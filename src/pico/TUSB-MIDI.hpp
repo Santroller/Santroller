@@ -30,7 +30,7 @@ namespace usbMidi {
         };
 
     public:
-        uint8_t midi_dev_addr = 0;
+        uint8_t midi_idx = 0;
 
         static const bool thruActivated = false;
 
@@ -41,19 +41,19 @@ namespace usbMidi {
         };
 
         void pollUsb() {
-            if (!midi_dev_addr || !tuh_midi_configured(midi_dev_addr)) {
-                return;
-            }
-            if (tuh_midih_get_num_rx_cables(midi_dev_addr) < 1) {
-                return;
-            }
+            // if (!midi_idx || !tuh_midi_mounted(midi_idx)) {
+            //     return;
+            // }
+            // if (tuh_midi_get_tx_cable_count(midi_idx) < 1) {
+            //     return;
+            // }
 
-            tuh_midi_read_poll(midi_dev_addr); // if there is data, then the callback will be called
-            tuh_midi_stream_flush(midi_dev_addr);
+            // tuh_midi_read_poll(midi_idx); // if there is data, then the callback will be called
+            // tuh_midi_stream_flush(midi_idx);
         }
 
         void tuh_midi_rx_cb(uint8_t dev_addr, uint32_t num_packets) {
-            if (midi_dev_addr != dev_addr) return;
+            if (midi_idx != dev_addr) return;
 
             while (num_packets > 0) {
                 --num_packets;
@@ -124,7 +124,7 @@ namespace usbMidi {
                 } else if (i == 2) {
                     mPacket.byte3 = byte;
                     if (byte != MidiType::SystemExclusiveEnd) {
-                        tuh_midi_packet_write(midi_dev_addr, (uint8_t*)&mPacket);
+                        tuh_midi_packet_write(midi_idx, (uint8_t*)&mPacket);
                     }
                 }
             }
@@ -132,7 +132,7 @@ namespace usbMidi {
         };
 
         void endTransmission() {
-            tuh_midi_packet_write(midi_dev_addr, (uint8_t*)&mPacket);
+            tuh_midi_packet_write(midi_idx, (uint8_t*)&mPacket);
         };
 
         byte read() {

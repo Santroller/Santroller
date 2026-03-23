@@ -190,8 +190,8 @@ typedef struct
     uint8_t b : 1; // red
     uint8_t y : 1; // yellow
 
-    uint8_t kick1 : 1; // orange
-    uint8_t kick2 : 1; // orange
+    uint8_t leftShoulder : 1; // orange
+    uint8_t rightShoulder : 1; // orange
     uint8_t : 2;
     uint8_t back : 1;  // share
     uint8_t start : 1; // options

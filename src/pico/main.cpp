@@ -273,7 +273,10 @@ void setup()
         arcadeSide = 1;
     }
     init_main();
-    tud_init(TUD_OPT_RHPORT);
+    const tusb_rhport_init_t rd_init = {
+        .role = TUSB_ROLE_DEVICE,
+        .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};
+    tud_rhport_init(TUD_OPT_RHPORT, &rd_init);
 #if USB_HOST_STACK
     pio_usb_configuration_t config = {
         pin_dp : USB_HOST_DP_PIN,
@@ -290,7 +293,11 @@ void setup()
         pinout : PIO_USB_PINOUT_DPDM
     };
     tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
-    tuh_init(TUH_OPT_RHPORT);
+    const tusb_rhport_init_t rh_init = {
+        .role = TUSB_ROLE_HOST,
+        .speed = TUH_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL,
+    };
+    tuh_rhport_init(TUH_OPT_RHPORT, &rh_init);
 #ifdef INPUT_USB_HOST
     MIDI.begin(0);
     MIDI.setHandleNoteOn(onNote);
@@ -316,14 +323,14 @@ void tuh_midi_rx_cb(uint8_t dev_addr, uint32_t num_packets)
     usbMIDITransport.tuh_midi_rx_cb(dev_addr, num_packets);
 }
 
-void tuh_midi_mount_cb(uint8_t dev_addr, uint8_t in_ep, uint8_t out_ep, uint8_t num_cables_rx, uint16_t num_cables_tx)
+void tuh_midi_mount_cb(uint8_t idx, const tuh_midi_mount_cb_t *mount_cb_data)
 {
-    printf("MIDI device address = %u, IN endpoint %u has %u cables, OUT endpoint %u has %u cables\r\n",
-           dev_addr, in_ep & 0xf, num_cables_rx, out_ep & 0xf, num_cables_tx);
+    printf("MIDI device address = %u, IN endpoint has %u cables, OUT endpoint has %u cables\r\n",
+           mount_cb_data->daddr, mount_cb_data->rx_cable_count, mount_cb_data->tx_cable_count);
 
-    usbMIDITransport.midi_dev_addr = dev_addr;
+    usbMIDITransport.midi_idx = idx;
 
-    USB_Device_Type_t type = {MIDI_ID, 0, dev_addr, 0};
+    USB_Device_Type_t type = {MIDI_ID, 0, mount_cb_data->daddr, 0};
     usb_host_devices[total_usb_host_devices].type = type;
     total_usb_host_devices++;
 }
@@ -333,7 +340,7 @@ void tuh_midi_umount_cb(uint8_t dev_addr, uint8_t instance)
 {
     printf("MIDI device address = %d, instance = %d is unmounted\r\n", dev_addr, instance);
 
-    usbMIDITransport.midi_dev_addr = 0;
+    usbMIDITransport.midi_idx = 0;
     // Probably should actulaly work out what was unplugged and all that
     total_usb_host_devices = 0;
 }

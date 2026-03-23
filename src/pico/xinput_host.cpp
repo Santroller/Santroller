@@ -190,7 +190,7 @@ void xinputh_close(uint8_t dev_addr)
 // Enumeration
 //--------------------------------------------------------------------+
 extern uint8_t transfer_with_usb_controller(const uint8_t dev_addr, const uint8_t requestType, const uint8_t request, const uint16_t wValue, const uint16_t wIndex, const uint16_t wLength, uint8_t *buffer, bool *status);
-bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
+uint16_t xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
     (void)rhport;
     (void)max_len;
@@ -294,7 +294,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         _xinputh_dev->inst_count++;
         tuh_xinput_receive_report(dev_addr, i);
         p_xinput->subtype = GAMEPAD;
-        return true;
+        return drv_len;
     }
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
     if (0xFF == desc_itf->bInterfaceClass && desc_itf->bInterfaceSubClass == 0x00 &&
@@ -325,7 +325,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
 
         p_xinput->type = SWITCH2;
         p_xinput->subtype = NON_CONTROLLER;
-        return true;
+        return drv_len;
     }
 
     if (desc_itf->bInterfaceSubClass == 0x5D &&
@@ -357,7 +357,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
 
         p_xinput->type = XBOX360_BB;
         p_xinput->subtype = GAMEPAD;
-        return true;
+        return drv_len;
     }
     else if (desc_itf->bInterfaceSubClass == 0x5D &&
              (desc_itf->bInterfaceProtocol == 0x01 ||
@@ -404,7 +404,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             p_xinput->type = NON_CONTROLLER;
         }
         _xinputh_dev->inst_count++;
-        return true;
+        return drv_len;
     }
     else if (desc_itf->bInterfaceSubClass == 0xfD &&
              desc_itf->bInterfaceProtocol == 0x13)
@@ -421,7 +421,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_xinput->subtype = GAMEPAD;
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
         _xinputh_dev->inst_count++;
-        return true;
+        return drv_len;
     }
     else if (desc_itf->bInterfaceSubClass == 0x47 &&
              desc_itf->bInterfaceProtocol == 0xD0 && desc_itf->bNumEndpoints)
@@ -451,7 +451,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_xinput->subtype = GAMEPAD;
         _xinputh_dev->inst_count++;
         usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
-        return true;
+        return drv_len;
     }
     else if (desc_itf->bInterfaceSubClass == 0x5D &&
              desc_itf->bInterfaceProtocol == 0x81)
@@ -483,7 +483,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_xinput->subtype = UNKNOWN;
         _xinputh_dev->inst_count++;
         usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
-        return true;
+        return drv_len;
     }
     else if (desc_itf->bInterfaceClass == 0x58)
     {
@@ -512,7 +512,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
 
         p_xinput->type = OG_XBOX;
         p_xinput->subtype = GAMEPAD;
-        return true;
+        return drv_len;
     }
     return false;
 }

@@ -26,33 +26,69 @@
 
 #include "tusb_option.h"
 
-#if (TUSB_OPT_HOST_ENABLED && CFG_TUH_MIDI)
+#if (CFG_TUH_ENABLED && CFG_TUH_MIDI_CUSTOM)
 
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
+
 #include "midi_host.h"
+#include <stdio.h>
+
+// Level where CFG_TUSB_DEBUG must be at least for this driver is logged
+#ifndef CFG_TUH_MIDI_CUSTOM_LOG_LEVEL
+  #define CFG_TUH_MIDI_CUSTOM_LOG_LEVEL   0
+#endif
+
+#define TU_LOG_DRV(...)   TU_LOG(CFG_TUH_MIDI_CUSTOM_LOG_LEVEL, __VA_ARGS__)
+
+#define MIDI_CS_ROLAND_HEADER 0xF1
+//--------------------------------------------------------------------+
+// Weak stubs: invoked if no strong implementation is available
+//--------------------------------------------------------------------+
+TU_ATTR_WEAK void tuh_midi_descriptor_cb(uint8_t idx, const tuh_midi_descriptor_cb_t * desc_cb_data) { (void) idx; (void) desc_cb_data; }
+TU_ATTR_WEAK void tuh_midi_mount_cb(uint8_t idx, const tuh_midi_mount_cb_t* mount_cb_data) { (void) idx; (void) mount_cb_data; }
+TU_ATTR_WEAK void tuh_midi_umount_cb(uint8_t idx) { (void) idx; }
+TU_ATTR_WEAK void tuh_midi_rx_cb(uint8_t idx, uint32_t xferred_bytes) { (void) idx; (void) xferred_bytes; }
+TU_ATTR_WEAK void tuh_midi_tx_cb(uint8_t idx, uint32_t xferred_bytes) { (void) idx; (void) xferred_bytes; }
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
 //--------------------------------------------------------------------+
-#ifndef CFG_TUH_MAX_CABLES
-#define CFG_TUH_MAX_CABLES 16
-#endif
-#define CFG_TUH_MIDI_RX_BUFSIZE 64
-#define CFG_TUH_MIDI_TX_BUFSIZE 64
-#ifndef CFG_TUH_MIDI_EP_BUFSIZE
-#define CFG_TUH_MIDI_EP_BUFSIZE 64
-#endif
 
-#define MIDI_CS_ROLAND_HEADER 0xF1
+typedef struct {
+  uint8_t daddr;
+  uint8_t bInterfaceNumber; // interface number of MIDI streaming
+  uint8_t iInterface;
+  uint8_t itf_count;        // number of interfaces including Audio Control + MIDI streaming
 
-// TODO: refactor to share code with the MIDI Device driver
-typedef struct
-{
-    uint8_t buffer[4];
-    uint8_t index;
-    uint8_t total;
-} midi_stream_t;
+  uint8_t rx_cable_count;  // IN endpoint CS descriptor bNumEmbMIDIJack value
+  uint8_t tx_cable_count;  // OUT endpoint CS descriptor bNumEmbMIDIJack value
+
+  #if CFG_TUH_MIDI_CUSTOM_STREAM_API
+  // For Stream read()/write() API
+  // Messages are always 4 bytes long, queue them for reading and writing so the
+  // callers can use the Stream interface with single-byte read/write calls.
+  midi_driver_stream_t stream_write;
+  midi_driver_stream_t stream_read;
+  #endif
+
+  // Endpoint stream
+  struct {
+    tu_edpt_stream_t tx;
+    tu_edpt_stream_t rx;
+
+    uint8_t rx_ff_buf[CFG_TUH_MIDI_RX_BUFSIZE];
+    uint8_t tx_ff_buf[CFG_TUH_MIDI_TX_BUFSIZE];
+  } ep_stream;
+
+  bool mounted;
+}midih_interface_t;
+
+typedef struct {
+  TUH_EPBUF_DEF(tx, TUH_EPSIZE_BULK_MAX);
+  TUH_EPBUF_DEF(rx, TUH_EPSIZE_BULK_MAX);
+} midih_epbuf_t;
+
 
 /// MIDI In Jack Descriptor
 typedef struct TU_ATTR_PACKED {
@@ -63,785 +99,594 @@ typedef struct TU_ATTR_PACKED {
     uint8_t num_cables_rx;       /// rx cable count
     uint8_t num_cables_tx;       /// tx cable count
 } midi_desc_roland_header_t;
+static midih_interface_t _midi_host[CFG_TUH_MIDI_CUSTOM];
+CFG_TUH_MEM_SECTION static midih_epbuf_t _midi_epbuf[CFG_TUH_MIDI_CUSTOM];
 
-typedef struct
-{
-    uint8_t dev_addr;
-    uint8_t itf_num;
-
-    uint8_t ep_in;        // IN endpoint address
-    uint8_t ep_out;       // OUT endpoint address
-    uint16_t ep_in_max;   // min( CFG_TUH_MIDI_RX_BUFSIZE, wMaxPacketSize of the IN endpoint)
-    uint16_t ep_out_max;  //  min( CFG_TUH_MIDI_TX_BUFSIZE, wMaxPacketSize of the OUT endpoint)
-
-    uint8_t num_cables_rx;  // IN endpoint CS descriptor bNumEmbMIDIJack value
-    uint8_t num_cables_tx;  // OUT endpoint CS descriptor bNumEmbMIDIJack value
-
-    // For Stream read()/write() API
-    // Messages are always 4 bytes long, queue them for reading and writing so the
-    // callers can use the Stream interface with single-byte read/write calls.
-    midi_stream_t stream_write;
-    midi_stream_t stream_read;
-
-    /*------------- From this point, data is not cleared by bus reset -------------*/
-    // Endpoint FIFOs
-    tu_fifo_t rx_ff;
-    tu_fifo_t tx_ff;
-
-    uint8_t rx_ff_buf[CFG_TUH_MIDI_RX_BUFSIZE];
-    uint8_t tx_ff_buf[CFG_TUH_MIDI_TX_BUFSIZE];
-
-#if CFG_FIFO_MUTEX
-    osal_mutex_def_t rx_ff_mutex;
-    osal_mutex_def_t tx_ff_mutex;
-#endif
-
-    // Endpoint Transfer buffer
-    CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUH_MIDI_EP_BUFSIZE];
-    CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUH_MIDI_EP_BUFSIZE];
-
-    bool configured;
-
-#if CFG_MIDI_HOST_DEVSTRINGS
-#define MAX_STRING_INDICES 32
-    uint8_t all_string_indices[MAX_STRING_INDICES];
-    uint8_t num_string_indices;
-#define MAX_IN_JACKS 8
-#define MAX_OUT_JACKS 8
-    struct {
-        uint8_t jack_id;
-        uint8_t jack_type;
-        uint8_t string_index;
-    } in_jack_info[MAX_IN_JACKS];
-    uint8_t next_in_jack;
-    struct {
-        uint8_t jack_id;
-        uint8_t jack_type;
-        uint8_t num_source_ids;
-        uint8_t source_ids[MAX_IN_JACKS / 4];
-        uint8_t string_index;
-    } out_jack_info[MAX_OUT_JACKS];
-    uint8_t next_out_jack;
-    uint8_t ep_in_associated_jacks[MAX_OUT_JACKS / 2];
-    uint8_t ep_out_associated_jacks[MAX_IN_JACKS / 2];
-#endif
-} midih_interface_t;
-
-static midih_interface_t _midi_host[CFG_TUH_DEVICE_MAX];
-
-static midih_interface_t *get_midi_host(uint8_t dev_addr) {
-    TU_VERIFY(dev_addr > 0 && dev_addr <= CFG_TUH_DEVICE_MAX);
-    return (_midi_host + dev_addr - 1);
+//--------------------------------------------------------------------+
+// Helper
+//--------------------------------------------------------------------+
+TU_ATTR_ALWAYS_INLINE static inline uint8_t find_new_midi_index(void) {
+  for (uint8_t idx = 0; idx < CFG_TUH_MIDI_CUSTOM; idx++) {
+    if (_midi_host[idx].daddr == 0) {
+      return idx;
+    }
+  }
+  return TUSB_INDEX_INVALID_8;
 }
 
-//------------- Internal prototypes -------------//
-static uint32_t write_flush(uint8_t dev_addr, midih_interface_t *midi);
+static inline uint8_t get_idx_by_ep_addr(uint8_t daddr, uint8_t ep_addr) {
+  for (uint8_t idx = 0; idx < CFG_TUH_MIDI_CUSTOM; idx++) {
+    const midih_interface_t *p_midi = &_midi_host[idx];
+    if ((p_midi->daddr == daddr) &&
+        (ep_addr == p_midi->ep_stream.rx.ep_addr || ep_addr == p_midi->ep_stream.tx.ep_addr)) {
+      return idx;
+    }
+  }
+  return TUSB_INDEX_INVALID_8;
+}
 
 //--------------------------------------------------------------------+
 // USBH API
 //--------------------------------------------------------------------+
 bool midih_init(void) {
-    tu_memclr(&_midi_host, sizeof(_midi_host));
-    // config fifos
-    for (int inst = 0; inst < CFG_TUH_DEVICE_MAX; inst++) {
-        midih_interface_t *p_midi_host = &_midi_host[inst];
-        tu_fifo_config(&p_midi_host->rx_ff, p_midi_host->rx_ff_buf, CFG_TUH_MIDI_RX_BUFSIZE, 1, false);  // true, true
-        tu_fifo_config(&p_midi_host->tx_ff, p_midi_host->tx_ff_buf, CFG_TUH_MIDI_TX_BUFSIZE, 1, false);  // OBVS.
+  tu_memclr(&_midi_host, sizeof(_midi_host));
+  for (int inst = 0; inst < CFG_TUH_MIDI_CUSTOM; inst++) {
+    midih_interface_t *p_midi_host = &_midi_host[inst];
+    tu_edpt_stream_init(&p_midi_host->ep_stream.rx, true, false, false,
+      p_midi_host->ep_stream.rx_ff_buf, CFG_TUH_MIDI_RX_BUFSIZE, _midi_epbuf[inst].rx);
+    tu_edpt_stream_init(&p_midi_host->ep_stream.tx, true, true, false,
+      p_midi_host->ep_stream.tx_ff_buf, CFG_TUH_MIDI_TX_BUFSIZE, _midi_epbuf[inst].tx);
+  }
+  return true;
+}
 
-#if CFG_FIFO_MUTEX
-        tu_fifo_config_mutex(&p_midi_host->rx_ff, NULL, osal_mutex_create(&p_midi_host->rx_ff_mutex));
-        tu_fifo_config_mutex(&p_midi_host->tx_ff, osal_mutex_create(&p_midi_host->tx_ff_mutex), NULL);
+bool midih_deinit(void) {
+  for (size_t i = 0; i < CFG_TUH_MIDI_CUSTOM; i++) {
+    midih_interface_t* p_midi = &_midi_host[i];
+    tu_edpt_stream_deinit(&p_midi->ep_stream.rx);
+    tu_edpt_stream_deinit(&p_midi->ep_stream.tx);
+  }
+  return true;
+}
+
+void midih_close(uint8_t daddr) {
+  for (uint8_t idx = 0; idx < CFG_TUH_MIDI_CUSTOM; idx++) {
+    midih_interface_t* p_midi = &_midi_host[idx];
+    if (p_midi->daddr == daddr) {
+      TU_LOG_DRV("  MIDI close addr = %u index = %u\r\n", daddr, idx);
+      tuh_midi_umount_cb(idx);
+
+      p_midi->bInterfaceNumber = 0;
+      p_midi->rx_cable_count = 0;
+      p_midi->tx_cable_count = 0;
+      p_midi->daddr = 0;
+      p_midi->mounted = false;
+#if CFG_TUH_MIDI_CUSTOM_STREAM_API
+      tu_memclr(&p_midi->stream_read, sizeof(p_midi->stream_read));
+      tu_memclr(&p_midi->stream_write, sizeof(p_midi->stream_write));
 #endif
+      tu_edpt_stream_close(&p_midi->ep_stream.rx);
+      tu_edpt_stream_close(&p_midi->ep_stream.tx);
     }
-    return true;
+  }
 }
 
 bool midih_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) {
-    (void)result;
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    if (ep_addr == p_midi_host->ep_in) {
-        if (0 == xferred_bytes) {
-            return true;  // No data to handle
-        }
+  (void) result;
+  const uint8_t idx = get_idx_by_ep_addr(dev_addr, ep_addr);
+  TU_VERIFY(idx < CFG_TUH_MIDI_CUSTOM);
+  midih_interface_t *p_midi = &_midi_host[idx];
+  tu_edpt_stream_t  *ep_str_rx = &p_midi->ep_stream.rx;
+  tu_edpt_stream_t  *ep_str_tx = &p_midi->ep_stream.tx;
 
-        // receive new data if available
-        uint32_t packets_queued = 0;
-        if (xferred_bytes) {
-            // put in the RX FIFO only non-zero MIDI IN 4-byte packets
-            uint8_t *buf = p_midi_host->epin_buf;
-            uint32_t npackets = xferred_bytes / 4;
-            uint32_t packet_num;
-            for (packet_num = 0; packet_num < npackets; packet_num++) {
-                // some devices send back all zero packets even if there is no data ready
-                uint32_t packet = (uint32_t)((*buf) << 24) | ((uint32_t)(*(buf + 1)) << 16) | ((uint32_t)(*(buf + 2)) << 8) | ((uint32_t)(*(buf + 3)));
-                if (packet != 0) {
-                    tu_fifo_write_n(&p_midi_host->rx_ff, buf, 4);
-                    ++packets_queued;
-                    TU_LOG3("MIDI RX=%08x\r\n", packet);
-                }
-                buf += 4;
-            }
-        }
-        // invoke receive callback if available
-        if (tuh_midi_rx_cb) {
-            tuh_midi_rx_cb(dev_addr, packets_queued);
-        }
-    } else if (ep_addr == p_midi_host->ep_out) {
-        if (0 == write_flush(dev_addr, p_midi_host)) {
-            // If there is no data left, a ZLP should be sent if
-            // xferred_bytes is multiple of EP size and not zero
-            if (!tu_fifo_count(&p_midi_host->tx_ff) && xferred_bytes && (0 == (xferred_bytes % p_midi_host->ep_out_max))) {
-                if (usbh_edpt_claim(dev_addr, p_midi_host->ep_out)) {
-                    TU_ASSERT(usbh_edpt_xfer(dev_addr, p_midi_host->ep_out, XFER_RESULT_SUCCESS, 0));
-                }
-            }
-        }
-        if (tuh_midi_tx_cb) {
-            tuh_midi_tx_cb(dev_addr);
-        }
+  if (ep_addr == ep_str_rx->ep_addr) {
+    // receive new data, put it into FIFO and invoke callback if available
+    // Note: some devices send back all zero packets even if there is no data ready
+    if (xferred_bytes && !tu_mem_is_zero(ep_str_rx->ep_buf, xferred_bytes)) {
+      tu_edpt_stream_read_xfer_complete(ep_str_rx, xferred_bytes);
+      tuh_midi_rx_cb(idx, xferred_bytes);
     }
 
-    return true;
-}
+    tu_edpt_stream_read_xfer(ep_str_rx); // prepare for next transfer
+  } else if (ep_addr == ep_str_tx->ep_addr) {
+    tuh_midi_tx_cb(idx, xferred_bytes);
 
-void midih_close(uint8_t dev_addr) {
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    if (p_midi_host == NULL)
-        return;
-    if (tuh_midi_umount_cb)
-        tuh_midi_umount_cb(dev_addr, 0);
-    tu_fifo_clear(&p_midi_host->rx_ff);
-    tu_fifo_clear(&p_midi_host->tx_ff);
-    p_midi_host->ep_in = 0;
-    p_midi_host->ep_in_max = 0;
-    p_midi_host->ep_out = 0;
-    p_midi_host->ep_out_max = 0;
-    p_midi_host->itf_num = 0;
-    p_midi_host->num_cables_rx = 0;
-    p_midi_host->num_cables_tx = 0;
-    p_midi_host->dev_addr = 255;  // invalid
-    p_midi_host->configured = false;
-    tu_memclr(&p_midi_host->stream_read, sizeof(p_midi_host->stream_read));
-    tu_memclr(&p_midi_host->stream_write, sizeof(p_midi_host->stream_write));
+    if (0 == tu_edpt_stream_write_xfer(ep_str_tx)) {
+      // If there is no data left, a ZLP should be sent if
+      // xferred_bytes is multiple of EP size and not zero
+      tu_edpt_stream_write_zlp_if_needed(ep_str_tx, xferred_bytes);
+    }
+  }
+
+  return true;
 }
 
 //--------------------------------------------------------------------+
 // Enumeration
 //--------------------------------------------------------------------+
-bool midih_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len) {
-    (void)rhport;
+uint16_t midih_open(uint8_t rhport, uint8_t dev_addr, const tusb_desc_interface_t *desc_itf, uint16_t max_len) {
+  (void) rhport;
+  // Some roland devices use vendor specific and have their own header
+  TU_VERIFY(TUSB_CLASS_AUDIO == desc_itf->bInterfaceClass || TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass, 0);
+  bool roland = TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass;
+  const uint8_t *desc_start = (const uint8_t *)desc_itf;
+  const uint8_t *p_desc     = desc_start;
+  const uint8_t *desc_end   = desc_start + max_len;
 
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
+  const uint8_t idx = find_new_midi_index();
+  TU_VERIFY(idx < CFG_TUH_MIDI_CUSTOM, 0);
+  midih_interface_t *p_midi = &_midi_host[idx];
+  p_midi->itf_count = 0;
 
-    TU_VERIFY(p_midi_host != NULL);
-#if CFG_MIDI_HOST_DEVSTRINGS
-    p_midi_host->num_string_indices = 0;
-#endif
-    // Some roland devices use vendor specific and have their own header
-    TU_VERIFY(TUSB_CLASS_AUDIO == desc_itf->bInterfaceClass || TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass);
-    // There can be just a MIDI interface or an audio and a MIDI interface. Only open the MIDI interface
-    uint8_t const *p_desc = (uint8_t const *)desc_itf;
-    uint16_t len_parsed = 0;
-    if (AUDIO_SUBCLASS_CONTROL == desc_itf->bInterfaceSubClass) {
-#if CFG_MIDI_HOST_DEVSTRINGS
-        // Keep track of any string descriptor that might be here
-        if (desc_itf->iInterface != 0)
-            p_midi_host->all_string_indices[p_midi_host->num_string_indices++] = desc_itf->iInterface;
-#endif
-        // This driver does not support audio streaming. However, if this is the audio control interface
-        // there might be a MIDI interface following it. Search through every descriptor until a MIDI
-        // interface is found or the end of the descriptor is found
-        while (len_parsed < max_len && (desc_itf->bInterfaceClass != TUSB_CLASS_AUDIO || desc_itf->bInterfaceSubClass != AUDIO_SUBCLASS_MIDI_STREAMING)) {
-            len_parsed += desc_itf->bLength;
-            p_desc = tu_desc_next(p_desc);
-            desc_itf = (tusb_desc_interface_t const *)p_desc;
-        }
+  tuh_midi_descriptor_cb_t desc_cb = { 0 };
+  desc_cb.jack_num = 0;
 
-        TU_VERIFY(TUSB_CLASS_AUDIO == desc_itf->bInterfaceClass);
-    }
-    TU_VERIFY(AUDIO_SUBCLASS_MIDI_STREAMING == desc_itf->bInterfaceSubClass);
-    len_parsed += desc_itf->bLength;
-#if CFG_MIDI_HOST_DEVSTRINGS
-    // Keep track of any string descriptor that might be here
-    if (desc_itf->iInterface != 0)
-        p_midi_host->all_string_indices[p_midi_host->num_string_indices++] = desc_itf->iInterface;
-#endif
+  // There can be just a MIDI or an Audio + MIDI interface
+  // - If there is Audio Control Interface + Audio Header descriptor, then skip it.
+  // - If there is an Audio Control Interface + Audio Streaming Interface, then ignore the Audio Streaming Interface.
+  // Future:
+  // Note that if this driver is used with an USB Audio Streaming host driver,
+  // then call that driver first. If the MIDI interface comes before the
+  // audio streaming interface, then the audio driver will have to call this
+  // driver after parsing the audio control interface and then resume parsing
+  // the streaming audio interface.
+  if (AUDIO_SUBCLASS_CONTROL == desc_itf->bInterfaceSubClass) {
+    TU_VERIFY(max_len > 2 * sizeof(tusb_desc_interface_t) + sizeof(midi10_desc_cs_ac_interface_t), 0);
     p_desc = tu_desc_next(p_desc);
-    TU_LOG1("MIDI opening Interface %u (addr = %u)\r\n", desc_itf->bInterfaceNumber, dev_addr);
-    // Find out if getting the MIDI class specific interface header or an endpoint descriptor
-    // or a class-specific endpoint descriptor
-    // Jack descriptors or element descriptors must follow the cs interface header,
-    // but this driver does not support devices that contain element descriptors
+    TU_VERIFY(tu_desc_type(p_desc) == TUSB_DESC_CS_INTERFACE &&
+                tu_desc_subtype(p_desc) == AUDIO10_CS_AC_INTERFACE_HEADER,
+              0);
+    desc_cb.desc_audio_control = desc_itf;
 
-    // assume it is an interface header
-    midi_desc_header_t const *p_mdh = (midi_desc_header_t const *)p_desc;
-    TU_VERIFY((p_mdh->bDescriptorType == TUSB_DESC_CS_INTERFACE && p_mdh->bDescriptorSubType == MIDI_CS_INTERFACE_HEADER) ||
-              (p_mdh->bDescriptorType == TUSB_DESC_CS_INTERFACE && p_mdh->bDescriptorSubType == MIDI_CS_ROLAND_HEADER) ||
-              (p_mdh->bDescriptorType == TUSB_DESC_CS_ENDPOINT && p_mdh->bDescriptorSubType == MIDI_CS_ENDPOINT_GENERAL) ||
-              p_mdh->bDescriptorType == TUSB_DESC_ENDPOINT);
+    p_desc = tu_desc_next(p_desc);
+    desc_itf = (const tusb_desc_interface_t *)p_desc;
+    p_midi->itf_count = 1;
+    // skip non-interface and non-midi streaming descriptors
+    while (tu_desc_in_bounds(p_desc, desc_end) && (desc_itf->bDescriptorType != TUSB_DESC_INTERFACE ||
+                                                   (desc_itf->bInterfaceClass == TUSB_CLASS_AUDIO &&
+                                                    desc_itf->bInterfaceSubClass != AUDIO_SUBCLASS_MIDI_STREAMING))) {
+      if (desc_itf->bDescriptorType == TUSB_DESC_INTERFACE && desc_itf->bAlternateSetting == 0) {
+        p_midi->itf_count++;
+      }
+      p_desc = tu_desc_next(p_desc);
+      desc_itf = (const tusb_desc_interface_t *)p_desc;
+    }
+    TU_VERIFY(p_desc < desc_end, 0);
+    TU_VERIFY(TUSB_CLASS_AUDIO == desc_itf->bInterfaceClass, 0);
+  }
+  TU_VERIFY(AUDIO_SUBCLASS_MIDI_STREAMING == desc_itf->bInterfaceSubClass, 0);
 
-    uint8_t prev_ep_addr = 0;  // the CS endpoint descriptor is associated with the previous endpoint descrptor
-    p_midi_host->itf_num = desc_itf->bInterfaceNumber;
-    tusb_desc_endpoint_t const *in_desc = NULL;
-    tusb_desc_endpoint_t const *out_desc = NULL;
-    while (len_parsed < max_len) {
-        TU_VERIFY((p_mdh->bDescriptorType == TUSB_DESC_CS_INTERFACE) ||
-                  (p_mdh->bDescriptorType == TUSB_DESC_CS_ENDPOINT && p_mdh->bDescriptorSubType == MIDI_CS_ENDPOINT_GENERAL) ||
-                  p_mdh->bDescriptorType == TUSB_DESC_ENDPOINT);
+  TU_LOG_DRV("MIDI opening Interface %u (addr = %u)\r\n", desc_itf->bInterfaceNumber, dev_addr);
+  p_midi->bInterfaceNumber = desc_itf->bInterfaceNumber;
+  p_midi->iInterface = desc_itf->iInterface;
+  p_midi->itf_count++;
+  desc_cb.desc_midi = desc_itf;
 
-        if (p_mdh->bDescriptorType == TUSB_DESC_CS_INTERFACE) {
-            // The USB host doesn't really need this information unless it uses
-            // the string descriptor for a jack or Element
+  bool found_new_interface = false;
+  do {
+    p_desc = tu_desc_next(p_desc);
+    if (!tu_desc_in_bounds(p_desc, desc_end)) {
+      break;
+    }
+    switch (tu_desc_type(p_desc)) {
+      case TUSB_DESC_INTERFACE:
+        found_new_interface = true;
+        break;
 
-            // assume it is an input jack
-            midi_desc_in_jack_t const *p_mdij = (midi_desc_in_jack_t const *)p_desc;
-            if (p_mdij->bDescriptorSubType == MIDI_CS_INTERFACE_HEADER) {
-                TU_LOG2("Found MIDI Interface Header\r\n");
-            } else if (p_mdij->bDescriptorSubType == MIDI_CS_INTERFACE_IN_JACK) {
-                // Then it is an in jack.
-                TU_LOG2("Found in jack\r\n");
-#if CFG_MIDI_HOST_DEVSTRINGS
-                if (p_midi_host->next_in_jack < MAX_IN_JACKS) {
-                    p_midi_host->in_jack_info[p_midi_host->next_in_jack].jack_id = p_mdij->bJackID;
-                    p_midi_host->in_jack_info[p_midi_host->next_in_jack].jack_type = p_mdij->bJackType;
-                    p_midi_host->in_jack_info[p_midi_host->next_in_jack].string_index = p_mdij->iJack;
-                    ++p_midi_host->next_in_jack;
-                    // Keep track of any string descriptor that might be here
-                    if (p_mdij->iJack != 0)
-                        p_midi_host->all_string_indices[p_midi_host->num_string_indices++] = p_mdij->iJack;
-                }
-#endif
-            } else if (p_mdij->bDescriptorSubType == MIDI_CS_INTERFACE_OUT_JACK) {
-                // then it is an out jack
-                TU_LOG2("Found out jack\r\n");
-#if CFG_MIDI_HOST_DEVSTRINGS
-                if (p_midi_host->next_out_jack < MAX_OUT_JACKS) {
-                    midi_desc_out_jack_t const *p_mdoj = (midi_desc_out_jack_t const *)p_desc;
-                    p_midi_host->out_jack_info[p_midi_host->next_out_jack].jack_id = p_mdoj->bJackID;
-                    p_midi_host->out_jack_info[p_midi_host->next_out_jack].jack_type = p_mdoj->bJackType;
-                    p_midi_host->out_jack_info[p_midi_host->next_out_jack].num_source_ids = p_mdoj->bNrInputPins;
-                    const struct associated_jack_s {
-                        uint8_t id;
-                        uint8_t pin;
-                    } *associated_jack = (const struct associated_jack_s *)(p_desc + 6);
-                    int jack;
-                    for (jack = 0; jack < p_mdoj->bNrInputPins; jack++) {
-                        p_midi_host->out_jack_info[p_midi_host->next_out_jack].source_ids[jack] = associated_jack->id;
-                    }
-                    p_midi_host->out_jack_info[p_midi_host->next_out_jack].string_index = *(p_desc + 6 + p_mdoj->bNrInputPins * 2);
-                    ++p_midi_host->next_out_jack;
-                    if (p_mdoj->iJack != 0)
-                        p_midi_host->all_string_indices[p_midi_host->num_string_indices++] = p_mdoj->iJack;
-                }
-#endif
-            } else if (p_mdij->bDescriptorSubType == MIDI_CS_INTERFACE_ELEMENT) {
-                // the it is an element;
-#if CFG_MIDI_HOST_DEVSTRINGS
-                TU_LOG1("Found element; strings not supported\r\n");
-#else
-                TU_LOG2("Found element\r\n");
-#endif
-            } else if (p_mdij->bDescriptorSubType == MIDI_CS_ROLAND_HEADER) {
-                midi_desc_roland_header_t const *p_rl = (midi_desc_roland_header_t const *)p_desc;
-                TU_LOG2("Found Roland Header %02x %02x %02x %02x\r\n", p_rl->bLength, p_rl->always_2, p_rl->num_cables_rx, p_rl->num_cables_tx);
-                if (p_rl->bLength >= sizeof(midi_desc_roland_header_t) && p_rl->always_2 == 0x02) {
-                    TU_VERIFY(p_rl->num_cables_rx < 0x10 && p_rl->num_cables_tx < 0x10);
-                    TU_LOG2("Found Roland Header\r\n");
-                    p_midi_host->num_cables_rx = (1 << p_rl->num_cables_rx) - 1;
-                    p_midi_host->num_cables_tx = (1 << p_rl->num_cables_tx) - 1;
+      case TUSB_DESC_CS_INTERFACE:
+        switch (tu_desc_subtype(p_desc)) {
+          case MIDI_CS_INTERFACE_HEADER:
+            TU_LOG_DRV("  Interface Header descriptor\r\n");
+            desc_cb.desc_header = p_desc;
+            break;
 
-                } else {
-                    TU_LOG2("Unknown CS Interface sub-type %u\r\n", p_mdij->bDescriptorSubType);
-                    TU_VERIFY(false);  // unknown CS Interface sub-type
-                }
-                len_parsed += p_mdij->bLength;
-            } else {
-                TU_LOG2("Unknown CS Interface sub-type %u\r\n", p_mdij->bDescriptorSubType);
-                TU_VERIFY(false);  // unknown CS Interface sub-type
+          case MIDI_CS_INTERFACE_IN_JACK:
+          case MIDI_CS_INTERFACE_OUT_JACK: {
+            TU_LOG_DRV("  Jack %s %s descriptor \r\n",
+                       tu_desc_subtype(p_desc) == MIDI_CS_INTERFACE_IN_JACK ? "IN" : "OUT",
+                       p_desc[3] == MIDI_JACK_EXTERNAL ? "External" : "Embedded");
+            if (desc_cb.jack_num < TU_ARRAY_SIZE(desc_cb.desc_jack)) {
+                desc_cb.desc_jack[desc_cb.jack_num++] = p_desc;
             }
-            len_parsed += p_mdij->bLength;
-        } else if (p_mdh->bDescriptorType == TUSB_DESC_CS_ENDPOINT) {
-            TU_LOG2("found CS_ENDPOINT Descriptor for %u\r\n", prev_ep_addr);
-            TU_VERIFY(prev_ep_addr != 0);
-            // parse out the mapping between the device's embedded jacks and the endpoints
-            // Each embedded IN jack is assocated with an OUT endpoint
-            midi_cs_desc_endpoint_t const *p_csep = (midi_cs_desc_endpoint_t const *)p_mdh;
-            if (tu_edpt_dir(prev_ep_addr) == TUSB_DIR_OUT) {
-                TU_VERIFY(p_midi_host->ep_out == prev_ep_addr);
-                TU_VERIFY(p_midi_host->num_cables_tx == 0);
-                p_midi_host->num_cables_tx = p_csep->bNumEmbMIDIJack;
-#if CFG_MIDI_HOST_DEVSTRINGS
-                uint8_t jack;
-                uint8_t max_jack = p_midi_host->num_cables_tx;
-                if (max_jack > sizeof(p_midi_host->ep_out_associated_jacks)) {
-                    max_jack = sizeof(p_midi_host->ep_out_associated_jacks);
-                }
-                for (jack = 0; jack < max_jack; jack++) {
-                    p_midi_host->ep_out_associated_jacks[jack] = p_csep->baAssocJackID[jack];
-                }
-#endif
-            } else {
-                TU_VERIFY(p_midi_host->ep_in == prev_ep_addr);
-                TU_VERIFY(p_midi_host->num_cables_rx == 0);
-                p_midi_host->num_cables_rx = p_csep->bNumEmbMIDIJack;
-#if CFG_MIDI_HOST_DEVSTRINGS
-                uint8_t jack;
-                uint8_t max_jack = p_midi_host->num_cables_rx;
-                if (max_jack > sizeof(p_midi_host->ep_in_associated_jacks)) {
-                    max_jack = sizeof(p_midi_host->ep_in_associated_jacks);
-                }
-                for (jack = 0; jack < max_jack; jack++) {
-                    p_midi_host->ep_in_associated_jacks[jack] = p_csep->baAssocJackID[jack];
-                }
-#endif
-            }
-            len_parsed += p_csep->bLength;
-            prev_ep_addr = 0;
-        } else if (p_mdh->bDescriptorType == TUSB_DESC_ENDPOINT) {
-            // parse out the bulk endpoint info
-            tusb_desc_endpoint_t const *p_ep = (tusb_desc_endpoint_t const *)p_mdh;
-            TU_LOG2("found ENDPOINT Descriptor for %u\r\n", p_ep->bEndpointAddress);
-            if (tu_edpt_dir(p_ep->bEndpointAddress) == TUSB_DIR_OUT) {
-                TU_VERIFY(p_midi_host->ep_out == 0);
-                TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass || p_midi_host->num_cables_tx == 0);
-                p_midi_host->ep_out = p_ep->bEndpointAddress;
-                p_midi_host->ep_out_max = p_ep->wMaxPacketSize;
-                if (p_midi_host->ep_out_max > CFG_TUH_MIDI_TX_BUFSIZE)
-                    p_midi_host->ep_out_max = CFG_TUH_MIDI_TX_BUFSIZE;
-                prev_ep_addr = p_midi_host->ep_out;
-                out_desc = p_ep;
-            } else {
-                TU_VERIFY(p_midi_host->ep_in == 0);
-                TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass || p_midi_host->num_cables_rx == 0);
-                p_midi_host->ep_in = p_ep->bEndpointAddress;
-                p_midi_host->ep_in_max = p_ep->wMaxPacketSize;
-                if (p_midi_host->ep_in_max > CFG_TUH_MIDI_RX_BUFSIZE)
-                    p_midi_host->ep_in_max = CFG_TUH_MIDI_RX_BUFSIZE;
-                prev_ep_addr = p_midi_host->ep_in;
-                in_desc = p_ep;
-            }
-            len_parsed += p_mdh->bLength;
-        }
-        if (TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass && (p_midi_host->ep_out != 0 && p_midi_host->num_cables_tx != 0) && (p_midi_host->ep_in != 0 && p_midi_host->num_cables_rx != 0)) {
+            break;
+          }
+
+          case MIDI_CS_INTERFACE_ELEMENT:
+            TU_LOG_DRV("  Element descriptor\r\n");
+            desc_cb.desc_element = p_desc;
+            break;
+          
+          case MIDI_CS_ROLAND_HEADER:
+            midi_desc_roland_header_t const *p_rl = (midi_desc_roland_header_t const *)p_desc;
+            TU_LOG2("Found Roland Header %02x %02x %02x %02x\r\n", p_rl->bLength, p_rl->always_2, p_rl->num_cables_rx, p_rl->num_cables_tx);
+            if (p_rl->bLength >= sizeof(midi_desc_roland_header_t) && p_rl->always_2 == 0x02) {
+                TU_VERIFY(p_rl->num_cables_rx < 0x10 && p_rl->num_cables_tx < 0x10);
+                TU_LOG2("Found Roland Header\r\n");
+                p_midi->rx_cable_count = (1 << p_rl->num_cables_rx) - 1;
+                p_midi->tx_cable_count = (1 << p_rl->num_cables_tx) - 1;
+                break;
+            } 
+            TU_LOG_DRV("  Unknown CS Interface sub-type %u\r\n", tu_desc_subtype(p_desc));
+            break;
+          default:
+            TU_LOG_DRV("  Unknown CS Interface sub-type %u\r\n", tu_desc_subtype(p_desc));
             break;
         }
-        p_desc = tu_desc_next(p_desc);
-        p_mdh = (midi_desc_header_t const *)p_desc;
-    }
-    TU_VERIFY((p_midi_host->ep_out != 0 && p_midi_host->num_cables_tx != 0) ||
-              (p_midi_host->ep_in != 0 && p_midi_host->num_cables_rx != 0));
-    TU_LOG1("MIDI descriptor parsed successfully\r\n");
+        break;
 
-#if CFG_MIDI_HOST_DEVSTRINGS
-    // remove duplicate string indices
-    for (int idx = 0; idx < p_midi_host->num_string_indices; idx++) {
-        for (int jdx = idx + 1; jdx < p_midi_host->num_string_indices; jdx++) {
-            while (jdx < p_midi_host->num_string_indices && p_midi_host->all_string_indices[idx] == p_midi_host->all_string_indices[jdx]) {
-                // delete the duplicate by overwriting it with the last entry and reducing the number of entries by 1
-                p_midi_host->all_string_indices[jdx] = p_midi_host->all_string_indices[p_midi_host->num_string_indices - 1];
-                --p_midi_host->num_string_indices;
-            }
+      case TUSB_DESC_ENDPOINT: {
+        const tusb_desc_endpoint_t *p_ep = (const tusb_desc_endpoint_t *) p_desc;
+
+        p_desc = tu_desc_next(p_desc); // next to CS endpoint
+        TU_VERIFY(tu_desc_in_bounds(p_desc, desc_end), 0);
+        tu_edpt_stream_t *ep_stream;  
+        if (roland) {
+          if (tu_edpt_dir(p_ep->bEndpointAddress) == TUSB_DIR_OUT) {
+            desc_cb.desc_epout = p_ep;
+            ep_stream              = &p_midi->ep_stream.tx;
+          } else {
+            desc_cb.desc_epin      = p_ep;
+            ep_stream              = &p_midi->ep_stream.rx;
+          }
+        } else {
+          const midi_desc_cs_endpoint_t *p_csep = (const midi_desc_cs_endpoint_t *) p_desc;
+
+          TU_LOG_DRV("  Endpoint and CS_Endpoint descriptor %02x\r\n", p_ep->bEndpointAddress);
+          if (tu_edpt_dir(p_ep->bEndpointAddress) == TUSB_DIR_OUT) {
+            p_midi->tx_cable_count = p_csep->bNumEmbMIDIJack;
+            desc_cb.desc_epout = p_ep;
+            ep_stream              = &p_midi->ep_stream.tx;
+          } else {
+            p_midi->rx_cable_count = p_csep->bNumEmbMIDIJack;
+            desc_cb.desc_epin      = p_ep;
+            ep_stream              = &p_midi->ep_stream.rx;
+          }
         }
-    }
-#endif
-    if (in_desc) {
-        TU_ASSERT(tuh_edpt_open(dev_addr, in_desc));
-        // Some devices always return exactly the request length so transfers won't complete
-        // unless you assume every transfer is the last one.
-        // TODO usbh_edpt_force_last_buffer(dev_addr, p_midi_host->ep_in, true);
-    }
-    if (out_desc) {
-        TU_ASSERT(tuh_edpt_open(dev_addr, out_desc));
-    }
-    p_midi_host->dev_addr = dev_addr;
+        TU_ASSERT(tuh_edpt_open(dev_addr, p_ep), 0);
+        tu_edpt_stream_open(ep_stream, dev_addr, p_ep, tu_edpt_packet_size(p_ep));
+        tu_edpt_stream_clear(ep_stream);
 
-    if (tuh_midi_mount_cb) {
-        tuh_midi_mount_cb(dev_addr, p_midi_host->ep_in, p_midi_host->ep_out, p_midi_host->num_cables_rx, p_midi_host->num_cables_tx);
-    }
-    return true;
-}
+        break;
+      }
 
-bool tuh_midi_configured(uint8_t dev_addr) {
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    return p_midi_host->configured;
+      default: break; // skip unknown descriptor
+    }
+  } while (!found_new_interface);
+
+  desc_cb.desc_midi_total_len = (uint16_t)((uintptr_t)p_desc - (uintptr_t)desc_start);
+
+  p_midi->daddr = dev_addr;
+  tuh_midi_descriptor_cb(idx, &desc_cb);
+
+  return desc_cb.desc_midi_total_len;
 }
 
 bool midih_set_config(uint8_t dev_addr, uint8_t itf_num) {
-    (void)itf_num;
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    p_midi_host->configured = true;
+  uint8_t idx = tuh_midi_itf_get_index(dev_addr, itf_num);
+  TU_ASSERT(idx < CFG_TUH_MIDI_CUSTOM);
+  midih_interface_t *p_midi = &_midi_host[idx];
+  p_midi->mounted = true;
 
-    // TODO I don't think there are any special config things to do for MIDI
-    usbh_driver_set_config_complete(dev_addr, p_midi_host->itf_num);
-    return true;
+  const tuh_midi_mount_cb_t mount_cb_data = {
+    .daddr = dev_addr,
+    .bInterfaceNumber = p_midi->bInterfaceNumber,
+    .rx_cable_count = p_midi->rx_cable_count,
+    .tx_cable_count = p_midi->tx_cable_count,
+  };
+  tuh_midi_mount_cb(idx, &mount_cb_data);
+
+  tu_edpt_stream_read_xfer(&p_midi->ep_stream.rx); // prepare for incoming data
+
+  // No special config things to do for MIDI
+  usbh_driver_set_config_complete(dev_addr, p_midi->bInterfaceNumber);
+  return true;
+}
+
+//--------------------------------------------------------------------+
+// API
+//--------------------------------------------------------------------+
+bool tuh_midi_mounted(uint8_t idx) {
+  TU_VERIFY(idx < CFG_TUH_MIDI_CUSTOM);
+  midih_interface_t *p_midi = &_midi_host[idx];
+  return p_midi->mounted;
+}
+
+uint8_t tuh_midi_itf_get_index(uint8_t daddr, uint8_t itf_num) {
+  for (uint8_t idx = 0; idx < CFG_TUH_MIDI_CUSTOM; idx++) {
+    const midih_interface_t *p_midi = &_midi_host[idx];
+    if (p_midi->daddr == daddr &&
+        (p_midi->bInterfaceNumber == itf_num ||
+         p_midi->bInterfaceNumber == (uint8_t) (itf_num + p_midi->itf_count - 1))) {
+      return idx;
+    }
+  }
+  return TUSB_INDEX_INVALID_8;
+}
+
+bool tuh_midi_itf_get_info(uint8_t idx, tuh_itf_info_t* info) {
+  midih_interface_t* p_midi = &_midi_host[idx];
+  TU_VERIFY(p_midi && info);
+
+  info->daddr = p_midi->daddr;
+
+  // re-construct descriptor
+  tusb_desc_interface_t* desc = &info->desc;
+  desc->bLength            = sizeof(tusb_desc_interface_t);
+  desc->bDescriptorType    = TUSB_DESC_INTERFACE;
+
+  desc->bInterfaceNumber   = p_midi->bInterfaceNumber;
+  desc->bAlternateSetting = 0;
+  desc->bNumEndpoints     = 0;
+  if (tu_edpt_stream_is_opened(&p_midi->ep_stream.tx)) {
+    desc->bNumEndpoints++;
+  }
+  if (tu_edpt_stream_is_opened(&p_midi->ep_stream.rx)) {
+    desc->bNumEndpoints++;
+  }
+  desc->bInterfaceClass    = TUSB_CLASS_AUDIO;
+  desc->bInterfaceSubClass = AUDIO_SUBCLASS_MIDI_STREAMING;
+  desc->bInterfaceProtocol = 0;
+  desc->iInterface         = p_midi->iInterface;
+
+  return true;
+}
+
+uint8_t tuh_midi_get_tx_cable_count (uint8_t idx) {
+  TU_VERIFY(idx < CFG_TUH_MIDI_CUSTOM);
+  midih_interface_t *p_midi = &_midi_host[idx];
+  TU_VERIFY(p_midi->ep_stream.tx.ep_addr != 0, 0);
+  return p_midi->tx_cable_count;
+}
+
+uint8_t tuh_midi_get_rx_cable_count (uint8_t idx) {
+  TU_VERIFY(idx < CFG_TUH_MIDI_CUSTOM);
+  midih_interface_t *p_midi = &_midi_host[idx];
+  TU_VERIFY(p_midi->ep_stream.rx.ep_addr != 0, 0);
+  return p_midi->rx_cable_count;
+}
+
+uint32_t tuh_midi_read_available(uint8_t idx) {
+  TU_VERIFY(idx < CFG_TUH_MIDI_CUSTOM);
+  midih_interface_t *p_midi = &_midi_host[idx];
+  return tu_edpt_stream_read_available(&p_midi->ep_stream.rx);
+}
+
+uint32_t tuh_midi_write_flush(uint8_t idx) {
+  TU_VERIFY(idx < CFG_TUH_MIDI_CUSTOM);
+  midih_interface_t *p_midi = &_midi_host[idx];
+  return tu_edpt_stream_write_xfer(&p_midi->ep_stream.tx);
+}
+
+//--------------------------------------------------------------------+
+// Packet API
+//--------------------------------------------------------------------+
+uint32_t tuh_midi_packet_read_n(uint8_t idx, uint8_t* buffer, uint32_t bufsize) {
+  TU_VERIFY(idx < CFG_TUH_MIDI_CUSTOM && buffer && bufsize > 0, 0);
+  midih_interface_t *p_midi = &_midi_host[idx];
+
+  uint32_t count4 = tu_min32(bufsize, tu_edpt_stream_read_available(&p_midi->ep_stream.rx));
+  count4 = tu_align4(count4); // round down to multiple of 4
+  TU_VERIFY(count4 > 0, 0);
+  return tu_edpt_stream_read(&p_midi->ep_stream.rx, buffer, count4);
+}
+
+uint32_t tuh_midi_packet_write_n(uint8_t idx, const uint8_t* buffer, uint32_t bufsize) {
+  TU_VERIFY(idx < CFG_TUH_MIDI_CUSTOM && buffer && bufsize > 0, 0);
+  midih_interface_t *p_midi = &_midi_host[idx];
+
+  const uint32_t bufsize4 = tu_align4(bufsize);
+  TU_VERIFY(bufsize4 > 0, 0);
+  return tu_edpt_stream_write(&p_midi->ep_stream.tx, buffer, bufsize4);
 }
 
 //--------------------------------------------------------------------+
 // Stream API
 //--------------------------------------------------------------------+
-static uint32_t write_flush(uint8_t dev_addr, midih_interface_t *midi) {
-    // No data to send
-    if (!tu_fifo_count(&midi->tx_ff)) return 0;
+#if CFG_TUH_MIDI_CUSTOM_STREAM_API
+uint32_t tuh_midi_stream_write(uint8_t idx, uint8_t cable_num, uint8_t const *buffer, uint32_t bufsize) {
+  TU_VERIFY(idx < CFG_TUH_MIDI_CUSTOM && buffer && bufsize > 0);
+  midih_interface_t *p_midi = &_midi_host[idx];
+  TU_VERIFY(cable_num < p_midi->tx_cable_count);
+  midi_driver_stream_t *stream = &p_midi->stream_write;
 
-    // skip if previous transfer not complete
-    TU_VERIFY(usbh_edpt_claim(dev_addr, midi->ep_out));
+  uint32_t byte_count = 0;
+  while ((byte_count < bufsize) && (tu_edpt_stream_write_available(&p_midi->ep_stream.tx) >= 4)) {
+    const uint8_t data = buffer[byte_count];
+    byte_count++;
+    if (data >= MIDI_STATUS_SYSREAL_TIMING_CLOCK) {
+      // real-time messages need to be sent right away
+      midi_driver_stream_t streamrt;
+      streamrt.buffer[0] = (uint8_t)((cable_num << 4) | MIDI_CIN_SYSEX_END_1BYTE);
+      streamrt.buffer[1] = data;
+      streamrt.index = 2;
+      streamrt.total = 2;
+      const uint32_t count = tu_edpt_stream_write(&p_midi->ep_stream.tx, streamrt.buffer, 4);
+      TU_ASSERT(count == 4, byte_count); // Check FIFO overflown, since we already check fifo remaining. It is probably race condition
+    } else if (stream->index == 0) {
+      //------------- New event packet -------------//
 
-    uint16_t count = tu_fifo_read_n(&midi->tx_ff, midi->epout_buf, midi->ep_out_max);
+      uint8_t const msg = data >> 4;
 
-    if (count) {
-        TU_ASSERT(usbh_edpt_xfer(dev_addr, midi->ep_out, midi->epout_buf, count), 0);
-        return count;
-    } else {
-        // Release endpoint since we don't make any transfer
-        usbh_edpt_release(dev_addr, midi->ep_out);
-        return 0;
-    }
-}
+      stream->index = 2;
+      stream->buffer[1] = data;
 
-bool tuh_midi_read_poll(uint8_t dev_addr) {
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    bool result = false;
-
-    bool in_edpt_not_busy = !usbh_edpt_busy(dev_addr, p_midi_host->ep_in);
-    if (in_edpt_not_busy) {
-        TU_LOG2("Requesting poll IN endpoint %d\r\n", p_midi_host->ep_in);
-        TU_ASSERT(usbh_edpt_xfer(p_midi_host->dev_addr, p_midi_host->ep_in, p_midi_host->epin_buf, p_midi_host->ep_in_max), 0);
-        result = true;
-    } else {
-        // Maybe the IN endpoint is only busy because the RP2040 host hardware
-        // is retrying a NAK'd IN transfer forever. Try aborting the NAK'd
-        // transfer to allow other transfers to happen on the one shared
-        // epx endpoint.
-        // TODO for RP2040 USB shared endpoint: usbh_edpt_clear_in_on_nak(p_midi_host->dev_addr, p_midi_host->ep_in);
-    }
-    return result;
-}
-
-uint32_t tuh_midi_stream_write(uint8_t dev_addr, uint8_t cable_num, uint8_t const *buffer, uint32_t bufsize) {
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    TU_VERIFY(cable_num < p_midi_host->num_cables_tx);
-    midi_stream_t *stream = &p_midi_host->stream_write;
-
-    uint32_t i = 0;
-    while ((i < bufsize) && (tu_fifo_remaining(&p_midi_host->tx_ff) >= 4)) {
-        uint8_t const data = buffer[i];
-        i++;
-        if (data >= MIDI_STATUS_SYSREAL_TIMING_CLOCK) {
-            // real-time messages need to be sent right away
-            midi_stream_t streamrt;
-            streamrt.buffer[0] = MIDI_CIN_SYSEX_END_1BYTE;
-            streamrt.buffer[1] = data;
-            streamrt.index = 2;
-            streamrt.total = 2;
-            uint16_t const count = tu_fifo_write_n(&p_midi_host->tx_ff, streamrt.buffer, 4);
-            // FIFO overflown, since we already check fifo remaining. It is probably race condition
-            TU_ASSERT(count == 4, i);
-        } else if (stream->index == 0) {
-            //------------- New event packet -------------//
-
-            uint8_t const msg = data >> 4;
-
-            stream->index = 2;
-            stream->buffer[1] = data;
-
-            // Check to see if we're still in a SysEx transmit.
-            if (stream->buffer[0] == MIDI_CIN_SYSEX_START) {
-                if (data == MIDI_STATUS_SYSEX_END) {
-                    stream->buffer[0] = MIDI_CIN_SYSEX_END_1BYTE;
-                    stream->total = 2;
-                } else {
-                    stream->total = 4;
-                }
-            } else if ((msg >= 0x8 && msg <= 0xB) || msg == 0xE) {
-                // Channel Voice Messages
-                stream->buffer[0] = (uint8_t)((cable_num << 4) | msg);
-                stream->total = 4;
-            } else if (msg == 0xC || msg == 0xD) {
-                // Channel Voice Messages, two-byte variants (Program Change and Channel Pressure)
-                stream->buffer[0] = (uint8_t)((cable_num << 4) | msg);
-                stream->total = 3;
-            } else if (msg == 0xf) {
-                // System message
-                if (data == MIDI_STATUS_SYSEX_START) {
-                    stream->buffer[0] = MIDI_CIN_SYSEX_START;
-                    stream->total = 4;
-                } else if (data == MIDI_STATUS_SYSCOM_TIME_CODE_QUARTER_FRAME || data == MIDI_STATUS_SYSCOM_SONG_SELECT) {
-                    stream->buffer[0] = MIDI_CIN_SYSCOM_2BYTE;
-                    stream->total = 3;
-                } else if (data == MIDI_STATUS_SYSCOM_SONG_POSITION_POINTER) {
-                    stream->buffer[0] = MIDI_CIN_SYSCOM_3BYTE;
-                    stream->total = 4;
-                } else {
-                    stream->buffer[0] = MIDI_CIN_SYSEX_END_1BYTE;
-                    stream->total = 2;
-                }
-            } else {
-                // Pack individual bytes if we don't support packing them into words.
-                stream->buffer[0] = (uint8_t)(cable_num << 4 | 0xf);
-                stream->buffer[2] = 0;
-                stream->buffer[3] = 0;
-                stream->index = 2;
-                stream->total = 2;
-            }
+      // Check to see if we're still in a SysEx transmit.
+      if ((stream->buffer[0] & 0xF) == MIDI_CIN_SYSEX_START) {
+        if (data == MIDI_STATUS_SYSEX_END) {
+          stream->buffer[0] = (uint8_t)((cable_num << 4) | MIDI_CIN_SYSEX_END_1BYTE);
+          stream->total = 2;
         } else {
-            //------------- On-going (buffering) packet -------------//
+          stream->total = 4;
+        }
+      } else if ((msg >= 0x8 && msg <= 0xB) || msg == 0xE) {
+        // Channel Voice Messages
+        stream->buffer[0] = (uint8_t) ((cable_num << 4) | msg);
+        stream->total = 4;
+      } else if (msg == 0xC || msg == 0xD) {
+        // Channel Voice Messages, two-byte variants (Program Change and Channel Pressure)
+        stream->buffer[0] = (uint8_t) ((cable_num << 4) | msg);
+        stream->total = 3;
+      } else if (msg == 0xf) {
+        // System message
+        if (data == MIDI_STATUS_SYSEX_START) {
+          stream->buffer[0] = MIDI_CIN_SYSEX_START;
+          stream->total = 4;
+        } else if (data == MIDI_STATUS_SYSCOM_TIME_CODE_QUARTER_FRAME || data == MIDI_STATUS_SYSCOM_SONG_SELECT) {
+          stream->buffer[0] = MIDI_CIN_SYSCOM_2BYTE;
+          stream->total = 3;
+        } else if (data == MIDI_STATUS_SYSCOM_SONG_POSITION_POINTER) {
+          stream->buffer[0] = MIDI_CIN_SYSCOM_3BYTE;
+          stream->total = 4;
+        } else {
+          stream->buffer[0] = MIDI_CIN_SYSEX_END_1BYTE;
+          stream->total = 2;
+        }
+        stream->buffer[0] |= (uint8_t)(cable_num << 4);
+      } else {
+        // Pack individual bytes if we don't support packing them into words.
+        stream->buffer[0] = (uint8_t) (cable_num << 4 | 0xf);
+        stream->buffer[2] = 0;
+        stream->buffer[3] = 0;
+        stream->index = 2;
+        stream->total = 2;
+      }
+    } else {
+      //------------- On-going (buffering) packet -------------//
+      TU_ASSERT(stream->index < 4, byte_count);
+      stream->buffer[stream->index] = data;
+      stream->index++;
+      // See if this byte ends a SysEx.
+      if ((stream->buffer[0] & 0xF) == MIDI_CIN_SYSEX_START && data == MIDI_STATUS_SYSEX_END) {
+        stream->buffer[0] = (uint8_t)((cable_num << 4) | (MIDI_CIN_SYSEX_START + (stream->index - 1)));
+        stream->total = stream->index;
+      }
+    }
 
-            TU_ASSERT(stream->index < 4, i);
-            stream->buffer[stream->index] = data;
-            stream->index++;
-            // See if this byte ends a SysEx.
-            if (stream->buffer[0] == MIDI_CIN_SYSEX_START && data == MIDI_STATUS_SYSEX_END) {
-                stream->buffer[0] = MIDI_CIN_SYSEX_START + (stream->index - 1);
-                stream->total = stream->index;
+    // Send out packet
+    if (stream->index >= 2 && stream->index == stream->total) {
+      // zeroes unused bytes
+      for (uint8_t i = stream->total; i < 4; i++) {
+        stream->buffer[i] = 0;
+      }
+      TU_LOG3_MEM(stream->buffer, 4, 2);
+
+      const uint32_t count = tu_edpt_stream_write(&p_midi->ep_stream.tx, stream->buffer, 4);
+
+      // complete current event packet, reset stream
+      stream->index = 0;
+      stream->total = 0;
+
+      // FIFO overflown, since we already check fifo remaining. It is probably race condition
+      TU_ASSERT(count == 4, byte_count);
+    }
+  }
+  return byte_count;
+}
+
+uint32_t tuh_midi_stream_read(uint8_t idx, uint8_t *p_cable_num, uint8_t *p_buffer, uint16_t bufsize) {
+  TU_VERIFY(idx < CFG_TUH_MIDI_CUSTOM && p_cable_num && p_buffer && bufsize > 0);
+  midih_interface_t *p_midi = &_midi_host[idx];
+  uint32_t bytes_buffered = 0;
+  uint8_t one_byte;
+  if (!tu_edpt_stream_peek(&p_midi->ep_stream.rx, &one_byte)) {
+    return 0;
+  }
+  *p_cable_num = (one_byte >> 4) & 0xf;
+  uint32_t nread = tu_edpt_stream_read(&p_midi->ep_stream.rx, p_midi->stream_read.buffer, 4);
+  static uint16_t cable_sysex_in_progress;// bit i is set if received MIDI_STATUS_SYSEX_START but not MIDI_STATUS_SYSEX_END
+  while (nread == 4 && bytes_buffered < bufsize) {
+    *p_cable_num = (p_midi->stream_read.buffer[0] >> 4) & 0x0f;
+    uint8_t bytes_to_add_to_stream = 0;
+    if (*p_cable_num < p_midi->rx_cable_count) {
+      // ignore the CIN field; too many devices out there encode this wrong
+      uint8_t status = p_midi->stream_read.buffer[1];
+      uint16_t cable_mask = (uint16_t) (1 << *p_cable_num);
+      if (status <= MIDI_MAX_DATA_VAL || status == MIDI_STATUS_SYSEX_START) {
+        if (status == MIDI_STATUS_SYSEX_START) {
+          cable_sysex_in_progress |= cable_mask;
+        }
+        // only add the packet if a sysex message is in progress
+        if (cable_sysex_in_progress & cable_mask) {
+          ++bytes_to_add_to_stream;
+          for (uint8_t i = 2; i < 4; i++) {
+            if (p_midi->stream_read.buffer[i] <= MIDI_MAX_DATA_VAL) {
+              ++bytes_to_add_to_stream;
+            } else if (p_midi->stream_read.buffer[i] == MIDI_STATUS_SYSEX_END) {
+              ++bytes_to_add_to_stream;
+              cable_sysex_in_progress &= (uint16_t) ~cable_mask;
+              i = 4;// force the loop to exit; I hate break statements in loops
             }
+          }
         }
-
-        // Send out packet
-        if (stream->index >= 2 && stream->index == stream->total) {
-            // zeroes unused bytes
-            for (uint8_t idx = stream->total; idx < 4; idx++) stream->buffer[idx] = 0;
-            TU_LOG3_MEM(stream->buffer, 4, 2);
-
-            uint16_t const count = tu_fifo_write_n(&p_midi_host->tx_ff, stream->buffer, 4);
-
-            // complete current event packet, reset stream
-            stream->index = 0;
-            stream->total = 0;
-
-            // FIFO overflown, since we already check fifo remaining. It is probably race condition
-            TU_ASSERT(count == 4, i);
+        else {
+          // bad packet discard
+          nread = tu_edpt_stream_read(&p_midi->ep_stream.rx, p_midi->stream_read.buffer, 4);
+          continue;
         }
-    }
-    return i;
-}
-
-bool tuh_midi_packet_write(uint8_t dev_addr, uint8_t const packet[4]) {
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-
-    if (tu_fifo_remaining(&p_midi_host->tx_ff) < 4) {
-        return false;
-    }
-
-    tu_fifo_write_n(&p_midi_host->tx_ff, packet, 4);
-
-    return true;
-}
-
-uint32_t tuh_midi_stream_flush(uint8_t dev_addr) {
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-
-    uint32_t bytes_flushed = 0;
-    if (!usbh_edpt_busy(p_midi_host->dev_addr, p_midi_host->ep_out)) {
-        bytes_flushed = write_flush(dev_addr, p_midi_host);
-    }
-    return bytes_flushed;
-}
-//--------------------------------------------------------------------+
-// Helper
-//--------------------------------------------------------------------+
-uint8_t tuh_midih_get_num_tx_cables(uint8_t dev_addr) {
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    TU_VERIFY(p_midi_host->ep_out != 0);  // returns 0 if fails
-    return p_midi_host->num_cables_tx;
-}
-
-uint8_t tuh_midih_get_num_rx_cables(uint8_t dev_addr) {
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    TU_VERIFY(p_midi_host->ep_in != 0);  // returns 0 if fails
-    return p_midi_host->num_cables_rx;
-}
-
-bool tuh_midi_packet_read(uint8_t dev_addr, uint8_t packet[4]) {
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    TU_VERIFY(tu_fifo_count(&p_midi_host->rx_ff) >= 4);
-    return tu_fifo_read_n(&p_midi_host->rx_ff, packet, 4) == 4;
-}
-
-uint32_t tuh_midi_stream_read(uint8_t dev_addr, uint8_t *p_cable_num, uint8_t *p_buffer, uint16_t bufsize) {
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    uint32_t bytes_buffered = 0;
-    TU_ASSERT(p_cable_num);
-    TU_ASSERT(p_buffer);
-    TU_ASSERT(bufsize);
-    uint8_t one_byte;
-    if (!tu_fifo_peek(&p_midi_host->rx_ff, &one_byte)) {
-        return 0;
-    }
-    *p_cable_num = (one_byte >> 4) & 0xf;
-    uint32_t nread = tu_fifo_read_n(&p_midi_host->rx_ff, p_midi_host->stream_read.buffer, 4);
-    static uint16_t cable_sysex_in_progress;  // bit i is set if received MIDI_STATUS_SYSEX_START but not MIDI_STATUS_SYSEX_END
-    while (nread == 4 && bytes_buffered < bufsize) {
-        *p_cable_num = (p_midi_host->stream_read.buffer[0] >> 4) & 0x0f;
-        uint8_t bytes_to_add_to_stream = 0;
-        if (*p_cable_num < p_midi_host->num_cables_rx) {
-            // ignore the CIN field; too many devices out there encode this wrong
-            uint8_t status = p_midi_host->stream_read.buffer[1];
-            uint16_t cable_mask = (uint16_t)(1 << *p_cable_num);
-            if (status <= MIDI_MAX_DATA_VAL || status == MIDI_STATUS_SYSEX_START) {
-                if (status == MIDI_STATUS_SYSEX_START) {
-                    cable_sysex_in_progress |= cable_mask;
-                }
-                // only add the packet if a sysex message is in progress
-                if (cable_sysex_in_progress & cable_mask) {
-                    ++bytes_to_add_to_stream;
-                    uint8_t idx;
-                    for (idx = 2; idx < 4; idx++) {
-                        if (p_midi_host->stream_read.buffer[idx] <= MIDI_MAX_DATA_VAL) {
-                            ++bytes_to_add_to_stream;
-                        } else if (p_midi_host->stream_read.buffer[idx] == MIDI_STATUS_SYSEX_END) {
-                            ++bytes_to_add_to_stream;
-                            cable_sysex_in_progress &= (uint16_t)~cable_mask;
-                            idx = 4;  // force the loop to exit; I hate break statements in loops
-                        }
-                    }
-                }
-            } else if (status < MIDI_STATUS_SYSEX_START) {
-                // then it is a channel message either three bytes or two
-                uint8_t fake_cin = (status & 0xf0) >> 4;
-                switch (fake_cin) {
-                    case MIDI_CIN_NOTE_OFF:
-                    case MIDI_CIN_NOTE_ON:
-                    case MIDI_CIN_POLY_KEYPRESS:
-                    case MIDI_CIN_CONTROL_CHANGE:
-                    case MIDI_CIN_PITCH_BEND_CHANGE:
-                        bytes_to_add_to_stream = 3;
-                        break;
-                    case MIDI_CIN_PROGRAM_CHANGE:
-                    case MIDI_CIN_CHANNEL_PRESSURE:
-                        bytes_to_add_to_stream = 2;
-                        break;
-                    default:
-                        break;  // Should not get this
-                }
-                cable_sysex_in_progress &= (uint16_t)~cable_mask;
-            } else if (status < MIDI_STATUS_SYSREAL_TIMING_CLOCK) {
-                switch (status) {
-                    case MIDI_STATUS_SYSCOM_TIME_CODE_QUARTER_FRAME:
-                    case MIDI_STATUS_SYSCOM_SONG_SELECT:
-                        bytes_to_add_to_stream = 2;
-                        break;
-                    case MIDI_STATUS_SYSCOM_SONG_POSITION_POINTER:
-                        bytes_to_add_to_stream = 3;
-                        break;
-                    case MIDI_STATUS_SYSCOM_TUNE_REQUEST:
-                    case MIDI_STATUS_SYSEX_END:
-                        bytes_to_add_to_stream = 1;
-                        break;
-                    default:
-                        break;
-                        cable_sysex_in_progress &= (uint16_t)~cable_mask;
-                }
-            } else {
-                // Real-time message: can be inserted into a sysex message,
-                // so do don't clear cable_sysex_in_progress bit
-                bytes_to_add_to_stream = 1;
-            }
+      } else if (status < MIDI_STATUS_SYSEX_START) {
+        // then it is a channel message either three bytes or two
+        uint8_t fake_cin = (status & 0xf0) >> 4;
+        switch (fake_cin) {
+          case MIDI_CIN_NOTE_OFF:
+          case MIDI_CIN_NOTE_ON:
+          case MIDI_CIN_POLY_KEYPRESS:
+          case MIDI_CIN_CONTROL_CHANGE:
+          case MIDI_CIN_PITCH_BEND_CHANGE:
+            bytes_to_add_to_stream = 3;
+            break;
+          case MIDI_CIN_PROGRAM_CHANGE:
+          case MIDI_CIN_CHANNEL_PRESSURE:
+            bytes_to_add_to_stream = 2;
+            break;
+          default:
+            break;// Should not get this
         }
-        uint8_t idx;
-        for (idx = 1; idx <= bytes_to_add_to_stream; idx++) {
-            *p_buffer++ = p_midi_host->stream_read.buffer[idx];
+        cable_sysex_in_progress &= (uint16_t) ~cable_mask;
+      } else if (status < MIDI_STATUS_SYSREAL_TIMING_CLOCK) {
+        switch (status) {
+          case MIDI_STATUS_SYSCOM_TIME_CODE_QUARTER_FRAME:
+          case MIDI_STATUS_SYSCOM_SONG_SELECT:
+            bytes_to_add_to_stream = 2;
+            break;
+          case MIDI_STATUS_SYSCOM_SONG_POSITION_POINTER:
+            bytes_to_add_to_stream = 3;
+            break;
+          case MIDI_STATUS_SYSCOM_TUNE_REQUEST:
+          case MIDI_STATUS_SYSEX_END:
+            bytes_to_add_to_stream = 1;
+            break;
+          default:
+            break;
         }
-        bytes_buffered += bytes_to_add_to_stream;
-        nread = 0;
-        if (tu_fifo_peek(&p_midi_host->rx_ff, &one_byte)) {
-            uint8_t new_cable = (one_byte >> 4) & 0xf;
-            if (new_cable == *p_cable_num) {
-                // still on the same cable. Continue reading the stream
-                nread = tu_fifo_read_n(&p_midi_host->rx_ff, p_midi_host->stream_read.buffer, 4);
-            }
-        }
+        cable_sysex_in_progress &= (uint16_t) ~cable_mask;
+      } else {
+        // Real-time message: can be inserted into a sysex message,
+        // so do don't clear cable_sysex_in_progress bit
+        bytes_to_add_to_stream = 1;
+      }
+    }
+    else {
+      // bad packet discard
+      nread = tu_edpt_stream_read(&p_midi->ep_stream.rx, p_midi->stream_read.buffer, 4);
+      continue;
     }
 
-    return bytes_buffered;
-}
+    for (uint8_t i = 1; i <= bytes_to_add_to_stream; i++) {
+      *p_buffer++ = p_midi->stream_read.buffer[i];
+    }
+    bytes_buffered += bytes_to_add_to_stream;
+    nread = 0;
+    if (tu_edpt_stream_peek(&p_midi->ep_stream.rx, &one_byte)) {
+      uint8_t new_cable = (one_byte >> 4) & 0xf;
+      if (new_cable == *p_cable_num) {
+        // still on the same cable. Continue reading the stream
+        nread = tu_edpt_stream_read(&p_midi->ep_stream.rx, p_midi->stream_read.buffer, 4);
+      }
+    }
+  }
 
-uint8_t tuh_midi_get_num_rx_cables(uint8_t dev_addr) {
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    uint8_t num_cables = 0;
-    if (p_midi_host) {
-        num_cables = p_midi_host->num_cables_rx;
-    }
-    return num_cables;
-}
-
-uint8_t tuh_midi_get_num_tx_cables(uint8_t dev_addr) {
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    uint8_t num_cables = 0;
-    if (p_midi_host) {
-        num_cables = p_midi_host->num_cables_tx;
-    }
-    return num_cables;
-}
-
-#if CFG_MIDI_HOST_DEVSTRINGS
-static uint8_t find_string_index(midih_interface_t *ptr, uint8_t jack_id) {
-    uint8_t index = 0;
-    uint8_t assoc;
-    for (assoc = 0; index == 0 && assoc < ptr->next_in_jack; assoc++) {
-        if (jack_id == ptr->in_jack_info[assoc].jack_id) {
-            index = ptr->in_jack_info[assoc].string_index;
-        }
-    }
-    for (assoc = 0; index == 0 && assoc < ptr->next_out_jack; assoc++) {
-        if (jack_id == ptr->out_jack_info[assoc].jack_id) {
-            index = ptr->out_jack_info[assoc].string_index;
-        }
-    }
-    return index;
-}
-uint8_t tuh_midi_get_rx_cable_istrings(uint8_t dev_addr, uint8_t *istrings, uint8_t max_istrings) {
-    uint8_t nstrings = 0;
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    nstrings = p_midi_host->num_cables_rx;
-    if (nstrings > max_istrings) {
-        nstrings = max_istrings;
-    }
-    uint8_t jack;
-    for (jack = 0; jack < nstrings; jack++) {
-        uint8_t jack_id = p_midi_host->ep_in_associated_jacks[jack];
-        istrings[jack] = find_string_index(p_midi_host, jack_id);
-    }
-    return nstrings;
-}
-
-uint8_t tuh_midi_get_tx_cable_istrings(uint8_t dev_addr, uint8_t *istrings, uint8_t max_istrings) {
-    uint8_t nstrings = 0;
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    nstrings = p_midi_host->num_cables_tx;
-    if (nstrings > max_istrings) {
-        nstrings = max_istrings;
-    }
-    uint8_t jack;
-    for (jack = 0; jack < nstrings; jack++) {
-        uint8_t jack_id = p_midi_host->ep_out_associated_jacks[jack];
-        istrings[jack] = find_string_index(p_midi_host, jack_id);
-    }
-    return nstrings;
-}
-
-uint8_t tuh_midi_get_all_istrings(uint8_t dev_addr, const uint8_t **istrings) {
-    midih_interface_t *p_midi_host = get_midi_host(dev_addr);
-    TU_VERIFY(p_midi_host != NULL);
-    uint8_t nstrings = p_midi_host->num_string_indices;
-    if (nstrings)
-        *istrings = p_midi_host->all_string_indices;
-    return nstrings;
+  return bytes_buffered;
 }
 #endif
-#endif
 
+#endif

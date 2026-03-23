@@ -16,13 +16,12 @@
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF
 //--------------------------------------------------------------------+
-typedef struct
-{
+typedef struct {
     uint8_t itf_num;
     uint8_t ep_in;
-    uint8_t ep_out;        // optional Out endpoint
-    uint8_t boot_protocol; // Boot mouse or keyboard
-    bool boot_mode;        // default = false (Report)
+    uint8_t ep_out;         // optional Out endpoint
+    uint8_t boot_protocol;  // Boot mouse or keyboard
+    bool boot_mode;         // default = false (Report)
 
     CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
     CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
@@ -31,12 +30,9 @@ typedef struct
 CFG_TUSB_MEM_SECTION static xinputd_interface_t _xinputd_itf[CFG_TUD_XINPUT];
 static volatile bool sending = false;
 /*------------- Helpers -------------*/
-static inline uint8_t get_index_by_itfnum(uint8_t itf_num)
-{
-    for (uint8_t i = 0; i < CFG_TUD_XINPUT; i++)
-    {
-        if (itf_num == _xinputd_itf[i].itf_num)
-            return i;
+static inline uint8_t get_index_by_itfnum(uint8_t itf_num) {
+    for (uint8_t i = 0; i < CFG_TUD_XINPUT; i++) {
+        if (itf_num == _xinputd_itf[i].itf_num) return i;
     }
 
     return 0xFF;
@@ -45,19 +41,16 @@ static inline uint8_t get_index_by_itfnum(uint8_t itf_num)
 //--------------------------------------------------------------------+
 // APPLICATION API
 //--------------------------------------------------------------------+
-bool tud_xinput_n_ready(uint8_t itf)
-{
+bool tud_xinput_n_ready(uint8_t itf) {
     uint8_t const ep_in = _xinputd_itf[itf].ep_in;
     return tud_ready() && (ep_in != 0) && !usbd_edpt_busy(TUD_OPT_RHPORT, ep_in);
 }
 
-bool tud_ready_for_packet(void)
-{
+bool tud_ready_for_packet(void) {
     return !sending;
 }
 
-bool tud_xusb_n_report(uint8_t itf, void const *report, uint8_t len)
-{
+bool tud_xusb_n_report(uint8_t itf, void const *report, uint8_t len) {
     uint8_t const rhport = 0;
     xinputd_interface_t *p_xinput = &_xinputd_itf[itf];
 
@@ -70,8 +63,7 @@ bool tud_xusb_n_report(uint8_t itf, void const *report, uint8_t len)
 }
 
 bool tud_xinput_n_report(uint8_t itf, uint8_t report_id, void const *report,
-                         uint8_t len)
-{
+                         uint8_t len) {
     uint8_t const rhport = 0;
     xinputd_interface_t *p_xinput = &_xinputd_itf[itf];
 
@@ -79,16 +71,13 @@ bool tud_xinput_n_report(uint8_t itf, uint8_t report_id, void const *report,
     TU_VERIFY(usbd_edpt_claim(rhport, p_xinput->ep_in));
 
     // prepare data
-    if (report_id)
-    {
+    if (report_id) {
         len = tu_min8(len, CFG_TUD_XINPUT_TX_BUFSIZE - 1);
 
         p_xinput->epin_buf[0] = report_id;
         memcpy(p_xinput->epin_buf + 1, report, len);
         len++;
-    }
-    else
-    {
+    } else {
         // If report id = 0, skip ID field
         len = tu_min8(len, CFG_TUD_XINPUT_TX_BUFSIZE);
         memcpy(p_xinput->epin_buf, report, len);
@@ -103,24 +92,20 @@ bool tud_xinput_n_boot_mode(uint8_t itf) { return _xinputd_itf[itf].boot_mode; }
 //--------------------------------------------------------------------+
 // USBD-CLASS API
 //--------------------------------------------------------------------+
-void xinputd_init(void)
-{
+void xinputd_init(void) {
     xinputd_reset(TUD_OPT_RHPORT);
 }
 
-void xinputd_reset(uint8_t rhport)
-{
+void xinputd_reset(uint8_t rhport) {
     (void)rhport;
     tu_memclr(_xinputd_itf, sizeof(_xinputd_itf));
     sending = false;
 }
 
 uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
-                      uint16_t max_len)
-{
+                      uint16_t max_len) {
     uint16_t drv_len;
-    if (TUSB_CLASS_VENDOR_SPECIFIC == itf_desc->bInterfaceClass)
-    {
+    if (TUSB_CLASS_VENDOR_SPECIFIC == itf_desc->bInterfaceClass) {
         drv_len = sizeof(tusb_desc_interface_t) +
                   (itf_desc->bNumEndpoints * sizeof(tusb_desc_endpoint_t));
 
@@ -128,19 +113,16 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
 
         // Find available interface
         xinputd_interface_t *p_xinput = NULL;
-        for (uint8_t i = 0; i < CFG_TUD_XINPUT; i++)
-        {
-            if (_xinputd_itf[i].ep_in == 0 && _xinputd_itf[i].ep_out == 0)
-            {
+        for (uint8_t i = 0; i < CFG_TUD_XINPUT; i++) {
+            if (_xinputd_itf[i].ep_in == 0 && _xinputd_itf[i].ep_out == 0) {
                 p_xinput = &_xinputd_itf[i];
                 break;
             }
         }
         TU_VERIFY(p_xinput, 0);
         uint8_t const *p_desc = (uint8_t const *)itf_desc;
-
-        if (itf_desc->bInterfaceSubClass == 0x01 && itf_desc->bInterfaceProtocol == 0xFF)
-        {
+        
+        if (itf_desc->bInterfaceSubClass == 0x01 && itf_desc->bInterfaceProtocol == 0xFF) {
             p_desc = tu_desc_next(p_desc);
             printf("Opened: %d\r\n", itf_desc->bNumEndpoints);
             TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, itf_desc->bNumEndpoints,
@@ -148,21 +130,17 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
                                           &p_xinput->ep_in),
                       0);
             printf("Opened: %02x %02x\r\n", p_xinput->ep_out, p_xinput->ep_in);
-            if (p_xinput->ep_out)
-            {
-                if (!usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf, sizeof(p_xinput->epout_buf), false))
-                {
+            if (p_xinput->ep_out) {
+                if (!usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf, sizeof(p_xinput->epout_buf), false)) {
                     TU_LOG_FAILED();
                     TU_BREAKPOINT();
                 }
             }
             return drv_len;
-        }
-        else if (itf_desc->bInterfaceSubClass == 0x5D &&
-                 (itf_desc->bInterfaceProtocol == 0x01 ||
-                  itf_desc->bInterfaceProtocol == 0x03 ||
-                  itf_desc->bInterfaceProtocol == 0x02))
-        {
+        } else if (itf_desc->bInterfaceSubClass == 0x5D &&
+                   (itf_desc->bInterfaceProtocol == 0x01 ||
+                    itf_desc->bInterfaceProtocol == 0x03 ||
+                    itf_desc->bInterfaceProtocol == 0x02)) {
             // Xinput reserved endpoint
             //-------------- Xinput Descriptor --------------//
             p_desc = tu_desc_next(p_desc);
@@ -177,19 +155,14 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
                       0);
 
             p_xinput->itf_num = itf_desc->bInterfaceNumber;
-            if (p_xinput->ep_out)
-            {
-                if (!usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf, sizeof(p_xinput->epout_buf), false))
-                {
+            if (p_xinput->ep_out) {
+                if (!usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf, sizeof(p_xinput->epout_buf), false)) {
                     TU_LOG_FAILED();
                     TU_BREAKPOINT();
                 }
             }
-            return drv_len;
-        }
-        else if (itf_desc->bInterfaceSubClass == 0xfD &&
-                 itf_desc->bInterfaceProtocol == 0x13)
-        {
+        } else if (itf_desc->bInterfaceSubClass == 0xfD &&
+                   itf_desc->bInterfaceProtocol == 0x13) {
             // Xinput reserved endpoint
             //-------------- Xinput Descriptor --------------//
             p_desc = tu_desc_next(p_desc);
@@ -198,30 +171,22 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
             TU_ASSERT(XINPUT_SECURITY_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
             drv_len += x_desc->bLength;
             p_desc = tu_desc_next(p_desc);
-            return drv_len;
-        }
-        else if (itf_desc->bInterfaceSubClass == 0x47 &&
-                 itf_desc->bInterfaceProtocol == 0xD0)
-        {
+        } else if (itf_desc->bInterfaceSubClass == 0x47 &&
+                   itf_desc->bInterfaceProtocol == 0xD0) {
             p_desc = tu_desc_next(p_desc);
             TU_ASSERT(usbd_open_edpt_pair(rhport, p_desc, itf_desc->bNumEndpoints, TUSB_XFER_INTERRUPT, &p_xinput->ep_out, &p_xinput->ep_in), 0);
 
             p_xinput->itf_num = itf_desc->bInterfaceNumber;
 
             // Prepare for output endpoint
-            if (p_xinput->ep_out)
-            {
-                if (!usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf, sizeof(p_xinput->epout_buf), false))
-                {
+            if (p_xinput->ep_out) {
+                if (!usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf, sizeof(p_xinput->epout_buf), false)) {
                     TU_LOG_FAILED();
                     TU_BREAKPOINT();
                 }
             }
-            return drv_len;
         }
-    }
-    else if (0x58 == itf_desc->bInterfaceClass)
-    {
+    } else if (0x58 == itf_desc->bInterfaceClass) {
         // len = interface + n*endpoints
         drv_len = sizeof(tusb_desc_interface_t) + itf_desc->bNumEndpoints * sizeof(tusb_desc_endpoint_t);
         TU_ASSERT(max_len >= drv_len, 0);
@@ -229,10 +194,8 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
         // Find available interface
         xinputd_interface_t *p_hid = NULL;
         uint8_t hid_id;
-        for (hid_id = 0; hid_id < CFG_TUD_XINPUT; hid_id++)
-        {
-            if (_xinputd_itf[hid_id].ep_in == 0)
-            {
+        for (hid_id = 0; hid_id < CFG_TUD_XINPUT; hid_id++) {
+            if (_xinputd_itf[hid_id].ep_in == 0) {
                 p_hid = &_xinputd_itf[hid_id];
                 break;
             }
@@ -248,18 +211,13 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
         p_hid->itf_num = itf_desc->bInterfaceNumber;
 
         // Prepare for output endpoint
-        if (p_hid->ep_out)
-        {
-            if (!usbd_edpt_xfer(rhport, p_hid->ep_out, p_hid->epout_buf, sizeof(p_hid->epout_buf), false))
-            {
+        if (p_hid->ep_out) {
+            if (!usbd_edpt_xfer(rhport, p_hid->ep_out, p_hid->epout_buf, sizeof(p_hid->epout_buf), false)) {
                 TU_LOG_FAILED();
                 TU_BREAKPOINT();
             }
         }
-        return drv_len;
-    }
-    else
-    {
+    } else {
         TU_VERIFY(TUSB_CLASS_HID == itf_desc->bInterfaceClass, 0);
 
         // len = interface + hid + n*endpoints
@@ -269,10 +227,8 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
         // Find available interface
         xinputd_interface_t *p_hid = NULL;
         uint8_t hid_id;
-        for (hid_id = 0; hid_id < CFG_TUD_XINPUT; hid_id++)
-        {
-            if (_xinputd_itf[hid_id].ep_in == 0)
-            {
+        for (hid_id = 0; hid_id < CFG_TUD_XINPUT; hid_id++) {
+            if (_xinputd_itf[hid_id].ep_in == 0) {
                 p_hid = &_xinputd_itf[hid_id];
                 break;
             }
@@ -292,70 +248,52 @@ uint16_t xinputd_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
         p_hid->itf_num = itf_desc->bInterfaceNumber;
 
         // Prepare for output endpoint
-        if (p_hid->ep_out)
-        {
-            if (!usbd_edpt_xfer(rhport, p_hid->ep_out, p_hid->epout_buf, sizeof(p_hid->epout_buf), false))
-            {
+        if (p_hid->ep_out) {
+            if (!usbd_edpt_xfer(rhport, p_hid->ep_out, p_hid->epout_buf, sizeof(p_hid->epout_buf), false)) {
                 TU_LOG_FAILED();
                 TU_BREAKPOINT();
             }
         }
-        return drv_len;
     }
     //------------- Endpoint Descriptor -------------//
 
     // Config endpoint
 
-    return 0;
+    return drv_len;
 }
 
 bool xinputd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
-                     uint32_t xferred_bytes)
-{
+                     uint32_t xferred_bytes) {
     (void)result;
 
     uint8_t itf = 0;
     xinputd_interface_t *p_xinput = _xinputd_itf;
 
-    for (;; itf++, p_xinput++)
-    {
-        if (itf >= TU_ARRAY_SIZE(_xinputd_itf))
-            return false;
+    for (;; itf++, p_xinput++) {
+        if (itf >= TU_ARRAY_SIZE(_xinputd_itf)) return false;
 
-        if (ep_addr == p_xinput->ep_out || ep_addr == p_xinput->ep_in)
-            break;
+        if (ep_addr == p_xinput->ep_out || ep_addr == p_xinput->ep_in) break;
     }
-    if (ep_addr == p_xinput->ep_out)
-    {
+    if (ep_addr == p_xinput->ep_out) {
         hid_set_report(p_xinput->epout_buf, xferred_bytes, 0x00, INTERRUPT_ID);
-        if (consoleType == XBOX360 || consoleType == WINDOWS || consoleType == OG_XBOX)
-        {
+        if (consoleType == XBOX360 || consoleType == WINDOWS || consoleType == OG_XBOX) {
             TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                                      0x20, false));
-        }
-        else if (consoleType == XBOXONE)
-        {
+        } else if (consoleType == XBOXONE) {
             TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                                      0x40, false));
-        }
-        else if (consoleType == ARCADE)
-        {
+        } else if (consoleType == ARCADE) {
             TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                                      0x40, false));
-        }
-        else if (consoleType == PS5)
-        {
+        } else if (consoleType == PS5) {
             TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                                      0x40, false));
-        }
-        else
-        {
+        } else {
             TU_ASSERT(usbd_edpt_xfer(rhport, p_xinput->ep_out, p_xinput->epout_buf,
                                      0x08, false));
         }
-    }
-    else if (ep_addr == p_xinput->ep_in)
-    {
+
+    } else if (ep_addr == p_xinput->ep_in) {
         sending = false;
     }
     return true;

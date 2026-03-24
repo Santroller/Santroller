@@ -283,8 +283,12 @@ target_link_libraries(
 pfb_compile_with_bootloader(${TARGET})
 pico_add_extra_outputs(${TARGET})
 
+add_custom_target(build_combined ALL
+    DEPENDS pico_fota_bootloader
+)
+
 add_custom_command(
-        TARGET ${TARGET}
+        TARGET build_combined
         POST_BUILD
         COMMAND python ${CMAKE_SOURCE_DIR}/build.py "${GIT_COMMIT}" "${CMAKE_CURRENT_BINARY_DIR}"
 )

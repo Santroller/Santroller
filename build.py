@@ -105,4 +105,4 @@ with open(bootloader_filename, 'rb') as bootloader:
 with open(os.path.join(out_dir,"santroller_fota.uf2"), "wb") as full_file:
     full_file.write(convert_binary_to_uf2([(0, bootloader_binary)]))
 
-print("Build combined uf2!")
+print("Built combined uf2!")

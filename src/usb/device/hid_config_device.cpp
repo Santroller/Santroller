@@ -183,7 +183,7 @@ void HIDConfigDevice::process()
   pb_ostream_t outputStream = pb_ostream_from_buffer(epin_buf + 1, 63);
   if (pb_encode_delimited(&outputStream, proto_EventList_fields, &list))
   {
-    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, 64);
+    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, 64, false);
   }
   list.event_count = 0;
 

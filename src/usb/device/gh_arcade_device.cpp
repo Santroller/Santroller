@@ -28,7 +28,7 @@ uint16_t GHArcadeVendorDevice::open(tusb_desc_interface_t const *itf_desc, uint1
               0);
     if (m_epout)
     {
-        if (!usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, sizeof(epout_buf)))
+        if (!usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, sizeof(epout_buf), false))
         {
             TU_LOG_FAILED();
             TU_BREAKPOINT();
@@ -76,7 +76,7 @@ bool GHArcadeVendorDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         // packet sends 0 for left and 1 for right, hid report uses 1 for left and 2 for right
         side = epout_buf[1] + 1;
     }
-    TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x40));
+    TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x40, false));
     return true;
 }
 bool GHArcadeVendorDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)

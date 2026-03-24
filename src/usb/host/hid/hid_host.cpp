@@ -14,7 +14,15 @@ static std::shared_ptr<UsbHostInterface> (*hid_device_types[])(std::shared_ptr<U
     Ps4Host::open,
     Ps5Host::open,
     KeyboardHost::open,
-    MouseHost::open};
+    LTekHost::open,
+    StepmaniaHost::open,
+    RaphnetHost::open,
+    StreamDeckHost::open,
+    SwitchHost::open,
+    StadiaHost::open,
+    MouseHost::open,
+    GenericHost::open};
+static CFG_TUSB_MEM_ALIGN uint8_t temp_buf[512];
 std::shared_ptr<UsbHostInterface> HidHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
     TU_VERIFY(TUSB_CLASS_HID == desc_itf->bInterfaceClass, nullptr);
@@ -29,26 +37,22 @@ std::shared_ptr<UsbHostInterface> HidHost::open(std::shared_ptr<UsbHostDevice> l
 
     uint16_t vid, pid;
     tuh_vid_pid_get(dev_addr, &vid, &pid);
-    static uint8_t temp_buf[512];
-    tuh_descriptor_get_hid_report(dev_addr, desc_itf->bInterfaceNumber, x_desc->bReportType, 0, temp_buf, x_desc->wReportLength, NULL, (uintptr_t)temp_buf);
-    // Seems that sometimes we miss the first byte?
-    if (!temp_buf[0] || temp_buf[0] == 4)
-    {
-        temp_buf[0] = 0x05;
-    }
+    tuh_descriptor_get_hid_report_sync(dev_addr, desc_itf->bInterfaceNumber, x_desc->bReportType, 0, temp_buf, x_desc->wReportLength);
     HID_ReportInfo_t *info;
-    USB_ProcessHIDReport(temp_buf, x_desc->wReportLength, &info);
-    tusb_desc_device_t desc;
-    tuh_descriptor_get_device_sync(dev_addr, &desc, sizeof(tusb_desc_device_t));
-    for (auto &open : hid_device_types)
+    if (USB_ProcessHIDReport(temp_buf, x_desc->wReportLength, &info) == HID_PARSE_Successful)
     {
-        auto ret = open(list, desc_itf, max_len, vid, pid, desc.bcdDevice, info);
-        if (ret != nullptr)
+        tusb_desc_device_t desc;
+        tuh_descriptor_get_device_sync(dev_addr, &desc, sizeof(tusb_desc_device_t));
+        for (auto &open : hid_device_types)
         {
-            return ret;
+            auto ret = open(list, desc_itf, max_len, vid, pid, desc.bcdDevice, info);
+            if (ret != nullptr)
+            {
+                return ret;
+            }
         }
+        USB_FreeReportInfo(info);
     }
-    USB_FreeReportInfo(info);
     return nullptr;
 }
 

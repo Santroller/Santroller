@@ -154,6 +154,16 @@ bool Ps5Host::send_intr_report(const void *buffer, uint8_t len)
     return true;
 }
 
+bool Ps5Host::get_intr_report(void *buffer, uint8_t len)
+{
+    if (!received_packet) {
+        return false;
+    }
+    memcpy(buffer, m_ep_in_buf, TU_MIN(len, m_ep_in_size));
+    received_packet = false;
+    return true;
+}
+
 bool Ps5Host::set_config()
 {
     return true;

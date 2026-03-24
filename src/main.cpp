@@ -166,7 +166,10 @@ int main()
     printf("init %d\r\n", mode);
 
     // init device stack on configured roothub port
-    tud_init(BOARD_TUD_RHPORT);
+    const tusb_rhport_init_t rh_init = {
+        .role = TUSB_ROLE_DEVICE,
+        .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};
+    tud_rhport_init(BOARD_TUD_RHPORT, &rh_init);
 
     while (1)
     {

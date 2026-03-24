@@ -28,9 +28,13 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
         skip_alarm_pool : false,
         pinout : device.dmFirst ? PIO_USB_PINOUT_DMDP : PIO_USB_PINOUT_DPDM
     };
+    const tusb_rhport_init_t rh_init = {
+        .role = TUSB_ROLE_HOST,
+        .speed = TUH_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL,
+    };
     usb_host_id = id;
     tuh_configure(TUH_OPT_RHPORT, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &host_config);
-    tuh_init(TUH_OPT_RHPORT);
+    tusb_init(TUH_OPT_RHPORT, &rh_init);
     printf("assignable_devices before: %d\r\n", assignable_usb_devices.size());
 
     for (auto it = assignable_usb_devices.begin(); it != assignable_usb_devices.end();)
@@ -121,7 +125,7 @@ static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<
     XInputWirelessAudioHost::open,
     HidHost::open};
 
-bool usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
+uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
     printf("usbh open %d %d\r\n", dev_addr, desc_itf->bInterfaceNumber);
     if (host_devices.find(dev_addr) == host_devices.end())
@@ -159,6 +163,7 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
 
 void usbh_close(uint8_t dev_addr)
 {
+    printf("usbh close %d %d\r\n", dev_addr);
     reload();
 }
 

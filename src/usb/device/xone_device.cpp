@@ -184,7 +184,7 @@ uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint1
     // Prepare for output endpoint
     if (m_epout)
     {
-        if (!usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, sizeof(epout_buf)))
+        if (!usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, sizeof(epout_buf), false))
         {
             TU_LOG_FAILED();
             TU_BREAKPOINT();
@@ -325,7 +325,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
     }
 
     // prepare for new transfer
-    TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE));
+    TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE, false));
 
     return true;
 }
@@ -348,7 +348,7 @@ bool XboxOneGamepadDevice::send_xbone_usb(uint8_t const *report, uint16_t report
         (m_epin != 0) && (!usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))) // Is the IN endpoint available?
     {
         usbd_edpt_claim(0, m_epin);                                // Take control of IN endpoint
-        usbd_edpt_xfer(0, m_epin, (uint8_t *)report, report_size); // Send report buffer
+        usbd_edpt_xfer(0, m_epin, (uint8_t *)report, report_size, false); // Send report buffer
         usbd_edpt_release(0, m_epin);                              // Release control of IN endpoint
 
         // we successfully sent the report

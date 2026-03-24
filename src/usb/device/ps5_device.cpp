@@ -64,25 +64,21 @@ void PS5GamepadDevice::process()
     PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)epin_buf;
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
-    // gamepad->guide = true;
-    // send_report(sizeof(PS5Dpad_Data_t), 0, epin_buf);
-    std::shared_ptr<Ps5Host> host_device = nullptr;
+    std::shared_ptr<HidHost> host_device = nullptr;
     auto auth_device = auth_devices.find(ModePs5);
     if (auth_device != auth_devices.end())
     {
-        host_device = std::static_pointer_cast<Ps5Host>(auth_device->second);
+        host_device = std::static_pointer_cast<HidHost>(auth_device->second);
         if (m_report_ready)
         {
             m_report_ready = false;
             host_device->send_intr_report(epin_buf, sizeof(PS5Dpad_Data_t));
         }
-        if (!host_device->received_packet)
+        if (host_device->get_intr_report(epin_buf, sizeof(epin_buf)))
         {
-            return;
+            send_report(sizeof(PS5Dpad_Data_t), 0, epin_buf);
+            m_report_ready = true;
         }
-        host_device->received_packet = false;
-        send_report(sizeof(PS5Dpad_Data_t), 0, host_device->m_ep_in_buf);
-        m_report_ready = true;
     }
 }
 

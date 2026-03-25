@@ -13,6 +13,10 @@
 #define XINPUT_FLAGS_NONE 0x0000
 #define XINPUT_FLAGS_FORCE_FEEDBACK 0x000D
 
+#define PS4_FLAG_GUITAR_EFFECTS 1
+#define PS4_FLAG_GUITAR_TILT 2
+#define PS4_FLAG_GUITAR_WHAMMY 4
+
 // https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-and-controller-subtypes
 // http://forum.gimx.fr/viewtopic.php?f=11&t=2897&start=10
 #define XINPUT_GAMEPAD 1

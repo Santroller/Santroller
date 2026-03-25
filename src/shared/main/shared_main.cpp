@@ -613,6 +613,17 @@ uint8_t handle_calibration_ps3(uint8_t previous, int32_t orig_val, int16_t min, 
     int8_t ret = handle_calibration_xbox((previous - PS3_STICK_CENTER) << 8, orig_val, min, max, center, deadzone, section) >> 8;
     return (uint8_t)(ret + PS3_STICK_CENTER);
 }
+uint8_t handle_calibration_ps4_xb1_tilt(uint8_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone)
+{
+    int16_t ret = abs(handle_calibration_xbox(previous << 7, orig_val, min, max, center, deadzone, 0)) >> 7;
+    if (ret > 255) {
+        ret = 255;
+    }
+    if (ret < 0) {
+        ret = 0;
+    }
+    return (uint8_t)(ret);
+}
 
 int8_t handle_calibration_mouse(int8_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone)
 {

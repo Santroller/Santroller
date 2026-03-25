@@ -4,6 +4,14 @@ sort: 3
 
 # Setting up a Drum Kit
 
+
+```danger
+   If you have a GHWT or Band Hero Drum kit, you do NOT need to go down this method of hardwiring. The GHWT drum kits can be hardwiried by just connecting the pico up to the connector going to the brain, as there are just digital signals there and santroller supports those signals.
+
+   Band hero drum kits are modded a bit differently. If you open up the brain, you can remove the pcb with the microcontroller on it from the main pcb, and then solder the pico up to the I2C lines, and the buttons directly to the pico, and that is also supported by santroller. 
+   I have not written documentation for either of these methods yet, but feel free to join the discord and ask for help, we can run you through how to do this there.
+```
+
 ## Supplies
 
 - A microcontroller

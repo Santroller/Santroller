@@ -34,6 +34,7 @@
 #define XINPUT_TURNTABLE 23
 #define XINPUT_PRO_GUITAR 25
 #define XINPUT_DISNEY_INFINITY_AND_LEGO_DIMENSIONS 33
+#define XINPUT_UDRAW 35
 #define XINPUT_SKYLANDERS 36
 // Next few arent real, but its easier for us to match this way
 #define XINPUT_GUITAR_HERO_LIVE 24

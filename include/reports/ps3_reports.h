@@ -816,3 +816,56 @@ typedef struct
 
     uint16_t unused4[3];
 } __attribute__((packed)) PS3GHLGuitar_Data_t;
+
+
+typedef struct
+{
+    uint8_t x : 1;  // square, white1
+    uint8_t a : 1;  // cross, black1
+    uint8_t b : 1;  // circle, black2
+    uint8_t y : 1;  // triangle, black3
+
+    uint8_t leftShoulder : 1;   // white2, l1
+    uint8_t rightShoulder : 1;  // white3, r1
+    uint8_t : 1;
+    uint8_t : 1;
+
+    uint8_t back : 1;            // back, heroPower
+    uint8_t start : 1;           // start, pause
+    uint8_t leftThumbClick : 1;  // leftThumbClick, ghtv
+    uint8_t : 1;
+
+    uint8_t guide : 1;    // ps
+    uint8_t capture : 1;  // switch capture button
+    uint8_t : 2;
+
+    // To make things easier, we use bitfields here, and then we map to a proper hat later
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    uint8_t : 4;
+    
+    uint8_t leftStickX;  // leftStickX
+    uint8_t leftStickY;  // leftStickY
+    uint8_t rightStickX; // rightStickX
+    uint8_t rightStickY; // rightStickY
+
+    uint8_t unused3[4];
+    uint8_t status; // 0x40 = pen touch, 0x80 = single finger, anything else = multi touch
+    uint8_t distance; // distance between fingers for multitouch (0x74 -> 0xff)
+    uint8_t pressure; // 0x74 -> 0xff, 0x60 if not pressed
+    uint8_t unused4;
+    uint8_t penXHigh;
+    uint8_t penYHigh;
+    uint8_t penXLow;
+    uint8_t penYLow;
+
+    // Reminder that this value is 10-bit in range
+    // Each of the following are 10 bits in accuracy
+    // Centered/neutral state is nominally 0x0200, actual values may vary
+    uint16_t accelX;  // Left/right acceleration (roll)
+    uint16_t accelZ;  // Forward/back acceleration (pitch)
+    uint16_t accelY;  // Up/down acceleration (gravity)
+    uint16_t gyro;    // Left/right instantaneous rotation (yaw)
+} __attribute__((packed)) PS3UDraw_Data_t;

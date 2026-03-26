@@ -124,6 +124,9 @@ enum endpoints_t {
 #define STADIA_VID 0x18d1
 #define STADIA_PID 0x9400
 
+#define PS3_UDRAW_VID 0x20D6
+#define PS3_UDRAW_PID 0xCB17
+
 
 #define SIMULTANEOUS_KEYS 6
 

@@ -3947,7 +3947,7 @@ bool tick_usb(void)
         send_report_to_pc(&combined_report, size);
     }
     report_requested = true;
-    return size;
+    return ready;
 }
 #if BLUETOOTH_RX
 int tick_bluetooth_inputs(const void *data, uint8_t len, USB_Device_Type_t device_type)

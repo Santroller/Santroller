@@ -458,6 +458,9 @@ uint16_t xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t co
     {
         // Skip over 0x22 descriptor
         p_desc = tu_desc_next(p_desc);
+        XBOX_ID_DESCRIPTOR *x_desc =
+            (XBOX_ID_DESCRIPTOR *)p_desc;
+        drv_len += x_desc->bLength;
         uint8_t endpoints = desc_itf->bNumEndpoints;
         while (endpoints--)
         {

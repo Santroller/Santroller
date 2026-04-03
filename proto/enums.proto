@@ -7,6 +7,7 @@ enum ReportId {
   ReportIdKeyboard = 2;
   ReportIdMouse = 3;
   ReportIdConsumer = 4;
+  ReportIdSantrollerCapabilities = 0x10;
   ReportIdConfig = 0x22;
   ReportIdConfigInfo = 0x23;
   ReportIdLoaded = 0x24;
@@ -83,22 +84,22 @@ enum SubType {
   RockBandDrums = 6;
   LiveGuitar = 7;
   DjHeroTurntable = 8;
-  ProGuitarMustang = 9;
-  ProGuitarSquire = 10;
-  ProKeys = 11;
-  Taiko = 12;
-  StageKit = 13;
-  KeyboardMouse = 14;
+  StageKit = 9;
+  DisneyInfinity = 10;
+  Skylanders = 11;
+  LegoDimensions = 12;
+  ProjectDiva = 13;
+  GuitarFreaks = 14;
   Wheel = 15;
-  DisneyInfinity = 16;
-  Skylanders = 17;
-  LegoDimensions = 18;
-  FightStick = 19;
-  FlightStick = 20;
-  GuitarFreaks = 21;
+  ProKeys = 16;
+  ProGuitarMustang = 17;
+  ProGuitarSquire = 18;
+  KeyboardMouse = 19;
+  FightStick = 20;
+  FlightStick = 21;
   PopNMusic = 22;
   DJMax = 23;
-  ProjectDiva = 24;
+  Taiko = 24;
   PowerGigDrum = 25;
   PowerGigGuitar = 26;
   RockRevolutionGuitar = 27;
@@ -223,4 +224,11 @@ enum ReactiveRgbPatternType {
     PatternStatic=1;
     PatternHeatmap=2;
     PatternSpread=3;
+}
+
+enum CapabilitiyFlags {
+    CapabilityHasPlayerLeds=1;
+    CapabilityHasRGBLeds=2;
+    CapabilityHasInstrumentLeds=4;
+    CapabilityHasRumble=8;
 }

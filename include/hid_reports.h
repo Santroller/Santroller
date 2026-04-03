@@ -137,6 +137,17 @@
         HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                   \
         HID_COLLECTION_END
 
+#define TUD_HID_REPORT_DESC_SANTROLLER_DESC()               \
+    HID_REPORT_ID(ReportIdSantrollerCapabilities)           \
+    HID_USAGE_N(0x2021, 2),                                 \
+        HID_REPORT_SIZE(8),                                 \
+        HID_REPORT_COUNT(1),                                \
+        HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE), \
+        HID_USAGE_N(0x2021, 2),                             \
+        HID_REPORT_SIZE(8),                                 \
+        HID_REPORT_COUNT(2),                                \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE)
+
 #define TUD_HID_REPORT_DESC_PS3_4_5()                        \
     HID_USAGE_N(0x2621, 2),                                  \
         HID_REPORT_SIZE(8),                                  \
@@ -817,6 +828,7 @@
         HID_REPORT_SIZE(8),                                    \
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),     \
         TUD_HID_REPORT_DESC_PS3_4_5(),                         \
+        TUD_HID_REPORT_DESC_SANTROLLER_DESC(),                 \
         HID_COLLECTION_END
 
 #define TUD_HID_REPORT_DESC_PS3_THIRDPARTY_GAMEPAD()           \

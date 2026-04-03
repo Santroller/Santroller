@@ -4,6 +4,7 @@
 #include "host/usbh_pvt.h"
 #include "usb/host/xinput_host.h"
 #include "usb/host/hid_host.h"
+#include "usb/host/midi_host.h"
 #include "config.hpp"
 #include "usb/device//hid_device.h"
 #include <algorithm>
@@ -115,7 +116,7 @@ uint32_t UsbHostInterface::send_ctrl_xfer(tusb_control_request_t setup, void *bu
     return xfer.actual_len;
 }
 
-static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len) = {
+static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t* out_len) = {
     XInputGamepadHost::open,
     XInputAudioHost::open,
     XInputModuleHost::open,
@@ -123,7 +124,8 @@ static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<
     XInputBigButtonHost::open,
     XInputWirelessGamepadHost::open,
     XInputWirelessAudioHost::open,
-    HidHost::open};
+    HidHost::open,
+    MidiHost::open};
 
 uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
@@ -136,15 +138,16 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
     auto &list = host_devices[dev_addr];
     for (auto &host_device : host_device_types)
     {
-        auto dev = host_device(list, desc_itf, max_len);
+        uint16_t out_len;
+        auto dev = host_device(list, desc_itf, max_len, &out_len);
         if (dev != nullptr)
         {
             list->host_devices_by_itf[desc_itf->bInterfaceNumber] = dev;
             reload();
-            return true;
+            return out_len;
         }
     }
-    return false;
+    return 0;
 }
 
 bool usbh_set_config(uint8_t dev_addr, uint8_t itf_num)

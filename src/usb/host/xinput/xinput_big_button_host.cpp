@@ -5,7 +5,7 @@
 #include "host/usbh_pvt.h"
 #include "config.hpp"
 
-std::shared_ptr<UsbHostInterface> XInputBigButtonHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
+std::shared_ptr<UsbHostInterface> XInputBigButtonHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t* out_len)
 {
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass, nullptr);
     uint8_t dev_addr = list->dev_addr();
@@ -45,6 +45,7 @@ std::shared_ptr<UsbHostInterface> XInputBigButtonHost::open(std::shared_ptr<UsbH
         list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
     }
         assignable_usb_devices.push_back(intf);
+        *out_len = (uint16_t)((uintptr_t)p_desc - (uintptr_t)desc_itf);
         return intf;
     }
     return nullptr;

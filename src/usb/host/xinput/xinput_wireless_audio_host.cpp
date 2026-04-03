@@ -6,7 +6,7 @@
 #include "usb/usb_devices.h"
 #include "config.hpp"
 
-std::shared_ptr<UsbHostInterface> XInputWirelessAudioHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
+std::shared_ptr<UsbHostInterface> XInputWirelessAudioHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass, nullptr);
     uint8_t dev_addr = list->dev_addr();
@@ -43,13 +43,14 @@ std::shared_ptr<UsbHostInterface> XInputWirelessAudioHost::open(std::shared_ptr<
             }
         }
         if (intf->m_ep_out)
-    {
-        list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
-    }
-    if (intf->m_ep_in)
-    {
-        list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
-    }
+        {
+            list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
+        }
+        if (intf->m_ep_in)
+        {
+            list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
+        }
+        *out_len = TUD_XINPUT_WIRELESS_AUDIO_DESC_LEN;
         // TODO: audio
         // assignable_usb_devices.push_back(intf);
         printf("found device: %d\r\n", intf->m_subtype);

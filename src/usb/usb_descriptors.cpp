@@ -282,7 +282,6 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             }
             compatible_descriptor->TotalSections = count;
             compatible_descriptor->TotalLength = current;
-            printf("count %02x %02x\r\n", current, count);
             tud_control_xfer(rhport, request, descriptor_buffer, current);
           }
           return true;

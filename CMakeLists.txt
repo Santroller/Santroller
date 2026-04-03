@@ -103,6 +103,7 @@ add_executable(
   src/usb/device/switch_device.cpp
   src/usb/device/gh_arcade_device.cpp
   src/usb/host/xone_host.cpp
+  src/usb/host/midi_host.cpp
   src/usb/host/ogxbox_host.cpp
   src/usb/host/hid/hid_host.cpp
   src/usb/host/hid/ps3_host.cpp

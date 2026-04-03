@@ -107,7 +107,6 @@ enum
 #define RUMBLE_SANTROLLER_EUPHORIA_LED 0xA0
 
 
-#define TUD_XINPUT_GAMEPAD_DESC_LEN    (9 + 17 + 7 + 7)
 
 
 enum
@@ -136,6 +135,8 @@ enum
   /* Endpoint Out */\
   7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 1
 
+#define TUD_XINPUT_GAMEPAD_DESC_LEN    (9 + 17 + 7 + 7)
+
 // XInput Audio Descriptor
 #define TUD_XINPUT_AUDIO_DESCRIPTOR(_itfnum, _epin, _epout, _epin2, _epout2) \
   /* Interface */\
@@ -151,6 +152,8 @@ enum
   /* Endpoint Out 2 (unk 2)*/\
   7, TUSB_DESC_ENDPOINT, _epout2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 16
 
+#define TUD_XINPUT_AUDIO_DESC_LEN    (9 + 27 + 7 + 7 + 7 + 7)
+
 // XInput Plugin Module Descriptor
 #define TUD_XINPUT_PLUGIN_MODULE_DESCRIPTOR(_itfnum, _epin) \
   /* Interface */\
@@ -160,7 +163,7 @@ enum
   /* Endpoint In */\
   7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 16
 
-#define TUD_XINPUT_SECURITY_DESC_LEN    (9 + 6)
+#define TUD_XINPUT_PLUGIN_MODULE_DESC_LEN    (9 + 9 + 7)
 
 // XInput Security Descriptor
 #define TUD_XINPUT_SECURITY_DESCRIPTOR(_itfnum, _strnum) \
@@ -168,6 +171,8 @@ enum
   9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, 0xFF, 0xFD, 0x13, _strnum,\
   /* XInput Security descriptor */\
   6, 0x41, 0x00, 0x01, 0x01, 0x03
+
+#define TUD_XINPUT_SECURITY_DESC_LEN    (9 + 6)
 
 // XInput Gamepad Descriptor
 #define TUD_OGXBOX_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout) \
@@ -178,6 +183,8 @@ enum
   /* Endpoint Out */\
   7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 4
 
+#define TUD_OGXBOX_GAMEPAD_DESC_LEN    (9 + 7 + 7)
+
 // XOne Gamepad Descriptor
 #define TUD_XONE_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout) \
   /* Interface */\
@@ -186,6 +193,8 @@ enum
   7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1,\
   /* Endpoint Out */\
   7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1
+
+#define TUD_XONE_GAMEPAD_DESC_LEN    (9 + 7 + 7)
 
 // GHArcade Gamepad Descriptor
 #define TUD_GHARCADE_VENDOR_DESCRIPTOR(_itfnum, _epin1, _epout, _epin2, _strnum) \
@@ -198,3 +207,8 @@ enum
   /* Endpoint In */\
   7, TUSB_DESC_ENDPOINT, _epin2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1
 
+#define TUD_GHARCADE_VENDOR_DESC_LEN    (9 + 7 + 7 + 7)
+
+#define TUD_XINPUT_WIRELESS_CONTROLLER_DESC_LEN   (9 + 20 + 7 + 7)
+
+#define TUD_XINPUT_WIRELESS_AUDIO_DESC_LEN   (9 + 12 + 7 + 7)

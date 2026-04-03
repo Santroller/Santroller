@@ -45,9 +45,9 @@ public:
     virtual void process() = 0;
     SubType subtype;
     ConsoleMode mode;
-    bool xinput_on_windows;
-    bool invert_y_axis_hid;
-    bool supports_ps4;
+    bool xinput_on_windows = 0;
+    bool invert_y_axis_hid = 0;
+    bool supports_ps4 = 0;
     std::vector<std::shared_ptr<Profile>> profiles;
     uint8_t rumble_left = 0;
     uint8_t rumble_right = 0;
@@ -58,5 +58,6 @@ public:
     uint8_t lightbar_blue = 0;
     uint8_t stagekit_command = 0;
     uint8_t stagekit_param = 0;
+    uint8_t capabilities = 0;
     bool side = 0;
 };

@@ -33,7 +33,7 @@ public:
     {
         return 0;
     }
-    void update(bool full_poll, bool send_events)
+    virtual void update(bool full_poll, bool send_events)
     {
     }
     bool is_wii_extension(WiiExtType type)

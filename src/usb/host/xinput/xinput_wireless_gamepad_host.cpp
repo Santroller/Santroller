@@ -11,7 +11,7 @@
 #include <algorithm>
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t xbox360w_prescence[] = {0x08, 0x00, 0x0f, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-std::shared_ptr<UsbHostInterface> XInputWirelessGamepadHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
+std::shared_ptr<UsbHostInterface> XInputWirelessGamepadHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass, nullptr);
     uint8_t dev_addr = list->dev_addr();
@@ -47,14 +47,15 @@ std::shared_ptr<UsbHostInterface> XInputWirelessGamepadHost::open(std::shared_pt
             }
         }
         if (intf->m_ep_out)
-    {
-        list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
-    }
-    if (intf->m_ep_in)
-    {
-        list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
-    }
+        {
+            list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
+        }
+        if (intf->m_ep_in)
+        {
+            list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
+        }
 
+        *out_len = TUD_XINPUT_WIRELESS_CONTROLLER_DESC_LEN;
         printf("found device: %d\r\n", intf->m_subtype);
         return intf;
     }

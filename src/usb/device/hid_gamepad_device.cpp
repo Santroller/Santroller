@@ -12,8 +12,14 @@
 #include "device/usbd_pvt.h"
 #include "pico/bootrom.h"
 #include "utils.h"
-uint8_t const desc_hid_report[] =
-    {TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(ReportIdGamepad))};
+
+// Dance pads really need simultaneous directions, so they emulate buttons instead of hats
+uint8_t const desc_hid_report_buttons[] =
+    {TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(ReportIdGamepad), TUD_HID_REPORT_DESC_GAME_CONTROLLER_BUTTONS)};
+
+// for compatibility though, report the dpad as a hat for non-dancepad devices
+uint8_t const desc_hid_report_hat[] =
+    {TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(ReportIdGamepad), TUD_HID_REPORT_DESC_GAME_CONTROLLER_HAT_SWITCH)};
 
 HIDGamepadDevice::HIDGamepadDevice()
 {
@@ -86,9 +92,12 @@ void HIDGamepadDevice::process()
     report->leftStickY = -report->leftStickY;
     report->rightStickY = -report->rightStickY;
   }
-
-  // convert bitmask dpad to actual hid dpad
-  report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
+  // dance pads need to report the dpad as buttons, so skip the conversion to hat
+  if (subtype != Dancepad)
+  {
+    // convert bitmask dpad to actual hid dpad
+    report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
+  }
   if (subtype == GuitarHeroGuitar)
   {
     // convert bitmask slider to actual hid slider
@@ -110,10 +119,20 @@ size_t HIDGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t rem
 
 size_t HIDGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-  uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
-  assert(sizeof(desc) <= remaining);
-  memcpy(dest, desc, sizeof(desc));
-  return sizeof(desc);
+  if (subtype == Dancepad)
+  {
+    uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_buttons), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+    assert(sizeof(desc) <= remaining);
+    memcpy(dest, desc, sizeof(desc));
+    return sizeof(desc);
+  }
+  else
+  {
+    uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_hat), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+    assert(sizeof(desc) <= remaining);
+    memcpy(dest, desc, sizeof(desc));
+    return sizeof(desc);
+  }
 }
 
 void HIDGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
@@ -121,19 +140,35 @@ void HIDGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 }
 const uint8_t *HIDGamepadDevice::report_descriptor()
 {
-  return desc_hid_report;
+  if (subtype == Dancepad)
+  {
+    return desc_hid_report_buttons;
+  }
+  else
+  {
+    return desc_hid_report_hat;
+  }
 }
 
 uint16_t HIDGamepadDevice::report_desc_len()
 {
-  return sizeof(desc_hid_report);
+  if (subtype == Dancepad)
+  {
+    return sizeof(desc_hid_report_buttons);
+  }
+  else
+  {
+    return sizeof(desc_hid_report_hat);
+  }
 }
 
 void HIDGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
-  if (report_type == HID_REPORT_TYPE_OUTPUT) {
+  if (report_type == HID_REPORT_TYPE_OUTPUT)
+  {
     // if the host is asking for capabilities, send them
-    if (report_id == ReportIdSantrollerCapabilities || buffer[0] == ReportIdSantrollerCapabilities) {
+    if (report_id == ReportIdSantrollerCapabilities || buffer[0] == ReportIdSantrollerCapabilities)
+    {
       epin_buf[0] = ReportIdSantrollerCapabilities;
       epin_buf[1] = subtype;
       epin_buf[2] = capabilities;

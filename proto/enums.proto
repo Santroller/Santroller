@@ -227,8 +227,9 @@ enum ReactiveRgbPatternType {
 }
 
 enum CapabilitiyFlags {
-    CapabilityHasPlayerLeds=1;
-    CapabilityHasRGBLeds=2;
-    CapabilityHasInstrumentLeds=4;
-    CapabilityHasRumble=8;
+    CapabilityHasStandardPlayerLeds=1; /* Has standard player LEDs */
+    CapabilityHasRGBIndicatorLed=2; /* Has RGB indicator LED */
+    CapabilityHasInstrumentLeds=4; /* Has instrument LEDs (Stage kit format or santroller format) */
+    CapabilityHasRumble=8; /* Has rumble */
+    CapabilityDpadAsButtons=16; /* Treat D-pad as buttons instead of hat */
 }

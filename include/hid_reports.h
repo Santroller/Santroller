@@ -18,6 +18,10 @@
 #define BTN_GUIDE 0x0d
 #define BTN_THUMBL 0x0e
 #define BTN_THUMBR 0x0f
+#define BTN_UP 0x10
+#define BTN_DOWN 0x11
+#define BTN_LEFT 0x12
+#define BTN_RIGHT 0x13
 #define BTN_END 0x0f
 
 #define TUD_HID_REPORT_DESC_KEYBOARD_NKRO(...)                                                                     \
@@ -139,11 +143,11 @@
 
 #define TUD_HID_REPORT_DESC_SANTROLLER_DESC()               \
     HID_REPORT_ID(ReportIdSantrollerCapabilities)           \
-    HID_USAGE_N(0x2021, 2),                                 \
+    HID_USAGE_N(0x2882, 2),                                 \
         HID_REPORT_SIZE(8),                                 \
         HID_REPORT_COUNT(1),                                \
         HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE), \
-        HID_USAGE_N(0x2021, 2),                             \
+        HID_USAGE_N(0x2882, 2),                             \
         HID_REPORT_SIZE(8),                                 \
         HID_REPORT_COUNT(2),                                \
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE)
@@ -761,7 +765,37 @@
         0xB1, 0x03,                      /*     Feature (Const,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)*/              \
         0xC0                             /*   End Collection*/
 
-#define TUD_HID_REPORT_DESC_GAME_CONTROLLER(rid)               \
+// report dpad as a hat
+#define TUD_HID_REPORT_DESC_GAME_CONTROLLER_HAT_SWITCH     \
+    HID_USAGE(HID_USAGE_DESKTOP_HAT_SWITCH),               \
+        HID_LOGICAL_MAX(7),                                \
+        HID_PHYSICAL_MAX_N(315, 2),                        \
+        HID_REPORT_COUNT(1),                               \
+        HID_REPORT_SIZE(4),                                \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE), \
+        HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),             \
+        HID_LOGICAL_MIN(0),                                \
+        HID_LOGICAL_MAX(1),                                \
+        HID_PHYSICAL_MIN(0),                               \
+        HID_PHYSICAL_MAX(1),                               \
+        HID_REPORT_COUNT(12),                              \
+        HID_REPORT_SIZE(1)
+
+// report dpad as buttons
+#define TUD_HID_REPORT_DESC_GAME_CONTROLLER_BUTTONS \
+    HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),          \
+        HID_LOGICAL_MIN(0),                         \
+        HID_LOGICAL_MAX(1),                         \
+        HID_PHYSICAL_MIN(0),                        \
+        HID_PHYSICAL_MAX(1),                        \
+        HID_REPORT_COUNT(16),                       \
+        HID_REPORT_SIZE(1),                         \
+        HID_USAGE(BTN_UP),                          \
+        HID_USAGE(BTN_DOWN),                        \
+        HID_USAGE(BTN_LEFT),                        \
+        HID_USAGE(BTN_RIGHT)
+
+#define TUD_HID_REPORT_DESC_GAME_CONTROLLER(rid, button_style) \
     HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                    \
         HID_USAGE(HID_USAGE_DESKTOP_GAMEPAD),                  \
         HID_COLLECTION(HID_COLLECTION_APPLICATION),            \
@@ -770,19 +804,7 @@
         HID_REPORT_SIZE(8),                                    \
         HID_REPORT_COUNT(1),                                   \
         HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE), \
-        HID_USAGE(HID_USAGE_DESKTOP_HAT_SWITCH),               \
-        HID_LOGICAL_MAX(7),                                    \
-        HID_PHYSICAL_MAX_N(315, 2),                            \
-        HID_REPORT_COUNT(1),                                   \
-        HID_REPORT_SIZE(4),                                    \
-        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),     \
-        HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),                 \
-        HID_LOGICAL_MIN(0),                                    \
-        HID_LOGICAL_MAX(1),                                    \
-        HID_PHYSICAL_MIN(0),                                   \
-        HID_PHYSICAL_MAX(1),                                   \
-        HID_REPORT_COUNT(12),                                  \
-        HID_REPORT_SIZE(1),                                    \
+        button_style,                                          \
         HID_USAGE(BTN_START),                                  \
         HID_USAGE(BTN_SELECT),                                 \
         HID_USAGE(BTN_THUMBL),                                 \

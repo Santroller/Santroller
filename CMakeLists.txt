@@ -285,7 +285,7 @@ pfb_compile_with_bootloader(${TARGET})
 pico_add_extra_outputs(${TARGET})
 
 add_custom_target(build_combined ALL
-    DEPENDS pico_fota_bootloader
+    DEPENDS pico_fota_bootloader ${TARGET}
 )
 
 add_custom_command(

@@ -15,7 +15,11 @@ GamepadAxisMapping::GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<In
 void GamepadAxisMapping::update_hid(uint8_t *buf)
 {
     // santroller hid uses an xinput style report descriptor for compatibility reasons
-    return update_xinput(buf);
+    update_xinput(buf);
+    // and while its almost correct, the y axis is inverted on 360, so we do need to flip that back
+    PCGamepadDpad_Data_t* data = (PCGamepadDpad_Data_t*)buf;
+    data->leftStickY = -data->leftStickY;
+    data->rightStickY = -data->rightStickY;
 }
 void GamepadAxisMapping::update_wii(uint8_t *buf)
 {

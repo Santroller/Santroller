@@ -164,14 +164,19 @@ uint16_t HIDGamepadDevice::report_desc_len()
 
 void HIDGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
+  // printf("set report %d %d %d\r\n", report_id, report_type, bufsize);
   if (report_type == HID_REPORT_TYPE_OUTPUT)
   {
     // if the host is asking for capabilities, send them
-    if (report_id == ReportIdSantrollerCapabilities || buffer[0] == ReportIdSantrollerCapabilities)
+    if (report_id == ReportIdSantrollerCapabilities)
     {
       epin_buf[0] = ReportIdSantrollerCapabilities;
       epin_buf[1] = subtype;
       epin_buf[2] = capabilities;
+      // Make sure this packet isn't dropped
+      while (!ready()) {
+        tud_task();
+      }
       send_report(3, 0, epin_buf);
     }
   }

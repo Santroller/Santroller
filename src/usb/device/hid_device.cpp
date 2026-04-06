@@ -72,7 +72,7 @@ bool HIDDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t x
 
   if (XFER_RESULT_SUCCESS == result)
   {
-    set_report(0, HID_REPORT_TYPE_OUTPUT, epout_buf, (uint16_t)xferred_bytes);
+    set_report(epout_buf[0], HID_REPORT_TYPE_OUTPUT, epout_buf, (uint16_t)xferred_bytes);
   }
 
   TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE, false));

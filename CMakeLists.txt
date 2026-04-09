@@ -195,6 +195,7 @@ add_executable(
   src/devices/debug.cpp
   src/devices/crazyneck.cpp
   src/devices/multiplexer.cpp
+  src/devices/midiserial.cpp
   src/devices/djh.cpp
   src/devices/midi.cpp
   src/devices/gh5neck.cpp
@@ -240,6 +241,7 @@ target_link_libraries(
   quadrature_encoder
   accelerometer
   band_hero_drum
+  midi_serial
   crazy_guitar_neck
   dj_hero_turntable
   guitar_hero_5_neck

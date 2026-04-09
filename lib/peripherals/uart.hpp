@@ -6,6 +6,7 @@
 class UARTInterface {
    public:
     UARTInterface(uint8_t block, int8_t tx, int8_t rx, uint32_t baudrate);
+    ~UARTInterface();
     bool read_uart(uint8_t header, uint8_t size, uint8_t *dest);
     bool read_uart(uint8_t size, uint8_t *dest);
     bool send(uint8_t* data, uint8_t size);
@@ -16,6 +17,12 @@ class UARTInterface {
     bool transfer_done();
     void reset_transfer();
     long last_read_time();
+    bool is_uart0() {
+        return uart == uart0;
+    }
+    bool is_uart1() {
+        return uart == uart1;
+    }
 
    private:
     uart_inst_t *uart;

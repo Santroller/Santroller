@@ -1,10 +1,11 @@
+#include <stdint.h>
+#include <stdio.h>
+#include <math.h>
+
 #include "crkd_neck.hpp"
 #include "main.hpp"
 #include "utils.h"
 #include "main.hpp"
-#include "stdio.h"
-#include "math.h"
-#include "stdint.h"
 #include "hardware/irq.h"
 
 static uint8_t firmware[10000];
@@ -14,7 +15,6 @@ CrkdNeck::CrkdNeck(uint8_t block, uint8_t tx, uint8_t rx, uint32_t clock) : inte
 }
 void CrkdNeck::tick()
 {
-    
     green = m_crkdNeck.green;
     red = m_crkdNeck.red;
     yellow = m_crkdNeck.yellow;

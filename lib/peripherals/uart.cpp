@@ -16,7 +16,7 @@ static long read_time_0;
 static long read_time_1;
 static uint8_t start_char_0 = 0;
 static uint8_t start_char_1 = 0;
-void on_uart_rx_0()
+static void on_uart_rx_0()
 {
     while (uart_is_readable(uart0) && current_0 < irq_size_0)
     {
@@ -34,7 +34,7 @@ void on_uart_rx_0()
         current_0 = 0;
     }
 }
-void on_uart_rx_1()
+static void on_uart_rx_1()
 {
     while (uart_is_readable(uart1) && current_1 < irq_size_1)
     {
@@ -54,13 +54,30 @@ void on_uart_rx_1()
 }
 UARTInterface::UARTInterface(uint8_t block, int8_t tx, int8_t rx, uint32_t clock)
 {
-    if (tx == -1 || rx == -1) {
+    if (tx == -1 || rx == -1)
+    {
         return;
     }
     uart = _hardwareBlocks[block];
     uart_init(uart, clock);
     gpio_set_function(tx, GPIO_FUNC_UART);
     gpio_set_function(rx, GPIO_FUNC_UART);
+}
+
+UARTInterface::~UARTInterface()
+{
+    if (uart == uart0 && irq_dest_0)
+    {
+        irq_set_enabled(UART0_IRQ, false);
+        uart_set_irq_enables(uart, false, false);
+        irq_remove_handler(UART0_IRQ, on_uart_rx_0);
+    }  
+    if (uart == uart1 && irq_dest_1)
+    {
+        irq_set_enabled(UART1_IRQ, false);
+        uart_set_irq_enables(uart, false, false);
+        irq_remove_handler(UART1_IRQ, on_uart_rx_1);
+    }
 }
 
 void UARTInterface::set_format(uint data_bits, uint stop_bits, uart_parity_t parity)
@@ -112,7 +129,7 @@ void UARTInterface::setup_interrupts(uint8_t *dest, uint8_t start_char, size_t m
         irq_set_exclusive_handler(UART0_IRQ, on_uart_rx_0);
         irq_set_enabled(UART0_IRQ, true);
 
-        uart_set_irq_enables(uart, true, false);
+        uart_set_irqs_enabled(uart, true, false);
     }
     if (uart == uart1)
     {
@@ -132,6 +149,7 @@ void UARTInterface::disable_interrupts()
 {
     int UART_IRQ = uart ? UART0_IRQ : UART1_IRQ;
     irq_set_enabled(UART_IRQ, false);
+    uart_set_irqs_enabled(uart, false, false);
 }
 
 bool UARTInterface::send(uint8_t *data, uint8_t size)

@@ -1,6 +1,7 @@
 #include "devices/midi.hpp"
 #include "events.pb.h"
 #include "usb/device/hid_device.h"
+#include "main.hpp"
 
 MidiDevice::MidiDevice(uint16_t id, bool usbBased) : Device(id), drumMode(false), usbBased(usbBased)
 {

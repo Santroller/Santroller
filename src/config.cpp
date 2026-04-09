@@ -30,6 +30,7 @@
 #include "devices/mpr121.hpp"
 #include "devices/ws2812.hpp"
 #include "devices/apa102.hpp"
+#include "devices/midiserial.hpp"
 #include "devices/stp16cpc.hpp"
 #include "mappings/mapping.hpp"
 #include "leds/leds.hpp"
@@ -125,6 +126,9 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Device_debug_tag:
         active_devices.emplace_back(new DebugDevice(device.device.debug, *dev_id));
+        break;
+    case proto_Device_midiSerial_tag:
+        active_devices.emplace_back(new MidiSerialDevice(device.device.midiSerial, *dev_id));
         break;
     case proto_Device_ws2812_tag:
         active_devices.emplace_back(new WS2812Device(device.device.ws2812, *dev_id));

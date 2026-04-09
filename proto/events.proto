@@ -56,7 +56,7 @@ message PS2DeviceHotplugEvent {
 }
 
 message DebugEvent {
-    repeated uint32 data = 1; 
+    required bytes data = 1; 
 }
 
 message MidiEvent {

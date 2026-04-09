@@ -104,8 +104,8 @@ void hid_task(void)
 
 void send_debug(uint8_t *data, size_t len)
 {
-    proto_Event event = {which_event : proto_Event_debug_tag, event : {debug : (pb_size_t)len}};
-    memcpy(event.event.debug.data, data, len);
+    proto_Event event = {which_event : proto_Event_debug_tag, event : {debug : {data : {size : (pb_size_t)len}}}};
+    memcpy(event.event.debug.data.bytes, data, len);
     HIDConfigDevice::send_event(event);
 }
 

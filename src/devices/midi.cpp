@@ -175,10 +175,13 @@ void MidiDevice::update(bool full_poll, bool send_events)
             //     }
             //     printf("\r\n");
             // }
-            uint8_t data_size = MIN(32, cable_state->actual_size);
-            proto_Event event = {which_event : proto_Event_midiDebug_tag, event : {midiDebug : {data: {size: data_size, bytes: {0}}}}};
-            memcpy(event.event.midiDebug.data.bytes, cable_state->data, data_size);
-            printf("test: %d %d\r\n", HIDConfigDevice::send_event(event), data_size);
+            if (cable_state->data[0] != 0xF8)
+            {
+                uint8_t data_size = MIN(32, cable_state->actual_size);
+                proto_Event event = {which_event : proto_Event_midiDebug_tag, event : {midiDebug : {data : {size : data_size, bytes : {0}}}}};
+                memcpy(event.event.midiDebug.data.bytes, cable_state->data, data_size);
+                HIDConfigDevice::send_event(event), data_size;
+            }
             uint8_t status = (cable_state->data[0] & 0xf0) >> 4;
             uint8_t channel = cable_state->data[0] & 0x0f;
             switch (status)

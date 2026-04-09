@@ -60,7 +60,7 @@ message DebugEvent {
 }
 
 message MidiEvent {
-    repeated uint32 data = 1; 
+    required bytes data = 1;  
 }
 
 message Event {

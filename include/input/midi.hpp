@@ -2,6 +2,7 @@
 #include "input.hpp"
 #include "input.pb.h"
 #include "devices/base.hpp"
+#include "devices/midi.hpp"
 #include <memory>
 class MidiNoteInput : public Input
 {

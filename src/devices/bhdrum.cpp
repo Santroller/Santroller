@@ -3,7 +3,7 @@
 #include "main.hpp"
 #include "config.hpp"
 #include "usb/device/hid_device.h"
-BandHeroDrumDevice::BandHeroDrumDevice(proto_BandHeroDrumDevice device, uint16_t id) : Device(id), m_band_hero_drum(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
+BandHeroDrumDevice::BandHeroDrumDevice(proto_BandHeroDrumDevice device, uint16_t id) : MidiDevice(id, false), m_band_hero_drum(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
 {
 }
 
@@ -16,6 +16,7 @@ void BandHeroDrumDevice::update(bool full_poll, bool send_events)
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
         resend = !HIDConfigDevice::send_event(event);
     }
+    MidiDevice::update(full_poll, send_events);
 }
 
 bool BandHeroDrumDevice::using_pin(uint8_t pin)

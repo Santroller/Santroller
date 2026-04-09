@@ -12,7 +12,7 @@ void BandHeroDrum::tick()
         if (numPackets)
         {
             connected = interface.readFrom(DRUM_ADDR, data, numPackets * PACKET_SIZE, true);
-            midiInterface.parsePacket(data, numPackets * PACKET_SIZE);
+            m_device->processMidiData(data, numPackets * PACKET_SIZE);
         }
     }
 };

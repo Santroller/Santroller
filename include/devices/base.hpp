@@ -23,19 +23,6 @@ protected:
     bool resend = false;
 };
 
-class MidiDevice : public Device
-{
-public:
-    MidiDevice(uint16_t id) : Device(id) {}
-    virtual ~MidiDevice() { printf("~MidiDevice()\r\n"); }
-    virtual uint16_t readMidiNote(uint8_t note) = 0;
-    virtual uint16_t readMidiControlChange(uint8_t cc) = 0;
-    virtual int16_t readMidiPitchBend() = 0;
-
-protected:
-    void processMidiData(uint8_t *data, uint16_t len);
-};
-
 class LedDevice : public Device
 {
 public:

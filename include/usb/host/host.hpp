@@ -3,6 +3,7 @@
 #include "tusb.h"
 #include "device.pb.h"
 #include "devices/base.hpp"
+#include "devices/midi.hpp"
 #include <vector>
 #include <unordered_map>
 #include <memory>
@@ -10,8 +11,8 @@
 class UsbHostInterface : public MidiDevice
 {
 public:
-    virtual ~UsbHostInterface() {printf("~UsbHostInterface()\r\n");};
-    UsbHostInterface(uint8_t d_addr, uint8_t interface, uint16_t id) : MidiDevice(id), m_dev_addr(d_addr), m_interface(interface) {}
+    virtual ~UsbHostInterface() { printf("~UsbHostInterface()\r\n"); };
+    UsbHostInterface(uint8_t d_addr, uint8_t interface, uint16_t id) : MidiDevice(id, true), m_dev_addr(d_addr), m_interface(interface) {}
     virtual bool set_config() = 0;
     virtual bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) = 0;
     uint8_t dev_addr()
@@ -33,9 +34,7 @@ public:
     {
         return 0;
     }
-    virtual void update(bool full_poll, bool send_events)
-    {
-    }
+    virtual void update(bool full_poll, bool send_events);
     bool is_wii_extension(WiiExtType type)
     {
         return false;
@@ -76,25 +75,13 @@ protected:
 class UsbHostDevice : public Device
 {
 public:
-    ~UsbHostDevice() {printf("~UsbHostDevice()\r\n");}
+    ~UsbHostDevice() { printf("~UsbHostDevice()\r\n"); }
     UsbHostDevice(uint8_t d_addr, uint16_t id) : Device(id), m_dev_addr(d_addr)
     {
     }
     uint8_t dev_addr()
     {
         return m_dev_addr;
-    }
-    uint16_t readMidiNote(uint8_t note)
-    {
-        return 0;
-    }
-    uint16_t readMidiControlChange(uint8_t cc)
-    {
-        return 0;
-    }
-    int16_t readMidiPitchBend()
-    {
-        return 0;
     }
     void update(bool full_poll, bool send_events)
     {

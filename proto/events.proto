@@ -59,6 +59,10 @@ message DebugEvent {
     repeated uint32 data = 1; 
 }
 
+message MidiEvent {
+    repeated uint32 data = 1; 
+}
+
 message Event {
     oneof event{
         ButtonEvent button = 1;   
@@ -72,6 +76,7 @@ message Event {
         DebugEvent debug = 9;
         ActivationTriggerEvent trigger = 10;  
         LedEvent led = 11;  
+        MidiEvent midiDebug = 12;
     };
 }
 

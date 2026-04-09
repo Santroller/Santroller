@@ -196,6 +196,7 @@ add_executable(
   src/devices/crazyneck.cpp
   src/devices/multiplexer.cpp
   src/devices/djh.cpp
+  src/devices/midi.cpp
   src/devices/gh5neck.cpp
   src/devices/max1704x.cpp
   src/devices/mpr121.cpp
@@ -234,7 +235,6 @@ target_link_libraries(
   pico_rand
   FlashPROM
   CRC32
-  midi
   crkd_neck
   peripherals
   quadrature_encoder

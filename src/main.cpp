@@ -72,7 +72,10 @@ void hid_task(void)
         seenHidDescriptorRead = false;
         tud_deinit(BOARD_TUD_RHPORT);
         load(config);
-        tud_init(BOARD_TUD_RHPORT);
+        const tusb_rhport_init_t rh_init = {
+            .role = TUSB_ROLE_DEVICE,
+            .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};
+        tud_rhport_init(BOARD_TUD_RHPORT, &rh_init);
         timeSinceMode = millis();
         return;
     }
@@ -117,6 +120,9 @@ void update()
     for (const auto &instance : active_instances)
     {
         instance->process();
+    }
+    for (const auto& device : assignable_usb_devices) {
+        device->update(false, false);
     }
     if (HIDConfigDevice::tool_closed())
     {

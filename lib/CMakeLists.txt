@@ -1,4 +1,3 @@
-add_subdirectory(midi)
 add_subdirectory(peripherals)
 add_subdirectory(band_hero_drum)
 add_subdirectory(crkd_neck)

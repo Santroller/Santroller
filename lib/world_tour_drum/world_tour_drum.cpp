@@ -29,7 +29,7 @@ void WorldTourDrum::tick() {
     uint8_t data;
     for (size_t i = 0; i < resp; i++) {
         data = mInterface->transfer(0x00);
-        midiInterface.parsePacket(&data, 1);
+        m_device->processMidiData(&data, 1);
         sleep_us(50);
     }
     gpio_put(mCsPin, true);

@@ -2,7 +2,7 @@
 #include "base.hpp"
 #include "device.pb.h"
 #include "band_hero_drum.hpp"
-class BandHeroDrumDevice : public Device
+class BandHeroDrumDevice : public MidiDevice
 {
 public:
     ~BandHeroDrumDevice() {}

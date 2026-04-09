@@ -1,9 +1,9 @@
 #pragma once
-#include <SimpleMidiTransport.hpp>
-
+#include <stdint.h>
 #include "i2c.hpp"
 #include "enums.pb.h"
 #include "input_enums.pb.h"
+#include "devices/midi.hpp"
 #define WII_ADDR 0x52
 #define WII_READ_ID 0xFA
 #define WII_ENCRYPTION_STATE_ID 0xF0
@@ -24,12 +24,11 @@ class WiiExtension
 {
 
 public:
-    inline WiiExtension(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock) : mInterface(block, sda, scl, clock), mFound(false)
+    inline WiiExtension(MidiDevice* midiDevice, uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock) : mInterface(block, sda, scl, clock), mFound(false), m_device(midiDevice)
     {
     }
     void tick();
     WiiExtType mType = WiiExtType::WiiNoExtension;
-    MIDI_NAMESPACE::SimpleMidiInterface midiInterface;
     uint16_t readAxis(proto_WiiAxisType type);
     bool readButton(proto_WiiButtonType type);
     uint8_t mBuffer[8];
@@ -50,6 +49,7 @@ private:
     uint8_t wiiBytes;
     uint8_t wiiPointer = 0;
     uint8_t s_box = 0;
+    MidiDevice *m_device;
 
     bool hiRes = false;
     bool hasTapBar = false;

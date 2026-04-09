@@ -1,16 +1,13 @@
 #pragma once
-#include <MIDI.h>
+#include "devices/midi.hpp"
 #include <stdint.h>
-
-#include <SimpleMidiTransport.hpp>
-
 #include "spi.hpp"
 #define DRUM_ADDR 0x0D
 #define BH_DRUM_PTR 0x10
 class WorldTourDrum {
    public:
-    WorldTourDrum(SPIMasterInterface* interface, uint8_t csPin)
-        : mInterface(interface), mCsPin(csPin) {};
+    WorldTourDrum(MidiDevice* midiDevice, SPIMasterInterface* interface, uint8_t csPin)
+        : mInterface(interface), mCsPin(csPin), m_device(midiDevice) {};
     void tick();
     inline bool is_connected() {
         return connected;
@@ -18,8 +15,8 @@ class WorldTourDrum {
 
    private:
     SPIMasterInterface* mInterface;
-    MIDI_NAMESPACE::SimpleMidiInterface midiInterface;
     uint8_t mCsPin;
     int missing;
     bool connected;
+    MidiDevice *m_device;
 };

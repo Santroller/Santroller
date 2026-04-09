@@ -3,6 +3,7 @@
 #include "usb/host/midi_host.h"
 #include "class/midi/midi.h"
 #include "class/audio/audio.h"
+#include "config.hpp"
 
 #define TU_LOG_DRV(...) TU_LOG(1, __VA_ARGS__)
 
@@ -21,18 +22,12 @@ typedef struct TU_ATTR_PACKED
 MidiHost::~MidiHost()
 {
   TU_LOG_DRV("MIDI Host Interface destroyed\r\n");
-    tu_edpt_stream_deinit(&ep_stream.rx);
-    tu_edpt_stream_deinit(&ep_stream.tx);
+  tu_edpt_stream_deinit(&ep_stream.rx);
+  tu_edpt_stream_deinit(&ep_stream.tx);
 }
 
 MidiHost::MidiHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id)
 {
-
-  tu_memclr(&ep_stream, sizeof(ep_stream));
-  tu_edpt_stream_init(&ep_stream.rx, true, false, false,
-    ep_stream.rx_ff_buf, TUH_EPSIZE_BULK_MAX, m_ep_in_buf);
-  tu_edpt_stream_init(&ep_stream.tx, true, true, false,
-    ep_stream.tx_ff_buf, TUH_EPSIZE_BULK_MAX, m_ep_out_buf);
 }
 
 std::shared_ptr<UsbHostInterface> MidiHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
@@ -154,19 +149,21 @@ std::shared_ptr<UsbHostInterface> MidiHost::open(std::shared_ptr<UsbHostDevice> 
         {
           intf->tx_cable_count = p_csep->bNumEmbMIDIJack;
           ep_stream = &intf->ep_stream.tx;
+          intf->m_ep_out = p_ep->bEndpointAddress;
           list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
         }
         else
         {
           intf->rx_cable_count = p_csep->bNumEmbMIDIJack;
           ep_stream = &intf->ep_stream.rx;
+          intf->m_ep_in = p_ep->bEndpointAddress;
           list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
         }
       }
       TU_ASSERT(tuh_edpt_open(dev_addr, p_ep), 0);
       tu_edpt_stream_open(ep_stream, dev_addr, p_ep, tu_edpt_packet_size(p_ep));
       tu_edpt_stream_clear(ep_stream);
-
+      assignable_usb_devices.push_back(intf);
       break;
     }
 
@@ -181,6 +178,7 @@ std::shared_ptr<UsbHostInterface> MidiHost::open(std::shared_ptr<UsbHostDevice> 
 
 bool MidiHost::set_config()
 {
+  tu_edpt_stream_read_xfer(&ep_stream.rx);
   return true;
 }
 
@@ -197,7 +195,7 @@ bool MidiHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_b
       tu_edpt_stream_read_xfer_complete(ep_str_rx, xferred_bytes);
       // tuh_midi_rx_cb(idx, xferred_bytes);
     }
-
+    
     tu_edpt_stream_read_xfer(ep_str_rx); // prepare for next transfer
   }
   else if (ep_addr == ep_str_tx->ep_addr)

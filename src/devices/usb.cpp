@@ -70,6 +70,7 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
 
 void USBHostHardwareDevice::update(bool full_poll, bool send_events)
 {
+    MidiDevice::update(full_poll, send_events);
 }
 
 bool USBHostHardwareDevice::using_pin(uint8_t pin)
@@ -82,6 +83,11 @@ bool usbh_init(void)
     printf("usbh init\r\n");
     host_devices.clear();
     return true;
+}
+
+void UsbHostInterface::update(bool full_poll, bool send_events)
+{
+    MidiDevice::update(full_poll, send_events);
 }
 
 bool UsbHostInterface::send_intr_xfer(uint8_t endpoint, const void *buffer, uint8_t len)

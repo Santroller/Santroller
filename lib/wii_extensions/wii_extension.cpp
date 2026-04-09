@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-#include "MidiNotes.h"
+#include "devices/midi.hpp"
 #include "main.hpp"
 #include <cmath>
 #include "utils.h"
@@ -201,8 +201,8 @@ void WiiExtension::tick()
         if (velocity || note)
         {
             // Sadly the wii drums don't include the status byte, so we have to make one up.
-            uint8_t packet[] = {MIDI_NAMESPACE::NoteOn, channel, note, velocity};
-            midiInterface.parsePacket(packet, sizeof(packet));
+            uint8_t packet[] = {0, MIDI_CIN_NOTE_ON << 4 | channel, note, velocity};
+            m_device->processMidiData(packet, sizeof(packet));
         }
     }
     if (mType == WiiExtType::WiiGuitarHeroGuitar)

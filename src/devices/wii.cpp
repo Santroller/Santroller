@@ -3,7 +3,7 @@
 #include "main.hpp"
 #include "usb/device/hid_device.h"
 #include "config.hpp"
-WiiDevice::WiiDevice(proto_WiiDevice device, uint16_t id) : MidiDevice(id), m_extension(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
+WiiDevice::WiiDevice(proto_WiiDevice device, uint16_t id) : MidiDevice(id, false), m_extension(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
 {
 }
 void WiiDevice::rescan(bool first)
@@ -32,6 +32,7 @@ void WiiDevice::update(bool full_poll, bool send_events)
         }
         rescan(false);
     }
+    MidiDevice::update(full_poll, send_events);
 }
 uint16_t WiiDevice::readAxis(proto_WiiAxisType type)
 {
@@ -44,27 +45,6 @@ bool WiiDevice::readButton(proto_WiiButtonType type)
 bool WiiDevice::is_wii_extension(WiiExtType type)
 {
     return m_extension.mType == type;
-}
-uint16_t WiiDevice::readMidiNote(uint8_t note)
-{
-    return m_extension.midiInterface.midiVelocities[note] << 8;
-}
-uint16_t WiiDevice::readMidiControlChange(uint8_t cc)
-{
-    switch (cc)
-    {
-    case MIDI_CONTROL_COMMAND_MOD_WHEEL:
-        return m_extension.midiInterface.midiModWheel << 8;
-    case MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL:
-        return m_extension.midiInterface.midiSustainPedal << 8;
-    default:
-        return 0;
-    }
-    return 0;
-}
-int16_t WiiDevice::readMidiPitchBend()
-{
-    return m_extension.midiInterface.midiPitchWheel;
 }
 
 bool WiiDevice::using_pin(uint8_t pin)

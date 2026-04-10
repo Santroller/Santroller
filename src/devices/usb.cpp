@@ -150,7 +150,9 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
         if (dev != nullptr)
         {
             list->host_devices_by_itf[desc_itf->bInterfaceNumber] = dev;
-            reload();
+            if (HIDConfigDevice::tool_closed()) {
+                reload();
+            }
             return out_len;
         }
     }
@@ -174,7 +176,9 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
 void usbh_close(uint8_t dev_addr)
 {
     printf("usbh close %d %d\r\n", dev_addr);
-    reload();
+    if (HIDConfigDevice::tool_closed()) {
+        reload();
+    }
 }
 
 static const usbh_class_driver_t driver_host[] = {

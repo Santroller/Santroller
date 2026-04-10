@@ -661,6 +661,7 @@ uint32_t copy_config_info(uint8_t *buffer)
 
 void reload()
 {
+    printf("reload called\r\n");
     reinit = true;
 }
 

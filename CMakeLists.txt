@@ -235,6 +235,7 @@ target_link_libraries(
   pico_stdlib
   pico_rand
   FlashPROM
+  ring_buffer
   CRC32
   crkd_neck
   peripherals

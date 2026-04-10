@@ -18,7 +18,6 @@ MidiDevice::MidiDevice(uint16_t id, bool usbBased) : Device(id), drumMode(false)
 
 void MidiDevice::rescan(bool first)
 {
-    printf("rescan midi device %d %d\r\n", m_id, first);
     if (first)
     {
         for (int i = 0; i < 16; i++)

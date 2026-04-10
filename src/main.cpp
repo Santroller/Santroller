@@ -42,7 +42,8 @@
 
 #include "usb/usb_descriptors.h"
 #include <pico_fota_bootloader/core.h>
-
+#include "ring_buffer.h"
+void hid_task(void);
 proto_Config config;
 uint32_t timeSinceMode = millis();
 bool seenPs4 = false;
@@ -52,15 +53,22 @@ bool seenReadAnyDeviceString = false;
 bool seenHidDescriptorRead = false;
 bool reinit = false;
 proto_Event console_event = {which_event : proto_Event_console_tag, event : {console : {data : {}}}};
-uint8_t out_char_count = 0;
+ring_buffer_t console_buf;
+char console_buf_data[1024];
 void out_chars(const char *buf, int len) {
-    memcpy(console_event.event.console.data+out_char_count, buf, len);
-    out_char_count += len;
+    ring_buffer_push(&console_buf, buf, len);
 }
 void out_flush(void) {
-    HIDConfigDevice::send_event(console_event);
-    memset(console_event.event.console.data, 0, sizeof(console_event.event.console.data));
-    out_char_count = 0;
+    if (HIDConfigDevice::tool_closed()) {
+        return;
+    }
+    while (!ring_buffer_is_empty(&console_buf)) {
+        tu_memclr(console_event.event.console.data, 32);
+        ring_buffer_pop(&console_buf, console_event.event.console.data, 31);
+        HIDConfigDevice::send_event(console_event);
+        hid_task();
+        tud_task();
+    }
 }
 int in_chars(char *buf, int len) {
     return 0;
@@ -74,7 +82,7 @@ stdio_driver_t usb_driver = {
     .in_chars = in_chars,
     .set_chars_available_callback = set_chars_available_callback,
     .next = nullptr,
-    .last_ended_with_cr = false,
+    .last_ended_with_cr = true,
     .crlf_enabled = true
 };
 bool mode_recently_changed()
@@ -188,6 +196,7 @@ int main()
     multicore_launch_core1(core1);
     adc_init();
     // stdio_uart_init_full(uart_get_instance(1), 115200, 8, 9);
+    ring_buffer_init(&console_buf, console_buf_data, sizeof(console_buf_data), 0);
     stdio_set_driver_enabled(&usb_driver, true);
     EEPROM.start();
     if (!load(config))

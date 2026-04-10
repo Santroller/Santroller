@@ -24,7 +24,7 @@ set(PICO_BTSTACK_PATH ${CMAKE_SOURCE_DIR}/lib/btstack)
 set(PICO_BOARD pico_w CACHE STRING "Board type")
 set(BLUEPAD32_ROOT ${CMAKE_SOURCE_DIR}/lib/bluepad32)
 set(PFB_WITH_IMAGE_ENCRYPTION OFF)
-# set(PFB_WITH_SHA256_HASHING OFF)
+set(PFB_WITH_SHA256_HASHING OFF)
 set(PFB_RESERVED_FILESYSTEM_SIZE_KB 8)
 
 include(pico_sdk_import.cmake)
@@ -284,6 +284,10 @@ target_link_libraries(
   tinyusb_device_unmarked)
 
 pfb_compile_with_bootloader(${TARGET})
+
+if (PICO_BOARD STREQUAL "pico2_w")
+  set_property(TARGET ${TARGET} PROPERTY PICOTOOL_EXTRA_UF2_ARGS --platform rp2350)
+endif()
 pico_add_extra_outputs(${TARGET})
 
 add_custom_target(build_combined ALL

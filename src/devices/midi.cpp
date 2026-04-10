@@ -167,16 +167,8 @@ void MidiDevice::update(bool full_poll, bool send_events)
         {
             // then this is the last byte of the message, so reset pos for next message
             cable_state->pos = 0;
-            // if (cable_state->data[0] != 0xF8)
-            // {
-            //     printf("got message (%d %d): ", cable_state->actual_size, usb_pos);
-            //     for (int i = 0; i < cable_state->actual_size; i++)
-            //     {
-            //         printf("%02x, ", cable_state->data[i]);
-            //     }
-            //     printf("\r\n");
-            // }
-            if (cable_state->data[0] != 0xF8)
+            // lets not send timing clock signals to the monitor
+            if (cable_state->data[0] != MIDI_STATUS_SYSREAL_TIMING_CLOCK)
             {
                 uint8_t data_size = MIN(32, cable_state->actual_size);
                 proto_Event event = {which_event : proto_Event_midiDebug_tag, event : {midiDebug : {data : {size : data_size, bytes : {0}}}}};
@@ -198,7 +190,6 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 [[fallthrough]];
             case MIDI_CIN_NOTE_ON:
                 midiVelocities[channel][cable_state->data[1]] = cable_state->data[2];
-                printf("Note %s: %02x, velocity %02x\r\n", (status == MIDI_CIN_NOTE_ON) ? "ON" : "OFF", cable_state->data[1], cable_state->data[2]);
                 break;
             case MIDI_CIN_CONTROL_CHANGE:
                 if (cable_state->data[1] == MIDI_CONTROL_COMMAND_MOD_WHEEL)
@@ -209,30 +200,27 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 {
                     midiSustainPedal[channel] = cable_state->data[2];
                 }
-                printf("Control Change: %02x, value %02x\r\n", cable_state->data[1], cable_state->data[2]);
                 break;
             case MIDI_CIN_PITCH_BEND_CHANGE:
                 midiPitchWheel[channel] = ((int16_t)cable_state->data[3] << 7) | cable_state->data[2];
-                printf("Pitch Bend: %04x\r\n", (uint16_t)midiPitchWheel[channel]);
                 break;
             case MIDI_CIN_POLY_KEYPRESS:
-                printf("Channel message 3 bytes %02x %02x %02x\r\n", cable_state->data[1], cable_state->data[2], cable_state->data[3]);
                 break;
             case MIDI_CIN_PROGRAM_CHANGE:
             case MIDI_CIN_CHANNEL_PRESSURE:
-                printf("Channel message 2 bytes %02x %02x %02x\r\n", cable_state->data[1], cable_state->data[2]);
                 break;
             default:
                 break; // Should not get this
             }
             if (cable_state->data[0] == MIDI_STATUS_SYSEX_START)
             {
-                printf("Sysex message: ");
-                for (int i = 0; i < cable_state->actual_size; i++)
-                {
-                    printf("%02x, ", cable_state->data[i]);
-                }
-                printf("\r\n");
+                // TODO: handle pro guitar
+                // printf("Sysex message: ");
+                // for (int i = 0; i < cable_state->actual_size; i++)
+                // {
+                //     printf("%02x, ", cable_state->data[i]);
+                // }
+                // printf("\r\n");
             }
             // at this point we can look at the state and process the message.
             if (usb_pos < USB_PACKET_SIZE && usbBased)

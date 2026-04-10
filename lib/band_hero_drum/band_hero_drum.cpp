@@ -1,5 +1,4 @@
 #include "band_hero_drum.hpp"
-#include "main.hpp"
 #include "utils.h"
 void BandHeroDrum::tick()
 {

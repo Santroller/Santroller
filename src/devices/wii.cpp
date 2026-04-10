@@ -8,6 +8,7 @@ WiiDevice::WiiDevice(proto_WiiDevice device, uint16_t id) : MidiDevice(id, false
 }
 void WiiDevice::rescan(bool first)
 {
+    MidiDevice::rescan(first);
     if (first)
     {
         assignable_devices.push_back(active_devices.back());

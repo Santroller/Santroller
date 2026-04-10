@@ -2,7 +2,9 @@
 #include "events.pb.h"
 #include "usb/device/hid_device.h"
 #include "main.hpp"
+#include "config.hpp"
 
+static std::map<std::tuple<uint16_t, uint16_t>, bool> seenChannels;
 MidiDevice::MidiDevice(uint16_t id, bool usbBased) : Device(id), drumMode(false), usbBased(usbBased)
 {
     tu_memclr(&ep_stream, sizeof(ep_stream));
@@ -11,6 +13,21 @@ MidiDevice::MidiDevice(uint16_t id, bool usbBased) : Device(id), drumMode(false)
     tu_edpt_stream_init(&ep_stream.tx, true, true, false,
                         ep_stream.tx_ff_buf, TUH_EPSIZE_BULK_MAX, m_ep_out_buf);
     memset(cable_status, 0, sizeof(cable_status));
+}
+
+void MidiDevice::rescan(bool first)
+{
+    if (first)
+    {
+        for (int i = 0; i < 16; i++)
+        {
+            channelDevices[i] = std::make_shared<MidiDeviceWithChannel>(m_id, i, std::static_pointer_cast<MidiDevice>(active_devices.back()));
+            if (seenChannels.find({m_id, i}) != seenChannels.end())
+            {
+                assignable_devices.push_back(channelDevices[i]);
+            }
+        }
+    }
 }
 
 MidiDevice::~MidiDevice()
@@ -26,20 +43,6 @@ void MidiDevice::processMidiData(uint8_t *data, uint16_t len)
     memcpy(ep_str_rx->ep_buf, data, len);
     tu_edpt_stream_read_xfer_complete(ep_str_rx, len);
 }
-
-uint16_t MidiDevice::readMidiNote(uint8_t note)
-{
-    return 0;
-}
-uint16_t MidiDevice::readMidiControlChange(uint8_t cc)
-{
-    return 0;
-}
-int16_t MidiDevice::readMidiPitchBend()
-{
-    return 0;
-}
-
 void MidiDevice::update(bool full_poll, bool send_events)
 {
     uint8_t one_byte;
@@ -173,7 +176,7 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 uint8_t data_size = MIN(32, cable_state->actual_size);
                 proto_Event event = {which_event : proto_Event_midiDebug_tag, event : {midiDebug : {data : {size : data_size, bytes : {0}}}}};
                 memcpy(event.event.midiDebug.data.bytes, cable_state->data, data_size);
-                HIDConfigDevice::send_event(event), data_size;
+                HIDConfigDevice::send_event(event);
             }
             uint8_t status = (cable_state->data[0] & 0xf0) >> 4;
             uint8_t channel = cable_state->data[0] & 0x0f;
@@ -192,17 +195,12 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 midiVelocities[channel][cable_state->data[1]] = cable_state->data[2];
                 break;
             case MIDI_CIN_CONTROL_CHANGE:
-                if (cable_state->data[1] == MIDI_CONTROL_COMMAND_MOD_WHEEL)
-                {
-                    midiModWheel[channel] = cable_state->data[2];
-                }
-                else if (cable_state->data[1] == MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL)
-                {
-                    midiSustainPedal[channel] = cable_state->data[2];
-                }
+                midiControlChanges[channel][cable_state->data[1]] = cable_state->data[2];
+                seenChannels[{m_id, channel}] = true;
                 break;
             case MIDI_CIN_PITCH_BEND_CHANGE:
                 midiPitchWheel[channel] = ((int16_t)cable_state->data[3] << 7) | cable_state->data[2];
+                seenChannels[{m_id, channel}] = true;
                 break;
             case MIDI_CIN_POLY_KEYPRESS:
                 break;
@@ -210,7 +208,16 @@ void MidiDevice::update(bool full_poll, bool send_events)
             case MIDI_CIN_CHANNEL_PRESSURE:
                 break;
             default:
-                break; // Should not get this
+                break;
+            }
+            if (status < MIDI_STATUS_SYSEX_START)
+            {
+                if (seenChannels.find({m_id, channel}) == seenChannels.end())
+                {
+                    printf("Seen new MIDI channel: %d on device %d\r\n", channel, m_id);
+                    seenChannels[{m_id, channel}] = true;
+                    reload();
+                }
             }
             if (cable_state->data[0] == MIDI_STATUS_SYSEX_START)
             {

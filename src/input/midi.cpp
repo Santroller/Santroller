@@ -4,7 +4,7 @@
 #include "stdio.h"
 
 
-MidiNoteInput::MidiNoteInput(proto_MidiNoteInput input, std::shared_ptr<MidiDevice> device) : m_input(input), m_device(device)
+MidiNoteInput::MidiNoteInput(proto_MidiNoteInput input, std::shared_ptr<MidiDeviceWithChannel> device) : m_input(input), m_device(device)
 {
 }
 bool MidiNoteInput::tickDigital()
@@ -18,7 +18,7 @@ uint16_t MidiNoteInput::tickAnalog()
 void MidiNoteInput::setup()
 {
 }
-MidiControlChangeInput::MidiControlChangeInput(proto_MidiControlChangeInput input, std::shared_ptr<MidiDevice> device) : m_input(input), m_device(device)
+MidiControlChangeInput::MidiControlChangeInput(proto_MidiControlChangeInput input, std::shared_ptr<MidiDeviceWithChannel> device) : m_input(input), m_device(device)
 {
 }
 bool MidiControlChangeInput::tickDigital()
@@ -32,7 +32,7 @@ uint16_t MidiControlChangeInput::tickAnalog()
 void MidiControlChangeInput::setup()
 {
 }
-MidiPitchBendInput::MidiPitchBendInput(proto_MidiPitchBendInput input, std::shared_ptr<MidiDevice> device) : m_input(input), m_device(device)
+MidiPitchBendInput::MidiPitchBendInput(proto_MidiPitchBendInput input, std::shared_ptr<MidiDeviceWithChannel> device) : m_input(input), m_device(device)
 {
 }
 bool MidiPitchBendInput::tickDigital()

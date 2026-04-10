@@ -32,19 +32,16 @@ message MPR121Input {
 
 message MidiNoteInput { 
   required int32 deviceid = 1;
-  required int32 channel = 2;
-  required int32 note = 3; 
+  required int32 note = 2; 
 }
 
 message MidiControlChangeInput { 
   required int32 deviceid = 1;
-  required int32 channel = 2;
-  required int32 cc = 3; 
+  required int32 cc = 2; 
 }
 
 message MidiPitchBendInput { 
   required int32 deviceid = 1; 
-  required int32 channel = 2;
 }
 
 message FixedInput { required int32 value = 1; }

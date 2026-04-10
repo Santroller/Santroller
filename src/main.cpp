@@ -56,13 +56,16 @@ proto_Event console_event = {which_event : proto_Event_console_tag, event : {con
 ring_buffer_t console_buf;
 char console_buf_data[1024];
 void out_chars(const char *buf, int len) {
+    if (HIDConfigDevice::tool_closed()) {
+        return;
+    }
     ring_buffer_push(&console_buf, buf, len);
 }
 void out_flush(void) {
     if (HIDConfigDevice::tool_closed()) {
         return;
     }
-    while (!ring_buffer_is_empty(&console_buf)) {
+    while (!ring_buffer_is_empty(&console_buf) && !HIDConfigDevice::tool_closed()) {
         tu_memclr(console_event.event.console.data, 32);
         ring_buffer_pop(&console_buf, console_event.event.console.data, 31);
         HIDConfigDevice::send_event(console_event);

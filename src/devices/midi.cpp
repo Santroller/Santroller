@@ -219,7 +219,10 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 {
                     printf("Seen new MIDI channel: %d on device %d\r\n", channel, m_id);
                     seenChannels[{m_id, channel}] = true;
-                    reload();
+                    if (HIDConfigDevice::tool_closed())
+                    {
+                        reload();
+                    }
                 }
             }
             if (cable_state->data[0] == MIDI_STATUS_SYSEX_START)
@@ -247,7 +250,6 @@ void MidiDevice::update(bool full_poll, bool send_events)
         }
     }
 }
-
 
 uint16_t MidiDevice::readMidiNote(uint8_t channel, uint8_t note)
 {

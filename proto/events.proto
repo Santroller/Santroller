@@ -58,6 +58,9 @@ message PS2DeviceHotplugEvent {
 message DebugEvent {
     required bytes data = 1; 
 }
+message ConsoleEvent {
+    required string data = 1; 
+}
 
 message MidiEvent {
     required bytes data = 1;  
@@ -77,6 +80,7 @@ message Event {
         ActivationTriggerEvent trigger = 10;  
         LedEvent led = 11;  
         MidiEvent midiDebug = 12;
+        ConsoleEvent console = 13;
     };
 }
 

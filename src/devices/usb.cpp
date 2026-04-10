@@ -11,6 +11,7 @@
 static uint8_t usb_host_id;
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : UsbHostInterface(0, 0, id), m_device(device)
 {
+    printf("UsbHostHardwareDevice: %p\r\n", this);
     if (device.firstPin == -1)
     {
         return;

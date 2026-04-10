@@ -14,6 +14,7 @@ public:
     virtual bool is_bluetooth_device(proto_SpecificUsbDevice type);
     virtual bool is_bluetooth_type(SubType type);
     virtual bool is_ps2_device(PS2ControllerType type);
+    virtual bool has_midi_channel(uint8_t channel);
     virtual bool using_pin(uint8_t pin) = 0;
     virtual void rescan(bool first);
     uint16_t m_id;

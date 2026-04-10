@@ -289,5 +289,21 @@ MidiChannelActivationTrigger::MidiChannelActivationTrigger(uint32_t channel, uin
 
 bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
+    auto it = assignable_devices.begin();
+    while (it != assignable_devices.end())
+    {
+        auto device = *it;
+        if (device->has_midi_channel(m_channel))
+        {
+            if (claim_device)
+            {
+                assignable_devices.erase(it);
+                printf("Claimed device: %d %p %p\r\n", m_profile_id, all_profiles[m_profile_id], device);
+                all_profiles[m_profile_id]->midiDevices[device->m_id] = device;
+            }
+            return true;
+        }
+        it++;
+    }
     return false;
 }

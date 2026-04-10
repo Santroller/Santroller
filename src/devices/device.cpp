@@ -23,4 +23,8 @@ bool Device::is_ps2_device(PS2ControllerType type)
 {
     return false;
 }
+bool Device::has_midi_channel(uint8_t channel)
+{
+    return false;
+}
 void Device::rescan(bool first) {}

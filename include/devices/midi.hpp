@@ -7,6 +7,7 @@
 #include "host/usbh_pvt.h"
 #include "class/midi/midi.h"
 #include <memory>
+#include <vector>
 
 #define MIDI_CONTROL_COMMAND_MOD_WHEEL 1
 #define MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL 64
@@ -29,22 +30,10 @@ public:
     void processMidiData(uint8_t *data, uint16_t len);
     virtual void update(bool full_poll, bool send_events);
     virtual void rescan(bool first);
-    uint16_t readMidiNote(uint8_t channel, uint8_t note)
-    {
-        return midiVelocities[channel][note];
-    }
-    uint16_t readMidiControlChange(uint8_t channel, uint8_t cc)
-    {
-        return midiControlChanges[channel][cc];
-    }
-    int16_t readMidiPitchBend(uint8_t channel)
-    {
-        return midiPitchWheel[channel];
-    }
-    std::shared_ptr<MidiDeviceWithChannel> getDeviceForChannel(uint8_t channel)
-    {
-        return channelDevices[channel];
-    }
+    uint16_t readMidiNote(uint8_t channel, uint8_t note);
+    uint16_t readMidiControlChange(uint8_t channel, uint8_t cc);
+    int16_t readMidiPitchBend(uint8_t channel);
+    std::shared_ptr<MidiDeviceWithChannel> getDeviceForChannel(uint8_t channel);
 
 private:
     // Endpoint stream
@@ -65,7 +54,7 @@ private:
     bool usbBased;
     cable_state_t cable_status[16];
     uint8_t usb_pos = 0;
-    std::shared_ptr<MidiDeviceWithChannel> channelDevices[16];
+    std::vector<std::shared_ptr<MidiDeviceWithChannel>> channelDevices;
 };
 
 class MidiDeviceWithChannel : public Device
@@ -73,18 +62,9 @@ class MidiDeviceWithChannel : public Device
 public:
     MidiDeviceWithChannel(uint16_t id, uint8_t channel, std::shared_ptr<MidiDevice> midi_device) : Device(id), m_channel(channel), m_midi_device(midi_device) {}
     ~MidiDeviceWithChannel() {}
-    uint16_t readMidiNote(uint8_t note)
-    {
-        return m_midi_device->readMidiNote(m_channel, note);
-    }
-    uint16_t readMidiControlChange(uint8_t cc)
-    {
-        return m_midi_device->readMidiControlChange(m_channel, cc);
-    }
-    int16_t readMidiPitchBend()
-    {
-        return m_midi_device->readMidiPitchBend(m_channel);
-    }
+    uint16_t readMidiNote(uint8_t note);
+    uint16_t readMidiControlChange(uint8_t cc);
+    int16_t readMidiPitchBend();
     void update(bool full_poll, bool send_events) {};
     bool is_wii_extension(WiiExtType type) { return false; }
     bool is_usb_device(proto_SpecificUsbDevice type) { return false; }
@@ -92,6 +72,7 @@ public:
     bool is_bluetooth_device(proto_SpecificUsbDevice type) { return false; }
     bool is_bluetooth_type(SubType type) { return false; }
     bool is_ps2_device(PS2ControllerType type) { return false; }
+    bool has_midi_channel(uint8_t channel) { return m_channel == channel; }
     bool using_pin(uint8_t pin) { return m_midi_device->using_pin(pin); }
 
 private:

@@ -7,6 +7,7 @@
 static std::map<std::tuple<uint16_t, uint16_t>, bool> seenChannels;
 MidiDevice::MidiDevice(uint16_t id, bool usbBased) : Device(id), drumMode(false), usbBased(usbBased)
 {
+    printf("MIDI Device (%p) created with id %d\r\n", this, id);
     tu_memclr(&ep_stream, sizeof(ep_stream));
     tu_edpt_stream_init(&ep_stream.rx, true, false, false,
                         ep_stream.rx_ff_buf, TUH_EPSIZE_BULK_MAX, m_ep_in_buf);
@@ -17,14 +18,17 @@ MidiDevice::MidiDevice(uint16_t id, bool usbBased) : Device(id), drumMode(false)
 
 void MidiDevice::rescan(bool first)
 {
+    printf("rescan midi device %d %d\r\n", m_id, first);
     if (first)
     {
         for (int i = 0; i < 16; i++)
         {
-            channelDevices[i] = std::make_shared<MidiDeviceWithChannel>(m_id, i, std::static_pointer_cast<MidiDevice>(active_devices.back()));
+            printf("pushing back: %d %d\r\n", m_id, channelDevices.size());
+            channelDevices.push_back(std::make_shared<MidiDeviceWithChannel>(m_id, i, std::static_pointer_cast<MidiDevice>(active_devices.back())));
             if (seenChannels.find({m_id, i}) != seenChannels.end())
             {
-                assignable_devices.push_back(channelDevices[i]);
+                printf("Assigning MIDI channel: %d on device %d (%p -> %p)\r\n", i, m_id, this, channelDevices.back());
+                assignable_devices.push_back(channelDevices.back());
             }
         }
     }
@@ -243,4 +247,36 @@ void MidiDevice::update(bool full_poll, bool send_events)
             usb_pos = 0;
         }
     }
+}
+
+
+uint16_t MidiDevice::readMidiNote(uint8_t channel, uint8_t note)
+{
+    return midiVelocities[channel][note];
+}
+uint16_t MidiDevice::readMidiControlChange(uint8_t channel, uint8_t cc)
+{
+    return midiControlChanges[channel][cc];
+}
+int16_t MidiDevice::readMidiPitchBend(uint8_t channel)
+{
+    return midiPitchWheel[channel];
+}
+std::shared_ptr<MidiDeviceWithChannel> MidiDevice::getDeviceForChannel(uint8_t channel)
+{
+    printf("Getting device for MIDI channel %d on device %d, %d (%p)\r\n", channel, m_id, channelDevices.size(), this);
+    return channelDevices[channel];
+}
+
+uint16_t MidiDeviceWithChannel::readMidiNote(uint8_t note)
+{
+    return m_midi_device->readMidiNote(m_channel, note);
+}
+uint16_t MidiDeviceWithChannel::readMidiControlChange(uint8_t cc)
+{
+    return m_midi_device->readMidiControlChange(m_channel, cc);
+}
+int16_t MidiDeviceWithChannel::readMidiPitchBend()
+{
+    return m_midi_device->readMidiPitchBend(m_channel);
 }

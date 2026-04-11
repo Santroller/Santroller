@@ -46,3 +46,33 @@ uint16_t MidiPitchBendInput::tickAnalog()
 void MidiPitchBendInput::setup()
 {
 }
+
+MidiProGuitarButtonInput::MidiProGuitarButtonInput(proto_MidiProGuitarButtonInput input, std::shared_ptr<ProGuitarMidiDevice> device) : m_input(input), m_device(device)
+{
+}
+bool MidiProGuitarButtonInput::tickDigital()
+{
+    return m_device->readProGuitarButton(m_input.button) ? 65535 : 0;
+}
+uint16_t MidiProGuitarButtonInput::tickAnalog()
+{
+    return m_device->readProGuitarButton(m_input.button);
+}
+void MidiProGuitarButtonInput::setup()
+{
+}
+
+MidiProGuitarAxisInput::MidiProGuitarAxisInput(proto_MidiProGuitarAxisInput input, std::shared_ptr<ProGuitarMidiDevice> device) : m_input(input), m_device(device)
+{
+}
+bool MidiProGuitarAxisInput::tickDigital()
+{
+    return m_device->readProGuitarAxis(m_input.axis) > 0;
+}
+uint16_t MidiProGuitarAxisInput::tickAnalog()
+{
+    return m_device->readProGuitarAxis(m_input.axis);
+}
+void MidiProGuitarAxisInput::setup()
+{
+}

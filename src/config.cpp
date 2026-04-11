@@ -182,6 +182,10 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
         return std::unique_ptr<Input>(new MidiControlChangeInput(input.input.midiControlChange, std::static_pointer_cast<MidiDeviceWithChannel>(profile->midiDevices[input.input.midiControlChange.deviceid])));
     case proto_Input_midiPitchBend_tag:
         return std::unique_ptr<Input>(new MidiPitchBendInput(input.input.midiPitchBend, std::static_pointer_cast<MidiDeviceWithChannel>(profile->midiDevices[input.input.midiPitchBend.deviceid])));
+    case proto_Input_midiProGuitarButton_tag:
+        return std::unique_ptr<Input>(new MidiProGuitarButtonInput(input.input.midiProGuitarButton, std::static_pointer_cast<ProGuitarMidiDevice>(profile->midiDevices[input.input.midiProGuitarButton.deviceid])));
+    case proto_Input_midiProGuitarAxis_tag:
+        return std::unique_ptr<Input>(new MidiProGuitarAxisInput(input.input.midiProGuitarAxis, std::static_pointer_cast<ProGuitarMidiDevice>(profile->midiDevices[input.input.midiProGuitarAxis.deviceid])));
     case proto_Input_mouseAxis_tag:
         return std::unique_ptr<Input>(new MouseAxisInput(input.input.mouseAxis, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.mouseAxis.deviceid])));
     case proto_Input_mouseButton_tag:

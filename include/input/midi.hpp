@@ -40,3 +40,27 @@ private:
     proto_MidiPitchBendInput m_input;
     std::shared_ptr<MidiDeviceWithChannel> m_device;
 };
+class MidiProGuitarButtonInput : public Input
+{
+public:
+    MidiProGuitarButtonInput(proto_MidiProGuitarButtonInput input, std::shared_ptr<ProGuitarMidiDevice> device);
+    bool tickDigital();
+    uint16_t tickAnalog();
+
+private:
+    void setup();
+    proto_MidiProGuitarButtonInput m_input;
+    std::shared_ptr<ProGuitarMidiDevice> m_device;
+};
+class MidiProGuitarAxisInput : public Input
+{
+public:
+    MidiProGuitarAxisInput(proto_MidiProGuitarAxisInput input, std::shared_ptr<ProGuitarMidiDevice> device);
+    bool tickDigital();
+    uint16_t tickAnalog();
+
+private:
+    void setup();
+    proto_MidiProGuitarAxisInput m_input;
+    std::shared_ptr<ProGuitarMidiDevice> m_device;
+};

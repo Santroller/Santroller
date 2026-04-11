@@ -9,7 +9,8 @@
 #define SIMULTANEOUS_KEYS 6
 #define KEYCODE_F24 115
 
-typedef struct {
+typedef struct
+{
     uint8_t rid;
     bool left : 1;
     bool right : 1;
@@ -20,7 +21,8 @@ typedef struct {
     int8_t scrollY; /** Current scroll Y delta movement on the mouse */
     int8_t scrollX; /** Current scroll X delta movement on the mouse */
 } __attribute__((packed)) USB_Mouse_Data_t;
-typedef struct {
+typedef struct
+{
     uint8_t rid;
     bool mediaNextTrack : 1;
     bool mediaPreviousTrack : 1;
@@ -32,7 +34,8 @@ typedef struct {
     bool : 1;
 } USB_ConsumerControl_Data_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t rid;
     bool leftCtrl : 1;
     bool leftShift : 1;
@@ -42,8 +45,10 @@ typedef struct {
     bool rightShift : 1;
     bool rightAlt : 1;
     bool rWin : 1;
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             uint8_t : 4;
             bool a : 1;
             bool b : 1;
@@ -91,7 +96,7 @@ typedef struct {
             bool oemOpenBrackets : 1;
             bool oemCloseBrackets : 1;
             bool oemPipe : 1;
-            bool : 1;  // Unused ansi pipe
+            bool : 1; // Unused ansi pipe
             bool oemSemicolon : 1;
             bool oemQuotes : 1;
             bool oemTilde : 1;
@@ -129,7 +134,7 @@ typedef struct {
             bool multiply : 1;
             bool subtract : 1;
             bool add : 1;
-            bool : 1;  // numpad enter
+            bool : 1; // numpad enter
             bool numPad1 : 1;
             bool numPad2 : 1;
             bool numPad3 : 1;
@@ -164,7 +169,8 @@ typedef struct {
     };
 
 } __attribute__((packed)) USB_NKRO_Data_t;
-typedef struct {
+typedef struct
+{
     uint8_t rid;
     bool leftCtrl : 1;
     bool leftShift : 1;
@@ -179,7 +185,8 @@ typedef struct {
                                            keys. */
 } __attribute__((packed)) USB_6KRO_Data_t;
 
-typedef struct {
+typedef struct
+{
     bool leftCtrl : 1;
     bool leftShift : 1;
     bool leftAlt : 1;
@@ -193,7 +200,8 @@ typedef struct {
                                            keys. */
 } __attribute__((packed)) USB_6KRO_Boot_Data_t;
 
-typedef struct {
+typedef struct
+{
     bool left : 1;
     bool right : 1;
     bool middle : 1;
@@ -204,40 +212,45 @@ typedef struct {
     int8_t scrollX; /** Current scroll X delta movement on the mouse */
 } __attribute__((packed)) USB_Mouse_Boot_Data_t;
 
-typedef union {
-    struct {
-        bool x : 1;  // square
-        bool a : 1;  // cross
-        bool b : 1;  // circle
-        bool y : 1;  // triangle
+typedef union
+{
+    struct
+    {
+        bool x : 1; // square
+        bool a : 1; // cross
+        bool b : 1; // circle
+        bool y : 1; // triangle
 
-        bool leftShoulder : 1;   // l1
-        bool rightShoulder : 1;  // r1
+        bool leftShoulder : 1;  // l1
+        bool rightShoulder : 1; // r1
     };
     uint8_t val;
 } Buffer_Report_t;
 
-typedef struct {
-    uint8_t x : 1;              // square
-    uint8_t a : 1;              // cross
-    uint8_t b : 1;              // circle
-    uint8_t y : 1;              // triangle
-    uint8_t leftShoulder : 1;   // l1
-    uint8_t rightShoulder : 1;  // r1
-    uint8_t back : 1;  // select
+typedef struct
+{
+    uint8_t x : 1;             // square
+    uint8_t a : 1;             // cross
+    uint8_t b : 1;             // circle
+    uint8_t y : 1;             // triangle
+    uint8_t leftShoulder : 1;  // l1
+    uint8_t rightShoulder : 1; // r1
+    uint8_t back : 1;          // select
     uint8_t start : 1;
 
-    uint8_t leftThumbClick : 1;   // l3
-    uint8_t rightThumbClick : 1;  // r3
-    uint8_t guide : 1;            // ps
-    uint8_t capture : 1;          // switch capture button
+    uint8_t leftThumbClick : 1;  // l3
+    uint8_t rightThumbClick : 1; // r3
+    uint8_t guide : 1;           // ps
+    uint8_t capture : 1;         // switch capture button
     uint8_t dpadUp : 1;
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
 
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             uint16_t genericButton1 : 1;
             uint16_t genericButton2 : 1;
             uint16_t genericButton3 : 1;
@@ -260,7 +273,6 @@ typedef struct {
     uint16_t leftTrigger;
     uint16_t rightTrigger;
 
-
     int16_t leftStickX;
     int16_t leftStickY;
     int16_t rightStickX;
@@ -274,36 +286,63 @@ typedef struct {
     uint16_t genericAxisSlider;
 } __attribute__((packed)) USB_Host_Data_t;
 
-
-
-typedef struct {
+typedef struct
+{
 
     uint8_t report_id; // 0x03
     uint8_t dpad : 4;
     uint8_t : 4;
-    
+
     uint8_t capture : 1;
     uint8_t assistant : 1;
-    uint8_t r2 : 1;             // r2
-    uint8_t l2 : 1;             // l2
-    uint8_t guide : 1;    // ps
-    uint8_t start : 1; // menu
-    uint8_t back : 1;  // options
-    uint8_t rightThumbClick : 1;  // r3
+    uint8_t r2 : 1;              // r2
+    uint8_t l2 : 1;              // l2
+    uint8_t guide : 1;           // ps
+    uint8_t start : 1;           // menu
+    uint8_t back : 1;            // options
+    uint8_t rightThumbClick : 1; // r3
 
-    uint8_t leftThumbClick : 1;   // l3
+    uint8_t leftThumbClick : 1; // l3
     uint8_t rightShoulder : 1;  // r1
     uint8_t leftShoulder : 1;   // l1
-    uint8_t y : 1;  // triangle
-    uint8_t x : 1;  // square
-    uint8_t b : 1;  // circle
-    uint8_t a : 1;  // cross
+    uint8_t y : 1;              // triangle
+    uint8_t x : 1;              // square
+    uint8_t b : 1;              // circle
+    uint8_t a : 1;              // cross
     uint8_t : 1;
 
     uint8_t leftStickX;
     uint8_t leftStickY;
     uint8_t rightStickX;
     uint8_t rightStickY;
-    uint8_t leftTrigger;   // pressure_l2
-    uint8_t rightTrigger;  // pressure_r2
+    uint8_t leftTrigger;  // pressure_l2
+    uint8_t rightTrigger; // pressure_r2
 } __attribute__((packed)) Stadia_Data_t;
+
+typedef struct
+{
+    uint8_t header[5];
+    uint8_t x : 1; // square
+    uint8_t a : 1; // cross
+    uint8_t b : 1; // circle
+    uint8_t y : 1; // triangle
+
+    uint8_t : 1; // orange, l1
+    uint8_t : 1; // tilt, r1
+    uint8_t : 1; // l2
+    uint8_t : 1; // r2
+
+    uint8_t back : 1; // select
+    uint8_t start : 1;
+    uint8_t : 1;
+    uint8_t : 1;
+
+    uint8_t guide : 1;   // ps
+    uint8_t capture : 1; // switch capture button
+    uint8_t : 2;
+
+    uint8_t dpad : 4;
+    uint8_t : 2;
+    uint8_t tilt : 1;
+    uint8_t : 1;
+} __attribute__((packed)) ProGuitar_Sysex_Buttons_t;

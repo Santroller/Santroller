@@ -106,6 +106,16 @@ message USBAxisInput {
   required UsbAxisType axis = 2;
 }
 
+message MidiProGuitarButtonInput { 
+  required int32 deviceid = 1;
+  required ProGuitarButtonType button = 2; 
+}
+
+message MidiProGuitarAxisInput { 
+  required int32 deviceid = 1;
+  required ProGuitarAxisType axis = 2; 
+}
+
 message Input {
   oneof input {
     GPIOInput gpio = 1;
@@ -129,6 +139,8 @@ message Input {
     USBButtonInput usbButton = 19;
     USBAxisInput usbAxis = 20;
     MultiplexerInput multiplexer = 21;
+    MidiProGuitarButtonInput midiProGuitarButton = 22;
+    MidiProGuitarAxisInput midiProGuitarAxis = 23;
   }
 }
 message InputActivationTrigger {

@@ -6,11 +6,13 @@
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
 #include "class/midi/midi.h"
+#include "protocols/controller_reports.hpp"
 #include <memory>
 #include <vector>
 
 #define MIDI_CONTROL_COMMAND_MOD_WHEEL 1
 #define MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL 64
+#define MIDI_CHANNEL_PROGUITAR 16
 #define USB_PACKET_SIZE 4
 typedef struct
 {
@@ -33,6 +35,8 @@ public:
     uint16_t readMidiNote(uint8_t channel, uint8_t note);
     uint16_t readMidiControlChange(uint8_t channel, uint8_t cc);
     int16_t readMidiPitchBend(uint8_t channel);
+    bool readProGuitarButton(proto_ProGuitarButtonType button);
+    uint16_t readProGuitarAxis(proto_ProGuitarAxisType axis);
 
 private:
     // Endpoint stream
@@ -49,6 +53,9 @@ private:
     uint8_t midiVelocities[16][128];
     int16_t midiPitchWheel[16];
     uint8_t midiControlChanges[16][128];
+    uint8_t midiFrets[6];
+    uint8_t midiStringVelocities[6];
+    ProGuitar_Sysex_Buttons_t midiButtons;
     bool drumMode;
     bool usbBased;
     cable_state_t cable_status[16];
@@ -75,5 +82,27 @@ public:
 
 private:
     uint8_t m_channel;
+    std::shared_ptr<MidiDevice> m_midi_device;
+};
+
+
+class ProGuitarMidiDevice : public Device
+{
+public:
+    ProGuitarMidiDevice(uint16_t id, std::shared_ptr<MidiDevice> midi_device) : Device(id), m_midi_device(midi_device) {}
+    ~ProGuitarMidiDevice() {}
+    bool readProGuitarButton(proto_ProGuitarButtonType button);
+    uint16_t readProGuitarAxis(proto_ProGuitarAxisType axis);
+    void update(bool full_poll, bool send_events) {};
+    bool is_wii_extension(WiiExtType type) { return false; }
+    bool is_usb_device(proto_SpecificUsbDevice type) { return false; }
+    bool is_usb_type(SubType type) { return false; }
+    bool is_bluetooth_device(proto_SpecificUsbDevice type) { return false; }
+    bool is_bluetooth_type(SubType type) { return false; }
+    bool is_ps2_device(PS2ControllerType type) { return false; }
+    bool has_midi_channel(uint8_t channel) { return MIDI_CHANNEL_PROGUITAR == channel; }
+    bool using_pin(uint8_t pin) { return m_midi_device->using_pin(pin); }
+
+private:
     std::shared_ptr<MidiDevice> m_midi_device;
 };

@@ -240,7 +240,7 @@ void MidiDevice::update(bool full_poll, bool send_events)
             default:
                 break;
             }
-            if (status < MIDI_STATUS_SYSEX_START)
+            if (cable_state->data[0] < MIDI_STATUS_SYSEX_START)
             {
                 if (seenChannels.find({m_id, channel}) == seenChannels.end())
                 {
@@ -259,8 +259,8 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 {
                     if (seenChannels.find({m_id, MIDI_CHANNEL_PROGUITAR}) == seenChannels.end())
                     {
-                        printf("Seen new MIDI channel: %d on device %d\r\n", channel, m_id);
-                        seenChannels[{m_id, channel}] = true;
+                        printf("Seen new MIDI channel: proguitar on device %d\r\n", m_id);
+                        seenChannels[{m_id, MIDI_CHANNEL_PROGUITAR}] = true;
                         if (HIDConfigDevice::tool_closed())
                         {
                             reload();

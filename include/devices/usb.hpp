@@ -13,6 +13,7 @@ public:
     ~USBHostHardwareDevice() { printf("~USBHostHardwareDevice()\r\n"); }
     USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id);
     void update(bool full_poll, bool send_events);
+    void rescan(bool first);
     bool using_pin(uint8_t pin);
     bool tick_digital(UsbButtonType type) { return false; }
     uint16_t tick_analog(UsbAxisType type) { return 0; }

@@ -29,11 +29,10 @@ public:
     virtual ~MidiDevice();
     void processMidiData(uint8_t *data, uint16_t len);
     virtual void update(bool full_poll, bool send_events);
-    virtual void rescan(bool first);
+    void rescan(bool first);
     uint16_t readMidiNote(uint8_t channel, uint8_t note);
     uint16_t readMidiControlChange(uint8_t channel, uint8_t cc);
     int16_t readMidiPitchBend(uint8_t channel);
-    std::shared_ptr<MidiDeviceWithChannel> getDeviceForChannel(uint8_t channel);
 
 private:
     // Endpoint stream
@@ -54,7 +53,6 @@ private:
     bool usbBased;
     cable_state_t cable_status[16];
     uint8_t usb_pos = 0;
-    std::vector<std::shared_ptr<MidiDeviceWithChannel>> channelDevices;
 };
 
 class MidiDeviceWithChannel : public Device

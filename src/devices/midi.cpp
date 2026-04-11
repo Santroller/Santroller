@@ -7,13 +7,16 @@
 static std::map<std::tuple<uint16_t, uint16_t>, bool> seenChannels;
 MidiDevice::MidiDevice(uint16_t id, bool usbBased) : Device(id), drumMode(false), usbBased(usbBased)
 {
-    printf("MIDI Device (%p) created with id %d\r\n", this, id);
+    printf("MIDI Device created with id %d\r\n", id);
     tu_memclr(&ep_stream, sizeof(ep_stream));
     tu_edpt_stream_init(&ep_stream.rx, true, false, false,
                         ep_stream.rx_ff_buf, TUH_EPSIZE_BULK_MAX, m_ep_in_buf);
     tu_edpt_stream_init(&ep_stream.tx, true, true, false,
                         ep_stream.tx_ff_buf, TUH_EPSIZE_BULK_MAX, m_ep_out_buf);
     memset(cable_status, 0, sizeof(cable_status));
+    memset(midiVelocities, 0, sizeof(midiVelocities));
+    memset(midiPitchWheel, 0, sizeof(midiPitchWheel));
+    memset(midiControlChanges, 0, sizeof(midiControlChanges));
 }
 
 void MidiDevice::rescan(bool first)
@@ -22,12 +25,19 @@ void MidiDevice::rescan(bool first)
     {
         for (int i = 0; i < 16; i++)
         {
-            printf("pushing back: %d %d\r\n", m_id, channelDevices.size());
-            channelDevices.push_back(std::make_shared<MidiDeviceWithChannel>(m_id, i, std::static_pointer_cast<MidiDevice>(active_devices.back())));
             if (seenChannels.find({m_id, i}) != seenChannels.end())
             {
-                printf("Assigning MIDI channel: %d on device %d (%p -> %p)\r\n", i, m_id, this, channelDevices.back());
-                assignable_devices.push_back(channelDevices.back());
+                if (usbBased)
+                {
+                    // USB host has more than one interface, so we need to grab it from assignable
+                    assignable_devices.push_back(std::make_shared<MidiDeviceWithChannel>(m_id, i, std::static_pointer_cast<MidiDevice>(assignable_devices.back())));
+                }
+                else
+                {
+                    // Every other device will do this scanning on creation, so we grab from active_devices
+                    assignable_devices.push_back(std::make_shared<MidiDeviceWithChannel>(m_id, i, std::static_pointer_cast<MidiDevice>(active_devices.back())));
+                }
+                printf("Assigning MIDI channel: %d on device %d\r\n", i, m_id);
             }
         }
     }
@@ -199,11 +209,9 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 break;
             case MIDI_CIN_CONTROL_CHANGE:
                 midiControlChanges[channel][cable_state->data[1]] = cable_state->data[2];
-                seenChannels[{m_id, channel}] = true;
                 break;
             case MIDI_CIN_PITCH_BEND_CHANGE:
                 midiPitchWheel[channel] = ((int16_t)cable_state->data[3] << 7) | cable_state->data[2];
-                seenChannels[{m_id, channel}] = true;
                 break;
             case MIDI_CIN_POLY_KEYPRESS:
                 break;
@@ -250,23 +258,17 @@ void MidiDevice::update(bool full_poll, bool send_events)
         }
     }
 }
-
 uint16_t MidiDevice::readMidiNote(uint8_t channel, uint8_t note)
 {
-    return midiVelocities[channel][note];
+    return midiVelocities[channel][note] << 9;
 }
 uint16_t MidiDevice::readMidiControlChange(uint8_t channel, uint8_t cc)
 {
-    return midiControlChanges[channel][cc];
+    return midiControlChanges[channel][cc] << 9;
 }
 int16_t MidiDevice::readMidiPitchBend(uint8_t channel)
 {
     return midiPitchWheel[channel];
-}
-std::shared_ptr<MidiDeviceWithChannel> MidiDevice::getDeviceForChannel(uint8_t channel)
-{
-    printf("Getting device for MIDI channel %d on device %d, %d (%p)\r\n", channel, m_id, channelDevices.size(), this);
-    return channelDevices[channel];
 }
 
 uint16_t MidiDeviceWithChannel::readMidiNote(uint8_t note)

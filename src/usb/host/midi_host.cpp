@@ -22,8 +22,6 @@ typedef struct TU_ATTR_PACKED
 MidiHost::~MidiHost()
 {
   TU_LOG_DRV("MIDI Host Interface destroyed\r\n");
-  tu_edpt_stream_deinit(&ep_stream.rx);
-  tu_edpt_stream_deinit(&ep_stream.tx);
 }
 
 MidiHost::MidiHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id)

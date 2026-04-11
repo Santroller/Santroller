@@ -177,11 +177,11 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
     case proto_Input_mpr121_tag:
         return std::unique_ptr<Input>(new MPR121Input(input.input.mpr121, std::static_pointer_cast<MPR121Device>(profile->devices[input.input.mpr121.deviceid])));
     case proto_Input_midiNote_tag:
-        return std::unique_ptr<Input>(new MidiNoteInput(input.input.midiNote, std::static_pointer_cast<MidiDeviceWithChannel>(profile->devices[input.input.midiNote.deviceid])));
+        return std::unique_ptr<Input>(new MidiNoteInput(input.input.midiNote, std::static_pointer_cast<MidiDeviceWithChannel>(profile->midiDevices[input.input.midiNote.deviceid])));
     case proto_Input_midiControlChange_tag:
-        return std::unique_ptr<Input>(new MidiControlChangeInput(input.input.midiControlChange, std::static_pointer_cast<MidiDeviceWithChannel>(profile->devices[input.input.midiControlChange.deviceid])));
+        return std::unique_ptr<Input>(new MidiControlChangeInput(input.input.midiControlChange, std::static_pointer_cast<MidiDeviceWithChannel>(profile->midiDevices[input.input.midiControlChange.deviceid])));
     case proto_Input_midiPitchBend_tag:
-        return std::unique_ptr<Input>(new MidiPitchBendInput(input.input.midiPitchBend, std::static_pointer_cast<MidiDeviceWithChannel>(profile->devices[input.input.midiPitchBend.deviceid])));
+        return std::unique_ptr<Input>(new MidiPitchBendInput(input.input.midiPitchBend, std::static_pointer_cast<MidiDeviceWithChannel>(profile->midiDevices[input.input.midiPitchBend.deviceid])));
     case proto_Input_mouseAxis_tag:
         return std::unique_ptr<Input>(new MouseAxisInput(input.input.mouseAxis, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.mouseAxis.deviceid])));
     case proto_Input_mouseButton_tag:
@@ -385,7 +385,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
         }
         break;
     case proto_ProfileAssignmentInfo_midiChannel_tag:
-        list->triggers.emplace_back(new MidiChannelActivationTrigger(assignment.assignment.consoleType, profile->profile_id));
+        list->triggers.emplace_back(new MidiChannelActivationTrigger(assignment.assignment.midiChannel, profile->profile_id));
         break;
     case proto_ProfileAssignmentInfo_copilotProfile_tag:
         // TODO: how do we handle this

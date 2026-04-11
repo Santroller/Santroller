@@ -293,7 +293,7 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
     while (it != assignable_devices.end())
     {
         auto device = *it;
-        if (device->has_midi_channel(m_channel))
+        if (device->has_midi_channel(m_channel-1))
         {
             if (claim_device)
             {

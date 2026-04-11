@@ -48,6 +48,7 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
         else
         {
             assignable_devices.push_back(it[0]);
+            it[0]->rescan(true);
             ++it;
         }
     }
@@ -71,7 +72,10 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
 
 void USBHostHardwareDevice::update(bool full_poll, bool send_events)
 {
-    MidiDevice::update(full_poll, send_events);
+}
+void USBHostHardwareDevice::rescan(bool first)
+{
+    printf("usbhosthardware rescan\r\n");
 }
 
 bool USBHostHardwareDevice::using_pin(uint8_t pin)

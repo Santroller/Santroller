@@ -1146,8 +1146,8 @@
         HID_LOGICAL_MAX(1),                                                      \
         HID_REPORT_SIZE(1),                                                      \
         HID_REPORT_COUNT(10),                                                    \
-        HID_UNIT(0),                                                             \
         HID_UNIT_EXPONENT(0),                                                    \
+        HID_UNIT(0),                                                             \
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
         HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),                                   \
         HID_USAGE_MIN(0x0B),                                                     \

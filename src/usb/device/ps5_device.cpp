@@ -95,6 +95,11 @@ size_t PS5GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     return sizeof(desc);
 }
 
+size_t PS5GamepadDevice::device_name(uint8_t idx, char *desc) 
+{
+    return 0;
+}
+
 void PS5GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
     desc->idVendor = P5GENERAL_VENDOR_ID;

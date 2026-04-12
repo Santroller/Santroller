@@ -92,6 +92,11 @@ size_t PS4GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     return sizeof(desc);
 }
 
+size_t PS4GamepadDevice::device_name(uint8_t idx, char *desc) 
+{
+    return 0;
+}
+
 void PS4GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
 }

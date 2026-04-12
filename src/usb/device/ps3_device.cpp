@@ -5,6 +5,8 @@
 #include "enums.pb.h"
 #include "usb/usb_devices.h"
 
+static const char str_powergig_guitar[] = "Seven45 Guitar Controller";
+static const char str_powergig_drums[] = "Seven45 Drum Controller";
 uint8_t ef_byte = 0;
 uint8_t master_bd_addr[6];
 uint8_t f5_state = 0;
@@ -167,6 +169,7 @@ void PS3GamepadDevice::initialize()
 {
     m_epin = next_epin();
     m_epout = next_epout();
+    m_strid = next_strid();
     usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
     usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
     if (subtype == Gamepad)
@@ -318,11 +321,25 @@ size_t PS3GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     }
     else
     {
-        uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_ps3_thirdparty), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+        uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_ps3_thirdparty), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
         assert(sizeof(desc) <= remaining);
         memcpy(dest, desc, sizeof(desc));
         return sizeof(desc);
     }
+}
+
+size_t PS3GamepadDevice::device_name(uint8_t idx, char *desc) 
+{
+    // TODO: test the game and see if this is enough.
+    if (subtype == PowerGigGuitar) {
+        memcpy(desc, str_powergig_guitar, sizeof(str_powergig_guitar));
+        return sizeof(str_powergig_guitar);
+    }
+    if (subtype == PowerGigDrum) {
+        memcpy(desc, str_powergig_drums, sizeof(str_powergig_drums));
+        return sizeof(str_powergig_drums);
+    }
+    return 0;
 }
 
 void PS3GamepadDevice::device_descriptor(tusb_desc_device_t *desc)

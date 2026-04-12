@@ -103,6 +103,7 @@ enum SubType {
   PowerGigDrum = 25;
   PowerGigGuitar = 26;
   RockRevolutionGuitar = 27;
+  Midi = 28;
 }
 
 enum PinMode {

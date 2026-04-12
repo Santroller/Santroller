@@ -45,8 +45,8 @@ private:
         tu_edpt_stream_t tx;
         tu_edpt_stream_t rx;
 
-        uint8_t rx_ff_buf[TUH_EPSIZE_BULK_MAX];
-        uint8_t tx_ff_buf[TUH_EPSIZE_BULK_MAX];
+        uint8_t rx_ff_buf[512];
+        uint8_t tx_ff_buf[512];
     } ep_stream;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[TUH_EPSIZE_BULK_MAX];
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[TUH_EPSIZE_BULK_MAX];

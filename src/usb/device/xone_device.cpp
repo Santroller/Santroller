@@ -641,6 +641,11 @@ size_t XboxOneGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     return sizeof(desc);
 }
 
+size_t XboxOneGamepadDevice::device_name(uint8_t idx, char *desc) 
+{
+    return 0;
+}
+
 void XboxOneGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
     desc->idVendor = XBOX_ONE_CONTROLLER_VID;

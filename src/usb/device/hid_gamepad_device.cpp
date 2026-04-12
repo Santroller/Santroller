@@ -28,6 +28,7 @@ void HIDGamepadDevice::initialize()
 {
   m_epin = next_epin();
   m_epout = next_epout();
+  m_strid = next_strid();
   usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
   usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
   memset(&initialReport, 0, sizeof(initialReport));
@@ -68,6 +69,26 @@ void HIDGamepadDevice::initialize()
 }
 void HIDGamepadDevice::process()
 {
+  // Deal with devices that don't have easy detection methods
+  if (!mode_recently_changed() && !seenWindowsXb1 && !seenOsDescriptorRead && !seenReadAnyDeviceString && tud_connected())
+    {
+        // Switch 2 does read the hid descriptor
+        if (seenHidDescriptorRead)
+        {
+            newMode = ModeSwitch;
+        }
+        else if (tud_ready() && (subtype == RockBandGuitar || subtype == RockBandDrums))
+        {
+            // PS2 / Wii / WiiU does not read hid descriptor
+            // The wii however will configure the usb device before it stops communicating
+            newMode = ModeWiiRb;
+        }
+        else
+        {
+            // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
+            newMode = ModePs3;
+        }
+    }
   if (!ready())
     return;
   PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
@@ -121,18 +142,27 @@ size_t HIDGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
   if (subtype == Dancepad)
   {
-    uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_buttons), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+    uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_buttons), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);
   }
   else
   {
-    uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_hat), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+    uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_hat), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);
   }
+}
+
+size_t HIDGamepadDevice::device_name(uint8_t idx, char *desc) 
+{
+    if (idx == m_strid) {
+      memcpy(desc, profiles[0]->name, sizeof(profiles[0]->name));
+      return sizeof(profiles[0]->name);
+    }
+    return 0;
 }
 
 void HIDGamepadDevice::device_descriptor(tusb_desc_device_t *desc)

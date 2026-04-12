@@ -13,7 +13,7 @@
 #include <pico/unique_id.h>
 #include "usb/usb_devices.h"
 #include "config.hpp"
-
+static const char str_xb360_auth[] = "Xbox Security Method 3, Version 1.00, \xa9 2005 Microsoft Corporation. All rights reserved.";
 static const uint8_t xbox_players[] = {
     0, // 0x00	 All off
     0, // 0x01	 All blinking
@@ -39,6 +39,7 @@ void XInputGamepadDevice::initialize()
 {
     m_epin = next_epin();
     m_epout = next_epout();
+    m_strid = next_strid();
     usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
     usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
 
@@ -310,6 +311,15 @@ size_t XInputGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     return sizeof(desc);
 }
 
+size_t XInputGamepadDevice::device_name(uint8_t idx, char *desc) 
+{
+    if (idx == m_strid) {
+      memcpy(desc, profiles[0]->name, sizeof(profiles[0]->name));
+      return sizeof(profiles[0]->name);
+    }
+    return 0;
+}
+
 void XInputGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
 }
@@ -319,9 +329,20 @@ XInputSecurityDevice::XInputSecurityDevice()
 }
 void XInputSecurityDevice::initialize()
 {
+    m_strid = next_strid();
 }
 void XInputSecurityDevice::process()
 {
+}
+
+size_t XInputSecurityDevice::device_name(uint8_t idx, char *desc) 
+{
+    
+    if (m_strid != idx) {
+        return 0;
+    }
+    memcpy(desc, str_xb360_auth, sizeof(str_xb360_auth));
+    return sizeof(str_xb360_auth);
 }
 
 uint16_t XInputSecurityDevice::open(tusb_desc_interface_t const *itf_desc, uint16_t max_len)
@@ -366,7 +387,7 @@ size_t XInputSecurityDevice::compatible_section_descriptor(uint8_t *dest, size_t
 
 size_t XInputSecurityDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-    uint8_t desc[] = {TUD_XINPUT_SECURITY_DESCRIPTOR(interface_id, STRID_XSM3)};
+    uint8_t desc[] = {TUD_XINPUT_SECURITY_DESCRIPTOR(interface_id, m_strid)};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);

@@ -7,6 +7,10 @@
 #include "config.hpp"
 
 static uint8_t const desc_hid_report_arcade[] = {TUD_HID_REPORT_DESC_GUITAR_HERO_ARCADE()};
+static char const str_gha_input[] = "RT-GH INPUT ";
+static char const str_gha_led[] = "RT-GH LED ";
+static char const str_gha_controller[] = "RT-GH CONTROLLER ";
+
 
 GHArcadeVendorDevice::GHArcadeVendorDevice()
 {
@@ -41,6 +45,7 @@ void GHArcadeVendorDevice::initialize()
     m_epin1 = next_epin();
     m_epin2 = next_epin();
     m_epout = next_epin();
+    m_strid = next_strid();
     usb_instances_by_epnum[m_epin1] = usb_instances[interface_id];
     usb_instances_by_epnum[m_epin2] = usb_instances[interface_id];
     usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
@@ -54,10 +59,18 @@ size_t GHArcadeVendorDevice::compatible_section_descriptor(uint8_t *dest, size_t
 {
     return 0;
 }
+size_t GHArcadeVendorDevice::device_name(uint8_t idx, char *desc) 
+{
+    if (m_strid != idx) {
+        return 0;
+    }
+    memcpy(desc, str_gha_led, sizeof(str_gha_led));
+    return sizeof(str_gha_led);
+}
 
 size_t GHArcadeVendorDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-    uint8_t desc[] = {TUD_GHARCADE_VENDOR_DESCRIPTOR(interface_id, m_epin1, m_epout, m_epin2, STRID_GHA_LED)};
+    uint8_t desc[] = {TUD_GHARCADE_VENDOR_DESCRIPTOR(interface_id, m_epin1, m_epout, m_epin2, m_strid)};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);
@@ -89,6 +102,8 @@ GHArcadeGamepadDevice::GHArcadeGamepadDevice()
 }
 void GHArcadeGamepadDevice::initialize()
 {
+    m_strid = next_strid();
+    m_epin = next_epin();
 }
 void GHArcadeGamepadDevice::process()
 {
@@ -123,6 +138,14 @@ size_t GHArcadeGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);
+}
+size_t GHArcadeGamepadDevice::device_name(uint8_t idx, char *desc) 
+{
+    if (m_strid != idx) {
+        return 0;
+    }
+    memcpy(desc, str_gha_input, sizeof(str_gha_input));
+    return sizeof(str_gha_input);
 }
 
 void GHArcadeGamepadDevice::device_descriptor(tusb_desc_device_t *desc)

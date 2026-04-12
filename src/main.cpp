@@ -117,26 +117,6 @@ void hid_task(void)
         timeSinceMode = millis();
         return;
     }
-    if ((millis() - timeSinceMode) > 2000 && mode == ModeHid && !seenWindowsXb1 && !seenOsDescriptorRead && !seenReadAnyDeviceString && tud_connected())
-    {
-        // Switch 2 does read the hid descriptor
-        if (seenHidDescriptorRead)
-        {
-            newMode = ModeSwitch;
-        }
-        // TODO: do this right
-        // else if (tud_ready() && (current_type == RockBandGuitar || current_type == RockBandDrums))
-        // {
-        //     // PS2 / Wii / WiiU does not read hid descriptor
-        //     // The wii however will configure the usb device before it stops communicating
-        //     newMode = ModeWiiRb;
-        // }
-        // else
-        // {
-        //     // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
-        //     newMode = ModePs3;
-        // }
-    }
     update();
 }
 
@@ -158,6 +138,9 @@ void update()
     for (const auto &instance : active_instances)
     {
         instance->process();
+    }
+    for (const auto& device : assignable_devices) {
+        device->update(false, false);
     }
     for (const auto& device : assignable_usb_devices) {
         device->update(false, false);

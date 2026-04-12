@@ -13,6 +13,7 @@ public:
     uint8_t interface_id = 0;
     virtual size_t compatible_section_descriptor(uint8_t *desc, size_t remaining) = 0;
     virtual size_t config_descriptor(uint8_t *desc, size_t remaining) = 0;
+    virtual size_t device_name(uint8_t idx, char *desc) = 0;
     virtual void device_descriptor(tusb_desc_device_t *desc) = 0;
     virtual bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) = 0;
     virtual bool control_transfer(uint8_t stage, tusb_control_request_t const *request) = 0;
@@ -27,13 +28,20 @@ public:
         printf("epout: %d\r\n", m_last_epout);
         return m_last_epout++;
     }
+    static inline uint8_t next_strid()
+    {
+        printf("strid: %d\r\n", m_last_strid);
+        return m_last_strid++;
+    }
     static inline void reset_ep()
     {
         m_last_epin = 0x81;
         m_last_epout = 0x01;
+        m_last_strid = STRID_COUNT;
     }
 
 private:
     static uint8_t m_last_epin;
     static uint8_t m_last_epout;
+    static uint8_t m_last_strid;
 };

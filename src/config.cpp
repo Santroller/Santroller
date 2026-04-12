@@ -485,6 +485,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_profile.leds.arg = &profile;
     proto_profile.leds.funcs.decode = &load_leds;
     pb_decode(stream, proto_Profile_fields, &proto_profile);
+    memcpy(profile->name, proto_profile.name, sizeof(profile->name));
     profile->subtype = proto_profile.deviceToEmulate;
     profile->xinput_on_windows = proto_profile.has_xinputOnWindows && proto_profile.xinputOnWindows;
     profile->invert_y_axis_hid = proto_profile.has_invertYAxisHid && proto_profile.invertYAxisHid;

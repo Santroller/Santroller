@@ -25,6 +25,7 @@ class Profile
 {
 public:
     virtual ~Profile() {}
+    char name[32];
     SubType subtype;
     bool xinput_on_windows;
     bool invert_y_axis_hid;

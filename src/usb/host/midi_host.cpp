@@ -27,6 +27,7 @@ MidiHost::~MidiHost()
 MidiHost::MidiHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id)
 {
   printf("MIDIHOST: %p\r\n", this);
+  m_subtype = SubType_Midi;
 }
 
 std::shared_ptr<UsbHostInterface> MidiHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)

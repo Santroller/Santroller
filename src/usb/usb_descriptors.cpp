@@ -97,21 +97,16 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
 
 static char serial[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2];
 // array of pointer to string descriptors
-char const *string_desc_arr[] =
+char const *string_desc_arr[STRID_COUNT] =
     {
         (const char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
         "sanjay900",                // 1: Manufacturer
         "Santroller",               // 2: Product
         serial,                     // 3: Serials will use unique ID if possible
-        "Xbox Security Method 3, Version 1.00, \xa9 2005 Microsoft Corporation. All rights reserved.",
-        "MSFT100\x20",
-        "RT GH CONTROLLER ",
-        "RT-GH LED ",
-        "RT-GH INPUT ",
-        "Seven45 Guitar Controller",
-        "Seven45 Drum Controller"};
+        "MSFT100\x20"};
 
 static uint16_t _desc_str[100 + 1];
+static char _desc_str_tmp[100 + 1];
 
 // Invoked when received GET STRING DESCRIPTOR request
 // Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
@@ -119,8 +114,9 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
   (void)langid;
   // printf("desc %02x %02x\r\n", index, langid);
-  
+
   size_t chr_count;
+  const char *str;
   // We only care about actual reads for this heuristic
   if (index != STRID_LANGID)
   {
@@ -143,22 +139,24 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
       index = STRID_MSFT;
     }
 
-    if (!(index < sizeof(string_desc_arr) / sizeof(string_desc_arr[0])))
-      return NULL;
-    if (mode == ModePs3 && index == STRID_PRODUCT) {
+    if ((index < sizeof(string_desc_arr) / sizeof(string_desc_arr[0])))
+    {
+      str = string_desc_arr[index];
+    }
+    else
+    {
       for (auto &instance : usb_instances)
       {
-        if (instance.second->subtype == PowerGigGuitar) {
-          index = STRID_PG_GUITAR_PRODUCT;
-          break;
-        }
-        if (instance.second->subtype == PowerGigDrum) {
-          index = STRID_PG_DRUM_PRODUCT;
+        if (instance.second->device_name(index, _desc_str_tmp)) {
+          str = _desc_str_tmp;
+          printf("got name: %d %s\r\n", index, _desc_str_tmp);
           break;
         }
       }
     }
-    const char *str = string_desc_arr[index];
+    if (!str) {
+      return 0;
+    }
     // Cap at max char
     chr_count = strlen(str);
     size_t const max_count = sizeof(_desc_str) / sizeof(_desc_str[0]) - 1; // -1 for string type
@@ -276,7 +274,8 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
               {
                 count++;
               }
-              if (mode == ModeHid && instance.second->xinput_on_windows) {
+              if (mode == ModeHid && instance.second->xinput_on_windows)
+              {
                 newMode = ModeXbox360;
               }
             }
@@ -341,3 +340,4 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
 
 uint8_t UsbDevice::m_last_epin = 0x81;
 uint8_t UsbDevice::m_last_epout = 0x01;
+uint8_t UsbDevice::m_last_strid = 0x00;

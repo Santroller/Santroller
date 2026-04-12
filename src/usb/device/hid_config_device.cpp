@@ -203,6 +203,11 @@ size_t HIDConfigDevice::config_descriptor(uint8_t *dest, size_t remaining)
   return sizeof(desc);
 }
 
+size_t HIDConfigDevice::device_name(uint8_t idx, char *desc) 
+{
+    return 0;
+}
+
 void HIDConfigDevice::device_descriptor(tusb_desc_device_t *desc)
 {
 }

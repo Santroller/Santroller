@@ -10,9 +10,9 @@ MidiDevice::MidiDevice(uint16_t id, bool usbBased) : Device(id), drumMode(false)
     printf("MIDI Device created with id %d\r\n", id);
     tu_memclr(&ep_stream, sizeof(ep_stream));
     tu_edpt_stream_init(&ep_stream.rx, true, false, false,
-                        ep_stream.rx_ff_buf, TUH_EPSIZE_BULK_MAX, m_ep_in_buf);
+                        ep_stream.rx_ff_buf, 512, m_ep_in_buf);
     tu_edpt_stream_init(&ep_stream.tx, true, true, false,
-                        ep_stream.tx_ff_buf, TUH_EPSIZE_BULK_MAX, m_ep_out_buf);
+                        ep_stream.tx_ff_buf, 512, m_ep_out_buf);
     memset(cable_status, 0, sizeof(cable_status));
     memset(midiVelocities, 0, sizeof(midiVelocities));
     memset(midiPitchWheel, 0, sizeof(midiPitchWheel));
@@ -244,10 +244,10 @@ void MidiDevice::update(bool full_poll, bool send_events)
             {
                 if (seenChannels.find({m_id, channel}) == seenChannels.end())
                 {
-                    printf("Seen new MIDI channel: %d on device %d\r\n", channel, m_id);
-                    seenChannels[{m_id, channel}] = true;
                     if (HIDConfigDevice::tool_closed())
                     {
+                        printf("Seen new MIDI channel: %d on device %d\r\n", channel, m_id);
+                        seenChannels.insert_or_assign({m_id, channel}, true);
                         reload();
                     }
                 }

@@ -47,6 +47,7 @@ protected:
   bool clearedOut = false;
   uint8_t m_epin = 0;
   uint8_t m_epout = 0;
+  uint8_t m_strid = 0;
   CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
   CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
   CFG_TUSB_MEM_ALIGN uint8_t ctrl_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
@@ -63,6 +64,7 @@ public:
   static bool tool_closed();
   size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
   size_t config_descriptor(uint8_t *desc, size_t remaining);
+  size_t device_name(uint8_t idx, char *desc);
   void device_descriptor(tusb_desc_device_t *desc);
   const uint8_t *report_descriptor();
   uint16_t report_desc_len();
@@ -98,6 +100,7 @@ public:
   void process();
   size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
   size_t config_descriptor(uint8_t *desc, size_t remaining);
+  size_t device_name(uint8_t idx, char *desc);
   void device_descriptor(tusb_desc_device_t *desc);
   const uint8_t *report_descriptor();
   uint16_t report_desc_len();

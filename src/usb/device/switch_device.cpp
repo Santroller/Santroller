@@ -90,7 +90,7 @@ void SwitchGamepadDevice::initialize()
 }
 bool SwitchGamepadDevice::sendReport(uint8_t reportID, void const *reportData, uint16_t reportLength)
 {
-    bool response = send_report(reportLength, reportID, reportData);
+    bool response = send_report(reportLength, 0, reportData);
     if (last_report_counter < 255)
     {
         last_report_counter++;
@@ -181,6 +181,11 @@ size_t SwitchGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     return sizeof(desc);
 }
 
+size_t SwitchGamepadDevice::device_name(uint8_t idx, char *desc) 
+{
+    return 0;
+}
+
 void SwitchGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
     desc->idVendor = NINTENDO_VID;
@@ -214,7 +219,7 @@ void SwitchGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report
 
     uint8_t switchReportID = buffer[0];
     uint8_t switchReportSubID = buffer[1];
-    // printf("SwitchProDriver::set_report Rpt: %02x, Type: %d, Len: %d :: SID: %02x, SSID: %02x\n", report_id, report_type, bufsize, switchReportID, switchReportSubID);
+    printf("SwitchProDriver::set_report Rpt: %02x, Type: %d, Len: %d :: SID: %02x, SSID: %02x\n", report_id, report_type, bufsize, switchReportID, switchReportSubID);
     if (switchReportID == SwitchReportID::REPORT_OUTPUT_00)
     {
     }
@@ -230,7 +235,7 @@ void SwitchGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report
     }
     else
     {
-        // printf("SwitchProDriver::set_report Rpt: %02x, Type: %d, Len: %d :: SID: %02x, SSID: %02x\n", report_id, report_type, bufsize, switchReportID, switchReportSubID);
+        printf("SwitchProDriver::set_report Rpt: %02x, Type: %d, Len: %d :: SID: %02x, SSID: %02x\n", report_id, report_type, bufsize, switchReportID, switchReportSubID);
     }
 }
 

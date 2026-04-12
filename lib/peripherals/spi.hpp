@@ -13,4 +13,5 @@ private:
     spi_inst_t *spi;
     spi_inst_t *_hardwareBlocks[NUM_I2CS] = {spi0, spi1};
     bool m_msbfirst;
+    bool m_valid;
 };

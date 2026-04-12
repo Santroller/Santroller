@@ -478,8 +478,10 @@ void PSXController::tick()
     {
         return;
     }
-    if (!connected)
+    // dont init too quickly
+    if (!connected && to_us_since_boot(get_absolute_time()) - lastInit < 3000)
     {
+        lastInit = to_us_since_boot(get_absolute_time());
         if (!autoShiftData(ps2Data, commandPollInput, sizeof(commandPollInput)))
         {
             return;

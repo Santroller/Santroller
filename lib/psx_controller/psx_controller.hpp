@@ -78,6 +78,7 @@ private:
     bool connected;
     bool hasTapBar = false;
     long last = 0;
+    long lastInit = 0;
     uint8_t invalidCount = 0;
     uint8_t ps2Data[BUFFER_SIZE];
 };

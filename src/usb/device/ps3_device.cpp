@@ -328,14 +328,16 @@ size_t PS3GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     }
 }
 
-size_t PS3GamepadDevice::device_name(uint8_t idx, char *desc) 
+size_t PS3GamepadDevice::device_name(uint8_t idx, char *desc)
 {
     // TODO: test the game and see if this is enough.
-    if (subtype == PowerGigGuitar) {
+    if (subtype == PowerGigGuitar)
+    {
         memcpy(desc, str_powergig_guitar, sizeof(str_powergig_guitar));
         return sizeof(str_powergig_guitar);
     }
-    if (subtype == PowerGigDrum) {
+    if (subtype == PowerGigDrum)
+    {
         memcpy(desc, str_powergig_drums, sizeof(str_powergig_drums));
         return sizeof(str_powergig_drums);
     }
@@ -406,6 +408,8 @@ void PS3GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
     case Taiko:
         desc->idVendor = REDOCTANE_VID;
         desc->idProduct = PS3_KEYBOARD_PID;
+        return;
+    default:
         return;
     }
 }

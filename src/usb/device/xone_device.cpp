@@ -277,6 +277,11 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 xboxOneDescriptor = xb1_descriptor_ld;
                 len = sizeof(xb1_descriptor_ld);
                 break;
+            default:
+                xboxOneDescriptor = xb1_descriptor_gamepad;
+                len = sizeof(xb1_descriptor_gamepad);
+                break;
+                ;
             }
             outgoingXGIP->setData(xboxOneDescriptor, len);
             xboneDriverState = XboxOneDriverState::SEND_DESCRIPTOR;
@@ -347,9 +352,9 @@ bool XboxOneGamepadDevice::send_xbone_usb(uint8_t const *report, uint16_t report
     if (tud_ready() &&                                              // Is the device ready?
         (m_epin != 0) && (!usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))) // Is the IN endpoint available?
     {
-        usbd_edpt_claim(0, m_epin);                                // Take control of IN endpoint
+        usbd_edpt_claim(0, m_epin);                                       // Take control of IN endpoint
         usbd_edpt_xfer(0, m_epin, (uint8_t *)report, report_size, false); // Send report buffer
-        usbd_edpt_release(0, m_epin);                              // Release control of IN endpoint
+        usbd_edpt_release(0, m_epin);                                     // Release control of IN endpoint
 
         // we successfully sent the report
         return true;
@@ -462,6 +467,9 @@ void XboxOneGamepadDevice::process()
                 break;
             case LegoDimensions:
                 announcePacket = announce_ld;
+                break;
+            default:
+                announcePacket = announce_gamepad;
                 break;
             }
             announcePacket = announce_guitar;
@@ -641,7 +649,7 @@ size_t XboxOneGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     return sizeof(desc);
 }
 
-size_t XboxOneGamepadDevice::device_name(uint8_t idx, char *desc) 
+size_t XboxOneGamepadDevice::device_name(uint8_t idx, char *desc)
 {
     return 0;
 }

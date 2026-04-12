@@ -149,6 +149,8 @@ inline uint8_t get_xinput_subtype(SubType subtype)
         return XINPUT_ARCADE_STICK;
     case FlightStick:
         return XINPUT_FLIGHT_STICK;
+    default:
+        return XINPUT_GAMEPAD;
     }
     return 1;
 }

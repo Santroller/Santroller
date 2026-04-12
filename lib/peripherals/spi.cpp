@@ -23,7 +23,7 @@ SPIMasterInterface::SPIMasterInterface(uint8_t block, spi_cpha_t cpha, spi_cpol_
         gpio_set_function(miso, GPIO_FUNC_SPI);
         gpio_set_pulls(miso, true, false);
     }
-    m_valid = sck != -1 && (mosi != -1 || miso != -1);
+    m_valid = sck != -1 || mosi != -1 || miso != -1;
 }
 uint8_t SPIMasterInterface::transfer(uint8_t data)
 {

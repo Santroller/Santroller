@@ -59,7 +59,7 @@ protected:
     uint8_t m_interface;
     SubType m_subtype = SubType_Gamepad;
     bool m_sent_type = false;
-    char m_name[32] = "";
+    char m_name[64] = {0};
     bool m_fetched_name = false;
     uint32_t send_ctrl_xfer(tusb_control_request_t setup, void *buffer, bool *status);
     bool send_intr_xfer(uint8_t endpoint, const void *buffer, uint8_t len);

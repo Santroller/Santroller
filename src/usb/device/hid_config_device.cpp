@@ -60,6 +60,25 @@ void HIDConfigDevice::process()
     {
       device->update(true, true);
     }
+    for (const auto &device : assignable_devices)
+    {
+      device->update(true, true);
+    }
+    for (const auto &device : assignable_usb_devices)
+    {
+      device->update(true, true);
+    }
+    for (const auto &profile : all_profiles)
+    {
+      for (const auto &device : profile.second->devices)
+      {
+        device.second->update(true, true);
+      }
+      for (const auto &device : profile.second->midiDevices)
+      {
+        device.second->update(true, true);
+      }
+    }
     just_loaded = false;
   }
   if (profile_selected)
@@ -159,6 +178,14 @@ void HIDConfigDevice::process()
         {
           device->update(profile_changed, true);
         }
+        for (const auto &device : assignable_devices)
+        {
+          device->update(profile_changed, true);
+        }
+        for (const auto &device : assignable_usb_devices)
+        {
+          device->update(profile_changed, true);
+        }
       }
       for (const auto &mapping : selected->second->mappings)
       {
@@ -203,9 +230,9 @@ size_t HIDConfigDevice::config_descriptor(uint8_t *dest, size_t remaining)
   return sizeof(desc);
 }
 
-size_t HIDConfigDevice::device_name(uint8_t idx, char *desc) 
+size_t HIDConfigDevice::device_name(uint8_t idx, char *desc)
 {
-    return 0;
+  return 0;
 }
 
 void HIDConfigDevice::device_descriptor(tusb_desc_device_t *desc)

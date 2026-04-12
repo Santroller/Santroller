@@ -42,9 +42,9 @@ message DeviceHotplugEvent {
 
 message UsbDeviceHotplugEvent {
     required int32 id = 1;
-    required int32 subtype = 2;
-    required string name = 3;
-    required int32 port = 4;
+    required SubType subtype = 2;
+    required int32 port = 3;
+    // required string name = 4;
 }
 
 message WiiDeviceHotplugEvent {

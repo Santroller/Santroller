@@ -74,6 +74,7 @@ public:
   static std::shared_ptr<HIDConfigDevice> instance;
 
 private:
+  void process_events();
   void handle_command(proto_Command command);
   proto_EventList list;
   proto_PinDetectType m_detect_type;

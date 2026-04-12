@@ -24,13 +24,13 @@ void PS2Device::rescan(bool first)
 void PS2Device::update(bool full_poll, bool send_events)
 {
     m_controller.tick();
-    if (m_controller.type != m_lastControllerType || full_poll || resend)
+    if (m_controller.type != m_lastControllerType || full_poll)
     {
         m_lastControllerType = m_controller.type;
         if (send_events)
         {
             proto_Event event = {which_event : proto_Event_ps2_tag, event : {ps2 : {m_id, m_lastControllerType, port: m_port}}};
-            resend = !HIDConfigDevice::send_event(event);
+            HIDConfigDevice::send_event(event);
         }
         if (m_controller.type != m_lastControllerType)
         {

@@ -201,6 +201,11 @@ void HIDConfigDevice::process()
       }
     }
   }
+  process_events();
+  profile_changed = false;
+}
+
+void HIDConfigDevice::process_events() {
   if (list.event_count == 0 || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
   {
     return;
@@ -213,8 +218,6 @@ void HIDConfigDevice::process()
     usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, 64, false);
   }
   list.event_count = 0;
-
-  profile_changed = false;
 }
 
 size_t HIDConfigDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -494,9 +497,13 @@ bool HIDConfigDevice::tool_closed()
 bool HIDConfigDevice::send_event(proto_Event event)
 {
   auto dev = HIDConfigDevice::instance;
-  if (tool_closed() || dev->list.event_count >= TU_ARRAY_SIZE(dev->list.event))
+  if (tool_closed())
   {
     return false;
+  }
+  while (dev->list.event_count >= TU_ARRAY_SIZE(dev->list.event)) {
+    dev->process_events();
+    tud_task();
   }
   dev->list.event[dev->list.event_count++] = event;
   return true;

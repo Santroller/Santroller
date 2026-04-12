@@ -108,17 +108,17 @@ void ButtonMapping::update(bool full_poll, bool send_events)
         {
             calcVal = m_input->tickAnalog() > m_mapping.triggerValue && m_input->tickAnalog() < m_mapping.maxTriggerValue;
         }
-        if (send_events && (val != m_last_sent_value || full_poll || m_resend))
+        if (send_events && (val != m_last_sent_value || full_poll))
         {
             proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, val, calcVal ? (uint16_t)65535 : (uint16_t)0}}};
-            m_resend = !HIDConfigDevice::send_event(event);
+            HIDConfigDevice::send_event(event);
             m_last_sent_value = val;
         }
     }
-    else if (send_events && (calcVal != m_last_sent_value || full_poll || m_resend))
+    else if (send_events && (calcVal != m_last_sent_value || full_poll))
     {
         proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, calcVal, calcVal}}};
-        m_resend = !HIDConfigDevice::send_event(event);
+        HIDConfigDevice::send_event(event);
         m_last_sent_value = calcVal;
     }
     if (calcVal)
@@ -145,10 +145,10 @@ void AxisMapping::update(bool full_poll, bool send_events)
         m_centered = m_calibratedValue == m_mapping.center;
     }
 
-    if (send_events && (val != m_last_sent_value || full_poll || m_resend))
+    if (send_events && (val != m_last_sent_value || full_poll))
     {
         m_last_sent_value = val;
         proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, val, m_calibratedValue}}};
-        m_resend = !HIDConfigDevice::send_event(event);
+        HIDConfigDevice::send_event(event);
     }
 }

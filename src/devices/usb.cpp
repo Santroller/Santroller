@@ -93,23 +93,23 @@ bool usbh_init(void)
 void UsbHostInterface::update(bool full_poll, bool send_events)
 {
     MidiDevice::update(full_poll, send_events);
-    // if (!m_fetched_name) {
-    //     m_fetched_name = true;
-    //     tuh_descriptor_get_product_string_sync(m_dev_addr, 0, m_name, sizeof(m_name));
-    //     proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, port: m_dev_addr}}};
-    //     for (size_t i = 0; i < sizeof(event.event.usb.name); i++) {
-    //         event.event.usb.name[i] = m_name[i*2];
-    //     }
-    //     HIDConfigDevice::send_event(event);
-    // }
-    if (send_events && (full_poll || resend))
+    if (!m_fetched_name) {
+        m_fetched_name = true;
+        tuh_descriptor_get_product_string_sync(m_dev_addr, 0, m_name, sizeof(m_name));
+        proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, port: m_dev_addr}}};
+        for (size_t i = 0; i < sizeof(event.event.usb.name); i++) {
+            event.event.usb.name[i] = m_name[i*2];
+        }
+        HIDConfigDevice::send_event(event);
+    }
+    if (send_events && (full_poll))
     {
         m_sent_type = true;
         proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, port: m_dev_addr}}};
-        // for (size_t i = 0; i < sizeof(event.event.usb.name); i++) {
-        //     event.event.usb.name[i] = m_name[i*2];
-        // }
-        resend = !HIDConfigDevice::send_event(event);
+        for (size_t i = 0; i < sizeof(event.event.usb.name); i++) {
+            event.event.usb.name[i] = m_name[i*2];
+        }
+        HIDConfigDevice::send_event(event);
     }
 }
 

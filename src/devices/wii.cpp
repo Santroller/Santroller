@@ -23,13 +23,13 @@ void WiiDevice::rescan(bool first)
 void WiiDevice::update(bool full_poll, bool send_events)
 {
     m_extension.tick();
-    if (m_extension.mType != m_lastExtType || full_poll || resend)
+    if (m_extension.mType != m_lastExtType || full_poll)
     {
         m_lastExtType = m_extension.mType;
         if (send_events)
         {
             proto_Event event = {which_event : proto_Event_wii_tag, event : {wii : {m_id, m_lastExtType}}};
-            resend = !HIDConfigDevice::send_event(event);
+            HIDConfigDevice::send_event(event);
         }
         rescan(false);
     }

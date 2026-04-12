@@ -21,7 +21,6 @@ public:
 
 protected:
     bool m_lastConnected;
-    bool resend = false;
 };
 
 class LedDevice : public Device

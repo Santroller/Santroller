@@ -107,7 +107,6 @@ protected:
 
 private:
     uint16_t m_last_val = 0;
-    bool m_resend = false;
     uint32_t m_last_poll = 0;
     float m_multiplier = 0;
     uint32_t m_pos = 0;

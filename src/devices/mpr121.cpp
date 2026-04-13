@@ -9,10 +9,10 @@ MPR121Device::MPR121Device(proto_Mpr121Device device, uint16_t id) : Device(id),
 
 void MPR121Device::update(bool full_poll, bool send_events) {
     m_mpr121.tick();
-    if (send_events && (m_lastConnected != m_mpr121.is_connected() || full_poll)) {
+    if (m_lastConnected != m_mpr121.is_connected() || full_poll) {
         m_lastConnected = m_mpr121.is_connected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
-        HIDConfigDevice::send_event(event);
+        HIDConfigDevice::send_event(event, true);
     }
 }
 

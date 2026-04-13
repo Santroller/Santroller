@@ -68,13 +68,13 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
         {
             m_last_analog_val = analog_val;
             proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_last_analog_val, val ? (uint16_t)65535 : (uint16_t)0}}};
-            HIDConfigDevice::send_event(event);
+            HIDConfigDevice::send_event(event, false);
         }
     }
     else if (send_events && (val != m_last_val || full_poll))
     {
         proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_last_analog_val, val ? (uint16_t)65535 : (uint16_t)0}}};
-        HIDConfigDevice::send_event(event);
+        HIDConfigDevice::send_event(event, false);
     }
     if (!m_initialised)
     {

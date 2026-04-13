@@ -90,7 +90,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Device_psx_tag:
     {
-        for (int i = A; i <= D; i++)
+        for (int i = A; i <= A; i++)
         {
             auto &ps2Dev = active_devices.emplace_back(new PS2Device(device.device.psx, *dev_id, (MultitapPort)i));
             ps2Dev->rescan(true);

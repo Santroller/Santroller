@@ -72,6 +72,7 @@ public:
     UsbHostDevice(uint8_t d_addr, uint16_t id) : Device(id), m_dev_addr(d_addr)
     {
     }
+    void disconnect();
     uint8_t dev_addr()
     {
         return m_dev_addr;

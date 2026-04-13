@@ -10,11 +10,11 @@ ADS1115Device::ADS1115Device(proto_ADS1115Device device, uint16_t id) : Device(i
 void ADS1115Device::update(bool full_poll, bool send_events)
 {
     ads1115.tick();
-    if (send_events && (m_lastConnected != ads1115.is_connected() || full_poll))
+    if (m_lastConnected != ads1115.is_connected() || full_poll)
     {
         m_lastConnected = ads1115.is_connected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
-        HIDConfigDevice::send_event(event);
+        HIDConfigDevice::send_event(event, true);
     }
 }
 

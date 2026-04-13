@@ -479,7 +479,7 @@ void PSXController::tick()
         return;
     }
     // dont init too quickly
-    if (!connected && to_us_since_boot(get_absolute_time()) - lastInit < 3000)
+    if (!connected && to_us_since_boot(get_absolute_time()) - lastInit > 3000)
     {
         lastInit = to_us_since_boot(get_absolute_time());
         if (!autoShiftData(ps2Data, commandPollInput, sizeof(commandPollInput)))
@@ -571,6 +571,7 @@ void PSXController::tick()
             if (invalidCount > 10)
             {
                 connected = false;
+                type = PS2ControllerTypeUnknown;
             }
         }
     }

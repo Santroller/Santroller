@@ -93,23 +93,26 @@ bool usbh_init(void)
 void UsbHostInterface::update(bool full_poll, bool send_events)
 {
     MidiDevice::update(full_poll, send_events);
-    if (!m_fetched_name) {
+    if (!m_fetched_name)
+    {
         m_fetched_name = true;
         tuh_descriptor_get_product_string_sync(m_dev_addr, 0, m_name, sizeof(m_name));
-        proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, port: m_dev_addr}}};
-        for (size_t i = 0; i < sizeof(event.event.usb.name); i++) {
-            event.event.usb.name[i] = m_name[i*2];
+        proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, m_dev_addr, true}}};
+        for (size_t i = 0; i < sizeof(event.event.usb.name); i++)
+        {
+            event.event.usb.name[i] = m_name[i * 2];
         }
-        HIDConfigDevice::send_event(event);
+        HIDConfigDevice::send_event(event, true);
     }
     if (send_events && full_poll)
     {
         m_sent_type = true;
-        proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, port: m_dev_addr}}};
-        for (size_t i = 0; i < sizeof(event.event.usb.name); i++) {
-            event.event.usb.name[i] = m_name[i*2];
+        proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, m_dev_addr, true}}};
+        for (size_t i = 0; i < sizeof(event.event.usb.name); i++)
+        {
+            event.event.usb.name[i] = m_name[i * 2];
         }
-        HIDConfigDevice::send_event(event);
+        HIDConfigDevice::send_event(event, true);
     }
 }
 
@@ -145,7 +148,7 @@ uint32_t UsbHostInterface::send_ctrl_xfer(tusb_control_request_t setup, void *bu
     return xfer.actual_len;
 }
 
-static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t* out_len) = {
+static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len) = {
     XInputGamepadHost::open,
     XInputAudioHost::open,
     XInputModuleHost::open,
@@ -172,7 +175,8 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
         if (dev != nullptr)
         {
             list->host_devices_by_itf[desc_itf->bInterfaceNumber] = dev;
-            if (HIDConfigDevice::tool_closed()) {
+            if (HIDConfigDevice::tool_closed())
+            {
                 reload();
             }
             return out_len;
@@ -195,12 +199,25 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
     return host_devices[dev_addr]->host_devices_by_endpoint_out[ep_addr]->xfer_cb(ep_addr, result, xferred_bytes);
 }
 
+
+
 void usbh_close(uint8_t dev_addr)
 {
     printf("usbh close %d %d\r\n", dev_addr);
-    if (HIDConfigDevice::tool_closed()) {
+    auto dev = host_devices.find(dev_addr);
+    if (dev != host_devices.end())
+    {
+        dev->second->disconnect();
+    }
+    if (HIDConfigDevice::tool_closed())
+    {
         reload();
     }
+}
+
+void UsbHostDevice::disconnect() {
+    proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, SubType_Gamepad, m_dev_addr, false}}};
+    HIDConfigDevice::send_event(event, true);
 }
 
 static const usbh_class_driver_t driver_host[] = {

@@ -68,9 +68,7 @@ void out_flush(void) {
     while (!ring_buffer_is_empty(&console_buf) && !HIDConfigDevice::tool_closed()) {
         tu_memclr(console_event.event.console.data, 32);
         ring_buffer_pop(&console_buf, console_event.event.console.data, 31);
-        HIDConfigDevice::send_event(console_event);
-        hid_task();
-        tud_task();
+        HIDConfigDevice::send_event(console_event, true);
     }
 }
 int in_chars(char *buf, int len) {
@@ -124,7 +122,7 @@ void send_debug(uint8_t *data, size_t len)
 {
     proto_Event event = {which_event : proto_Event_debug_tag, event : {debug : {data : {size : (pb_size_t)len}}}};
     memcpy(event.event.debug.data.bytes, data, len);
-    HIDConfigDevice::send_event(event);
+    HIDConfigDevice::send_event(event, true);
 }
 
 bool send_timeout = false;

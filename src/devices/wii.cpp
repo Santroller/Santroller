@@ -25,13 +25,14 @@ void WiiDevice::update(bool full_poll, bool send_events)
     m_extension.tick();
     if (m_extension.mType != m_lastExtType || full_poll)
     {
+        bool changed = m_extension.mType != m_lastExtType;
         m_lastExtType = m_extension.mType;
-        if (send_events)
+        proto_Event event = {which_event : proto_Event_wii_tag, event : {wii : {m_id, m_lastExtType}}};
+        HIDConfigDevice::send_event(event, true);
+        if (changed)
         {
-            proto_Event event = {which_event : proto_Event_wii_tag, event : {wii : {m_id, m_lastExtType}}};
-            HIDConfigDevice::send_event(event);
+            rescan(false);
         }
-        rescan(false);
     }
     MidiDevice::update(full_poll, send_events);
 }

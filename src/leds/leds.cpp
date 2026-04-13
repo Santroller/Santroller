@@ -11,7 +11,7 @@ void InputLedMapping::update(bool full_poll, bool send_events)
     {
         m_last_val = raw;
         proto_Event event = {which_event : proto_Event_led_tag, event : {led : {m_id, raw, curr}}};
-        HIDConfigDevice::send_event(event);
+        HIDConfigDevice::send_event(event, false);
         m_last_poll = millis();
     }
     if (m_mapping.has_pattern && m_mapping.pattern == PatternHeatmap)

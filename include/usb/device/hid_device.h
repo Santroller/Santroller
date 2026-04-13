@@ -70,7 +70,7 @@ public:
   uint16_t report_desc_len();
   uint16_t get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
   void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
-  static bool send_event(proto_Event event);
+  static bool send_event(proto_Event event, bool now);
   static std::shared_ptr<HIDConfigDevice> instance;
 
 private:
@@ -84,6 +84,7 @@ private:
   uint32_t selected_profile = 0;
   uint8_t current_pos = 1;
   uint32_t m_valid_pins;
+  bool processing = false;
   bool tool_seen = false;
   bool just_loaded = false;
   bool profile_selected = false;

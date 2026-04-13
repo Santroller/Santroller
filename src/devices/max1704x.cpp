@@ -10,11 +10,11 @@ Max1704XDevice::Max1704XDevice(proto_Max1704xDevice device, uint16_t id) : Devic
 void Max1704XDevice::update(bool full_poll, bool send_events)
 {
     m_max1704x.tick();
-    if (send_events && (m_lastConnected != m_max1704x.is_connected() || full_poll))
+    if (m_lastConnected != m_max1704x.is_connected() || full_poll)
     {
         m_lastConnected = m_max1704x.is_connected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
-        HIDConfigDevice::send_event(event);
+        HIDConfigDevice::send_event(event, true);
     }
 }
 

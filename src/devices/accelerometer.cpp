@@ -10,11 +10,11 @@ AccelerometerDevice::AccelerometerDevice(proto_AccelerometerDevice device, uint1
 void AccelerometerDevice::update(bool full_poll, bool send_events)
 {
     m_accelerometer.tick();
-    if (send_events && (m_lastConnected != m_accelerometer.is_connected() || full_poll))
+    if (m_lastConnected != m_accelerometer.is_connected() || full_poll)
     {
         m_lastConnected = m_accelerometer.is_connected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
-        HIDConfigDevice::send_event(event);
+        HIDConfigDevice::send_event(event, true);
     }
 }
 

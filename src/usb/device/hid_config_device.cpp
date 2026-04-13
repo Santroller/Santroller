@@ -103,7 +103,7 @@ void HIDConfigDevice::process()
             proto_Event evt;
             evt.which_event = proto_Event_pin_tag;
             evt.event.pin.pin = i;
-            send_event(evt);
+            send_event(evt, true);
             break;
           }
         }
@@ -122,7 +122,7 @@ void HIDConfigDevice::process()
               proto_Event evt;
               evt.which_event = proto_Event_pin_tag;
               evt.event.pin.pin = i + ADC_BASE_PIN;
-              send_event(evt);
+              send_event(evt, true);
               break;
             }
           }
@@ -197,7 +197,7 @@ void HIDConfigDevice::process()
       }
       for (const auto &led : selected->second->leds)
       {
-        led->update(true, true);
+        led->update(profile_changed, true);
       }
     }
   }
@@ -205,12 +205,14 @@ void HIDConfigDevice::process()
   profile_changed = false;
 }
 
-void HIDConfigDevice::process_events() {
+void HIDConfigDevice::process_events()
+{
   if (list.event_count == 0 || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
   {
     return;
   }
 
+  processing = true;
   epin_buf[0] = ReportId::ReportIdConfig;
   pb_ostream_t outputStream = pb_ostream_from_buffer(epin_buf + 1, 63);
   if (pb_encode_delimited(&outputStream, proto_EventList_fields, &list))
@@ -218,6 +220,8 @@ void HIDConfigDevice::process_events() {
     usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, 64, false);
   }
   list.event_count = 0;
+  lastKeepAlive = millis();
+  processing = false;
 }
 
 size_t HIDConfigDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -491,21 +495,32 @@ bool HIDConfigDevice::tool_closed()
   {
     return true;
   }
-  return millis() - dev->lastKeepAlive > 500;
+  return millis() - dev->lastKeepAlive > 1000 && !dev->processing;
 }
 
-bool HIDConfigDevice::send_event(proto_Event event)
+bool HIDConfigDevice::send_event(proto_Event event, bool now)
 {
   auto dev = HIDConfigDevice::instance;
   if (tool_closed())
   {
     return false;
   }
-  while (dev->list.event_count >= TU_ARRAY_SIZE(dev->list.event)) {
+  dev->processing = true;
+  // flush queue if overflowing or event is important
+  while (dev->list.event_count >= TU_ARRAY_SIZE(dev->list.event) || (dev->list.event_count && now))
+  {
     dev->process_events();
     tud_task();
   }
   dev->list.event[dev->list.event_count++] = event;
+  // flush queue if event is important
+  while (now && dev->list.event_count)
+  {
+    dev->process_events();
+    tud_task();
+  }
+  dev->lastKeepAlive = millis();
+  dev->processing = false;
   return true;
 }
 

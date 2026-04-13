@@ -109,7 +109,7 @@ void UsbHostInterface::update(bool full_poll, bool send_events)
         proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, m_dev_addr, m_interface, true}}};
         for (size_t i = 0; i < sizeof(event.event.usb.name); i++)
         {
-            event.event.usb.name[i] = m_name[(i+1) * 2];
+            event.event.usb.name[i] = m_name[(i + 1) * 2];
         }
         HIDConfigDevice::send_event(event, true);
     }
@@ -229,7 +229,14 @@ void usbh_close(uint8_t dev_addr)
 
 void UsbHostDevice::disconnect()
 {
-    proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, SubType_Gamepad, m_dev_addr, false}}};
+    for (auto &device : host_devices_by_itf)
+    {
+        device->disconnect();
+    }
+}
+
+void UsbHostInterface::disconnect() {
+    proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, SubType_Gamepad, m_dev_addr, m_interface, false}}};
     HIDConfigDevice::send_event(event, true);
 }
 

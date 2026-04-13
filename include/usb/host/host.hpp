@@ -18,6 +18,7 @@ public:
     {
         return m_dev_addr;
     }
+    void disconnect();
     virtual bool tick_digital(UsbButtonType type) = 0;
     virtual uint16_t tick_analog(UsbAxisType type) = 0;
     virtual void update(bool full_poll, bool send_events);

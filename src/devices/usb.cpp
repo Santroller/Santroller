@@ -231,7 +231,9 @@ void UsbHostDevice::disconnect()
 {
     for (auto &device : host_devices_by_itf)
     {
-        device->disconnect();
+        if (device != nullptr) {
+            device->disconnect();
+        }
     }
 }
 

@@ -172,10 +172,10 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
         if (dev != nullptr)
         {
             host_devices[dev_addr]->host_devices_by_itf[desc_itf->bInterfaceNumber] = dev;
-            // if (HIDConfigDevice::tool_closed())
-            // {
-            //     reload();
-            // }
+            if (HIDConfigDevice::tool_closed())
+            {
+                reload();
+            }
             return out_len;
         }
     }
@@ -221,10 +221,10 @@ void usbh_close(uint8_t dev_addr)
         host_devices[dev_addr]->disconnect();
     }
     host_devices[dev_addr] = nullptr;
-    // if (HIDConfigDevice::tool_closed())
-    // {
-    //     reload();
-    // }
+    if (HIDConfigDevice::tool_closed())
+    {
+        reload();
+    }
 }
 
 void UsbHostDevice::disconnect()

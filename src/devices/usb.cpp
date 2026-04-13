@@ -90,6 +90,7 @@ bool UsbHostInterface::set_config()
     // TODO: get lang id and use it
     // also, deal with devices that dont have product names
     tuh_descriptor_get_product_string(m_dev_addr, 0x0409, m_name, sizeof(m_name), process_product_string, 0);
+    usbh_driver_set_config_complete(m_dev_addr, m_interface);
     return true;
 }
 

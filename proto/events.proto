@@ -80,7 +80,7 @@ message Event {
         PS2DeviceHotplugEvent ps2 = 7;
         DeviceHotplugEvent device = 8;
         DebugEvent debug = 9;
-        ActivationTriggerEvent trigger = 10;  
+        ActivationTriggerEvent trigger = 10;
         LedEvent led = 11;  
         MidiEvent midiDebug = 12;
         ConsoleEvent console = 13;

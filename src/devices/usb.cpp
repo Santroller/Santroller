@@ -102,7 +102,7 @@ void UsbHostInterface::update(bool full_poll, bool send_events)
         }
         HIDConfigDevice::send_event(event);
     }
-    if (send_events && (full_poll))
+    if (send_events && full_poll)
     {
         m_sent_type = true;
         proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, port: m_dev_addr}}};

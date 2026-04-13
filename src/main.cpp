@@ -156,6 +156,14 @@ void update()
     }
 }
 
+void initDebug() {
+    stdio_set_driver_enabled(&usb_driver, true);
+}
+
+void deinitDebug() {
+    stdio_set_driver_enabled(&usb_driver, false);
+}
+
 void core1()
 {
     multicore_lockout_victim_init();
@@ -181,7 +189,7 @@ int main()
     adc_init();
     // stdio_uart_init_full(uart_get_instance(1), 115200, 8, 9);
     ring_buffer_init(&console_buf, console_buf_data, sizeof(console_buf_data), 0);
-    stdio_set_driver_enabled(&usb_driver, true);
+    
     EEPROM.start();
     if (!load(config))
     {

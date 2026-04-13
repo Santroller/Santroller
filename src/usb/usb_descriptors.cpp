@@ -63,7 +63,7 @@ uint8_t const *tud_descriptor_device_cb(void)
   memcpy(descriptor_buffer, &desc_device_init, sizeof(desc_device_init));
   for (auto &instance : usb_instances)
   {
-    if (instance == nullptr)
+    if (!instance)
     {
       continue;
     }
@@ -85,7 +85,7 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
   size_t interfaces = 0;
   for (auto &instance : usb_instances)
   {
-    if (instance == nullptr)
+    if (!instance)
     {
       continue;
     }
@@ -124,7 +124,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
   // printf("desc %02x %02x\r\n", index, langid);
 
   size_t chr_count;
-  const char *str;
+  const char *str = nullptr;
   // We only care about actual reads for this heuristic
   if (index != STRID_LANGID)
   {
@@ -155,7 +155,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     {
       for (auto &instance : usb_instances)
       {
-        if (instance == nullptr)
+        if (!instance)
         {
           continue;
         }
@@ -289,7 +289,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             size_t count = 0;
             for (auto &instance : usb_instances)
             {
-              if (instance == nullptr)
+              if (!instance)
               {
                 continue;
               }
@@ -341,7 +341,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
       wIndex = XInputGamepadDevice::xinputInterfaces[0];
     }
     auto dev = usb_instances[wIndex];
-    if (dev == nullptr)
+    if (!dev)
     {
       return false;
     }
@@ -360,7 +360,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     {
       dev = usb_instances_by_epout[ep_addr & (~0x80)];
     }
-    if (dev == nullptr)
+    if (!dev)
     {
       return false;
     }

@@ -121,7 +121,7 @@ uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         return 0;
     }
     bool status;
-    std::shared_ptr<HidHost> host_device = nullptr;
+    std::shared_ptr<HidHost> host_device;
     auto auth_device = auth_devices.find(ModePs4);
     if (auth_device != auth_devices.end())
     {
@@ -163,14 +163,14 @@ uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         return sizeof(ps4_feature_config);
     case ReportId::ReportIdPs4GetResponse:
     case ReportId::ReportIdPs4GetAuthStatus:
-        if (host_device != nullptr)
+        if (host_device)
         {
             return host_device->get_report(report_id, report_type, buffer, reqlen, nullptr);
         }
         return 0;
     case ReportId::ReportIdPs4GetAuthPageSize:
 
-        if (host_device != nullptr)
+        if (host_device)
         {
             status = false;
             reqlen = host_device->get_report(report_id, report_type, buffer, reqlen, &status);
@@ -189,7 +189,7 @@ uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
 
 void PS4GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
-    std::shared_ptr<HidHost> host_device = nullptr;
+    std::shared_ptr<HidHost> host_device;
     auto auth_device = auth_devices.find(ModePs4);
     if (auth_device != auth_devices.end())
     {
@@ -204,7 +204,7 @@ void PS4GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
         case 0:
             return;
         case ReportId::ReportIdPs4SetChallenge:
-            if (host_device != nullptr)
+            if (host_device)
             {
                 host_device->set_report(report_id, report_type, (uint8_t *)buffer, bufsize, nullptr);
             }

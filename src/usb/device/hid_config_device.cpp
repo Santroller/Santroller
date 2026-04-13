@@ -52,6 +52,7 @@ void HIDConfigDevice::process()
   if (tool_closed())
   {
     profile_selected = false;
+    deinitDebug();
     return;
   }
   if (just_loaded)
@@ -403,6 +404,7 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       lastKeepAlive = millis();
       tool_seen = true;
       just_loaded = true;
+      initDebug();
       break;
     case ReportId::ReportIdKeepalive:
       lastKeepAlive = millis();
@@ -507,14 +509,14 @@ bool HIDConfigDevice::send_event(proto_Event event, bool now)
   }
   dev->processing = true;
   // flush queue if overflowing or event is important
-  while (dev->list.event_count >= TU_ARRAY_SIZE(dev->list.event) || (dev->list.event_count && now))
+  while ((dev->list.event_count >= TU_ARRAY_SIZE(dev->list.event) || (dev->list.event_count && now)) && !tool_closed())
   {
     dev->process_events();
     tud_task();
   }
   dev->list.event[dev->list.event_count++] = event;
   // flush queue if event is important
-  while (now && dev->list.event_count)
+  while (now && dev->list.event_count && !tool_closed())
   {
     dev->process_events();
     tud_task();

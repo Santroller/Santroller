@@ -64,7 +64,7 @@ void PS5GamepadDevice::process()
     PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)epin_buf;
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
-    std::shared_ptr<HidHost> host_device = nullptr;
+    std::shared_ptr<HidHost> host_device;
     auto auth_device = auth_devices.find(ModePs5);
     if (auth_device != auth_devices.end())
     {
@@ -126,7 +126,7 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         return 0;
     }
 
-    std::shared_ptr<HidHost> host_device = nullptr;
+    std::shared_ptr<HidHost> host_device;
     auto auth_device = auth_devices.find(ModePs5);
     if (auth_device != auth_devices.end())
     {
@@ -169,7 +169,7 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         return sizeof(ps5_feature_config);
     case ReportId::ReportIdPs5GetResponse:
     case ReportId::ReportIdPs5GetAuthStatus:
-        if (host_device != nullptr)
+        if (host_device)
         {
             return host_device->get_report(report_id, report_type, buffer, reqlen, nullptr);
         }
@@ -213,7 +213,7 @@ uint8_t handle_player_leds_ps5(uint8_t player_mask)
 
 void PS5GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
-    std::shared_ptr<HidHost> host_device = nullptr;
+    std::shared_ptr<HidHost> host_device;
     auto auth_device = auth_devices.find(ModePs5);
     if (auth_device != auth_devices.end())
     {
@@ -228,7 +228,7 @@ void PS5GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
         case 0:
             return;
         case ReportId::ReportIdPs5SetChallenge:
-            if (host_device != nullptr)
+            if (host_device)
             {
                 host_device->set_report(report_id, report_type, (uint8_t *)buffer, bufsize, nullptr);
             }

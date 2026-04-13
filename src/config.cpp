@@ -244,7 +244,7 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     mapping.input.input.shortcut.funcs.decode = &load_shortcut;
     pb_decode(stream, proto_Mapping_fields, &mapping);
     std::unique_ptr<Input> input = make_input(mapping.input, profile, stream);
-    if (input == nullptr)
+    if (!input)
     {
         return true;
     }
@@ -424,7 +424,7 @@ bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
 bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = *(std::shared_ptr<Profile> *)*arg;
-    std::unique_ptr<LedMappingDevice> device = nullptr;
+    std::unique_ptr<LedMappingDevice> device;
     proto_Led proto_led;
     proto_led.mapping.led.inputMapping.input.input.shortcut.arg = &profile;
     proto_led.mapping.led.inputMapping.input.input.shortcut.funcs.decode = &load_shortcut;
@@ -494,13 +494,13 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     printf("profile loaded: %d %d %d\r\n", profile->profile_id, profile->xinput_on_windows, profile->invert_y_axis_hid);
     // TODO: handle this once we support emulating non usb devices
     profile->output = OutputUSB;
-    std::shared_ptr<UsbDevice> instance = nullptr;
+    std::shared_ptr<UsbDevice> instance;
     for (auto &list : profile->triggers)
     {
         if (list->validate(true, false, false))
         {
             printf("profile assigned! %d\r\n", profile->profile_id);
-            if (instance == nullptr)
+            if (!instance)
             {
                 if (profile->output == OutputUSB)
                 {
@@ -599,14 +599,17 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     assignable_devices.clear();
     instances.clear();
     active_instances.clear();
-    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances); i++) {
-        usb_instances[i] = nullptr;
+    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances); i++)
+    {
+        usb_instances[i] = std::shared_ptr<UsbDevice>();
     }
-    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epin); i++) {
-        usb_instances_by_epin[i] = nullptr;
+    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epin); i++)
+    {
+        usb_instances_by_epin[i] = std::shared_ptr<UsbDevice>();
     }
-    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epout); i++) {
-        usb_instances_by_epout[i] = nullptr;
+    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epout); i++)
+    {
+        usb_instances_by_epout[i] = std::shared_ptr<UsbDevice>();
     }
     active_devices.clear();
     active_profiles.clear();
@@ -791,14 +794,17 @@ void first_load()
     active_devices.clear();
     instances.clear();
     active_instances.clear();
-    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances); i++) {
-        usb_instances[i] = nullptr;
+    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances); i++)
+    {
+        usb_instances[i] = std::shared_ptr<UsbDevice>();
     }
-    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epin); i++) {
-        usb_instances_by_epin[i] = nullptr;
+    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epin); i++)
+    {
+        usb_instances_by_epin[i] = std::shared_ptr<UsbDevice>();
     }
-    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epout); i++) {
-        usb_instances_by_epout[i] = nullptr;
+    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epout); i++)
+    {
+        usb_instances_by_epout[i] = std::shared_ptr<UsbDevice>();
     }
     all_profiles.clear();
     auth_devices.clear();

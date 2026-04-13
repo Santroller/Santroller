@@ -8,6 +8,7 @@
 #include "config.hpp"
 #include "usb/device//hid_device.h"
 #include <algorithm>
+#include <vector>
 #include "utils.h"
 static uint8_t usb_host_id;
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : UsbHostInterface(0, 0, id), m_device(device)
@@ -40,18 +41,10 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
     tusb_init(TUH_OPT_RHPORT, &rh_init);
     printf("assignable_devices before: %d\r\n", assignable_usb_devices.size());
 
-    for (auto it = assignable_usb_devices.begin(); it != assignable_usb_devices.end();)
+    for (auto dev : assignable_usb_devices)
     {
-        if (!tuh_connected(it[0]->dev_addr()))
-        {
-            it = assignable_usb_devices.erase(it);
-        }
-        else
-        {
-            assignable_devices.push_back(it[0]);
-            it[0]->rescan(true);
-            ++it;
-        }
+        assignable_devices.push_back(dev);
+        dev->rescan(true);
     }
     printf("assignable_devices after: %d\r\n", assignable_usb_devices.size());
 }
@@ -74,18 +67,18 @@ bool usbh_init(void)
     printf("usbh init\r\n");
     for (size_t i = 0; i < TU_ARRAY_SIZE(host_devices); i++)
     {
-        host_devices[i] = nullptr;
+        host_devices[i] = std::shared_ptr<UsbHostDevice>();
     }
     return true;
 }
 void process_product_string(tuh_xfer_t *xfer)
 {
-    if (host_devices[xfer->daddr] != nullptr)
+    if (host_devices[xfer->daddr])
     {
         // send state change event
         for (auto &device : host_devices[xfer->daddr]->host_devices_by_itf)
         {
-            if (device != nullptr)
+            if (device)
             {
                 device->update(true, true);
             }
@@ -161,7 +154,7 @@ static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<
 uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
     printf("usbh open %d %d\r\n", dev_addr, desc_itf->bInterfaceNumber);
-    if (host_devices[dev_addr] == nullptr)
+    if (!host_devices[dev_addr])
     {
         host_devices[dev_addr] = std::make_shared<UsbHostDevice>(dev_addr, usb_host_id);
     }
@@ -169,9 +162,10 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
     {
         uint16_t out_len;
         auto dev = host_device(host_devices[dev_addr], desc_itf, max_len, &out_len);
-        if (dev != nullptr)
+        if (dev)
         {
             host_devices[dev_addr]->host_devices_by_itf[desc_itf->bInterfaceNumber] = dev;
+            printf("done\r\n");
             return out_len;
         }
     }
@@ -180,7 +174,7 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
 
 bool usbh_set_config(uint8_t dev_addr, uint8_t itf_num)
 {
-    if (host_devices[dev_addr]->host_devices_by_itf[itf_num] == nullptr)
+    if (!host_devices[dev_addr] || !host_devices[dev_addr]->host_devices_by_itf[itf_num])
     {
         return true;
     }
@@ -193,7 +187,7 @@ bool usbh_set_config(uint8_t dev_addr, uint8_t itf_num)
 
 bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
-    if (host_devices[dev_addr] == nullptr)
+    if (!host_devices[dev_addr])
     {
         return false;
     }
@@ -206,7 +200,7 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
     {
         dev = host_devices[dev_addr]->host_devices_by_endpoint_out[ep_addr];
     }
-    if (dev == nullptr)
+    if (!dev)
     {
         return false;
     }
@@ -216,14 +210,16 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
 void usbh_close(uint8_t dev_addr)
 {
     printf("usbh close %d %d\r\n", dev_addr);
-    if (host_devices[dev_addr] != nullptr)
+    if (host_devices[dev_addr])
     {
         host_devices[dev_addr]->disconnect();
-    }
-    host_devices[dev_addr] = nullptr;
-    if (HIDConfigDevice::tool_closed())
-    {
-        reload();
+        host_devices[dev_addr] = std::shared_ptr<UsbHostDevice>();
+        assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
+                                                    { return dev->dev_addr() == dev_addr; }));
+        if (HIDConfigDevice::tool_closed())
+        {
+            reload();
+        }
     }
 }
 
@@ -231,13 +227,15 @@ void UsbHostDevice::disconnect()
 {
     for (auto &device : host_devices_by_itf)
     {
-        if (device != nullptr) {
+        if (device)
+        {
             device->disconnect();
         }
     }
 }
 
-void UsbHostInterface::disconnect() {
+void UsbHostInterface::disconnect()
+{
     proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, SubType_Gamepad, m_dev_addr, m_interface, false}}};
     HIDConfigDevice::send_event(event, true);
 }

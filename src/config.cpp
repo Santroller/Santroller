@@ -65,8 +65,9 @@ std::vector<std::shared_ptr<Device>> active_devices;
 std::vector<std::shared_ptr<Device>> assignable_devices;
 std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
 std::map<ConsoleMode, std::shared_ptr<UsbHostInterface>> auth_devices;
-std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
-std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
+std::shared_ptr<UsbDevice> usb_instances[32];
+std::shared_ptr<UsbDevice> usb_instances_by_epin[16];
+std::shared_ptr<UsbDevice> usb_instances_by_epout[16];
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
 bool working = false;
@@ -545,7 +546,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                     instance->invert_y_axis_hid = profile->invert_y_axis_hid;
                     instance->supports_ps4 = profile->supports_ps4;
                     active_instances.push_back(instance);
-                    usb_instances[usb_instances.size()] = instance;
+                    usb_instances[instance->interface_id] = instance;
                     instance->initialize();
                 }
                 active_profiles.insert(profile->profile_id);
@@ -598,8 +599,15 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     assignable_devices.clear();
     instances.clear();
     active_instances.clear();
-    usb_instances.clear();
-    usb_instances_by_epnum.clear();
+    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances); i++) {
+        usb_instances[i] = nullptr;
+    }
+    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epin); i++) {
+        usb_instances_by_epin[i] = nullptr;
+    }
+    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epout); i++) {
+        usb_instances_by_epout[i] = nullptr;
+    }
     active_devices.clear();
     active_profiles.clear();
     all_profiles.clear();
@@ -783,7 +791,15 @@ void first_load()
     active_devices.clear();
     instances.clear();
     active_instances.clear();
-    usb_instances.clear();
+    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances); i++) {
+        usb_instances[i] = nullptr;
+    }
+    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epin); i++) {
+        usb_instances_by_epin[i] = nullptr;
+    }
+    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epout); i++) {
+        usb_instances_by_epout[i] = nullptr;
+    }
     all_profiles.clear();
     auth_devices.clear();
     auto confDevice = std::make_shared<HIDConfigDevice>();

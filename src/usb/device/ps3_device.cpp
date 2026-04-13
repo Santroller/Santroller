@@ -170,8 +170,8 @@ void PS3GamepadDevice::initialize()
     m_epin = next_epin();
     m_epout = next_epout();
     m_strid = next_strid();
-    usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
-    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
+    usb_instances_by_epin[m_epin & (~0x80)] = usb_instances[interface_id];
+    usb_instances_by_epout[m_epout] = usb_instances[interface_id];
     if (subtype == Gamepad)
     {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)initialReport;

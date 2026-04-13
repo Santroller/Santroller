@@ -7,7 +7,6 @@
 static std::map<std::tuple<uint16_t, uint16_t>, bool> seenChannels;
 MidiDevice::MidiDevice(uint16_t id, bool usbBased) : Device(id), drumMode(false), usbBased(usbBased)
 {
-    printf("MIDI Device created with id %d\r\n", id);
     tu_memclr(&ep_stream, sizeof(ep_stream));
     tu_edpt_stream_init(&ep_stream.rx, true, false, false,
                         ep_stream.rx_ff_buf, 512, m_ep_in_buf);

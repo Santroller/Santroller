@@ -21,29 +21,29 @@ std::shared_ptr<UsbHostInterface> MouseHost::open(std::shared_ptr<UsbHostDevice>
             p_desc = tu_desc_next(p_desc);
             tusb_desc_endpoint_t const *desc_ep =
                 (tusb_desc_endpoint_t const *)p_desc;
-            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType, nullptr);
+            TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType, nullptr);
             if (desc_ep->bEndpointAddress & 0x80)
             {
                 intf->m_ep_in = desc_ep->bEndpointAddress;
                 intf->m_ep_in_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep), nullptr);
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
                 usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
             }
             else
             {
                 intf->m_ep_out = desc_ep->bEndpointAddress;
                 intf->m_ep_out_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep), nullptr);
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
             }
         }
         if (intf->m_ep_out)
-    {
-        list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
-    }
-    if (intf->m_ep_in)
-    {
-        list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
-    }
+        {
+            list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
+        }
+        if (intf->m_ep_in)
+        {
+            list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
+        }
         assignable_usb_devices.push_back(intf);
         USB_FreeReportInfo(info);
         return intf;
@@ -53,6 +53,7 @@ std::shared_ptr<UsbHostInterface> MouseHost::open(std::shared_ptr<UsbHostDevice>
 
 bool MouseHost::set_config()
 {
+    UsbHostInterface::set_config();
     return true;
 }
 

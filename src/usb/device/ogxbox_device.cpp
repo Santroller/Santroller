@@ -65,7 +65,7 @@ uint16_t OGXboxGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16
 
     uint8_t const *p_desc = (uint8_t const *)itf_desc;
     p_desc = tu_desc_next(p_desc);
-    TU_ASSERT(usbd_open_edpt_pair(TUD_OPT_RHPORT, p_desc, itf_desc->bNumEndpoints, TUSB_XFER_INTERRUPT, &m_epout, &m_epin), 0);
+    TU_VERIFY(usbd_open_edpt_pair(TUD_OPT_RHPORT, p_desc, itf_desc->bNumEndpoints, TUSB_XFER_INTERRUPT, &m_epout, &m_epin), 0);
 
     // Prepare for output endpoint
     if (m_epout)
@@ -93,7 +93,7 @@ bool OGXboxGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, 
     }
 
     // prepare for new transfer
-    TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x40, false));
+    TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x40, false));
     return true;
 }
 bool OGXboxGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
@@ -138,8 +138,8 @@ void OGXboxGamepadDevice::initialize()
 {
     m_epin = next_epin();
     m_epout = next_epout();
-    usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
-    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
+    usb_instances_by_epin[m_epin & (~0x80)] = usb_instances[interface_id];
+    usb_instances_by_epout[m_epout] = usb_instances[interface_id];
 
     memset(&initialReport, 0, sizeof(initialReport));
     switch (subtype)

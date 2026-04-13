@@ -11,7 +11,6 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
 {
     uint8_t dev_addr = list->dev_addr();
 
-    printf("ps5host_open: %02x\r\n", dev_addr);
     uint8_t const *p_desc = (uint8_t const *)itf_desc;
     bool isThirdParty = info->foundPS5Usage;
     bool isFirstParty = vid == SONY_VID && (pid == PS5_DS_PID || pid == PS5_DS_EDGE_PID);
@@ -96,7 +95,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
         p_desc = tu_desc_next(p_desc);
         tusb_hid_descriptor_hid_t *x_desc =
             (tusb_hid_descriptor_hid_t *)p_desc;
-        TU_ASSERT(HID_DESC_TYPE_HID == x_desc->bDescriptorType, nullptr);
+        TU_VERIFY(HID_DESC_TYPE_HID == x_desc->bDescriptorType, nullptr);
         uint8_t endpoints = itf_desc->bNumEndpoints;
         while (endpoints--)
         {
@@ -104,19 +103,19 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
             tusb_desc_endpoint_t const *desc_ep =
                 (tusb_desc_endpoint_t const *)p_desc;
             printf("%02x, %02x, %02x, %02x\r\n", TUSB_DESC_ENDPOINT, desc_ep->bDescriptorType, desc_ep->bEndpointAddress, desc_ep->wMaxPacketSize);
-            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType, nullptr);
+            TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType, nullptr);
             if (desc_ep->bEndpointAddress & 0x80)
             {
                 intf->m_ep_in = desc_ep->bEndpointAddress;
                 intf->m_ep_in_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep), nullptr);
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
                 usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
             }
             else
             {
                 intf->m_ep_out = desc_ep->bEndpointAddress;
                 intf->m_ep_out_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep), nullptr);
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
             }
         }
 
@@ -156,7 +155,8 @@ bool Ps5Host::send_intr_report(const void *buffer, uint8_t len)
 
 bool Ps5Host::get_intr_report(void *buffer, uint8_t len)
 {
-    if (!received_packet) {
+    if (!received_packet)
+    {
         return false;
     }
     memcpy(buffer, m_ep_in_buf, TU_MIN(len, m_ep_in_size));
@@ -166,6 +166,7 @@ bool Ps5Host::get_intr_report(void *buffer, uint8_t len)
 
 bool Ps5Host::set_config()
 {
+    UsbHostInterface::set_config();
     return true;
 }
 

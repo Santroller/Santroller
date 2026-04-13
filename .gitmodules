@@ -6,7 +6,7 @@
 	url = https://github.com/sanjay900/btstack.git
 [submodule "lib/pico_pio_usb"]
 	path = lib/pico_pio_usb
-	url = https://github.com/sekigon-gonnoc/Pico-PIO-USB
+	url = https://github.com/Santroller/Pico-PIO-USB
 [submodule "lib/bluepad32"]
 	path = lib/bluepad32
 	url = https://github.com/ricardoquesada/bluepad32

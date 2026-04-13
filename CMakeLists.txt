@@ -26,6 +26,7 @@ set(BLUEPAD32_ROOT ${CMAKE_SOURCE_DIR}/lib/bluepad32)
 set(PFB_WITH_IMAGE_ENCRYPTION OFF)
 set(PFB_WITH_SHA256_HASHING OFF)
 set(PFB_RESERVED_FILESYSTEM_SIZE_KB 8)
+set(PFB_WITH_BOOTLOADER_LOGS OFF)
 
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
@@ -38,6 +39,7 @@ add_compile_options(-Wall
   -Wtype-limits
   -Wno-format # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
   -Wno-unused-function # we have some for the docs that aren't called
+  -Werror=return-type
 )
 
 include(compile_proto.cmake)

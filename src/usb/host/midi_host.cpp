@@ -26,7 +26,6 @@ MidiHost::~MidiHost()
 
 MidiHost::MidiHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id)
 {
-  printf("MIDIHOST: %p\r\n", this);
   m_subtype = SubType_Midi;
 }
 
@@ -63,7 +62,7 @@ std::shared_ptr<UsbHostInterface> MidiHost::open(std::shared_ptr<UsbHostDevice> 
   }
   TU_VERIFY(AUDIO_SUBCLASS_MIDI_STREAMING == desc_itf->bInterfaceSubClass, 0);
 
-  TU_LOG_DRV("MIDI opening Interface %u (addr = %u)\r\n", desc_itf->bInterfaceNumber, dev_addr);
+  // TU_LOG_DRV("MIDI opening Interface %u (addr = %u)\r\n", desc_itf->bInterfaceNumber, dev_addr);
 
   auto intf = std::make_shared<MidiHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);
 
@@ -85,39 +84,39 @@ std::shared_ptr<UsbHostInterface> MidiHost::open(std::shared_ptr<UsbHostDevice> 
       switch (tu_desc_subtype(p_desc))
       {
       case MIDI_CS_INTERFACE_HEADER:
-        TU_LOG_DRV("  Interface Header descriptor\r\n");
+        // TU_LOG_DRV("  Interface Header descriptor\r\n");
         break;
 
       case MIDI_CS_INTERFACE_IN_JACK:
       case MIDI_CS_INTERFACE_OUT_JACK:
       {
-        TU_LOG_DRV("  Jack %s %s descriptor \r\n",
-                   tu_desc_subtype(p_desc) == MIDI_CS_INTERFACE_IN_JACK ? "IN" : "OUT",
-                   p_desc[3] == MIDI_JACK_EXTERNAL ? "External" : "Embedded");
+        // TU_LOG_DRV("  Jack %s %s descriptor \r\n",
+        //            tu_desc_subtype(p_desc) == MIDI_CS_INTERFACE_IN_JACK ? "IN" : "OUT",
+        //            p_desc[3] == MIDI_JACK_EXTERNAL ? "External" : "Embedded");
         break;
       }
 
       case MIDI_CS_INTERFACE_ELEMENT:
-        TU_LOG_DRV("  Element descriptor\r\n");
+        // TU_LOG_DRV("  Element descriptor\r\n");
         break;
 
       case MIDI_CS_ROLAND_HEADER:
       {
         midi_desc_roland_header_t const *p_rl = (midi_desc_roland_header_t const *)p_desc;
-        TU_LOG2("Found Roland Header %02x %02x %02x %02x\r\n", p_rl->bLength, p_rl->always_2, p_rl->num_cables_rx, p_rl->num_cables_tx);
+        // TU_LOG2("Found Roland Header %02x %02x %02x %02x\r\n", p_rl->bLength, p_rl->always_2, p_rl->num_cables_rx, p_rl->num_cables_tx);
         if (p_rl->bLength >= sizeof(midi_desc_roland_header_t) && p_rl->always_2 == 0x02)
         {
           TU_VERIFY(p_rl->num_cables_rx < 0x10 && p_rl->num_cables_tx < 0x10, nullptr);
-          TU_LOG2("Found Roland Header\r\n");
+          // TU_LOG2("Found Roland Header\r\n");
           intf->rx_cable_count = (1 << p_rl->num_cables_rx) - 1;
           intf->tx_cable_count = (1 << p_rl->num_cables_tx) - 1;
           break;
         }
-        TU_LOG_DRV("  Unknown CS Interface sub-type %u\r\n", tu_desc_subtype(p_desc));
+        // TU_LOG_DRV("  Unknown CS Interface sub-type %u\r\n", tu_desc_subtype(p_desc));
         break;
       }
       default:
-        TU_LOG_DRV("  Unknown CS Interface sub-type %u\r\n", tu_desc_subtype(p_desc));
+        // TU_LOG_DRV("  Unknown CS Interface sub-type %u\r\n", tu_desc_subtype(p_desc));
         break;
       }
       break;
@@ -144,7 +143,7 @@ std::shared_ptr<UsbHostInterface> MidiHost::open(std::shared_ptr<UsbHostDevice> 
       {
         const midi_desc_cs_endpoint_t *p_csep = (const midi_desc_cs_endpoint_t *)p_desc;
 
-        TU_LOG_DRV("  Endpoint and CS_Endpoint descriptor %02x\r\n", p_ep->bEndpointAddress);
+        // TU_LOG_DRV("  Endpoint and CS_Endpoint descriptor %02x\r\n", p_ep->bEndpointAddress);
         if (tu_edpt_dir(p_ep->bEndpointAddress) == TUSB_DIR_OUT)
         {
           intf->tx_cable_count = p_csep->bNumEmbMIDIJack;
@@ -160,7 +159,7 @@ std::shared_ptr<UsbHostInterface> MidiHost::open(std::shared_ptr<UsbHostDevice> 
           list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
         }
       }
-      TU_ASSERT(tuh_edpt_open(dev_addr, p_ep), 0);
+      TU_VERIFY(tuh_edpt_open(dev_addr, p_ep), 0);
       tu_edpt_stream_open(ep_stream, dev_addr, p_ep, tu_edpt_packet_size(p_ep));
       tu_edpt_stream_clear(ep_stream);
       assignable_usb_devices.push_back(intf);
@@ -178,6 +177,7 @@ std::shared_ptr<UsbHostInterface> MidiHost::open(std::shared_ptr<UsbHostDevice> 
 
 bool MidiHost::set_config()
 {
+  UsbHostInterface::set_config();
   tu_edpt_stream_read_xfer(&ep_stream.rx);
   return true;
 }
@@ -195,8 +195,9 @@ bool MidiHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_b
       tu_edpt_stream_read_xfer_complete(ep_str_rx, xferred_bytes);
       // tuh_midi_rx_cb(idx, xferred_bytes);
     }
-    
-    tu_edpt_stream_read_xfer(ep_str_rx); // prepare for next transfer
+    if (result != XFER_RESULT_FAILED) {
+      tu_edpt_stream_read_xfer(ep_str_rx); // prepare for next transfer
+    }
   }
   else if (ep_addr == ep_str_tx->ep_addr)
   {

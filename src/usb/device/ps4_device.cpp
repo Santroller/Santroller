@@ -40,8 +40,8 @@ void PS4GamepadDevice::initialize()
 {
     m_epin = next_epin();
     m_epout = next_epout();
-    usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
-    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
+    usb_instances_by_epin[m_epin & (~0x80)] = usb_instances[interface_id];
+    usb_instances_by_epout[m_epout] = usb_instances[interface_id];
 
     PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)initialReport;
     gamepad->report_id = 1;

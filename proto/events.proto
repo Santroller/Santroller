@@ -44,8 +44,9 @@ message UsbDeviceHotplugEvent {
     required int32 id = 1;
     required SubType subtype = 2;
     required int32 port = 3;
-    required bool connected = 4;
-    required string name = 5;
+    required int32 interface = 4;
+    required bool connected = 5;
+    required string name = 6;
 }
 
 message WiiDeviceHotplugEvent {

@@ -5,8 +5,7 @@
 #include "device.pb.h"
 #include "libmpr121.hpp"
 #include "usb/host/host.hpp"
-#include <unordered_map>
-extern std::unordered_map<uint8_t, std::shared_ptr<UsbHostDevice>> host_devices;
+extern std::shared_ptr<UsbHostDevice> host_devices[127];
 class USBHostHardwareDevice : public UsbHostInterface
 {
 public:

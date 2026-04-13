@@ -225,7 +225,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_desc = tu_desc_next(p_desc);
         USB_HID_DESCRIPTOR *x_desc =
             (USB_HID_DESCRIPTOR *)p_desc;
-        TU_ASSERT(HID_DESCRIPTOR_HID == x_desc->bDescriptorType, 0);
+        TU_VERIFY(HID_DESCRIPTOR_HID == x_desc->bDescriptorType, 0);
         drv_len += x_desc->bLength;
         uint8_t endpoints = desc_itf->bNumEndpoints;
         while (endpoints--)
@@ -233,19 +233,19 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             p_desc = tu_desc_next(p_desc);
             tusb_desc_endpoint_t const *desc_ep =
                 (tusb_desc_endpoint_t const *)p_desc;
-            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
+            TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
             if (desc_ep->bEndpointAddress & 0x80)
             {
                 p_xinput->ep_in = desc_ep->bEndpointAddress;
                 p_xinput->epin_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
                 usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
             }
             else
             {
                 p_xinput->ep_out = desc_ep->bEndpointAddress;
                 p_xinput->epout_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
             }
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
@@ -309,19 +309,19 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             p_desc = tu_desc_next(p_desc);
             tusb_desc_endpoint_t const *desc_ep =
                 (tusb_desc_endpoint_t const *)p_desc;
-            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
+            TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
             if (desc_ep->bEndpointAddress & 0x80)
             {
                 p_xinput->ep_in = desc_ep->bEndpointAddress;
                 p_xinput->epin_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
                 usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
             }
             else
             {
                 p_xinput->ep_out = desc_ep->bEndpointAddress;
                 p_xinput->epout_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
             }
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
@@ -341,19 +341,19 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             p_desc = tu_desc_next(p_desc);
             tusb_desc_endpoint_t const *desc_ep =
                 (tusb_desc_endpoint_t const *)p_desc;
-            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
+            TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
             if (desc_ep->bEndpointAddress & 0x80)
             {
                 p_xinput->ep_in = desc_ep->bEndpointAddress;
                 p_xinput->epin_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
                 usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
             }
             else
             {
                 p_xinput->ep_out = desc_ep->bEndpointAddress;
                 p_xinput->epout_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
             }
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
@@ -372,7 +372,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_desc = tu_desc_next(p_desc);
         XBOX_ID_DESCRIPTOR *x_desc =
             (XBOX_ID_DESCRIPTOR *)p_desc;
-        TU_ASSERT(XINPUT_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
+        TU_VERIFY(XINPUT_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
         drv_len += x_desc->bLength;
         uint8_t endpoints = desc_itf->bNumEndpoints;
         while (endpoints--)
@@ -380,18 +380,18 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             p_desc = tu_desc_next(p_desc);
             tusb_desc_endpoint_t const *desc_ep =
                 (tusb_desc_endpoint_t const *)p_desc;
-            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
+            TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
             if (desc_ep->bEndpointAddress & 0x80)
             {
                 p_xinput->ep_in = desc_ep->bEndpointAddress;
                 p_xinput->epin_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
             }
             else
             {
                 p_xinput->ep_out = desc_ep->bEndpointAddress;
                 p_xinput->epout_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
             }
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
@@ -417,7 +417,7 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
         p_desc = tu_desc_next(p_desc);
         XBOX_ID_DESCRIPTOR *x_desc =
             (XBOX_ID_DESCRIPTOR *)p_desc;
-        TU_ASSERT(XINPUT_SECURITY_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
+        TU_VERIFY(XINPUT_SECURITY_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
         drv_len += x_desc->bLength;
         p_desc = tu_desc_next(p_desc);
         p_xinput->type = NON_CONTROLLER;
@@ -435,18 +435,18 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             p_desc = tu_desc_next(p_desc);
             tusb_desc_endpoint_t const *desc_ep =
                 (tusb_desc_endpoint_t const *)p_desc;
-            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
+            TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
             if (desc_ep->bEndpointAddress & 0x80)
             {
                 p_xinput->ep_in = desc_ep->bEndpointAddress;
                 p_xinput->epin_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
             }
             else
             {
                 p_xinput->ep_out = desc_ep->bEndpointAddress;
                 p_xinput->epout_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
             }
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
@@ -467,18 +467,18 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             p_desc = tu_desc_next(p_desc);
             tusb_desc_endpoint_t const *desc_ep =
                 (tusb_desc_endpoint_t const *)p_desc;
-            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
+            TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
             if (desc_ep->bEndpointAddress & 0x80)
             {
                 p_xinput->ep_in = desc_ep->bEndpointAddress;
                 p_xinput->epin_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
             }
             else
             {
                 p_xinput->ep_out = desc_ep->bEndpointAddress;
                 p_xinput->epout_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
             }
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;
@@ -496,19 +496,19 @@ bool xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const 
             p_desc = tu_desc_next(p_desc);
             tusb_desc_endpoint_t const *desc_ep =
                 (tusb_desc_endpoint_t const *)p_desc;
-            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
+            TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType);
             if (desc_ep->bEndpointAddress & 0x80)
             {
                 p_xinput->ep_in = desc_ep->bEndpointAddress;
                 p_xinput->epin_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
                 usbh_edpt_xfer(dev_addr, p_xinput->ep_in, p_xinput->epin_buf, p_xinput->epin_size);
             }
             else
             {
                 p_xinput->ep_out = desc_ep->bEndpointAddress;
                 p_xinput->epout_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep));
+                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep));
             }
         }
         p_xinput->itf_num = desc_itf->bInterfaceNumber;

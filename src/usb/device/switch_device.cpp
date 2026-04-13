@@ -85,8 +85,8 @@ void SwitchGamepadDevice::initialize()
 {
     m_epin = next_epin();
     m_epout = next_epout();
-    usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
-    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
+    usb_instances_by_epin[m_epin & (~0x80)] = usb_instances[interface_id];
+    usb_instances_by_epout[m_epout] = usb_instances[interface_id];
 }
 bool SwitchGamepadDevice::sendReport(uint8_t reportID, void const *reportData, uint16_t reportLength)
 {

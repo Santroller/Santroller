@@ -31,8 +31,9 @@ extern ConsoleMode newMode;
 extern bool working;
 
 extern std::vector<std::shared_ptr<Instance>> instances;
-extern std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances;
-extern std::unordered_map<uint8_t, std::shared_ptr<UsbDevice>> usb_instances_by_epnum;
+extern std::shared_ptr<UsbDevice> usb_instances[32];
+extern std::shared_ptr<UsbDevice> usb_instances_by_epin[16];
+extern std::shared_ptr<UsbDevice> usb_instances_by_epout[16];
 extern std::vector<std::shared_ptr<Device>> active_devices;
 extern std::vector<std::shared_ptr<Device>> assignable_devices;
 extern std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;

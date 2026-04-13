@@ -5,18 +5,14 @@
 #include "devices/base.hpp"
 #include "devices/midi.hpp"
 #include <vector>
-#include <unordered_map>
 #include <memory>
 
 class UsbHostInterface : public MidiDevice
 {
 public:
     virtual ~UsbHostInterface() { printf("~UsbHostInterface()\r\n"); };
-    UsbHostInterface(uint8_t d_addr, uint8_t interface, uint16_t id) : MidiDevice(id, true), m_dev_addr(d_addr), m_interface(interface)
-    {
-        printf("UsbHostInterface: %p\r\n", this);
-    }
-    virtual bool set_config() = 0;
+    UsbHostInterface(uint8_t d_addr, uint8_t interface, uint16_t id) : MidiDevice(id, true), m_dev_addr(d_addr), m_interface(interface) {}
+    virtual bool set_config();
     virtual bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) = 0;
     uint8_t dev_addr()
     {
@@ -59,8 +55,7 @@ protected:
     uint8_t m_interface;
     SubType m_subtype = SubType_Gamepad;
     bool m_sent_type = false;
-    char m_name[64] = {0};
-    bool m_fetched_name = false;
+    CFG_TUSB_MEM_ALIGN char m_name[128] = {0};
     uint32_t send_ctrl_xfer(tusb_control_request_t setup, void *buffer, bool *status);
     bool send_intr_xfer(uint8_t endpoint, const void *buffer, uint8_t len);
 };
@@ -108,7 +103,7 @@ public:
     {
         return false;
     }
-    std::unordered_map<uint8_t, std::shared_ptr<UsbHostInterface>> host_devices_by_itf;
+    std::shared_ptr<UsbHostInterface> host_devices_by_itf[30];
     std::shared_ptr<UsbHostInterface> host_devices_by_endpoint_in[16];
     std::shared_ptr<UsbHostInterface> host_devices_by_endpoint_out[16];
 

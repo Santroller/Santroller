@@ -40,8 +40,8 @@ void XInputGamepadDevice::initialize()
     m_epin = next_epin();
     m_epout = next_epout();
     m_strid = next_strid();
-    usb_instances_by_epnum[m_epin] = usb_instances[interface_id];
-    usb_instances_by_epnum[m_epout] = usb_instances[interface_id];
+    usb_instances_by_epin[m_epin & (~0x80)] = usb_instances[interface_id];
+    usb_instances_by_epout[m_epout] = usb_instances[interface_id];
 
     memset(&initialReport, 0, sizeof(initialReport));
     initialReport.leftStickX = 0;
@@ -110,10 +110,10 @@ uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16
         p_desc = tu_desc_next(p_desc);
         XBOX_ID_DESCRIPTOR *x_desc =
             (XBOX_ID_DESCRIPTOR *)p_desc;
-        TU_ASSERT(XINPUT_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
+        TU_VERIFY(XINPUT_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
         drv_len += x_desc->bLength;
         p_desc = tu_desc_next(p_desc);
-        TU_ASSERT(usbd_open_edpt_pair(TUD_OPT_RHPORT, p_desc, itf_desc->bNumEndpoints,
+        TU_VERIFY(usbd_open_edpt_pair(TUD_OPT_RHPORT, p_desc, itf_desc->bNumEndpoints,
                                       TUSB_XFER_INTERRUPT, &m_epout,
                                       &m_epin),
                   0);
@@ -207,7 +207,7 @@ bool XInputGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, 
                 rumble_right = rumbleReport->rightRumble;
             }
         }
-        TU_ASSERT(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x20, false));
+        TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x20, false));
     }
     return true;
 }
@@ -364,7 +364,7 @@ uint16_t XInputSecurityDevice::open(tusb_desc_interface_t const *itf_desc, uint1
         p_desc = tu_desc_next(p_desc);
         XBOX_SECURITY_DESCRIPTOR *x_desc =
             (XBOX_SECURITY_DESCRIPTOR *)p_desc;
-        TU_ASSERT(XINPUT_SECURITY_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
+        TU_VERIFY(XINPUT_SECURITY_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
         drv_len += x_desc->bLength;
         return drv_len;
     }

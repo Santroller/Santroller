@@ -63,7 +63,11 @@ uint8_t const *tud_descriptor_device_cb(void)
   memcpy(descriptor_buffer, &desc_device_init, sizeof(desc_device_init));
   for (auto &instance : usb_instances)
   {
-    instance.second->device_descriptor((tusb_desc_device_t *)descriptor_buffer);
+    if (instance == nullptr)
+    {
+      continue;
+    }
+    instance->device_descriptor((tusb_desc_device_t *)descriptor_buffer);
   }
   return descriptor_buffer;
 }
@@ -81,7 +85,11 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
   size_t interfaces = 0;
   for (auto &instance : usb_instances)
   {
-    current += instance.second->config_descriptor(descriptor_buffer + current, sizeof(descriptor_buffer) - current);
+    if (instance == nullptr)
+    {
+      continue;
+    }
+    current += instance->config_descriptor(descriptor_buffer + current, sizeof(descriptor_buffer) - current);
     interfaces++;
   }
   config->bDescriptorType = TUSB_DESC_CONFIGURATION;
@@ -147,14 +155,20 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     {
       for (auto &instance : usb_instances)
       {
-        if (instance.second->device_name(index, _desc_str_tmp)) {
+        if (instance == nullptr)
+        {
+          continue;
+        }
+        if (instance->device_name(index, _desc_str_tmp))
+        {
           str = _desc_str_tmp;
           printf("got name: %d %s\r\n", index, _desc_str_tmp);
           break;
         }
       }
     }
-    if (!str) {
+    if (!str)
+    {
       return 0;
     }
     // Cap at max char
@@ -213,12 +227,19 @@ const OS_COMPATIBLE_ID_DESCRIPTOR DevCompatIDHeader = {
 bool usb_device_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
                         uint32_t xferred_bytes)
 {
-  auto it = usb_instances_by_epnum.find(ep_addr);
-  if (it == usb_instances_by_epnum.end())
+  std::shared_ptr<UsbDevice> dev;
+  if (tu_edpt_dir(ep_addr) == TUSB_DIR_OUT)
+  {
+    dev = usb_instances_by_epout[ep_addr];
+  }
+  else
+  {
+    dev = usb_instances_by_epout[ep_addr & (~0x80)];
+  }
+  if (!dev)
   {
     return false;
   }
-  auto dev = it->second;
   return dev->interrupt_xfer(ep_addr, result, xferred_bytes);
 }
 
@@ -268,13 +289,17 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             size_t count = 0;
             for (auto &instance : usb_instances)
             {
-              size_t size = instance.second->compatible_section_descriptor(descriptor_buffer + current, sizeof(descriptor_buffer) - current);
+              if (instance == nullptr)
+              {
+                continue;
+              }
+              size_t size = instance->compatible_section_descriptor(descriptor_buffer + current, sizeof(descriptor_buffer) - current);
               current += size;
               if (size)
               {
                 count++;
               }
-              if (mode == ModeHid && instance.second->xinput_on_windows)
+              if (mode == ModeHid && instance->xinput_on_windows)
               {
                 newMode = ModeXbox360;
               }
@@ -315,23 +340,30 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     {
       wIndex = XInputGamepadDevice::xinputInterfaces[0];
     }
-    auto it = usb_instances.find(wIndex);
-    if (it == usb_instances.end())
+    auto dev = usb_instances[wIndex];
+    if (dev == nullptr)
     {
       return false;
     }
-    auto dev = it->second;
     // printf("xfer\r\n");
     return dev->control_transfer(stage, request);
   }
   else if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_ENDPOINT)
   {
-    auto it = usb_instances_by_epnum.find(request->wIndex & 0xFF);
-    if (it == usb_instances_by_epnum.end())
+    uint8_t ep_addr = request->wIndex & 0xFF;
+    std::shared_ptr<UsbDevice> dev;
+    if (tu_edpt_dir(ep_addr) == TUSB_DIR_OUT)
+    {
+      dev = usb_instances_by_epout[ep_addr];
+    }
+    else
+    {
+      dev = usb_instances_by_epout[ep_addr & (~0x80)];
+    }
+    if (dev == nullptr)
     {
       return false;
     }
-    auto dev = it->second;
     // printf("xfer\r\n");
     return dev->control_transfer(stage, request);
   }

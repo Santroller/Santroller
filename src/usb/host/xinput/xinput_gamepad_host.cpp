@@ -8,58 +8,54 @@
 
 std::shared_ptr<UsbHostInterface> XInputGamepadHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
-    TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass, nullptr);
+    TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass && desc_itf->bInterfaceSubClass == 0x5D && desc_itf->bInterfaceProtocol == 0x01, nullptr);
     uint8_t dev_addr = list->dev_addr();
 
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
 
-    if (desc_itf->bInterfaceSubClass == 0x5D && desc_itf->bInterfaceProtocol == 0x01)
+    auto intf = std::make_shared<XInputGamepadHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);
+    p_desc = tu_desc_next(p_desc);
+    XBOX_ID_DESCRIPTOR *x_desc =
+        (XBOX_ID_DESCRIPTOR *)p_desc;
+    TU_VERIFY(XINPUT_DESC_TYPE_RESERVED == x_desc->bDescriptorType, nullptr);
+    intf->m_subtype = get_subtype_from_xinput(x_desc->subtype);
+    uint8_t endpoints = desc_itf->bNumEndpoints;
+    while (endpoints--)
     {
-        auto intf = std::make_shared<XInputGamepadHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);
         p_desc = tu_desc_next(p_desc);
-        XBOX_ID_DESCRIPTOR *x_desc =
-            (XBOX_ID_DESCRIPTOR *)p_desc;
-        TU_ASSERT(XINPUT_DESC_TYPE_RESERVED == x_desc->bDescriptorType, nullptr);
-        intf->m_subtype = get_subtype_from_xinput(x_desc->subtype);
-        uint8_t endpoints = desc_itf->bNumEndpoints;
-        while (endpoints--)
+        tusb_desc_endpoint_t const *desc_ep =
+            (tusb_desc_endpoint_t const *)p_desc;
+        TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType, nullptr);
+        if (desc_ep->bEndpointAddress & 0x80)
         {
-            p_desc = tu_desc_next(p_desc);
-            tusb_desc_endpoint_t const *desc_ep =
-                (tusb_desc_endpoint_t const *)p_desc;
-            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType, nullptr);
-            if (desc_ep->bEndpointAddress & 0x80)
-            {
-                intf->m_ep_in = desc_ep->bEndpointAddress;
-                intf->m_ep_in_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-                usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
-            }
-            else
-            {
-                intf->m_ep_out = desc_ep->bEndpointAddress;
-                intf->m_ep_out_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-            }
+            intf->m_ep_in = desc_ep->bEndpointAddress;
+            intf->m_ep_in_size = desc_ep->wMaxPacketSize;
+            TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
+            usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
         }
-        if (intf->m_ep_out)
+        else
         {
-            list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
+            intf->m_ep_out = desc_ep->bEndpointAddress;
+            intf->m_ep_out_size = desc_ep->wMaxPacketSize;
+            TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
         }
-        if (intf->m_ep_in)
-        {
-            list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
-        }
-        assignable_usb_devices.push_back(intf);
-        printf("found device: %d\r\n", intf->m_subtype);
-        *out_len = TUD_XINPUT_GAMEPAD_DESC_LEN;
-        return intf;
     }
-    return nullptr;
+    if (intf->m_ep_out)
+    {
+        list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
+    }
+    if (intf->m_ep_in)
+    {
+        list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
+    }
+    assignable_usb_devices.push_back(intf);
+    *out_len = TUD_XINPUT_GAMEPAD_DESC_LEN;
+    return intf;
 }
 
 bool XInputGamepadHost::set_config()
 {
+    UsbHostInterface::set_config();
     XInputInputCapabilities_t caps;
     XInputVibrationCapabilities_t caps_vibr;
     uint32_t serial;
@@ -135,7 +131,7 @@ bool XInputGamepadHost::set_config()
 
 bool XInputGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
-    if (ep_addr & 0x80)
+    if (ep_addr & 0x80 && result != XFER_RESULT_FAILED)
     {
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }

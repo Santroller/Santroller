@@ -8,59 +8,55 @@
 
 std::shared_ptr<UsbHostInterface> XInputWirelessAudioHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
-    TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass, nullptr);
+    TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass && desc_itf->bInterfaceSubClass == 0x5D && desc_itf->bInterfaceProtocol == 0x82, nullptr);
     uint8_t dev_addr = list->dev_addr();
 
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
 
-    if (desc_itf->bInterfaceSubClass == 0x5D && desc_itf->bInterfaceProtocol == 0x82)
+    auto intf = std::make_shared<XInputWirelessAudioHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);
+    p_desc = tu_desc_next(p_desc);
+    XBOX_ID_DESCRIPTOR *x_desc =
+        (XBOX_ID_DESCRIPTOR *)p_desc;
+    TU_VERIFY(XINPUT_DESC_TYPE_WIRELESS_CAPABILITIES == x_desc->bDescriptorType, nullptr);
+    intf->m_subtype = get_subtype_from_xinput(x_desc->subtype);
+    uint8_t endpoints = desc_itf->bNumEndpoints;
+    while (endpoints--)
     {
-        auto intf = std::make_shared<XInputWirelessAudioHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);
         p_desc = tu_desc_next(p_desc);
-        XBOX_ID_DESCRIPTOR *x_desc =
-            (XBOX_ID_DESCRIPTOR *)p_desc;
-        TU_ASSERT(XINPUT_DESC_TYPE_WIRELESS_CAPABILITIES == x_desc->bDescriptorType, nullptr);
-        intf->m_subtype = get_subtype_from_xinput(x_desc->subtype);
-        uint8_t endpoints = desc_itf->bNumEndpoints;
-        while (endpoints--)
+        tusb_desc_endpoint_t const *desc_ep =
+            (tusb_desc_endpoint_t const *)p_desc;
+        TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType, nullptr);
+        if (desc_ep->bEndpointAddress & 0x80)
         {
-            p_desc = tu_desc_next(p_desc);
-            tusb_desc_endpoint_t const *desc_ep =
-                (tusb_desc_endpoint_t const *)p_desc;
-            TU_ASSERT(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType, nullptr);
-            if (desc_ep->bEndpointAddress & 0x80)
-            {
-                intf->m_ep_in = desc_ep->bEndpointAddress;
-                intf->m_ep_in_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-                usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
-            }
-            else
-            {
-                intf->m_ep_out = desc_ep->bEndpointAddress;
-                intf->m_ep_out_size = desc_ep->wMaxPacketSize;
-                TU_ASSERT(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-            }
+            intf->m_ep_in = desc_ep->bEndpointAddress;
+            intf->m_ep_in_size = desc_ep->wMaxPacketSize;
+            TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
+            usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
         }
-        if (intf->m_ep_out)
+        else
         {
-            list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
+            intf->m_ep_out = desc_ep->bEndpointAddress;
+            intf->m_ep_out_size = desc_ep->wMaxPacketSize;
+            TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
         }
-        if (intf->m_ep_in)
-        {
-            list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
-        }
-        *out_len = TUD_XINPUT_WIRELESS_AUDIO_DESC_LEN;
-        // TODO: audio
-        // assignable_usb_devices.push_back(intf);
-        printf("found device: %d\r\n", intf->m_subtype);
-        return intf;
     }
-    return nullptr;
+    if (intf->m_ep_out)
+    {
+        list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
+    }
+    if (intf->m_ep_in)
+    {
+        list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
+    }
+    *out_len = TUD_XINPUT_WIRELESS_AUDIO_DESC_LEN;
+    // TODO: audio
+    // assignable_usb_devices.push_back(intf);
+    return intf;
 }
 
 bool XInputWirelessAudioHost::set_config()
 {
+    UsbHostInterface::set_config();
     XInputInputCapabilities_t caps;
     XInputVibrationCapabilities_t caps_vibr;
     uint32_t serial;

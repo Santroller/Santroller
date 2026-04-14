@@ -272,7 +272,7 @@ uint16_t PSXController::readAxis(PS2AxisType axisType)
         switch (axisType)
         {
         case PS2AxisGuitarWhammy:
-            return (ps2Data[8] - 0x80) << 9;
+            return (0x80 - ps2Data[8]) << 9;
         default:
             return 0;
         }

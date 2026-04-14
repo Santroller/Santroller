@@ -218,13 +218,13 @@ uint16_t PSXController::readAxis(PS2AxisType axisType)
         switch (axisType)
         {
         case PS2AxisLeftStickX:
-            return (ps2Data[7] - 128) << 8;
+            return ps2Data[7] << 8;
         case PS2AxisLeftStickY:
-            return -(ps2Data[8] - 127) << 8;
+            return (255-ps2Data[8]) << 8;
         case PS2AxisRightStickX:
-            return (ps2Data[5] - 128) << 8;
+            return (ps2Data[5]) << 8;
         case PS2AxisRightStickY:
-            return -(ps2Data[6] - 127) << 8;
+            return (255-ps2Data[6]) << 8;
         case PS2AxisDualshock2RightButton:
             return ps2Data[9] << 8;
         case PS2AxisDualshock2LeftButton:
@@ -257,13 +257,13 @@ uint16_t PSXController::readAxis(PS2AxisType axisType)
         switch (axisType)
         {
         case PS2AxisLeftStickX:
-            return (ps2Data[7] - 128) << 8;
+            return ps2Data[7] << 8;
         case PS2AxisLeftStickY:
-            return -(ps2Data[8] - 127) << 8;
+            return (255-ps2Data[8]) << 8;
         case PS2AxisRightStickX:
-            return (ps2Data[5] - 128) << 8;
+            return (ps2Data[5]) << 8;
         case PS2AxisRightStickY:
-            return -(ps2Data[6] - 127) << 8;
+            return (255-ps2Data[6]) << 8;
         default:
             return 0;
         }
@@ -272,7 +272,7 @@ uint16_t PSXController::readAxis(PS2AxisType axisType)
         switch (axisType)
         {
         case PS2AxisGuitarWhammy:
-            return -(ps2Data[8] - 0x80) << 9;
+            return (ps2Data[8] - 0x80) << 9;
         default:
             return 0;
         }
@@ -281,7 +281,7 @@ uint16_t PSXController::readAxis(PS2AxisType axisType)
         switch (axisType)
         {
         case PS2AxisNegConTwist:
-            return (ps2Data[5] - 128) << 8;
+            return (ps2Data[5]) << 8;
         case PS2AxisNegConI:
             return ps2Data[6];
         case PS2AxisNegConIi:
@@ -316,9 +316,9 @@ uint16_t PSXController::readAxis(PS2AxisType axisType)
         switch (axisType)
         {
         case PS2AxisMouseX:
-            return (ps2Data[5] - 128) << 8;
+            return (ps2Data[5]) << 8;
         case PS2AxisMouseY:
-            return -(ps2Data[6] - 127) << 8;
+            return (255-ps2Data[6]) << 8;
 
         default:
             return 0;

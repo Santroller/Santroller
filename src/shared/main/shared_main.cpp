@@ -616,10 +616,12 @@ uint8_t handle_calibration_ps3(uint8_t previous, int32_t orig_val, int16_t min, 
 uint8_t handle_calibration_ps4_xb1_tilt(uint8_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, int16_t deadzone)
 {
     int16_t ret = abs(handle_calibration_xbox(previous << 7, orig_val, min, max, center, deadzone, 0)) >> 7;
-    if (ret > 255) {
+    if (ret > 255)
+    {
         ret = 255;
     }
-    if (ret < 0) {
+    if (ret < 0)
+    {
         ret = 0;
     }
     return (uint8_t)(ret);
@@ -3433,6 +3435,21 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     {
         if (!festival_gameplay_mode)
         {
+#if DEVICE_TYPE_IS_DRUM
+            PS3GamepadDrum_Data_t *report = (PS3GamepadDrum_Data_t *)report_data;
+            memset(report, 0, sizeof(PS3GamepadDrum_Data_t));
+            report->reportId = 1;
+            report->accelX = PS3_ACCEL_CENTER;
+            report->accelY = PS3_ACCEL_CENTER;
+            report->accelZ = PS3_ACCEL_CENTER;
+            report->gyro = PS3_ACCEL_CENTER;
+            report->leftStickX = PS3_STICK_CENTER;
+            report->leftStickY = PS3_STICK_CENTER;
+            report->rightStickX = PS3_STICK_CENTER;
+            report->rightStickY = PS3_STICK_CENTER;
+            TICK_PS3_WITHOUT_CAPTURE;
+            report_size = packet_size = sizeof(PS3GamepadDrum_Data_t);
+#else
             PS3GamepadGuitar_Data_t *report = (PS3GamepadGuitar_Data_t *)report_data;
             memset(report, 0, sizeof(PS3GamepadGuitar_Data_t));
             report->reportId = 1;
@@ -3446,9 +3463,22 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->rightStickY = PS3_STICK_CENTER;
             TICK_PS3_WITHOUT_CAPTURE;
             report_size = packet_size = sizeof(PS3GamepadGuitar_Data_t);
+#endif
         }
         else
         {
+
+#if DEVICE_TYPE_IS_DRUM
+            PS3FestivalProDrumLayer_Data_t *report = (PS3FestivalProDrumLayer_Data_t *)report_data;
+            memset(report, 0, sizeof(PS3FestivalProDrumLayer_Data_t));
+            report->reportId = 0x01;
+            report->leftStickX = PS3_STICK_CENTER;
+            report->leftStickY = PS3_STICK_CENTER;
+            report->rightStickX = PS3_STICK_CENTER;
+            report->rightStickY = PS3_STICK_CENTER;
+            TICK_FESTIVAL;
+            report_size = packet_size = sizeof(PS3FestivalProDrumLayer_Data_t);
+#else
             PS3FestivalProGuitarLayer_Data_t *report = (PS3FestivalProGuitarLayer_Data_t *)report_data;
             memset(report, 0, sizeof(PS3FestivalProGuitarLayer_Data_t));
             report->reportId = 0x01;
@@ -3458,6 +3488,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->rightStickY = PS3_STICK_CENTER;
             TICK_FESTIVAL;
             report_size = packet_size = sizeof(PS3FestivalProGuitarLayer_Data_t);
+#endif
         }
     }
 #endif
@@ -3528,6 +3559,18 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
         else
         {
+#if DEVICE_TYPE_IS_DRUM
+
+            PC_FESTIVAL_REPORT *report = (PC_FESTIVAL_REPORT *)report_data;
+            report_size = packet_size = sizeof(PC_FESTIVAL_REPORT);
+            memset(report, 0, sizeof(PC_FESTIVAL_REPORT));
+            report->reportId = 1;
+            TICK_FESTIVAL;
+
+            asm volatile("" ::
+                             : "memory");
+            report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
+#else
             PC_FESTIVAL_REPORT *report = (PC_FESTIVAL_REPORT *)report_data;
             report_size = packet_size = sizeof(PC_FESTIVAL_REPORT);
             memset(report, 0, sizeof(PC_FESTIVAL_REPORT));
@@ -3540,6 +3583,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             asm volatile("" ::
                              : "memory");
             report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
+#endif
         }
 #endif
     }
@@ -3770,8 +3814,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             }
             else
             {
+#if DEVICE_TYPE_IS_DRUM
+                SwitchFestivalProDrumsLayer_Data_t *report = (SwitchFestivalProDrumsLayer_Data_t *)report_data;
+                TICK_FESTIVAL;
+#else
                 SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)report_data;
                 TICK_FESTIVAL;
+#endif
 
                 asm volatile("" ::
                                  : "memory");

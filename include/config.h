@@ -471,7 +471,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define OG_XBOX_REPORT OGXboxRockBandDrums_Data_t
 #define XINPUT_REPORT XInputRockBandDrums_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandDrums_Data_t
-#define PC_FESTIVAL_REPORT FestivalProGuitarLayerRB_Data_t
+#define PC_FESTIVAL_REPORT FestivalProDrumsLayerRB_Data_t
 #define PC_REPORT PCRockBandDrums_Data_t
 #define PS2_REPORT PS2Gamepad_Data_t
 #define PS3_REPORT PS3RockBandDrums_Data_t

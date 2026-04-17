@@ -52,11 +52,11 @@ MidiProGuitarButtonInput::MidiProGuitarButtonInput(proto_MidiProGuitarButtonInpu
 }
 bool MidiProGuitarButtonInput::tickDigital()
 {
-    return m_device->readProGuitarButton(m_input.button) ? 65535 : 0;
+    return m_device->readProGuitarButton(m_input.button);
 }
 uint16_t MidiProGuitarButtonInput::tickAnalog()
 {
-    return m_device->readProGuitarButton(m_input.button);
+    return m_device->readProGuitarButton(m_input.button) ? 65535 : 0;
 }
 void MidiProGuitarButtonInput::setup()
 {

@@ -1615,6 +1615,59 @@ uint16_t descriptorRequest(const uint16_t wValue,
 #endif
         break;
     }
+    case HID_DESCRIPTOR_HID:
+    {
+        size = sizeof(UNIVERSAL_CONFIGURATION_DESCRIPTOR);
+        memcpy_P(descriptorBuffer, &UniversalConfigurationDescriptor, size);
+        USB_HID_DESCRIPTOR *desc = (USB_HID_DESCRIPTOR *)descriptorBuffer;
+
+        if (consoleType == PS4)
+        {
+            desc->wDescriptorLength = sizeof(ps4_descriptor);
+        }
+        else if (consoleType == PS5)
+        {
+            desc->wDescriptorLength = sizeof(ps5_descriptor);
+            desc->bcdHID = 0x0111;
+        }
+        else if (consoleType == IOS_FESTIVAL)
+        {
+            desc->wDescriptorLength = sizeof(ps3_descriptor);
+#if DEVICE_TYPE_IS_INSTRUMENT
+#if defined(TICK_NKRO) || defined(TICK_SIXKRO)
+        }
+        else if (consoleType == KEYBOARD_MOUSE)
+        {
+            desc->wDescriptorLength = sizeof(keyboard_mouse_descriptor);
+#endif
+#if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
+        }
+        else if (consoleType == FNF)
+        {
+            desc->wDescriptorLength = sizeof(fnf_descriptor);
+#endif
+        }
+        else
+        {
+            desc->wDescriptorLength = sizeof(ps3_instrument_descriptor);
+        }
+#else
+        }
+        else if (consoleType == PS3)
+        {
+            desc->wDescriptorLength = sizeof(ps3_descriptor);
+        }
+        else
+        {
+            desc->wDescriptorLength = sizeof(ps3_instrument_descriptor);
+        }
+#endif
+        if (consoleType == UNIVERSAL)
+        {
+            desc->wDescriptorLength = sizeof(pc_descriptor);
+        }
+        break;
+    }
     case HID_DESCRIPTOR_REPORT:
     {
         const void *address;

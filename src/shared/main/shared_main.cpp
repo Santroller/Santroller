@@ -1720,10 +1720,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
     case PS4:
     {
         PS4Dpad_Data_t *dpad = (PS4Dpad_Data_t *)data;
-        usb_host_data->dpadLeft = dpad->dpad == 6 || dpad->dpad == 5 || dpad->dpad == 7;
-        usb_host_data->dpadRight = dpad->dpad == 3 || dpad->dpad == 2 || dpad->dpad == 1;
-        usb_host_data->dpadUp = dpad->dpad == 0 || dpad->dpad == 1 || dpad->dpad == 7;
-        usb_host_data->dpadDown = dpad->dpad == 5 || dpad->dpad == 4 || dpad->dpad == 3;
+        usb_host_data->dpadLeft |= dpad->dpad == 6 || dpad->dpad == 5 || dpad->dpad == 7;
+        usb_host_data->dpadRight |= dpad->dpad == 3 || dpad->dpad == 2 || dpad->dpad == 1;
+        usb_host_data->dpadUp |= dpad->dpad == 0 || dpad->dpad == 1 || dpad->dpad == 7;
+        usb_host_data->dpadDown |= dpad->dpad == 5 || dpad->dpad == 4 || dpad->dpad == 3;
         switch (device_type.sub_type)
         {
         case GAMEPAD:
@@ -1846,10 +1846,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
     case PS5:
     {
         PS5Dpad_Data_t *dpad = (PS5Dpad_Data_t *)data;
-        usb_host_data->dpadLeft = dpad->dpad == 6 || dpad->dpad == 5 || dpad->dpad == 7;
-        usb_host_data->dpadRight = dpad->dpad == 3 || dpad->dpad == 2 || dpad->dpad == 1;
-        usb_host_data->dpadUp = dpad->dpad == 0 || dpad->dpad == 1 || dpad->dpad == 7;
-        usb_host_data->dpadDown = dpad->dpad == 5 || dpad->dpad == 4 || dpad->dpad == 3;
+        usb_host_data->dpadLeft |= dpad->dpad == 6 || dpad->dpad == 5 || dpad->dpad == 7;
+        usb_host_data->dpadRight |= dpad->dpad == 3 || dpad->dpad == 2 || dpad->dpad == 1;
+        usb_host_data->dpadUp |= dpad->dpad == 0 || dpad->dpad == 1 || dpad->dpad == 7;
+        usb_host_data->dpadDown |= dpad->dpad == 5 || dpad->dpad == 4 || dpad->dpad == 3;
         switch (device_type.sub_type)
         {
         case GAMEPAD:
@@ -1941,10 +1941,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
         case GAMEPAD:
         {
             SwitchProGamepad_Data_t *report = (SwitchProGamepad_Data_t *)data;
-            usb_host_data->dpadLeft = report->dpadLeft;
-            usb_host_data->dpadRight = report->dpadRight;
-            usb_host_data->dpadUp = report->dpadUp;
-            usb_host_data->dpadDown = report->dpadDown;
+            usb_host_data->dpadLeft |= report->dpadLeft;
+            usb_host_data->dpadRight |= report->dpadRight;
+            usb_host_data->dpadUp |= report->dpadUp;
+            usb_host_data->dpadDown |= report->dpadDown;
             usb_host_data->green |= report->a;
             usb_host_data->red |= report->b;
             usb_host_data->yellow |= report->y;
@@ -2007,10 +2007,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->guide |= report->guide;
             usb_host_data->leftThumbClick |= report->leftThumbClick;
             usb_host_data->rightThumbClick |= report->rightThumbClick;
-            usb_host_data->dpadLeft = report->dpad == 6 || report->dpad == 5 || report->dpad == 7;
-            usb_host_data->dpadRight = report->dpad == 3 || report->dpad == 2 || report->dpad == 1;
-            usb_host_data->dpadUp = report->dpad == 0 || report->dpad == 1 || report->dpad == 7;
-            usb_host_data->dpadDown = report->dpad == 5 || report->dpad == 4 || report->dpad == 3;
+            usb_host_data->dpadLeft |= report->dpad == 6 || report->dpad == 5 || report->dpad == 7;
+            usb_host_data->dpadRight |= report->dpad == 3 || report->dpad == 2 || report->dpad == 1;
+            usb_host_data->dpadUp |= report->dpad == 0 || report->dpad == 1 || report->dpad == 7;
+            usb_host_data->dpadDown |= report->dpad == 5 || report->dpad == 4 || report->dpad == 3;
             if (report->l2)
             {
                 usb_host_data->leftTrigger = UINT16_MAX;
@@ -2146,10 +2146,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
         usb_host_data->start |= report->start;
         usb_host_data->leftThumbClick |= report->leftThumbClick;
         usb_host_data->rightThumbClick |= report->rightThumbClick;
-        usb_host_data->dpadLeft = report->dpadLeft;
-        usb_host_data->dpadRight = report->dpadRight;
-        usb_host_data->dpadUp = report->dpadUp;
-        usb_host_data->dpadDown = report->dpadDown;
+        usb_host_data->dpadLeft |= report->dpadLeft;
+        usb_host_data->dpadRight |= report->dpadRight;
+        usb_host_data->dpadUp |= report->dpadUp;
+        usb_host_data->dpadDown |= report->dpadDown;
         if (report->leftTrigger)
         {
             usb_host_data->leftTrigger = report->leftTrigger << 8;
@@ -2219,10 +2219,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
         usb_host_data->guide |= report->guide;
         usb_host_data->leftThumbClick |= report->leftThumbClick;
         usb_host_data->rightThumbClick |= report->rightThumbClick;
-        usb_host_data->dpadLeft = report->dpadLeft;
-        usb_host_data->dpadRight = report->dpadRight;
-        usb_host_data->dpadUp = report->dpadUp;
-        usb_host_data->dpadDown = report->dpadDown;
+        usb_host_data->dpadLeft |= report->dpadLeft;
+        usb_host_data->dpadRight |= report->dpadRight;
+        usb_host_data->dpadUp |= report->dpadUp;
+        usb_host_data->dpadDown |= report->dpadDown;
         break;
     }
 
@@ -2237,10 +2237,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
         if (report->rid == 1)
         {
             uint8_t dpad = report->dpad - 1;
-            usb_host_data->dpadLeft = dpad == 6 || dpad == 5 || dpad == 7;
-            usb_host_data->dpadRight = dpad == 3 || dpad == 2 || dpad == 1;
-            usb_host_data->dpadUp = dpad == 0 || dpad == 1 || dpad == 7;
-            usb_host_data->dpadDown = dpad == 5 || dpad == 4 || dpad == 3;
+            usb_host_data->dpadLeft |= dpad == 6 || dpad == 5 || dpad == 7;
+            usb_host_data->dpadRight |= dpad == 3 || dpad == 2 || dpad == 1;
+            usb_host_data->dpadUp |= dpad == 0 || dpad == 1 || dpad == 7;
+            usb_host_data->dpadDown |= dpad == 5 || dpad == 4 || dpad == 3;
             // Festival pro mode mappings
             usb_host_data->green |= dpad == 6 || dpad == 5 || dpad == 7;
             usb_host_data->red |= dpad == 0 || dpad == 1 || dpad == 7;
@@ -2319,10 +2319,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->back |= report->back;
             usb_host_data->start |= report->start;
             usb_host_data->guide |= report->guide;
-            usb_host_data->dpadLeft = report->dpadLeft;
-            usb_host_data->dpadRight = report->dpadRight;
-            usb_host_data->dpadUp = report->dpadUp;
-            usb_host_data->dpadDown = report->dpadDown;
+            usb_host_data->dpadLeft |= report->dpadLeft;
+            usb_host_data->dpadRight |= report->dpadRight;
+            usb_host_data->dpadUp |= report->dpadUp;
+            usb_host_data->dpadDown |= report->dpadDown;
             if (report->tilt)
             {
                 usb_host_data->tilt = INT16_MAX;
@@ -2362,10 +2362,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->back |= report->back;
             usb_host_data->start |= report->start;
             usb_host_data->guide |= report->guide;
-            usb_host_data->dpadLeft = report->dpadLeft;
-            usb_host_data->dpadRight = report->dpadRight;
-            usb_host_data->dpadUp = report->dpadUp;
-            usb_host_data->dpadDown = report->dpadDown;
+            usb_host_data->dpadLeft |= report->dpadLeft;
+            usb_host_data->dpadRight |= report->dpadRight;
+            usb_host_data->dpadUp |= report->dpadUp;
+            usb_host_data->dpadDown |= report->dpadDown;
             if (report->tilt)
             {
                 usb_host_data->tilt = report->tilt;
@@ -2439,10 +2439,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                 usb_host_data->back |= report->back;
                 usb_host_data->start |= report->start;
                 usb_host_data->guide |= report->guide;
-                usb_host_data->dpadLeft = report->dpadLeft;
-                usb_host_data->dpadRight = report->dpadRight;
-                usb_host_data->dpadUp = report->dpadUp;
-                usb_host_data->dpadDown = report->dpadDown;
+                usb_host_data->dpadLeft |= report->dpadLeft;
+                usb_host_data->dpadRight |= report->dpadRight;
+                usb_host_data->dpadUp |= report->dpadUp;
+                usb_host_data->dpadDown |= report->dpadDown;
                 SET_GH_PADS();
                 // Forward any midi data we get
                 if ((report->midiPacket[0] & 0xF0) == 0x90)
@@ -2477,10 +2477,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
                     usb_host_data->b |= report->b;
                     usb_host_data->x |= report->x;
                     usb_host_data->y |= report->y;
-                    usb_host_data->dpadLeft = report->dpadLeft;
-                    usb_host_data->dpadRight = report->dpadRight;
-                    usb_host_data->dpadUp = report->dpadUp;
-                    usb_host_data->dpadDown = report->dpadDown;
+                    usb_host_data->dpadLeft |= report->dpadLeft;
+                    usb_host_data->dpadRight |= report->dpadRight;
+                    usb_host_data->dpadUp |= report->dpadUp;
+                    usb_host_data->dpadDown |= report->dpadDown;
                 }
                 usb_host_data->back |= report->back;
                 usb_host_data->start |= report->start;
@@ -2502,10 +2502,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->yellow |= report->y;
             usb_host_data->blue |= report->x;
             usb_host_data->orange |= report->leftShoulder;
-            usb_host_data->dpadLeft = report->dpadLeft;
-            usb_host_data->dpadRight = report->dpadRight;
-            usb_host_data->dpadUp = report->dpadUp;
-            usb_host_data->dpadDown = report->dpadDown;
+            usb_host_data->dpadLeft |= report->dpadLeft;
+            usb_host_data->dpadRight |= report->dpadRight;
+            usb_host_data->dpadUp |= report->dpadUp;
+            usb_host_data->dpadDown |= report->dpadDown;
             usb_host_data->leftThumbClick |= report->leftThumbClick;
             usb_host_data->back |= report->back;
             usb_host_data->start |= report->start;
@@ -2527,10 +2527,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->b |= report->b;
             usb_host_data->x |= report->x;
             usb_host_data->y |= report->y;
-            usb_host_data->dpadLeft = report->dpadLeft;
-            usb_host_data->dpadRight = report->dpadRight;
-            usb_host_data->dpadUp = report->dpadUp;
-            usb_host_data->dpadDown = report->dpadDown;
+            usb_host_data->dpadLeft |= report->dpadLeft;
+            usb_host_data->dpadRight |= report->dpadRight;
+            usb_host_data->dpadUp |= report->dpadUp;
+            usb_host_data->dpadDown |= report->dpadDown;
             usb_host_data->back |= report->back;
             usb_host_data->start |= report->start;
             usb_host_data->guide |= report->guide;
@@ -2615,10 +2615,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->guide |= report->guide;
             usb_host_data->leftThumbClick |= report->leftThumbClick;
             usb_host_data->rightThumbClick |= report->rightThumbClick;
-            usb_host_data->dpadLeft = report->dpadLeft;
-            usb_host_data->dpadRight = report->dpadRight;
-            usb_host_data->dpadUp = report->dpadUp;
-            usb_host_data->dpadDown = report->dpadDown;
+            usb_host_data->dpadLeft |= report->dpadLeft;
+            usb_host_data->dpadRight |= report->dpadRight;
+            usb_host_data->dpadUp |= report->dpadUp;
+            usb_host_data->dpadDown |= report->dpadDown;
             if (report->leftTrigger)
             {
                 usb_host_data->leftTrigger = report->leftTrigger << 8;
@@ -2671,10 +2671,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->start |= report->start;
             usb_host_data->leftThumbClick |= report->leftThumbClick;
             usb_host_data->rightThumbClick |= report->rightThumbClick;
-            usb_host_data->dpadLeft = report->dpadLeft;
-            usb_host_data->dpadRight = report->dpadRight;
-            usb_host_data->dpadUp = report->dpadUp;
-            usb_host_data->dpadDown = report->dpadDown;
+            usb_host_data->dpadLeft |= report->dpadLeft;
+            usb_host_data->dpadRight |= report->dpadRight;
+            usb_host_data->dpadUp |= report->dpadUp;
+            usb_host_data->dpadDown |= report->dpadDown;
             // XB1 reports range from 0 - 1024
             if (report->leftTrigger)
             {
@@ -2722,10 +2722,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->soloYellow |= report->soloYellow;
             usb_host_data->soloBlue |= report->soloBlue;
             usb_host_data->soloOrange |= report->soloOrange;
-            usb_host_data->dpadLeft = report->dpadLeft;
-            usb_host_data->dpadRight = report->dpadRight;
-            usb_host_data->dpadUp = report->dpadUp;
-            usb_host_data->dpadDown = report->dpadDown;
+            usb_host_data->dpadLeft |= report->dpadLeft;
+            usb_host_data->dpadRight |= report->dpadRight;
+            usb_host_data->dpadUp |= report->dpadUp;
+            usb_host_data->dpadDown |= report->dpadDown;
             if (report->tilt)
             {
                 usb_host_data->tilt = report->tilt << 7;
@@ -2749,10 +2749,10 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->y |= report->y;
             usb_host_data->back |= report->back;
             usb_host_data->start |= report->start;
-            usb_host_data->dpadLeft = report->dpadLeft;
-            usb_host_data->dpadRight = report->dpadRight;
-            usb_host_data->dpadUp = report->dpadUp;
-            usb_host_data->dpadDown = report->dpadDown;
+            usb_host_data->dpadLeft |= report->dpadLeft;
+            usb_host_data->dpadRight |= report->dpadRight;
+            usb_host_data->dpadUp |= report->dpadUp;
+            usb_host_data->dpadDown |= report->dpadDown;
             if (report->greenVelocity)
             {
                 onNote(10, RB_MIDI_NOTE_GREEN, report->greenVelocity << 3);

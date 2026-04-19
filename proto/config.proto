@@ -16,6 +16,7 @@ message Profile {
   optional bool xinputOnWindows = 10;
   optional bool invertYAxisHid = 11;
   optional bool ps4OrPs5Mode = 12;
+  optional uint32 assignedDevice = 13;
 }
 message InputLedMapping {
   required Input input = 1;

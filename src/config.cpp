@@ -32,6 +32,7 @@
 #include "devices/apa102.hpp"
 #include "devices/midiserial.hpp"
 #include "devices/stp16cpc.hpp"
+#include "devices/bluetooth.hpp"
 #include "mappings/mapping.hpp"
 #include "leds/leds.hpp"
 #include "tusb.h"
@@ -44,6 +45,7 @@
 #include "usb/device/ps5_device.h"
 #include "usb/device/gh_arcade_device.h"
 #include "usb/device/switch_device.h"
+#include "bt/device/bt_gamepad.h"
 #include "usb/host/host.hpp"
 #include "usb/usb_descriptors.h"
 #include "hardware/watchdog.h"
@@ -70,8 +72,10 @@ std::shared_ptr<UsbDevice> usb_instances_by_epin[16];
 std::shared_ptr<UsbDevice> usb_instances_by_epout[16];
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
+int seenMasks = 0;
 bool working = false;
 bool loadedAny = false;
+bool bluetoothInitted = false;
 
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
@@ -139,6 +143,9 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Device_multiplexer_tag:
         active_devices.emplace_back(new MultiplexerDevice(device.device.multiplexer, *dev_id));
+        break;
+    case proto_Device_bt_tag:
+        active_devices.emplace_back(new BluetoothDevice(device.device.bt, *dev_id));
         break;
     }
     if (device.which_device != proto_Device_psx_tag)
@@ -493,64 +500,77 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->supports_ps4 = proto_profile.has_ps4OrPs5Mode && proto_profile.ps4OrPs5Mode;
     printf("profile loaded: %d %d %d\r\n", profile->profile_id, profile->xinput_on_windows, profile->invert_y_axis_hid);
     // TODO: handle this once we support emulating non usb devices
-    profile->output = OutputUSB;
-    std::shared_ptr<UsbDevice> instance;
+    profile->assignedDevices = proto_profile.assignedDevice;
+    std::shared_ptr<UsbDevice> usbInstance;
+    std::shared_ptr<BTGamepadDevice> btGamepadInstance;
     for (auto &list : profile->triggers)
     {
         if (list->validate(true, false, false))
         {
             printf("profile assigned! %d\r\n", profile->profile_id);
-            if (!instance)
+            if ((profile->assignedDevices & ProfileAssignMask_AssignBluetoothGamepad) && !(seenMasks & ProfileAssignMask_AssignBluetoothGamepad))
             {
-                if (profile->output == OutputUSB)
-                {
-                    switch (mode)
-                    {
-                    case ModeHid:
-                        instance = std::make_shared<HIDGamepadDevice>();
-                        break;
-                    case ModeOgXbox:
-                        instance = std::make_shared<OGXboxGamepadDevice>();
-                        break;
-                    case ModeXbox360:
-                        instance = std::make_shared<XInputGamepadDevice>();
-                        break;
-                    case ModeXboxOne:
-                        instance = std::make_shared<XboxOneGamepadDevice>();
-                        break;
-                    case ModeWiiRb:
-                        // wii rb is the same as ps3 but different ids
-                        instance = std::make_shared<PS3GamepadDevice>(true);
-                        break;
-                    case ModePs3:
-                        instance = std::make_shared<PS3GamepadDevice>(false);
-                        break;
-                    case ModePs4:
-                        instance = std::make_shared<PS4GamepadDevice>();
-                        break;
-                    case ModePs5:
-                        instance = std::make_shared<PS5GamepadDevice>();
-                        break;
-                    case ModeSwitch:
-                        instance = std::make_shared<SwitchGamepadDevice>();
-                        break;
-                    case ModeGuitarHeroArcade:
-                        instance = std::make_shared<GHArcadeGamepadDevice>();
-                        break;
-                    }
-                    instances.push_back(instance);
-                    instance->profiles.push_back(profile);
-                    instance->interface_id = active_instances.size();
-                    instance->subtype = profile->subtype;
-                    instance->xinput_on_windows = profile->xinput_on_windows;
-                    instance->invert_y_axis_hid = profile->invert_y_axis_hid;
-                    instance->supports_ps4 = profile->supports_ps4;
-                    active_instances.push_back(instance);
-                    usb_instances[instance->interface_id] = instance;
-                    instance->initialize();
-                }
+                btGamepadInstance = std::make_shared<BTGamepadDevice>();
+                instances.push_back(btGamepadInstance);
+                btGamepadInstance->profiles.push_back(profile);
+                btGamepadInstance->subtype = profile->subtype;
+                btGamepadInstance->xinput_on_windows = profile->xinput_on_windows;
+                btGamepadInstance->invert_y_axis_hid = profile->invert_y_axis_hid;
+                btGamepadInstance->supports_ps4 = profile->supports_ps4;
+                active_instances.push_back(btGamepadInstance);
+                btGamepadInstance->initialize();
                 active_profiles.insert(profile->profile_id);
-                printf("instance: %d\r\n", instance->interface_id);
+                seenMasks |= ProfileAssignMask_AssignBluetoothGamepad;
+                printf("assigned bluetooth!\r\n");
+            }
+            if (!usbInstance && (profile->assignedDevices & ProfileAssignMask_AssignUsb))
+            {
+                switch (mode)
+                {
+                case ModeHid:
+                    usbInstance = std::make_shared<HIDGamepadDevice>();
+                    break;
+                case ModeOgXbox:
+                    usbInstance = std::make_shared<OGXboxGamepadDevice>();
+                    break;
+                case ModeXbox360:
+                    usbInstance = std::make_shared<XInputGamepadDevice>();
+                    break;
+                case ModeXboxOne:
+                    usbInstance = std::make_shared<XboxOneGamepadDevice>();
+                    break;
+                case ModeWiiRb:
+                    // wii rb is the same as ps3 but different ids
+                    usbInstance = std::make_shared<PS3GamepadDevice>(true);
+                    break;
+                case ModePs3:
+                    usbInstance = std::make_shared<PS3GamepadDevice>(false);
+                    break;
+                case ModePs4:
+                    usbInstance = std::make_shared<PS4GamepadDevice>();
+                    break;
+                case ModePs5:
+                    usbInstance = std::make_shared<PS5GamepadDevice>();
+                    break;
+                case ModeSwitch:
+                    usbInstance = std::make_shared<SwitchGamepadDevice>();
+                    break;
+                case ModeGuitarHeroArcade:
+                    usbInstance = std::make_shared<GHArcadeGamepadDevice>();
+                    break;
+                }
+                instances.push_back(usbInstance);
+                usbInstance->profiles.push_back(profile);
+                usbInstance->interface_id = active_instances.size();
+                usbInstance->subtype = profile->subtype;
+                usbInstance->xinput_on_windows = profile->xinput_on_windows;
+                usbInstance->invert_y_axis_hid = profile->invert_y_axis_hid;
+                usbInstance->supports_ps4 = profile->supports_ps4;
+                active_instances.push_back(usbInstance);
+                usb_instances[usbInstance->interface_id] = usbInstance;
+                usbInstance->initialize();
+                active_profiles.insert(profile->profile_id);
+                printf("instance: %d\r\n", usbInstance->interface_id);
             }
             break;
         }
@@ -599,6 +619,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     assignable_devices.clear();
     instances.clear();
     active_instances.clear();
+    seenMasks = 0;
     for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances); i++)
     {
         usb_instances[i] = std::shared_ptr<UsbDevice>();

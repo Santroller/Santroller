@@ -206,8 +206,11 @@ add_executable(
   src/devices/ws2812.cpp
   src/devices/apa102.cpp
   src/devices/led.cpp
+  src/devices/bluetooth.cpp
   src/devices/stp16cpc.cpp
   src/config.cpp
+  src/bt/device/bt_gamepad.cpp
+  src/bt/device/bt_descriptors.cpp
   ${PROTO_OUTPUT_DIR}/input_enums.pb.c
   ${PROTO_OUTPUT_DIR}/enums.pb.c
   ${PROTO_OUTPUT_DIR}/device.pb.c
@@ -236,6 +239,10 @@ target_link_libraries(
   ${TARGET}
   pico_stdlib
   pico_rand
+  pico_btstack_cyw43
+  pico_btstack_classic
+  pico_btstack_ble
+  pico_cyw43_arch_threadsafe_background
   FlashPROM
   ring_buffer
   CRC32
@@ -249,6 +256,7 @@ target_link_libraries(
   dj_hero_turntable
   guitar_hero_5_neck
   xgip_protocol
+  pico_audio_i2s
   xsm3
   matrix
   max1704x

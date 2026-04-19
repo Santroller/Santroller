@@ -39,6 +39,7 @@
 #include "common/tusb_types.h"
 #include "pio_usb.h"
 #include "pico/stdio/driver.h"
+#include <pico/cyw43_arch.h>
 
 #include "usb/usb_descriptors.h"
 #include <pico_fota_bootloader/core.h>
@@ -55,27 +56,33 @@ bool reinit = false;
 proto_Event console_event = {which_event : proto_Event_console_tag, event : {console : {data : {}}}};
 ring_buffer_t console_buf;
 char console_buf_data[1024];
-void out_chars(const char *buf, int len) {
-    if (HIDConfigDevice::tool_closed()) {
+void out_chars(const char *buf, int len)
+{
+    if (HIDConfigDevice::tool_closed())
+    {
         return;
     }
     ring_buffer_push(&console_buf, buf, len);
 }
-void out_flush(void) {
-    if (HIDConfigDevice::tool_closed()) {
+void out_flush(void)
+{
+    if (HIDConfigDevice::tool_closed())
+    {
         return;
     }
-    while (!ring_buffer_is_empty(&console_buf) && !HIDConfigDevice::tool_closed()) {
+    while (!ring_buffer_is_empty(&console_buf) && !HIDConfigDevice::tool_closed())
+    {
         tu_memclr(console_event.event.console.data, 32);
         ring_buffer_pop(&console_buf, console_event.event.console.data, 31);
         HIDConfigDevice::send_event(console_event, true);
     }
 }
-int in_chars(char *buf, int len) {
+int in_chars(char *buf, int len)
+{
     return 0;
 }
-void set_chars_available_callback(void (*fn)(void*), void *param) {
-
+void set_chars_available_callback(void (*fn)(void *), void *param)
+{
 }
 stdio_driver_t usb_driver = {
     .out_chars = out_chars,
@@ -84,8 +91,7 @@ stdio_driver_t usb_driver = {
     .set_chars_available_callback = set_chars_available_callback,
     .next = nullptr,
     .last_ended_with_cr = true,
-    .crlf_enabled = true
-};
+    .crlf_enabled = true};
 bool mode_recently_changed()
 {
     return (millis() - timeSinceMode) < 2000;
@@ -137,10 +143,12 @@ void update()
     {
         instance->process();
     }
-    for (const auto& device : assignable_devices) {
+    for (const auto &device : assignable_devices)
+    {
         device->update(false, false);
     }
-    for (const auto& device : assignable_usb_devices) {
+    for (const auto &device : assignable_usb_devices)
+    {
         device->update(false, false);
     }
     if (HIDConfigDevice::tool_closed())
@@ -156,11 +164,13 @@ void update()
     }
 }
 
-void initDebug() {
+void initDebug()
+{
     stdio_set_driver_enabled(&usb_driver, true);
 }
 
-void deinitDebug() {
+void deinitDebug()
+{
     stdio_set_driver_enabled(&usb_driver, false);
 }
 
@@ -171,7 +181,7 @@ void core1()
     {
     }
 }
-
+extern void bt_gamepad_setup(void);
 int main()
 {
     if (pfb_is_after_firmware_update())
@@ -189,7 +199,7 @@ int main()
     adc_init();
     // stdio_uart_init_full(uart_get_instance(1), 115200, 8, 9);
     ring_buffer_init(&console_buf, console_buf_data, sizeof(console_buf_data), 0);
-    
+
     EEPROM.start();
     if (!load(config))
     {
@@ -204,7 +214,7 @@ int main()
         .role = TUSB_ROLE_DEVICE,
         .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};
     tud_rhport_init(BOARD_TUD_RHPORT, &rh_init);
-
+    timeSinceMode = millis();
     while (1)
     {
         tud_task(); // tinyusb device task

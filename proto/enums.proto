@@ -205,13 +205,6 @@ enum ConsoleType {
     ConsolePC=9;
 }
 
-enum OutputMode {
-    OutputUSB=1;
-    OutputBluetooth=2;
-    OutputPS2=3;
-    OutputWiiExt=4;
-}
-
 enum PinDetectType {
     DetectDigital=1;
     DetectAnalog=2;
@@ -233,4 +226,12 @@ enum CapabilitiyFlags {
     CapabilityHasInstrumentLeds=4; /* Has instrument LEDs (Stage kit format or santroller format) */
     CapabilityHasRumble=8; /* Has rumble */
     CapabilityDpadAsButtons=16; /* Treat D-pad as buttons instead of hat */
+}
+
+enum ProfileAssignMask {
+    AssignUsb=1; /* Profile is assignable to usb device*/
+    AssignBluetoothGamepad=2; /* Profile is assignable to bluetooth */
+    AssignPsx=4; /* Profile is assignable to PSX emulation */
+    AssignBluetoothWiimote=8; /* Profile is assignable to Wiimote emulation */
+    AssignWiimoteExtension=16; /* Profile is assignable to Wiimote extension emulation */
 }

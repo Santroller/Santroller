@@ -96,11 +96,11 @@ ConsoleTypeActivationTrigger::ConsoleTypeActivationTrigger(proto_ConsoleType typ
 bool ConsoleTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
     auto profile = all_profiles[m_profile_id];
-    if (profile->output == OutputPS2)
+    if (profile->assignedDevices & ProfileAssignMask_AssignPsx)
     {
         return m_type == ConsolePS2;
     }
-    if (profile->output == OutputWiiExt)
+    if (profile->assignedDevices & ProfileAssignMask_AssignWiimoteExtension)
     {
         return m_type == ConsoleWii_WiiU;
     }

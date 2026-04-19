@@ -31,7 +31,7 @@ public:
     bool invert_y_axis_hid;
     bool supports_ps4;
     ConsoleMode mode;
-    OutputMode output;
+    int assignedDevices;
     uint32_t profile_id;
     std::vector<std::unique_ptr<Mapping>> mappings;
     std::vector<std::unique_ptr<ActivationTriggerList>> triggers;

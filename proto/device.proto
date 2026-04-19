@@ -69,6 +69,8 @@ message UsbHostDevice {
   required bool dmFirst = 3;
   required MappingMode mappingMode = 4;
 }
+message BluetoothDevice {
+}
 message MultiplexerDevice {
   required int32 inputPin = 1;
   required bool sixteenChannel = 2;
@@ -151,5 +153,6 @@ message Device {
     WS2812Device ws2812 = 26;
     APA102Device apa102 = 27;
     STP16CPCDevice stp16cpc = 28;
+    BluetoothDevice bt = 29;
   }
 }

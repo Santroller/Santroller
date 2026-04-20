@@ -3,14 +3,19 @@
 #include "events.pb.h"
 #include "usb/device/hid_device.h"
 BluetoothDevice::BluetoothDevice(proto_BluetoothDevice device, uint16_t id): Device(id), m_device(device) {
+    printf("bt device init\r\n");
     if (cyw43_arch_init())
     {
+        printf("bt device init failed\r\n");
         m_isPicoW = false;
+    } else {
+        printf("bt device init success\r\n");
     }
 }
 
 BluetoothDevice::~BluetoothDevice() {
-
+    printf("bt device deinit\r\n");
+    cyw43_arch_deinit();
 }
 
 void BluetoothDevice::update(bool full_poll, bool send_events)

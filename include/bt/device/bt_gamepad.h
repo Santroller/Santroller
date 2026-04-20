@@ -20,4 +20,8 @@ public:
     void initialize();
     void process();
 
+private:
+    uint8_t initialReport[CFG_TUD_XINPUT_TX_BUFSIZE];
+    uint8_t lastReport[CFG_TUD_XINPUT_TX_BUFSIZE];
+    uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
 };

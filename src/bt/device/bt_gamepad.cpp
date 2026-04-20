@@ -88,36 +88,6 @@ static const uint8_t adv_data_gamepad[] = {
     0xC4,
     0x03,
 };
-const uint8_t adv_data_kb[] = {
-    // Flags general discoverable, BR/EDR not supported
-    0x02,
-    BLUETOOTH_DATA_TYPE_FLAGS,
-    0x06,
-    // Name
-    0x0d,
-    BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME,
-    'S',
-    'a',
-    'n',
-    't',
-    'r',
-    'o',
-    'l',
-    'l',
-    'e',
-    'r',
-    'B',
-    'T',
-    // 16-bit Service UUIDs
-    0x03,
-    BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS,
-    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE & 0xff,
-    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE >> 8,
-    0x03,
-    BLUETOOTH_DATA_TYPE_APPEARANCE,
-    0xC1,
-    0x03,
-};
 bool check_bluetooth_ready()
 {
     return con_handle != HCI_CON_HANDLE_INVALID;
@@ -145,6 +115,7 @@ void set_battery_state(uint8_t state)
 }
 BTGamepadDevice::BTGamepadDevice()
 {
+
 }
 BTGamepadDevice::~BTGamepadDevice()
 {
@@ -202,7 +173,7 @@ void BTGamepadDevice::initialize()
     switch (subtype)
     {
     case SubType_KeyboardMouse:
-        gap_advertisements_set_data(adv_data_len, (uint8_t *)adv_data_kb);
+        gap_advertisements_set_data(adv_data_len, (uint8_t *)adv_data_keyboard);
         break;
     default:
         gap_advertisements_set_data(adv_data_len, (uint8_t *)adv_data_gamepad);
@@ -223,11 +194,85 @@ void BTGamepadDevice::initialize()
 
     hci_power_control(HCI_POWER_ON);
     printf("bt init done\r\n");
+
+    memset(&initialReport, 0, sizeof(initialReport));
+    switch (subtype)
+    {
+    case RockBandDrums:
+    {
+        XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)&initialReport;
+        report->redVelocity = -1;
+        report->blueVelocity = -1;
+        report->greenVelocity = 0;
+        report->yellowVelocity = 0;
+        break;
+    }
+    case GuitarHeroGuitar:
+    {
+        XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)&initialReport;
+        report->whammy = INT16_MIN;
+        break;
+    }
+    case LiveGuitar:
+    {
+        XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&initialReport;
+        report->whammy = INT16_MIN;
+        break;
+    }
+    case GuitarHeroDrums:
+    {
+        XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)&initialReport;
+        report->leftThumbClick = true;
+        break;
+    }
+    default:
+        break;
+    }
+    XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)initialReport;
+    gamepad->rsize = sizeof(XInputGamepad_Data_t);
 }
 void BTGamepadDevice::process()
 {
+    PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
+    memcpy(epin_buf, initialReport, sizeof(epin_buf));
+    report->rid = ReportIdGamepad;
+    report->rsize = sizeof(PCGamepadDpad_Data_t);
 
-    printf("btgamepaddevice process\r\n");
+    for (const auto &profile : profiles)
+    {
+        for (const auto &mapping : profile->mappings)
+        {
+        mapping->update(false, false);
+        mapping->update_hid(epin_buf);
+        }
+        for (const auto &led : profile->leds)
+        {
+        led->update(false, false);
+        }
+    }
+    if (invert_y_axis_hid && subtype == Gamepad)
+    {
+        report->leftStickY = -report->leftStickY;
+        report->rightStickY = -report->rightStickY;
+    }
+    // dance pads need to report the dpad as buttons, so skip the conversion to hat
+    if (subtype != Dancepad)
+    {
+        // convert bitmask dpad to actual hid dpad
+        report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
+    }
+    if (subtype == GuitarHeroGuitar)
+    {
+        // convert bitmask slider to actual hid slider
+        XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
+        reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
+    }
+    if (memcmp(lastReport, epin_buf, sizeof(XInputGamepad_Data_t)) != 0)
+    {
+
+        send_report(sizeof(XInputGamepad_Data_t), epin_buf);
+        memcpy(lastReport, epin_buf, sizeof(XInputGamepad_Data_t));
+    }
 }
 
 static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size)

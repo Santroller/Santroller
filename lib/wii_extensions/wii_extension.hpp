@@ -20,17 +20,6 @@
 #define FIRST_PARTY_SBOX 0x97
 #define THIRD_PARTY_SBOX 0x4D
 
-#define I2C_MAX_TRANSFER_SIZE 1056
-// A transfer timeout of 1000ms will allow a 10000 bit transfer to complete
-// successfully without timeouts at baudrates as low as 10000 baud.
-#define I2C_TRANSFER_TIMEOUT_MS 10000
-#define I2C_TAKE_MUTEX_TIMEOUT_MS 10000
-typedef enum {
-    I2C_NONE,
-    I2C_WRITE,
-    I2C_READ_POINTER,
-    I2C_READ
-} i2c_status_e;
 typedef enum {
     WII_INIT_FINISH_ENC,
     WII_INIT_FB_0,
@@ -52,33 +41,8 @@ typedef enum {
     WII_INIT_ENC_READ_ID_READ,
     WII_INPUTS_WRITE_PTR,
     WII_INPUTS_READ,
+    WII_INPUTS_UPDATE_LED
 } wii_status_e;
-typedef struct i2c_dma_s
-{
-    i2c_status_e status;
-    i2c_inst_t *i2c;
-
-    uint irq_num;
-    irq_handler_t irq_handler;
-
-    uint baudrate;
-    uint sda_gpio;
-    uint scl_gpio;
-    int tx_chan;
-    int rx_chan;
-    bool reading;
-    bool writing;
-
-    volatile bool stop_detected;
-    volatile bool abort_detected;
-    volatile bool timeout;
-    volatile bool running;
-    alarm_id_t timeout_alarm_id;
-    alarm_id_t restart_alarm_id;
-
-    uint16_t data_cmds[I2C_MAX_TRANSFER_SIZE];
-    void (*process_data)();
-} i2c_dma_t;
 class WiiExtension
 {
 
@@ -86,7 +50,7 @@ public:
     WiiExtension(MidiDevice* midiDevice, uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock);
     ~WiiExtension();
     void tick();
-    void processData();
+    void processData(bool running, bool timeout, bool abort_detected, bool stop_detected);
     WiiExtType mType = WiiExtType::WiiNoExtension;
     uint16_t readAxis(proto_WiiAxisType type);
     bool readButton(proto_WiiButtonType type);
@@ -106,17 +70,15 @@ private:
     uint8_t wiiBytes;
     uint8_t wiiPointer = 0;
     uint8_t s_box = 0;
+    uint8_t m_block = 0;
     MidiDevice *m_device;
+    alarm_id_t restart_alarm_id;
 
     bool started = false;
-    bool delayNext = false;
 
     bool hiRes = false;
     bool hasTapBar = false;
 
-    i2c_inst_t *i2c;
-    i2c_dma_t *i2c_dma;
-    i2c_inst_t* _hardwareBlocks[NUM_I2CS] = {i2c0,i2c1};
     wii_status_e status = WII_INIT_FINISH_ENC;
     uint8_t bufferTx[32];
     uint8_t bufferRx[32];

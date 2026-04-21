@@ -6,7 +6,7 @@
 class GuitarHero5Neck {
    public:
     GuitarHero5Neck(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock)
-        : interface(block, sda, scl, 150000) {};
+        : interface(block, sda, scl, 150000, nullptr) {};
     void tick();
     inline bool is_connected() {
         return connected;

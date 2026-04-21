@@ -33,32 +33,25 @@ typedef enum {
 } i2c_status_e;
 typedef enum {
     WII_INIT_FINISH_ENC,
-    WII_INIT_DELAY,
     WII_INIT_FB_0,
     WII_INIT_READ_ID_WRITE_PTR,
-    WII_INIT_READ_ID_READ_DELAY,
     WII_INIT_READ_ID_READ,
     WII_INIT_DRAWSOME,
     WII_INIT_CLASSIC_0,
     WII_INIT_CLASSIC_1,
     WII_INIT_CLASSIC_2,
     WII_INIT_CLASSIC_READ_ID_WRITE_PTR,
-    WII_INIT_CLASSIC_READ_ID_READ_DELAY,
     WII_INIT_CLASSIC_READ_ID_READ,
     WII_INIT_READ_DATA_WRITE_PTR,
-    WII_INIT_READ_DATA_READ_DELAY,
     WII_INIT_READ_DATA_READ,
     WII_INIT_ENABLE_ENC_0,
     WII_INIT_ENABLE_ENC_1,
     WII_INIT_ENABLE_ENC_2,
     WII_INIT_ENABLE_ENC_3,
     WII_INIT_ENC_READ_ID_WRITE_PTR,
-    WII_INIT_ENC_READ_ID_READ_DELAY,
     WII_INIT_ENC_READ_ID_READ,
     WII_INPUTS_WRITE_PTR,
-    WII_INPUTS_READ_DELAY,
     WII_INPUTS_READ,
-    WII_INPUTS_WRITE_DELAY
 } wii_status_e;
 typedef struct i2c_dma_s
 {
@@ -116,6 +109,7 @@ private:
     MidiDevice *m_device;
 
     bool started = false;
+    bool delayNext = false;
 
     bool hiRes = false;
     bool hasTapBar = false;

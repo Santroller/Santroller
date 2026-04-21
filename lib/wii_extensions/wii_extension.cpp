@@ -306,7 +306,7 @@ void WiiExtension::processData()
     }
     if (i2c_dma->timeout || i2c_dma->abort_detected)
     {
-        printf("connection lost %d %d %d!\r\n", status, i2c_dma->timeout, i2c_dma->abort_detected);
+        // printf("connection lost %d %d %d!\r\n", status, i2c_dma->timeout, i2c_dma->abort_detected);
         status = WII_INIT_FINISH_ENC;
         mType = WiiExtType::WiiNoExtension;
         i2c_dma->timeout = false;
@@ -321,20 +321,12 @@ void WiiExtension::processData()
         switch (status)
         {
         case WII_INIT_FINISH_ENC:
-            status = WII_INIT_DELAY;
-            i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
-            break;
-        case WII_INIT_DELAY:
             status = WII_INIT_FB_0;
             break;
         case WII_INIT_FB_0:
             status = WII_INIT_READ_ID_WRITE_PTR;
             break;
         case WII_INIT_READ_ID_WRITE_PTR:
-            status = WII_INIT_READ_ID_READ_DELAY;
-            i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
-            break;
-        case WII_INIT_READ_ID_READ_DELAY:
             status = WII_INIT_READ_ID_READ;
             break;
         case WII_INIT_READ_ID_READ:
@@ -381,10 +373,6 @@ void WiiExtension::processData()
             status = WII_INIT_CLASSIC_READ_ID_WRITE_PTR;
             break;
         case WII_INIT_CLASSIC_READ_ID_WRITE_PTR:
-            status = WII_INIT_CLASSIC_READ_ID_READ_DELAY;
-            i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
-            break;
-        case WII_INIT_CLASSIC_READ_ID_READ_DELAY:
             status = WII_INIT_CLASSIC_READ_ID_READ;
             break;
         case WII_INIT_CLASSIC_READ_ID_READ:
@@ -400,10 +388,6 @@ void WiiExtension::processData()
             status = WII_INIT_READ_DATA_WRITE_PTR;
             break;
         case WII_INIT_READ_DATA_WRITE_PTR:
-            status = WII_INIT_READ_DATA_READ_DELAY;
-            i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
-            break;
-        case WII_INIT_READ_DATA_READ_DELAY:
             status = WII_INIT_READ_DATA_READ;
             break;
         case WII_INIT_READ_DATA_READ:
@@ -436,10 +420,6 @@ void WiiExtension::processData()
             status = WII_INIT_ENC_READ_ID_WRITE_PTR;
             break;
         case WII_INIT_ENC_READ_ID_WRITE_PTR:
-            status = WII_INIT_ENC_READ_ID_READ_DELAY;
-            i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
-            break;
-        case WII_INIT_ENC_READ_ID_READ_DELAY:
             status = WII_INIT_ENC_READ_ID_READ;
             break;
         case WII_INIT_ENC_READ_ID_READ:
@@ -453,35 +433,26 @@ void WiiExtension::processData()
             break;
         }
         case WII_INPUTS_WRITE_PTR:
-            status = WII_INPUTS_READ_DELAY;
-            i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
-            break;
-        case WII_INPUTS_READ_DELAY:
             status = WII_INPUTS_READ;
             break;
         case WII_INPUTS_READ:
-            status = WII_INPUTS_WRITE_DELAY;
+            status = WII_INPUTS_WRITE_PTR;
             if (verifyData(bufferRx, wiiBytes))
             {
                 memcpy(mBuffer, bufferRx, wiiBytes);
             }
-            i2c_dma->restart_alarm_id = add_alarm_in_us(750, restart_handler, i2c_dma, true);
-            break;
-        case WII_INPUTS_WRITE_DELAY:
-            status = WII_INPUTS_WRITE_PTR;
             break;
         }
     }
+    if (delayNext)
+    {
+        delayNext = false;
+        i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
+        return;
+    }
+    delayNext = true;
     switch (status)
     {
-    case WII_INPUTS_WRITE_DELAY:
-    case WII_INPUTS_READ_DELAY:
-    case WII_INIT_DELAY:
-    case WII_INIT_READ_ID_READ_DELAY:
-    case WII_INIT_READ_DATA_READ_DELAY:
-    case WII_INIT_ENC_READ_ID_READ_DELAY:
-    case WII_INIT_CLASSIC_READ_ID_READ_DELAY:
-        break;
     case WII_INIT_FINISH_ENC:
         bufferTx[0] = WII_ENCRYPTION_STATE_ID;
         bufferTx[1] = WII_ENCRYPTION_FINISH_ID;
@@ -607,6 +578,7 @@ WiiExtension::WiiExtension(MidiDevice *midiDevice, uint8_t block, uint8_t sda, u
     i2c_dma->abort_detected = false;
     i2c_dma->stop_detected = false;
     i2c_dma_init_intern(i2c_dma);
+    delayNext = false;
     processData();
 }
 WiiExtension::~WiiExtension()

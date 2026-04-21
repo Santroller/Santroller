@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include "utils.h"
 I2CMasterInterface::I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, uint32_t clock)
 {
     if (sda == -1 || scl == -1)
@@ -29,7 +30,7 @@ bool I2CMasterInterface::readRegisterSlow(uint8_t address, uint8_t pointer, uint
     }
     if (!writeTo(address, &pointer, 1, true, true))
         return false;
-    sleep_us(170);
+    busy_wait_us(170);
     return readFrom(address, data, length, true);
 }
 
@@ -71,7 +72,10 @@ bool I2CMasterInterface::readFrom(uint8_t address, uint8_t *data, uint8_t length
         return false;
     }
     int ret =
-        i2c_read_timeout_us(i2c, address, data, length, !sendStop, 5000*length);
+        i2c_read_timeout_per_char_us(i2c, address, data, length, !sendStop, 5000);
+    if (ret < 0) {
+        printf("i2cread ret: %d\r\n", ret);
+    }
     return ret > 0;
 }
 
@@ -83,9 +87,11 @@ bool I2CMasterInterface::writeTo(uint8_t address, uint8_t *data, uint8_t length,
         return false;
     }
     int ret =
-        i2c_write_timeout_us(i2c, address, data, length, !sendStop, 1000 * length);
+        i2c_write_timeout_per_char_us(i2c, address, data, length, !sendStop, 1000);
     if (ret < 0)
-        ret = i2c_write_timeout_us(i2c, address, data, length, !sendStop,
-                                   1000 * length);
+        ret = i2c_write_timeout_per_char_us(i2c, address, data, length, !sendStop, 1000);
+    if (ret < 0) {
+        printf("i2cread ret: %d\r\n", ret);
+    }
     return ret > 0;
 }

@@ -6,6 +6,9 @@
 #include "main.hpp"
 #include <cmath>
 #include "utils.h"
+#include "hardware/dma.h"
+#include "hardware/irq.h"
+#include "hardware/clocks.h"
 
 bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
 {
@@ -25,110 +28,621 @@ bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
 
     return true;
 }
-WiiExtType WiiExtension::readExtID()
+int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
-    uint8_t data[WII_ID_LEN];
-    memset(data, 0, sizeof(data));
-    mInterface.readRegisterSlow(WII_ADDR, WII_READ_ID, WII_ID_LEN, data);
-    sleep_us(200);
-    if (!verifyData(data, sizeof(data)))
+    i2c_dma_t *i2c_dma = (i2c_dma_t *)user_data;
+    if (i2c_dma->process_data)
     {
-        return WiiExtType::WiiNoExtension;
+        i2c_dma->process_data();
     }
-    return static_cast<WiiExtType>(data[0] << 8 | data[5]);
+    return 0;
 }
-void WiiExtension::initWiiExt()
+static i2c_dma_t i2c_dma_list[2];
+static void i2c_dma_irq_handler(i2c_dma_t *i2c_dma)
 {
-    // Send packets needed to initialise a controller
-    if (!mInterface.writeRegister(WII_ADDR, WII_ENCRYPTION_STATE_ID, WII_ENCRYPTION_FINISH_ID))
+    const uint32_t status = i2c_get_hw(i2c_dma->i2c)->intr_stat;
+
+    // If there is an abort, normally there is an abort interrupt followed by a
+    // stop interrupt. On the rare occasion, for example, if the first I2C
+    // transaction after reset is aborted, the abort and stop interrupt flags
+    // appear to be set at the same instant or almost the same instant.
+    if (status & I2C_IC_INTR_STAT_R_TX_ABRT_BITS)
     {
-        mType = WiiExtType::WiiNoExtension;
+        // Transfer aborted.
+        i2c_get_hw(i2c_dma->i2c)->clr_tx_abrt;
+        if (i2c_dma->running)
+        {
+            i2c_dma->abort_detected = true;
+        }
+    }
+
+    if (status & I2C_IC_INTR_STAT_R_STOP_DET_BITS)
+    {
+        // Transfer complete.
+        i2c_get_hw(i2c_dma->i2c)->clr_stop_det;
+        if (i2c_dma->running)
+        {
+            i2c_dma->stop_detected = true;
+            if (i2c_dma->process_data)
+            {
+                i2c_dma->process_data();
+            }
+        }
+    }
+}
+
+static void i2c0_dma_irq_handler(void)
+{
+    i2c_dma_irq_handler(&i2c_dma_list[0]);
+}
+
+static void i2c_dma_pin_open_drain(uint gpio)
+{
+    gpio_set_function(gpio, GPIO_FUNC_SIO);
+    gpio_set_dir(gpio, GPIO_IN);
+    gpio_put(gpio, 0);
+}
+static void i2c1_dma_irq_handler(void)
+{
+    i2c_dma_irq_handler(&i2c_dma_list[1]);
+}
+static void i2c_dma_pin_od_low(uint gpio)
+{
+    gpio_set_dir(gpio, GPIO_OUT);
+}
+
+static void i2c_dma_pin_od_high(uint gpio)
+{
+    gpio_set_dir(gpio, GPIO_IN);
+}
+static void i2c_dma_unblock(i2c_dma_t *i2c_dma)
+{
+    i2c_dma_pin_open_drain(i2c_dma->sda_gpio);
+    i2c_dma_pin_open_drain(i2c_dma->scl_gpio);
+
+    bool sda_high;
+    int max_tries = 9;
+
+    // Make sure the frequency of the bit-bannged I2C clock is at most 100KHz.
+    const uint32_t f_clk_sys_khz =
+        frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_SYS);
+    const uint32_t i2c_delay = f_clk_sys_khz / 100 / 2;
+
+    do
+    {
+        i2c_dma_pin_od_low(i2c_dma->scl_gpio);
+        for (int i = i2c_delay; i > 0; i -= 1)
+        {
+            __asm__("nop");
+        }
+
+        i2c_dma_pin_od_high(i2c_dma->scl_gpio);
+        for (int i = i2c_delay; i > 0; i -= 1)
+        {
+            __asm__("nop");
+        }
+
+        max_tries -= 1;
+        sda_high = gpio_get(i2c_dma->sda_gpio);
+    } while (!sda_high && max_tries > 0);
+}
+static bool i2c_dma_is_blocked(i2c_dma_t *i2c_dma)
+{
+    i2c_dma_pin_open_drain(i2c_dma->sda_gpio);
+    i2c_dma_pin_open_drain(i2c_dma->scl_gpio);
+
+    const bool sda_high = gpio_get(i2c_dma->sda_gpio);
+    const bool scl_high = gpio_get(i2c_dma->scl_gpio);
+
+    return !sda_high || !scl_high;
+}
+static int i2c_dma_init_intern(i2c_dma_t *i2c_dma)
+{
+    irq_set_enabled(i2c_dma->irq_num, false);
+
+    i2c_dma->stop_detected = false;
+    i2c_dma->abort_detected = false;
+    // Attempt to unblock a blocked bus. If it can't be unblocked, continue
+    // anyway.
+    if (i2c_dma_is_blocked(i2c_dma))
+    {
+        i2c_dma_unblock(i2c_dma);
+    }
+
+    i2c_init(i2c_dma->i2c, i2c_dma->baudrate);
+
+    gpio_set_function(i2c_dma->sda_gpio, GPIO_FUNC_I2C);
+    gpio_set_function(i2c_dma->scl_gpio, GPIO_FUNC_I2C);
+    gpio_pull_up(i2c_dma->sda_gpio);
+    gpio_pull_up(i2c_dma->scl_gpio);
+
+    i2c_get_hw(i2c_dma->i2c)->intr_mask =
+        I2C_IC_INTR_MASK_M_STOP_DET_BITS |
+        I2C_IC_INTR_MASK_M_TX_ABRT_BITS;
+
+    irq_set_exclusive_handler(i2c_dma->irq_num, i2c_dma->irq_handler);
+    irq_set_enabled(i2c_dma->irq_num, true);
+    i2c_dma->tx_chan = dma_claim_unused_channel(false);
+    i2c_dma->rx_chan = dma_claim_unused_channel(false);
+
+    return PICO_OK;
+}
+
+static void i2c_dma_set_target_addr(i2c_inst_t *i2c, uint8_t addr)
+{
+    i2c_get_hw(i2c)->enable = 0;
+    i2c_get_hw(i2c)->tar = addr;
+    i2c_get_hw(i2c)->enable = 1;
+}
+
+static void i2c_dma_tx_channel_configure(
+    i2c_inst_t *i2c, int tx_channel, const uint16_t *tx_buf, size_t len)
+{
+    dma_channel_config tx_config = dma_channel_get_default_config(tx_channel);
+    channel_config_set_read_increment(&tx_config, true);
+    channel_config_set_write_increment(&tx_config, false);
+    channel_config_set_transfer_data_size(&tx_config, DMA_SIZE_16);
+    channel_config_set_dreq(&tx_config, i2c_get_dreq(i2c, true));
+    dma_channel_configure(
+        tx_channel, &tx_config, &i2c_get_hw(i2c)->data_cmd, tx_buf, len, true);
+}
+
+static void i2c_dma_rx_channel_configure(
+    i2c_inst_t *i2c, int rx_channel, uint8_t *rx_buf, size_t len)
+{
+    dma_channel_config rx_config = dma_channel_get_default_config(rx_channel);
+    channel_config_set_read_increment(&rx_config, false);
+    channel_config_set_write_increment(&rx_config, true);
+    channel_config_set_transfer_data_size(&rx_config, DMA_SIZE_8);
+    channel_config_set_dreq(&rx_config, i2c_get_dreq(i2c, false));
+    dma_channel_configure(
+        rx_channel, &rx_config, rx_buf, &i2c_get_hw(i2c)->data_cmd, len, true);
+}
+
+int64_t timeout_handler(__unused alarm_id_t id, void *user_data)
+{
+    i2c_dma_t *i2c_dma = (i2c_dma_t *)user_data;
+    i2c_dma->timeout = true;
+    if (i2c_dma->process_data && i2c_dma->running)
+    {
+        i2c_dma->process_data();
+    }
+    return 0;
+}
+static void i2c_dma_write_read_internal(
+    i2c_dma_t *i2c_dma,
+    uint8_t addr,
+    const uint8_t *wbuf,
+    size_t wbuf_len,
+    uint8_t *rbuf,
+    size_t rbuf_len)
+{
+    if (
+        (wbuf_len > 0 && wbuf == NULL) ||
+        (rbuf_len > 0 && rbuf == NULL) ||
+        (wbuf_len == 0 && rbuf_len == 0) ||
+        (wbuf_len + rbuf_len > I2C_MAX_TRANSFER_SIZE))
+    {
         return;
     }
-    sleep_us(10);
-    mInterface.writeRegister(WII_ADDR, 0xFB, 0x00);
-    sleep_us(10);
-    mType = readExtID();
-    sleep_us(10);
-    if (mType == WiiExtType::WiiUbisoftDrawsomeTablet)
+
+    i2c_dma->writing = (wbuf_len > 0);
+    i2c_dma->reading = (rbuf_len > 0);
+
+    if (i2c_dma->writing)
     {
-        // Drawsome tablet needs some additional init
-        mInterface.writeRegister(WII_ADDR, 0xFB, 0x01);
-        sleep_us(10);
-    }
-    wiiPointer = 0;
-    wiiBytes = 6;
-    hiRes = false;
-    s_box = 0;
-    if (mType == WiiExtType::WiiClassicController ||
-        mType == WiiExtType::WiiClassicControllerPro)
-    {
-        // Enable high-res mode (try a few times, sometimes the controller doesnt
-        // pick it up)
-        for (int i = 0; i < 3; i++)
+        // Setup commands for each byte to write to the I2C bus.
+        for (size_t i = 0; i != wbuf_len; ++i)
         {
-            mInterface.writeRegister(WII_ADDR, WII_SET_RES_MODE, WII_HIGHRES_MODE);
-            sleep_us(200);
+            i2c_dma->data_cmds[i] = wbuf[i];
         }
 
-        // Some controllers support high res mode, some dont. Some require it, some
-        // dont. When a controller goes into high res mode, its ID will change,
-        // so check.
+        // The first byte written must be preceded by a start.
+        i2c_dma->data_cmds[0] |= I2C_IC_DATA_CMD_RESTART_BITS;
+    }
 
-        uint8_t id[WII_ID_LEN];
-        mInterface.readRegisterSlow(WII_ADDR, WII_READ_ID, WII_ID_LEN, id);
-        sleep_us(200);
-        if (id[4] == WII_HIGHRES_MODE)
+    if (i2c_dma->reading)
+    {
+        // Setup commands for each byte to read from the I2C bus.
+        for (size_t i = 0; i != rbuf_len; ++i)
         {
-            hiRes = true;
-            wiiBytes = 8;
+            i2c_dma->data_cmds[wbuf_len + i] = I2C_IC_DATA_CMD_CMD_BITS;
         }
-        else
-        {
-            hiRes = false;
-        }
-    }
-    else if (mType == WiiExtType::WiiTaikoNoTatsujinController)
-    {
-        // We can cheat a little with these controllers, as most of the bytes that
-        // get read back are constant. Hence we start at 0x5 instead of 0x0.
-        wiiPointer = 5;
-        wiiBytes = 1;
-    }
-    sleep_us(200);
-    uint8_t data[8] = {0};
-    mInterface.readRegisterSlow(WII_ADDR, wiiPointer, wiiBytes, data);
-    uint8_t orCheck = 0x00;
-    for (int i = 0; i < wiiBytes; i++)
-    {
-        orCheck |= data[i];
-    }
-    // It appears when you disable encryption on some third party controllers, they stop replying with inputs
-    if (orCheck == 0)
-    {
-        sleep_us(200);
 
-        // Enable encryption
-        mInterface.writeRegister(WII_ADDR, WII_ENCRYPTION_STATE_ID, WII_ENCRYPTION_ENABLE_ID);
-        sleep_us(200);
-        // Write zeroed key in blocks
-        uint8_t key[6] = {0};
-        mInterface.writeRegister(WII_ADDR, WII_ENCRYPTION_KEY_ID, 6, key);
-        sleep_us(200);
-        mInterface.writeRegister(WII_ADDR, WII_ENCRYPTION_KEY_ID_2, 6, key);
-        sleep_us(200);
-        mInterface.writeRegister(WII_ADDR, WII_ENCRYPTION_KEY_ID_3, 4, key);
-        sleep_us(200);
-        uint8_t id[WII_ID_LEN];
-        mInterface.readRegisterSlow(WII_ADDR, WII_READ_ID, WII_ID_LEN, id);
-        // first party controllers return all FFs for the ID, third party ones don't
-        s_box = FIRST_PARTY_SBOX;
-        if (id[3] != 0xFF)
-        {
-            s_box = THIRD_PARTY_SBOX;
-        }
+        // The first byte read must be preceded by a start/restart.
+        i2c_dma->data_cmds[wbuf_len] |= I2C_IC_DATA_CMD_RESTART_BITS;
+    }
+
+    // The last byte transfered must be followed by a stop.
+    i2c_dma->data_cmds[wbuf_len + rbuf_len - 1] |= I2C_IC_DATA_CMD_STOP_BITS;
+
+    // Tell the I2C peripheral the adderss of the device for the transfer.
+    i2c_dma_set_target_addr(i2c_dma->i2c, addr);
+
+    i2c_dma->stop_detected = false;
+    i2c_dma->abort_detected = false;
+    i2c_dma->timeout = false;
+    i2c_dma->running = true;
+
+    // Start the I2C transfer on required DMA channels.
+    if (i2c_dma->reading)
+    {
+        i2c_dma_rx_channel_configure(i2c_dma->i2c, i2c_dma->rx_chan, rbuf, rbuf_len);
+    }
+    i2c_dma_tx_channel_configure(
+        i2c_dma->i2c, i2c_dma->tx_chan, i2c_dma->data_cmds, wbuf_len + rbuf_len);
+    i2c_dma->timeout_alarm_id = add_alarm_in_us(I2C_TRANSFER_TIMEOUT_MS, timeout_handler, i2c_dma, true);
+}
+static WiiExtension *wiiinstances[2];
+void process_data_0()
+{
+    if (wiiinstances[0])
+    {
+        wiiinstances[0]->processData();
     }
 }
+void process_data_1()
+{
+    if (wiiinstances[1])
+    {
+        wiiinstances[1]->processData();
+    }
+}
+
+void WiiExtension::processData()
+{
+    if (i2c_dma->running)
+    {
+        i2c_dma->running = false;
+        cancel_alarm(i2c_dma->timeout_alarm_id);
+        if (i2c_dma->abort_detected || !i2c_dma->stop_detected)
+        {
+            dma_channel_abort(i2c_dma->tx_chan);
+            if (i2c_dma->reading)
+            {
+                dma_channel_abort(i2c_dma->rx_chan);
+            }
+        }
+    }
+    if (i2c_dma->timeout || i2c_dma->abort_detected)
+    {
+        printf("connection lost %d %d %d!\r\n", status, i2c_dma->timeout, i2c_dma->abort_detected);
+        status = WII_INIT_FINISH_ENC;
+        mType = WiiExtType::WiiNoExtension;
+        i2c_dma->timeout = false;
+        i2c_dma->abort_detected = false;
+        i2c_dma->stop_detected = false;
+        i2c_dma->restart_alarm_id = add_alarm_in_ms(500, restart_handler, i2c_dma, true);
+        return;
+    }
+    // printf("status: %d %d %d %d\r\n", status, i2c_dma->abort_detected, i2c_dma->stop_detected, i2c_dma->timeout);
+    if (i2c_dma->stop_detected)
+    {
+        switch (status)
+        {
+        case WII_INIT_FINISH_ENC:
+            status = WII_INIT_DELAY;
+            i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
+            break;
+        case WII_INIT_DELAY:
+            status = WII_INIT_FB_0;
+            break;
+        case WII_INIT_FB_0:
+            status = WII_INIT_READ_ID_WRITE_PTR;
+            break;
+        case WII_INIT_READ_ID_WRITE_PTR:
+            status = WII_INIT_READ_ID_READ_DELAY;
+            i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
+            break;
+        case WII_INIT_READ_ID_READ_DELAY:
+            status = WII_INIT_READ_ID_READ;
+            break;
+        case WII_INIT_READ_ID_READ:
+            if (verifyData(bufferRx, WII_ID_LEN))
+            {
+                mType = static_cast<WiiExtType>(bufferRx[0] << 8 | bufferRx[5]);
+                printf("found wii ext: %d\r\n", mType);
+                wiiPointer = 0;
+                wiiBytes = 6;
+                hiRes = false;
+                s_box = 0;
+                if (mType == WiiUbisoftDrawsomeTablet)
+                {
+                    status = WII_INIT_DRAWSOME;
+                }
+                else if (mType == WiiExtType::WiiClassicController ||
+                         mType == WiiExtType::WiiClassicControllerPro)
+                {
+                    status = WII_INIT_CLASSIC_0;
+                }
+                else
+                {
+                    status = WII_INIT_READ_DATA_WRITE_PTR;
+                }
+                if (mType == WiiExtType::WiiTaikoNoTatsujinController)
+                {
+                    // We can cheat a little with these controllers, as most of the bytes that
+                    // get read back are constant. Hence we start at 0x5 instead of 0x0.
+                    wiiPointer = 5;
+                    wiiBytes = 1;
+                }
+            }
+            break;
+        case WII_INIT_DRAWSOME:
+            status = WII_INIT_READ_DATA_WRITE_PTR;
+            break;
+        case WII_INIT_CLASSIC_0:
+            status = WII_INIT_CLASSIC_1;
+            break;
+        case WII_INIT_CLASSIC_1:
+            status = WII_INIT_CLASSIC_2;
+            break;
+        case WII_INIT_CLASSIC_2:
+            status = WII_INIT_CLASSIC_READ_ID_WRITE_PTR;
+            break;
+        case WII_INIT_CLASSIC_READ_ID_WRITE_PTR:
+            status = WII_INIT_CLASSIC_READ_ID_READ_DELAY;
+            i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
+            break;
+        case WII_INIT_CLASSIC_READ_ID_READ_DELAY:
+            status = WII_INIT_CLASSIC_READ_ID_READ;
+            break;
+        case WII_INIT_CLASSIC_READ_ID_READ:
+            if (bufferRx[4] == WII_HIGHRES_MODE)
+            {
+                hiRes = true;
+                wiiBytes = 8;
+            }
+            else
+            {
+                hiRes = false;
+            }
+            status = WII_INIT_READ_DATA_WRITE_PTR;
+            break;
+        case WII_INIT_READ_DATA_WRITE_PTR:
+            status = WII_INIT_READ_DATA_READ_DELAY;
+            i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
+            break;
+        case WII_INIT_READ_DATA_READ_DELAY:
+            status = WII_INIT_READ_DATA_READ;
+            break;
+        case WII_INIT_READ_DATA_READ:
+        {
+            uint8_t orCheck = 0x00;
+            for (int i = 0; i < wiiBytes; i++)
+            {
+                orCheck |= bufferRx[i];
+            }
+            if (orCheck == 0)
+            {
+                status = WII_INIT_ENABLE_ENC_0;
+            }
+            else
+            {
+                status = WII_INPUTS_WRITE_PTR;
+            }
+            break;
+        }
+        case WII_INIT_ENABLE_ENC_0:
+            status = WII_INIT_ENABLE_ENC_1;
+            break;
+        case WII_INIT_ENABLE_ENC_1:
+            status = WII_INIT_ENABLE_ENC_2;
+            break;
+        case WII_INIT_ENABLE_ENC_2:
+            status = WII_INIT_ENABLE_ENC_3;
+            break;
+        case WII_INIT_ENABLE_ENC_3:
+            status = WII_INIT_ENC_READ_ID_WRITE_PTR;
+            break;
+        case WII_INIT_ENC_READ_ID_WRITE_PTR:
+            status = WII_INIT_ENC_READ_ID_READ_DELAY;
+            i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
+            break;
+        case WII_INIT_ENC_READ_ID_READ_DELAY:
+            status = WII_INIT_ENC_READ_ID_READ;
+            break;
+        case WII_INIT_ENC_READ_ID_READ:
+        {
+            s_box = FIRST_PARTY_SBOX;
+            if (bufferRx[3] != 0xFF)
+            {
+                s_box = THIRD_PARTY_SBOX;
+            }
+            status = WII_INPUTS_WRITE_PTR;
+            break;
+        }
+        case WII_INPUTS_WRITE_PTR:
+            status = WII_INPUTS_READ_DELAY;
+            i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
+            break;
+        case WII_INPUTS_READ_DELAY:
+            status = WII_INPUTS_READ;
+            break;
+        case WII_INPUTS_READ:
+            status = WII_INPUTS_WRITE_DELAY;
+            if (verifyData(bufferRx, wiiBytes))
+            {
+                memcpy(mBuffer, bufferRx, wiiBytes);
+            }
+            i2c_dma->restart_alarm_id = add_alarm_in_us(750, restart_handler, i2c_dma, true);
+            break;
+        case WII_INPUTS_WRITE_DELAY:
+            status = WII_INPUTS_WRITE_PTR;
+            break;
+        }
+    }
+    switch (status)
+    {
+    case WII_INPUTS_WRITE_DELAY:
+    case WII_INPUTS_READ_DELAY:
+    case WII_INIT_DELAY:
+    case WII_INIT_READ_ID_READ_DELAY:
+    case WII_INIT_READ_DATA_READ_DELAY:
+    case WII_INIT_ENC_READ_ID_READ_DELAY:
+    case WII_INIT_CLASSIC_READ_ID_READ_DELAY:
+        break;
+    case WII_INIT_FINISH_ENC:
+        bufferTx[0] = WII_ENCRYPTION_STATE_ID;
+        bufferTx[1] = WII_ENCRYPTION_FINISH_ID;
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 2, nullptr, 0);
+        break;
+    case WII_INIT_FB_0:
+        bufferTx[0] = 0xFB;
+        bufferTx[1] = 0x00;
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 2, nullptr, 0);
+        break;
+    case WII_INIT_READ_ID_WRITE_PTR:
+        bufferTx[0] = WII_READ_ID;
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 2, nullptr, 0);
+        break;
+    case WII_INIT_READ_ID_READ:
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, nullptr, 0, bufferRx, WII_ID_LEN);
+        break;
+    case WII_INIT_DRAWSOME:
+        bufferTx[0] = 0xFB;
+        bufferTx[1] = 0x01;
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 2, nullptr, 0);
+        break;
+    case WII_INIT_CLASSIC_0:
+        bufferTx[0] = WII_SET_RES_MODE;
+        bufferTx[1] = WII_HIGHRES_MODE;
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 2, nullptr, 0);
+        break;
+    case WII_INIT_CLASSIC_1:
+        bufferTx[0] = WII_SET_RES_MODE;
+        bufferTx[1] = WII_HIGHRES_MODE;
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 2, nullptr, 0);
+        break;
+    case WII_INIT_CLASSIC_2:
+        bufferTx[0] = WII_SET_RES_MODE;
+        bufferTx[1] = WII_HIGHRES_MODE;
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 2, nullptr, 0);
+        break;
+    case WII_INIT_CLASSIC_READ_ID_WRITE_PTR:
+        bufferTx[0] = WII_READ_ID;
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 2, nullptr, 0);
+        break;
+    case WII_INIT_CLASSIC_READ_ID_READ:
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, nullptr, 0, bufferRx, WII_ID_LEN);
+        break;
+    case WII_INIT_READ_DATA_WRITE_PTR:
+        bufferTx[0] = wiiPointer;
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 2, nullptr, 0);
+        break;
+    case WII_INIT_READ_DATA_READ:
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, nullptr, 0, bufferRx, wiiBytes);
+        break;
+    case WII_INIT_ENABLE_ENC_0:
+        bufferTx[0] = WII_ENCRYPTION_STATE_ID;
+        bufferTx[1] = WII_ENCRYPTION_ENABLE_ID;
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 2, nullptr, 0);
+        break;
+    case WII_INIT_ENABLE_ENC_1:
+        bufferTx[0] = WII_ENCRYPTION_KEY_ID;
+        memset(bufferTx + 1, 0, 6);
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 7, nullptr, 0);
+        break;
+    case WII_INIT_ENABLE_ENC_2:
+        bufferTx[0] = WII_ENCRYPTION_KEY_ID_2;
+        memset(bufferTx + 1, 0, 6);
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 7, nullptr, 0);
+        break;
+    case WII_INIT_ENABLE_ENC_3:
+        bufferTx[0] = WII_ENCRYPTION_KEY_ID_3;
+        memset(bufferTx + 1, 0, 4);
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 5, nullptr, 0);
+        break;
+    case WII_INIT_ENC_READ_ID_WRITE_PTR:
+        bufferTx[0] = WII_READ_ID;
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 2, nullptr, 0);
+        break;
+    case WII_INIT_ENC_READ_ID_READ:
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, nullptr, 0, bufferRx, WII_ID_LEN);
+        break;
+    case WII_INPUTS_WRITE_PTR:
+        bufferTx[0] = wiiPointer;
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, bufferTx, 2, nullptr, 0);
+        break;
+    case WII_INPUTS_READ:
+        i2c_dma_write_read_internal(i2c_dma, WII_ADDR, nullptr, 0, bufferRx, wiiBytes);
+        break;
+    }
+}
+
+WiiExtension::WiiExtension(MidiDevice *midiDevice, uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock) : mInterface(block, sda, scl, clock), mFound(false), m_device(midiDevice)
+{
+    printf("wiiext init\r\n");
+    if (sda == -1 || scl == -1)
+    {
+        i2c = nullptr;
+        return;
+    }
+    i2c = _hardwareBlocks[block];
+
+    if (i2c == i2c0)
+    {
+        i2c_dma = &i2c_dma_list[0];
+        i2c_dma->i2c = i2c0;
+        i2c_dma->irq_num = I2C0_IRQ;
+        i2c_dma->irq_handler = i2c0_dma_irq_handler;
+        i2c_dma->process_data = process_data_0;
+        wiiinstances[0] = this;
+    }
+
+    if (i2c == i2c1)
+    {
+        i2c_dma = &i2c_dma_list[1];
+        i2c_dma->i2c = i2c1;
+        i2c_dma->irq_num = I2C1_IRQ;
+        i2c_dma->irq_handler = i2c1_dma_irq_handler;
+        i2c_dma->process_data = process_data_1;
+        wiiinstances[1] = this;
+    }
+    i2c_dma->status = I2C_NONE;
+    i2c_dma->baudrate = clock;
+    i2c_dma->sda_gpio = sda;
+    i2c_dma->scl_gpio = scl;
+    i2c_dma->timeout = false;
+    i2c_dma->abort_detected = false;
+    i2c_dma->stop_detected = false;
+    i2c_dma_init_intern(i2c_dma);
+    processData();
+}
+WiiExtension::~WiiExtension()
+{
+    printf("wiiext deinit\r\n");
+    irq_set_enabled(i2c_dma->irq_num, false);
+
+    cancel_alarm(i2c_dma->timeout_alarm_id);
+    if (i2c_dma->abort_detected || !i2c_dma->stop_detected)
+    {
+        dma_channel_abort(i2c_dma->tx_chan);
+        if (i2c_dma->reading)
+        {
+            dma_channel_abort(i2c_dma->rx_chan);
+        }
+    }
+
+    // Free the DMA channels.
+    dma_channel_unclaim(i2c_dma->tx_chan);
+    if (i2c_dma->reading)
+    {
+        dma_channel_unclaim(i2c_dma->rx_chan);
+    }
+    i2c_dma->stop_detected = false;
+    i2c_dma->abort_detected = false;
+    i2c_dma->process_data = nullptr;
+    if (i2c == i2c0)
+    {
+        wiiinstances[0] = nullptr;
+    }
+    if (i2c == i2c1)
+    {
+        wiiinstances[1] = nullptr;
+    }
+}
+
 void WiiExtension::setEuphoriaLed(bool state)
 {
     nextEuphoriaLedState = state;
@@ -136,90 +650,91 @@ void WiiExtension::setEuphoriaLed(bool state)
 }
 void WiiExtension::tick()
 {
-    if (micros() - lastTick > 750)
-    {
-        lastTick = micros();
-    }
-    else
-    {
-        return;
-    }
-    static uint8_t wiiData[8];
-    memset(wiiData, 0, sizeof(wiiData));
-    if (mType == WiiExtType::WiiNotInitialised ||
-        mType == WiiExtType::WiiNoExtension ||
-        !mInterface.readRegisterSlow(WII_ADDR, wiiPointer, wiiBytes, wiiData) ||
-        !verifyData(wiiData, wiiBytes))
-    {
-        if (mFound)
-        {
-            packetIssueCount++;
-            if (packetIssueCount < 10)
-            {
-                return;
-            }
-        }
-        packetIssueCount = 0;
-        mFound = false;
-        initWiiExt();
-        return;
-    }
-    packetIssueCount = 0;
-    // decrypt if encryption is enabled
-    if (s_box)
-    {
-        for (int i = 0; i < 8; i++)
-        {
-            wiiData[i] = (uint8_t)(((wiiData[i] ^ s_box) + s_box) & 0xFF);
-        }
-    }
-    mFound = true;
-    // Update the led if it changes
-    if (mType == WiiExtType::WiiDjHeroTurntable && ledUpdated)
-    {
-        ledUpdated = false;
-        // encrypt if encryption is enabled
-        uint8_t state = nextEuphoriaLedState ? 1 : 0;
-        if (s_box)
-        {
-            state = (state - s_box) ^ s_box;
-        }
-        mInterface.writeRegister(WII_ADDR, WII_DJ_EUPHORIA, state);
-    }
-    if (mType == WiiExtType::WiiGuitarHeroDrums)
-    {
-        // https://wiibrew.org/wiki/Wiimote/Extension_Controllers/Guitar_Hero_World_Tour_(Wii)_Drums
-        uint8_t velocity = ((wiiData[4] & 0b00000001) |
-                            ((wiiData[4] & 0b10000000) >> 6) |
-                            ((wiiData[3] & 0b00000001) << 2) |
-                            ((wiiData[2] & 0b00000001) << 3) |
-                            ((wiiData[3] & (0b11100000)) >> 1));
-        uint8_t note = (wiiData[2] >> 1) & 0x7f;
-        uint8_t channel = ((~wiiData[3]) >> 1) & 0xF;
-        velocity = 0x7F - velocity;
-        note = 0x7F - note;
-        if (velocity || note)
-        {
-            // Sadly the wii drums don't include the status byte, so we have to make one up.
-            uint8_t packet[] = {0, MIDI_CIN_NOTE_ON << 4 | channel, note, velocity};
-            m_device->processMidiData(packet, sizeof(packet));
-        }
-    }
-    if (mType == WiiExtType::WiiGuitarHeroGuitar)
-    {
-        auto lastTapWii = (wiiData[2] & 0x1f);
+    // return;
+    // if (micros() - lastTick > 750)
+    // {
+    //     lastTick = micros();
+    // }
+    // else
+    // {
+    //     return;
+    // }
+    // static uint8_t wiiData[8];
+    // memset(wiiData, 0, sizeof(wiiData));
+    // if (mType == WiiExtType::WiiNotInitialised ||
+    //     mType == WiiExtType::WiiNoExtension ||
+    //     !mInterface.readRegisterSlow(WII_ADDR, wiiPointer, wiiBytes, wiiData) ||
+    //     !verifyData(wiiData, wiiBytes))
+    // {
+    //     if (mFound)
+    //     {
+    //         packetIssueCount++;
+    //         if (packetIssueCount < 10)
+    //         {
+    //             return;
+    //         }
+    //     }
+    //     packetIssueCount = 0;
+    //     mFound = false;
+    //     initWiiExt();
+    //     return;
+    // }
+    // packetIssueCount = 0;
+    // // decrypt if encryption is enabled
+    // if (s_box)
+    // {
+    //     for (int i = 0; i < 8; i++)
+    //     {
+    //         wiiData[i] = (uint8_t)(((wiiData[i] ^ s_box) + s_box) & 0xFF);
+    //     }
+    // }
+    // mFound = true;
+    // // Update the led if it changes
+    // if (mType == WiiExtType::WiiDjHeroTurntable && ledUpdated)
+    // {
+    //     ledUpdated = false;
+    //     // encrypt if encryption is enabled
+    //     uint8_t state = nextEuphoriaLedState ? 1 : 0;
+    //     if (s_box)
+    //     {
+    //         state = (state - s_box) ^ s_box;
+    //     }
+    //     mInterface.writeRegister(WII_ADDR, WII_DJ_EUPHORIA, state);
+    // }
+    // if (mType == WiiExtType::WiiGuitarHeroDrums)
+    // {
+    //     // https://wiibrew.org/wiki/Wiimote/Extension_Controllers/Guitar_Hero_World_Tour_(Wii)_Drums
+    //     uint8_t velocity = ((wiiData[4] & 0b00000001) |
+    //                         ((wiiData[4] & 0b10000000) >> 6) |
+    //                         ((wiiData[3] & 0b00000001) << 2) |
+    //                         ((wiiData[2] & 0b00000001) << 3) |
+    //                         ((wiiData[3] & (0b11100000)) >> 1));
+    //     uint8_t note = (wiiData[2] >> 1) & 0x7f;
+    //     uint8_t channel = ((~wiiData[3]) >> 1) & 0xF;
+    //     velocity = 0x7F - velocity;
+    //     note = 0x7F - note;
+    //     if (velocity || note)
+    //     {
+    //         // Sadly the wii drums don't include the status byte, so we have to make one up.
+    //         uint8_t packet[] = {0, MIDI_CIN_NOTE_ON << 4 | channel, note, velocity};
+    //         m_device->processMidiData(packet, sizeof(packet));
+    //     }
+    // }
+    // if (mType == WiiExtType::WiiGuitarHeroGuitar)
+    // {
+    //     auto lastTapWii = (wiiData[2] & 0x1f);
 
-        // GH3 guitars set this bit, while WT and GH5 guitars do not
-        if (!hasTapBar)
-        {
-            if (lastTapWii == 0x0F)
-            {
-                hasTapBar = true;
-            }
-            lastTapWii = 0;
-        }
-    }
-    memcpy(mBuffer, wiiData, sizeof(wiiData));
+    //     // GH3 guitars set this bit, while WT and GH5 guitars do not
+    //     if (!hasTapBar)
+    //     {
+    //         if (lastTapWii == 0x0F)
+    //         {
+    //             hasTapBar = true;
+    //         }
+    //         lastTapWii = 0;
+    //     }
+    // }
+    // memcpy(mBuffer, wiiData, sizeof(wiiData));
 }
 
 uint16_t atanAxis(uint16_t y, uint16_t x)

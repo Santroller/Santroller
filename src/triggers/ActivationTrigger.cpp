@@ -83,7 +83,7 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
     }
     if (((m_any_time || mode_recently_changed()) && val != m_last_val) && HIDConfigDevice::tool_closed())
     {
-        reload();
+        // reload();
     }
     m_last_val = val;
     return val;

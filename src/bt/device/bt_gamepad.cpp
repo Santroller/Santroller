@@ -12,6 +12,7 @@
 #include "bt/device/bt_descriptors.h"
 #include "bt/device/bt_gamepad.h"
 #include "btstack.h"
+#include "utils.h"
 #define SIZE_OF_BD_ADDRESS 18
 // static btstack_timer_source_t heartbeat;
 static btstack_packet_callback_registration_t hci_event_callback_registration;
@@ -20,7 +21,6 @@ static uint8_t battery = 100;
 static hci_con_handle_t con_handle = HCI_CON_HANDLE_INVALID;
 static uint8_t protocol_mode = 1;
 static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
-
 // Appearance HID - Keyboard (Category 15, Sub-Category 1)
 #define APPEARANCE_KEYBOARD 0xC1
 // Appearance HID - Gamepad (Category 15, Sub-Category 4)

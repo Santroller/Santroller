@@ -7,10 +7,12 @@
 #include "usb/host/midi_host.h"
 #include "config.hpp"
 #include "usb/device//hid_device.h"
+#include "hardware/dma.h"
 #include <algorithm>
 #include <vector>
 #include "utils.h"
 static uint8_t usb_host_id;
+static int8_t tx_ch = -1;
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : UsbHostInterface(0, 0, id), m_device(device)
 {
     printf("UsbHostHardwareDevice: %p\r\n", this);
@@ -18,11 +20,15 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
     {
         return;
     }
+    if (tx_ch == -1)
+    {
+        tx_ch = dma_claim_unused_channel(false);
+    }
     pio_usb_configuration_t host_config = {
         pin_dp : (uint8_t)(device.firstPin + device.dmFirst),
         pio_tx_num : 0,
         sm_tx : 0,
-        tx_ch : 0,
+        tx_ch : tx_ch,
         pio_rx_num : 0,
         sm_rx : 1,
         sm_eop : 2,
@@ -38,6 +44,7 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
     };
     usb_host_id = id;
     tuh_configure(TUH_OPT_RHPORT, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &host_config);
+    dma_channel_unclaim(tx_ch);
     tusb_init(TUH_OPT_RHPORT, &rh_init);
     printf("assignable_devices before: %d\r\n", assignable_usb_devices.size());
 

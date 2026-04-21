@@ -181,7 +181,6 @@ void core1()
     {
     }
 }
-extern void bt_gamepad_setup(void);
 int main()
 {
     if (pfb_is_after_firmware_update())

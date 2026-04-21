@@ -73,6 +73,7 @@ std::shared_ptr<UsbDevice> usb_instances_by_epout[16];
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
 int seenMasks = 0;
+bool fullReload = true;
 bool working = false;
 bool loadedAny = false;
 bool bluetoothInitted = false;
@@ -614,7 +615,15 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     pb_istream_t inputStream = pb_istream_from_buffer(dataPtr, size);
     uint16_t dev_id = 0;
     config.devices.arg = &dev_id;
-    config.devices.funcs.decode = &load_device;
+
+    if (fullReload)
+    {
+        config.devices.funcs.decode = &load_device;
+    }
+    else
+    {
+        config.devices.funcs.decode = nullptr;
+    }
     config.profiles.funcs.decode = &load_profile;
     assignable_devices.clear();
     instances.clear();
@@ -632,7 +641,10 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     {
         usb_instances_by_epout[i] = std::shared_ptr<UsbDevice>();
     }
-    active_devices.clear();
+    if (fullReload)
+    {
+        active_devices.clear();
+    }
     active_profiles.clear();
     all_profiles.clear();
     UsbDevice::reset_ep();
@@ -699,6 +711,7 @@ uint32_t copy_config_info(uint8_t *buffer)
 void reload()
 {
     printf("reload called\r\n");
+    fullReload = false;
     reinit = true;
 }
 

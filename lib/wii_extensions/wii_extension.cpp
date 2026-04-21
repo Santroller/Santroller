@@ -50,23 +50,17 @@ static void i2c_dma_irq_handler(i2c_dma_t *i2c_dma)
     {
         // Transfer aborted.
         i2c_get_hw(i2c_dma->i2c)->clr_tx_abrt;
-        if (i2c_dma->running)
-        {
-            i2c_dma->abort_detected = true;
-        }
+        i2c_dma->abort_detected = true;
     }
 
     if (status & I2C_IC_INTR_STAT_R_STOP_DET_BITS)
     {
         // Transfer complete.
         i2c_get_hw(i2c_dma->i2c)->clr_stop_det;
-        if (i2c_dma->running)
+        i2c_dma->stop_detected = true;
+        if (i2c_dma->process_data)
         {
-            i2c_dma->stop_detected = true;
-            if (i2c_dma->process_data)
-            {
-                i2c_dma->process_data();
-            }
+            i2c_dma->process_data();
         }
     }
 }
@@ -306,7 +300,7 @@ void WiiExtension::processData()
     }
     if (i2c_dma->timeout || i2c_dma->abort_detected)
     {
-        // printf("connection lost %d %d %d!\r\n", status, i2c_dma->timeout, i2c_dma->abort_detected);
+        printf("connection lost %d %d %d!\r\n", status, i2c_dma->timeout, i2c_dma->abort_detected);
         status = WII_INIT_FINISH_ENC;
         mType = WiiExtType::WiiNoExtension;
         i2c_dma->timeout = false;
@@ -334,6 +328,11 @@ void WiiExtension::processData()
             {
                 mType = static_cast<WiiExtType>(bufferRx[0] << 8 | bufferRx[5]);
                 printf("found wii ext: %d\r\n", mType);
+                for (int i = 0; i < WII_ID_LEN; i++)
+                {
+                    printf("%02x, ", bufferRx[i]);
+                }
+                printf("\r\n");
                 wiiPointer = 0;
                 wiiBytes = 6;
                 hiRes = false;
@@ -443,14 +442,13 @@ void WiiExtension::processData()
             }
             break;
         }
-    }
-    if (delayNext)
-    {
-        delayNext = false;
-        i2c_dma->restart_alarm_id = add_alarm_in_us(170, restart_handler, i2c_dma, true);
+        // add 200us delay between commands otherwise the extension is overwhelmed
+        i2c_dma->stop_detected = false;
+        i2c_dma->abort_detected = false;
+        i2c_dma->timeout = false;
+        i2c_dma->restart_alarm_id = add_alarm_in_us(200, restart_handler, i2c_dma, true);
         return;
     }
-    delayNext = true;
     switch (status)
     {
     case WII_INIT_FINISH_ENC:

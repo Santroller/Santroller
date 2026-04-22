@@ -22,7 +22,7 @@ PS2ButtonInput::PS2ButtonInput(proto_PS2ButtonInput input, std::shared_ptr<PS2De
 }
 bool PS2ButtonInput::tickDigital()
 {
-    return m_device->readButton(m_input.button) > 0;
+    return m_device->readButton(m_input.button);
 }
 uint16_t PS2ButtonInput::tickAnalog()
 {

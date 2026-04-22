@@ -43,8 +43,6 @@ public:
                       uint8_t *data);
     bool readRegisterRepeatedStart(uint8_t address, uint8_t pointer, uint8_t length,
                                    uint8_t *data);
-    bool readRegisterSlow(uint8_t address, uint8_t pointer, uint8_t length,
-                          uint8_t *data);
     bool writeRegister(uint8_t address, uint8_t pointer, uint8_t data);
     bool writeRegister(uint8_t address, uint8_t pointer, uint8_t length,
                        uint8_t *data);

@@ -28,7 +28,7 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
         pin_dp : (uint8_t)(device.firstPin + device.dmFirst),
         pio_tx_num : 0,
         sm_tx : 0,
-        tx_ch : tx_ch,
+        tx_ch : (uint8_t)tx_ch,
         pio_rx_num : 0,
         sm_rx : 1,
         sm_eop : 2,
@@ -46,14 +46,6 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
     tuh_configure(TUH_OPT_RHPORT, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &host_config);
     dma_channel_unclaim(tx_ch);
     tusb_init(TUH_OPT_RHPORT, &rh_init);
-    printf("assignable_devices before: %d\r\n", assignable_usb_devices.size());
-
-    for (auto dev : assignable_usb_devices)
-    {
-        assignable_devices.push_back(dev);
-        dev->rescan(true);
-    }
-    printf("assignable_devices after: %d\r\n", assignable_usb_devices.size());
 }
 
 void USBHostHardwareDevice::update(bool full_poll, bool send_events)
@@ -62,6 +54,17 @@ void USBHostHardwareDevice::update(bool full_poll, bool send_events)
 void USBHostHardwareDevice::rescan(bool first)
 {
     printf("usbhosthardware rescan\r\n");
+    if (first)
+    {
+        printf("assignable_devices before: %d\r\n", assignable_usb_devices.size());
+
+        for (auto dev : assignable_usb_devices)
+        {
+            assignable_devices.push_back(dev);
+            dev->rescan(true);
+        }
+        printf("assignable_devices after: %d\r\n", assignable_usb_devices.size());
+    }
 }
 
 bool USBHostHardwareDevice::using_pin(uint8_t pin)

@@ -63,6 +63,7 @@ std::vector<std::shared_ptr<Instance>> active_instances;
 std::unordered_map<uint32_t, std::shared_ptr<Profile>> all_profiles;
 std::set<uint32_t> active_profiles;
 std::vector<std::shared_ptr<Device>> active_devices;
+std::unordered_map<uint32_t, std::shared_ptr<Device>> root_devices;
 // devices that have not yet been assigned to a profile
 std::vector<std::shared_ptr<Device>> assignable_devices;
 std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
@@ -96,11 +97,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Device_psx_tag:
     {
-        for (int i = A; i <= A; i++)
-        {
-            auto &ps2Dev = active_devices.emplace_back(new PS2Device(device.device.psx, *dev_id, (MultitapPort)i));
-            ps2Dev->rescan(true);
-        }
+        active_devices.emplace_back(new PS2Device(device.device.psx, *dev_id));
         break;
     }
     case proto_Device_bhDrum_tag:
@@ -149,10 +146,8 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new BluetoothDevice(device.device.bt, *dev_id));
         break;
     }
-    if (device.which_device != proto_Device_psx_tag)
-    {
-        active_devices.back()->rescan(true);
-    }
+    root_devices[*dev_id] = active_devices.back();
+    active_devices.back()->rescan(true);
     *dev_id += 1;
     return true;
 }
@@ -615,6 +610,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     pb_istream_t inputStream = pb_istream_from_buffer(dataPtr, size);
     uint16_t dev_id = 0;
     config.devices.arg = &dev_id;
+    assignable_devices.clear();
 
     if (fullReload)
     {
@@ -623,9 +619,12 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     else
     {
         config.devices.funcs.decode = nullptr;
+        for (auto &device : active_devices)
+        {
+            device->rescan(true);
+        }
     }
     config.profiles.funcs.decode = &load_profile;
-    assignable_devices.clear();
     instances.clear();
     active_instances.clear();
     seenMasks = 0;
@@ -644,6 +643,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     if (fullReload)
     {
         active_devices.clear();
+        root_devices.clear();
     }
     active_profiles.clear();
     all_profiles.clear();
@@ -826,6 +826,7 @@ void first_load()
 {
     UsbDevice::reset_ep();
     active_devices.clear();
+    root_devices.clear();
     instances.clear();
     active_instances.clear();
     for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances); i++)

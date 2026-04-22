@@ -39,7 +39,7 @@ void MidiDevice::rescan(bool first)
                 else
                 {
                     // Every other device will do this scanning on creation, so we grab from active_devices
-                    assignable_devices.push_back(std::make_shared<MidiDeviceWithChannel>(m_id, i, std::static_pointer_cast<MidiDevice>(active_devices.back())));
+                    assignable_devices.push_back(std::make_shared<MidiDeviceWithChannel>(m_id, i, std::static_pointer_cast<MidiDevice>(root_devices[m_id])));
                 }
                 printf("Assigning MIDI channel: %d on device %d\r\n", i, m_id);
             }
@@ -54,7 +54,7 @@ void MidiDevice::rescan(bool first)
             else
             {
                 // Every other device will do this scanning on creation, so we grab from active_devices
-                assignable_devices.push_back(std::make_shared<ProGuitarMidiDevice>(m_id, std::static_pointer_cast<MidiDevice>(active_devices.back())));
+                assignable_devices.push_back(std::make_shared<ProGuitarMidiDevice>(m_id, std::static_pointer_cast<MidiDevice>(root_devices[m_id])));
             }
             printf("Assigning MIDI channel: pro guitar on device %d\r\n", m_id);
         }

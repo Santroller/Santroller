@@ -35,6 +35,7 @@ extern std::shared_ptr<UsbDevice> usb_instances[32];
 extern std::shared_ptr<UsbDevice> usb_instances_by_epin[16];
 extern std::shared_ptr<UsbDevice> usb_instances_by_epout[16];
 extern std::vector<std::shared_ptr<Device>> active_devices;
+extern std::unordered_map<uint32_t, std::shared_ptr<Device>> root_devices;
 extern std::vector<std::shared_ptr<Device>> assignable_devices;
 extern std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
 extern std::vector<std::shared_ptr<Instance>> active_instances;

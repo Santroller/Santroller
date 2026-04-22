@@ -4,6 +4,8 @@
 #include "spi.hpp"
 #include "enums.pb.h"
 #include "input_enums.pb.h"
+#include "pico/time.h"
+#include <hardware/gpio.h>
 
 /** \brief Size of internal communication buffer
  *
@@ -19,7 +21,7 @@
  * This should actually be done by watching the \a Acknowledge line, but we are
  * ignoring it at the moment.
  */
-#define INTER_CMD_BYTE_DELAY 50
+#define INTER_CMD_BYTE_DELAY 100
 /** \brief Command timeout (ms)
  *
  * Commands are sent to the controller repeatedly, until they succeed or time
@@ -41,44 +43,52 @@
  * Time between attention being issued to the controller and the first clock
  * edge (us).
  */
-#define ATTN_DELAY 50
+#define ATTN_DELAY 100
 
-typedef enum
+typedef enum 
 {
-    A = 0x01,
-    B = 0x02,
-    C = 0x03,
-    D = 0x04
-} MultitapPort;
+    DISCONNECTED,
+    FIRST_INPUTS,
+    ENTER_CONFIG,
+    ENABLE_ANALOG_MODE,
+    ENABLE_PRESSURES,
+    EXIT_CONFIG,
+    SECOND_INPUTS,
+    ENUMERATED
+} PSXControllerState;
+
 class PSXController
 {
 public:
-    PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin, MultitapPort port);
+    PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin);
     void tick();
-    inline bool is_connected()
-    {
-        return connected;
-    }
     PS2ControllerType type = PS2ControllerTypeUnknown;
     uint16_t readAxis(PS2AxisType type);
     bool readButton(PS2ButtonType type);
-    bool controller_valid(MultitapPort port);
+    bool controller_valid();
+    void processData(bool ack, bool timeout);
 
 private:
-    bool autoShiftData(uint8_t *in, const uint8_t *out, const uint8_t len);
-    void shiftDataInOut(const uint8_t *out, uint8_t *in, const uint8_t len);
-    bool sendCommand(uint8_t *in, const uint8_t *buf, uint8_t len);
+    bool autoShiftData(const uint8_t *out, const uint8_t len);
     void noAttention();
     void signalAttention();
     SPIMasterInterface interface;
-    MultitapPort m_port;
     uint8_t m_attPin;
     uint8_t m_ackPin;
-    int missing;
-    bool connected;
+    int missing = 0;
+    bool valid = false;
     bool hasTapBar = false;
     long last = 0;
     long lastInit = 0;
     uint8_t invalidCount = 0;
     uint8_t ps2Data[BUFFER_SIZE];
+    uint8_t lastInputs[BUFFER_SIZE];
+    const uint8_t* ps2DataOut;
+    uint8_t ps2Idx;
+    uint8_t ps2Len;
+    uint8_t ps2DataLen;
+    alarm_id_t timeout_alarm_id;
+    bool done = false;
+    uint32_t lastScan = 0;
+    PSXControllerState status = DISCONNECTED;
 };

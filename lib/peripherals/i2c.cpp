@@ -331,19 +331,6 @@ void I2CMasterInterface::dmaWriteRead(uint8_t addr,
 {
     i2c_dma_write_read_internal(i2c_dma, addr, wbuf, wbuf_len, rbuf, rbuf_len);
 }
-bool I2CMasterInterface::readRegisterSlow(uint8_t address, uint8_t pointer, uint8_t length,
-                                          uint8_t *data)
-{
-    if (!i2c)
-    {
-        return false;
-    }
-    if (!writeTo(address, &pointer, 1, true, true))
-        return false;
-    busy_wait_us(170);
-    return readFrom(address, data, length, true);
-}
-
 bool I2CMasterInterface::readRegister(uint8_t address, uint8_t pointer, uint8_t length,
                                       uint8_t *data)
 {
@@ -383,10 +370,6 @@ bool I2CMasterInterface::readFrom(uint8_t address, uint8_t *data, uint8_t length
     }
     int ret =
         i2c_read_timeout_per_char_us(i2c, address, data, length, !sendStop, 5000);
-    if (ret < 0)
-    {
-        printf("i2cread ret: %d\r\n", ret);
-    }
     return ret > 0;
 }
 
@@ -401,9 +384,5 @@ bool I2CMasterInterface::writeTo(uint8_t address, uint8_t *data, uint8_t length,
         i2c_write_timeout_per_char_us(i2c, address, data, length, !sendStop, 1000);
     if (ret < 0)
         ret = i2c_write_timeout_per_char_us(i2c, address, data, length, !sendStop, 1000);
-    if (ret < 0)
-    {
-        printf("i2cread ret: %d\r\n", ret);
-    }
     return ret > 0;
 }

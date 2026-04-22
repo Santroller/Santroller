@@ -57,7 +57,6 @@ message WiiDeviceHotplugEvent {
 message PS2DeviceHotplugEvent {
     required int32 id = 1;
     required int32 type = 2;
-    required int32 port = 3;
 }
 
 message DebugEvent {

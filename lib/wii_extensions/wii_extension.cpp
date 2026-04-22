@@ -10,6 +10,29 @@
 #include "hardware/irq.h"
 #include "hardware/clocks.h"
 
+static WiiExtension *wiiinstances[2];
+void process_data_0(bool running, bool timeout, bool abort_detected, bool stop_detected)
+{
+    if (wiiinstances[0])
+    {
+        wiiinstances[0]->processData(running, timeout, abort_detected, stop_detected);
+    }
+}
+void process_data_1(bool running, bool timeout, bool abort_detected, bool stop_detected)
+{
+    if (wiiinstances[1])
+    {
+        wiiinstances[1]->processData(running, timeout, abort_detected, stop_detected);
+    }
+}
+
+static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
+{
+    WiiExtension *inst = (WiiExtension *)user_data;
+    inst->processData(false, false, false, false);
+    return 0;
+}
+
 bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
 {
     uint8_t orCheck = 0x00;  // Check if data is zeroed (bad connection)
@@ -28,40 +51,16 @@ bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
 
     return true;
 }
-static WiiExtension *wiiinstances[2];
-void process_data_0(bool running, bool timeout, bool abort_detected, bool stop_detected)
-{
-    if (wiiinstances[0])
-    {
-        wiiinstances[0]->processData(running, timeout, abort_detected, stop_detected);
-    }
-}
-void process_data_1(bool running, bool timeout, bool abort_detected, bool stop_detected)
-{
-    if (wiiinstances[1])
-    {
-        wiiinstances[1]->processData(running, timeout, abort_detected, stop_detected);
-    }
-}
-
-int64_t restart_handler(__unused alarm_id_t id, void *user_data)
-{
-    WiiExtension *inst = (WiiExtension *)user_data;
-    inst->processData(false, false, false, false);
-    return 0;
-}
-
+// state machine to handle polling wii extensions
 void WiiExtension::processData(bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     if (timeout || abort_detected)
     {
-        printf("connection lost %d %d %d!\r\n", status, timeout, abort_detected);
         status = WII_INIT_FINISH_ENC;
         mType = WiiExtType::WiiNoExtension;
         restart_alarm_id = add_alarm_in_ms(500, restart_handler, this, true);
         return;
     }
-    // printf("status: %d %d %d %d\r\n", status, abort_detected, stop_detected, timeout);
     if (stop_detected)
     {
         switch (status)
@@ -88,6 +87,7 @@ void WiiExtension::processData(bool running, bool timeout, bool abort_detected, 
                 wiiPointer = 0;
                 wiiBytes = 6;
                 hiRes = false;
+                hasTapBar = false;
                 s_box = 0;
                 if (mType == WiiUbisoftDrawsomeTablet)
                 {
@@ -219,7 +219,7 @@ void WiiExtension::processData(bool running, bool timeout, bool abort_detected, 
                     if (velocity || note)
                     {
                         // Sadly the wii drums don't include the status byte, so we have to make one up.
-                        uint8_t packet[] = {0, MIDI_CIN_NOTE_ON << 4 | channel, note, velocity};
+                        uint8_t packet[] = {0, (uint8_t)(MIDI_CIN_NOTE_ON << 4 | channel), note, velocity};
                         m_device->processMidiData(packet, sizeof(packet));
                     }
                 }
@@ -354,13 +354,11 @@ void WiiExtension::processData(bool running, bool timeout, bool abort_detected, 
 
 WiiExtension::WiiExtension(MidiDevice *midiDevice, uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock) : mInterface(block, sda, scl, clock, block == 0 ? process_data_0 : process_data_1), mFound(false), m_block(block), m_device(midiDevice)
 {
-    printf("wiiext init\r\n");
     wiiinstances[m_block] = this;
     processData(false, false, false, false);
 }
 WiiExtension::~WiiExtension()
 {
-    printf("wiiext deinit\r\n");
     wiiinstances[m_block] = nullptr;
 }
 

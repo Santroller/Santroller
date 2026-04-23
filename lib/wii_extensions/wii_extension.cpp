@@ -56,13 +56,20 @@ void WiiExtension::processData(bool running, bool timeout, bool abort_detected, 
 {
     if (timeout || abort_detected)
     {
-        status = WII_INIT_FINISH_ENC;
-        mType = WiiExtType::WiiNoExtension;
-        restart_alarm_id = add_alarm_in_ms(500, restart_handler, this, true);
-        return;
+        failCount++;
+        // during high load, there might be the occassional drop, so allow a few failures
+        if (failCount > 10 || status == WII_INIT_FINISH_ENC)
+        {
+            printf("lost wii ext: %d %d\r\n", timeout, abort_detected);
+            status = WII_INIT_FINISH_ENC;
+            mType = WiiExtType::WiiNoExtension;
+            restart_alarm_id = add_alarm_in_ms(500, restart_handler, this, true);
+            return;
+        }
     }
     if (stop_detected)
     {
+        failCount = 0;
         switch (status)
         {
         case WII_INIT_FINISH_ENC:

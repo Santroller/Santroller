@@ -73,6 +73,7 @@ private:
     uint8_t m_block = 0;
     MidiDevice *m_device;
     alarm_id_t restart_alarm_id;
+    int failCount = 0;
 
     bool started = false;
 

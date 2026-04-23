@@ -508,11 +508,6 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         if (list->validate(true, false, false))
         {
             int assignedDevices = list->assignedDevices();
-            // If a profile isn't explicitly assigned, then default to just usb
-            if (assignedDevices == 0)
-            {
-                assignedDevices = AssignUsb;
-            }
             printf("profile assigned! %d\r\n", profile->profile_id);
             if ((assignedDevices & ProfileAssignMask_AssignBluetoothGamepad) && !(seenMasks & ProfileAssignMask_AssignBluetoothGamepad))
             {

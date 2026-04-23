@@ -187,10 +187,6 @@ void HIDConfigDevice::process()
         {
           device->update(profile_changed, true);
         }
-        for (const auto &mapping : selected->second->triggers)
-        {
-          mapping->validate(false, true, true);
-        }
       }
       for (const auto &mapping : selected->second->mappings)
       {
@@ -198,7 +194,7 @@ void HIDConfigDevice::process()
       }
       for (const auto &mapping : selected->second->triggers)
       {
-        mapping->validate(false, false, true);
+        mapping->validate(false, profile_changed, true);
       }
       for (const auto &led : selected->second->leds)
       {

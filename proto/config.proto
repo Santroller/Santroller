@@ -90,10 +90,6 @@ message PSXAssignment {
 
 }
 
-message BluetoothAssignment {
-  required BluetoothMode mode = 1;
-}
-
 message ProfileAssignmentInfo {
   oneof assignment {
     UsbDeviceAssignment consoleType = 4;
@@ -106,7 +102,7 @@ message ProfileAssignmentInfo {
     InputActivationTrigger inputAnyTime = 11; // Input at any time
     uint32 copilotProfile = 12; // copilot another profile
     uint32 midiChannel = 13;
-    BluetoothAssignment bluetooth = 14;
+    BluetoothMode bluetooth = 14;
     WiimoteAssignment wiiEmulation = 16;
     PSXAssignment ps2Emulation = 17;
   }

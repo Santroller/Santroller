@@ -90,11 +90,6 @@ void WiiExtension::processData(bool running, bool timeout, bool abort_detected, 
             {
                 mType = static_cast<WiiExtType>(bufferRx[0] << 8 | bufferRx[5]);
                 printf("found wii ext: %d\r\n", mType);
-                for (int i = 0; i < WII_ID_LEN; i++)
-                {
-                    printf("%02x, ", bufferRx[i]);
-                }
-                printf("\r\n");
                 wiiPointer = 0;
                 wiiBytes = 6;
                 hiRes = false;

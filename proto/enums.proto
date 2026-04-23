@@ -235,3 +235,8 @@ enum ProfileAssignMask {
     AssignBluetoothWiimote=8; /* Profile is assignable to Wiimote emulation */
     AssignWiimoteExtension=16; /* Profile is assignable to Wiimote extension emulation */
 }
+
+enum BluetoothMode {
+    BTStandard=1;
+    BTWiimote=2;
+}

@@ -76,22 +76,39 @@ message SpecificUsbDevice {
   required uint32 pid = 2;
 }
 
+message UsbDeviceAssignment {
+  optional ConsoleType consoleType = 1;
+}
+
+message CatchallAssignment {
+
+}
+message WiimoteAssignment {
+
+}
+message PSXAssignment {
+
+}
+
+message BluetoothAssignment {
+  required BluetoothMode mode = 1;
+}
+
 message ProfileAssignmentInfo {
   oneof assignment {
-    ConsoleType consoleType = 4;
+    UsbDeviceAssignment consoleType = 4;
     WiiExtType wiiExt = 5;
     PS2ControllerType ps2Cnt = 6;
     SubType usbType = 7;
     SpecificUsbDevice usbDevice = 8;
-    bool catchall = 9;
+    CatchallAssignment catchall = 9;
     InputActivationTrigger input = 10; // Input at startup
     InputActivationTrigger inputAnyTime = 11; // Input at any time
     uint32 copilotProfile = 12; // copilot another profile
     uint32 midiChannel = 13;
-    bool bluetoothStandard = 14;
-    bool bluetoothWiimote = 15;
-    WiiExtType wiiEmulation = 16;
-    PS2ControllerType ps2Emulation = 17;
+    BluetoothAssignment bluetooth = 14;
+    WiimoteAssignment wiiEmulation = 16;
+    PSXAssignment ps2Emulation = 17;
   }
 }
 

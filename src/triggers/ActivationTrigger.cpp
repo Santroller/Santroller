@@ -96,34 +96,37 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
     return val;
 }
 
-ConsoleTypeActivationTrigger::ConsoleTypeActivationTrigger(proto_ConsoleType type, uint32_t profile_id) : ActivationTrigger(profile_id), m_type(type)
+UsbModeActivationTrigger::UsbModeActivationTrigger(proto_UsbDeviceAssignment config, uint32_t profile_id) : ActivationTrigger(profile_id), m_config(config)
 {
 }
 
-bool ConsoleTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
+    if (!m_config.has_consoleType) {
+        return true;
+    }
     auto profile = all_profiles[m_profile_id];
     switch (profile->mode)
     {
     case ModeGuitarHeroArcade:
     case ModeHid:
-        return m_type == ConsolePC;
+        return m_config.consoleType == ConsolePC;
     case ModeOgXbox:
-        return m_type == ConsoleOgXbox;
+        return m_config.consoleType == ConsoleOgXbox;
     case ModeXbox360:
-        return m_type == ConsoleXbox360;
+        return m_config.consoleType == ConsoleXbox360;
     case ModeXboxOne:
-        return m_type == ConsoleXboxOne;
+        return m_config.consoleType == ConsoleXboxOne;
     case ModePs3:
-        return m_type == ConsolePS3;
+        return m_config.consoleType == ConsolePS3;
     case ModePs4:
-        return m_type == ConsolePS4_PS5;
+        return m_config.consoleType == ConsolePS4_PS5;
     case ModePs5:
-        return m_type == ConsolePS4_PS5;
+        return m_config.consoleType == ConsolePS4_PS5;
     case ModeWiiRb:
-        return m_type == ConsoleWii_WiiU;
+        return m_config.consoleType == ConsoleWii_WiiU;
     case ModeSwitch:
-        return m_type == ConsoleSwitch_Switch2;
+        return m_config.consoleType == ConsoleSwitch_Switch2;
     }
     return false;
 }
@@ -273,7 +276,7 @@ bool SpecificBluetoothDeviceActivationTrigger::validate(bool claim_device, bool 
     return false;
 }
 
-CatchAllActivationTrigger::CatchAllActivationTrigger(uint32_t profile_id) : ActivationTrigger(profile_id)
+CatchAllActivationTrigger::CatchAllActivationTrigger(proto_CatchallAssignment config, uint32_t profile_id) : ActivationTrigger(profile_id), m_config(config)
 {
 }
 
@@ -306,23 +309,15 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
     }
     return false;
 }
-BTGamepadActivationTrigger::BTGamepadActivationTrigger(uint32_t profile_id) : ActivationTrigger(profile_id)
+BluetoothModeActivationTrigger::BluetoothModeActivationTrigger(proto_BluetoothAssignment config, uint32_t profile_id) : ActivationTrigger(profile_id), m_config(config)
 {
 }
 
-bool BTGamepadActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+bool BluetoothModeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
     return true;
 }
-BTWiimoteActivationTrigger::BTWiimoteActivationTrigger(uint32_t profile_id) : ActivationTrigger(profile_id)
-{
-}
-
-bool BTWiimoteActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
-{
-    return true;
-}
-WiiExtensionEmulationActivationTrigger::WiiExtensionEmulationActivationTrigger(uint32_t profile_id) : ActivationTrigger(profile_id)
+WiiExtensionEmulationActivationTrigger::WiiExtensionEmulationActivationTrigger(proto_WiimoteAssignment config, uint32_t profile_id) : ActivationTrigger(profile_id), m_config(config)
 {
 }
 
@@ -330,7 +325,7 @@ bool WiiExtensionEmulationActivationTrigger::validate(bool claim_device, bool fu
 {
     return true;
 }
-PS2ControllerEmulationActivationTrigger::PS2ControllerEmulationActivationTrigger(uint32_t profile_id) : ActivationTrigger(profile_id)
+PS2ControllerEmulationActivationTrigger::PS2ControllerEmulationActivationTrigger(proto_PSXAssignment config, uint32_t profile_id) : ActivationTrigger(profile_id), m_config(config)
 {
 }
 

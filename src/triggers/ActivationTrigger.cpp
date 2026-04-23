@@ -20,7 +20,10 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
     {
         if (!trigger->validate(false, full_poll, send_events))
         {
-            return false;
+            if (claim_devices)
+            {
+                return false;
+            }
         }
     }
     if (!claim_devices)

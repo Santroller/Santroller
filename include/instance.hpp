@@ -17,6 +17,7 @@ public:
     uint32_t profile_id;
     std::vector<std::unique_ptr<ActivationTrigger>> triggers;
     bool validate(bool claim_devices, bool full_poll, bool send_events);
+    int assignedDevices();
 private:
     bool m_claimed = false;
 };
@@ -31,7 +32,6 @@ public:
     bool invert_y_axis_hid;
     bool supports_ps4;
     ConsoleMode mode;
-    int assignedDevices;
     uint32_t profile_id;
     std::vector<std::unique_ptr<Mapping>> mappings;
     std::vector<std::unique_ptr<ActivationTriggerList>> triggers;

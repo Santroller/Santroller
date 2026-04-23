@@ -16,7 +16,6 @@ message Profile {
   optional bool xinputOnWindows = 10;
   optional bool invertYAxisHid = 11;
   optional bool ps4OrPs5Mode = 12;
-  optional uint32 assignedDevice = 13;
 }
 message InputLedMapping {
   required Input input = 1;
@@ -89,6 +88,10 @@ message ProfileAssignmentInfo {
     InputActivationTrigger inputAnyTime = 11; // Input at any time
     uint32 copilotProfile = 12; // copilot another profile
     uint32 midiChannel = 13;
+    bool bluetoothStandard = 14;
+    bool bluetoothWiimote = 15;
+    WiiExtType wiiEmulation = 16;
+    PS2ControllerType ps2Emulation = 17;
   }
 }
 

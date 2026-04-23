@@ -257,11 +257,16 @@ void PSXController::processData(bool ack, bool timeout)
             if (valid)
             {
                 memcpy(lastInputs, ps2Data, BUFFER_SIZE);
+                missing = 0;
             }
             else
             {
-                status = DISCONNECTED;
-                type = PS2ControllerTypeUnknown;
+                // allow a few failures before reinit
+                missing++;
+                if (missing > 10) {
+                    status = DISCONNECTED;
+                    type = PS2ControllerTypeUnknown;
+                }
             }
             break;
         }

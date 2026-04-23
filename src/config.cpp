@@ -395,6 +395,30 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
     case proto_ProfileAssignmentInfo_midiChannel_tag:
         list->triggers.emplace_back(new MidiChannelActivationTrigger(assignment.assignment.midiChannel, profile->profile_id));
         break;
+    case proto_ProfileAssignmentInfo_ps2Emulation_tag:
+        if (assignment.assignment.ps2Emulation)
+        {
+            list->triggers.emplace_back(new PS2ControllerEmulationActivationTrigger(profile->profile_id));
+        }
+        break;
+    case proto_ProfileAssignmentInfo_wiiEmulation_tag:
+        if (assignment.assignment.wiiEmulation)
+        {
+            list->triggers.emplace_back(new WiiExtensionEmulationActivationTrigger(profile->profile_id));
+        }
+        break;
+    case proto_ProfileAssignmentInfo_bluetoothStandard_tag:
+        if (assignment.assignment.bluetoothStandard)
+        {
+            list->triggers.emplace_back(new BTGamepadActivationTrigger(profile->profile_id));
+        }
+        break;
+    case proto_ProfileAssignmentInfo_bluetoothWiimote_tag:
+        if (assignment.assignment.bluetoothWiimote)
+        {
+            list->triggers.emplace_back(new BTWiimoteActivationTrigger(profile->profile_id));
+        }
+        break;
     case proto_ProfileAssignmentInfo_copilotProfile_tag:
         // TODO: how do we handle this
         break;
@@ -495,16 +519,20 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->invert_y_axis_hid = proto_profile.has_invertYAxisHid && proto_profile.invertYAxisHid;
     profile->supports_ps4 = proto_profile.has_ps4OrPs5Mode && proto_profile.ps4OrPs5Mode;
     printf("profile loaded: %d %d %d\r\n", profile->profile_id, profile->xinput_on_windows, profile->invert_y_axis_hid);
-    // TODO: handle this once we support emulating non usb devices
-    profile->assignedDevices = proto_profile.assignedDevice;
     std::shared_ptr<UsbDevice> usbInstance;
     std::shared_ptr<BTGamepadDevice> btGamepadInstance;
     for (auto &list : profile->triggers)
     {
         if (list->validate(true, false, false))
         {
+            int assignedDevices = list->assignedDevices();
+            // If a profile isn't explicitly assigned, then default to just usb
+            if (assignedDevices == 0)
+            {
+                assignedDevices = AssignUsb;
+            }
             printf("profile assigned! %d\r\n", profile->profile_id);
-            if ((profile->assignedDevices & ProfileAssignMask_AssignBluetoothGamepad) && !(seenMasks & ProfileAssignMask_AssignBluetoothGamepad))
+            if ((assignedDevices & ProfileAssignMask_AssignBluetoothGamepad) && !(seenMasks & ProfileAssignMask_AssignBluetoothGamepad))
             {
                 btGamepadInstance = std::make_shared<BTGamepadDevice>();
                 instances.push_back(btGamepadInstance);
@@ -519,7 +547,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                 seenMasks |= ProfileAssignMask_AssignBluetoothGamepad;
                 printf("assigned bluetooth!\r\n");
             }
-            if (!usbInstance && (profile->assignedDevices & ProfileAssignMask_AssignUsb))
+            if (!usbInstance && (assignedDevices & ProfileAssignMask_AssignUsb))
             {
                 switch (mode)
                 {

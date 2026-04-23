@@ -36,7 +36,14 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
     m_claimed = true;
     return true;
 }
-
+int ActivationTriggerList::assignedDevices() {
+    int assigned = 0;
+    for (auto &trigger : triggers)
+    {
+        assigned |= trigger->assignedDevices();
+    }
+    return assigned;
+}
 InputActivationTrigger::InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id) : ActivationTrigger(profile_id), m_activation_trigger(activation_trigger), m_input(std::move(input)), m_any_time(any_time), m_id(id)
 {
 }
@@ -96,14 +103,6 @@ ConsoleTypeActivationTrigger::ConsoleTypeActivationTrigger(proto_ConsoleType typ
 bool ConsoleTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
     auto profile = all_profiles[m_profile_id];
-    if (profile->assignedDevices & ProfileAssignMask_AssignPsx)
-    {
-        return m_type == ConsolePS2;
-    }
-    if (profile->assignedDevices & ProfileAssignMask_AssignWiimoteExtension)
-    {
-        return m_type == ConsoleWii_WiiU;
-    }
     switch (profile->mode)
     {
     case ModeGuitarHeroArcade:
@@ -306,4 +305,36 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
         it++;
     }
     return false;
+}
+BTGamepadActivationTrigger::BTGamepadActivationTrigger(uint32_t profile_id) : ActivationTrigger(profile_id)
+{
+}
+
+bool BTGamepadActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+{
+    return true;
+}
+BTWiimoteActivationTrigger::BTWiimoteActivationTrigger(uint32_t profile_id) : ActivationTrigger(profile_id)
+{
+}
+
+bool BTWiimoteActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+{
+    return true;
+}
+WiiExtensionEmulationActivationTrigger::WiiExtensionEmulationActivationTrigger(uint32_t profile_id) : ActivationTrigger(profile_id)
+{
+}
+
+bool WiiExtensionEmulationActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+{
+    return true;
+}
+PS2ControllerEmulationActivationTrigger::PS2ControllerEmulationActivationTrigger(uint32_t profile_id) : ActivationTrigger(profile_id)
+{
+}
+
+bool PS2ControllerEmulationActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+{
+    return true;
 }

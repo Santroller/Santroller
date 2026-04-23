@@ -128,36 +128,36 @@ void GuitarHeroDrumsAxisMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.ghDrumAxis)
     {
     case GuitarHeroDrumsRedPad:
-        report->redVelocity = m_calibratedValue - 32767;
+        report->redVelocity = m_calibratedValue - 32768;
         report->b = true;
         break;
     case GuitarHeroDrumsYellowPad:
-        report->yellowVelocity = m_calibratedValue - 32767;
+        report->yellowVelocity = m_calibratedValue - 32768;
         report->y = true;
         break;
     case GuitarHeroDrumsBluePad:
-        report->blueVelocity = m_calibratedValue - 32767;
+        report->blueVelocity = m_calibratedValue - 32768;
         report->x = true;
         break;
     case GuitarHeroDrumsOrangePad:
-        report->orangeVelocity = m_calibratedValue - 32767;
+        report->orangeVelocity = m_calibratedValue - 32768;
         report->rightShoulder = true;
         break;
     case GuitarHeroDrumsGreenPad:
-        report->greenVelocity = m_calibratedValue - 32767;
+        report->greenVelocity = m_calibratedValue - 32768;
         report->a = true;
         break;
     case GuitarHeroDrumsKickPedal:
-        report->kickVelocity = m_calibratedValue - 32767;
+        report->kickVelocity = m_calibratedValue - 32768;
         report->leftShoulder = true;
         break;
     case GuitarHeroDrumsLeftStickX:
-        report->leftStickX = m_calibratedValue - 32767;
+        report->leftStickX = m_calibratedValue - 32768;
         break;
     case GuitarHeroDrumsLeftStickY:
         if (!m_centered)
         {
-            report->leftStickY = m_calibratedValue - 32767;
+            report->leftStickY = m_calibratedValue - 32768;
         }
         break;
     }
@@ -172,36 +172,36 @@ void GuitarHeroDrumsAxisMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.ghDrumAxis)
     {
     case GuitarHeroDrumsRedPad:
-        report->redVelocity = m_calibratedValue - 32767;
+        report->redVelocity = m_calibratedValue - 32768;
         report->b = true;
         break;
     case GuitarHeroDrumsYellowPad:
-        report->yellowVelocity = m_calibratedValue - 32767;
+        report->yellowVelocity = m_calibratedValue - 32768;
         report->y = true;
         break;
     case GuitarHeroDrumsBluePad:
-        report->blueVelocity = m_calibratedValue - 32767;
+        report->blueVelocity = m_calibratedValue - 32768;
         report->x = true;
         break;
     case GuitarHeroDrumsOrangePad:
-        report->orangeVelocity = m_calibratedValue - 32767;
+        report->orangeVelocity = m_calibratedValue - 32768;
         report->rightShoulder = true;
         break;
     case GuitarHeroDrumsGreenPad:
-        report->greenVelocity = m_calibratedValue - 32767;
+        report->greenVelocity = m_calibratedValue - 32768;
         report->a = true;
         break;
     case GuitarHeroDrumsKickPedal:
-        report->kickVelocity = m_calibratedValue - 32767;
+        report->kickVelocity = m_calibratedValue - 32768;
         report->leftShoulder = true;
         break;
     case GuitarHeroDrumsLeftStickX:
-        report->leftStickX = m_calibratedValue - 32767;
+        report->leftStickX = m_calibratedValue - 32768;
         break;
     case GuitarHeroDrumsLeftStickY:
         if (!m_centered)
         {
-            report->leftStickY = m_calibratedValue - 32767;
+            report->leftStickY = m_calibratedValue - 32768;
         }
         break;
     }

@@ -21,7 +21,7 @@ void GuitarHeroArcadeAxisMapping::update_hid(uint8_t *buf)
     switch (m_mapping.mapping.ghaAxis)
     {
     case GuitarHeroArcadeTilt:
-        report->tilt = m_calibratedValue - 32767;
+        report->tilt = m_calibratedValue - 32768;
         break;
     }
 }

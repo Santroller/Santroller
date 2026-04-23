@@ -107,10 +107,10 @@ void ProGuitarAxisMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.proAxis)
     {
     case ProGuitarLeftStickX:
-        report->leftStickX = m_calibratedValue - 32767;
+        report->leftStickX = m_calibratedValue - 32768;
         break;
     case ProGuitarLeftStickY:
-        report->leftStickY = m_calibratedValue - 32767;
+        report->leftStickY = m_calibratedValue - 32768;
         break;
     case ProGuitarLowEFret:
         report->lowEFret = m_calibratedValue >> 8;
@@ -165,10 +165,10 @@ void ProGuitarAxisMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.proAxis)
     {
     case ProGuitarLeftStickX:
-        report->leftStickX = m_calibratedValue - 32767;
+        report->leftStickX = m_calibratedValue - 32768;
         break;
     case ProGuitarLeftStickY:
-        report->leftStickY = m_calibratedValue - 32767;
+        report->leftStickY = m_calibratedValue - 32768;
         break;
     case ProGuitarLowEFret:
         report->lowEFret = m_calibratedValue >> 8;

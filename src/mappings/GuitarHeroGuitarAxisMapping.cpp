@@ -108,7 +108,7 @@ void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
         return;
     }
     // tilt is flipped
-    int tilt = m_calibratedValue - 32767;
+    int tilt = m_calibratedValue - 32768;
     // tilt centers at 512 but isnt actually full range
     tilt = 512 - (tilt >> 8);
     PS3GuitarHeroGuitar_Data_t *report = (PS3GuitarHeroGuitar_Data_t *)buf;
@@ -191,19 +191,16 @@ void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
     {
     case GuitarHeroGuitarLeftStickX:
         // shove stick on the slider, then it can be used in menus
-        if (!m_centered)
-        {
-            report->slider = m_calibratedValue - 32767;
-        }
+        report->slider = m_calibratedValue - 32768;
         break;
     case GuitarHeroGuitarLeftStickY:
-        report->leftStickY = m_calibratedValue - 32767;
+        report->leftStickY = m_calibratedValue - 32768;
         break;
     case GuitarHeroGuitarWhammy:
-        report->whammy = m_calibratedValue - 32767;
+        report->whammy = m_calibratedValue - 32768;
         break;
     case GuitarHeroGuitarTilt:
-        report->tilt = m_calibratedValue - 32767;
+        report->tilt = m_calibratedValue - 32768;
         break;
     default:
         break;
@@ -222,17 +219,17 @@ void GuitarHeroGuitarAxisMapping::update_ogxbox(uint8_t *buf)
         // shove stick on the slider, then it can be used in menus
         if (!m_centered)
         {
-            report->slider = m_calibratedValue - 32767;
+            report->slider = m_calibratedValue - 32768;
         }
         break;
     case GuitarHeroGuitarLeftStickY:
-        report->unused = m_calibratedValue - 32767;
+        report->unused = m_calibratedValue - 32768;
         break;
     case GuitarHeroGuitarWhammy:
-        report->whammy = m_calibratedValue - 32767;
+        report->whammy = m_calibratedValue - 32768;
         break;
     case GuitarHeroGuitarTilt:
-        report->tilt = m_calibratedValue - 32767;
+        report->tilt = m_calibratedValue - 32768;
         break;
     }
 }

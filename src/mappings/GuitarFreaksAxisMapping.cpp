@@ -17,9 +17,9 @@ void GuitarFreaksAxisMapping::update_hid(uint8_t *buf)
     // switch (m_mapping.mapping.gfAxis)
     // {
     // case GuitarFreaksLeftStickX:
-    //     report->leftStickX = m_calibratedValue - 32767;
+    //     report->leftStickX = m_calibratedValue - 32768;
     // case GuitarFreaksLeftStickY:
-    //     report->leftStickY = m_calibratedValue - 32767;
+    //     report->leftStickY = m_calibratedValue - 32768;
     //     break;
     // }
 }

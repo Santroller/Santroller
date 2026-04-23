@@ -23,8 +23,9 @@ message LedEvent {
 
 message ActivationTriggerEvent {
     required uint32 id = 1;
-    required uint32 stateRaw = 2;
-    required uint32 state = 3;
+    required uint32 listId = 2;
+    required uint32 stateRaw = 3;
+    required bool state = 4;
 }
 
 message PinDetectionEvent {

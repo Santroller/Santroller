@@ -357,7 +357,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
         {
             return true;
         }
-        list->triggers.emplace_back(new InputActivationTrigger(false, assignment.assignment.input, std::move(input), profile->profile_id, list->triggers.size()));
+        list->triggers.emplace_back(new InputActivationTrigger(false, assignment.assignment.input, std::move(input), profile->profile_id, list->triggers.size(), profile->triggers.size()));
         break;
     }
     case proto_ProfileAssignmentInfo_inputAnyTime_tag:
@@ -368,38 +368,38 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
         {
             return true;
         }
-        list->triggers.emplace_back(new InputActivationTrigger(true, assignment.assignment.inputAnyTime, std::move(input), profile->profile_id, list->triggers.size()));
+        list->triggers.emplace_back(new InputActivationTrigger(true, assignment.assignment.inputAnyTime, std::move(input), profile->profile_id, list->triggers.size(), profile->triggers.size()));
         break;
     }
     case proto_ProfileAssignmentInfo_consoleType_tag:
-        list->triggers.emplace_back(new UsbModeActivationTrigger(assignment.assignment.consoleType, profile->profile_id));
+        list->triggers.emplace_back(new UsbModeActivationTrigger(assignment.assignment.consoleType, profile->profile_id, list->triggers.size(), profile->triggers.size()));
         break;
     case proto_ProfileAssignmentInfo_wiiExt_tag:
-        list->triggers.emplace_back(new WiiExtTypeActivationTrigger(assignment.assignment.wiiExt, profile->profile_id));
+        list->triggers.emplace_back(new WiiExtTypeActivationTrigger(assignment.assignment.wiiExt, profile->profile_id, list->triggers.size(), profile->triggers.size()));
         break;
     case proto_ProfileAssignmentInfo_ps2Cnt_tag:
-        list->triggers.emplace_back(new PS2ControllerTypeActivationTrigger(assignment.assignment.ps2Cnt, profile->profile_id));
+        list->triggers.emplace_back(new PS2ControllerTypeActivationTrigger(assignment.assignment.ps2Cnt, profile->profile_id, list->triggers.size(), profile->triggers.size()));
         break;
     case proto_ProfileAssignmentInfo_usbType_tag:
-        list->triggers.emplace_back(new UsbTypeActivationTrigger(assignment.assignment.usbType, profile->profile_id));
+        list->triggers.emplace_back(new UsbTypeActivationTrigger(assignment.assignment.usbType, profile->profile_id, list->triggers.size(), profile->triggers.size()));
         break;
     case proto_ProfileAssignmentInfo_usbDevice_tag:
-        list->triggers.emplace_back(new SpecificUsbDeviceActivationTrigger(assignment.assignment.usbDevice, profile->profile_id));
+        list->triggers.emplace_back(new SpecificUsbDeviceActivationTrigger(assignment.assignment.usbDevice, profile->profile_id, list->triggers.size(), profile->triggers.size()));
         break;
     case proto_ProfileAssignmentInfo_catchall_tag:
-        list->triggers.emplace_back(new CatchAllActivationTrigger(assignment.assignment.catchall, profile->profile_id));
+        list->triggers.emplace_back(new CatchAllActivationTrigger(assignment.assignment.catchall, profile->profile_id, list->triggers.size(), profile->triggers.size()));
         break;
     case proto_ProfileAssignmentInfo_midiChannel_tag:
-        list->triggers.emplace_back(new MidiChannelActivationTrigger(assignment.assignment.midiChannel, profile->profile_id));
+        list->triggers.emplace_back(new MidiChannelActivationTrigger(assignment.assignment.midiChannel, profile->profile_id, list->triggers.size(), profile->triggers.size()));
         break;
     case proto_ProfileAssignmentInfo_ps2Emulation_tag:
-        list->triggers.emplace_back(new PS2ControllerEmulationActivationTrigger(assignment.assignment.ps2Emulation, profile->profile_id));
+        list->triggers.emplace_back(new PS2ControllerEmulationActivationTrigger(assignment.assignment.ps2Emulation, profile->profile_id, list->triggers.size(), profile->triggers.size()));
         break;
     case proto_ProfileAssignmentInfo_wiiEmulation_tag:
-        list->triggers.emplace_back(new WiiExtensionEmulationActivationTrigger(assignment.assignment.wiiEmulation, profile->profile_id));
+        list->triggers.emplace_back(new WiiExtensionEmulationActivationTrigger(assignment.assignment.wiiEmulation, profile->profile_id, list->triggers.size(), profile->triggers.size()));
         break;
     case proto_ProfileAssignmentInfo_bluetooth_tag:
-        list->triggers.emplace_back(new BluetoothModeActivationTrigger(assignment.assignment.bluetooth, profile->profile_id));
+        list->triggers.emplace_back(new BluetoothModeActivationTrigger(assignment.assignment.bluetooth, profile->profile_id, list->triggers.size(), profile->triggers.size()));
         break;
     case proto_ProfileAssignmentInfo_copilotProfile_tag:
         // TODO: how do we handle this

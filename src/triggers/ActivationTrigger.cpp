@@ -8,10 +8,12 @@
 
 bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool send_events)
 {
-    if (claim_devices && m_claimed) {
+    if (claim_devices && m_claimed)
+    {
         return true;
     }
-    if (triggers.empty()) {
+    if (triggers.empty())
+    {
         return false;
     }
     for (auto &trigger : triggers)
@@ -36,7 +38,8 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
     m_claimed = true;
     return true;
 }
-int ActivationTriggerList::assignedDevices() {
+int ActivationTriggerList::assignedDevices()
+{
     int assigned = 0;
     for (auto &trigger : triggers)
     {
@@ -44,7 +47,7 @@ int ActivationTriggerList::assignedDevices() {
     }
     return assigned;
 }
-InputActivationTrigger::InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id) : ActivationTrigger(profile_id), m_activation_trigger(activation_trigger), m_input(std::move(input)), m_any_time(any_time), m_id(id)
+InputActivationTrigger::InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_activation_trigger(activation_trigger), m_input(std::move(input)), m_any_time(any_time)
 {
 }
 
@@ -74,13 +77,13 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
         if (send_events && (analog_val != m_last_analog_val || full_poll))
         {
             m_last_analog_val = analog_val;
-            proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_last_analog_val, val ? (uint16_t)65535 : (uint16_t)0}}};
+            proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, val}}};
             HIDConfigDevice::send_event(event, false);
         }
     }
     else if (send_events && (val != m_last_val || full_poll))
     {
-        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_last_analog_val, val ? (uint16_t)65535 : (uint16_t)0}}};
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, val}}};
         HIDConfigDevice::send_event(event, false);
     }
     if (!m_initialised)
@@ -90,48 +93,69 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
     }
     if (((m_any_time || mode_recently_changed()) && val != m_last_val) && HIDConfigDevice::tool_closed())
     {
-        // reload();
+        reload();
     }
     m_last_val = val;
     return val;
 }
 
-UsbModeActivationTrigger::UsbModeActivationTrigger(proto_UsbDeviceAssignment config, uint32_t profile_id) : ActivationTrigger(profile_id), m_config(config)
+UsbModeActivationTrigger::UsbModeActivationTrigger(proto_UsbDeviceAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_config(config)
 {
 }
 
 bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    if (!m_config.has_consoleType) {
+    if (!m_config.has_consoleType)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
+        HIDConfigDevice::send_event(event, true);
         return true;
     }
+    bool matched = false;
     auto profile = all_profiles[m_profile_id];
     switch (profile->mode)
     {
     case ModeGuitarHeroArcade:
     case ModeHid:
-        return m_config.consoleType == ConsolePC;
+        matched = m_config.consoleType == ConsolePC;
+        break;
     case ModeOgXbox:
-        return m_config.consoleType == ConsoleOgXbox;
+        matched = m_config.consoleType == ConsoleOgXbox;
+        break;
     case ModeXbox360:
-        return m_config.consoleType == ConsoleXbox360;
+        matched = m_config.consoleType == ConsoleXbox360;
+        break;
     case ModeXboxOne:
-        return m_config.consoleType == ConsoleXboxOne;
+        matched = m_config.consoleType == ConsoleXboxOne;
+        break;
     case ModePs3:
-        return m_config.consoleType == ConsolePS3;
+        matched = m_config.consoleType == ConsolePS3;
+        break;
     case ModePs4:
-        return m_config.consoleType == ConsolePS4_PS5;
+        matched = m_config.consoleType == ConsolePS4_PS5;
+        break;
     case ModePs5:
-        return m_config.consoleType == ConsolePS4_PS5;
+        matched = m_config.consoleType == ConsolePS4_PS5;
+        break;
     case ModeWiiRb:
-        return m_config.consoleType == ConsoleWii_WiiU;
+        matched = m_config.consoleType == ConsoleWii_WiiU;
+        break;
     case ModeSwitch:
-        return m_config.consoleType == ConsoleSwitch_Switch2;
+        matched = m_config.consoleType == ConsoleSwitch_Switch2;
+        break;
+    default:
+        break;
     }
-    return false;
+
+    if (send_events && full_poll)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, matched}}};
+        HIDConfigDevice::send_event(event, true);
+    }
+    return matched;
 }
 
-WiiExtTypeActivationTrigger::WiiExtTypeActivationTrigger(proto_WiiExtType type, uint32_t profile_id) : ActivationTrigger(profile_id), m_type(type)
+WiiExtTypeActivationTrigger::WiiExtTypeActivationTrigger(proto_WiiExtType type, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_type(type)
 {
 }
 
@@ -148,14 +172,20 @@ bool WiiExtTypeActivationTrigger::validate(bool claim_device, bool full_poll, bo
                 assignable_devices.erase(it);
                 all_profiles[m_profile_id]->devices[device->m_id] = device;
             }
+            m_last_val = true;
             return true;
         }
         it++;
     }
+    if (send_events && full_poll)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, m_last_val}}};
+        HIDConfigDevice::send_event(event, true);
+    }
     return false;
 }
 
-PS2ControllerTypeActivationTrigger::PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, uint32_t profile_id) : ActivationTrigger(profile_id), m_type(type)
+PS2ControllerTypeActivationTrigger::PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_type(type)
 {
 }
 
@@ -172,14 +202,20 @@ bool PS2ControllerTypeActivationTrigger::validate(bool claim_device, bool full_p
                 assignable_devices.erase(it);
                 all_profiles[m_profile_id]->devices[device->m_id] = device;
             }
+            m_last_val = true;
             return true;
         }
         it++;
     }
+    if (send_events && full_poll)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, m_last_val}}};
+        HIDConfigDevice::send_event(event, true);
+    }
     return false;
 }
 
-UsbTypeActivationTrigger::UsbTypeActivationTrigger(proto_SubType type, uint32_t profile_id) : ActivationTrigger(profile_id), m_type(type)
+UsbTypeActivationTrigger::UsbTypeActivationTrigger(proto_SubType type, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_type(type)
 {
 }
 
@@ -188,23 +224,29 @@ bool UsbTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
     auto it = assignable_devices.begin();
     while (it != assignable_devices.end())
     {
-        auto& device = *it;
+        auto &device = *it;
         if (device->is_usb_type(m_type))
         {
             if (claim_device)
             {
-                auto& profile = all_profiles[m_profile_id];
+                auto &profile = all_profiles[m_profile_id];
                 profile->devices.insert_or_assign(device->m_id, device);
                 assignable_devices.erase(it);
             }
+            m_last_val = true;
             return true;
         }
         it++;
     }
+    if (send_events && full_poll)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, m_last_val}}};
+        HIDConfigDevice::send_event(event, true);
+    }
     return false;
 }
 
-SpecificUsbDeviceActivationTrigger::SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id) : ActivationTrigger(profile_id), m_device(device)
+SpecificUsbDeviceActivationTrigger::SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_device(device)
 {
 }
 
@@ -221,14 +263,20 @@ bool SpecificUsbDeviceActivationTrigger::validate(bool claim_device, bool full_p
                 assignable_devices.erase(it);
                 all_profiles[m_profile_id]->devices[device->m_id] = device;
             }
+            m_last_val = true;
             return true;
         }
         it++;
     }
+    if (send_events && full_poll)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, m_last_val}}};
+        HIDConfigDevice::send_event(event, true);
+    }
     return false;
 }
 
-BluetoothTypeActivationTrigger::BluetoothTypeActivationTrigger(proto_SubType type, uint32_t profile_id) : ActivationTrigger(profile_id), m_type(type)
+BluetoothTypeActivationTrigger::BluetoothTypeActivationTrigger(proto_SubType type, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_type(type)
 {
 }
 
@@ -245,14 +293,20 @@ bool BluetoothTypeActivationTrigger::validate(bool claim_device, bool full_poll,
                 assignable_devices.erase(it);
                 all_profiles[m_profile_id]->devices[device->m_id] = device;
             }
+            m_last_val = true;
             return true;
         }
         it++;
     }
+    if (send_events && full_poll)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, m_last_val}}};
+        HIDConfigDevice::send_event(event, true);
+    }
     return false;
 }
 
-SpecificBluetoothDeviceActivationTrigger::SpecificBluetoothDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id) : ActivationTrigger(profile_id), m_device(device)
+SpecificBluetoothDeviceActivationTrigger::SpecificBluetoothDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_device(device)
 {
 }
 
@@ -269,23 +323,20 @@ bool SpecificBluetoothDeviceActivationTrigger::validate(bool claim_device, bool 
                 assignable_devices.erase(it);
                 all_profiles[m_profile_id]->devices[device->m_id] = device;
             }
+            m_last_val = true;
             return true;
         }
         it++;
     }
+    if (send_events && full_poll)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, m_last_val}}};
+        HIDConfigDevice::send_event(event, true);
+    }
     return false;
 }
 
-CatchAllActivationTrigger::CatchAllActivationTrigger(proto_CatchallAssignment config, uint32_t profile_id) : ActivationTrigger(profile_id), m_config(config)
-{
-}
-
-bool CatchAllActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
-{
-    return true;
-}
-
-MidiChannelActivationTrigger::MidiChannelActivationTrigger(uint32_t channel, uint32_t profile_id) : ActivationTrigger(profile_id), m_channel(channel)
+MidiChannelActivationTrigger::MidiChannelActivationTrigger(uint32_t channel, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_channel(channel)
 {
 }
 
@@ -295,7 +346,7 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
     while (it != assignable_devices.end())
     {
         auto device = *it;
-        if (device->has_midi_channel(m_channel-1))
+        if (device->has_midi_channel(m_channel - 1))
         {
             if (claim_device)
             {
@@ -303,33 +354,68 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
                 printf("Claimed device: %d %p %p\r\n", m_profile_id, all_profiles[m_profile_id], device);
                 all_profiles[m_profile_id]->midiDevices[device->m_id] = device;
             }
+            m_last_val = true;
             return true;
         }
         it++;
     }
+    if (send_events && full_poll)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, m_last_val}}};
+        HIDConfigDevice::send_event(event, true);
+    }
     return false;
 }
-BluetoothModeActivationTrigger::BluetoothModeActivationTrigger(proto_BluetoothMode mode, uint32_t profile_id) : ActivationTrigger(profile_id), m_mode(mode)
+
+CatchAllActivationTrigger::CatchAllActivationTrigger(proto_CatchallAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_config(config)
+{
+}
+
+bool CatchAllActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+{
+    if (send_events && full_poll)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
+        HIDConfigDevice::send_event(event, true);
+    }
+    return true;
+}
+BluetoothModeActivationTrigger::BluetoothModeActivationTrigger(proto_BluetoothMode mode, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_mode(mode)
 {
 }
 
 bool BluetoothModeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
+    if (send_events && full_poll)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
+        HIDConfigDevice::send_event(event, true);
+    }
     return true;
 }
-WiiExtensionEmulationActivationTrigger::WiiExtensionEmulationActivationTrigger(proto_WiimoteAssignment config, uint32_t profile_id) : ActivationTrigger(profile_id), m_config(config)
+WiiExtensionEmulationActivationTrigger::WiiExtensionEmulationActivationTrigger(proto_WiimoteAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_config(config)
 {
 }
 
 bool WiiExtensionEmulationActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
+    if (send_events && full_poll)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
+        HIDConfigDevice::send_event(event, true);
+    }
     return true;
 }
-PS2ControllerEmulationActivationTrigger::PS2ControllerEmulationActivationTrigger(proto_PSXAssignment config, uint32_t profile_id) : ActivationTrigger(profile_id), m_config(config)
+PS2ControllerEmulationActivationTrigger::PS2ControllerEmulationActivationTrigger(proto_PSXAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_config(config)
 {
 }
 
 bool PS2ControllerEmulationActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
+    if (send_events && full_poll)
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
+        HIDConfigDevice::send_event(event, true);
+    }
     return true;
 }

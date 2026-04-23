@@ -772,7 +772,7 @@ public:
 class ActivationTrigger
 {
 public:
-    ActivationTrigger(uint32_t profile_id) : m_profile_id(profile_id) {}
+    ActivationTrigger(uint32_t profile_id, uint32_t id, uint32_t list_id) : m_profile_id(profile_id), m_id(id), m_list_id(list_id) {}
     ~ActivationTrigger() {}
     virtual bool validate(bool claim_device, bool full_poll, bool send_events) = 0;
     virtual int assignedDevices() = 0;
@@ -782,11 +782,13 @@ protected:
     bool m_initialised = false;
     bool m_last_val = false;
     uint16_t m_last_analog_val = 0;
+    uint16_t m_id;
+    uint16_t m_list_id;
 };
 class InputActivationTrigger : public ActivationTrigger
 {
 public:
-    InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id);
+    InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id, uint32_t list_id);
     ~InputActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -795,12 +797,11 @@ protected:
     proto_InputActivationTrigger m_activation_trigger;
     std::unique_ptr<Input> m_input;
     bool m_any_time;
-    uint16_t m_id;
 };
 class WiiExtTypeActivationTrigger : public ActivationTrigger
 {
 public:
-    WiiExtTypeActivationTrigger(proto_WiiExtType type, uint32_t profile_id);
+    WiiExtTypeActivationTrigger(proto_WiiExtType type, uint32_t profile_id, uint32_t id, uint32_t list_id);
     ~WiiExtTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -811,7 +812,7 @@ protected:
 class PS2ControllerTypeActivationTrigger : public ActivationTrigger
 {
 public:
-    PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, uint32_t profile_id);
+    PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, uint32_t profile_id, uint32_t id, uint32_t list_id);
     ~PS2ControllerTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -822,7 +823,7 @@ protected:
 class UsbTypeActivationTrigger : public ActivationTrigger
 {
 public:
-    UsbTypeActivationTrigger(proto_SubType type, uint32_t profile_id);
+    UsbTypeActivationTrigger(proto_SubType type, uint32_t profile_id, uint32_t id, uint32_t list_id);
     ~UsbTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -833,7 +834,7 @@ protected:
 class SpecificUsbDeviceActivationTrigger : public ActivationTrigger
 {
 public:
-    SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id);
+    SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id, uint32_t id, uint32_t list_id);
     ~SpecificUsbDeviceActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -844,7 +845,7 @@ protected:
 class BluetoothTypeActivationTrigger : public ActivationTrigger
 {
 public:
-    BluetoothTypeActivationTrigger(proto_SubType type, uint32_t profile_id);
+    BluetoothTypeActivationTrigger(proto_SubType type, uint32_t profile_id, uint32_t id, uint32_t list_id);
     ~BluetoothTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -855,7 +856,7 @@ protected:
 class SpecificBluetoothDeviceActivationTrigger : public ActivationTrigger
 {
 public:
-    SpecificBluetoothDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id);
+    SpecificBluetoothDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id, uint32_t id, uint32_t list_id);
     ~SpecificBluetoothDeviceActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -866,7 +867,7 @@ protected:
 class CatchAllActivationTrigger : public ActivationTrigger
 {
 public:
-    CatchAllActivationTrigger(proto_CatchallAssignment config, uint32_t profile_id);
+    CatchAllActivationTrigger(proto_CatchallAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id);
     ~CatchAllActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0xFF; }
@@ -876,7 +877,7 @@ private:
 class MidiChannelActivationTrigger : public ActivationTrigger
 {
 public:
-    MidiChannelActivationTrigger(uint32_t channel, uint32_t profile_id);
+    MidiChannelActivationTrigger(uint32_t channel, uint32_t profile_id, uint32_t id, uint32_t list_id);
     ~MidiChannelActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -887,7 +888,7 @@ protected:
 class UsbModeActivationTrigger : public ActivationTrigger
 {
 public:
-    UsbModeActivationTrigger(proto_UsbDeviceAssignment config, uint32_t profile_id);
+    UsbModeActivationTrigger(proto_UsbDeviceAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id);
     ~UsbModeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignUsb; }
@@ -898,7 +899,7 @@ protected:
 class BluetoothModeActivationTrigger : public ActivationTrigger
 {
 public:
-    BluetoothModeActivationTrigger(proto_BluetoothMode mode, uint32_t profile_id);
+    BluetoothModeActivationTrigger(proto_BluetoothMode mode, uint32_t profile_id, uint32_t id, uint32_t list_id);
     ~BluetoothModeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignBluetoothGamepad; }
@@ -908,7 +909,7 @@ private:
 class WiiExtensionEmulationActivationTrigger : public ActivationTrigger
 {
 public:
-    WiiExtensionEmulationActivationTrigger(proto_WiimoteAssignment config, uint32_t profile_id);
+    WiiExtensionEmulationActivationTrigger(proto_WiimoteAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id);
     ~WiiExtensionEmulationActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignWiimoteExtension; }
@@ -918,7 +919,7 @@ private:
 class PS2ControllerEmulationActivationTrigger : public ActivationTrigger
 {
 public:
-    PS2ControllerEmulationActivationTrigger(proto_PSXAssignment config, uint32_t profile_id);
+    PS2ControllerEmulationActivationTrigger(proto_PSXAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id);
     ~PS2ControllerEmulationActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignPsx; }

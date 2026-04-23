@@ -309,7 +309,7 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
     }
     return false;
 }
-BluetoothModeActivationTrigger::BluetoothModeActivationTrigger(proto_BluetoothAssignment config, uint32_t profile_id) : ActivationTrigger(profile_id), m_config(config)
+BluetoothModeActivationTrigger::BluetoothModeActivationTrigger(proto_BluetoothMode mode, uint32_t profile_id) : ActivationTrigger(profile_id), m_mode(mode)
 {
 }
 

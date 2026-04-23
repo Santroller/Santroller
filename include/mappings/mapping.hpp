@@ -898,12 +898,12 @@ protected:
 class BluetoothModeActivationTrigger : public ActivationTrigger
 {
 public:
-    BluetoothModeActivationTrigger(proto_BluetoothAssignment config, uint32_t profile_id);
+    BluetoothModeActivationTrigger(proto_BluetoothMode mode, uint32_t profile_id);
     ~BluetoothModeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignBluetoothGamepad; }
 private:
-    proto_BluetoothAssignment m_config;
+    proto_BluetoothMode m_mode;
 };
 class WiiExtensionEmulationActivationTrigger : public ActivationTrigger
 {

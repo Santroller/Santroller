@@ -91,4 +91,5 @@ private:
     bool done = false;
     uint32_t lastScan = 0;
     PSXControllerState status = DISCONNECTED;
+    uint32_t packet_delay = 5000;
 };

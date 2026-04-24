@@ -118,7 +118,7 @@ void PSXController::noAttention(void)
 {
     done = true;
     gpio_put(m_attPin, true);
-    timeout_alarm_id = add_alarm_in_us(5000, restart_handler, this, true);
+    timeout_alarm_id = add_alarm_in_us(packet_delay, restart_handler, this, true);
 }
 void PSXController::signalAttention(void)
 {
@@ -139,6 +139,11 @@ bool PSXController::autoShiftData(const uint8_t *out, const uint8_t len)
 }
 void PSXController::processData(bool ack, bool timeout)
 {
+    // if the controller sends an ack after we are done, ignore it!
+    if (done && ack)
+    {
+        return;
+    }
     cancel_alarm(timeout_alarm_id);
     if (done)
     {
@@ -213,6 +218,8 @@ void PSXController::processData(bool ack, bool timeout)
                 }
                 else
                 {
+                    // pretty much the only controller that works at 1ms
+                    packet_delay = 1000;
                     type = PS2ControllerTypeDualshock2;
                 }
             }
@@ -263,9 +270,11 @@ void PSXController::processData(bool ack, bool timeout)
             {
                 // allow a few failures before reinit
                 missing++;
-                if (missing > 10) {
+                if (missing > 10)
+                {
                     status = DISCONNECTED;
                     type = PS2ControllerTypeUnknown;
+                    packet_delay = 5000;
                 }
             }
             break;
@@ -273,7 +282,7 @@ void PSXController::processData(bool ack, bool timeout)
         autoShiftData(commandPollInput, sizeof(commandPollInput));
         return;
     }
-    
+
     uint8_t resp = interface.transfer(ps2DataOut != nullptr ? ps2DataOut[ps2Idx] : 0x5A);
     ps2Data[ps2Idx++] = resp;
     // no more data in command

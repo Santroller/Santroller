@@ -48,10 +48,12 @@
 typedef enum 
 {
     DISCONNECTED,
+    CONNECTION_DELAY,
     FIRST_INPUTS,
     ENTER_CONFIG,
     ENABLE_ANALOG_MODE,
     ENABLE_PRESSURES,
+    ENABLE_PRESSURES_2,
     EXIT_CONFIG,
     SECOND_INPUTS,
     ENUMERATED
@@ -91,5 +93,5 @@ private:
     bool done = false;
     uint32_t lastScan = 0;
     PSXControllerState status = DISCONNECTED;
-    uint32_t packet_delay = 5000;
+    uint32_t packet_delay = 10000;
 };

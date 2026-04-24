@@ -152,11 +152,15 @@ void PSXController::processData(bool ack, bool timeout)
         case DISCONNECTED:
             if (valid)
             {
-                status = FIRST_INPUTS;
-                autoShiftData(commandPollInput, sizeof(commandPollInput));
+                status = CONNECTION_DELAY;
+                timeout_alarm_id = add_alarm_in_ms(100, restart_handler, this, true);
                 return;
             }
             break;
+        case CONNECTION_DELAY:
+            status = FIRST_INPUTS;
+            autoShiftData(commandPollInput, sizeof(commandPollInput));
+            return;
         case FIRST_INPUTS:
             if (isConfigReply(ps2Data))
             {
@@ -187,6 +191,10 @@ void PSXController::processData(bool ack, bool timeout)
             autoShiftData(commandSetPressures, sizeof(commandSetPressures));
             return;
         case ENABLE_PRESSURES:
+            status = ENABLE_PRESSURES_2;
+            autoShiftData(commandSetPressures, sizeof(commandSetPressures));
+            return;
+        case ENABLE_PRESSURES_2:
             status = EXIT_CONFIG;
             autoShiftData(commandExitConfig, sizeof(commandExitConfig));
             return;
@@ -204,6 +212,7 @@ void PSXController::processData(bool ack, bool timeout)
             return;
         case SECOND_INPUTS:
             status = ENUMERATED;
+            packet_delay = 5000;
             if (isDualShock2Reply(ps2Data))
             {
                 if ((~ps2Data[3]) & (1 << 7) && (~ps2Data[3]) & (1 << 5) && (~ps2Data[3]) & (1 << 6))
@@ -258,7 +267,7 @@ void PSXController::processData(bool ack, bool timeout)
             {
                 type = PS2ControllerTypeDigital;
             }
-            printf("found ps2 controller! %d\r\n", type);
+            // printf("found ps2 controller! %d\r\n", type);
             break;
         case ENUMERATED:
             if (valid)
@@ -274,7 +283,7 @@ void PSXController::processData(bool ack, bool timeout)
                 {
                     status = DISCONNECTED;
                     type = PS2ControllerTypeUnknown;
-                    packet_delay = 5000;
+                    packet_delay = 10000;
                 }
             }
             break;

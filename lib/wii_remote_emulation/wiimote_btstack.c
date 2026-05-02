@@ -415,8 +415,6 @@ void wiimote_emulator(void *report){
 
     // Loop control to send report
     loop_wii.process = &task_wiimote;
-
-    btstack_run_loop_execute();
 }
 
 

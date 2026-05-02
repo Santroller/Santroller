@@ -391,6 +391,11 @@ void write_register(struct wiimote_state *state, uint32_t offset, uint8_t size, 
       reg = (state->sys.wmp_state == 1) ? state->sys.register_a6 : state->sys.register_a4;
 
       memcpy(reg + (offset & 0xff), buf, size);
+      if (state->sys.wmp_state == 0 && (offset & 0xff) >= 0xfb && ((offset & 0xff) + size) <= 0xfb + size) {
+      // TODO: grab a copy of djh and see what this ends up like, does it need decryption?
+      printf("djh led: %d\r\n",state->sys.register_a4[0xfb]);
+        // djhEuphoriaLedState = state->sys.register_a4[0xfb];
+      }
 
       //TODO: double check what this does, the buf location it's looking for
       if (((offset & 0xff) == 0xf0) && (buf[0] == 0x55) && (state->sys.wmp_state == 1)) //deactivate wmp

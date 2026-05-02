@@ -247,6 +247,7 @@ target_link_libraries(
   ring_buffer
   CRC32
   crkd_neck
+  wm_crypto
   peripherals
   quadrature_encoder
   accelerometer

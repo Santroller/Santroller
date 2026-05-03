@@ -59,7 +59,7 @@ public:
         size_t rbuf_len);
 
 private:
-    i2c_dma_t *i2c_dma;
+    i2c_dma_t *i2c_dma = nullptr;
     i2c_inst_t *i2c;
     i2c_inst_t *_hardwareBlocks[NUM_I2CS] = {i2c0, i2c1};
 };

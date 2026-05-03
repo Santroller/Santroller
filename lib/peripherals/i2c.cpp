@@ -301,6 +301,10 @@ I2CMasterInterface::I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, ui
     }
 }
 I2CMasterInterface::~I2CMasterInterface() {
+    if (!i2c_dma)
+    {
+        return;
+    }
     irq_set_enabled(i2c_dma->irq_num, false);
 
     cancel_alarm(i2c_dma->timeout_alarm_id);

@@ -13,3 +13,5 @@ check_ps4_auth.py
 *.pio.h
 include_old
 src_old
+build_pico1
+build_pico2

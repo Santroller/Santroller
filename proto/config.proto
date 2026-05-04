@@ -131,6 +131,9 @@ message GetVersion {
   required string version = 1;
 }
 
+message GetType {
+  required string type = 1;
+}
 message FirmwareUpdate {
   required int32 firmwareSize = 1;
   required int32 offset = 2;

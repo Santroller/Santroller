@@ -18,6 +18,7 @@
 #include <pico_fota_bootloader/core.h>
 
 static const char version[] = GIT_HASH;
+static const char type[] = PICO_BOARD;
 uint8_t const desc_hid_report_config[] =
     {
 
@@ -34,6 +35,7 @@ uint8_t const desc_hid_report_config[] =
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(63, HID_REPORT_ID(ReportIdUpdateFirmware)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(33, HID_REPORT_ID(ReportIdUploadFirmware)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(version) + 1, HID_REPORT_ID(ReportIdGetVersion)),
+        TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(type) + 1, HID_REPORT_ID(ReportIdGetType)),
         HID_COLLECTION_END};
 
 HIDConfigDevice::HIDConfigDevice()
@@ -469,6 +471,12 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
     buffer[0] = report_id;
     memcpy(buffer + 1, version, sizeof(version));
     return sizeof(version) + 1;
+  }
+  case ReportId::ReportIdGetType:
+  {
+    buffer[0] = report_id;
+    memcpy(buffer + 1, type, sizeof(type));
+    return sizeof(type) + 1;
   }
   case ReportId::ReportIdGetActiveProfiles:
   {

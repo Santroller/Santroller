@@ -6,7 +6,7 @@ else()
 endif()
 set(sdkVersion 2.2.0)
 set(toolchainVersion 14_2_Rel1)
-set(picotoolVersion 2.2.0-a4)
+set(picotoolVersion 2.1.1)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
 if (EXISTS ${picoVscode})
     include(${picoVscode})
@@ -297,9 +297,6 @@ target_link_libraries(
 
 pfb_compile_with_bootloader(${TARGET})
 
-if (PICO_BOARD STREQUAL "pico2_w")
-  set_property(TARGET ${TARGET} PROPERTY PICOTOOL_EXTRA_UF2_ARGS --platform rp2350)
-endif()
 pico_add_extra_outputs(${TARGET})
 
 add_custom_target(build_combined ALL

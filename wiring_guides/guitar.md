@@ -28,9 +28,10 @@ sort: 2
     - Any of the following options are supported.
       - A Digital Tilt Switch (somtimes called a mercury or ball tilt switch)
         - It is recommended using two tilt sensors in series, as this can help with accidental activations.
-      - An ADXL345, MPU-6050 or LIS3DH Accelerometer.
+      - An ADXL345 or LIS3DH Accelerometer.
         - Gives a proper analog value of the devices acceleration.
           - Tilt is detected by observing acceleration due to gravity.
+          - While the MPU-6050 is supported, it has been obselete for years now, and thus most MPU-6050s that can be purchased are fakes and the fake units have many issues, so it is recommended to stay away from them.
       - An analog accelerometer, such as the ADXL335, or the accelerometer on certain GH guitars.
         - This gives a proper analog value of the devices acceleration
           - Tilt is detected by observing acceleration due to gravity

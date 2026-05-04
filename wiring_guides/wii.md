@@ -43,10 +43,11 @@ Any of the following options are supported:
 
   - Using two tilt switches in series is recommended to reduce accidental activations
 
-- **Digital accelerometers**: ADXL345, MPU-6050, or LIS3DH
+- **Digital accelerometers**: ADXL345 or LIS3DH
 
   - Provides analog acceleration data
   - Tilt is detected using acceleration due to gravity
+  - While the MPU-6050 is supported, it has been obselete for years now, and thus most MPU-6050s that can be purchased are fakes and the fake units have many issues, so it is recommended to stay away from them.
 
 - **Analog accelerometers**: ADXL335 or accelerometers found in some Guitar Hero guitars
 

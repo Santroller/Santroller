@@ -2,14 +2,16 @@
 #include <pico/cyw43_arch.h>
 #include "events.pb.h"
 #include "usb/device/hid_device.h"
+#include "config.hpp"
 BluetoothDevice::BluetoothDevice(proto_BluetoothDevice device, uint16_t id): Device(id), m_device(device) {
     printf("bt device init\r\n");
-    if (cyw43_arch_init())
+    if (cyw43_arch_init() == 0)
     {
-        printf("bt device init failed\r\n");
-        m_isPicoW = false;
-    } else {
+        isPicoW = true;
         printf("bt device init success\r\n");
+    } else {
+        printf("bt device init failed\r\n");
+        isPicoW = false;
     }
 }
 
@@ -22,7 +24,7 @@ void BluetoothDevice::update(bool full_poll, bool send_events)
 {
     if (full_poll)
     {
-        proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_isPicoW}}};
+        proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, isPicoW}}};
         HIDConfigDevice::send_event(event, true);
     }
 }

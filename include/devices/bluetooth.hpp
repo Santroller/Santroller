@@ -1,6 +1,7 @@
 #pragma once
 #include "base.hpp"
 #include "device.pb.h"
+extern bool isPicoW;
 class BluetoothDevice : public Device
 {
 public:
@@ -11,5 +12,4 @@ public:
 
 private:
     proto_BluetoothDevice m_device;
-    bool m_isPicoW = true;
 };

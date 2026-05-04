@@ -9,7 +9,7 @@
 class BandHeroDrum {
    public:
     BandHeroDrum(MidiDevice* midiDevice, uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock)
-        : interface(block, sda, scl, clock, nullptr), m_device(midiDevice) {};
+        : interface(block, sda, scl, clock), m_device(midiDevice) {};
     void tick();
     inline bool is_connected() {
         return connected;

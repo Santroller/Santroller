@@ -7,7 +7,7 @@
 class DJHeroTurntable {
    public:
    DJHeroTurntable(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock, bool left)
-        : interface(block, sda, scl, clock, nullptr), addr(left ? DJLEFT_ADDR: DJRIGHT_ADDR) {};
+        : interface(block, sda, scl, clock), addr(left ? DJLEFT_ADDR: DJRIGHT_ADDR) {};
     void tick();
     inline bool is_connected() {
         return connected;

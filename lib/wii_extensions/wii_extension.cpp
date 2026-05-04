@@ -9,23 +9,6 @@
 #include "hardware/dma.h"
 #include "hardware/irq.h"
 #include "hardware/clocks.h"
-
-static WiiExtension *wiiinstances[2];
-void process_data_0(bool running, bool timeout, bool abort_detected, bool stop_detected)
-{
-    if (wiiinstances[0])
-    {
-        wiiinstances[0]->processData(running, timeout, abort_detected, stop_detected);
-    }
-}
-void process_data_1(bool running, bool timeout, bool abort_detected, bool stop_detected)
-{
-    if (wiiinstances[1])
-    {
-        wiiinstances[1]->processData(running, timeout, abort_detected, stop_detected);
-    }
-}
-
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
     WiiExtension *inst = (WiiExtension *)user_data;
@@ -358,14 +341,14 @@ void WiiExtension::processData(bool running, bool timeout, bool abort_detected, 
     }
 }
 
-WiiExtension::WiiExtension(MidiDevice *midiDevice, uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock) : mInterface(block, sda, scl, clock, block == 0 ? process_data_0 : process_data_1), mFound(false), m_block(block), m_device(midiDevice)
+WiiExtension::WiiExtension(MidiDevice *midiDevice, uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock) : mInterface(block, sda, scl, clock), mFound(false), m_block(block), m_device(midiDevice)
 {
-    wiiinstances[m_block] = this;
+    mInterface.dmaInit(WII_ADDR, this);
     processData(false, false, false, false);
 }
 WiiExtension::~WiiExtension()
 {
-    wiiinstances[m_block] = nullptr;
+    mInterface.dmaDeinit(WII_ADDR);
 }
 
 void WiiExtension::setEuphoriaLed(bool state)

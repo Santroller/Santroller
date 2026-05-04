@@ -4,11 +4,20 @@
 #include <hardware/i2c.h>
 #include <hardware/gpio.h>
 
+#define I2C_MAX_ADDR 127
 #define I2C_MAX_TRANSFER_SIZE 1056
 // A transfer timeout of 1000ms will allow a 10000 bit transfer to complete
 // successfully without timeouts at baudrates as low as 10000 baud.
 #define I2C_TRANSFER_TIMEOUT_MS 10000
 #define I2C_TAKE_MUTEX_TIMEOUT_MS 10000
+
+class I2CDMAInterface
+{
+public:
+    I2CDMAInterface() {};
+    ~I2CDMAInterface() {};
+    virtual void processData(bool running, bool timeout, bool abort_detected, bool stop_detected) = 0;
+};
 typedef struct i2c_dma_s
 {
     i2c_inst_t *i2c;
@@ -23,6 +32,8 @@ typedef struct i2c_dma_s
     int rx_chan;
     bool reading;
     bool writing;
+    uint device_count;
+    uint currentDevAddr;
 
     volatile bool stop_detected;
     volatile bool abort_detected;
@@ -31,13 +42,13 @@ typedef struct i2c_dma_s
     alarm_id_t timeout_alarm_id;
 
     uint16_t data_cmds[I2C_MAX_TRANSFER_SIZE];
-    void (*process_data)(bool running, bool timeout, bool abort_detected, bool stop_detected);
+    I2CDMAInterface* dmaInterface[I2C_MAX_ADDR];
 } i2c_dma_t;
 
 class I2CMasterInterface
 {
 public:
-    I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, uint32_t clock, void (*process_data)(bool running, bool timeout, bool abort_detected, bool stop_detected));
+    I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, uint32_t clock);
     ~I2CMasterInterface();
     bool readRegister(uint8_t address, uint8_t pointer, uint8_t length,
                       uint8_t *data);
@@ -51,6 +62,8 @@ public:
 
     bool writeTo(uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
                  uint8_t sendStop);
+    void dmaInit(uint8_t addr, I2CDMAInterface* dmaInterface);
+    void dmaDeinit(uint8_t addr);
     void dmaWriteRead(
         uint8_t addr,
         const uint8_t *wbuf,
@@ -62,6 +75,9 @@ private:
     i2c_dma_t *i2c_dma = nullptr;
     i2c_inst_t *i2c;
     i2c_inst_t *_hardwareBlocks[NUM_I2CS] = {i2c0, i2c1};
+    uint8_t m_sda;
+    uint8_t m_scl;
+    uint32_t m_clock;
 };
 
 class I2CSlaveInterface

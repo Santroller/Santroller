@@ -24,16 +24,16 @@ inline void process_dma(i2c_dma_t *i2c_dma)
             }
         }
     }
-    if (i2c_dma->process_data)
+    if (i2c_dma->dmaInterface[i2c_dma->currentDevAddr])
     {
-        i2c_dma->process_data(i2c_dma->running, i2c_dma->timeout, i2c_dma->abort_detected, i2c_dma->stop_detected);
+        i2c_dma->dmaInterface[i2c_dma->currentDevAddr]->processData(i2c_dma->running, i2c_dma->timeout, i2c_dma->abort_detected, i2c_dma->stop_detected);
     }
     i2c_dma->timeout = false;
     i2c_dma->abort_detected = false;
     i2c_dma->stop_detected = false;
 }
 
-static i2c_dma_t i2c_dma_list[2];
+static i2c_dma_t i2c_dma_list[2] = {0};
 static void i2c_dma_irq_handler(i2c_dma_t *i2c_dma)
 {
     const uint32_t status = i2c_get_hw(i2c_dma->i2c)->intr_stat;
@@ -125,6 +125,12 @@ static bool i2c_dma_is_blocked(i2c_dma_t *i2c_dma)
 }
 static int i2c_dma_init_intern(i2c_dma_t *i2c_dma)
 {
+    // if the bus is already initialised, then just increase the device count
+    if (i2c_dma->device_count)
+    {
+        i2c_dma->device_count++;
+        return PICO_OK;
+    }
     irq_set_enabled(i2c_dma->irq_num, false);
 
     i2c_dma->stop_detected = false;
@@ -151,6 +157,7 @@ static int i2c_dma_init_intern(i2c_dma_t *i2c_dma)
     irq_set_enabled(i2c_dma->irq_num, true);
     i2c_dma->tx_chan = dma_claim_unused_channel(false);
     i2c_dma->rx_chan = dma_claim_unused_channel(false);
+    i2c_dma->device_count = 1;
 
     return PICO_OK;
 }
@@ -257,7 +264,36 @@ static void i2c_dma_write_read_internal(
         i2c_dma->i2c, i2c_dma->tx_chan, i2c_dma->data_cmds, wbuf_len + rbuf_len);
     i2c_dma->timeout_alarm_id = add_alarm_in_us(I2C_TRANSFER_TIMEOUT_MS, timeout_handler, i2c_dma, true);
 }
-I2CMasterInterface::I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, uint32_t clock, void (*process_data)(bool running, bool timeout, bool abort_detected, bool stop_detected))
+
+void I2CMasterInterface::dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface)
+{
+    if (i2c == i2c0)
+    {
+        i2c_dma = &i2c_dma_list[0];
+        i2c_dma->i2c = i2c0;
+        i2c_dma->irq_num = I2C0_IRQ;
+        i2c_dma->irq_handler = i2c0_dma_irq_handler;
+        i2c_dma->dmaInterface[addr] = dmaInterface;
+    }
+
+    if (i2c == i2c1)
+    {
+        i2c_dma = &i2c_dma_list[1];
+        i2c_dma->i2c = i2c1;
+        i2c_dma->irq_num = I2C1_IRQ;
+        i2c_dma->irq_handler = i2c1_dma_irq_handler;
+        i2c_dma->dmaInterface[addr] = dmaInterface;
+        i2c_dma->device_count++;
+    }
+    i2c_dma->baudrate = m_clock;
+    i2c_dma->sda_gpio = m_sda;
+    i2c_dma->scl_gpio = m_scl;
+    i2c_dma->timeout = false;
+    i2c_dma->abort_detected = false;
+    i2c_dma->stop_detected = false;
+    i2c_dma_init_intern(i2c_dma);
+}
+I2CMasterInterface::I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, uint32_t clock) : m_sda(sda), m_scl(scl), m_clock(clock)
 {
     if (sda == -1 || scl == -1)
     {
@@ -272,60 +308,47 @@ I2CMasterInterface::I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, ui
 
     gpio_pull_up(sda);
     gpio_pull_up(scl);
-    if (process_data)
-    {
-        if (i2c == i2c0)
-        {
-            i2c_dma = &i2c_dma_list[0];
-            i2c_dma->i2c = i2c0;
-            i2c_dma->irq_num = I2C0_IRQ;
-            i2c_dma->irq_handler = i2c0_dma_irq_handler;
-            i2c_dma->process_data = process_data;
-        }
-
-        if (i2c == i2c1)
-        {
-            i2c_dma = &i2c_dma_list[1];
-            i2c_dma->i2c = i2c1;
-            i2c_dma->irq_num = I2C1_IRQ;
-            i2c_dma->irq_handler = i2c1_dma_irq_handler;
-            i2c_dma->process_data = process_data;
-        }
-        i2c_dma->baudrate = clock;
-        i2c_dma->sda_gpio = sda;
-        i2c_dma->scl_gpio = scl;
-        i2c_dma->timeout = false;
-        i2c_dma->abort_detected = false;
-        i2c_dma->stop_detected = false;
-        i2c_dma_init_intern(i2c_dma);
-    }
 }
-I2CMasterInterface::~I2CMasterInterface() {
+
+void I2CMasterInterface::dmaDeinit(uint8_t addr)
+{
     if (!i2c_dma)
     {
         return;
     }
-    irq_set_enabled(i2c_dma->irq_num, false);
-
-    cancel_alarm(i2c_dma->timeout_alarm_id);
-    if (i2c_dma->abort_detected || !i2c_dma->stop_detected)
+    i2c_dma->dmaInterface[addr] = nullptr;
+    i2c_dma->device_count--;
+    if (i2c_dma->device_count == 0)
     {
-        dma_channel_abort(i2c_dma->tx_chan);
+        irq_set_enabled(i2c_dma->irq_num, false);
+
+        cancel_alarm(i2c_dma->timeout_alarm_id);
+        if (i2c_dma->abort_detected || !i2c_dma->stop_detected)
+        {
+            dma_channel_abort(i2c_dma->tx_chan);
+            if (i2c_dma->reading)
+            {
+                dma_channel_abort(i2c_dma->rx_chan);
+            }
+        }
+
+        // Free the DMA channels.
+        dma_channel_unclaim(i2c_dma->tx_chan);
         if (i2c_dma->reading)
         {
-            dma_channel_abort(i2c_dma->rx_chan);
+            dma_channel_unclaim(i2c_dma->rx_chan);
         }
+        i2c_dma->stop_detected = false;
+        i2c_dma->abort_detected = false;
     }
-
-    // Free the DMA channels.
-    dma_channel_unclaim(i2c_dma->tx_chan);
-    if (i2c_dma->reading)
+}
+I2CMasterInterface::~I2CMasterInterface()
+{
+    // only need to free dma if its being used
+    if (!i2c_dma)
     {
-        dma_channel_unclaim(i2c_dma->rx_chan);
+        return;
     }
-    i2c_dma->stop_detected = false;
-    i2c_dma->abort_detected = false;
-    i2c_dma->process_data = nullptr;
 }
 void I2CMasterInterface::dmaWriteRead(uint8_t addr,
                                       const uint8_t *wbuf,

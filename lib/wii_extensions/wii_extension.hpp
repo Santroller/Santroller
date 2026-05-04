@@ -43,7 +43,7 @@ typedef enum {
     WII_INPUTS_READ,
     WII_INPUTS_UPDATE_LED
 } wii_status_e;
-class WiiExtension
+class WiiExtension: public I2CDMAInterface
 {
 
 public:

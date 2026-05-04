@@ -81,7 +81,7 @@
 class ADS1115 {
    public:
     ADS1115(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock, uint8_t alert)
-        : interface(block, sda, scl, clock, nullptr), alert(alert) {};
+        : interface(block, sda, scl, clock), alert(alert) {};
     void tick();
     inline bool is_connected() {
         return connected;

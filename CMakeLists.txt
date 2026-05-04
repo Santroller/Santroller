@@ -309,5 +309,5 @@ add_custom_target(build_combined ALL
 add_custom_command(
         TARGET build_combined
         POST_BUILD
-        COMMAND python ${CMAKE_SOURCE_DIR}/build.py "${GIT_COMMIT}" "${CMAKE_CURRENT_BINARY_DIR}"
+        COMMAND python ${CMAKE_SOURCE_DIR}/build.py "${GIT_COMMIT}" "${CMAKE_CURRENT_BINARY_DIR}" "${PICO_BOARD}"
 )

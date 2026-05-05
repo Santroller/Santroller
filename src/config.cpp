@@ -77,7 +77,6 @@ int seenMasks = 0;
 bool fullReload = true;
 bool working = false;
 bool loadedAny = false;
-bool bluetoothInitted = false;
 
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
@@ -509,7 +508,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         {
             int assignedDevices = list->assignedDevices();
             printf("profile assigned! %d\r\n", profile->profile_id);
-            if ((assignedDevices & ProfileAssignMask_AssignBluetoothGamepad) && !(seenMasks & ProfileAssignMask_AssignBluetoothGamepad))
+            if ((assignedDevices & ProfileAssignMask_AssignBluetoothGamepad) && !(seenMasks & ProfileAssignMask_AssignBluetoothGamepad) && isPicoW)
             {
                 btGamepadInstance = std::make_shared<BTGamepadDevice>();
                 instances.push_back(btGamepadInstance);

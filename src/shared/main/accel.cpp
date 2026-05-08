@@ -10,27 +10,46 @@ bool accel_found = false;
 uint8_t lis3dh_address = LIS3DH_ADDRESS;
 uint8_t type = NONE;
 #ifdef ACCEL_TWI_PORT
-void init_lis3dh() {
+void init_lis3dh()
+{
     uint8_t id = 0;
     lis3dh_address = LIS3DH_ADDRESS;
     twi_readFromPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_WHOAMI, 1, &id);
-    if (id != LIS3DH_ID) {
+    if (id != LIS3DH_ID && id != SC7A20_ID && id != LIS3DSH_ID)
+    {
         lis3dh_address = LIS3DH_ADDRESS_2;
         twi_readFromPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_WHOAMI, 1, &id);
-        if (id != LIS3DH_ID) {
+        if (id != LIS3DH_ID && id != SC7A20_ID && id != LIS3DSH_ID)
+        {
             return;
         }
     }
-    type = LIS3DH;
     accel_found = true;
-    twi_writeSingleToPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_CTRL1, 0b01110111);  // enable all axis, set data rate to 4000hz
-    twi_writeSingleToPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_CTRL4, 0x88);        // High res & BDU enabled
-    twi_writeSingleToPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_TEMPCFG, 0x80);      // enable adc
+    if (id == SC7A20_ID)
+    {
+        type = SC7A20;
+        twi_writeSingleToPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_CTRL1, 0b01110111); // enable all axis, set data rate to 4000hz
+        twi_writeSingleToPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_CTRL4, 0x88);       // High res & BDU enabled
+    }
+    else if (id == LIS3DSH_ID)
+    {
+        type = LIS3DSH;
+        twi_writeSingleToPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_CTRL1, 0b01111111); // enable all axis, BDU, set data rate to 4000hz
+    }
+    else
+    {
+        type = LIS3DH;
+        twi_writeSingleToPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_CTRL1, 0b01110111); // enable all axis, set data rate to 4000hz
+        twi_writeSingleToPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_CTRL4, 0x88);       // High res & BDU enabled
+        twi_writeSingleToPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_TEMPCFG, 0x80);     // enable adc
+    }
 }
-void init_adxl() {
+void init_adxl()
+{
     uint8_t id = 0;
     twi_readFromPointer(ACCEL_TWI_PORT, ADXL345_ADDRESS, ADXL345_REG_DEVID, 1, &id);
-    if (id != ADXL345_ID) {
+    if (id != ADXL345_ID)
+    {
         return;
     }
     type = ADXL345;
@@ -38,10 +57,12 @@ void init_adxl() {
     twi_writeSingleToPointer(ACCEL_TWI_PORT, ADXL345_ADDRESS, ADXL345_POWER_CTL, 0x08);
     twi_writeSingleToPointer(ACCEL_TWI_PORT, ADXL345_ADDRESS, ADXL345_DATA_FORMAT, 0x0B);
 }
-void init_mpu6050() {
+void init_mpu6050()
+{
     uint8_t id = 0;
     twi_readFromPointer(ACCEL_TWI_PORT, MPU6050_ADDRESS, MPU6050_REG_WHO_AM_I, 1, &id);
-    if (id != MPU6050_ID && id != MPU6050_ID2) {
+    if (id != MPU6050_ID && id != MPU6050_ID2)
+    {
         return;
     }
     type = MPU6050;
@@ -51,33 +72,50 @@ void init_mpu6050() {
     id &= ~(1 << 6);
     twi_writeSingleToPointer(ACCEL_TWI_PORT, MPU6050_ADDRESS, MPU6050_REG_PWR_MGMT_1, id);
 }
-void init_accel() {
+void init_accel()
+{
     init_mpu6050();
     init_lis3dh();
     init_adxl();
 }
-void tick_accel() {
-    if (!accel_found) {
+void tick_accel()
+{
+    if (!accel_found)
+    {
         init_accel();
         return;
     }
     int16_t raw[3];
-    if (type == LIS3DH) {
-        accel_found = twi_readFromPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_OUT, 6, (uint8_t*)raw);
-        accel_found = twi_readFromPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_OUTADC1_L, sizeof(accel_adc), (uint8_t*)accel_adc);
-        for (int i = 0; i < 3; i++) {
+    if (type == LIS3DH)
+    {
+        accel_found = twi_readFromPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_OUT, 6, (uint8_t *)raw);
+        accel_found = twi_readFromPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_OUTADC1_L, sizeof(accel_adc), (uint8_t *)accel_adc);
+        for (int i = 0; i < 3; i++)
+        {
             filtered[i] = (raw[i]) * currentLowPassAlpha + (filtered[i] * (1.0 - currentLowPassAlpha));
         }
     }
-    if (type == ADXL345) {
-        accel_found = twi_readFromPointer(ACCEL_TWI_PORT, ADXL345_ADDRESS, ADXL345_DATAX0, 6, (uint8_t*)raw);
-        for (int i = 0; i < 3; i++) {
+    if (type == SC7A20 || type == LIS3DSH)
+    {
+        accel_found = twi_readFromPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_OUT, 6, (uint8_t *)raw);
+        for (int i = 0; i < 3; i++)
+        {
+            filtered[i] = (raw[i]) * currentLowPassAlpha + (filtered[i] * (1.0 - currentLowPassAlpha));
+        }
+    }
+    if (type == ADXL345)
+    {
+        accel_found = twi_readFromPointer(ACCEL_TWI_PORT, ADXL345_ADDRESS, ADXL345_DATAX0, 6, (uint8_t *)raw);
+        for (int i = 0; i < 3; i++)
+        {
             filtered[i] = (raw[i] * 64) * currentLowPassAlpha + (filtered[i] * (1.0 - currentLowPassAlpha));
         }
     }
-    if (type == MPU6050) {
-        accel_found = twi_readFromPointer(ACCEL_TWI_PORT, MPU6050_ADDRESS, MPU6050_REG_ACCEL_OUT, 6, (uint8_t*)raw);
-        for (int i = 0; i < 3; i++) {
+    if (type == MPU6050)
+    {
+        accel_found = twi_readFromPointer(ACCEL_TWI_PORT, MPU6050_ADDRESS, MPU6050_REG_ACCEL_OUT, 6, (uint8_t *)raw);
+        for (int i = 0; i < 3; i++)
+        {
             filtered[i] = (raw[i]) * currentLowPassAlpha + (filtered[i] * (1.0 - currentLowPassAlpha));
         }
     }

@@ -8,6 +8,8 @@
 #define ADXL345 1
 #define LIS3DH 2
 #define MPU6050 3
+#define SC7A20 4
+#define LIS3DSH 5
 
 #define XINPUT_FLAGS_NO_NAV 0xFFFF
 #define XINPUT_FLAGS_NONE 0x0000

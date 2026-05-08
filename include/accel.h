@@ -13,6 +13,7 @@ extern "C" {
 #define LIS3DH_ADDRESS_2 0x19
 #define LIS3DH_REG_CTRL1 0x20
 #define LIS3DH_REG_CTRL4 0x23
+#define LIS3DH_REG_CTRL5 0x24
 #define LIS3DH_REG_WHOAMI 0x0F
 #define LIS3DH_REG_OUT 0x28 | 0x80  // Set auto increment
 #define LIS3DH_REG_OUTADC1_L 0x08 | 0x80  
@@ -22,6 +23,8 @@ extern "C" {
 #define LIS3DH_REG_OUTADC3_L 0x0C | 0x80 
 #define LIS3DH_REG_OUTADC3_H 0x0D | 0x80 
 #define LIS3DH_ID 0x33
+#define LIS3DSH_ID 0x3F
+#define SC7A20_ID 0x11
 #define LIS3DH_REG_TEMPCFG 0x1F
 #define MPU6050_ADDRESS 0x68
 #define MPU6050_REG_ACCEL_OUT 0x3B

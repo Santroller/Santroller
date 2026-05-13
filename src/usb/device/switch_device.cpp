@@ -23,7 +23,7 @@ SwitchGamepadDevice::SwitchGamepadDevice()
         // MAC address in reverse
         .macAddress = {0x7c, 0xbb, 0x8a, (uint8_t)(get_rand_32() % 0xff), (uint8_t)(get_rand_32() % 0xff), (uint8_t)(get_rand_32() % 0xff)},
         .unknown01 = 0x01,
-        .storedColors = 0x02,
+        .storedColors = 0x00,
     };
 
     switchReport = {

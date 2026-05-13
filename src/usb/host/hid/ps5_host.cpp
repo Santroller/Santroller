@@ -91,6 +91,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
             intf->m_lightbar_supported = true;
             intf->m_vibration_supported = true;
             intf->m_touchpad_supported = true;
+            intf->m_subtype = Gamepad;
         }
         p_desc = tu_desc_next(p_desc);
         tusb_hid_descriptor_hid_t *x_desc =

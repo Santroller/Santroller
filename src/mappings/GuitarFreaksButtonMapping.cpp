@@ -54,7 +54,8 @@ void GuitarFreaksButtonMapping::update_ps2(uint8_t *buf)
 
 void GuitarFreaksButtonMapping::update_ps3(uint8_t *buf)
 {
-    // TODO: this is also a thing
+    // in the ps3 case, we would actually need to emulate a ds3 that has right+left held at all times,
+    // since that would then let us use this with pademu and should work with ps2 on ps3 too.
 }
 
 void GuitarFreaksButtonMapping::update_ps4(uint8_t *buf)

@@ -193,7 +193,9 @@ typedef struct {
     uint8_t blueCymbalVelocity;
     uint8_t yellowCymbalVelocity;
     uint8_t greenCymbalVelocity;
-    uint8_t padding_4[14];
+    uint8_t orangeVelocity;
+    uint8_t kickVelocity;
+    uint8_t padding_4[12];
     // Each of the following are 10 bits in accuracy
     // Centered/neutral state is nominally 0x0200, actual values may vary
     uint16_t accelX;  // Left/right acceleration (roll)

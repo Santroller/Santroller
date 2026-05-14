@@ -37,6 +37,13 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
             (tusb_desc_endpoint_t const *)p_desc;
         size += desc_ep->bLength;
         TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType, nullptr);
+
+        if (list->host_devices_by_endpoint_out[desc_ep->bEndpointAddress & (~0x80)])
+        {
+            // not really sure what causes this
+            printf("intf duplicated?\r\n");
+            return nullptr;
+        }
         if (desc_ep->bEndpointAddress & 0x80)
         {
             intf->m_ep_in = desc_ep->bEndpointAddress;
@@ -52,12 +59,7 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
         }
     }
     if (intf->m_ep_out)
-    {   
-        if (list->host_devices_by_endpoint_out[intf->m_ep_out]) {
-            // not really sure what causes this
-            printf("intf duplicated?\r\n");
-            return nullptr;
-        }
+    {
         list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
     }
     if (intf->m_ep_in)

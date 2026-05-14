@@ -21,7 +21,7 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
 {
     uint32_t size = desc_itf->bLength;
     TU_VERIFY(desc_itf->bInterfaceSubClass == 0x47 &&
-                  desc_itf->bInterfaceProtocol == 0xD0,
+                  desc_itf->bInterfaceProtocol == 0xD0 && desc_itf->bAlternateSetting == 0,
               nullptr);
     uint8_t dev_addr = list->dev_addr();
 
@@ -38,12 +38,6 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
         size += desc_ep->bLength;
         TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType, nullptr);
 
-        if (list->host_devices_by_endpoint_out[desc_ep->bEndpointAddress & (~0x80)])
-        {
-            // not really sure what causes this
-            printf("intf duplicated?\r\n");
-            return nullptr;
-        }
         if (desc_ep->bEndpointAddress & 0x80)
         {
             intf->m_ep_in = desc_ep->bEndpointAddress;
@@ -70,6 +64,7 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
     {
         assignable_usb_devices.push_back(intf);
     }
+    printf("size: %d\r\n", size);
     *out_len = size;
     return intf;
 }

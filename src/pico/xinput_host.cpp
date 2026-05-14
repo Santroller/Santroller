@@ -199,6 +199,7 @@ uint16_t xinputh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t co
         return false;
     }
     TU_VERIFY(0x58 == desc_itf->bInterfaceClass || TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass || TUSB_CLASS_HID == desc_itf->bInterfaceClass, 0);
+    TU_VERIFY(desc_itf->bAlternateSetting == 0, 0);
     xinputh_interface_t *p_xinput = NULL;
     uint8_t i = 0;
     for (; i < CFG_TUH_XINPUT; i++)

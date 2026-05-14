@@ -10,7 +10,14 @@
 
 #define GIP_CMD_ACKNOWLEDGE 0x01
 #define GIP_ARRIVAL 0x02
+#define GIP_DEVICE_STATUS 0x03
+#define GIP_DEVICE_DESCRIPTOR 0x04
+#define GIP_POWER_MODE_DEVICE_CONFIG 0x05
 #define GIP_AUTHENTICATION 0x06
+#define GIP_VIRTUAL_KEYCODE 0x07
+#define GIP_CMD_RUMBLE 0x09
+#define GIP_CMD_LED      0x0a
+#define GIP_INPUT_REPORT 0x20
 #define GHL_HID_REPORT 0x21
 #define GHL_HID_OUTPUT 0x22
 #define GIP_VKEY_LEFT_WIN 0x5b
@@ -32,7 +39,6 @@ enum XboxResult {
 
 typedef struct
 {
-    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -64,7 +70,6 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -113,7 +118,6 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -148,7 +152,6 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -231,7 +234,6 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -266,7 +268,6 @@ typedef struct
 // This isnt actually real but by doing this we can get some sane gamepad mappings in turntable mode
 typedef struct
 {
-    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -305,7 +306,6 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t header;
     PS3GHLGuitar_Data_t report;
 } __attribute__((packed)) XboxOneGHLGuitar_Data_t;
 typedef struct
@@ -316,14 +316,12 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t header;
     uint8_t sub_command;
     uint8_t data[7];
 } __attribute__((packed)) XboxOneGHLGuitar_Output_t;
 
 typedef struct
 {
-    GipHeader_t header;
     uint8_t data[1024];
 } __attribute__((packed)) GipPacket_t;
 
@@ -343,23 +341,19 @@ typedef struct
 } __attribute__((packed)) Gip_Ack_t;
 typedef struct
 {
-    GipHeader_t header;
 } __attribute__((packed)) Gip_DeviceDescriptorRequest_t;
 typedef struct
 {
-    GipHeader_t header;
     uint8_t unk1;
     uint8_t unk2;
 } __attribute__((packed)) Gip_Auth_Done_t;
 typedef struct
 {
-    GipHeader_t header;
     uint8_t unk;
     uint8_t mode;
     uint8_t brightness;
 } __attribute__((packed)) Gip_Led_On_t;
 typedef struct {
-    GipHeader_t header;
     uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1;  // menu
@@ -368,7 +362,6 @@ typedef struct {
 
 typedef struct
 {
-    GipHeader_t header;
     bool pressed : 1;
     uint8_t : 7;
     uint8_t keycode;
@@ -376,13 +369,11 @@ typedef struct
 
 typedef struct
 {
-    GipHeader_t header;
     uint8_t subcommand;
 } __attribute__((packed)) GipPowerMode_t;
 
 
 typedef struct {
-    GipHeader_t header;
     uint8_t subCommand;  // Assumed based on the descriptor reporting a larger max length than what this uses
     uint8_t flags;
     uint8_t leftTrigger;

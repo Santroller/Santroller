@@ -19,6 +19,7 @@
 
 static uint8_t xb1_guide_on[] = {0x01, 0x5b};
 static uint8_t xb1_guide_off[] = {0x00, 0x5b};
+static uint8_t xb1_keep_alive[] = {0x80, 0x00, 0x00, 0x00};
 
 // Check if Auth is completed (start is 0x01, 0x01, and invalid is 0x01, 0x07)
 const uint8_t authReady[] = {0x01, 0x00};
@@ -536,28 +537,21 @@ void XboxOneGamepadDevice::process()
         return;
     }
 
-    // Send Keep-Alive every 15 seconds (keep_alive_timer updates if send is successful)
+    // Send Keep-Alive every 15 seconds
     if ((now - keep_alive_timer) > XBONE_KEEPALIVE_TIMER)
     {
-        memset(&xboneReport->header, 0, sizeof(GipHeader_t));
-        GIP_HEADER((xboneReport), GIP_KEEPALIVE, 1, keep_alive_sequence);
-        xboneReport->header.length = 4;
-        static uint8_t keepAlive[] = {0x80, 0x00, 0x00, 0x00};
-        memcpy(epin_buf + sizeof(GipHeader_t), &keepAlive, sizeof(keepAlive));
-        xboneReportSize = sizeof(GipHeader_t) + sizeof(keepAlive);
-        // If successful, update our keep alive timer/sequence
-        if (send_xbone_usb(epin_buf, xboneReportSize) == true)
-        {
-            keep_alive_timer = to_ms_since_boot(get_absolute_time());
-            keep_alive_sequence++; // will rollover
-            if (keep_alive_sequence == 0)
-                keep_alive_sequence = 1;
-        }
+        outgoingXGIP->reset();
+        outgoingXGIP->setAttributes(GIP_KEEPALIVE, keep_alive_sequence, 1, 0, 0);
+        outgoingXGIP->setData(xb1_keep_alive, sizeof(xb1_keep_alive));
+        queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
+        keep_alive_timer = now;
+        keep_alive_sequence++;
+        if (keep_alive_sequence == 0)
+            keep_alive_sequence = 1;
         return;
     }
 
     memset(epin_buf, 0, sizeof(XboxOneGamepad_Data_t));
-    GIP_HEADER((xboneReport), GIP_INPUT_REPORT, false, last_report_counter);
     xboneReportSize = sizeof(XboxOneGamepad_Data_t);
 
     for (const auto &profile : profiles)
@@ -576,54 +570,35 @@ void XboxOneGamepadDevice::process()
     if (xb1_guide_pressed != xboneReport->guide)
     {
         xb1_guide_pressed = xboneReport->guide;
-        uint8_t new_sequence = virtual_keycode_sequence;
-        new_sequence++; // will rollover
-        if (new_sequence == 0)
-            new_sequence = 1;
-        GIP_HEADER((xboneReport), GIP_VIRTUAL_KEYCODE, 1, new_sequence);
-        if (xb1_guide_pressed == false)
+        virtual_keycode_sequence++; // will rollover
+        if (virtual_keycode_sequence == 0)
+            virtual_keycode_sequence = 1;
+        outgoingXGIP->reset();
+        outgoingXGIP->setAttributes(GIP_VIRTUAL_KEYCODE, virtual_keycode_sequence, 1, 0, 0);
+        if (xb1_guide_pressed)
         {
-            xboneReport->header.length = sizeof(xb1_guide_on);
-            memcpy(epin_buf + sizeof(GipHeader_t), &xb1_guide_on, sizeof(xb1_guide_on));
-            xboneReportSize = sizeof(GipHeader_t) + sizeof(xb1_guide_on);
+            outgoingXGIP->setData(xb1_guide_on, sizeof(xb1_guide_on));
         }
         else
         {
-            xboneReport->header.length = sizeof(xb1_guide_off);
-            memcpy(epin_buf + sizeof(GipHeader_t), &xb1_guide_off, sizeof(xb1_guide_off));
-            xboneReportSize = sizeof(GipHeader_t) + sizeof(xb1_guide_off);
+            outgoingXGIP->setData(xb1_guide_off, sizeof(xb1_guide_off));
         }
-        if (send_xbone_usb((uint8_t *)&xboneReport, xboneReportSize) == true)
-        {
-            // On success, update our guide pressed state and virtual key code state
-            virtual_keycode_sequence = new_sequence;
-            xb1_guide_pressed = !xb1_guide_pressed;
-        }
+        queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
         return;
     }
     // this was set temporarily to make things easier for mapping, so don't actually send it
     xboneReport->guide = false;
     // We changed inputs since generating our last report, increment last report counter (but don't update until success)
-    if (memcmp(last_report, epin_buf + sizeof(GipHeader_t), xboneReportSize - sizeof(GipHeader_t)) != 0)
+    if (memcmp(last_report, epin_buf, xboneReportSize) != 0)
     {
-        xboneReportSize = sizeof(XboxOneGamepad_Data_t);
         memcpy(last_report, epin_buf, xboneReportSize);
-        xboneReport->header.sequence = last_report_counter + 1;
-        if (xboneReport->header.sequence == 0)
-            xboneReport->header.sequence = 1;
-
-        // Successfully sent report, actually increment last report counter!
-        if (send_xbone_usb(epin_buf, xboneReportSize) == true)
-        {
-            if (memcmp(last_report, epin_buf + sizeof(GipHeader_t), xboneReportSize - sizeof(GipHeader_t)) != 0)
-            {
-                last_report_counter++;
-                if (last_report_counter == 0)
-                    last_report_counter = 1;
-                memcpy(last_report, epin_buf + sizeof(GipHeader_t), xboneReportSize);
-                return;
-            }
-        }
+        last_report_counter++; // will rollover
+        if (last_report_counter == 0)
+            last_report_counter = 1;
+        outgoingXGIP->reset();
+        outgoingXGIP->setAttributes(GIP_INPUT_REPORT, last_report_counter, 0, 0, 0);
+        outgoingXGIP->setData(epin_buf, xboneReportSize);
+        queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
     }
 }
 

@@ -5,6 +5,8 @@
 #include "usb/host/xinput_host.h"
 #include "usb/host/hid_host.h"
 #include "usb/host/midi_host.h"
+#include "usb/host/ogxbox_host.h"
+#include "usb/host/xone_host.h"
 #include "config.hpp"
 #include "usb/device//hid_device.h"
 #include "hardware/dma.h"
@@ -81,6 +83,7 @@ bool usbh_init(void)
     }
     return true;
 }
+
 void process_product_string(tuh_xfer_t *xfer)
 {
     if (host_devices[xfer->daddr])
@@ -159,6 +162,8 @@ static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<
     XInputBigButtonHost::open,
     XInputWirelessGamepadHost::open,
     XInputWirelessAudioHost::open,
+    OGXboxHost::open,
+    XboxOneHost::open,
     HidHost::open,
     MidiHost::open};
 
@@ -224,11 +229,13 @@ void usbh_close(uint8_t dev_addr)
     if (host_devices[dev_addr])
     {
         host_devices[dev_addr]->disconnect();
-        host_devices[dev_addr] = std::shared_ptr<UsbHostDevice>();
         assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
                                                     { return dev->dev_addr() == dev_addr; }));
+        host_devices[dev_addr] = std::shared_ptr<UsbHostDevice>();
         if (HIDConfigDevice::tool_closed())
         {
+            fflush(stdout);
+            sleep_ms(500);
             reload();
         }
     }

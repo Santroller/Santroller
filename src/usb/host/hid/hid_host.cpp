@@ -25,7 +25,7 @@ static std::shared_ptr<UsbHostInterface> (*hid_device_types[])(std::shared_ptr<U
 static CFG_TUSB_MEM_ALIGN uint8_t temp_buf[512];
 std::shared_ptr<UsbHostInterface> HidHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
-    TU_VERIFY(TUSB_CLASS_HID == desc_itf->bInterfaceClass, nullptr);
+    TU_VERIFY(TUSB_CLASS_HID == desc_itf->bInterfaceClass && desc_itf->bAlternateSetting == 0, nullptr);
     const uint16_t drv_len = (uint16_t)(sizeof(tusb_desc_interface_t) + sizeof(tusb_hid_descriptor_hid_t) +
                                         desc_itf->bNumEndpoints * sizeof(tusb_desc_endpoint_t));
     uint8_t dev_addr = list->dev_addr();

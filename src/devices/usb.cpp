@@ -169,7 +169,7 @@ static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<
 
 uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
-    printf("usbh open %d %d\r\n", dev_addr, desc_itf->bInterfaceNumber);
+    printf("usbh open %d %d %d\r\n", dev_addr, desc_itf->bInterfaceNumber, desc_itf->bAlternateSetting);
     if (!host_devices[dev_addr])
     {
         host_devices[dev_addr] = std::make_shared<UsbHostDevice>(dev_addr, usb_host_id);

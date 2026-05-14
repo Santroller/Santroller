@@ -93,7 +93,7 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
     {
         incomingXGIP->parse(m_ep_in_buf, xferred_bytes);
 
-        printf("cmd: %02x %02x\r\n", incomingXGIP->getCommand(), incomingXGIP->ackRequired());
+        // printf("cmd: %02x %02x\r\n", incomingXGIP->getCommand(), incomingXGIP->ackRequired());
         if (incomingXGIP->ackRequired())
         {
             printf("send ack!\r\n");

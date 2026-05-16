@@ -123,7 +123,3 @@ WS2812::~WS2812()
     dma_channel_unclaim(chan);
     data = nullptr;
 }
-
-static void pio_irq_handler()
-{
-}

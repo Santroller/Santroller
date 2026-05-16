@@ -7,6 +7,7 @@
 #include "usb/host/midi_host.h"
 #include "usb/host/ogxbox_host.h"
 #include "usb/host/xone_host.h"
+#include "hardware/pio.h"
 #include "config.hpp"
 #include "usb/device//hid_device.h"
 #include "hardware/dma.h"
@@ -15,6 +16,9 @@
 #include "utils.h"
 static uint8_t usb_host_id;
 static int8_t tx_ch = -1;
+static int8_t tx_sm = -1;
+static int8_t rx_sm = -1;
+static int8_t eop_sm = -1;
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : UsbHostInterface(0, 0, id), m_device(device)
 {
     printf("UsbHostHardwareDevice: %p\r\n", this);
@@ -26,14 +30,26 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
     {
         tx_ch = dma_claim_unused_channel(false);
     }
+    if (tx_sm == -1)
+    {
+        tx_sm = pio_claim_unused_sm(pio0, true);
+    }
+    if (rx_sm == -1)
+    {
+        rx_sm = pio_claim_unused_sm(pio0, true);
+    }
+    if (eop_sm == -1)
+    {
+        eop_sm = pio_claim_unused_sm(pio0, true);
+    }
     pio_usb_configuration_t host_config = {
         pin_dp : (uint8_t)(device.firstPin + device.dmFirst),
         pio_tx_num : 0,
-        sm_tx : 0,
+        sm_tx : (uint8_t)tx_sm,
         tx_ch : (uint8_t)tx_ch,
         pio_rx_num : 0,
-        sm_rx : 1,
-        sm_eop : 2,
+        sm_rx : (uint8_t)rx_sm,
+        sm_eop : (uint8_t)eop_sm,
         alarm_pool : NULL,
         debug_pin_rx : -1,
         debug_pin_eop : -1,
@@ -47,6 +63,9 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
     usb_host_id = id;
     tuh_configure(TUH_OPT_RHPORT, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &host_config);
     dma_channel_unclaim(tx_ch);
+    pio_sm_unclaim(pio0, tx_sm);
+    pio_sm_unclaim(pio0, rx_sm);
+    pio_sm_unclaim(pio0, eop_sm);
     tusb_init(TUH_OPT_RHPORT, &rh_init);
 }
 

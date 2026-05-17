@@ -3616,6 +3616,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         memset(report, 0, sizeof(ArcadeGuitarHeroGuitar_Data_t));
         report->always_1d = 0x1d;
         report->always_ff = 0xff;
+        report->tilt = PS3_STICK_CENTER;
         report->side = arcadeSide;
         TICK_ARCADE;
         asm volatile("" ::

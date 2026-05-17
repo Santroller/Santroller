@@ -11,6 +11,7 @@ ProtarNeck::ProtarNeck(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint
     gpio_set_dir(attPin, true);
     gpio_set_pulls(attPin, false, false);
     last = micros();
+    lastInit = millis();
 }
 
 void ProtarNeck::noAttention(void)
@@ -83,22 +84,25 @@ void ProtarNeck::tick()
         if (resp == 0x00)
         {
             valid = true;
-            memset(&lastInputs, 0, sizeof(lastInputs));
-            noAttention();
-            return;
         }
-        if (resp != 0x80)
+        else if (resp != 0x80)
         {
             valid = false;
-            noAttention();
-            return;
         }
-        valid = true;
-        uint8_t *buf = (uint8_t *)&lastInputs;
-        for (size_t i = 0; i < sizeof(lastInputs); i++)
+        else
         {
-            buf[i] = interface.transfer(0x12);
+            valid = true;
+            uint8_t *buf = (uint8_t *)&lastInputs;
+            for (size_t i = 0; i < sizeof(lastInputs); i++)
+            {
+                buf[i] = interface.transfer(0x12);
+            }
+            lastInput = millis();
         }
-        noAttention();
+    }
+    noAttention();
+    if (millis() - lastInput > 10)
+    {
+        memset(&lastInputs, 0, sizeof(lastInputs));
     }
 }

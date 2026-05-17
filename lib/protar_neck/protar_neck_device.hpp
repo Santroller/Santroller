@@ -45,6 +45,7 @@ private:
     uint8_t m_attPin;
     bool valid = false;
     long last = 0;
+    long lastInput = 0;
     long lastInit = 0;
     protarneck_t lastInputs;
 };

@@ -115,6 +115,14 @@ message MidiProGuitarAxisInput {
   required int32 deviceid = 1;
   required ProGuitarAxisType axis = 2; 
 }
+message ProtarNeckAxisInput {
+  required int32 deviceid = 1;
+  required ProGuitarAxisType axis = 2;
+}
+message ProtarNeckButtonInput {
+  required int32 deviceid = 1;
+  required ProGuitarButtonType button = 2;
+}
 
 message Input {
   oneof input {
@@ -141,6 +149,8 @@ message Input {
     MultiplexerInput multiplexer = 21;
     MidiProGuitarButtonInput midiProGuitarButton = 22;
     MidiProGuitarAxisInput midiProGuitarAxis = 23;
+    ProtarNeckAxisInput protarNeckAxis = 24;
+    ProtarNeckButtonInput protarNeckButton = 25;
   }
 }
 message InputActivationTrigger {

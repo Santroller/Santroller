@@ -6,6 +6,7 @@
 #include "input/mpr121.hpp"
 #include "input/ps2.hpp"
 #include "input/midi.hpp"
+#include "input/protarNeck.hpp"
 #include "input/usb.hpp"
 #include "input/crkd.hpp"
 #include "input/shortcut.hpp"
@@ -191,6 +192,10 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
         return std::unique_ptr<Input>(new MidiProGuitarButtonInput(input.input.midiProGuitarButton, std::static_pointer_cast<ProGuitarMidiDevice>(profile->midiDevices[input.input.midiProGuitarButton.deviceid])));
     case proto_Input_midiProGuitarAxis_tag:
         return std::unique_ptr<Input>(new MidiProGuitarAxisInput(input.input.midiProGuitarAxis, std::static_pointer_cast<ProGuitarMidiDevice>(profile->midiDevices[input.input.midiProGuitarAxis.deviceid])));
+    case proto_Input_protarNeckButton_tag:
+        return std::unique_ptr<Input>(new ProtarNeckButtonInput(input.input.protarNeckButton, std::static_pointer_cast<ProtarNeckDevice>(profile->devices[input.input.protarNeckButton.deviceid])));
+    case proto_Input_protarNeckAxis_tag:
+        return std::unique_ptr<Input>(new ProtarNeckAxisInput(input.input.protarNeckAxis, std::static_pointer_cast<ProtarNeckDevice>(profile->devices[input.input.protarNeckAxis.deviceid])));
     case proto_Input_mouseAxis_tag:
         return std::unique_ptr<Input>(new MouseAxisInput(input.input.mouseAxis, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.mouseAxis.deviceid])));
     case proto_Input_mouseButton_tag:

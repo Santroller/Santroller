@@ -137,6 +137,7 @@ add_executable(
   src/input/ps2.cpp
   src/input/midi.cpp
   src/input/mpr121.cpp
+  src/input/protarNeck.cpp
   src/input/fixed.cpp
   src/input/ads1115.cpp
   src/input/multiplexer.cpp

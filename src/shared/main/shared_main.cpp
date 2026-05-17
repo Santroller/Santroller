@@ -648,10 +648,11 @@ uint16_t handle_calibration_ps3_accel(uint16_t previous, int32_t orig_val, int16
 #endif
     return PS3_ACCEL_CENTER + ret;
 }
+
 uint8_t handle_calibration_arcade_accel(uint16_t previous, int32_t orig_val, int16_t min, int16_t max, int16_t center, uint16_t deadzone)
 {
-    int8_t ret = handle_calibration_xbox((previous - 65) << 9, orig_val, min, max, center, deadzone, 0) >> 9;
-    return (uint8_t)(ret + 65);
+    int8_t ret = handle_calibration_xbox((previous) << 8, orig_val, min, max, center, deadzone, 0) >> 8;
+    return (uint8_t)(ret);
 }
 long last_zero = 0;
 uint8_t handle_calibration_ps3_whammy(uint8_t previous, uint16_t orig_val, uint32_t min, int16_t multiplier, uint16_t deadzone)
@@ -3616,7 +3617,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         memset(report, 0, sizeof(ArcadeGuitarHeroGuitar_Data_t));
         report->always_1d = 0x1d;
         report->always_ff = 0xff;
-        report->tilt = PS3_STICK_CENTER;
+        report->tilt = 0;
         report->side = arcadeSide;
         TICK_ARCADE;
         asm volatile("" ::

@@ -485,6 +485,8 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
 }
 uint16_t MidiDevice::readProGuitarAxis(proto_ProGuitarAxisType axis)
 {
+    // we want fret inputs to stay at the standard range
+    // but then everything else needs to be scaled up
     switch (axis)
     {
     case ProGuitarLowEFret:
@@ -500,17 +502,17 @@ uint16_t MidiDevice::readProGuitarAxis(proto_ProGuitarAxisType axis)
     case ProGuitarHighEFret:
         return midiFrets[5];
     case ProGuitarLowEFretVelocity:
-        return midiStringVelocities[0];
+        return midiStringVelocities[0] << 8;
     case ProGuitarAFretVelocity:
-        return midiStringVelocities[1];
+        return midiStringVelocities[1] << 8;
     case ProGuitarDFretVelocity:
-        return midiStringVelocities[2];
+        return midiStringVelocities[2] << 8;
     case ProGuitarGFretVelocity:
-        return midiStringVelocities[3];
+        return midiStringVelocities[3] << 8;
     case ProGuitarBFretVelocity:
-        return midiStringVelocities[4];
+        return midiStringVelocities[4] << 8;
     case ProGuitarHighEFretVelocity:
-        return midiStringVelocities[5];
+        return midiStringVelocities[5] << 8;
     case ProGuitarLeftStickX:
         return 32767;
     case ProGuitarLeftStickY:

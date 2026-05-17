@@ -64,25 +64,25 @@ void ProGuitarAxisMapping::update_ps3(uint8_t *buf)
         report->highEFret = m_calibratedValue;
         break;
     case ProGuitarLowEFretVelocity:
-        report->lowEFretVelocity = m_calibratedValue;
+        report->lowEFretVelocity = m_calibratedValue >> 8;
         break;
     case ProGuitarAFretVelocity:
-        report->aFretVelocity = m_calibratedValue;
+        report->aFretVelocity = m_calibratedValue >> 8;
         break;
     case ProGuitarDFretVelocity:
-        report->dFretVelocity = m_calibratedValue;
+        report->dFretVelocity = m_calibratedValue >> 8;
         break;
     case ProGuitarGFretVelocity:
-        report->gFretVelocity = m_calibratedValue;
+        report->gFretVelocity = m_calibratedValue >> 8;
         break;
     case ProGuitarBFretVelocity:
-        report->bFretVelocity = m_calibratedValue;
+        report->bFretVelocity = m_calibratedValue >> 8;
         break;
     case ProGuitarHighEFretVelocity:
-        report->highEFretVelocity = m_calibratedValue;
+        report->highEFretVelocity = m_calibratedValue >> 8;
         break;
     case ProGuitarTilt:
-        report->tilt = m_calibratedValue;
+        report->tilt = m_calibratedValue >> 8;
         break;
     default:
         break;
@@ -131,25 +131,25 @@ void ProGuitarAxisMapping::update_xinput(uint8_t *buf)
         report->highEFret = m_calibratedValue;
         break;
     case ProGuitarLowEFretVelocity:
-        report->lowEFretVelocity = m_calibratedValue;
+        report->lowEFretVelocity = m_calibratedValue >> 8;
         break;
     case ProGuitarAFretVelocity:
-        report->aFretVelocity = m_calibratedValue;
+        report->aFretVelocity = m_calibratedValue >> 8;
         break;
     case ProGuitarDFretVelocity:
-        report->dFretVelocity = m_calibratedValue;
+        report->dFretVelocity = m_calibratedValue >> 8;
         break;
     case ProGuitarGFretVelocity:
-        report->gFretVelocity = m_calibratedValue;
+        report->gFretVelocity = m_calibratedValue >> 8;
         break;
     case ProGuitarBFretVelocity:
-        report->bFretVelocity = m_calibratedValue;
+        report->bFretVelocity = m_calibratedValue >> 8;
         break;
     case ProGuitarHighEFretVelocity:
-        report->highEFretVelocity = m_calibratedValue;
+        report->highEFretVelocity = m_calibratedValue >> 8;
         break;
     case ProGuitarTilt:
-        report->tilt = m_calibratedValue;
+        report->tilt = m_calibratedValue >> 8;
         break;
     default:
         break;

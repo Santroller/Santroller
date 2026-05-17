@@ -26,17 +26,17 @@ uint16_t ProtarNeck::readAxis(ProGuitarNeckAxisType axisType)
 {
     switch (axisType)
     {
-    case ProGuitarLowEFret:
+    case ProGuitarNeckLowEFret:
         return lastInputs.lowEFret;
-    case ProGuitarAFret:
+    case ProGuitarNeckAFret:
         return lastInputs.aFret;
-    case ProGuitarDFret:
+    case ProGuitarNeckDFret:
         return lastInputs.dFret;
-    case ProGuitarGFret:
+    case ProGuitarNeckGFret:
         return lastInputs.gFret;
-    case ProGuitarBFret:
+    case ProGuitarNeckBFret:
         return lastInputs.bFret;
-    case ProGuitarHighEFret:
+    case ProGuitarNeckHighEFret:
         return lastInputs.highEFret;
     default:
         return 0;
@@ -48,25 +48,25 @@ bool ProtarNeck::readButton(ProGuitarNeckButtonType buttonType)
 
     switch (buttonType)
     {
-    case ProGuitarGreen:
+    case ProGuitarNeckGreen:
         return lastInputs.green;
-    case ProGuitarRed:
+    case ProGuitarNeckRed:
         return lastInputs.red;
-    case ProGuitarYellow:
+    case ProGuitarNeckYellow:
         return lastInputs.yellow;
-    case ProGuitarBlue:
+    case ProGuitarNeckBlue:
         return lastInputs.blue;
-    case ProGuitarOrange:
+    case ProGuitarNeckOrange:
         return lastInputs.orange;
-    case ProGuitarSoloGreen:
+    case ProGuitarNeckSoloGreen:
         return lastInputs.green && lastInputs.soloFlag;
-    case ProGuitarSoloRed:
+    case ProGuitarNeckSoloRed:
         return lastInputs.red && lastInputs.soloFlag;
-    case ProGuitarSoloYellow:
+    case ProGuitarNeckSoloYellow:
         return lastInputs.yellow && lastInputs.soloFlag;
-    case ProGuitarSoloBlue:
+    case ProGuitarNeckSoloBlue:
         return lastInputs.blue && lastInputs.soloFlag;
-    case ProGuitarSoloOrange:
+    case ProGuitarNeckSoloOrange:
         return lastInputs.orange && lastInputs.soloFlag;
     default:
         return 0;

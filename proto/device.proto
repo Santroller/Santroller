@@ -86,6 +86,10 @@ message PSXDevice {
   required int32 ackPin = 3;
   required MappingMode mappingMode = 4;
 }
+message ProtarNeckDevice {
+  required SPIDevice spi = 1;
+  required int32 attPin = 2;
+}
 message SNESDevice {
   required int32 clockPin = 1;
   required int32 latchPin = 2;
@@ -154,5 +158,6 @@ message Device {
     APA102Device apa102 = 27;
     STP16CPCDevice stp16cpc = 28;
     BluetoothDevice bt = 29;
+    ProtarNeckDevice protarNeck = 30;
   }
 }

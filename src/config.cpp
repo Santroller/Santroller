@@ -23,6 +23,7 @@
 #include "devices/djh.hpp"
 #include "devices/crkd.hpp"
 #include "devices/ads1115.hpp"
+#include "devices/protar_neck.hpp"
 #include "devices/gh5neck.hpp"
 #include "devices/usb.hpp"
 #include "devices/ps2.hpp"
@@ -95,10 +96,11 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new WiiDevice(device.device.wii, *dev_id));
         break;
     case proto_Device_psx_tag:
-    {
         active_devices.emplace_back(new PS2Device(device.device.psx, *dev_id));
         break;
-    }
+    case proto_Device_protarNeck_tag:
+        active_devices.emplace_back(new ProtarNeckDevice(device.device.protarNeck, *dev_id));
+        break;
     case proto_Device_bhDrum_tag:
         active_devices.emplace_back(new BandHeroDrumDevice(device.device.bhDrum, *dev_id));
         break;

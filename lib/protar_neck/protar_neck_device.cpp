@@ -9,6 +9,7 @@ ProtarNeck::ProtarNeck(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint
     printf("protar neck init!\r\n");
     gpio_init(attPin);
     gpio_set_dir(attPin, true);
+    gpio_set_pulls(attPin, false, false);
     last = micros();
 }
 

@@ -13,6 +13,11 @@ ProtarNeckDevice::ProtarNeckDevice(proto_ProtarNeckDevice device, uint16_t id) :
 void ProtarNeckDevice::update(bool full_poll, bool send_events)
 {
     m_controller.tick();
+    if (m_lastConnected != m_controller.controller_valid() || full_poll) {
+        m_lastConnected = m_controller.controller_valid();
+        proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
+        HIDConfigDevice::send_event(event, true);
+    }
 }
 
 bool ProtarNeckDevice::using_pin(uint8_t pin)

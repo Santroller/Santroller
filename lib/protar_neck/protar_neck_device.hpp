@@ -35,7 +35,7 @@ public:
     void tick();
     uint16_t readAxis(ProGuitarNeckAxisType type);
     bool readButton(ProGuitarNeckButtonType type);
-    void processData(bool ack, bool timeout);
+    bool controller_valid() { return valid; }
 
 private:
     bool autoShiftData();

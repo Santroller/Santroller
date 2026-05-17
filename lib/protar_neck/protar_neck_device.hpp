@@ -33,8 +33,8 @@ class ProtarNeck
 public:
     ProtarNeck(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin);
     void tick();
-    uint16_t readAxis(ProGuitarAxisType type);
-    bool readButton(ProGuitarButtonType type);
+    uint16_t readAxis(ProGuitarNeckAxisType type);
+    bool readButton(ProGuitarNeckButtonType type);
     void processData(bool ack, bool timeout);
 
 private:

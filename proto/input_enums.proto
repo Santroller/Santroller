@@ -699,3 +699,24 @@ enum AccelerometerInputType {
   AccelerometerAdc2 = 5;
   AccelerometerAdc3 = 6;
 }
+enum ProGuitarNeckButtonType {
+  ProGuitarNeckGreen = 1;
+  ProGuitarNeckRed = 2;
+  ProGuitarNeckYellow = 3;
+  ProGuitarNeckBlue = 4;
+  ProGuitarNeckOrange = 5;
+  ProGuitarNeckSoloGreen = 6;
+  ProGuitarNeckSoloRed = 7;
+  ProGuitarNeckSoloYellow = 8;
+  ProGuitarNeckSoloBlue = 9;
+  ProGuitarNeckSoloOrange = 10;
+}
+
+enum ProGuitarNeckAxisType {
+  ProGuitarNeckLowEFret = 1;
+  ProGuitarNeckAFret = 2;
+  ProGuitarNeckDFret = 3;
+  ProGuitarNeckGFret = 4;
+  ProGuitarNeckBFret = 5;
+  ProGuitarNeckHighEFret = 6;
+}

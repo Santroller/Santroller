@@ -19,11 +19,11 @@ bool ProtarNeckDevice::using_pin(uint8_t pin)
 {
     return pin == m_device.spi.mosi || pin == m_device.spi.miso || pin == m_device.spi.sck || pin == m_device.attPin;
 }
-uint16_t ProtarNeckDevice::readAxis(ProGuitarAxisType type)
+uint16_t ProtarNeckDevice::readAxis(ProGuitarNeckAxisType type)
 {
     return m_controller.readAxis(type);
 }
-bool ProtarNeckDevice::readButton(ProGuitarButtonType type)
+bool ProtarNeckDevice::readButton(ProGuitarNeckButtonType type)
 {
     return m_controller.readButton(type);
 }

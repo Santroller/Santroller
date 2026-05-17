@@ -13,8 +13,8 @@ public:
     ~ProtarNeckDevice() {}
     ProtarNeckDevice(proto_ProtarNeckDevice device, uint16_t id);
     void update(bool full_poll, bool send_events);
-    uint16_t readAxis(ProGuitarAxisType type);
-    bool readButton(ProGuitarButtonType type);
+    uint16_t readAxis(ProGuitarNeckAxisType type);
+    bool readButton(ProGuitarNeckButtonType type);
     bool using_pin(uint8_t pin);
 
 private:

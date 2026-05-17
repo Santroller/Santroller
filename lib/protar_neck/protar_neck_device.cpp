@@ -21,7 +21,7 @@ void ProtarNeck::signalAttention(void)
     gpio_put(m_attPin, false);
 }
 
-uint16_t ProtarNeck::readAxis(ProGuitarAxisType axisType)
+uint16_t ProtarNeck::readAxis(ProGuitarNeckAxisType axisType)
 {
     switch (axisType)
     {
@@ -42,7 +42,7 @@ uint16_t ProtarNeck::readAxis(ProGuitarAxisType axisType)
     }
     return 0;
 }
-bool ProtarNeck::readButton(ProGuitarButtonType buttonType)
+bool ProtarNeck::readButton(ProGuitarNeckButtonType buttonType)
 {
 
     switch (buttonType)

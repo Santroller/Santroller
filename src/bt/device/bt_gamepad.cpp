@@ -116,11 +116,11 @@ void set_battery_state(uint8_t state)
 }
 BTGamepadDevice::BTGamepadDevice()
 {
-
 }
 BTGamepadDevice::~BTGamepadDevice()
 {
-    if (!isPicoW) {
+    if (!isPicoW)
+    {
         return;
     }
     hci_power_control(HCI_POWER_OFF);
@@ -134,7 +134,8 @@ BTGamepadDevice::~BTGamepadDevice()
 }
 void BTGamepadDevice::initialize()
 {
-    if (!isPicoW) {
+    if (!isPicoW)
+    {
         return;
     }
     printf("btgamepaddevice init\r\n");
@@ -240,45 +241,48 @@ void BTGamepadDevice::initialize()
 }
 void BTGamepadDevice::process()
 {
-    PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
-    memcpy(epin_buf, initialReport, sizeof(epin_buf));
-    report->rid = ReportIdGamepad;
-    report->rsize = sizeof(PCGamepadDpad_Data_t);
+    if (con_handle != HCI_CON_HANDLE_INVALID)
+    {
+        PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
+        memcpy(epin_buf, initialReport, sizeof(epin_buf));
+        report->rid = ReportIdGamepad;
+        report->rsize = sizeof(PCGamepadDpad_Data_t);
 
-    for (const auto &profile : profiles)
-    {
-        for (const auto &mapping : profile->mappings)
+        for (const auto &profile : profiles)
         {
-        mapping->update(false, false);
-        mapping->update_hid(epin_buf);
+            for (const auto &mapping : profile->mappings)
+            {
+                mapping->update(false, false);
+                mapping->update_hid(epin_buf);
+            }
+            for (const auto &led : profile->leds)
+            {
+                led->update(false, false);
+            }
         }
-        for (const auto &led : profile->leds)
+        if (invert_y_axis_hid && subtype == Gamepad)
         {
-        led->update(false, false);
+            report->leftStickY = -report->leftStickY;
+            report->rightStickY = -report->rightStickY;
         }
-    }
-    if (invert_y_axis_hid && subtype == Gamepad)
-    {
-        report->leftStickY = -report->leftStickY;
-        report->rightStickY = -report->rightStickY;
-    }
-    // dance pads need to report the dpad as buttons, so skip the conversion to hat
-    if (subtype != Dancepad)
-    {
-        // convert bitmask dpad to actual hid dpad
-        report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
-    }
-    if (subtype == GuitarHeroGuitar)
-    {
-        // convert bitmask slider to actual hid slider
-        XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
-        reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
-    }
-    if (memcmp(lastReport, epin_buf, sizeof(XInputGamepad_Data_t)) != 0)
-    {
+        // dance pads need to report the dpad as buttons, so skip the conversion to hat
+        if (subtype != Dancepad)
+        {
+            // convert bitmask dpad to actual hid dpad
+            report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
+        }
+        if (subtype == GuitarHeroGuitar)
+        {
+            // convert bitmask slider to actual hid slider
+            XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
+            reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
+        }
+        if (memcmp(lastReport, epin_buf, sizeof(XInputGamepad_Data_t)) != 0)
+        {
 
-        send_report(sizeof(XInputGamepad_Data_t), epin_buf);
-        memcpy(lastReport, epin_buf, sizeof(XInputGamepad_Data_t));
+            send_report(sizeof(XInputGamepad_Data_t), epin_buf);
+            memcpy(lastReport, epin_buf, sizeof(XInputGamepad_Data_t));
+        }
     }
 }
 

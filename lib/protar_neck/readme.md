@@ -4,6 +4,7 @@ body -> neck, {0x80, 0x12, 0x12, 0x12, 0x12, 0x12}
 
 neck -> body
 
+```c
 struct {
     uint8_t header = 0x80;
     uint16_t lowEFret : 5;
@@ -26,3 +27,5 @@ struct {
     uint8_t : 1; // always 0
 
 } protarneck_t;
+```
+data is sent repeatedly when buttons are held down, but there is no event sent for buttons being released.

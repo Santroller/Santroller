@@ -170,6 +170,7 @@ void HIDGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 }
 const uint8_t *HIDGamepadDevice::report_descriptor()
 {
+  seenHidDescriptorRead = true;
   if (subtype == Dancepad)
   {
     return desc_hid_report_buttons;

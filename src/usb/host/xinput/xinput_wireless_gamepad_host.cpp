@@ -53,6 +53,7 @@ std::shared_ptr<UsbHostInterface> XInputWirelessGamepadHost::open(std::shared_pt
     {
         list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
     }
+    enumerating_usb_devices.push_back(intf);
 
     *out_len = TUD_XINPUT_WIRELESS_CONTROLLER_DESC_LEN;
     printf("found device: %d\r\n", intf->m_subtype);
@@ -82,6 +83,7 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                     printf("Disconnected %02x %02x\r\n", m_dev_addr, m_interface);
                     assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [this](std::shared_ptr<UsbHostInterface> intf)
                                                                 { return intf.get() == this; }));
+                    enumerating_usb_devices.push_back(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
                     m_found = false;
                     reload();
                 }
@@ -105,6 +107,8 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                     send_intr_xfer(m_ep_out, capabilitiesRequest, sizeof(capabilitiesRequest));
                     m_check_caps = millis() + 1000;
                     m_found = true;
+                    enumerating_usb_devices.erase(std::remove_if(enumerating_usb_devices.begin(), enumerating_usb_devices.end(), [this](std::shared_ptr<UsbHostInterface> intf)
+                                                                 { return intf.get() == this; }));
                     assignable_usb_devices.push_back(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
                     if (HIDConfigDevice::tool_closed())
                     {

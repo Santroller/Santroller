@@ -16,7 +16,7 @@
 #define GIP_AUTHENTICATION 0x06
 #define GIP_VIRTUAL_KEYCODE 0x07
 #define GIP_CMD_RUMBLE 0x09
-#define GIP_CMD_LED      0x0a
+#define GIP_CMD_LED 0x0a
 #define GIP_INPUT_REPORT 0x20
 #define GHL_HID_REPORT 0x21
 #define GHL_HID_OUTPUT 0x22
@@ -24,7 +24,8 @@
 #define GIP_POWER_ON 0x00
 #define GIP_LED_ON 0x01
 
-enum XboxResult {
+enum XboxResult
+{
     /// <summary>The packet was processed successfully.</summary>
     Success,
     /// <summary>More packet data is incoming and needs to be received.</summary>
@@ -36,13 +37,37 @@ enum XboxResult {
     /// <summary>The device being connected is not supported.</summary>
     UnsupportedDevice,
 };
-
+typedef struct
+{
+    uint16_t length;
+    uint16_t major_version;
+    uint16_t minor_version;
+    uint16_t reserved1;
+    uint16_t reserved2;
+    uint16_t reserved3;
+    uint16_t reserved4;
+    uint16_t total_size;
+} __attribute__((packed)) BinaryMetadataHeader;
+typedef struct
+{
+    uint16_t length;
+    uint16_t firmware_versions_offset;
+    uint16_t audio_formats_offset;
+    uint16_t in_commands_offset;
+    uint16_t out_commands_offset;
+    uint16_t preferred_types_offset;
+    uint16_t interfaces_offset;
+    uint16_t hid_descriptor_offset;
+    uint16_t reserved1;
+    uint16_t reserved2;
+    uint16_t reserved3;
+} __attribute__((packed)) BinaryDeviceMetadata;
 typedef struct
 {
     uint8_t sync : 1;
     uint8_t guide : 1;
-    uint8_t start : 1;  // menu
-    uint8_t back : 1;   // view
+    uint8_t start : 1; // menu
+    uint8_t back : 1;  // view
 
     uint8_t a : 1;
     uint8_t b : 1;
@@ -72,22 +97,22 @@ typedef struct
 {
     uint8_t sync : 1;
     uint8_t guide : 1;
-    uint8_t start : 1;  // menu
-    uint8_t back : 1;   // view
+    uint8_t start : 1; // menu
+    uint8_t back : 1;  // view
 
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
+    uint8_t a : 1; // green
+    uint8_t b : 1; // red
+    uint8_t x : 1; // blue
+    uint8_t y : 1; // yellow
 
-    uint8_t dpadUp : 1;    // dpadStrumUp
-    uint8_t dpadDown : 1;  // dpadStrumDown
+    uint8_t dpadUp : 1;   // dpadStrumUp
+    uint8_t dpadDown : 1; // dpadStrumDown
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
 
-    uint8_t leftShoulder : 1;  // orange
+    uint8_t leftShoulder : 1; // orange
     uint8_t : 1;
-    uint8_t solo : 1;  // leftThumbClick
+    uint8_t solo : 1; // leftThumbClick
     uint8_t : 1;
 
     uint8_t tilt;
@@ -107,7 +132,7 @@ typedef struct
     uint8_t soloBlue : 1;
     uint8_t soloOrange : 1;
     uint8_t : 3;
-    
+
     uint8_t autocalLight;
     uint16_t autocalAudio;
     int16_t joystickX;
@@ -120,22 +145,22 @@ typedef struct
 {
     uint8_t sync : 1;
     uint8_t guide : 1;
-    uint8_t start : 1;  // menu
-    uint8_t back : 1;   // view
+    uint8_t start : 1; // menu
+    uint8_t back : 1;  // view
 
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
+    uint8_t a : 1; // green
+    uint8_t b : 1; // red
+    uint8_t x : 1; // blue
+    uint8_t y : 1; // yellow
 
-    uint8_t dpadUp : 1;    // dpadStrumUp
-    uint8_t dpadDown : 1;  // dpadStrumDown
+    uint8_t dpadUp : 1;   // dpadStrumUp
+    uint8_t dpadDown : 1; // dpadStrumDown
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
 
-    uint8_t leftShoulder : 1;  // orange
+    uint8_t leftShoulder : 1; // orange
     uint8_t : 1;
-    uint8_t solo : 1;  // leftThumbClick
+    uint8_t solo : 1; // leftThumbClick
     uint8_t : 1;
 
     uint8_t tilt;
@@ -154,23 +179,23 @@ typedef struct
 {
     uint8_t sync : 1;
     uint8_t guide : 1;
-    uint8_t start : 1;  // menu
-    uint8_t back : 1;   // view
+    uint8_t start : 1; // menu
+    uint8_t back : 1;  // view
 
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
+    uint8_t a : 1; // green
+    uint8_t b : 1; // red
+    uint8_t x : 1; // blue
+    uint8_t y : 1; // yellow
 
-    uint8_t dpadUp : 1;    // dpadStrumUp
-    uint8_t dpadDown : 1;  // dpadStrumDown
+    uint8_t dpadUp : 1;   // dpadStrumUp
+    uint8_t dpadDown : 1; // dpadStrumDown
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
 
-    uint8_t leftShoulder : 1;  // orange
+    uint8_t leftShoulder : 1; // orange
     uint8_t : 1;
 
-    uint8_t solo : 1;  // leftThumbClick
+    uint8_t solo : 1; // leftThumbClick
     uint8_t : 1;
 
     uint8_t key8 : 1;
@@ -200,8 +225,10 @@ typedef struct
     uint8_t key18 : 1;
     uint8_t key17 : 1;
 
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             uint8_t velocity1 : 7;
             uint8_t key25 : 1;
 
@@ -228,7 +255,7 @@ typedef struct
     uint8_t touchPad : 7;
     uint8_t : 1;
 
-    uint8_t pedalConnection : 1;  // If this matches PS3 MPA behavior, always 0 with the MIDI Pro Adapter
+    uint8_t pedalConnection : 1; // If this matches PS3 MPA behavior, always 0 with the MIDI Pro Adapter
     uint8_t : 7;
 } __attribute__((packed)) XboxOneRockBandKeyboard_Data_t;
 
@@ -236,21 +263,21 @@ typedef struct
 {
     uint8_t sync : 1;
     uint8_t guide : 1;
-    uint8_t start : 1;  // menu
-    uint8_t back : 1;   // view
+    uint8_t start : 1; // menu
+    uint8_t back : 1;  // view
 
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t x : 1;  // blue
-    uint8_t y : 1;  // yellow
+    uint8_t a : 1; // green
+    uint8_t b : 1; // red
+    uint8_t x : 1; // blue
+    uint8_t y : 1; // yellow
 
     uint8_t dpadUp : 1;
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
 
-    uint8_t leftShoulder : 1;   // kick1
-    uint8_t rightShoulder : 1;  // kick2
+    uint8_t leftShoulder : 1;  // kick1
+    uint8_t rightShoulder : 1; // kick2
     uint8_t : 1;
     uint8_t : 1;
 
@@ -270,8 +297,8 @@ typedef struct
 {
     uint8_t sync : 1;
     uint8_t guide : 1;
-    uint8_t start : 1;  // menu
-    uint8_t back : 1;   // view
+    uint8_t start : 1; // menu
+    uint8_t back : 1;  // view
 
     uint8_t a : 1;
     uint8_t b : 1;
@@ -325,7 +352,6 @@ typedef struct
     uint8_t data[1024];
 } __attribute__((packed)) GipPacket_t;
 
-
 typedef struct
 {
     uint8_t unk1;
@@ -353,11 +379,12 @@ typedef struct
     uint8_t mode;
     uint8_t brightness;
 } __attribute__((packed)) Gip_Led_On_t;
-typedef struct {
+typedef struct
+{
     uint8_t sync : 1;
     uint8_t guide : 1;
-    uint8_t start : 1;  // menu
-    uint8_t back : 1;   // view
+    uint8_t start : 1; // menu
+    uint8_t back : 1;  // view
 } __attribute__((packed)) XboxOneInputHeader_Data_t;
 
 typedef struct
@@ -372,15 +399,15 @@ typedef struct
     uint8_t subcommand;
 } __attribute__((packed)) GipPowerMode_t;
 
-
-typedef struct {
-    uint8_t subCommand;  // Assumed based on the descriptor reporting a larger max length than what this uses
+typedef struct
+{
+    uint8_t subCommand; // Assumed based on the descriptor reporting a larger max length than what this uses
     uint8_t flags;
     uint8_t leftTrigger;
     uint8_t rightTrigger;
     uint8_t leftMotor;
     uint8_t rightMotor;
-    uint8_t duration;  // in deciseconds?
-    uint8_t delay;     // in deciseconds?
-    uint8_t repeat;    // in deciseconds?
+    uint8_t duration; // in deciseconds?
+    uint8_t delay;    // in deciseconds?
+    uint8_t repeat;   // in deciseconds?
 } __attribute__((packed)) GipRumble_t;

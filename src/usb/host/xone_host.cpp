@@ -4,6 +4,7 @@
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
 #include "usb/usb_devices.h"
+#include "usb/device/hid_device.h"
 #include "config.hpp"
 #include "utils.h"
 static const uint8_t XBOXONE_POWER_ON[] = {0x06, 0x62, 0x45, 0xb8, 0x77, 0x26, 0x2c, 0x55,
@@ -11,6 +12,24 @@ static const uint8_t XBOXONE_POWER_ON[] = {0x06, 0x62, 0x45, 0xb8, 0x77, 0x26, 0
 static const uint8_t XBOXONE_POWER_ON_SINGLE[] = {0x00};
 static const uint8_t XBOXONE_RUMBLE_ON[] = {0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0xeb};
 static const uint8_t XBOXONE_LED_ON[] = {0x00, 0x01, 0x14}; // 0x01 - LED on, 0x14 - Brightness
+typedef struct
+{
+    SubType type;
+    char name[36];
+} preferred_type_mapping_t;
+// TODO: how do we deal with the legacy adapters
+static const char *PREFERRED_TYPE_WIRELESS_LEGACY = "MadCatz.Xbox.Module.Brangus";
+static const char *PREFERRED_TYPE_USB_LEGACY = "PDP.Xbox.RBAdapter.LegacyUSB";
+static const preferred_type_mapping_t PREFERRED_TYPES[] = {
+    {Gamepad, "Windows.Xbox.Input.Gamepad"},
+    {RockBandGuitar, "MadCatz.Xbox.Guitar.Stratocaster"},
+    {RockBandGuitar, "PDP.Xbox.Guitar.Jaguar"},
+    {LiveGuitar, "Activision.Xbox.Input.GH7"},
+    {RockBandDrums, "MadCatz.Xbox.Drums.Glam"},
+    {RockBandDrums, "PDP.Xbox.Drums.Tablah"},
+    {Skylanders, "Activision.Xbox.Skylanders.Portal"},
+    {LegoDimensions, "TTGames.Xbox.Dimensions.Gateway"},
+    {DisneyInfinity, "Disney.Xbox.Infinity.Base"}};
 XboxOneHost::XboxOneHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id)
 {
     incomingXGIP = new XGIPProtocol();
@@ -28,7 +47,7 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
 
     auto intf = std::make_shared<XboxOneHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);
-    intf->m_subtype = SubType_Gamepad;
+    intf->m_subtype = SubType_Unknown;
     uint8_t endpoints = desc_itf->bNumEndpoints;
     while (endpoints--)
     {
@@ -88,9 +107,14 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
 {
     if (ep_addr & 0x80 && result != XFER_RESULT_FAILED)
     {
+        if (xferred_bytes == 0)
+        {
+            usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+            return true;
+        }
         incomingXGIP->parse(m_ep_in_buf, xferred_bytes);
 
-        // printf("cmd: %02x %02x\r\n", incomingXGIP->getCommand(), incomingXGIP->ackRequired());
+        printf("cmd: %02x %02x %02x %02x\r\n", incomingXGIP->getCommand(), incomingXGIP->ackRequired(), incomingXGIP->endOfChunk(), xferred_bytes);
         if (incomingXGIP->ackRequired())
         {
             printf("send ack!\r\n");
@@ -98,7 +122,33 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
         }
         if (incomingXGIP->getCommand() == GIP_DEVICE_DESCRIPTOR && incomingXGIP->endOfChunk())
         {
+            uint8_t *data = incomingXGIP->getData();
+            BinaryMetadataHeader *header = (BinaryMetadataHeader *)data;
+            data = incomingXGIP->getData();
+            data += sizeof(BinaryMetadataHeader);
             printf("descriptor read done!\r\n");
+            BinaryDeviceMetadata *metadata = (BinaryDeviceMetadata *)data;
+            data += metadata->preferred_types_offset;
+            uint8_t preferredTypeStrCount = *data++;
+            while (preferredTypeStrCount)
+            {
+                uint16_t len = *(uint16_t *)data;
+                data += 2;
+                for (size_t i = 0; i < sizeof(PREFERRED_TYPES) / sizeof(PREFERRED_TYPES[0]); i++)
+                {
+                    if (strncmp((char *)data, PREFERRED_TYPES[i].name, len) == 0)
+                    {
+                        m_subtype = PREFERRED_TYPES[i].type;
+                        printf("found subtype: %d\r\n", m_subtype);
+                        if (HIDConfigDevice::tool_closed())
+                        {
+                            reload();
+                        }
+                        break;
+                    }
+                }
+                preferredTypeStrCount--;
+            }
             outgoingXGIP->reset();
             outgoingXGIP->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, 2, 1, 0, 0);
             outgoingXGIP->setData(XBOXONE_POWER_ON, sizeof(XBOXONE_POWER_ON));
@@ -146,63 +196,117 @@ void XboxOneHost::update(bool full_poll, bool send_events)
 
 bool XboxOneHost::tick_digital(UsbButtonType type)
 {
-    switch (type)
+    switch (m_subtype)
     {
-    case UsbButtonA:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->a;
-    case UsbButtonB:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->b;
-    case UsbButtonX:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->x;
-    case UsbButtonY:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->y;
-    case UsbButtonLeftShoulder:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftShoulder;
-    case UsbButtonRightShoulder:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightShoulder;
-    case UsbButtonBack:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->back;
-    case UsbButtonStart:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->start;
-    case UsbButtonGuide:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->guide;
-    case UsbButtonLeftThumbClick:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftThumbClick;
-    case UsbButtonRightThumbClick:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightThumbClick;
-    case UsbButtonDpadUp:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->dpadUp;
-    case UsbButtonDpadDown:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->dpadDown;
-    case UsbButtonDpadLeft:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->dpadLeft;
-    case UsbButtonDpadRight:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->dpadRight;
-    default:
-        return false;
+    case Gamepad:
+        switch (type)
+        {
+        case UsbButtonA:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->a;
+        case UsbButtonB:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->b;
+        case UsbButtonX:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->x;
+        case UsbButtonY:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->y;
+        case UsbButtonLeftShoulder:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftShoulder;
+        case UsbButtonRightShoulder:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightShoulder;
+        case UsbButtonBack:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->back;
+        case UsbButtonStart:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->start;
+        case UsbButtonGuide:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->guide;
+        case UsbButtonLeftThumbClick:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftThumbClick;
+        case UsbButtonRightThumbClick:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightThumbClick;
+        case UsbButtonDpadUp:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->dpadUp;
+        case UsbButtonDpadDown:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->dpadDown;
+        case UsbButtonDpadLeft:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->dpadLeft;
+        case UsbButtonDpadRight:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->dpadRight;
+        default:
+            return false;
+        }
+        break;
+    case RockBandGuitar:
+        switch (type)
+        {
+        case UsbButtonGreen:
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->a;
+        case UsbButtonRed:
+            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->b;
+        case UsbButtonYellow:
+            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->y;
+        case UsbButtonBlue:
+            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->x;
+        case UsbButtonOrange:
+            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->leftShoulder;
+        case UsbButtonBack:
+            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->back;
+        case UsbButtonStart:
+            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->start;
+        case UsbButtonGuide:
+            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->guide;
+        case UsbButtonStrumUp:
+            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->dpadUp;
+        case UsbButtonStrumDown:
+            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->dpadDown;
+        case UsbButtonDpadLeft:
+            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
+        case UsbButtonDpadRight:
+            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->dpadRight;
+        default:
+            return false;
+        }
+        break;
     }
 
     return false;
 }
 uint16_t XboxOneHost::tick_analog(UsbAxisType type)
 {
-    switch (type)
+    switch (m_subtype)
     {
-    case UsbAxisLeftTrigger:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftTrigger << 8;
-    case UsbAxisRightTrigger:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightTrigger << 8;
-    case UsbAxisLeftStickX:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftStickX + INT16_MAX;
-    case UsbAxisLeftStickY:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftStickY + INT16_MAX;
-    case UsbAxisRightStickX:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightStickX + INT16_MAX;
-    case UsbAxisRightStickY:
-        return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightStickY + INT16_MAX;
-    default:
-        return 0;
+    case Gamepad:
+        switch (type)
+        {
+        case UsbAxisLeftTrigger:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftTrigger << 8;
+        case UsbAxisRightTrigger:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightTrigger << 8;
+        case UsbAxisLeftStickX:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftStickX + INT16_MAX;
+        case UsbAxisLeftStickY:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftStickY + INT16_MAX;
+        case UsbAxisRightStickX:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightStickX + INT16_MAX;
+        case UsbAxisRightStickY:
+            return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightStickY + INT16_MAX;
+        default:
+            return 0;
+        }
+        break;
+    case RockBandGuitar:
+        switch (type)
+        {
+        case UsbAxisWhammy:
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->whammy << 8;
+        case UsbAxisTilt:
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->tilt << 8;
+        case UsbAxisPickup:
+            // TODO: map this right
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->pickup + INT16_MAX;
+        default:
+            return 0;
+        }
+        break;
     }
-
     return 0;
 }

@@ -69,6 +69,7 @@ std::unordered_map<uint32_t, std::shared_ptr<Device>> root_devices;
 // devices that have not yet been assigned to a profile
 std::vector<std::shared_ptr<Device>> assignable_devices;
 std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
+std::vector<std::shared_ptr<UsbHostInterface>> enumerating_usb_devices;
 std::map<ConsoleMode, std::shared_ptr<UsbHostInterface>> auth_devices;
 std::shared_ptr<UsbDevice> usb_instances[32];
 std::shared_ptr<UsbDevice> usb_instances_by_epin[16];

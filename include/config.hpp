@@ -38,6 +38,7 @@ extern std::vector<std::shared_ptr<Device>> active_devices;
 extern std::unordered_map<uint32_t, std::shared_ptr<Device>> root_devices;
 extern std::vector<std::shared_ptr<Device>> assignable_devices;
 extern std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
+extern std::vector<std::shared_ptr<UsbHostInterface>> enumerating_usb_devices;
 extern std::vector<std::shared_ptr<Instance>> active_instances;
 extern std::unordered_map<uint32_t, std::shared_ptr<Profile>> all_profiles;
 extern std::set<uint32_t> active_profiles;

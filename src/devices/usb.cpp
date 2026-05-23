@@ -250,6 +250,8 @@ void usbh_close(uint8_t dev_addr)
         host_devices[dev_addr]->disconnect();
         assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
                                                     { return dev->dev_addr() == dev_addr; }));
+        enumerating_usb_devices.erase(std::remove_if(enumerating_usb_devices.begin(), enumerating_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
+                                                    { return dev->dev_addr() == dev_addr; }));
         host_devices[dev_addr] = std::shared_ptr<UsbHostDevice>();
         if (HIDConfigDevice::tool_closed())
         {

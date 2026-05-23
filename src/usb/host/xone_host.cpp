@@ -4,9 +4,11 @@
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
 #include "usb/usb_devices.h"
+#include "devices/usb.hpp"
 #include "usb/device/hid_device.h"
 #include "config.hpp"
 #include "utils.h"
+#include <algorithm>
 static const uint8_t XBOXONE_POWER_ON[] = {0x06, 0x62, 0x45, 0xb8, 0x77, 0x26, 0x2c, 0x55,
                                            0x53, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f};
 static const uint8_t XBOXONE_POWER_ON_SINGLE[] = {0x00};
@@ -17,9 +19,6 @@ typedef struct
     SubType type;
     char name[36];
 } preferred_type_mapping_t;
-// TODO: how do we deal with the legacy adapters
-static const char *PREFERRED_TYPE_WIRELESS_LEGACY = "MadCatz.Xbox.Module.Brangus";
-static const char *PREFERRED_TYPE_USB_LEGACY = "PDP.Xbox.RBAdapter.LegacyUSB";
 static const preferred_type_mapping_t PREFERRED_TYPES[] = {
     {Gamepad, "Windows.Xbox.Input.Gamepad"},
     {RockBandGuitar, "MadCatz.Xbox.Guitar.Stratocaster"},
@@ -27,6 +26,8 @@ static const preferred_type_mapping_t PREFERRED_TYPES[] = {
     {LiveGuitar, "Activision.Xbox.Input.GH7"},
     {RockBandDrums, "MadCatz.Xbox.Drums.Glam"},
     {RockBandDrums, "PDP.Xbox.Drums.Tablah"},
+    {WirelessLegacyAdapter, "MadCatz.Xbox.Module.Brangus"},
+    {WiredLegacyAdapter, "PDP.Xbox.RBAdapter.LegacyUSB"},
     {Skylanders, "Activision.Xbox.Skylanders.Portal"},
     {LegoDimensions, "TTGames.Xbox.Dimensions.Gateway"},
     {DisneyInfinity, "Disney.Xbox.Infinity.Base"}};
@@ -47,7 +48,7 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
 
     auto intf = std::make_shared<XboxOneHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);
-    intf->m_subtype = SubType_Unknown;
+    intf->m_subtype = SubType_Gamepad;
     uint8_t endpoints = desc_itf->bNumEndpoints;
     while (endpoints--)
     {
@@ -81,7 +82,7 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
     }
     if (desc_itf->bInterfaceNumber == 0)
     {
-        assignable_usb_devices.push_back(intf);
+        enumerating_usb_devices.push_back(intf);
     }
     printf("size: %d\r\n", size);
     *out_len = size;
@@ -140,6 +141,9 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
                     {
                         m_subtype = PREFERRED_TYPES[i].type;
                         printf("found subtype: %d\r\n", m_subtype);
+                        enumerating_usb_devices.erase(std::remove_if(enumerating_usb_devices.begin(), enumerating_usb_devices.end(), [this](std::shared_ptr<UsbHostInterface> intf)
+                                                                     { return intf.get() == this; }));
+                        assignable_usb_devices.push_back(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
                         if (HIDConfigDevice::tool_closed())
                         {
                             reload();

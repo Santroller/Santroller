@@ -151,6 +151,10 @@ void update()
     {
         device->update(false, false);
     }
+    for (const auto &device : enumerating_usb_devices)
+    {
+        device->update(false, false);
+    }
     if (HIDConfigDevice::tool_closed())
     {
 

@@ -71,6 +71,10 @@ void HIDConfigDevice::process()
     {
       device->update(true, true);
     }
+    for (const auto &device : enumerating_usb_devices)
+    {
+      device->update(true, true);
+    }
     for (const auto &profile : all_profiles)
     {
       for (const auto &device : profile.second->devices)

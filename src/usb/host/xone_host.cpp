@@ -130,15 +130,24 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
             printf("descriptor read done!\r\n");
             BinaryDeviceMetadata *metadata = (BinaryDeviceMetadata *)data;
             data += metadata->preferred_types_offset;
+            // First byte at the offset is a count of items
             uint8_t preferredTypeStrCount = *data++;
-            while (preferredTypeStrCount)
+            bool found = false;
+            for (size_t j = 0; j < preferredTypeStrCount; j++)
             {
+                if (found)
+                {
+                    break;
+                }
+                // first two bytes are the string length
                 uint16_t len = *(uint16_t *)data;
                 data += 2;
-                for (size_t i = 0; i < sizeof(PREFERRED_TYPES) / sizeof(PREFERRED_TYPES[0]); i++)
+                // check if we know what device this is
+                for (size_t i = 0; i < TU_ARRAY_SIZE(PREFERRED_TYPES); i++)
                 {
                     if (strncmp((char *)data, PREFERRED_TYPES[i].name, len) == 0)
                     {
+                        // we found it, flag the device as assignable and reload
                         m_subtype = PREFERRED_TYPES[i].type;
                         printf("found subtype: %d\r\n", m_subtype);
                         enumerating_usb_devices.erase(std::remove_if(enumerating_usb_devices.begin(), enumerating_usb_devices.end(), [this](std::shared_ptr<UsbHostInterface> intf)
@@ -148,10 +157,10 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
                         {
                             reload();
                         }
+                        found = true;
                         break;
                     }
                 }
-                preferredTypeStrCount--;
             }
             outgoingXGIP->reset();
             outgoingXGIP->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, 2, 1, 0, 0);

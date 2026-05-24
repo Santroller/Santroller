@@ -189,6 +189,10 @@ void HIDConfigDevice::process()
         {
           device->update(profile_changed, true);
         }
+        for (const auto &device : enumerating_usb_devices)
+        {
+          device->update(profile_changed, true);
+        }
         for (const auto &device : assignable_usb_devices)
         {
           device->update(profile_changed, true);
@@ -272,8 +276,8 @@ void HIDConfigDevice::handle_command(proto_Command command)
     profile_selected = true;
     profile_changed = true;
     selected_profile = command.command.setProfile.profileId;
+    break;
   }
-  break;
   case proto_Command_reboot_tag:
   {
     reload();

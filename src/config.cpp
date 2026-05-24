@@ -86,9 +86,12 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     proto_Device device;
     uint16_t *dev_id = (uint16_t *)*arg;
+    // If we are loading a new config, we grab the previous device so we can make sure its state is restored
     auto prevDeviceIt = prev_root_devices.find(*dev_id);
     auto prevDevice = prevDeviceIt == prev_root_devices.end() ? std::shared_ptr<Device>() : prevDeviceIt->second;
     if (prevDevice) {
+        // signal devices that they are being torn down, but in a way where if they are being replaced, they aren't fully torn down
+        // This is so that things like PS2 controllers, Wii extensions and USB host and bluetooth aren't restarted during a config change
         prevDevice->end(false);
     }
     printf("found device! %d\r\n", prevDeviceIt != prev_root_devices.end());
@@ -102,9 +105,13 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new CrkdDevice(device.device.crkdNeck, *dev_id));
         break;
     case proto_Device_wii_tag:
+        // we pass in the previous device here so we can make sure the state is kept between reloads
+        // that way, an extension stays connected between reloads
         active_devices.emplace_back(new WiiDevice(std::static_pointer_cast<WiiDevice>(prevDevice), device.device.wii, *dev_id));
         break;
     case proto_Device_psx_tag:
+        // we pass in the previous device here so we can make sure the state is kept between reloads
+        // that way, a controller stays connected between reloads
         active_devices.emplace_back(new PS2Device(std::static_pointer_cast<PS2Device>(prevDevice), device.device.psx, *dev_id));
         break;
     case proto_Device_protarNeck_tag:
@@ -332,7 +339,7 @@ bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **a
         return false;
     }
     auto inputPtr = make_input(input, profile, stream);
-    if (inputPtr == nullptr)
+    if (!inputPtr)
     {
         return true;
     }

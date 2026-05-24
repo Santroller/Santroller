@@ -138,7 +138,7 @@ void PSXController::load_state(PSXController* state) {
     packet_delay = state->packet_delay;
 }
 PSXController::~PSXController() {
-
+    printf("~PSXController\r\n");
 }
 void PSXController::noAttention(void)
 {

@@ -7,6 +7,12 @@ MPR121Device::MPR121Device(proto_Mpr121Device device, uint16_t id) : Device(id),
 {
 }
 
+void MPR121Device::begin()
+{
+}
+void MPR121Device::end()
+{
+}
 void MPR121Device::update(bool full_poll, bool send_events) {
     m_mpr121.tick();
     if (m_lastConnected != m_mpr121.is_connected() || full_poll) {

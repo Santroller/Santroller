@@ -268,6 +268,9 @@ static void i2c_dma_write_read_internal(
 
 void I2CMasterInterface::dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface)
 {
+    if (i2c == nullptr) {
+        return;
+    }
     if (i2c == i2c0)
     {
         i2c_dma = &i2c_dma_list[0];
@@ -358,6 +361,10 @@ void I2CMasterInterface::dmaWriteRead(uint8_t addr,
                                       uint8_t *rbuf,
                                       size_t rbuf_len)
 {
+    if (!i2c_dma)
+    {
+        return;
+    }
     i2c_dma_write_read_internal(i2c_dma, addr, wbuf, wbuf_len, rbuf, rbuf_len);
 }
 bool I2CMasterInterface::readRegister(uint8_t address, uint8_t pointer, uint8_t length,

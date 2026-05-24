@@ -110,9 +110,34 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
     gpio_set_dir(attPin, true);
     gpio_init(ackPin);
     gpio_set_dir(ackPin, false);
-    gpio_set_irq_enabled_with_callback(ackPin, GPIO_IRQ_EDGE_RISE, true, &attentionInterrupt);
     controller = this;
+}
+void PSXController::begin() {
+    gpio_set_irq_enabled_with_callback(m_ackPin, GPIO_IRQ_EDGE_RISE, true, &attentionInterrupt);
     autoShiftData(commandPollInput, sizeof(commandPollInput));
+}
+
+void PSXController::load_state(PSXController* state) {
+    type = state->type;
+    valid = state->valid;
+    hasTapBar = state->hasTapBar;
+    missing = state->missing;
+    last = state->last;
+    lastInit = state->lastInit;
+    invalidCount = state->invalidCount;
+    memcpy(ps2Data, state->ps2Data, sizeof(ps2Data));
+    memcpy(lastInputs, state->lastInputs, sizeof(lastInputs));
+    ps2DataOut = state->ps2DataOut;
+    ps2Idx = state->ps2Idx;
+    ps2Len = state->ps2Len;
+    ps2DataLen = state->ps2DataLen;
+    done = state->done;
+    packet_delay = state->packet_delay;
+}
+PSXController::~PSXController() {
+    gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
+    cancel_alarm(timeout_alarm_id);
+
 }
 void PSXController::noAttention(void)
 {

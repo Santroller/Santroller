@@ -22,7 +22,6 @@ MidiDevice::MidiDevice(uint16_t id, bool usbBased) : Device(id), drumMode(false)
     // default to neutral
     midiButtons.dpad = 8;
 }
-
 void MidiDevice::rescan(bool first)
 {
     if (first)

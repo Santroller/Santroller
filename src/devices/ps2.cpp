@@ -6,7 +6,20 @@
 #include "utils.h"
 #include "stdio.h"
 #include <algorithm>
-PS2Device::PS2Device(proto_PSXDevice device, uint16_t id) : Device(id), m_controller(device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.attPin, device.ackPin), m_device(device)
+PS2Device::PS2Device(std::shared_ptr<PS2Device> old, proto_PSXDevice device, uint16_t id) : Device(id), m_controller(device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.attPin, device.ackPin), m_device(device)
+{
+    if (old)
+    {
+        m_lastValue = old->m_lastValue;
+        m_lastControllerType = old->m_lastControllerType;
+        m_controller.load_state(&old->m_controller);
+    }
+}
+void PS2Device::begin()
+{
+    m_controller.begin();
+}
+void PS2Device::end()
 {
 }
 void PS2Device::rescan(bool first)

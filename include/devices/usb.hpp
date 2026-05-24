@@ -9,8 +9,10 @@ extern std::shared_ptr<UsbHostDevice> host_devices[127];
 class USBHostHardwareDevice : public UsbHostInterface
 {
 public:
-    ~USBHostHardwareDevice() { printf("~USBHostHardwareDevice()\r\n"); }
+    ~USBHostHardwareDevice();
     USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id);
+    void begin();
+    void end();
     void update(bool full_poll, bool send_events);
     void rescan(bool first);
     bool using_pin(uint8_t pin);

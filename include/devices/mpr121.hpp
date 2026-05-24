@@ -7,6 +7,8 @@ class MPR121Device : public Device
 public:
     ~MPR121Device() {}
     MPR121Device(proto_Mpr121Device device, uint16_t id);
+    void begin();
+    void end();
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
     MPR121 m_mpr121;

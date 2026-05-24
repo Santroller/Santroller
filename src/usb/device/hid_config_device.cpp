@@ -274,6 +274,11 @@ void HIDConfigDevice::handle_command(proto_Command command)
     selected_profile = command.command.setProfile.profileId;
   }
   break;
+  case proto_Command_reboot_tag:
+  {
+    reload();
+    return;
+  }
   case proto_Command_detectPin_tag:
   {
     // only detect for 10 seconds

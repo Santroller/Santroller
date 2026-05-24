@@ -15,35 +15,47 @@
 #include <vector>
 #include "utils.h"
 static uint8_t usb_host_id;
-static int8_t tx_ch = -1;
-static int8_t tx_sm = -1;
-static int8_t rx_sm = -1;
-static int8_t eop_sm = -1;
+static bool m_initialized = false;
+static uint8_t m_last_first_pin = -1;
+static bool m_last_dp_first = false;
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : UsbHostInterface(0, 0, id), m_device(device)
 {
     printf("UsbHostHardwareDevice: %p\r\n", this);
-    if (device.firstPin == -1)
+}
+
+USBHostHardwareDevice::~USBHostHardwareDevice()
+{
+    printf("USBHostHardwareDevice destructor\r\n");
+}
+void USBHostHardwareDevice::begin()
+{
+    if (m_device.firstPin == -1)
     {
         return;
     }
-    if (tx_ch == -1)
+    if (m_initialized)
     {
-        tx_ch = dma_claim_unused_channel(false);
+        if (m_last_dp_first == m_device.dmFirst && m_last_first_pin == m_device.firstPin) {
+            return;
+        }
+        // pins changed, need to deinit
+        end();
     }
-    if (tx_sm == -1)
-    {
-        tx_sm = pio_claim_unused_sm(pio0, true);
-    }
-    if (rx_sm == -1)
-    {
-        rx_sm = pio_claim_unused_sm(pio0, true);
-    }
-    if (eop_sm == -1)
-    {
-        eop_sm = pio_claim_unused_sm(pio0, true);
-    }
+
+    m_last_dp_first = m_device.dmFirst;
+    m_last_first_pin = m_device.firstPin;
+    printf("USBHostHardwareDevice begin!\r\n");
+    m_initialized = true;
+    int8_t tx_ch = -1;
+    int8_t tx_sm = -1;
+    int8_t rx_sm = -1;
+    int8_t eop_sm = -1;
+    tx_ch = dma_claim_unused_channel(false);
+    tx_sm = pio_claim_unused_sm(pio0, true);
+    rx_sm = pio_claim_unused_sm(pio0, true);
+    eop_sm = pio_claim_unused_sm(pio0, true);
     pio_usb_configuration_t host_config = {
-        pin_dp : (uint8_t)(device.firstPin + device.dmFirst),
+        pin_dp : (uint8_t)(m_device.firstPin + m_device.dmFirst),
         pio_tx_num : 0,
         sm_tx : (uint8_t)tx_sm,
         tx_ch : (uint8_t)tx_ch,
@@ -54,19 +66,23 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
         debug_pin_rx : -1,
         debug_pin_eop : -1,
         skip_alarm_pool : false,
-        pinout : device.dmFirst ? PIO_USB_PINOUT_DMDP : PIO_USB_PINOUT_DPDM
+        pinout : m_device.dmFirst ? PIO_USB_PINOUT_DMDP : PIO_USB_PINOUT_DPDM
     };
     const tusb_rhport_init_t rh_init = {
         .role = TUSB_ROLE_HOST,
         .speed = TUH_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL,
     };
-    usb_host_id = id;
+    usb_host_id = m_id;
     tuh_configure(TUH_OPT_RHPORT, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &host_config);
     dma_channel_unclaim(tx_ch);
     pio_sm_unclaim(pio0, tx_sm);
     pio_sm_unclaim(pio0, rx_sm);
     pio_sm_unclaim(pio0, eop_sm);
     tusb_init(TUH_OPT_RHPORT, &rh_init);
+}
+void USBHostHardwareDevice::end()
+{
+    tusb_deinit(TUH_OPT_RHPORT);
 }
 
 void USBHostHardwareDevice::update(bool full_poll, bool send_events)
@@ -248,15 +264,22 @@ void usbh_close(uint8_t dev_addr)
     if (host_devices[dev_addr])
     {
         host_devices[dev_addr]->disconnect();
-        assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
-                                                    { return dev->dev_addr() == dev_addr; }));
-        enumerating_usb_devices.erase(std::remove_if(enumerating_usb_devices.begin(), enumerating_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
-                                                    { return dev->dev_addr() == dev_addr; }));
+        if (assignable_usb_devices.size() > 0)
+        {
+            assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
+                                                        { return dev->dev_addr() == dev_addr; }));
+        }
+        if (enumerating_usb_devices.size() > 0)
+        {
+            enumerating_usb_devices.erase(std::remove_if(enumerating_usb_devices.begin(), enumerating_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
+                                                         { return dev->dev_addr() == dev_addr; }));
+        }
         host_devices[dev_addr] = std::shared_ptr<UsbHostDevice>();
         if (HIDConfigDevice::tool_closed())
         {
             fflush(stdout);
             sleep_ms(500);
+            printf("reload\r\n");
             reload();
         }
     }

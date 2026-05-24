@@ -6,7 +6,13 @@
 DjHeroTurntableDevice::DjHeroTurntableDevice(proto_DJHeroTurntableDevice device, uint16_t id) : Device(id), m_turntable(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock, device.left), m_device(device)
 {
 }
+void DjHeroTurntableDevice::begin()
+{
+}
 
+void DjHeroTurntableDevice::end()
+{
+}
 void DjHeroTurntableDevice::update(bool full_poll, bool send_events) {
     m_turntable.tick();
     if (m_lastConnected != m_turntable.is_connected() || full_poll) {

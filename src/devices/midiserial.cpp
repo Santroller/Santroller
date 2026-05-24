@@ -6,7 +6,13 @@
 MidiSerialDevice::MidiSerialDevice(proto_SerialMidiDevice device, uint16_t id) : MidiDevice(id, false), serial(this, device.uart.block, device.uart.tx, device.uart.rx, device.uart.baudrate), m_device(device)
 {
 }
+void MidiSerialDevice::begin()
+{
+}
 
+void MidiSerialDevice::end()
+{
+}
 void MidiSerialDevice::update(bool full_poll, bool send_events)
 {
     serial.tick();

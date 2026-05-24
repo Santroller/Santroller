@@ -7,6 +7,12 @@ ADS1115Device::ADS1115Device(proto_ADS1115Device device, uint16_t id) : Device(i
 {
 }
 
+void ADS1115Device::begin()
+{
+}
+void ADS1115Device::end()
+{
+}
 void ADS1115Device::update(bool full_poll, bool send_events)
 {
     ads1115.tick();

@@ -72,7 +72,6 @@ void WiiExtension::processData(bool running, bool timeout, bool abort_detected, 
             if (verifyData(bufferRx, WII_ID_LEN))
             {
                 mType = static_cast<WiiExtType>(bufferRx[0] << 8 | bufferRx[5]);
-                printf("found wii ext: %d\r\n", mType);
                 wiiPointer = 0;
                 wiiBytes = 6;
                 hiRes = false;
@@ -343,11 +342,32 @@ void WiiExtension::processData(bool running, bool timeout, bool abort_detected, 
 
 WiiExtension::WiiExtension(MidiDevice *midiDevice, uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock) : mInterface(block, sda, scl, clock), mFound(false), m_block(block), m_device(midiDevice)
 {
+    printf("WiiExtension::WiiExtension\r\n");
+}
+void WiiExtension::begin() {
+    printf("WiiExtension::begin\r\n");
     mInterface.dmaInit(WII_ADDR, this);
     processData(false, false, false, false);
 }
+void WiiExtension::load_state(WiiExtension* state) {
+    printf("WiiExtension::load_state\r\n");
+    // load state from previous instance
+    mFound = state->mFound;
+    mType = state->mType;
+    hiRes = state->hiRes;
+    packetIssueCount = state->packetIssueCount;
+    mBufferIndex = state->mBufferIndex;
+    lastTick = state->lastTick;
+    wiiBytes = state->wiiBytes;
+    wiiPointer = state->wiiPointer;
+    s_box = state->s_box;
+    m_block = state->m_block;
+    status = state->status;
+}
 WiiExtension::~WiiExtension()
 {
+    printf("WiiExtension::~WiiExtension\r\n");
+    cancel_alarm(restart_alarm_id);
     mInterface.dmaDeinit(WII_ADDR);
 }
 

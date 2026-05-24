@@ -5,6 +5,12 @@
 STP16CPCDevice::STP16CPCDevice(proto_STP16CPCDevice device, uint16_t id) : LedDevice(id, false, false), m_stp15cpc(device.spi.block, device.spi.mosi, device.spi.sck, device.oe, device.le, device.count), m_device(device)
 {
 }
+void STP16CPCDevice::begin()
+{
+}
+void STP16CPCDevice::end()
+{
+}
 
 void STP16CPCDevice::update(bool full_poll, bool send_events)
 {

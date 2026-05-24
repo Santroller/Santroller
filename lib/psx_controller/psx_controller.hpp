@@ -63,6 +63,9 @@ class PSXController
 {
 public:
     PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin);
+    ~PSXController();
+    void begin();
+    void load_state(PSXController* state);
     void tick();
     PS2ControllerType type = PS2ControllerTypeUnknown;
     uint16_t readAxis(PS2AxisType type);
@@ -91,7 +94,6 @@ private:
     uint8_t ps2DataLen;
     alarm_id_t timeout_alarm_id;
     bool done = false;
-    uint32_t lastScan = 0;
     PSXControllerState status = DISCONNECTED;
     uint32_t packet_delay = 10000;
 };

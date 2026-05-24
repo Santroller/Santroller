@@ -14,9 +14,14 @@ message DetectPinCommand {
 message DetectMidiCommand {
 }
 
+message RebootCommand {
+
+}
+
 message Command {
     oneof command {
         SetProfileCommand setProfile = 1;
         DetectPinCommand detectPin = 2;
+        RebootCommand reboot = 3;
     }
 }

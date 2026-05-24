@@ -10,6 +10,12 @@ MultiplexerDevice::MultiplexerDevice(proto_MultiplexerDevice device, uint16_t id
 void MultiplexerDevice::update(bool full_poll, bool send_events)
 {
 }
+void MultiplexerDevice::begin()
+{
+}
+void MultiplexerDevice::end()
+{
+}
 
 uint16_t MultiplexerDevice::read(uint8_t channel) {
     return m_multiplexer.read(channel);

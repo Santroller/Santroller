@@ -6,6 +6,12 @@
 Max1704XDevice::Max1704XDevice(proto_Max1704xDevice device, uint16_t id) : Device(id), m_max1704x(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
 {
 }
+void Max1704XDevice::begin()
+{
+}
+void Max1704XDevice::end()
+{
+}
 
 void Max1704XDevice::update(bool full_poll, bool send_events)
 {

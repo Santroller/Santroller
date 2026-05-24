@@ -7,8 +7,10 @@
 class WiiDevice : public MidiDevice
 {
 public:
-    ~WiiDevice() {}
-    WiiDevice(proto_WiiDevice device, uint16_t id);
+    WiiDevice(std::shared_ptr<WiiDevice> old, proto_WiiDevice device, uint16_t id);
+    ~WiiDevice();
+    void begin();
+    void end();
     void rescan(bool first);
     void update(bool full_poll, bool send_events);
     uint16_t readAxis(proto_WiiAxisType type);

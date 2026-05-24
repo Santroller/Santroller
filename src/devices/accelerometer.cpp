@@ -6,6 +6,13 @@
 AccelerometerDevice::AccelerometerDevice(proto_AccelerometerDevice device, uint16_t id) : Device(id), m_accelerometer(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
 {
 }
+void AccelerometerDevice::begin()
+{
+}
+void AccelerometerDevice::end()
+{
+}
+
 
 void AccelerometerDevice::update(bool full_poll, bool send_events)
 {

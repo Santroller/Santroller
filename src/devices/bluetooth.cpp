@@ -3,8 +3,17 @@
 #include "events.pb.h"
 #include "usb/device/hid_device.h"
 #include "config.hpp"
+static bool bluetooth_initted = false;
+static bool init_done = true;
 BluetoothDevice::BluetoothDevice(proto_BluetoothDevice device, uint16_t id): Device(id), m_device(device) {
-    printf("bt device init\r\n");
+}
+void BluetoothDevice::begin()
+{
+    // TODO: if we add support for swapping pins, then we gotta deinit here if the pins change
+    if (bluetooth_initted) {
+        return;
+    }
+    printf("bt device init %d\r\n", bluetooth_initted);
     if (cyw43_arch_init() == 0)
     {
         isPicoW = true;
@@ -13,11 +22,15 @@ BluetoothDevice::BluetoothDevice(proto_BluetoothDevice device, uint16_t id): Dev
         printf("bt device init failed\r\n");
         isPicoW = false;
     }
+    bluetooth_initted = true;
 }
 
-BluetoothDevice::~BluetoothDevice() {
+void BluetoothDevice::end()
+{
     printf("bt device deinit\r\n");
     cyw43_arch_deinit();
+}
+BluetoothDevice::~BluetoothDevice() {
 }
 
 void BluetoothDevice::update(bool full_poll, bool send_events)

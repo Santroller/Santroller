@@ -66,6 +66,7 @@ std::unordered_map<uint32_t, std::shared_ptr<Profile>> all_profiles;
 std::set<uint32_t> active_profiles;
 std::vector<std::shared_ptr<Device>> active_devices;
 std::unordered_map<uint32_t, std::shared_ptr<Device>> root_devices;
+std::unordered_map<uint32_t, std::shared_ptr<Device>> prev_root_devices;
 // devices that have not yet been assigned to a profile
 std::vector<std::shared_ptr<Device>> assignable_devices;
 std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
@@ -85,6 +86,9 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     proto_Device device;
     uint16_t *dev_id = (uint16_t *)*arg;
+    auto prevDeviceIt = prev_root_devices.find(*dev_id);
+    auto prevDevice = prevDeviceIt == prev_root_devices.end() ? std::shared_ptr<Device>() : prevDeviceIt->second;
+    printf("found device! %d\r\n", prevDeviceIt != prev_root_devices.end());
     pb_decode(stream, proto_Device_fields, &device);
     switch (device.which_device)
     {
@@ -95,10 +99,10 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new CrkdDevice(device.device.crkdNeck, *dev_id));
         break;
     case proto_Device_wii_tag:
-        active_devices.emplace_back(new WiiDevice(device.device.wii, *dev_id));
+        active_devices.emplace_back(new WiiDevice(std::static_pointer_cast<WiiDevice>(prevDevice), device.device.wii, *dev_id));
         break;
     case proto_Device_psx_tag:
-        active_devices.emplace_back(new PS2Device(device.device.psx, *dev_id));
+        active_devices.emplace_back(new PS2Device(std::static_pointer_cast<PS2Device>(prevDevice), device.device.psx, *dev_id));
         break;
     case proto_Device_protarNeck_tag:
         active_devices.emplace_back(new ProtarNeckDevice(device.device.protarNeck, *dev_id));
@@ -149,7 +153,12 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new BluetoothDevice(device.device.bt, *dev_id));
         break;
     }
+    if (prevDevice) {
+        prev_root_devices.erase(prevDeviceIt);
+        prevDevice = nullptr;
+    }
     root_devices[*dev_id] = active_devices.back();
+    active_devices.back()->begin();
     active_devices.back()->rescan(true);
     *dev_id += 1;
     return true;
@@ -161,119 +170,142 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
     switch (input.which_input)
     {
     case proto_Input_wiiAxis_tag:
-        if (profile->devices.find(input.input.wiiAxis.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.wiiAxis.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new WiiAxisInput(input.input.wiiAxis, std::static_pointer_cast<WiiDevice>(profile->devices[input.input.wiiAxis.deviceid])));
     case proto_Input_wiiButton_tag:
-        if (profile->devices.find(input.input.wiiButton.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.wiiButton.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new WiiButtonInput(input.input.wiiButton, std::static_pointer_cast<WiiDevice>(profile->devices[input.input.wiiButton.deviceid])));
     case proto_Input_crkd_tag:
-        if (profile->devices.find(input.input.crkd.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.crkd.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new CrkdButtonInput(input.input.crkd, std::static_pointer_cast<CrkdDevice>(profile->devices[input.input.crkd.deviceid])));
     case proto_Input_gpio_tag:
-        if (profile->devices.find(input.input.wiiAxis.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.wiiAxis.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new GPIOInput(input.input.gpio));
     case proto_Input_ads1115_tag:
-        if (profile->devices.find(input.input.ads1115.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.ads1115.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new ADS1115Input(input.input.ads1115, std::static_pointer_cast<ADS1115Device>(profile->devices[input.input.ads1115.deviceid])));
     case proto_Input_multiplexer_tag:
-        if (profile->devices.find(input.input.multiplexer.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.multiplexer.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new MultiplexerInput(input.input.multiplexer, std::static_pointer_cast<MultiplexerDevice>(profile->devices[input.input.multiplexer.deviceid])));
     case proto_Input_accelerometer_tag:
-        if (profile->devices.find(input.input.accelerometer.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.accelerometer.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new AccelerometerInput(input.input.accelerometer, std::static_pointer_cast<AccelerometerDevice>(profile->devices[input.input.accelerometer.deviceid])));
     case proto_Input_gh5Neck_tag:
-        if (profile->devices.find(input.input.gh5Neck.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.gh5Neck.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new Gh5ButtonInput(input.input.gh5Neck, std::static_pointer_cast<GH5NeckDevice>(profile->devices[input.input.gh5Neck.deviceid])));
     case proto_Input_fixed_tag:
         return std::unique_ptr<Input>(new FixedInput(input.input.fixed));
     case proto_Input_ps2Axis_tag:
-        if (profile->devices.find(input.input.ps2Axis.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.ps2Axis.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new PS2AxisInput(input.input.ps2Axis, std::static_pointer_cast<PS2Device>(profile->devices[input.input.ps2Axis.deviceid])));
     case proto_Input_ps2Button_tag:
-        if (profile->devices.find(input.input.ps2Button.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.ps2Button.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new PS2ButtonInput(input.input.ps2Button, std::static_pointer_cast<PS2Device>(profile->devices[input.input.ps2Button.deviceid])));
     case proto_Input_mpr121_tag:
-        if (profile->devices.find(input.input.mpr121.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.mpr121.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new MPR121Input(input.input.mpr121, std::static_pointer_cast<MPR121Device>(profile->devices[input.input.mpr121.deviceid])));
     case proto_Input_midiNote_tag:
-        if (profile->devices.find(input.input.midiNote.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.midiNote.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new MidiNoteInput(input.input.midiNote, std::static_pointer_cast<MidiDeviceWithChannel>(profile->midiDevices[input.input.midiNote.deviceid])));
     case proto_Input_midiControlChange_tag:
-        if (profile->devices.find(input.input.midiControlChange.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.midiControlChange.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new MidiControlChangeInput(input.input.midiControlChange, std::static_pointer_cast<MidiDeviceWithChannel>(profile->midiDevices[input.input.midiControlChange.deviceid])));
     case proto_Input_midiPitchBend_tag:
-        if (profile->devices.find(input.input.midiPitchBend.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.midiPitchBend.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new MidiPitchBendInput(input.input.midiPitchBend, std::static_pointer_cast<MidiDeviceWithChannel>(profile->midiDevices[input.input.midiPitchBend.deviceid])));
     case proto_Input_midiProGuitarButton_tag:
-        if (profile->devices.find(input.input.midiProGuitarButton.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.midiProGuitarButton.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new MidiProGuitarButtonInput(input.input.midiProGuitarButton, std::static_pointer_cast<ProGuitarMidiDevice>(profile->midiDevices[input.input.midiProGuitarButton.deviceid])));
     case proto_Input_midiProGuitarAxis_tag:
-        if (profile->devices.find(input.input.midiProGuitarAxis.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.midiProGuitarAxis.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new MidiProGuitarAxisInput(input.input.midiProGuitarAxis, std::static_pointer_cast<ProGuitarMidiDevice>(profile->midiDevices[input.input.midiProGuitarAxis.deviceid])));
     case proto_Input_protarNeckButton_tag:
-        if (profile->devices.find(input.input.protarNeckButton.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.protarNeckButton.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new ProtarNeckButtonInput(input.input.protarNeckButton, std::static_pointer_cast<ProtarNeckDevice>(profile->devices[input.input.protarNeckButton.deviceid])));
     case proto_Input_protarNeckAxis_tag:
-        if (profile->devices.find(input.input.protarNeckAxis.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.protarNeckAxis.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new ProtarNeckAxisInput(input.input.protarNeckAxis, std::static_pointer_cast<ProtarNeckDevice>(profile->devices[input.input.protarNeckAxis.deviceid])));
     case proto_Input_mouseAxis_tag:
-        if (profile->devices.find(input.input.mouseAxis.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.mouseAxis.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new MouseAxisInput(input.input.mouseAxis, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.mouseAxis.deviceid])));
     case proto_Input_mouseButton_tag:
-        if (profile->devices.find(input.input.mouseButton.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.mouseButton.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new MouseButtonInput(input.input.mouseButton, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.mouseButton.deviceid])));
     case proto_Input_key_tag:
-        if (profile->devices.find(input.input.key.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.key.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new KeyboardKeyInput(input.input.key, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.key.deviceid])));
     case proto_Input_usbButton_tag:
-        if (profile->devices.find(input.input.usbButton.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.usbButton.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new USBButtonInput(input.input.usbButton, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.usbButton.deviceid])));
     case proto_Input_usbAxis_tag:
-        if (profile->devices.find(input.input.usbAxis.deviceid) == profile->devices.end()) {
+        if (profile->devices.find(input.input.usbAxis.deviceid) == profile->devices.end())
+        {
             return nullptr;
         }
         return std::unique_ptr<Input>(new USBAxisInput(input.input.usbAxis, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.usbAxis.deviceid])));
@@ -297,7 +329,8 @@ bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **a
         return false;
     }
     auto inputPtr = make_input(input, profile, stream);
-    if (inputPtr == nullptr) {
+    if (inputPtr == nullptr)
+    {
         return true;
     }
     last_shortcut->inputs.push_back(std::move(inputPtr));
@@ -698,18 +731,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     config.devices.arg = &dev_id;
     assignable_devices.clear();
 
-    if (fullReload)
-    {
-        config.devices.funcs.decode = &load_device;
-    }
-    else
-    {
-        config.devices.funcs.decode = nullptr;
-        for (auto &device : active_devices)
-        {
-            device->rescan(true);
-        }
-    }
+    config.devices.funcs.decode = &load_device;
     config.profiles.funcs.decode = &load_profile;
     instances.clear();
     active_instances.clear();
@@ -726,10 +748,12 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     {
         usb_instances_by_epout[i] = std::shared_ptr<UsbDevice>();
     }
+    prev_root_devices = root_devices;
+    active_devices.clear();
+    root_devices.clear();
     if (fullReload)
     {
-        active_devices.clear();
-        root_devices.clear();
+        prev_root_devices.clear();
     }
     active_profiles.clear();
     all_profiles.clear();
@@ -776,6 +800,10 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
         usb_instances[confDevice2->interface_id] = confDevice2;
         confDevice2->initialize();
     }
+    for (const auto& prev : prev_root_devices) {
+        prev.second->end();
+    }
+    prev_root_devices.clear();
     return ret;
 }
 uint32_t copy_config_info(uint8_t *buffer)

@@ -6,7 +6,13 @@
 BandHeroDrumDevice::BandHeroDrumDevice(proto_BandHeroDrumDevice device, uint16_t id) : MidiDevice(id, false), m_band_hero_drum(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
 {
 }
+void BandHeroDrumDevice::begin()
+{
+}
 
+void BandHeroDrumDevice::end()
+{
+}
 void BandHeroDrumDevice::update(bool full_poll, bool send_events)
 {
     m_band_hero_drum.tick();

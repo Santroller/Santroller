@@ -9,6 +9,12 @@
 ProtarNeckDevice::ProtarNeckDevice(proto_ProtarNeckDevice device, uint16_t id) : Device(id), m_controller(device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.attPin), m_device(device)
 {
 }
+void ProtarNeckDevice::begin()
+{
+}
+void ProtarNeckDevice::end()
+{
+}
 
 void ProtarNeckDevice::update(bool full_poll, bool send_events)
 {

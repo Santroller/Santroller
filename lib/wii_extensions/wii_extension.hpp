@@ -49,6 +49,8 @@ class WiiExtension: public I2CDMAInterface
 public:
     WiiExtension(MidiDevice* midiDevice, uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock);
     ~WiiExtension();
+    void begin();
+    void load_state(WiiExtension* state);
     void tick();
     void processData(bool running, bool timeout, bool abort_detected, bool stop_detected);
     WiiExtType mType = WiiExtType::WiiNoExtension;

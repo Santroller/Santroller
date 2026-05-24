@@ -254,27 +254,27 @@ bool XboxOneHost::tick_digital(UsbButtonType type)
         case UsbButtonGreen:
             return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->a;
         case UsbButtonRed:
-            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->b;
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->b;
         case UsbButtonYellow:
-            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->y;
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->y;
         case UsbButtonBlue:
-            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->x;
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->x;
         case UsbButtonOrange:
-            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->leftShoulder;
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->leftShoulder;
         case UsbButtonBack:
-            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->back;
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->back;
         case UsbButtonStart:
-            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->start;
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->start;
         case UsbButtonGuide:
-            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->guide;
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->guide;
         case UsbButtonStrumUp:
-            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->dpadUp;
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->dpadUp;
         case UsbButtonStrumDown:
-            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->dpadDown;
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->dpadDown;
         case UsbButtonDpadLeft:
-            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->dpadLeft;
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->dpadLeft;
         case UsbButtonDpadRight:
-            return ((XboxOneRockBandGuitar_Data_t *)m_ep_in_buf)->dpadRight;
+            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->dpadRight;
         default:
             return false;
         }

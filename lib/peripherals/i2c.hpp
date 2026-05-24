@@ -3,9 +3,10 @@
 #include <stdint.h>
 #include <hardware/i2c.h>
 #include <hardware/gpio.h>
+#include <queue>
 
 #define I2C_MAX_ADDR 127
-#define I2C_MAX_TRANSFER_SIZE 1056
+#define I2C_MAX_TRANSFER_SIZE 32
 // A transfer timeout of 1000ms will allow a 10000 bit transfer to complete
 // successfully without timeouts at baudrates as low as 10000 baud.
 #define I2C_TRANSFER_TIMEOUT_MS 10000
@@ -18,6 +19,14 @@ public:
     ~I2CDMAInterface() {};
     virtual void processData(bool running, bool timeout, bool abort_detected, bool stop_detected) = 0;
 };
+typedef struct
+{
+    uint8_t addr;
+    uint8_t wbuf[I2C_MAX_TRANSFER_SIZE];
+    size_t wbuf_len;
+    uint8_t rbuf[I2C_MAX_TRANSFER_SIZE];
+    size_t rbuf_len;
+} i2c_dma_transfer_t;
 typedef struct i2c_dma_s
 {
     i2c_inst_t *i2c;
@@ -42,7 +51,8 @@ typedef struct i2c_dma_s
     alarm_id_t timeout_alarm_id;
 
     uint16_t data_cmds[I2C_MAX_TRANSFER_SIZE];
-    I2CDMAInterface* dmaInterface[I2C_MAX_ADDR];
+    I2CDMAInterface *dmaInterface[I2C_MAX_ADDR];
+    std::queue<i2c_dma_transfer_t> transferQueue;
 } i2c_dma_t;
 
 class I2CMasterInterface
@@ -62,7 +72,7 @@ public:
 
     bool writeTo(uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
                  uint8_t sendStop);
-    void dmaInit(uint8_t addr, I2CDMAInterface* dmaInterface);
+    void dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface);
     void dmaDeinit(uint8_t addr);
     void dmaWriteRead(
         uint8_t addr,

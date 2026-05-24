@@ -8,7 +8,13 @@
 #include "hardware/dma.h"
 #include "hardware/irq.h"
 #include "hardware/clocks.h"
-
+static void i2c_dma_write_read_internal(
+    i2c_dma_t *i2c_dma,
+    uint8_t addr,
+    const uint8_t *wbuf,
+    size_t wbuf_len,
+    uint8_t *rbuf,
+    size_t rbuf_len);
 inline void process_dma(i2c_dma_t *i2c_dma)
 {
     if (i2c_dma->running)
@@ -31,6 +37,12 @@ inline void process_dma(i2c_dma_t *i2c_dma)
     i2c_dma->timeout = false;
     i2c_dma->abort_detected = false;
     i2c_dma->stop_detected = false;
+    if (i2c_dma->transferQueue.size() > 0)
+    {
+        auto &transfer = i2c_dma->transferQueue.front();
+        i2c_dma->transferQueue.pop();
+        i2c_dma_write_read_internal(i2c_dma, transfer.addr, transfer.wbuf, transfer.wbuf_len, transfer.rbuf, transfer.rbuf_len);
+    }
 }
 
 static i2c_dma_t i2c_dma_list[2] = {0};
@@ -268,7 +280,8 @@ static void i2c_dma_write_read_internal(
 
 void I2CMasterInterface::dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface)
 {
-    if (i2c == nullptr) {
+    if (i2c == nullptr)
+    {
         return;
     }
     if (i2c == i2c0)
@@ -365,7 +378,23 @@ void I2CMasterInterface::dmaWriteRead(uint8_t addr,
     {
         return;
     }
-    i2c_dma_write_read_internal(i2c_dma, addr, wbuf, wbuf_len, rbuf, rbuf_len);
+    // TODO: instead of immediately writing here, we need to push this to a queue, and then let the DMA ISA run the queue once a transfer is finished
+    //  if there isnt another transfer in progress, then we would just start the transfer though.
+    if (!i2c_dma->running)
+    {
+        i2c_dma_write_read_internal(i2c_dma, addr, wbuf, wbuf_len, rbuf, rbuf_len);
+    }
+    else
+    {
+        i2c_dma_transfer_t transfer = {0};
+        transfer.addr = addr;
+        transfer.wbuf_len = wbuf_len;
+        transfer.rbuf_len = rbuf_len;
+        memcpy(transfer.wbuf, wbuf, wbuf_len);
+        memcpy(transfer.rbuf, rbuf, rbuf_len);
+        i2c_dma->transferQueue.push(transfer);
+        // TODO: push to queue
+    }
 }
 bool I2CMasterInterface::readRegister(uint8_t address, uint8_t pointer, uint8_t length,
                                       uint8_t *data)

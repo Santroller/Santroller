@@ -5,6 +5,8 @@ class WS2812
 public:
     WS2812(uint8_t pin, uint8_t count, WS2812Type type);
     ~WS2812();
+    void begin();
+    void end();
     void putLeds(uint32_t *leds, uint8_t count);
 
 private:
@@ -15,4 +17,5 @@ private:
     uint ws2812Sm;
     uint ws2812Offset;
     uint32_t led_state[255];
+    uint8_t m_count;
 };

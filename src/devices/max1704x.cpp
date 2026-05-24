@@ -9,7 +9,7 @@ Max1704XDevice::Max1704XDevice(proto_Max1704xDevice device, uint16_t id) : Devic
 void Max1704XDevice::begin()
 {
 }
-void Max1704XDevice::end()
+void Max1704XDevice::end(bool full)
 {
 }
 

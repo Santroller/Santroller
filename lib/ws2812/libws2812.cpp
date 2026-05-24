@@ -86,7 +86,10 @@ void __isr dma_complete_handler()
     }
 }
 
-WS2812::WS2812(uint8_t pin, uint8_t count, WS2812Type type) : m_pin(pin), hasW(type >= Ws2812Rgbw), m_type(type)
+WS2812::WS2812(uint8_t pin, uint8_t count, WS2812Type type) : m_pin(pin), hasW(type >= Ws2812Rgbw), m_type(type), m_count(count)
+{
+}
+void WS2812::begin()
 {
     pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_program, &ws2812Pio, &ws2812Sm, &ws2812Offset, m_pin, 1, true);
     ws2812_program_init(ws2812Pio, ws2812Sm, ws2812Offset, m_pin, 800000, hasW);
@@ -103,15 +106,14 @@ WS2812::WS2812(uint8_t pin, uint8_t count, WS2812Type type) : m_pin(pin), hasW(t
         &c,                        // The configuration we just created
         &ws2812Pio->txf[ws2812Sm], // The initial write address
         led_state,                 // The initial read address
-        count,                     // Number of transfers; in this case each is 1 byte.
+        m_count,                     // Number of transfers; in this case each is 1 byte.
         true                       // Start immediately.
     );
     irq_set_exclusive_handler(DMA_IRQ_0, dma_complete_handler);
     dma_channel_set_irq0_enabled(chan, true);
     irq_set_enabled(DMA_IRQ_0, true);
 }
-
-WS2812::~WS2812()
+void WS2812::end()
 {
     if (reset_delay_alarm_id)
     {
@@ -122,4 +124,9 @@ WS2812::~WS2812()
     dma_channel_cleanup(chan);
     dma_channel_unclaim(chan);
     data = nullptr;
+}
+
+WS2812::~WS2812()
+{
+    printf("~WS2812\r\n");
 }

@@ -35,11 +35,12 @@ void USBHostHardwareDevice::begin()
     }
     if (m_initialized)
     {
-        if (m_last_dp_first == m_device.dmFirst && m_last_first_pin == m_device.firstPin) {
+        if (m_last_dp_first == m_device.dmFirst && m_last_first_pin == m_device.firstPin)
+        {
             return;
         }
         // pins changed, need to deinit
-        end();
+        end(true);
     }
 
     m_last_dp_first = m_device.dmFirst;
@@ -80,9 +81,12 @@ void USBHostHardwareDevice::begin()
     pio_sm_unclaim(pio0, eop_sm);
     tusb_init(TUH_OPT_RHPORT, &rh_init);
 }
-void USBHostHardwareDevice::end()
+void USBHostHardwareDevice::end(bool full)
 {
-    tusb_deinit(TUH_OPT_RHPORT);
+    if (full)
+    {
+        tusb_deinit(TUH_OPT_RHPORT);
+    }
 }
 
 void USBHostHardwareDevice::update(bool full_poll, bool send_events)

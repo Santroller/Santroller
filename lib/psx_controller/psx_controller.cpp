@@ -116,7 +116,10 @@ void PSXController::begin() {
     gpio_set_irq_enabled_with_callback(m_ackPin, GPIO_IRQ_EDGE_RISE, true, &attentionInterrupt);
     autoShiftData(commandPollInput, sizeof(commandPollInput));
 }
-
+void PSXController::end() {
+    gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
+    cancel_alarm(timeout_alarm_id);
+}
 void PSXController::load_state(PSXController* state) {
     type = state->type;
     valid = state->valid;
@@ -135,8 +138,6 @@ void PSXController::load_state(PSXController* state) {
     packet_delay = state->packet_delay;
 }
 PSXController::~PSXController() {
-    gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
-    cancel_alarm(timeout_alarm_id);
 
 }
 void PSXController::noAttention(void)

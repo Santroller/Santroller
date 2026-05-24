@@ -12,7 +12,7 @@ ProtarNeckDevice::ProtarNeckDevice(proto_ProtarNeckDevice device, uint16_t id) :
 void ProtarNeckDevice::begin()
 {
 }
-void ProtarNeckDevice::end()
+void ProtarNeckDevice::end(bool full)
 {
 }
 

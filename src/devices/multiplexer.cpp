@@ -13,7 +13,7 @@ void MultiplexerDevice::update(bool full_poll, bool send_events)
 void MultiplexerDevice::begin()
 {
 }
-void MultiplexerDevice::end()
+void MultiplexerDevice::end(bool full)
 {
 }
 

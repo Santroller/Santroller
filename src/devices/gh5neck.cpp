@@ -10,7 +10,7 @@ GH5NeckDevice::GH5NeckDevice(proto_GuitarHero5NeckDevice device, uint16_t id) : 
 void GH5NeckDevice::begin()
 {
 }
-void GH5NeckDevice::end()
+void GH5NeckDevice::end(bool full)
 {
 }
 void GH5NeckDevice::update(bool full_poll, bool send_events) {

@@ -10,7 +10,7 @@ CrazyGuitarNeckDevice::CrazyGuitarNeckDevice(proto_CrazyGuitarNeckDevice device,
 void CrazyGuitarNeckDevice::begin()
 {
 }
-void CrazyGuitarNeckDevice::end()
+void CrazyGuitarNeckDevice::end(bool full)
 {
 }
 void CrazyGuitarNeckDevice::update(bool full_poll, bool send_events)

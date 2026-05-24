@@ -8,7 +8,7 @@ STP16CPCDevice::STP16CPCDevice(proto_STP16CPCDevice device, uint16_t id) : LedDe
 void STP16CPCDevice::begin()
 {
 }
-void STP16CPCDevice::end()
+void STP16CPCDevice::end(bool full)
 {
 }
 

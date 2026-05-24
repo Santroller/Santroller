@@ -88,6 +88,9 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     uint16_t *dev_id = (uint16_t *)*arg;
     auto prevDeviceIt = prev_root_devices.find(*dev_id);
     auto prevDevice = prevDeviceIt == prev_root_devices.end() ? std::shared_ptr<Device>() : prevDeviceIt->second;
+    if (prevDevice) {
+        prevDevice->end(false);
+    }
     printf("found device! %d\r\n", prevDeviceIt != prev_root_devices.end());
     pb_decode(stream, proto_Device_fields, &device);
     switch (device.which_device)
@@ -801,7 +804,7 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
         confDevice2->initialize();
     }
     for (const auto& prev : prev_root_devices) {
-        prev.second->end();
+        prev.second->end(true);
     }
     prev_root_devices.clear();
     return ret;

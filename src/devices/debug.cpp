@@ -16,7 +16,7 @@ DebugDevice::DebugDevice(proto_DebugDevice device, uint16_t id) : Device(id), m_
 void DebugDevice::begin()
 {
 }
-void DebugDevice::end()
+void DebugDevice::end(bool full)
 {
 }
 void DebugDevice::update(bool full_poll, bool send_events)

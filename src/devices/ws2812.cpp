@@ -9,7 +9,7 @@ WS2812Device::WS2812Device(proto_WS2812Device device, uint16_t id) : LedDevice(i
 void WS2812Device::begin()
 {
 }
-void WS2812Device::end()
+void WS2812Device::end(bool full)
 {
 }
 void WS2812Device::update(bool full_poll, bool send_events)

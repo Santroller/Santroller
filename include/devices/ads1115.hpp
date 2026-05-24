@@ -8,7 +8,7 @@ public:
     ~ADS1115Device() {}
     ADS1115Device(proto_ADS1115Device device, uint16_t id);
     void begin();
-    void end();
+    void end(bool full);
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
     ADS1115 ads1115;

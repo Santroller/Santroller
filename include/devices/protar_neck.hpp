@@ -13,7 +13,7 @@ public:
     ~ProtarNeckDevice() {}
     ProtarNeckDevice(proto_ProtarNeckDevice device, uint16_t id);
     void begin();
-    void end();
+    void end(bool full);
     void update(bool full_poll, bool send_events);
     uint16_t readAxis(ProGuitarNeckAxisType type);
     bool readButton(ProGuitarNeckButtonType type);

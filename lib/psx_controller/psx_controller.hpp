@@ -65,6 +65,7 @@ public:
     PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin);
     ~PSXController();
     void begin();
+    void end();
     void load_state(PSXController* state);
     void tick();
     PS2ControllerType type = PS2ControllerTypeUnknown;

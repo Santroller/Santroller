@@ -19,7 +19,7 @@ public:
         return m_dev_addr;
     }
     void begin() {};
-    void end() {};
+    void end(bool full) {};
     void disconnect();
     virtual bool tick_digital(UsbButtonType type) = 0;
     virtual uint16_t tick_analog(UsbAxisType type) = 0;
@@ -72,7 +72,7 @@ public:
     }
     void disconnect();
     void begin() {};
-    void end() {};
+    void end(bool full) {};
     uint8_t dev_addr()
     {
         return m_dev_addr;

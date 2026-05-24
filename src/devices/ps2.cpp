@@ -19,8 +19,9 @@ void PS2Device::begin()
 {
     m_controller.begin();
 }
-void PS2Device::end()
+void PS2Device::end(bool full)
 {
+    m_controller.end();
 }
 void PS2Device::rescan(bool first)
 {

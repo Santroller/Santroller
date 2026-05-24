@@ -18,8 +18,9 @@ void WiiDevice::begin()
 {
     m_extension.begin();
 }
-void WiiDevice::end()
+void WiiDevice::end(bool full)
 {
+    m_extension.end();
 }
 void WiiDevice::rescan(bool first)
 {

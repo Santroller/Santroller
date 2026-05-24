@@ -54,7 +54,8 @@ void WiiExtension::processData(bool running, bool timeout, bool abort_detected, 
     }
     if (stop_detected)
     {
-        if (!abort_detected) {
+        if (!abort_detected)
+        {
             failCount = 0;
         }
         switch (status)
@@ -344,12 +345,14 @@ WiiExtension::WiiExtension(MidiDevice *midiDevice, uint8_t block, uint8_t sda, u
 {
     printf("WiiExtension::WiiExtension\r\n");
 }
-void WiiExtension::begin() {
+void WiiExtension::begin()
+{
     printf("WiiExtension::begin\r\n");
     mInterface.dmaInit(WII_ADDR, this);
     processData(false, false, false, false);
 }
-void WiiExtension::load_state(WiiExtension* state) {
+void WiiExtension::load_state(WiiExtension *state)
+{
     printf("WiiExtension::load_state\r\n");
     // load state from previous instance
     mFound = state->mFound;
@@ -367,6 +370,10 @@ void WiiExtension::load_state(WiiExtension* state) {
 WiiExtension::~WiiExtension()
 {
     printf("WiiExtension::~WiiExtension\r\n");
+}
+void WiiExtension::end()
+{
+    printf("WiiExtension::end\r\n");
     cancel_alarm(restart_alarm_id);
     mInterface.dmaDeinit(WII_ADDR);
 }

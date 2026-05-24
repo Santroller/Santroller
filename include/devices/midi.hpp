@@ -68,7 +68,7 @@ public:
     MidiDeviceWithChannel(uint16_t id, uint8_t channel, std::shared_ptr<MidiDevice> midi_device) : Device(id), m_channel(channel), m_midi_device(midi_device) {}
     ~MidiDeviceWithChannel() {}
     void begin() {};
-    void end() {};
+    void end(bool full) {};
     uint16_t readMidiNote(uint8_t note);
     uint16_t readMidiControlChange(uint8_t cc);
     int16_t readMidiPitchBend();
@@ -97,7 +97,7 @@ public:
     uint16_t readProGuitarAxis(proto_ProGuitarAxisType axis);
     void update(bool full_poll, bool send_events) {};
     void begin() {};
-    void end() {};
+    void end(bool full) {};
     bool is_wii_extension(WiiExtType type) { return false; }
     bool is_usb_device(proto_SpecificUsbDevice type) { return false; }
     bool is_usb_type(SubType type) { return false; }

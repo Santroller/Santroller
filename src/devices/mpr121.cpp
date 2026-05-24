@@ -10,7 +10,7 @@ MPR121Device::MPR121Device(proto_Mpr121Device device, uint16_t id) : Device(id),
 void MPR121Device::begin()
 {
 }
-void MPR121Device::end()
+void MPR121Device::end(bool full)
 {
 }
 void MPR121Device::update(bool full_poll, bool send_events) {

@@ -9,7 +9,7 @@ APA102Device::APA102Device(proto_APA102Device device, uint16_t id) : LedDevice(i
 void APA102Device::begin()
 {
 }
-void APA102Device::end()
+void APA102Device::end(bool full)
 {
 }
 void APA102Device::update(bool full_poll, bool send_events)

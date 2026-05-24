@@ -10,7 +10,7 @@ void DjHeroTurntableDevice::begin()
 {
 }
 
-void DjHeroTurntableDevice::end()
+void DjHeroTurntableDevice::end(bool full)
 {
 }
 void DjHeroTurntableDevice::update(bool full_poll, bool send_events) {

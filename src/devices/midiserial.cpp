@@ -10,7 +10,7 @@ void MidiSerialDevice::begin()
 {
 }
 
-void MidiSerialDevice::end()
+void MidiSerialDevice::end(bool full)
 {
 }
 void MidiSerialDevice::update(bool full_poll, bool send_events)

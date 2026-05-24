@@ -8,7 +8,7 @@ public:
     Device(uint16_t id) : m_id(id) {}
     virtual ~Device() { printf("~Device()\r\n"); }
     virtual void begin() = 0;
-    virtual void end() = 0;
+    virtual void end(bool full) = 0;
     virtual void update(bool full_poll, bool send_events) = 0;
     virtual bool is_wii_extension(WiiExtType type);
     virtual bool is_usb_device(proto_SpecificUsbDevice type);

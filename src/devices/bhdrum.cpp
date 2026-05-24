@@ -10,7 +10,7 @@ void BandHeroDrumDevice::begin()
 {
 }
 
-void BandHeroDrumDevice::end()
+void BandHeroDrumDevice::end(bool full)
 {
 }
 void BandHeroDrumDevice::update(bool full_poll, bool send_events)

@@ -115,7 +115,7 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
         }
         incomingXGIP->parse(m_ep_in_buf, xferred_bytes);
 
-        printf("cmd: %02x %02x %02x %02x\r\n", incomingXGIP->getCommand(), incomingXGIP->ackRequired(), incomingXGIP->endOfChunk(), xferred_bytes);
+        // printf("cmd: %02x %02x %02x %02x\r\n", incomingXGIP->getCommand(), incomingXGIP->ackRequired(), incomingXGIP->endOfChunk(), xferred_bytes);
         if (incomingXGIP->ackRequired())
         {
             printf("send ack!\r\n");
@@ -124,7 +124,6 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
         if (incomingXGIP->getCommand() == GIP_DEVICE_DESCRIPTOR && incomingXGIP->endOfChunk())
         {
             uint8_t *data = incomingXGIP->getData();
-            BinaryMetadataHeader *header = (BinaryMetadataHeader *)data;
             data = incomingXGIP->getData();
             data += sizeof(BinaryMetadataHeader);
             printf("descriptor read done!\r\n");
@@ -185,7 +184,6 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
         }
         if (incomingXGIP->getCommand() == GIP_ARRIVAL)
         {
-            printf("send metadata!\r\n");
             outgoingXGIP->reset();
             outgoingXGIP->setAttributes(GIP_DEVICE_DESCRIPTOR, 1, 1, false, 0);
             queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());

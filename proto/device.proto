@@ -130,8 +130,9 @@ message STP16CPCDevice {
 }
 
 message Device {
+  required int32 deviceid = 1;
   oneof device {
-    AccelerometerDevice accelerometer = 1;
+    AccelerometerDevice accelerometer = 2;
     Max1704xDevice max1704x = 4;
     Mpr121Device mpr121 = 5;
     WiiDevice wii = 6;

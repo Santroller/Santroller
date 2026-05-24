@@ -85,9 +85,10 @@ bool loadedAny = false;
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     proto_Device device;
-    uint16_t *dev_id = (uint16_t *)*arg;
+    pb_decode(stream, proto_Device_fields, &device);
+    auto dev_id = device.deviceid;
     // If we are loading a new config, we grab the previous device so we can make sure its state is restored
-    auto prevDeviceIt = prev_root_devices.find(*dev_id);
+    auto prevDeviceIt = prev_root_devices.find(dev_id);
     auto prevDevice = prevDeviceIt == prev_root_devices.end() ? std::shared_ptr<Device>() : prevDeviceIt->second;
     if (prevDevice) {
         // signal devices that they are being torn down, but in a way where if they are being replaced, they aren't fully torn down
@@ -95,82 +96,80 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         prevDevice->end(false);
     }
     printf("found device! %d\r\n", prevDeviceIt != prev_root_devices.end());
-    pb_decode(stream, proto_Device_fields, &device);
     switch (device.which_device)
     {
     case proto_Device_accelerometer_tag:
-        active_devices.emplace_back(new AccelerometerDevice(device.device.accelerometer, *dev_id));
+        active_devices.emplace_back(new AccelerometerDevice(device.device.accelerometer, dev_id));
         break;
     case proto_Device_crkdNeck_tag:
-        active_devices.emplace_back(new CrkdDevice(device.device.crkdNeck, *dev_id));
+        active_devices.emplace_back(new CrkdDevice(device.device.crkdNeck, dev_id));
         break;
     case proto_Device_wii_tag:
         // we pass in the previous device here so we can make sure the state is kept between reloads
         // that way, an extension stays connected between reloads
-        active_devices.emplace_back(new WiiDevice(std::static_pointer_cast<WiiDevice>(prevDevice), device.device.wii, *dev_id));
+        active_devices.emplace_back(new WiiDevice(std::static_pointer_cast<WiiDevice>(prevDevice), device.device.wii, dev_id));
         break;
     case proto_Device_psx_tag:
         // we pass in the previous device here so we can make sure the state is kept between reloads
         // that way, a controller stays connected between reloads
-        active_devices.emplace_back(new PS2Device(std::static_pointer_cast<PS2Device>(prevDevice), device.device.psx, *dev_id));
+        active_devices.emplace_back(new PS2Device(std::static_pointer_cast<PS2Device>(prevDevice), device.device.psx, dev_id));
         break;
     case proto_Device_protarNeck_tag:
-        active_devices.emplace_back(new ProtarNeckDevice(device.device.protarNeck, *dev_id));
+        active_devices.emplace_back(new ProtarNeckDevice(device.device.protarNeck, dev_id));
         break;
     case proto_Device_bhDrum_tag:
-        active_devices.emplace_back(new BandHeroDrumDevice(device.device.bhDrum, *dev_id));
+        active_devices.emplace_back(new BandHeroDrumDevice(device.device.bhDrum, dev_id));
         break;
     case proto_Device_crazyGuitarNeck_tag:
-        active_devices.emplace_back(new CrazyGuitarNeckDevice(device.device.crazyGuitarNeck, *dev_id));
+        active_devices.emplace_back(new CrazyGuitarNeckDevice(device.device.crazyGuitarNeck, dev_id));
         break;
     case proto_Device_djhTurntable_tag:
-        active_devices.emplace_back(new DjHeroTurntableDevice(device.device.djhTurntable, *dev_id));
+        active_devices.emplace_back(new DjHeroTurntableDevice(device.device.djhTurntable, dev_id));
         break;
     case proto_Device_gh5Neck_tag:
-        active_devices.emplace_back(new GH5NeckDevice(device.device.gh5Neck, *dev_id));
+        active_devices.emplace_back(new GH5NeckDevice(device.device.gh5Neck, dev_id));
         break;
     case proto_Device_max1704x_tag:
-        active_devices.emplace_back(new Max1704XDevice(device.device.max1704x, *dev_id));
+        active_devices.emplace_back(new Max1704XDevice(device.device.max1704x, dev_id));
         break;
     case proto_Device_mpr121_tag:
-        active_devices.emplace_back(new MPR121Device(device.device.mpr121, *dev_id));
+        active_devices.emplace_back(new MPR121Device(device.device.mpr121, dev_id));
         break;
     case proto_Device_usbHost_tag:
-        active_devices.emplace_back(new USBHostHardwareDevice(device.device.usbHost, *dev_id));
+        active_devices.emplace_back(new USBHostHardwareDevice(device.device.usbHost, dev_id));
         break;
     case proto_Device_ads1115_tag:
-        active_devices.emplace_back(new ADS1115Device(device.device.ads1115, *dev_id));
+        active_devices.emplace_back(new ADS1115Device(device.device.ads1115, dev_id));
         break;
     case proto_Device_debug_tag:
-        active_devices.emplace_back(new DebugDevice(device.device.debug, *dev_id));
+        active_devices.emplace_back(new DebugDevice(device.device.debug, dev_id));
         break;
     case proto_Device_midiSerial_tag:
-        active_devices.emplace_back(new MidiSerialDevice(device.device.midiSerial, *dev_id));
+        active_devices.emplace_back(new MidiSerialDevice(device.device.midiSerial, dev_id));
         break;
     case proto_Device_ws2812_tag:
-        active_devices.emplace_back(new WS2812Device(device.device.ws2812, *dev_id));
+        active_devices.emplace_back(new WS2812Device(device.device.ws2812, dev_id));
         break;
     case proto_Device_stp16cpc_tag:
-        active_devices.emplace_back(new STP16CPCDevice(device.device.stp16cpc, *dev_id));
+        active_devices.emplace_back(new STP16CPCDevice(device.device.stp16cpc, dev_id));
         break;
     case proto_Device_apa102_tag:
-        active_devices.emplace_back(new APA102Device(device.device.apa102, *dev_id));
+        active_devices.emplace_back(new APA102Device(device.device.apa102, dev_id));
         break;
     case proto_Device_multiplexer_tag:
-        active_devices.emplace_back(new MultiplexerDevice(device.device.multiplexer, *dev_id));
+        active_devices.emplace_back(new MultiplexerDevice(device.device.multiplexer, dev_id));
         break;
     case proto_Device_bt_tag:
-        active_devices.emplace_back(new BluetoothDevice(device.device.bt, *dev_id));
+        active_devices.emplace_back(new BluetoothDevice(device.device.bt, dev_id));
         break;
     }
     if (prevDevice) {
         prev_root_devices.erase(prevDeviceIt);
         prevDevice = nullptr;
     }
-    root_devices[*dev_id] = active_devices.back();
+    root_devices[dev_id] = active_devices.back();
     active_devices.back()->begin();
     active_devices.back()->rescan(true);
-    *dev_id += 1;
     return true;
 }
 ShortcutInput *last_shortcut = nullptr;
@@ -737,8 +736,6 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
     // We are now sufficiently confident that the data is valid so we run the deserialization
     // load just the current profile to begin with
     pb_istream_t inputStream = pb_istream_from_buffer(dataPtr, size);
-    uint16_t dev_id = 0;
-    config.devices.arg = &dev_id;
     assignable_devices.clear();
 
     config.devices.funcs.decode = &load_device;

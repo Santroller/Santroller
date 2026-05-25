@@ -62,18 +62,6 @@ class I2CMasterInterface
 public:
     I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, uint32_t clock);
     ~I2CMasterInterface();
-    bool readRegister(uint8_t address, uint8_t pointer, uint8_t length,
-                      uint8_t *data);
-    bool readRegisterRepeatedStart(uint8_t address, uint8_t pointer, uint8_t length,
-                                   uint8_t *data);
-    bool writeRegister(uint8_t address, uint8_t pointer, uint8_t data);
-    bool writeRegister(uint8_t address, uint8_t pointer, uint8_t length,
-                       uint8_t *data);
-    bool readFrom(uint8_t address, uint8_t *data, uint8_t length,
-                  uint8_t sendStop);
-
-    bool writeTo(uint8_t address, uint8_t *data, uint8_t length, uint8_t wait,
-                 uint8_t sendStop);
     void dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface);
     void dmaDeinit(uint8_t addr);
     void tick();

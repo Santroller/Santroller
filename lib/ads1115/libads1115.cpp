@@ -145,8 +145,14 @@ void ADS1115::begin()
     memset(seen, true, sizeof(seen));
     processData(0, false, false, false, false);
 }
+
 void ADS1115::end()
 {
+    cancel_alarm(restart_alarm_id);
+    interface.dmaDeinit(ADS1115_ADDRESS_ADDR_GND);
+    interface.dmaDeinit(ADS1115_ADDRESS_ADDR_VDD);
+    interface.dmaDeinit(ADS1115_ADDRESS_ADDR_SDA);
+    interface.dmaDeinit(ADS1115_ADDRESS_ADDR_SCL);
 }
 void ADS1115::tick()
 {

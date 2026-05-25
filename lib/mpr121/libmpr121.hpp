@@ -1,10 +1,50 @@
 #pragma once
 
 #include "i2c.hpp"
-#define MPR121_I2CADDR_DEFAULT 0x5A         ///< default I2C address
-#define MPR121_TOUCH_THRESHOLD_DEFAULT 5    ///< default touch threshold value
-#define MPR121_RELEASE_THRESHOLD_DEFAULT 1  ///< default relese threshold value
-enum {
+#define MPR121_I2CADDR_DEFAULT 0x5A        ///< default I2C address
+#define MPR121_TOUCH_THRESHOLD_DEFAULT 5   ///< default touch threshold value
+#define MPR121_RELEASE_THRESHOLD_DEFAULT 1 ///< default relese threshold value
+typedef enum
+{
+    MPR121_INIT_SOFTRESET,
+    MPR121_INIT_ECR_CLEAR,
+    MPR121_INIT_CONFIG2_READ,
+    MPR121_INIT_TOUCHTH_N,
+    MPR121_INIT_RELEASETH_N,
+    MPR121_INIT_MHDR,
+    MPR121_INIT_NHDR,
+    MPR121_INIT_NCLR,
+    MPR121_INIT_FDLR,
+
+    MPR121_INIT_MHDF,
+    MPR121_INIT_NHDF,
+    MPR121_INIT_NCLF,
+    MPR121_INIT_FDLF,
+
+    MPR121_INIT_NHDT,
+    MPR121_INIT_NCLT,
+    MPR121_INIT_FDLT,
+
+    MPR121_INIT_DEBOUNCE,
+    MPR121_INIT_CONFIG1,
+    MPR121_INIT_CONFIG2,
+
+    MPR121_INIT_AUTOCONFIG0,
+
+    MPR121_INIT_UPLIMIT,
+    MPR121_INIT_TARGETLIMIT,
+    MPR121_INIT_LOWLIMIT,
+
+    MPR121_INIT_GPIODIR,
+    MPR121_INIT_GPIOEN,
+    MPR121_INIT_GPIOCTL1,
+    MPR121_INIT_GPIOCTL2,
+    MPR121_INIT_ECR_START,
+    MPR121_POLL
+
+} mpr121_status_e;
+enum
+{
     MPR121_TOUCHSTATUS_L = 0x00,
     MPR121_TOUCHSTATUS_H = 0x01,
     MPR121_FILTDATA_0L = 0x04,
@@ -53,21 +93,31 @@ enum {
     MPR121_PWM2 = 0x83,
     MPR121_PWM3 = 0x84,
 };
-class MPR121 {
-   public:
+class MPR121 : public I2CDMAInterface
+{
+public:
     MPR121(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock)
         : interface(block, sda, scl, clock) {};
     void tick();
-    inline bool is_connected() {
-        return connected;
+    void begin();
+    void end();
+    void processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
+    inline bool is_connected()
+    {
+        return status < MPR121_INIT_TOUCHTH_N;
     }
     uint16_t inputs;
 
-   private:
+private:
     void init();
     I2CMasterInterface interface;
-    bool connected;
+    int initTouchpad;
     int touchpadCount;
-    int ddr;     // pin data direction register
-    int enable;  // pin enable
+    int ddr;    // pin data direction register
+    int enable; // pin enable
+    mpr121_status_e status = MPR121_INIT_SOFTRESET;
+    uint8_t bufferTx[32];
+    uint8_t bufferRx[32];
+    alarm_id_t restart_alarm_id;
+    int failCount = 0;
 };

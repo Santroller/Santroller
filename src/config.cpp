@@ -78,7 +78,7 @@ std::shared_ptr<UsbDevice> usb_instances_by_epout[16];
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
 int seenMasks = 0;
-bool fullReload = true;
+bool fullReload = false;
 bool working = false;
 bool loadedAny = false;
 
@@ -96,6 +96,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         prevDevice->end(false);
     }
     printf("found device! %d\r\n", prevDeviceIt != prev_root_devices.end());
+    printf("device id: %d, type: %d\r\n", dev_id, device.which_device);
     switch (device.which_device)
     {
     case proto_Device_accelerometer_tag:
@@ -197,10 +198,6 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
         }
         return std::unique_ptr<Input>(new CrkdButtonInput(input.input.crkd, std::static_pointer_cast<CrkdDevice>(profile->devices[input.input.crkd.deviceid])));
     case proto_Input_gpio_tag:
-        if (profile->devices.find(input.input.wiiAxis.deviceid) == profile->devices.end())
-        {
-            return nullptr;
-        }
         return std::unique_ptr<Input>(new GPIOInput(input.input.gpio));
     case proto_Input_ads1115_tag:
         if (profile->devices.find(input.input.ads1115.deviceid) == profile->devices.end())

@@ -17,14 +17,14 @@ class I2CDMAInterface
 public:
     I2CDMAInterface() {};
     ~I2CDMAInterface() {};
-    virtual void processData(bool running, bool timeout, bool abort_detected, bool stop_detected) = 0;
+    virtual void processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected) = 0;
 };
 typedef struct
 {
     uint8_t addr;
-    uint8_t wbuf[I2C_MAX_TRANSFER_SIZE];
+    const uint8_t* wbuf;
     size_t wbuf_len;
-    uint8_t rbuf[I2C_MAX_TRANSFER_SIZE];
+    uint8_t* rbuf;
     size_t rbuf_len;
 } i2c_dma_transfer_t;
 typedef struct i2c_dma_s
@@ -48,11 +48,13 @@ typedef struct i2c_dma_s
     volatile bool abort_detected;
     volatile bool timeout;
     volatile bool running;
+    volatile bool processing;
     alarm_id_t timeout_alarm_id;
 
     uint16_t data_cmds[I2C_MAX_TRANSFER_SIZE];
     I2CDMAInterface *dmaInterface[I2C_MAX_ADDR];
-    std::queue<i2c_dma_transfer_t> transferQueue;
+    i2c_dma_transfer_t waitingTransfers[I2C_MAX_ADDR];
+    bool hasWaitingTransfer[I2C_MAX_ADDR];
 } i2c_dma_t;
 
 class I2CMasterInterface
@@ -74,6 +76,7 @@ public:
                  uint8_t sendStop);
     void dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface);
     void dmaDeinit(uint8_t addr);
+    void tick();
     void dmaWriteRead(
         uint8_t addr,
         const uint8_t *wbuf,

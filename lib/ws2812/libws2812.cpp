@@ -112,6 +112,7 @@ void WS2812::begin()
     irq_set_exclusive_handler(DMA_IRQ_0, dma_complete_handler);
     dma_channel_set_irq0_enabled(chan, true);
     irq_set_enabled(DMA_IRQ_0, true);
+    printf("ws2812 begin!\r\n");
 }
 void WS2812::end()
 {

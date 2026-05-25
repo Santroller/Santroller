@@ -6,7 +6,7 @@ class Device
 {
 public:
     Device(uint16_t id) : m_id(id) {}
-    virtual ~Device() { printf("~Device(%d)\r\n", m_id); }
+    virtual ~Device() {  }
     virtual void begin() = 0;
     virtual void end(bool full) = 0;
     virtual void update(bool full_poll, bool send_events) = 0;

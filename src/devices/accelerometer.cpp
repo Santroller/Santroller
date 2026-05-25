@@ -8,9 +8,11 @@ AccelerometerDevice::AccelerometerDevice(proto_AccelerometerDevice device, uint1
 }
 void AccelerometerDevice::begin()
 {
+    m_accelerometer.begin();
 }
 void AccelerometerDevice::end(bool full)
 {
+    m_accelerometer.end();
 }
 
 

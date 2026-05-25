@@ -12,7 +12,7 @@
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
     WiiExtension *inst = (WiiExtension *)user_data;
-    inst->processData(false, false, false, false);
+    inst->processData(WII_ADDR, false, false, false, false);
     return 0;
 }
 
@@ -35,7 +35,7 @@ bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
     return true;
 }
 // state machine to handle polling wii extensions
-void WiiExtension::processData(bool running, bool timeout, bool abort_detected, bool stop_detected)
+void WiiExtension::processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     if (timeout || abort_detected)
     {
@@ -349,7 +349,7 @@ void WiiExtension::begin()
 {
     printf("WiiExtension::begin\r\n");
     mInterface.dmaInit(WII_ADDR, this);
-    processData(false, false, false, false);
+    processData(WII_ADDR, false, false, false, false);
 }
 void WiiExtension::load_state(WiiExtension *state)
 {

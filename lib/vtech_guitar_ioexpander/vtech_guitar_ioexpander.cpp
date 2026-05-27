@@ -35,16 +35,23 @@ void VTechGuitarIOExpander::signalAttention(void)
 }
 void VTechGuitarIOExpander::tick() {
 };
-void VTechGuitarIOExpander::set_led(uint8_t i, uint8_t val) {
+void VTechGuitarIOExpander::set_led(uint8_t i, uint8_t val)
+{
     led_data = (led_data & ~(1 << i)) | (val << i);
 }
 void VTechGuitarIOExpander::begin()
 {
+
     status = INIT_POWER_ON;
     connected = false;
-    bool attention = false;
+    attention = false;
     processData(false, false);
 };
+VTechGuitarIOExpander::VTechGuitarIOExpander(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t csPin) : mInterface(block, SPI_CPHA_0, SPI_CPOL_0, sck, mosi, miso, true, clock), mCsPin(csPin) {
+    printf("vtech expander init!\r\n");
+    gpio_init(csPin);
+    gpio_set_dir(csPin, true);
+}
 void VTechGuitarIOExpander::end()
 {
     cancel_alarm(timeout_alarm_id);
@@ -57,6 +64,7 @@ void VTechGuitarIOExpander::processData(bool ack, bool timeout)
         signalAttention();
         return;
     }
+    // printf("status: %d\r\n", status);
     switch (status)
     {
     case CHECK:
@@ -146,6 +154,7 @@ void VTechGuitarIOExpander::processData(bool ack, bool timeout)
         mInterface.transfer(0x82);
         mInterface.transfer(0xFF);
         noAttention();
+        status = CHECK;
         break;
     }
 }

@@ -22,8 +22,7 @@ typedef enum
 } VTechGuitarIOExpanderState;
 class VTechGuitarIOExpander {
    public:
-    VTechGuitarIOExpander(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t csPin)
-        : mInterface(block, SPI_CPHA_1, SPI_CPOL_1, sck, mosi, miso, false, clock), mCsPin(csPin) {};
+    VTechGuitarIOExpander(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t csPin);
     void tick();
     void begin();
     void end();

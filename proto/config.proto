@@ -48,6 +48,10 @@ message GpioLedDevice {
   required int32 pin = 1;
   required bool analog = 3;
 }
+message VTechGuitarIOExpanderLedDevice {
+  required int32 deviceId = 1;
+  required int32 activeLed = 2;
+}
 message STP16CPCLedDevice {
   required int32 deviceId = 1;
   repeated int32 activeLed = 2;
@@ -57,6 +61,7 @@ message LedDevice {
     RGBLedDevice rgb = 4;
     GpioLedDevice gpio = 5;
     STP16CPCLedDevice stp16 = 6;
+    VTechGuitarIOExpanderLedDevice vtechExpander = 7;
   }
 }
 message LedMapping {

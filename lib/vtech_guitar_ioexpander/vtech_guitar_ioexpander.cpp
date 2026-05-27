@@ -35,6 +35,9 @@ void VTechGuitarIOExpander::signalAttention(void)
 }
 void VTechGuitarIOExpander::tick() {
 };
+void VTechGuitarIOExpander::set_led(uint8_t i, uint8_t val) {
+    led_data = (led_data & ~(1 << i)) | (val << i);
+}
 void VTechGuitarIOExpander::begin()
 {
     status = INIT_POWER_ON;

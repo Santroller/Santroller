@@ -15,6 +15,9 @@ void VTechGuitarIOExpanderDevice::end(bool full)
 {
     m_vtech_expander.end();
 }
+void VTechGuitarIOExpanderDevice::set_led(uint8_t i, uint8_t val) {
+    m_vtech_expander.set_led(i, val);
+}
 void VTechGuitarIOExpanderDevice::update(bool full_poll, bool send_events)
 {
     m_vtech_expander.tick();

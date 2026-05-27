@@ -12,6 +12,7 @@ public:
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
     bool read_button(uint8_t pin);
+    void set_led(uint8_t i, uint8_t val);
 
 private:
     VTechGuitarIOExpander m_vtech_expander;

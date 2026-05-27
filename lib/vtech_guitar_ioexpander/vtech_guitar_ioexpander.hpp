@@ -33,6 +33,7 @@ class VTechGuitarIOExpander {
     void noAttention();
     void signalAttention();
     bool read_button(uint8_t pin);
+    void set_led(uint8_t i, uint8_t val);
     inline bool is_connected() {
         return connected;
     }

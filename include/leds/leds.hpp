@@ -5,6 +5,7 @@
 #include "config.pb.h"
 #include "devices/base.hpp"
 #include "devices/stp16cpc.hpp"
+#include "devices/vtechexpander.hpp"
 #include <memory>
 #include <stdio.h>
 
@@ -62,6 +63,24 @@ public:
 
 protected:
     proto_GpioLedDevice m_device;
+};
+class VTechGuitarIoExpanderLedDevice : public LedMappingDevice
+{
+public:
+    VTechGuitarIoExpanderLedDevice(proto_VTechGuitarIOExpanderLedDevice device, std::shared_ptr<VTechGuitarIOExpanderDevice> led_device) : LedMappingDevice(), m_device(device), m_led_device(std::move(led_device))
+    {
+        setup();
+    }
+    void set_val(uint16_t val);
+    void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
+    void setup();
+    bool supports_brightness();
+    uint8_t led_count();
+
+protected:
+    proto_VTechGuitarIOExpanderLedDevice m_device;
+    std::shared_ptr<VTechGuitarIOExpanderDevice> m_led_device;
+    uint8_t m_led_count = 0;
 };
 class STP16CPCLedDevice : public LedMappingDevice
 {

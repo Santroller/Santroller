@@ -175,6 +175,38 @@ bool STP16CPCLedDevice::supports_brightness()
 {
     return false;
 }
+
+
+void VTechGuitarIoExpanderLedDevice::set_val(uint16_t val)
+{
+    for (int i = 0; i < 8; i++) {
+        if (m_device.activeLed & 1 << i) {
+            m_led_device->set_led(i, val);
+        }
+    }
+}
+void VTechGuitarIoExpanderLedDevice::set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
+{
+    m_led_device->set_led(index, r || g || b);
+}
+void VTechGuitarIoExpanderLedDevice::setup()
+{
+    m_led_count = 0;
+    for (int i = 0; i < 8; i++ ) {
+        if (m_device.activeLed & 1 << i) {
+            m_led_count++;
+        }
+    }
+}
+bool VTechGuitarIoExpanderLedDevice::supports_brightness()
+{
+    return false;
+}
+uint8_t VTechGuitarIoExpanderLedDevice::led_count()
+{
+    return m_led_count;
+}
+
 void GpioLedDevice::set_val(uint16_t val)
 {
     pwm_set_gpio_level(m_device.pin, val);

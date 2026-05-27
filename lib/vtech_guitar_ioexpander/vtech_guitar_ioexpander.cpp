@@ -20,7 +20,7 @@ void VTechGuitarIOExpander::noAttention(void)
     }
     else
     {
-        timeout_alarm_id = add_alarm_in_us(ATTN_DELAY, restart_handler, this, true);
+        timeout_alarm_id = add_alarm_in_us(CS_DELAY, restart_handler, this, true);
     }
 }
 bool VTechGuitarIOExpander::read_button(uint8_t pin)
@@ -31,7 +31,7 @@ void VTechGuitarIOExpander::signalAttention(void)
 {
     attention = true;
     gpio_put(mCsPin, false);
-    timeout_alarm_id = add_alarm_in_us(ATTN_DELAY, restart_handler, this, true);
+    timeout_alarm_id = add_alarm_in_us(CS_DELAY, restart_handler, this, true);
 }
 void VTechGuitarIOExpander::tick() {
 };

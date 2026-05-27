@@ -122,6 +122,10 @@ message APA102Device {
   required APA102Type type = 2; 
   required int32 count = 3;
 }
+message VTechGuitarIOExpanderDevice { 
+  required SPIDevice spi = 1; 
+  required int32 attPin = 2;
+}
 message STP16CPCDevice { 
   required SPIDevice spi = 1;
   required int32 oe = 2; 
@@ -160,5 +164,6 @@ message Device {
     STP16CPCDevice stp16cpc = 28;
     BluetoothDevice bt = 29;
     ProtarNeckDevice protarNeck = 30;
+    VTechGuitarIOExpanderDevice vtechExpander = 31;
   }
 }

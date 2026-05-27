@@ -138,6 +138,7 @@ add_executable(
   src/input/midi.cpp
   src/input/mpr121.cpp
   src/input/protarNeck.cpp
+  src/input/vtechexpander.cpp
   src/input/fixed.cpp
   src/input/ads1115.cpp
   src/input/multiplexer.cpp
@@ -197,6 +198,7 @@ add_executable(
   src/devices/bhdrum.cpp
   src/devices/protar_neck.cpp
   src/devices/debug.cpp
+  src/devices/vtechexpander.cpp
   src/devices/crazyneck.cpp
   src/devices/multiplexer.cpp
   src/devices/midiserial.cpp
@@ -260,6 +262,7 @@ target_link_libraries(
   dj_hero_turntable
   guitar_hero_5_neck
   xgip_protocol
+  vtech_guitar_ioexpander
   pico_audio_i2s
   xsm3
   matrix

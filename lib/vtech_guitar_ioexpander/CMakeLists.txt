@@ -1,6 +1,6 @@
-add_library(world_tour_drum INTERFACE)
-target_include_directories(world_tour_drum INTERFACE .)
-target_link_libraries(world_tour_drum INTERFACE
+add_library(vtech_guitar_ioexpander INTERFACE)
+target_include_directories(vtech_guitar_ioexpander INTERFACE .)
+target_link_libraries(vtech_guitar_ioexpander INTERFACE
     peripherals
 )
-target_sources(world_tour_drum INTERFACE world_tour_drum.cpp)
+target_sources(vtech_guitar_ioexpander INTERFACE vtech_guitar_ioexpander.cpp)

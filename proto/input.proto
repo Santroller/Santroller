@@ -66,6 +66,11 @@ message Gh5NeckButtonInput {
   required Gh5NeckButtonType button = 2;
 }
 
+message VTechGuitarIOExpanderInput {
+  required int32 deviceid = 1;
+  required int32 button = 2;
+}
+
 message MouseAxisInput {
   required int32 deviceid = 1;
   required MouseAxisType axis = 2;
@@ -190,6 +195,7 @@ message Mapping {
     MouseAxisType mouseAxis = 25;
     MouseButtonType mouseButton = 26;
     int32 keycode = 27;
+    VTechGuitarIOExpanderInput vtechExpander = 28;
   }
 
   required Input input = 50;

@@ -586,6 +586,10 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
         device = std::make_unique<STP16CPCLedDevice>(proto_led.device.device.stp16, std::static_pointer_cast<STP16CPCDevice>(profile->devices[proto_led.device.device.stp16.deviceId]));
         printf("dev stp16%d\r\n", profile->leds.size());
         break;
+    case proto_LedDevice_vtechExpander_tag:
+        device = std::make_unique<VTechGuitarIoExpanderLedDevice>(proto_led.device.device.vtechExpander, std::static_pointer_cast<VTechGuitarIOExpanderDevice>(profile->devices[proto_led.device.device.vtechExpander.deviceId]));
+        printf("dev stp16%d\r\n", profile->leds.size());
+        break;
     }
     if (!device)
     {

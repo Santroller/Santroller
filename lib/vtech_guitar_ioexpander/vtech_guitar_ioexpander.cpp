@@ -79,7 +79,6 @@ void VTechGuitarIOExpander::processData(bool ack, bool timeout)
         mInterface.transfer(0x0E);
         resp = mInterface.transfer(0x0E);
         noAttention();
-        timeout_alarm_id = add_alarm_in_us(ATTN_DELAY, restart_handler, this, true);
         button_data = resp;
         status = UPDATE_LED;
         break;
@@ -87,7 +86,6 @@ void VTechGuitarIOExpander::processData(bool ack, bool timeout)
         mInterface.transfer(0x81);
         mInterface.transfer(led_data);
         noAttention();
-        timeout_alarm_id = add_alarm_in_us(ATTN_DELAY, restart_handler, this, true);
         status = CHECK;
         break;
     case INIT_POWER_ON:

@@ -23,7 +23,8 @@ void VTechGuitarIOExpander::noAttention(void)
         timeout_alarm_id = add_alarm_in_us(ATTN_DELAY, restart_handler, this, true);
     }
 }
-bool VTechGuitarIOExpander::read_button(uint8_t pin) {
+bool VTechGuitarIOExpander::read_button(uint8_t pin)
+{
     return button_data & (1 << pin);
 }
 void VTechGuitarIOExpander::signalAttention(void)
@@ -37,6 +38,7 @@ void VTechGuitarIOExpander::tick() {
 void VTechGuitarIOExpander::begin()
 {
     status = INIT_POWER_ON;
+    connected = false;
     bool attention = false;
     processData(false, false);
 };
@@ -62,10 +64,12 @@ void VTechGuitarIOExpander::processData(bool ack, bool timeout)
         if (resp == 0x5A)
         {
             status = POLL;
+            connected = true;
         }
         else
         {
             status = INIT_POWER_ON;
+            connected = false;
         }
         break;
     case POLL:

@@ -2,9 +2,7 @@
 #include <stdint.h>
 
 #include "spi.hpp"
-#define DRUM_ADDR 0x0D
-#define BH_DRUM_PTR 0x10
-#define ATTN_DELAY 2000
+#define CS_DELAY 2000
 
 typedef enum 
 {

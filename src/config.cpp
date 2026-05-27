@@ -13,6 +13,7 @@
 #include "input/ads1115.hpp"
 #include "input/accelerometer.hpp"
 #include "input/multiplexer.hpp"
+#include "input/vtechexpander.hpp"
 #include "input/gh5.hpp"
 #include "devices/base.hpp"
 #include "devices/accelerometer.hpp"
@@ -29,6 +30,7 @@
 #include "devices/usb.hpp"
 #include "devices/ps2.hpp"
 #include "devices/max1704x.hpp"
+#include "devices/vtechexpander.hpp"
 #include "devices/mpr121.hpp"
 #include "devices/ws2812.hpp"
 #include "devices/apa102.hpp"
@@ -90,7 +92,8 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     // If we are loading a new config, we grab the previous device so we can make sure its state is restored
     auto prevDeviceIt = prev_root_devices.find(dev_id);
     auto prevDevice = prevDeviceIt == prev_root_devices.end() ? std::shared_ptr<Device>() : prevDeviceIt->second;
-    if (prevDevice) {
+    if (prevDevice)
+    {
         // signal devices that they are being torn down, but in a way where if they are being replaced, they aren't fully torn down
         // This is so that things like PS2 controllers, Wii extensions and USB host and bluetooth aren't restarted during a config change
         prevDevice->end(false);
@@ -163,8 +166,12 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Device_bt_tag:
         active_devices.emplace_back(new BluetoothDevice(device.device.bt, dev_id));
         break;
+    case proto_Device_vtechExpander_tag:
+        active_devices.emplace_back(new VTechGuitarIOExpanderDevice(device.device.vtechExpander, dev_id));
+        break;
     }
-    if (prevDevice) {
+    if (prevDevice)
+    {
         prev_root_devices.erase(prevDeviceIt);
         prevDevice = nullptr;
     }
@@ -191,6 +198,12 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
             return nullptr;
         }
         return std::unique_ptr<Input>(new WiiButtonInput(input.input.wiiButton, std::static_pointer_cast<WiiDevice>(profile->devices[input.input.wiiButton.deviceid])));
+    case proto_Input_vtechExpander_tag:
+        if (profile->devices.find(input.input.vtechExpander.deviceid) == profile->devices.end())
+        {
+            return nullptr;
+        }
+        return std::unique_ptr<Input>(new VTechExpanderInput(input.input.vtechExpander, std::static_pointer_cast<VTechGuitarIOExpanderDevice>(profile->devices[input.input.vtechExpander.deviceid])));
     case proto_Input_crkd_tag:
         if (profile->devices.find(input.input.crkd.deviceid) == profile->devices.end())
         {
@@ -804,7 +817,8 @@ bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8
         usb_instances[confDevice2->interface_id] = confDevice2;
         confDevice2->initialize();
     }
-    for (const auto& prev : prev_root_devices) {
+    for (const auto &prev : prev_root_devices)
+    {
         prev.second->end(true);
     }
     prev_root_devices.clear();

@@ -156,6 +156,7 @@ message Input {
     MidiProGuitarAxisInput midiProGuitarAxis = 23;
     ProtarNeckAxisInput protarNeckAxis = 24;
     ProtarNeckButtonInput protarNeckButton = 25;
+    VTechGuitarIOExpanderInput vtechExpander = 28;
   }
 }
 message InputActivationTrigger {
@@ -195,7 +196,6 @@ message Mapping {
     MouseAxisType mouseAxis = 25;
     MouseButtonType mouseButton = 26;
     int32 keycode = 27;
-    VTechGuitarIOExpanderInput vtechExpander = 28;
   }
 
   required Input input = 50;

@@ -89,6 +89,10 @@ message KeyboardKeyInput {
 message ShortcutInput {
   repeated Input inputs = 1;
 }
+message HeldInput {
+  required Input input = 1;
+  required int32 time = 2;
+}
 
 
 message PS2AxisInput {
@@ -157,6 +161,7 @@ message Input {
     ProtarNeckAxisInput protarNeckAxis = 24;
     ProtarNeckButtonInput protarNeckButton = 25;
     VTechGuitarIOExpanderInput vtechExpander = 28;
+    HeldInput held = 29;
   }
 }
 message InputActivationTrigger {

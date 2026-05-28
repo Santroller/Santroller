@@ -1,1 +1,2 @@
 proto.Input.shortcut type:FT_CALLBACK
+proto.Input.held type:FT_CALLBACK

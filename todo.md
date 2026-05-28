@@ -52,7 +52,6 @@
 [ ] Other analog filters - Low pass, high pass, zero point crossing
 [ ] Filters needed for hall effect
 [ ] Shortcut input masking - aka if you have start + select to home, it shouldnt keep pressing start and select
-[ ] Add mapping for an input being held for an amount of time
 
 ## Led / rumble features
 [ ] Gamepad rumble, including passthrough with usb host

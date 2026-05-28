@@ -7,6 +7,7 @@
 #include "input/ps2.hpp"
 #include "input/midi.hpp"
 #include "input/protarNeck.hpp"
+#include "input/held.hpp"
 #include "input/usb.hpp"
 #include "input/crkd.hpp"
 #include "input/shortcut.hpp"
@@ -181,6 +182,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     return true;
 }
 ShortcutInput *last_shortcut = nullptr;
+Input *last_special = nullptr;
 
 std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> profile, pb_istream_t *stream)
 {
@@ -330,7 +332,8 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
         return std::unique_ptr<Input>(new USBAxisInput(input.input.usbAxis, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.usbAxis.deviceid])));
     case 0:
     {
-        auto ret = last_shortcut;
+        auto ret = last_special;
+        last_special = nullptr;
         last_shortcut = nullptr;
         return std::unique_ptr<Input>(ret);
     }
@@ -361,6 +364,7 @@ bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
     auto profile = *(std::shared_ptr<Profile> *)*arg;
     printf("found shortcut!\r\n");
     last_shortcut = new ShortcutInput();
+    last_special = last_shortcut;
     proto_ShortcutInput input;
     input.inputs.arg = &profile;
     input.inputs.funcs.decode = &load_shortcut_input;
@@ -372,12 +376,28 @@ bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
     printf("loaded shortcut\r\n");
     return true;
 }
+bool load_held(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto profile = *(std::shared_ptr<Profile> *)*arg;
+    printf("found shortcut!\r\n");
+    auto last_held = new HeldInput();
+    last_special = last_held;
+    proto_HeldInput input;
+    if (!pb_decode(stream, proto_ShortcutInput_fields, &input))
+    {
+        printf("couldnt decode shortcut input?\r\n");
+        return false;
+    }
+    last_held->load(input, make_input(input.input, profile, stream));
+    return true;
+}
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = *(std::shared_ptr<Profile> *)*arg;
     proto_Mapping mapping;
     mapping.input.input.shortcut.arg = &profile;
     mapping.input.input.shortcut.funcs.decode = &load_shortcut;
+    mapping.input.input.held.funcs.decode = &load_held;
     pb_decode(stream, proto_Mapping_fields, &mapping);
     std::unique_ptr<Input> input = make_input(mapping.input, profile, stream);
     if (!input)
@@ -479,6 +499,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
     proto_ProfileAssignmentInfo assignment;
     assignment.assignment.input.input.input.shortcut.arg = &profile;
     assignment.assignment.input.input.input.shortcut.funcs.decode = &load_shortcut;
+    assignment.assignment.input.input.input.held.funcs.decode = &load_held;
     pb_decode(stream, proto_ProfileAssignmentInfo_fields, &assignment);
     switch (assignment.which_assignment)
     {
@@ -570,6 +591,7 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_Led proto_led;
     proto_led.mapping.led.inputMapping.input.input.shortcut.arg = &profile;
     proto_led.mapping.led.inputMapping.input.input.shortcut.funcs.decode = &load_shortcut;
+    proto_led.mapping.led.inputMapping.input.input.held.funcs.decode = &load_held;
     pb_decode(stream, proto_Led_fields, &proto_led);
     printf("load led%d %d\r\n", profile->leds.size(), proto_led.device.which_device);
     switch (proto_led.device.which_device)

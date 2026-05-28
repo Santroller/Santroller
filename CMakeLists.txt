@@ -139,6 +139,7 @@ add_executable(
   src/input/mpr121.cpp
   src/input/protarNeck.cpp
   src/input/vtechexpander.cpp
+  src/input/held.cpp
   src/input/fixed.cpp
   src/input/ads1115.cpp
   src/input/multiplexer.cpp

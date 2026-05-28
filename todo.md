@@ -6,8 +6,6 @@
 
 ## Firmware features
 [ ] bluetooth timeout
-[ ] max1704x battery levels
-[ ] battery levels by just measuring the voltage from an ADC pin
 [ ] input to put controller to sleep
 [ ] input for waking the controller up from sleep
 
@@ -65,4 +63,5 @@
 [ ] Xbox 360 fat RF module - https://github.com/blackfin/xbox360RFmodule
 [ ] Sound for PS4/5, XInput and GIP
 [ ] Port over logic for waking up 360s
-[ ] Battery levels
+[ ] max1704x
+[ ] battery level estimate via ADC pin

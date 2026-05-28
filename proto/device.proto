@@ -132,6 +132,10 @@ message STP16CPCDevice {
   required int32 le = 3; 
   required int32 count = 4;
 }
+message MatrixDevice {
+  required uint32 outPins = 1;
+  required uint32 inPins = 2;
+}
 
 message Device {
   required int32 deviceid = 1;
@@ -165,5 +169,6 @@ message Device {
     BluetoothDevice bt = 29;
     ProtarNeckDevice protarNeck = 30;
     VTechGuitarIOExpanderDevice vtechExpander = 31;
+    MatrixDevice matrix = 32;
   }
 }

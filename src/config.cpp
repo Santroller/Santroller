@@ -10,6 +10,7 @@
 #include "input/held.hpp"
 #include "input/usb.hpp"
 #include "input/crkd.hpp"
+#include "input/matrix.hpp"
 #include "input/shortcut.hpp"
 #include "input/ads1115.hpp"
 #include "input/accelerometer.hpp"
@@ -29,6 +30,7 @@
 #include "devices/protar_neck.hpp"
 #include "devices/gh5neck.hpp"
 #include "devices/usb.hpp"
+#include "devices/matrix.hpp"
 #include "devices/ps2.hpp"
 #include "devices/max1704x.hpp"
 #include "devices/vtechexpander.hpp"
@@ -170,6 +172,9 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Device_vtechExpander_tag:
         active_devices.emplace_back(new VTechGuitarIOExpanderDevice(device.device.vtechExpander, dev_id));
         break;
+    case proto_Device_matrix_tag:
+        active_devices.emplace_back(new MatrixDevice(device.device.matrix, dev_id));
+        break;
     }
     if (prevDevice)
     {
@@ -194,6 +199,12 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
             return nullptr;
         }
         return std::unique_ptr<Input>(new WiiAxisInput(input.input.wiiAxis, std::static_pointer_cast<WiiDevice>(profile->devices[input.input.wiiAxis.deviceid])));
+    case proto_Input_matrix_tag:
+        if (profile->devices.find(input.input.matrix.deviceid) == profile->devices.end())
+        {
+            return nullptr;
+        }
+        return std::unique_ptr<Input>(new MatrixInput(input.input.matrix, std::static_pointer_cast<MatrixDevice>(profile->devices[input.input.matrix.deviceid])));
     case proto_Input_wiiButton_tag:
         if (profile->devices.find(input.input.wiiButton.deviceid) == profile->devices.end())
         {

@@ -131,6 +131,7 @@ add_executable(
   src/input/crkd.cpp
   src/input/gh5.cpp
   src/input/gpio.cpp
+  src/input/matrix.cpp
   src/input/wii.cpp
   src/input/shortcut.cpp
   src/input/usb.cpp
@@ -199,6 +200,7 @@ add_executable(
   src/devices/bhdrum.cpp
   src/devices/protar_neck.cpp
   src/devices/debug.cpp
+  src/devices/matrix.cpp
   src/devices/vtechexpander.cpp
   src/devices/crazyneck.cpp
   src/devices/multiplexer.cpp

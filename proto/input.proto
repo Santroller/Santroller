@@ -10,6 +10,11 @@ message GPIOInput {
   required PinMode pinMode = 2;
   required bool analog = 3;
 }
+message MatrixInput {
+  required int32 deviceid = 1;
+  required int32 pin = 2;
+  required int32 outPins = 3;
+}
 message ADS1115Input {
   required int32 deviceid = 1;
   required int32 channel = 2;
@@ -162,6 +167,7 @@ message Input {
     ProtarNeckButtonInput protarNeckButton = 25;
     VTechGuitarIOExpanderInput vtechExpander = 28;
     HeldInput held = 29;
+    MatrixInput matrix = 30;
   }
 }
 message InputActivationTrigger {

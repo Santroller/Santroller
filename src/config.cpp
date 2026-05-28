@@ -379,13 +379,13 @@ bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
 bool load_held(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = *(std::shared_ptr<Profile> *)*arg;
-    printf("found shortcut!\r\n");
+    printf("found held!\r\n");
     auto last_held = new HeldInput();
     last_special = last_held;
     proto_HeldInput input;
-    if (!pb_decode(stream, proto_ShortcutInput_fields, &input))
+    if (!pb_decode(stream, proto_HeldInput_fields, &input))
     {
-        printf("couldnt decode shortcut input?\r\n");
+        printf("couldnt decode held input?\r\n");
         return false;
     }
     last_held->load(input, make_input(input.input, profile, stream));

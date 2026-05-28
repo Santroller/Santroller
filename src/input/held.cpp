@@ -24,6 +24,8 @@ bool HeldInput::tickDigital()
         {
             return true;
         }
+    } else {
+        m_lastPressed = 0;
     }
     return false;
 }

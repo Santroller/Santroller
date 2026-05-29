@@ -13,7 +13,7 @@ message GPIOInput {
 message MatrixInput {
   required int32 deviceid = 1;
   required int32 pin = 2;
-  required int32 outpin = 3;
+  required int32 outputPin = 3;
 }
 message ADS1115Input {
   required int32 deviceid = 1;

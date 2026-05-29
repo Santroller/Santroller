@@ -8,7 +8,7 @@ MatrixInput::MatrixInput(proto_MatrixInput input, std::shared_ptr<MatrixDevice> 
 }
 bool MatrixInput::tickDigital()
 {
-    return m_device->read_pin(m_input.pin, m_input.outPin);
+    return m_device->read_pin(m_input.pin, m_input.outputPin);
 }
 uint16_t MatrixInput::tickAnalog()
 {

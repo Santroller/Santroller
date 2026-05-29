@@ -7,9 +7,9 @@ MatrixDevice::MatrixDevice(proto_MatrixDevice device, uint16_t id) : Device(id),
 {
 }
 
-bool MatrixDevice::read_pin(uint8_t pin, uint32_t outPins)
+bool MatrixDevice::read_pin(uint8_t pin, uint32_t outPin)
 {
-    return m_matrix.read(outPins, pin);
+    return m_matrix.read(outPin, pin);
 }
 
 void MatrixDevice::begin()

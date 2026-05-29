@@ -8,6 +8,7 @@
 [ ] bluetooth timeout
 [ ] input to put controller to sleep
 [ ] input for waking the controller up from sleep
+[ ] xbox 360 wakeup
 
 ## Emulation
 [ ] Emulation of PS2 controllers

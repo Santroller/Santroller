@@ -129,6 +129,7 @@ add_executable(
   src/usb/host/xinput/xinput_security_host.cpp
   src/input/accelerometer.cpp
   src/input/crkd.cpp
+  src/input/crkd_drum.cpp
   src/input/gh5.cpp
   src/input/gpio.cpp
   src/input/matrix.cpp
@@ -194,6 +195,7 @@ add_executable(
   src/devices/wii.cpp
   src/devices/ps2.cpp
   src/devices/crkd.cpp
+  src/devices/crkd_drum.cpp
   src/devices/ads1115.cpp
   src/devices/device.cpp
   src/devices/accelerometer.cpp
@@ -255,6 +257,7 @@ target_link_libraries(
   CRC32
   protar_neck
   crkd_neck
+  crkd_drum
   wm_crypto
   peripherals
   quadrature_encoder

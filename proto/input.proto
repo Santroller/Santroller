@@ -66,6 +66,11 @@ message CrkdNeckButtonInput {
   required CrkdNeckButtonType button = 2;
 }
 
+message CrkdDrumAxisInput {
+  required int32 deviceid = 1;
+  required CrkdDrumAxisType axis = 2;
+}
+
 message Gh5NeckButtonInput {
   required int32 deviceid = 1;
   required Gh5NeckButtonType button = 2;
@@ -168,6 +173,7 @@ message Input {
     VTechGuitarIOExpanderInput vtechExpander = 28;
     HeldInput held = 29;
     MatrixInput matrix = 30;
+    CrkdDrumAxisInput crkdDrum = 31;
   }
 }
 message InputActivationTrigger {

@@ -677,6 +677,18 @@ enum CrkdNeckButtonType {
   CrkdSoloOrange = 14;
 }
 
+enum CrkdDrumAxisType {
+  CrkdRedPad = 1;
+  CrkdYellowPad = 2;
+  CrkdBluePad = 3;
+  CrkdGreenPad = 4;
+  CrkdYellowCymbal = 5;
+  CrkdBlueCymbal = 6;
+  CrkdGreenCymbal = 7;
+  CrkdKick1 = 8;
+  CrkdKick2 = 9;
+}
+
 enum Gh5NeckButtonType {
   Gh5Green = 1;
   Gh5Red = 2;

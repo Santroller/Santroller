@@ -1,2 +1,2 @@
-grpcio-tools==1.68.0
+grpcio-tools
 setuptools >= 66.1.0

@@ -10,6 +10,7 @@
 #include "input/held.hpp"
 #include "input/usb.hpp"
 #include "input/crkd.hpp"
+#include "input/crkd_drum.hpp"
 #include "input/matrix.hpp"
 #include "input/shortcut.hpp"
 #include "input/ads1115.hpp"
@@ -26,6 +27,7 @@
 #include "devices/debug.hpp"
 #include "devices/djh.hpp"
 #include "devices/crkd.hpp"
+#include "devices/crkd_drum.hpp"
 #include "devices/ads1115.hpp"
 #include "devices/protar_neck.hpp"
 #include "devices/gh5neck.hpp"
@@ -110,6 +112,9 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Device_crkdNeck_tag:
         active_devices.emplace_back(new CrkdDevice(device.device.crkdNeck, dev_id));
+        break;
+    case proto_Device_crkdDrum_tag:
+        active_devices.emplace_back(new CrkdDrumDevice(device.device.crkdDrum, dev_id));
         break;
     case proto_Device_wii_tag:
         // we pass in the previous device here so we can make sure the state is kept between reloads
@@ -223,6 +228,12 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
             return nullptr;
         }
         return std::unique_ptr<Input>(new CrkdButtonInput(input.input.crkd, std::static_pointer_cast<CrkdDevice>(profile->devices[input.input.crkd.deviceid])));
+    case proto_Input_crkdDrum_tag:
+        if (profile->devices.find(input.input.crkdDrum.deviceid) == profile->devices.end())
+        {
+            return nullptr;
+        }
+        return std::unique_ptr<Input>(new CrkdDrumInput(input.input.crkdDrum, std::static_pointer_cast<CrkdDrumDevice>(profile->devices[input.input.crkdDrum.deviceid])));
     case proto_Input_gpio_tag:
         return std::unique_ptr<Input>(new GPIOInput(input.input.gpio));
     case proto_Input_ads1115_tag:

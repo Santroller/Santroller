@@ -62,6 +62,7 @@ message BandHeroDrumDevice { required I2CDevice i2c = 1; }
 
 message SerialMidiDevice { required UARTDevice uart = 1; }
 message CrkdNeckDevice { required UARTDevice uart = 1; }
+message CrkdDrumDevice { required UARTDevice uart = 1; }
 message DebugDevice { required UARTDevice uart = 1; }
 message UsbHostDevice {
   required int32 firstPin = 1;
@@ -170,5 +171,6 @@ message Device {
     ProtarNeckDevice protarNeck = 30;
     VTechGuitarIOExpanderDevice vtechExpander = 31;
     MatrixDevice matrix = 32;
+    CrkdDrumDevice crkdDrum = 33;
   }
 }

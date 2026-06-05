@@ -16,5 +16,6 @@ public:
 private:
     std::unique_ptr<Input> m_input;
     uint32_t m_last_toggled = 0;
+    bool m_last_state = false;
     std::shared_ptr<CycleDevice> m_device;
 };

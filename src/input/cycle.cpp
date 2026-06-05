@@ -8,7 +8,8 @@
 CycleInput::CycleInput()
 {
 }
-void CycleInput::load(proto_CycleInput config, std::shared_ptr<CycleDevice> device, std::unique_ptr<Input> input) {
+void CycleInput::load(proto_CycleInput config, std::shared_ptr<CycleDevice> device, std::unique_ptr<Input> input)
+{
     m_input = std::move(input);
     m_device = device;
     m_last_toggled = 0;
@@ -23,9 +24,10 @@ bool CycleInput::tickDigital()
 }
 uint16_t CycleInput::tickAnalog()
 {
-    if (m_input->tickDigital() && (millis() - m_last_toggled > 500)) {
+    if (m_input->tickDigital() && !m_last_state)
+    {
         m_device->cycle();
-        m_last_toggled = millis();
     }
+    m_last_state = m_input->tickDigital();
     return m_device->get_value();
 }

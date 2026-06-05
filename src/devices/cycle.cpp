@@ -3,10 +3,9 @@
 #include "main.hpp"
 #include "usb/device/hid_device.h"
 #include "config.hpp"
-CycleDevice::CycleDevice(proto_CycleDevice device, uint16_t id, uint32_t current_index, std::vector<uint32_t> states) : Device(id), m_device(device),  m_current_index(current_index)
+CycleDevice::CycleDevice(proto_CycleDevice device, uint16_t id, uint32_t current_index, std::vector<uint32_t> states) : Device(id), m_device(device), m_states(states), m_current_value(states[current_index]), m_current_index(current_index)
 {
-    m_states = states;
-    m_current_value = m_states[m_current_index];
+
 }
 
 void CycleDevice::begin()

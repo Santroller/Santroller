@@ -139,7 +139,8 @@ message MatrixDevice {
 }
 
 message CycleDevice {
-  repeated int32 values = 1;
+  required CycleType type = 1;
+  repeated int32 values = 2;
 }
 
 message Device {

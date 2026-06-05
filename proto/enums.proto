@@ -243,3 +243,8 @@ enum BluetoothMode {
     BTStandard=1;
     BTWiimote=2;
 }
+
+enum CycleType {
+  custom=1;
+  pickup=2;
+}

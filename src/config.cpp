@@ -101,16 +101,16 @@ bool load_cycle_state(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_device_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-   if (field->tag == proto_Device_cycle_tag) {
-     proto_CycleDevice *msg = (proto_CycleDevice *)field->pData;
-     msg->values.funcs.decode = load_cycle_state;
-   }
-   return true;
+    if (field->tag == proto_Device_cycle_tag)
+    {
+        proto_CycleDevice *msg = (proto_CycleDevice *)field->pData;
+        msg->values.funcs.decode = load_cycle_state;
+    }
+    return true;
 }
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     printf("load_device");
-    last_cycle_states.clear();
     proto_Device device proto_Device_init_zero;
     device.cb_device.funcs.decode = load_device_dev;
     pb_decode(stream, proto_Device_fields, &device);

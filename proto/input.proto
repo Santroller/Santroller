@@ -3,8 +3,10 @@ syntax = "proto2";
 package proto;
 import "enums.proto";
 import "input_enums.proto";
-import "device.proto";
-
+message CycleInput {
+  required int32 deviceid = 1;
+  required Input input = 2;
+}
 message GPIOInput {
   required int32 pin = 1;
   required PinMode pinMode = 2;
@@ -174,6 +176,7 @@ message Input {
     HeldInput held = 29;
     MatrixInput matrix = 30;
     CrkdDrumAxisInput crkdDrum = 31;
+    CycleInput cycle = 32;
   }
 }
 message InputActivationTrigger {

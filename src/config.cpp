@@ -8,6 +8,7 @@
 #include "input/midi.hpp"
 #include "input/protarNeck.hpp"
 #include "input/held.hpp"
+#include "input/cycle.hpp"
 #include "input/usb.hpp"
 #include "input/crkd.hpp"
 #include "input/crkd_drum.hpp"
@@ -28,6 +29,7 @@
 #include "devices/djh.hpp"
 #include "devices/crkd.hpp"
 #include "devices/crkd_drum.hpp"
+#include "devices/cycle.hpp"
 #include "devices/ads1115.hpp"
 #include "devices/protar_neck.hpp"
 #include "devices/gh5neck.hpp"
@@ -82,16 +84,35 @@ std::map<ConsoleMode, std::shared_ptr<UsbHostInterface>> auth_devices;
 std::shared_ptr<UsbDevice> usb_instances[32];
 std::shared_ptr<UsbDevice> usb_instances_by_epin[16];
 std::shared_ptr<UsbDevice> usb_instances_by_epout[16];
+std::map<int32_t, int32_t> cycle_input_states;
+std::vector<uint32_t> last_cycle_states;
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
 int seenMasks = 0;
 bool fullReload = false;
 bool working = false;
 bool loadedAny = false;
-
+bool load_cycle_state(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    uint32_t state;
+    auto ret = pb_decode_varint32(stream, &state);
+    last_cycle_states.push_back(state);
+    return ret;
+}
+bool load_device_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+   if (field->tag == proto_Device_cycle_tag) {
+     proto_CycleDevice *msg = (proto_CycleDevice *)field->pData;
+     msg->values.funcs.decode = load_cycle_state;
+   }
+   return true;
+}
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    proto_Device device;
+    printf("load_device");
+    last_cycle_states.clear();
+    proto_Device device proto_Device_init_zero;
+    device.cb_device.funcs.decode = load_device_dev;
     pb_decode(stream, proto_Device_fields, &device);
     auto dev_id = device.deviceid;
     // If we are loading a new config, we grab the previous device so we can make sure its state is restored
@@ -179,6 +200,10 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Device_matrix_tag:
         active_devices.emplace_back(new MatrixDevice(device.device.matrix, dev_id));
+        break;
+    case proto_Device_cycle_tag:
+        active_devices.emplace_back(new CycleDevice(device.device.cycle, dev_id, cycle_input_states[dev_id], last_cycle_states));
+        last_cycle_states.clear();
         break;
     }
     if (prevDevice)
@@ -413,13 +438,36 @@ bool load_held(pb_istream_t *stream, const pb_field_t *field, void **arg)
     last_held->load(input, make_input(input.input, profile, stream));
     return true;
 }
+bool load_cycle(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto profile = *(std::shared_ptr<Profile> *)*arg;
+    printf("found cycle!\r\n");
+    auto last_cycle = new CycleInput();
+    last_special = last_cycle;
+    proto_CycleInput input;
+    if (!pb_decode(stream, proto_CycleInput_fields, &input))
+    {
+        printf("couldnt decode cycle input?\r\n");
+        return false;
+    }
+
+    if (profile->devices.find(input.deviceid) == profile->devices.end())
+    {
+        return true;
+    }
+    last_cycle->load(input, std::static_pointer_cast<CycleDevice>(profile->devices[input.deviceid]), make_input(input.input, profile, stream));
+    return true;
+}
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = *(std::shared_ptr<Profile> *)*arg;
     proto_Mapping mapping;
     mapping.input.input.shortcut.arg = &profile;
     mapping.input.input.shortcut.funcs.decode = &load_shortcut;
+    mapping.input.input.held.arg = &profile;
     mapping.input.input.held.funcs.decode = &load_held;
+    mapping.input.input.cycle.arg = &profile;
+    mapping.input.input.cycle.funcs.decode = &load_cycle;
     pb_decode(stream, proto_Mapping_fields, &mapping);
     std::unique_ptr<Input> input = make_input(mapping.input, profile, stream);
     if (!input)
@@ -522,6 +570,9 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
     assignment.assignment.input.input.input.shortcut.arg = &profile;
     assignment.assignment.input.input.input.shortcut.funcs.decode = &load_shortcut;
     assignment.assignment.input.input.input.held.funcs.decode = &load_held;
+    assignment.assignment.input.input.input.held.arg = &profile;
+    assignment.assignment.input.input.input.cycle.funcs.decode = &load_cycle;
+    assignment.assignment.input.input.input.cycle.arg = &profile;
     pb_decode(stream, proto_ProfileAssignmentInfo_fields, &assignment);
     switch (assignment.which_assignment)
     {
@@ -613,7 +664,10 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_Led proto_led;
     proto_led.mapping.led.inputMapping.input.input.shortcut.arg = &profile;
     proto_led.mapping.led.inputMapping.input.input.shortcut.funcs.decode = &load_shortcut;
+    proto_led.mapping.led.inputMapping.input.input.held.arg = &profile;
     proto_led.mapping.led.inputMapping.input.input.held.funcs.decode = &load_held;
+    proto_led.mapping.led.inputMapping.input.input.cycle.arg = &profile;
+    proto_led.mapping.led.inputMapping.input.input.cycle.funcs.decode = &load_cycle;
     pb_decode(stream, proto_Led_fields, &proto_led);
     printf("load led%d %d\r\n", profile->leds.size(), proto_led.device.which_device);
     switch (proto_led.device.which_device)
@@ -763,6 +817,8 @@ struct ConfigFooter
 {
     uint32_t dataSize;
     uint32_t dataCrc;
+    uint32_t mainSize;
+    uint32_t auxSize;
     uint32_t magic;
     uint32_t currentProfile;
 
@@ -781,6 +837,8 @@ bool save_empty()
     ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
 
     footer->dataSize = 0;
+    footer->mainSize = 0;
+    footer->auxSize = 0;
     footer->dataCrc = CRC32::calculate(EEPROM.writeCache, 0);
     footer->magic = FOOTER_MAGIC;
     footer->currentProfile = 0;
@@ -788,12 +846,38 @@ bool save_empty()
     return true;
 }
 
-bool inner_load(proto_Config &config, const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t size)
+bool decode_cycle_input_states(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
+    proto_CyclingInputState proto_cycle;
+    auto ret = pb_decode(stream, proto_CyclingInputState_fields, &proto_cycle);
+    cycle_input_states[proto_cycle.id] = proto_cycle.state;
+    return ret;
+}
+bool encode_cycle_input_states(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+{
+    proto_CyclingInputState proto_cycle;
+    for (auto &state : cycle_input_states)
+    {
+        proto_cycle.id = state.first;
+        proto_cycle.state = state.second;
+        pb_encode_tag_for_field(stream, field);
+        pb_encode_submessage(stream, proto_CyclingInputState_fields, &proto_cycle);
+    }
+    return true;
+}
+bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t size, uint32_t mainSize, uint32_t auxSize)
+{
+
+    proto_Config config proto_Config_init_zero;
     printf("inner_load\r\n");
+    cycle_input_states.clear();
+    pb_istream_t auxInputStream = pb_istream_from_buffer(dataPtr + mainSize, auxSize);
+    proto_AuxConfigBlock block proto_AuxConfigBlock_init_zero;
+    block.states.funcs.decode = decode_cycle_input_states;
+    pb_decode(&auxInputStream, proto_AuxConfigBlock_fields, &block);
     // We are now sufficiently confident that the data is valid so we run the deserialization
     // load just the current profile to begin with
-    pb_istream_t inputStream = pb_istream_from_buffer(dataPtr, size);
+    pb_istream_t inputStream = pb_istream_from_buffer(dataPtr, mainSize);
     assignable_devices.clear();
 
     config.devices.funcs.decode = &load_device;
@@ -880,6 +964,8 @@ uint32_t copy_config_info(uint8_t *buffer)
     info.dataCrc = footer.dataCrc;
     info.dataSize = footer.dataSize;
     info.magic = footer.magic;
+    info.mainSize = footer.mainSize;
+    info.auxSize = footer.auxSize;
     pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 64);
     if (!pb_encode(&outputStream, proto_ConfigInfo_fields, &info))
     {
@@ -895,6 +981,30 @@ void reload()
     reinit = true;
 }
 
+void update_aux(uint32_t id, uint32_t state)
+{
+    if (reinit)
+    {
+        return;
+    }
+    cycle_input_states[id] = state;
+    // Aux region contains data that the firmware can update itself
+    ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
+    // move data to start of cache to make modifying easier
+    memmove(EEPROM.writeCache, EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize, footer->dataSize);
+    pb_ostream_t auxOutputStream = pb_ostream_from_buffer(EEPROM.writeCache + footer->mainSize, EEPROM_SIZE_BYTES - footer->mainSize - sizeof(ConfigFooter));
+    proto_AuxConfigBlock block;
+    block.states.funcs.encode = encode_cycle_input_states;
+    pb_encode(&auxOutputStream, proto_AuxConfigBlock_fields, &block);
+    footer->auxSize = auxOutputStream.bytes_written;
+    footer->dataSize = footer->mainSize + footer->auxSize;
+    footer->dataCrc = CRC32::calculate(EEPROM.writeCache, footer->dataSize);
+    // Move the encoded data to end where it should be
+    memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize, EEPROM.writeCache, footer->dataSize);
+    memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize);
+    EEPROM.commit();
+}
+
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
 {
     ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
@@ -908,6 +1018,8 @@ bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
     footer->dataCrc = info.dataCrc;
     footer->dataSize = info.dataSize;
     footer->magic = info.magic;
+    footer->mainSize = info.mainSize;
+    footer->auxSize = info.auxSize;
     return true;
 }
 
@@ -935,9 +1047,8 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     // Move the encoded data in memory down to the footer
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, EEPROM.writeCache, footer.dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
-    proto_Config config;
     EEPROM.commit();
-    inner_load(config, footer.currentProfile, EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, footer.dataSize);
+    inner_load(footer.currentProfile, EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, footer.dataSize, footer.mainSize, footer.auxSize);
     working = false;
     return true;
 }
@@ -971,10 +1082,8 @@ uint32_t copy_config(uint8_t *buffer, uint32_t start)
     memcpy(buffer, dataPtr + start, size);
     return size;
 }
-bool load(proto_Config &config)
+bool load()
 {
-    config = proto_Config proto_Config_init_zero;
-
     const uint8_t *flashEnd = reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START) + EEPROM_SIZE_BYTES;
     const ConfigFooter &footer = *reinterpret_cast<const ConfigFooter *>(flashEnd - sizeof(ConfigFooter));
 
@@ -999,7 +1108,7 @@ bool load(proto_Config &config)
         return false;
     }
 
-    return inner_load(config, footer.currentProfile, dataPtr, footer.dataSize);
+    return inner_load(footer.currentProfile, dataPtr, footer.dataSize, footer.mainSize, footer.auxSize);
 }
 
 void first_load()

@@ -125,7 +125,9 @@ message Config {
 message ConfigInfo {
   required int32 dataSize = 1;
   required int32 dataCrc = 2;
-  required int32 magic = 3;
+  required int32 mainSize = 3;
+  required int32 auxSize = 4;
+  required int32 magic = 5;
 }
 
 message GetActiveProfiles {
@@ -144,4 +146,12 @@ message FirmwareUpdate {
   required int32 offset = 2;
   required int32 chunkOffset = 3;
   required int32 chunkSize = 4;
+}
+message CyclingInputState {
+  required int32 id = 1;
+  required int32 state = 2;
+}
+
+message AuxConfigBlock {
+  repeated CyclingInputState states = 1;
 }

@@ -35,6 +35,7 @@
 [ ] Input from bluetooth controllers (via bluepad?)
 [ ] Inputs from NKRO keyboards over usb host
 [ ] Inputs from switch controllers over usb host
+[ ] Input where you can map a range of values to a button and it cycles between them
 
 ## Mapping features
 [ ] Defaults for inputs, such as loading all the wii extension inputs for you with one click
@@ -43,7 +44,7 @@
 [ ] Copy inputs across profiles
 [ ] Copy profiles
 [ ] Advanced joystick mapping - allow for mapping to just a specific range of motion instead of the entire stick. Some games need the ability to map an axis to only the top half of a stick for example
-[ ] Cycling mapping - you give it a range of values (like say all the notches on a rb pickup), and then each time an input is pressed, it jumps to the next value, cycling back to the beginning after it hits the last one
+[x] Cycling mapping - you give it a range of values (like say all the notches on a rb pickup), and then each time an input is pressed, it jumps to the next value, cycling back to the beginning after it hits the last one
     For this i think the easiest method for implementation would be to have a seperate config area we store that state in
 [ ] Pin labels - Add the ability to define names for pins, so that a tool like RCM can let users reconfigure their guitars, but the pins are all given labels so a user knows what the defaults are
 [ ] Better analog filtering - https://github.com/dxinteractive/ResponsiveAnalogRead
@@ -51,6 +52,7 @@
 [ ] Other analog filters - Low pass, high pass, zero point crossing
 [ ] Filters needed for hall effect
 [ ] Shortcut input masking - aka if you have start + select to home, it shouldnt keep pressing start and select
+[x] matrix inputs
 
 ## Led / rumble features
 [ ] Gamepad rumble, including passthrough with usb host

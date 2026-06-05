@@ -45,7 +45,6 @@
 #include <pico_fota_bootloader/core.h>
 #include "ring_buffer.h"
 void hid_task(void);
-proto_Config config;
 uint32_t timeSinceMode = millis();
 bool seenPs4 = false;
 bool seenWindowsXb1 = false;
@@ -113,7 +112,7 @@ void hid_task(void)
         seenReadAnyDeviceString = false;
         seenHidDescriptorRead = false;
         tud_deinit(BOARD_TUD_RHPORT);
-        load(config);
+        load();
         const tusb_rhport_init_t rh_init = {
             .role = TUSB_ROLE_DEVICE,
             .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};
@@ -206,11 +205,11 @@ int main()
     ring_buffer_init(&console_buf, console_buf_data, sizeof(console_buf_data), 0);
 
     EEPROM.start();
-    if (!load(config))
+    if (!load())
     {
         // config was not valid, save a empty config
         save_empty();
-        load(config);
+        load();
     }
     printf("init %d\r\n", mode);
 

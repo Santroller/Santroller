@@ -277,6 +277,8 @@ bool XboxOneHost::tick_digital(UsbButtonType type)
             return false;
         }
         break;
+    default:
+        break;
     }
 
     return false;
@@ -317,6 +319,8 @@ uint16_t XboxOneHost::tick_analog(UsbAxisType type)
         default:
             return 0;
         }
+        break;
+    default:
         break;
     }
     return 0;

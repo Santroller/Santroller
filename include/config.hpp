@@ -18,7 +18,7 @@
 #include "usb/device/device.hpp"
 #include "usb/host/host.hpp"
 bool save_empty();
-bool load(proto_Config &config);
+bool load();
 uint32_t copy_config(uint8_t *buffer, uint32_t start);
 uint32_t copy_config_info(uint8_t *buffer);
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize);
@@ -26,6 +26,7 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start);
 void update();
 void first_load();
 void reload();
+void update_aux(uint32_t id, uint32_t state);
 extern ConsoleMode mode;
 extern ConsoleMode newMode;
 extern bool working;

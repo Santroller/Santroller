@@ -138,6 +138,10 @@ message MatrixDevice {
   required uint32 inPins = 2;
 }
 
+message CycleDevice {
+  repeated int32 values = 1;
+}
+
 message Device {
   required int32 deviceid = 1;
   oneof device {
@@ -172,5 +176,6 @@ message Device {
     VTechGuitarIOExpanderDevice vtechExpander = 31;
     MatrixDevice matrix = 32;
     CrkdDrumDevice crkdDrum = 33;
+    CycleDevice cycle = 34;
   }
 }

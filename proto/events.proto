@@ -8,6 +8,11 @@ message ButtonEvent {
     required bool state = 3;
 }
 
+message CycleEvent {
+    required uint32 id = 1;
+    required uint32 state = 2;
+}
+
 message AxisEvent {
     required uint32 id = 1;
     required uint32 stateRaw = 2;
@@ -86,6 +91,7 @@ message Event {
         LedEvent led = 11;  
         MidiEvent midiDebug = 12;
         ConsoleEvent console = 13;
+        CycleEvent cycle = 14;
     };
 }
 

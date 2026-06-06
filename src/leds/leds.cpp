@@ -182,10 +182,14 @@ void VTechGuitarIoExpanderLedDevice::set_val(uint16_t val)
     for (int i = 0; i < 8; i++) {
         if (m_device.activeLed & 1 << i) {
             // led order is 0,1,2,3,7,6,5,4
-            if (i >= 4) {
-                i = 11-i;
+            int fi = i;
+            if(i <= 3 ){
+                fi = 7-i;
             }
-            m_led_device->set_led(i, val);
+            else{
+                fi = i-4;
+            }
+            m_led_device->set_led(fi, val);
         }
     }
 }

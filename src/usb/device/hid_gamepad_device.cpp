@@ -89,6 +89,11 @@ void HIDGamepadDevice::process()
       newMode = ModePs3;
     }
   }
+  // if usb stack isnt ready, then we want to update inputs
+  // we want to limit updates to usb speed though if it is ready
+  if (tud_ready() && !ready()) {
+    return;
+  }
   PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
   memcpy(epin_buf, initialReport, sizeof(epin_buf));
   report->rid = ReportIdGamepad;
@@ -125,9 +130,9 @@ void HIDGamepadDevice::process()
   }
   // if (memcmp(lastReport, epin_buf, sizeof(XInputGamepad_Data_t)) != 0)
   // {
-
-  if (!ready())
+  if (!ready()) {
     return;
+  }
   send_report(sizeof(XInputGamepad_Data_t), 0, epin_buf);
   //   memcpy(lastReport, epin_buf, sizeof(XInputGamepad_Data_t));
   // }

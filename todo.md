@@ -68,6 +68,3 @@
 - [ ] Port over logic for waking up 360s
 - [ ] max1704x
 - [ ] battery level estimate via ADC pin
-
-# cycling input
-- [ ] use a better input than tag input, as its rather confusing

@@ -176,20 +176,19 @@ bool STP16CPCLedDevice::supports_brightness()
     return false;
 }
 
-
 void VTechGuitarIoExpanderLedDevice::set_val(uint16_t val)
 {
-    for (int i = 0; i < 8; i++) {
-        if (m_device.activeLed & 1 << i) {
-            // led order is 0,1,2,3,7,6,5,4
-            int fi = i;
-            if(i <= 3 ){
-                fi = 7-i;
+    for (int i = 0; i < 8; i++)
+    {
+        if (m_device.activeLed & 1 << i)
+        {
+            // led order is 7,6,5,4,0,1,2,3
+            int actual = 7 - i;
+            if (i > 3)
+            {
+                actual = i - 4;
             }
-            else{
-                fi = i-4;
-            }
-            m_led_device->set_led(fi, val);
+            m_led_device->set_led(actual, val);
         }
     }
 }
@@ -200,8 +199,10 @@ void VTechGuitarIoExpanderLedDevice::set_val_raw(uint8_t index, uint8_t r, uint8
 void VTechGuitarIoExpanderLedDevice::setup()
 {
     m_led_count = 0;
-    for (int i = 0; i < 8; i++ ) {
-        if (m_device.activeLed & 1 << i) {
+    for (int i = 0; i < 8; i++)
+    {
+        if (m_device.activeLed & 1 << i)
+        {
             m_led_count++;
         }
     }

@@ -5,7 +5,8 @@ import "enums.proto";
 import "input_enums.proto";
 message CycleInput {
   required int32 deviceid = 1;
-  required Input input = 2;
+  optional Input input = 2;
+  optional Input inputReverse = 3;
 }
 message GPIOInput {
   required int32 pin = 1;

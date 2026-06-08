@@ -11,7 +11,7 @@ public:
     void end(bool full);
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
-    void cycle();
+    void cycle(bool forward);
     uint32_t get_value() {return m_current_value;}
 private:
     proto_CycleDevice m_device;

@@ -455,7 +455,7 @@ bool load_cycle(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
         return true;
     }
-    last_cycle->load(input, std::static_pointer_cast<CycleDevice>(profile->devices[input.deviceid]), make_input(input.input, profile, stream));
+    last_cycle->load(input, std::static_pointer_cast<CycleDevice>(profile->devices[input.deviceid]), input.has_input ? make_input(input.input, profile, stream) : nullptr, input.has_inputReverse ? make_input(input.inputReverse, profile, stream) : nullptr);
     return true;
 }
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)

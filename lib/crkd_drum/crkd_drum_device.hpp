@@ -11,6 +11,7 @@ typedef struct
     uint8_t yellow_pad;
     uint8_t blue_pad;
     uint8_t green_pad;
+    uint8_t orange_pad;
     uint8_t yellow_cymbal;
     uint8_t blue_cymbal;
     uint8_t green_cymbal;
@@ -33,6 +34,7 @@ public:
     uint8_t yellow_pad;
     uint8_t blue_pad;
     uint8_t green_pad;
+    uint8_t orange_pad;
     uint8_t yellow_cymbal;
     uint8_t blue_cymbal;
     uint8_t green_cymbal;
@@ -45,7 +47,12 @@ private:
     bool m_connected = false;
     bool m_updating = false;
     crkd_drum_t m_CrkdDrum;
+    crkd_drum_t m_debounceParams;
+    crkd_drum_t m_minParams;
+    crkd_drum_t m_maxParams;
     long m_lastPoll;
     bool m_error = false;
     long m_lastSend;
+    bool m_read_param = false;
+    uint8_t m_param_cmd = 0;
 };

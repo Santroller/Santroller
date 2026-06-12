@@ -58,6 +58,7 @@ UARTInterface::UARTInterface(uint8_t block, int8_t tx, int8_t rx, uint32_t clock
     {
         return;
     }
+    printf("uart: %d %d %d %d\r\n", tx, rx, block, clock);
     uart = _hardwareBlocks[block];
     uart_init(uart, clock);
     gpio_set_function(tx, GPIO_FUNC_UART);
@@ -119,6 +120,7 @@ bool UARTInterface::transfer_done()
 
 void UARTInterface::setup_interrupts(uint8_t *dest, uint8_t start_char, size_t maxlen)
 {
+    printf("uart interrupts: %02x %d\r\n", start_char, maxlen);
     if (uart == uart0)
     {
         irq_dest_0 = dest;

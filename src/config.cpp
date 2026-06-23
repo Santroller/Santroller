@@ -88,6 +88,7 @@ std::map<int32_t, int32_t> cycle_input_states;
 std::vector<uint32_t> last_cycle_states;
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
+std::shared_ptr<Profile> working_profile;
 int seenMasks = 0;
 bool fullReload = false;
 bool working = false;
@@ -221,6 +222,7 @@ Input *last_special = nullptr;
 
 std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> profile, pb_istream_t *stream)
 {
+    printf("make input: %d %p\r\n", input.which_input, profile.get());
     switch (input.which_input)
     {
     case proto_Input_wiiAxis_tag:
@@ -377,6 +379,9 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
             return nullptr;
         }
         return std::unique_ptr<Input>(new USBAxisInput(input.input.usbAxis, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.usbAxis.deviceid])));
+    case proto_Input_held_tag:
+    case proto_Input_cycle_tag:
+    case proto_Input_shortcut_tag:
     case 0:
     {
         auto ret = last_special;
@@ -388,9 +393,10 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
         return nullptr;
     }
 }
+bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg);
 bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = *(std::shared_ptr<Profile> *)*arg;
+   auto profile = working_profile;
     proto_Input input;
     if (!pb_decode(stream, proto_Input_fields, &input))
     {
@@ -408,12 +414,12 @@ bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **a
 }
 bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = *(std::shared_ptr<Profile> *)*arg;
+   auto profile = working_profile;
     printf("found shortcut!\r\n");
     last_shortcut = new ShortcutInput();
     last_special = last_shortcut;
     proto_ShortcutInput input;
-    input.inputs.arg = &profile;
+    input.inputs.arg = arg;
     input.inputs.funcs.decode = &load_shortcut_input;
     if (!pb_decode(stream, proto_ShortcutInput_fields, &input))
     {
@@ -425,11 +431,13 @@ bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_held(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = *(std::shared_ptr<Profile> *)*arg;
+   auto profile = working_profile;
     printf("found held!\r\n");
     auto last_held = new HeldInput();
     last_special = last_held;
     proto_HeldInput input;
+    input.input.cb_input.funcs.decode = load_input_dev;
+    input.input.cb_input.arg = arg;
     if (!pb_decode(stream, proto_HeldInput_fields, &input))
     {
         printf("couldnt decode held input?\r\n");
@@ -440,34 +448,63 @@ bool load_held(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_cycle(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = *(std::shared_ptr<Profile> *)*arg;
-    printf("found cycle!\r\n");
+   auto profile = working_profile;
+    printf("found cycle! %p\r\n", profile.get());
     auto last_cycle = new CycleInput();
     last_special = last_cycle;
     proto_CycleInput input;
+    input.input.cb_input.funcs.decode = load_input_dev;
+    input.input.cb_input.arg = arg;
     if (!pb_decode(stream, proto_CycleInput_fields, &input))
     {
         printf("couldnt decode cycle input?\r\n");
         return false;
     }
 
+    printf("check %d %d\r\n", input.deviceid, profile->devices.size());
     if (profile->devices.find(input.deviceid) == profile->devices.end())
     {
+        printf("why tho\r\n");
         return true;
     }
+    printf("loading cycle\r\n");
     last_cycle->load(input, std::static_pointer_cast<CycleDevice>(profile->devices[input.deviceid]), input.has_input ? make_input(input.input, profile, stream) : nullptr, input.has_inputReverse ? make_input(input.inputReverse, profile, stream) : nullptr);
+    printf("loaded cycle\r\n");
+    return true;
+}
+
+bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+   auto profile = working_profile;
+    printf("input_dev: %d %p\r\n", field->tag, profile.get());
+
+    if (field->tag == proto_Input_cycle_tag)
+    {
+        pb_callback_t *msg = (pb_callback_t *)field->pData;
+        msg->funcs.decode = &load_cycle;
+        msg->arg = arg;
+    }
+    if (field->tag == proto_Input_held_tag)
+    {
+        pb_callback_t *msg = (pb_callback_t *)field->pData;
+        msg->funcs.decode = &load_held;
+        msg->arg = arg;
+    }
+    if (field->tag == proto_Input_shortcut_tag)
+    {
+        pb_callback_t *msg = (pb_callback_t *)field->pData;
+        msg->funcs.decode = &load_shortcut;
+        msg->arg = arg;
+    }
     return true;
 }
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = *(std::shared_ptr<Profile> *)*arg;
+   auto profile = working_profile;
+    printf("load_mapping: %p\r\n", profile.get());
     proto_Mapping mapping;
-    mapping.input.input.shortcut.arg = &profile;
-    mapping.input.input.shortcut.funcs.decode = &load_shortcut;
-    mapping.input.input.held.arg = &profile;
-    mapping.input.input.held.funcs.decode = &load_held;
-    mapping.input.input.cycle.arg = &profile;
-    mapping.input.input.cycle.funcs.decode = &load_cycle;
+    mapping.input.cb_input.funcs.decode = load_input_dev;
+    mapping.input.cb_input.arg = arg;
     pb_decode(stream, proto_Mapping_fields, &mapping);
     std::unique_ptr<Input> input = make_input(mapping.input, profile, stream);
     if (!input)
@@ -562,17 +599,36 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     return true;
 }
 
+bool load_assignment_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+   auto profile = working_profile;
+    printf("load_assignment_dev: %d %p\r\n", field->tag, profile.get());
+    proto_ProfileAssignmentInfo *info = (proto_ProfileAssignmentInfo *)field->message;
+    if (field->tag == proto_ProfileAssignmentInfo_input_tag)
+    {
+        info->assignment.input.input.cb_input.funcs.decode = load_input_dev;
+        info->assignment.input.input.cb_input.arg = arg;
+    }
+    if (field->tag == proto_ProfileAssignmentInfo_inputAnyTime_tag)
+    {
+        info->assignment.inputAnyTime.input.cb_input.funcs.decode = load_input_dev;
+        info->assignment.inputAnyTime.input.cb_input.arg = arg;
+    }
+    return true;
+}
 bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = *(std::shared_ptr<Profile> *)*arg;
+    printf("load assignment info before %p\r\n", arg);
+    fflush(stdout);
+   auto profile = working_profile;
+    printf("load assignment info before 2 %p\r\n", profile);
+    fflush(stdout);
+    printf("load_assignment_info: %p\r\n", profile.get());
+    fflush(stdout);
     auto &list = profile->triggers.back();
     proto_ProfileAssignmentInfo assignment;
-    assignment.assignment.input.input.input.shortcut.arg = &profile;
-    assignment.assignment.input.input.input.shortcut.funcs.decode = &load_shortcut;
-    assignment.assignment.input.input.input.held.funcs.decode = &load_held;
-    assignment.assignment.input.input.input.held.arg = &profile;
-    assignment.assignment.input.input.input.cycle.funcs.decode = &load_cycle;
-    assignment.assignment.input.input.input.cycle.arg = &profile;
+    assignment.cb_assignment.funcs.decode = load_assignment_dev;
+    assignment.cb_assignment.arg = arg;
     pb_decode(stream, proto_ProfileAssignmentInfo_fields, &assignment);
     switch (assignment.which_assignment)
     {
@@ -595,6 +651,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
         {
             return true;
         }
+        printf("input any time! %p\r\n", input.get());
         list->triggers.emplace_back(new InputActivationTrigger(true, assignment.assignment.inputAnyTime, std::move(input), profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
         break;
     }
@@ -637,19 +694,23 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
 
 bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = *(std::shared_ptr<Profile> *)*arg;
+   auto profile = working_profile;
+    printf("load_assignments: %p\r\n", profile.get());
     auto list = new ActivationTriggerList();
     profile->triggers.emplace_back(list);
     proto_ProfileAssignment proto_assignment;
     proto_assignment.assignments.funcs.decode = &load_assignment_info;
-    proto_assignment.assignments.arg = &profile;
+    proto_assignment.assignments.arg = arg;
+    printf("load_assignments start?\r\n");
     pb_decode(stream, proto_ProfileAssignment_fields, &proto_assignment);
+    printf("load_assignments done?\r\n");
     list->validate(true, false, false);
     return true;
 }
 bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = *(std::shared_ptr<Profile> *)*arg;
+   auto profile = working_profile;
+    printf("load_uid: %p\r\n", profile.get());
     uint64_t value;
     if (!pb_decode_varint(stream, &value))
         return false;
@@ -659,15 +720,12 @@ bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto profile = *(std::shared_ptr<Profile> *)*arg;
+   auto profile = working_profile;
+    printf("load_leds: %p\r\n", profile.get());
     std::unique_ptr<LedMappingDevice> device;
     proto_Led proto_led;
-    proto_led.mapping.led.inputMapping.input.input.shortcut.arg = &profile;
-    proto_led.mapping.led.inputMapping.input.input.shortcut.funcs.decode = &load_shortcut;
-    proto_led.mapping.led.inputMapping.input.input.held.arg = &profile;
-    proto_led.mapping.led.inputMapping.input.input.held.funcs.decode = &load_held;
-    proto_led.mapping.led.inputMapping.input.input.cycle.arg = &profile;
-    proto_led.mapping.led.inputMapping.input.input.cycle.funcs.decode = &load_cycle;
+    proto_led.mapping.led.inputMapping.input.cb_input.funcs.decode = load_input_dev;
+    proto_led.mapping.led.inputMapping.input.cb_input.arg = arg;
     pb_decode(stream, proto_Led_fields, &proto_led);
     printf("load led%d %d\r\n", profile->leds.size(), proto_led.device.which_device);
     switch (proto_led.device.which_device)
@@ -717,13 +775,14 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     for (auto &device : active_devices)
     {
         profile->devices.emplace(device->m_id, device);
-        printf("load device: %p %d\r\n", device.get(), device->m_id);
+        printf("load device: %p %p %d\r\n", profile.get(), device.get(), device->m_id);
     }
+    working_profile = profile;
     proto_Profile proto_profile;
     memset(&proto_profile, 0, sizeof(proto_profile));
     proto_profile.assignments.funcs.decode = &load_assignments;
-    proto_profile.mappings.funcs.decode = &load_mapping;
     proto_profile.assignments.arg = &profile;
+    proto_profile.mappings.funcs.decode = &load_mapping;
     proto_profile.mappings.arg = &profile;
     proto_profile.uid.arg = &profile;
     proto_profile.uid.funcs.decode = &load_uid;

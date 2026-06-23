@@ -18,4 +18,5 @@ private:
     std::vector<uint32_t> m_states;
     uint32_t m_current_value;
     uint32_t m_current_index;
+    uint32_t m_last = 0;
 };

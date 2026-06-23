@@ -57,6 +57,7 @@ InputActivationTrigger::InputActivationTrigger(bool any_time, proto_InputActivat
 // deal with debounce and all the other fun things
 bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
+    // printf("check trigger: %d %d\r\n", m_input->tickAnalog(), m_activation_trigger.triggerValue);
     auto val = m_input->tickDigital();
     if (m_activation_trigger.has_trigger)
     {
@@ -108,6 +109,11 @@ UsbModeActivationTrigger::UsbModeActivationTrigger(proto_UsbDeviceAssignment con
 
 bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
+    auto profile = all_profiles[m_profile_id];
+    if (m_config.has_forcedType)
+    {
+        profile->mode = m_config.forcedType;
+    }
     if (!m_config.has_consoleType)
     {
         proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
@@ -115,7 +121,6 @@ bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
         return true;
     }
     bool matched = false;
-    auto profile = all_profiles[m_profile_id];
     switch (profile->mode)
     {
     case ModeGuitarHeroArcade:

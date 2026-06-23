@@ -39,11 +39,11 @@ void CrkdDrum::tick()
 {
     m_lastPoll = interface.last_read_time();
     m_connected = millis() - m_lastPoll < 20;
-    if (!m_connected)
-    {
-        m_param_cmd = 0x60;
-    }
-    if (m_CrkdDrum.cmd == 0x50)
+    // if (!m_connected)
+    // {
+    //     m_param_cmd = 0x60;
+    // }
+    if (m_connected && m_CrkdDrum.cmd == 0x50)
     {
         red_pad = m_CrkdDrum.red_pad;
         yellow_pad = m_CrkdDrum.yellow_pad;
@@ -56,63 +56,63 @@ void CrkdDrum::tick()
         kick1 = m_CrkdDrum.kick1;
         kick2 = m_CrkdDrum.kick2;
         m_CrkdDrum.cmd = 0;
-        if (m_param_cmd == 0)
-        {
+        // if (m_param_cmd == 0)
+        // {
             interface.send(ack, sizeof(ack));
-        }
+        // }
     }
 
-    if (m_connected && m_param_cmd && (m_CrkdDrum.cmd == m_param_cmd || m_param_cmd == 0x60))
-    {
-        switch (m_param_cmd)
-        {
-        case 0x61:
-            m_debounceParams = m_CrkdDrum;
-            break;
-        case 0x62:
-            m_minParams = m_CrkdDrum;
-            break;
-        case 0x63:
-            m_maxParams = m_CrkdDrum;
-            break;
-        default:
-            break;
-        }
-        m_param_cmd++;
-        if (m_param_cmd <= 0x63)
-        {
-            uint8_t data[] = {0xA5, m_param_cmd, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00};
-            update_crc(data, sizeof(data));
-            interface.send(data, sizeof(data));
-        }
-        else
-        {
-            m_param_cmd = 0;
-            // if (m_minParams.green_cymbal != 0x10)
-            // {
-            //     printf("before: ");
-            //     for (int i = 0; i < sizeof(m_minParams); i++)
-            //     {
-            //         printf("%02x, ", ((uint8_t *)&m_minParams)[i]);
-            //     }
-            //     printf("\r\n");
-            //     printf("set green cymbal to 0x10 (was %02x)\r\n", m_minParams.green_cymbal);
-            //     m_minParams.cmd = 0x52;
-            //     m_minParams.green_cymbal = 0x10;
-            //     update_crc((uint8_t *)&m_minParams, sizeof(m_minParams));
+    // if (m_connected && m_param_cmd && (m_CrkdDrum.cmd == m_param_cmd || m_param_cmd == 0x60))
+    // {
+    //     switch (m_param_cmd)
+    //     {
+    //     case 0x61:
+    //         m_debounceParams = m_CrkdDrum;
+    //         break;
+    //     case 0x62:
+    //         m_minParams = m_CrkdDrum;
+    //         break;
+    //     case 0x63:
+    //         m_maxParams = m_CrkdDrum;
+    //         break;
+    //     default:
+    //         break;
+    //     }
+    //     m_param_cmd++;
+    //     if (m_param_cmd <= 0x63)
+    //     {
+    //         uint8_t data[] = {0xA5, m_param_cmd, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00};
+    //         update_crc(data, sizeof(data));
+    //         interface.send(data, sizeof(data));
+    //     }
+    //     else
+    //     {
+    //         m_param_cmd = 0;
+    //         // if (m_minParams.green_cymbal != 0x10)
+    //         // {
+    //         //     printf("before: ");
+    //         //     for (int i = 0; i < sizeof(m_minParams); i++)
+    //         //     {
+    //         //         printf("%02x, ", ((uint8_t *)&m_minParams)[i]);
+    //         //     }
+    //         //     printf("\r\n");
+    //         //     printf("set green cymbal to 0x10 (was %02x)\r\n", m_minParams.green_cymbal);
+    //         //     m_minParams.cmd = 0x52;
+    //         //     m_minParams.green_cymbal = 0x10;
+    //         //     update_crc((uint8_t *)&m_minParams, sizeof(m_minParams));
 
-            //     printf("got resp: ");
-            //     for (int i = 0; i < sizeof(m_minParams); i++)
-            //     {
-            //         printf("%02x, ", ((uint8_t *)&m_minParams)[i]);
-            //     }
-            //     printf("\r\n");
-            //     interface.send((uint8_t *)&m_minParams, sizeof(m_minParams));
-            // }
-            // else
-            // {
-                interface.send(ack, sizeof(ack));
-            // }
-        }
-    }
+    //         //     printf("got resp: ");
+    //         //     for (int i = 0; i < sizeof(m_minParams); i++)
+    //         //     {
+    //         //         printf("%02x, ", ((uint8_t *)&m_minParams)[i]);
+    //         //     }
+    //         //     printf("\r\n");
+    //         //     interface.send((uint8_t *)&m_minParams, sizeof(m_minParams));
+    //         // }
+    //         // else
+    //         // {
+    //             interface.send(ack, sizeof(ack));
+    //         // }
+    //     }
+    // }
 };

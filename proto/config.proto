@@ -83,6 +83,7 @@ message SpecificUsbDevice {
 
 message UsbDeviceAssignment {
   optional ConsoleType consoleType = 1;
+  optional ConsoleMode forcedType = 2;
 }
 
 message CatchallAssignment {

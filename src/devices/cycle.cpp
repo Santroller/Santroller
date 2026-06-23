@@ -3,6 +3,7 @@
 #include "main.hpp"
 #include "usb/device/hid_device.h"
 #include "config.hpp"
+#include "utils.h"
 CycleDevice::CycleDevice(proto_CycleDevice device, uint16_t id, uint32_t current_index, std::vector<uint32_t> states) : Device(id), m_device(device), m_states(states), m_current_value(states[current_index]), m_current_index(current_index)
 {
 }
@@ -19,6 +20,10 @@ void CycleDevice::update(bool full_poll, bool send_events)
 
 void CycleDevice::cycle(bool forward)
 {
+    if (millis() - m_last < 100) {
+        return;
+    }
+    m_last = millis();
     if (forward)
     {
         m_current_index++;

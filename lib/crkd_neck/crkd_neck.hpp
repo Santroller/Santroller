@@ -63,8 +63,11 @@ typedef struct
 class CrkdNeck
 {
 public:
+    ~CrkdNeck() {printf("destroy crkdneck!\r\n");}
     CrkdNeck(uint8_t block, uint8_t tx, uint8_t rx, uint32_t clock);
     void tick();
+    void begin();
+    void end();
     inline bool is_connected()
     {
         return m_connected;

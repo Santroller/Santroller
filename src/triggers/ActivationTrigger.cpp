@@ -110,9 +110,10 @@ UsbModeActivationTrigger::UsbModeActivationTrigger(proto_UsbDeviceAssignment con
 bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
     auto profile = all_profiles[m_profile_id];
-    if (m_config.has_forcedType)
+    if (m_config.has_forcedType && claim_device)
     {
-        profile->mode = m_config.forcedType;
+        printf("setting new mode: %d, old: %d\r\n", m_config.forcedType, newMode);
+        newMode = m_config.forcedType;
     }
     if (!m_config.has_consoleType)
     {

@@ -16,9 +16,11 @@ static long read_time_0;
 static long read_time_1;
 static uint8_t start_char_0 = 0;
 static uint8_t start_char_1 = 0;
+static volatile bool running_0 = false;
+static volatile bool running_1 = false;
 static void on_uart_rx_0()
 {
-    while (uart_is_readable(uart0) && current_0 < irq_size_0)
+    while (uart_is_readable(uart0) && current_0 < irq_size_0 && running_0)
     {
         irq_dest_0[current_0++] = uart_getc(uart0);
         // if start_char is set, then wait for a specific start character
@@ -36,7 +38,7 @@ static void on_uart_rx_0()
 }
 static void on_uart_rx_1()
 {
-    while (uart_is_readable(uart1) && current_1 < irq_size_1)
+    while (uart_is_readable(uart1) && current_1 < irq_size_1 && running_1)
     {
         irq_dest_1[current_1++] = uart_getc(uart1);
         // if start_char is set, then wait for a specific start character
@@ -67,18 +69,6 @@ UARTInterface::UARTInterface(uint8_t block, int8_t tx, int8_t rx, uint32_t clock
 
 UARTInterface::~UARTInterface()
 {
-    if (uart == uart0 && irq_dest_0)
-    {
-        irq_set_enabled(UART0_IRQ, false);
-        uart_set_irq_enables(uart, false, false);
-        irq_remove_handler(UART0_IRQ, on_uart_rx_0);
-    }  
-    if (uart == uart1 && irq_dest_1)
-    {
-        irq_set_enabled(UART1_IRQ, false);
-        uart_set_irq_enables(uart, false, false);
-        irq_remove_handler(UART1_IRQ, on_uart_rx_1);
-    }
 }
 
 void UARTInterface::set_format(uint data_bits, uint stop_bits, uart_parity_t parity)
@@ -123,9 +113,11 @@ void UARTInterface::setup_interrupts(uint8_t *dest, uint8_t start_char, size_t m
     printf("uart interrupts: %02x %d\r\n", start_char, maxlen);
     if (uart == uart0)
     {
+        running_0 = true;
         irq_dest_0 = dest;
         irq_size_0 = maxlen;
         start_char_0 = start_char;
+        current_0 = 0;
 
         // And set up and enable the interrupt handlers
         irq_set_exclusive_handler(UART0_IRQ, on_uart_rx_0);
@@ -135,9 +127,11 @@ void UARTInterface::setup_interrupts(uint8_t *dest, uint8_t start_char, size_t m
     }
     if (uart == uart1)
     {
+        running_1 = true;
         irq_dest_1 = dest;
         irq_size_1 = maxlen;
         start_char_1 = start_char;
+        current_1 = 0;
 
         // And set up and enable the interrupt handlers
         irq_set_exclusive_handler(UART1_IRQ, on_uart_rx_1);
@@ -149,9 +143,19 @@ void UARTInterface::setup_interrupts(uint8_t *dest, uint8_t start_char, size_t m
 
 void UARTInterface::disable_interrupts()
 {
-    int UART_IRQ = uart ? UART0_IRQ : UART1_IRQ;
-    irq_set_enabled(UART_IRQ, false);
-    uart_set_irqs_enabled(uart, false, false);
+    printf("disable interrupts uart\r\n");
+    if (uart == uart0)
+    {
+        irq_set_enabled(UART0_IRQ, false);
+        uart_set_irqs_enabled(uart, false, false);
+        running_0 = false;
+    }
+    if (uart == uart1)
+    {
+        irq_set_enabled(UART1_IRQ, false);
+        uart_set_irqs_enabled(uart, false, false);
+        running_1 = false;
+    }
 }
 
 bool UARTInterface::send(uint8_t *data, uint8_t size)

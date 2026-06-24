@@ -9,9 +9,11 @@ CrkdDevice::CrkdDevice(proto_CrkdNeckDevice device, uint16_t id) : Device(id), n
 
 void CrkdDevice::begin()
 {
+    neck.begin();
 }
 void CrkdDevice::end(bool full)
 {
+    neck.end();
 }
 void CrkdDevice::update(bool full_poll, bool send_events)
 {

@@ -11,7 +11,15 @@
 static uint8_t firmware[10000];
 CrkdNeck::CrkdNeck(uint8_t block, uint8_t tx, uint8_t rx, uint32_t clock) : interface(block, tx, rx, clock)
 {
+    printf("crkd neck: %d %d %d %d\r\n", block, tx, rx, clock);
+}
+void CrkdNeck::begin() {
+    printf("crkd neck begin!\r\n");
     interface.setup_interrupts((uint8_t *)&m_crkdNeck, 0xA5, sizeof(m_crkdNeck));
+}
+void CrkdNeck::end() {
+    printf("crkd neck end!\r\n");
+    interface.disable_interrupts();
 }
 void CrkdNeck::tick()
 {

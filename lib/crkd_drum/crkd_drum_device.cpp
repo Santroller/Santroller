@@ -12,9 +12,15 @@ static uint8_t ack[] = {0xA5, 0x41, 0x08, 0x00, 0x00, 0x50, 0x00, 0xBA};
 CrkdDrum::CrkdDrum(uint8_t block, uint8_t tx, uint8_t rx, uint32_t clock) : interface(block, tx, rx, clock)
 {
     printf("setup drum!\r\n");
+}
+void CrkdDrum::begin() {
+    printf("crkd drum begin!\r\n");
     interface.setup_interrupts((uint8_t *)&m_CrkdDrum, 0xA5, sizeof(m_CrkdDrum));
 }
-
+void CrkdDrum::end() {
+    printf("crkd drum end!\r\n");
+    interface.disable_interrupts();
+}
 void update_crc(uint8_t *buf, uint8_t len)
 {
     uint8_t i = 0, j = 0, crc = 0;

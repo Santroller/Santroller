@@ -136,8 +136,8 @@ const uint8_t xb1_descriptor_ld[] = {
     0x00, 0x00, 0x00, 0x00};
 
 const uint8_t announce_gamepad[] = {
-    0x7e, 0xed, 0x8d, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x09, 0x12, 0x82, 0x28,
-    0x05, 0x00, 0x11, 0x00, 0x82, 0x0c, 0x00, 0x00, 0x04, 0x05, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
+    0x7e, 0xed, 0x8d, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x5e, 0x04, 0xea, 0x02,
+    0x01, 0x00, 0x00, 0x00, 0x82, 0x0c, 0x00, 0x00, 0x04, 0x05, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
 const uint8_t xb1_descriptor_gamepad[] = {
     0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xDA, 0x00,
     0x9B, 0x00, 0x16, 0x00, 0x1F, 0x00, 0x20, 0x00, 0x27, 0x00, 0x2D, 0x00, 0x4A, 0x00, 0x00, 0x00,
@@ -216,6 +216,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         {
             queue_xbone_report((uint8_t *)incomingXGIP->generateAckPacket(), incomingXGIP->getPacketLength());
         }
+        // printf("got cmd: %02x\r\n", command);
         if (command == GIP_ACK_RESPONSE)
         {
             waiting_ack = false;
@@ -282,7 +283,6 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 xboxOneDescriptor = xb1_descriptor_gamepad;
                 len = sizeof(xb1_descriptor_gamepad);
                 break;
-                ;
             }
             outgoingXGIP->setData(xboxOneDescriptor, len);
             xboneDriverState = XboxOneDriverState::SEND_DESCRIPTOR;
@@ -442,6 +442,7 @@ void XboxOneGamepadDevice::process()
             case DJMax:
             case ProjectDiva:
                 announcePacket = announce_gamepad;
+                input_report_length = sizeof(XboxOneGamepad_Data_t);
                 break;
             case GuitarHeroGuitar:
             case RockBandGuitar:
@@ -451,14 +452,17 @@ void XboxOneGamepadDevice::process()
             case PowerGigGuitar:
             case RockRevolutionGuitar:
                 announcePacket = announce_guitar;
+                input_report_length = sizeof(XboxOneRockBandGuitar_Data_t);
                 break;
             case GuitarHeroDrums:
             case RockBandDrums:
             case PowerGigDrum:
                 announcePacket = announce_drum;
+                input_report_length = sizeof(XboxOneRockBandDrums_Data_t);
                 break;
             case LiveGuitar:
                 announcePacket = announce_ghl;
+                input_report_length = sizeof(XboxOneGHLGuitar_Data_t);
                 break;
             case Skylanders:
                 announcePacket = announce_skylanders;
@@ -471,12 +475,12 @@ void XboxOneGamepadDevice::process()
                 break;
             default:
                 announcePacket = announce_gamepad;
+                input_report_length = sizeof(XboxOneGamepad_Data_t);
                 break;
             }
-            announcePacket = announce_guitar;
             outgoingXGIP->setAttributes(GIP_ANNOUNCE, 1, 1, 0, 0);
             outgoingXGIP->setData(announcePacket, sizeof(announce_gamepad));
-            memcpy(outgoingXGIP->getData() + 3, &now, 3);
+            memcpy(outgoingXGIP->getData(), &now, 3);
             queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
             xboneDriverState = WAIT;
         }
@@ -550,9 +554,8 @@ void XboxOneGamepadDevice::process()
             keep_alive_sequence = 1;
         return;
     }
-
-    memset(epin_buf, 0, sizeof(XboxOneGamepad_Data_t));
-    xboneReportSize = sizeof(XboxOneGamepad_Data_t);
+    memset(epin_buf, 0, input_report_length);
+    xboneReportSize = input_report_length;
 
     for (const auto &profile : profiles)
     {
@@ -592,13 +595,16 @@ void XboxOneGamepadDevice::process()
     if (memcmp(last_report, epin_buf, xboneReportSize) != 0)
     {
         memcpy(last_report, epin_buf, xboneReportSize);
-        last_report_counter++; // will rollover
-        if (last_report_counter == 0)
-            last_report_counter = 1;
         outgoingXGIP->reset();
         outgoingXGIP->setAttributes(GIP_INPUT_REPORT, last_report_counter, 0, 0, 0);
         outgoingXGIP->setData(epin_buf, xboneReportSize);
-        queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
+        // don't put things in the queue here otherwise we will fill it pretty quick!
+        if (send_xbone_usb(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength()))
+        {
+            last_report_counter++; // will rollover
+            if (last_report_counter == 0)
+                last_report_counter = 1;
+        }
     }
 }
 

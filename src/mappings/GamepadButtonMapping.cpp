@@ -22,43 +22,43 @@ void GamepadButtonMapping::update_wii(uint8_t *buf)
     switch (m_mapping.mapping.gamepadButton)
     {
     case GamepadA:
-        report->a = m_lastValue;
+        report->a |= m_lastValue;
         break;
     case GamepadB:
-        report->b = m_lastValue;
+        report->b |= m_lastValue;
         break;
     case GamepadX:
-        report->x = m_lastValue;
+        report->x |= m_lastValue;
         break;
     case GamepadY:
-        report->y = m_lastValue;
+        report->y |= m_lastValue;
         break;
     case GamepadStart:
-        report->start = m_lastValue;
+        report->start |= m_lastValue;
         break;
     case GamepadBack:
-        report->back = m_lastValue;
+        report->back |= m_lastValue;
         break;
     case GamepadGuide:
-        report->guide = m_lastValue;
+        report->guide |= m_lastValue;
         break;
     case GamepadLeftShoulder:
-        report->leftShoulder = m_lastValue;
+        report->leftShoulder |= m_lastValue;
         break;
     case GamepadRightShoulder:
-        report->rightShoulder = m_lastValue;
+        report->rightShoulder |= m_lastValue;
         break;
     case GamepadDpadUp:
-        report->dpadUp = m_lastValue;
+        report->dpadUp |= m_lastValue;
         break;
     case GamepadDpadDown:
-        report->dpadDown = m_lastValue;
+        report->dpadDown |= m_lastValue;
         break;
     case GamepadDpadLeft:
-        report->dpadLeft = m_lastValue;
+        report->dpadLeft |= m_lastValue;
         break;
     case GamepadDpadRight:
-        report->dpadRight = m_lastValue;
+        report->dpadRight |= m_lastValue;
         break;
     default:
         break;
@@ -71,52 +71,52 @@ void GamepadButtonMapping::update_switch(uint8_t *buf)
     switch (m_mapping.mapping.gamepadButton)
     {
     case GamepadA:
-        report->a = m_lastValue;
+        report->a |= m_lastValue;
         break;
     case GamepadB:
-        report->b = m_lastValue;
+        report->b |= m_lastValue;
         break;
     case GamepadX:
-        report->x = m_lastValue;
+        report->x |= m_lastValue;
         break;
     case GamepadY:
-        report->y = m_lastValue;
+        report->y |= m_lastValue;
         break;
     case GamepadStart:
-        report->start = m_lastValue;
+        report->start |= m_lastValue;
         break;
     case GamepadBack:
-        report->back = m_lastValue;
+        report->back |= m_lastValue;
         break;
     case GamepadGuide:
-        report->guide = m_lastValue;
+        report->guide |= m_lastValue;
         break;
     case GamepadCapture:
-        report->capture = m_lastValue;
+        report->capture |= m_lastValue;
         break;
     case GamepadLeftShoulder:
-        report->leftShoulder = m_lastValue;
+        report->leftShoulder |= m_lastValue;
         break;
     case GamepadRightShoulder:
-        report->rightShoulder = m_lastValue;
+        report->rightShoulder |= m_lastValue;
         break;
     case GamepadLeftThumbClick:
-        report->leftThumbClick = m_lastValue;
+        report->leftThumbClick |= m_lastValue;
         break;
     case GamepadRightThumbClick:
-        report->rightThumbClick = m_lastValue;
+        report->rightThumbClick |= m_lastValue;
         break;
     case GamepadDpadUp:
-        report->dpadUp = m_lastValue;
+        report->dpadUp |= m_lastValue;
         break;
     case GamepadDpadDown:
-        report->dpadDown = m_lastValue;
+        report->dpadDown |= m_lastValue;
         break;
     case GamepadDpadLeft:
-        report->dpadLeft = m_lastValue;
+        report->dpadLeft |= m_lastValue;
         break;
     case GamepadDpadRight:
-        report->dpadRight = m_lastValue;
+        report->dpadRight |= m_lastValue;
         break;
     }
 }
@@ -127,46 +127,46 @@ void GamepadButtonMapping::update_ps2(uint8_t *buf)
     switch (m_mapping.mapping.gamepadButton)
     {
     case GamepadA:
-        report->a = m_lastValue;
+        report->a |= m_lastValue;
         break;
     case GamepadB:
-        report->b = m_lastValue;
+        report->b |= m_lastValue;
         break;
     case GamepadX:
-        report->x = m_lastValue;
+        report->x |= m_lastValue;
         break;
     case GamepadY:
-        report->y = m_lastValue;
+        report->y |= m_lastValue;
         break;
     case GamepadStart:
-        report->start = m_lastValue;
+        report->start |= m_lastValue;
         break;
     case GamepadBack:
-        report->back = m_lastValue;
+        report->back |= m_lastValue;
         break;
     case GamepadLeftShoulder:
-        report->leftShoulder = m_lastValue;
+        report->leftShoulder |= m_lastValue;
         break;
     case GamepadRightShoulder:
-        report->rightShoulder = m_lastValue;
+        report->rightShoulder |= m_lastValue;
         break;
     case GamepadLeftThumbClick:
-        report->leftThumbClick = m_lastValue;
+        report->leftThumbClick |= m_lastValue;
         break;
     case GamepadRightThumbClick:
-        report->rightThumbClick = m_lastValue;
+        report->rightThumbClick |= m_lastValue;
         break;
     case GamepadDpadUp:
-        report->dpadUp = m_lastValue;
+        report->dpadUp |= m_lastValue;
         break;
     case GamepadDpadDown:
-        report->dpadDown = m_lastValue;
+        report->dpadDown |= m_lastValue;
         break;
     case GamepadDpadLeft:
-        report->dpadLeft = m_lastValue;
+        report->dpadLeft |= m_lastValue;
         break;
     case GamepadDpadRight:
-        report->dpadRight = m_lastValue;
+        report->dpadRight |= m_lastValue;
         break;
     default:
         break;
@@ -181,49 +181,49 @@ void GamepadButtonMapping::update_ps3(uint8_t *buf)
         switch (m_mapping.mapping.gamepadButton)
         {
         case GamepadA:
-            report->a = m_lastValue;
+            report->a |= m_lastValue;
             break;
         case GamepadB:
-            report->b = m_lastValue;
+            report->b |= m_lastValue;
             break;
         case GamepadX:
-            report->x = m_lastValue;
+            report->x |= m_lastValue;
             break;
         case GamepadY:
-            report->y = m_lastValue;
+            report->y |= m_lastValue;
             break;
         case GamepadStart:
-            report->start = m_lastValue;
+            report->start |= m_lastValue;
             break;
         case GamepadBack:
-            report->back = m_lastValue;
+            report->back |= m_lastValue;
             break;
         case GamepadGuide:
-            report->guide = m_lastValue;
+            report->guide |= m_lastValue;
             break;
         case GamepadLeftShoulder:
-            report->leftShoulder = m_lastValue;
+            report->leftShoulder |= m_lastValue;
             break;
         case GamepadRightShoulder:
-            report->rightShoulder = m_lastValue;
+            report->rightShoulder |= m_lastValue;
             break;
         case GamepadLeftThumbClick:
-            report->leftThumbClick = m_lastValue;
+            report->leftThumbClick |= m_lastValue;
             break;
         case GamepadRightThumbClick:
-            report->rightThumbClick = m_lastValue;
+            report->rightThumbClick |= m_lastValue;
             break;
         case GamepadDpadUp:
-            report->dpadUp = m_lastValue;
+            report->dpadUp |= m_lastValue;
             break;
         case GamepadDpadDown:
-            report->dpadDown = m_lastValue;
+            report->dpadDown |= m_lastValue;
             break;
         case GamepadDpadLeft:
-            report->dpadLeft = m_lastValue;
+            report->dpadLeft |= m_lastValue;
             break;
         case GamepadDpadRight:
-            report->dpadRight = m_lastValue;
+            report->dpadRight |= m_lastValue;
             break;
         default:
             break;
@@ -234,49 +234,49 @@ void GamepadButtonMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.gamepadButton)
     {
     case GamepadA:
-        report->a = m_lastValue;
+        report->a |= m_lastValue;
         break;
     case GamepadB:
-        report->b = m_lastValue;
+        report->b |= m_lastValue;
         break;
     case GamepadX:
-        report->x = m_lastValue;
+        report->x |= m_lastValue;
         break;
     case GamepadY:
-        report->y = m_lastValue;
+        report->y |= m_lastValue;
         break;
     case GamepadStart:
-        report->start = m_lastValue;
+        report->start |= m_lastValue;
         break;
     case GamepadBack:
-        report->back = m_lastValue;
+        report->back |= m_lastValue;
         break;
     case GamepadGuide:
-        report->guide = m_lastValue;
+        report->guide |= m_lastValue;
         break;
     case GamepadLeftShoulder:
-        report->leftShoulder = m_lastValue;
+        report->leftShoulder |= m_lastValue;
         break;
     case GamepadRightShoulder:
-        report->rightShoulder = m_lastValue;
+        report->rightShoulder |= m_lastValue;
         break;
     case GamepadLeftThumbClick:
-        report->leftThumbClick = m_lastValue;
+        report->leftThumbClick |= m_lastValue;
         break;
     case GamepadRightThumbClick:
-        report->rightThumbClick = m_lastValue;
+        report->rightThumbClick |= m_lastValue;
         break;
     case GamepadDpadUp:
-        report->dpadUp = m_lastValue;
+        report->dpadUp |= m_lastValue;
         break;
     case GamepadDpadDown:
-        report->dpadDown = m_lastValue;
+        report->dpadDown |= m_lastValue;
         break;
     case GamepadDpadLeft:
-        report->dpadLeft = m_lastValue;
+        report->dpadLeft |= m_lastValue;
         break;
     case GamepadDpadRight:
-        report->dpadRight = m_lastValue;
+        report->dpadRight |= m_lastValue;
         break;
     default:
         break;
@@ -288,49 +288,49 @@ void GamepadButtonMapping::update_ps4(uint8_t *buf)
     switch (m_mapping.mapping.gamepadButton)
     {
     case GamepadA:
-        report->a = m_lastValue;
+        report->a |= m_lastValue;
         break;
     case GamepadB:
-        report->b = m_lastValue;
+        report->b |= m_lastValue;
         break;
     case GamepadX:
-        report->x = m_lastValue;
+        report->x |= m_lastValue;
         break;
     case GamepadY:
-        report->y = m_lastValue;
+        report->y |= m_lastValue;
         break;
     case GamepadStart:
-        report->start = m_lastValue;
+        report->start |= m_lastValue;
         break;
     case GamepadBack:
-        report->back = m_lastValue;
+        report->back |= m_lastValue;
         break;
     case GamepadGuide:
-        report->guide = m_lastValue;
+        report->guide |= m_lastValue;
         break;
     case GamepadLeftShoulder:
-        report->leftShoulder = m_lastValue;
+        report->leftShoulder |= m_lastValue;
         break;
     case GamepadRightShoulder:
-        report->rightShoulder = m_lastValue;
+        report->rightShoulder |= m_lastValue;
         break;
     case GamepadLeftThumbClick:
-        report->leftThumbClick = m_lastValue;
+        report->leftThumbClick |= m_lastValue;
         break;
     case GamepadRightThumbClick:
-        report->rightThumbClick = m_lastValue;
+        report->rightThumbClick |= m_lastValue;
         break;
     case GamepadDpadUp:
-        report->dpadUp = m_lastValue;
+        report->dpadUp |= m_lastValue;
         break;
     case GamepadDpadDown:
-        report->dpadDown = m_lastValue;
+        report->dpadDown |= m_lastValue;
         break;
     case GamepadDpadLeft:
-        report->dpadLeft = m_lastValue;
+        report->dpadLeft |= m_lastValue;
         break;
     case GamepadDpadRight:
-        report->dpadRight = m_lastValue;
+        report->dpadRight |= m_lastValue;
         break;
     default:
         break;
@@ -342,49 +342,49 @@ void GamepadButtonMapping::update_ps5(uint8_t *buf)
     switch (m_mapping.mapping.gamepadButton)
     {
     case GamepadA:
-        report->a = m_lastValue;
+        report->a |= m_lastValue;
         break;
     case GamepadB:
-        report->b = m_lastValue;
+        report->b |= m_lastValue;
         break;
     case GamepadX:
-        report->x = m_lastValue;
+        report->x |= m_lastValue;
         break;
     case GamepadY:
-        report->y = m_lastValue;
+        report->y |= m_lastValue;
         break;
     case GamepadStart:
-        report->start = m_lastValue;
+        report->start |= m_lastValue;
         break;
     case GamepadBack:
-        report->back = m_lastValue;
+        report->back |= m_lastValue;
         break;
     case GamepadGuide:
-        report->guide = m_lastValue;
+        report->guide |= m_lastValue;
         break;
     case GamepadLeftShoulder:
-        report->leftShoulder = m_lastValue;
+        report->leftShoulder |= m_lastValue;
         break;
     case GamepadRightShoulder:
-        report->rightShoulder = m_lastValue;
+        report->rightShoulder |= m_lastValue;
         break;
     case GamepadLeftThumbClick:
-        report->leftThumbClick = m_lastValue;
+        report->leftThumbClick |= m_lastValue;
         break;
     case GamepadRightThumbClick:
-        report->rightThumbClick = m_lastValue;
+        report->rightThumbClick |= m_lastValue;
         break;
     case GamepadDpadUp:
-        report->dpadUp = m_lastValue;
+        report->dpadUp |= m_lastValue;
         break;
     case GamepadDpadDown:
-        report->dpadDown = m_lastValue;
+        report->dpadDown |= m_lastValue;
         break;
     case GamepadDpadLeft:
-        report->dpadLeft = m_lastValue;
+        report->dpadLeft |= m_lastValue;
         break;
     case GamepadDpadRight:
-        report->dpadRight = m_lastValue;
+        report->dpadRight |= m_lastValue;
         break;
     default:
         break;
@@ -396,49 +396,49 @@ void GamepadButtonMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.gamepadButton)
     {
     case GamepadA:
-        report->a = m_lastValue;
+        report->a |= m_lastValue;
         break;
     case GamepadB:
-        report->b = m_lastValue;
+        report->b |= m_lastValue;
         break;
     case GamepadX:
-        report->x = m_lastValue;
+        report->x |= m_lastValue;
         break;
     case GamepadY:
-        report->y = m_lastValue;
+        report->y |= m_lastValue;
         break;
     case GamepadStart:
-        report->start = m_lastValue;
+        report->start |= m_lastValue;
         break;
     case GamepadBack:
-        report->back = m_lastValue;
+        report->back |= m_lastValue;
         break;
     case GamepadGuide:
-        report->guide = m_lastValue;
+        report->guide |= m_lastValue;
         break;
     case GamepadLeftShoulder:
-        report->leftShoulder = m_lastValue;
+        report->leftShoulder |= m_lastValue;
         break;
     case GamepadRightShoulder:
-        report->rightShoulder = m_lastValue;
+        report->rightShoulder |= m_lastValue;
         break;
     case GamepadLeftThumbClick:
-        report->leftThumbClick = m_lastValue;
+        report->leftThumbClick |= m_lastValue;
         break;
     case GamepadRightThumbClick:
-        report->rightThumbClick = m_lastValue;
+        report->rightThumbClick |= m_lastValue;
         break;
     case GamepadDpadUp:
-        report->dpadUp = m_lastValue;
+        report->dpadUp |= m_lastValue;
         break;
     case GamepadDpadDown:
-        report->dpadDown = m_lastValue;
+        report->dpadDown |= m_lastValue;
         break;
     case GamepadDpadLeft:
-        report->dpadLeft = m_lastValue;
+        report->dpadLeft |= m_lastValue;
         break;
     case GamepadDpadRight:
-        report->dpadRight = m_lastValue;
+        report->dpadRight |= m_lastValue;
         break;
     default:
         break;
@@ -451,46 +451,46 @@ void GamepadButtonMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.gamepadButton)
     {
     case GamepadA:
-        report->a = m_lastValue;
+        report->a |= m_lastValue;
         break;
     case GamepadB:
-        report->b = m_lastValue;
+        report->b |= m_lastValue;
         break;
     case GamepadX:
-        report->x = m_lastValue;
+        report->x |= m_lastValue;
         break;
     case GamepadY:
-        report->y = m_lastValue;
+        report->y |= m_lastValue;
         break;
     case GamepadStart:
-        report->start = m_lastValue;
+        report->start |= m_lastValue;
         break;
     case GamepadBack:
-        report->back = m_lastValue;
+        report->back |= m_lastValue;
         break;
     case GamepadLeftShoulder:
-        report->leftShoulder = m_lastValue;
+        report->leftShoulder |= m_lastValue;
         break;
     case GamepadRightShoulder:
-        report->rightShoulder = m_lastValue;
+        report->rightShoulder |= m_lastValue;
         break;
     case GamepadLeftThumbClick:
-        report->leftThumbClick = m_lastValue;
+        report->leftThumbClick |= m_lastValue;
         break;
     case GamepadRightThumbClick:
-        report->rightThumbClick = m_lastValue;
+        report->rightThumbClick |= m_lastValue;
         break;
     case GamepadDpadUp:
-        report->dpadUp = m_lastValue;
+        report->dpadUp |= m_lastValue;
         break;
     case GamepadDpadDown:
-        report->dpadDown = m_lastValue;
+        report->dpadDown |= m_lastValue;
         break;
     case GamepadDpadLeft:
-        report->dpadLeft = m_lastValue;
+        report->dpadLeft |= m_lastValue;
         break;
     case GamepadDpadRight:
-        report->dpadRight = m_lastValue;
+        report->dpadRight |= m_lastValue;
         break;
     default:
         break;
@@ -502,49 +502,49 @@ void GamepadButtonMapping::update_xboxone(uint8_t *buf)
     switch (m_mapping.mapping.gamepadButton)
     {
     case GamepadA:
-        report->a = m_lastValue;
+        report->a |= m_lastValue;
         break;
     case GamepadB:
-        report->b = m_lastValue;
+        report->b |= m_lastValue;
         break;
     case GamepadX:
-        report->x = m_lastValue;
+        report->x |= m_lastValue;
         break;
     case GamepadY:
-        report->y = m_lastValue;
+        report->y |= m_lastValue;
         break;
     case GamepadStart:
-        report->start = m_lastValue;
+        report->start |= m_lastValue;
         break;
     case GamepadBack:
-        report->a = m_lastValue;
+        report->back |= m_lastValue;
         break;
     case GamepadGuide:
-        report->guide = m_lastValue;
+        report->guide |= m_lastValue;
         break;
     case GamepadLeftShoulder:
-        report->leftShoulder = m_lastValue;
+        report->leftShoulder |= m_lastValue;
         break;
     case GamepadRightShoulder:
-        report->rightShoulder = m_lastValue;
+        report->rightShoulder |= m_lastValue;
         break;
     case GamepadLeftThumbClick:
-        report->leftThumbClick = m_lastValue;
+        report->leftThumbClick |= m_lastValue;
         break;
     case GamepadRightThumbClick:
-        report->rightThumbClick = m_lastValue;
+        report->rightThumbClick |= m_lastValue;
         break;
     case GamepadDpadUp:
-        report->dpadUp = m_lastValue;
+        report->dpadUp |= m_lastValue;
         break;
     case GamepadDpadDown:
-        report->dpadDown = m_lastValue;
+        report->dpadDown |= m_lastValue;
         break;
     case GamepadDpadLeft:
-        report->dpadLeft = m_lastValue;
+        report->dpadLeft |= m_lastValue;
         break;
     case GamepadDpadRight:
-        report->dpadRight = m_lastValue;
+        report->dpadRight |= m_lastValue;
         break;
     default:
         break;

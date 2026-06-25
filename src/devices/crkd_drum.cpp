@@ -9,9 +9,11 @@ CrkdDrumDevice::CrkdDrumDevice(proto_CrkdDrumDevice device, uint16_t id) : Devic
 
 void CrkdDrumDevice::begin()
 {
+    drum.begin();
 }
 void CrkdDrumDevice::end(bool full)
 {
+    drum.end();
 }
 void CrkdDrumDevice::update(bool full_poll, bool send_events)
 {

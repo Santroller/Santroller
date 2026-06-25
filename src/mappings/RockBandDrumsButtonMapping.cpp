@@ -267,4 +267,48 @@ void RockBandDrumsButtonMapping::update_ogxbox(uint8_t *buf)
 }
 void RockBandDrumsButtonMapping::update_xboxone(uint8_t *buf)
 {
+    
+    XboxOneRockBandDrums_Data_t *report = (XboxOneRockBandDrums_Data_t *)buf;
+    switch (m_mapping.mapping.rbDrumButton)
+    {
+    case RockBandDrumsA:
+        report->a |= m_lastValue;
+        break;
+    case RockBandDrumsB:
+        report->b |= m_lastValue;
+        break;
+    case RockBandDrumsX:
+        report->x |= m_lastValue;
+        break;
+    case RockBandDrumsY:
+        report->y |= m_lastValue;
+        break;
+    case RockBandDrumsKick1Pedal:
+        report->leftShoulder |= m_lastValue;
+        break;
+    case RockBandDrumsKick2Pedal:
+        report->rightShoulder |= m_lastValue;
+        break;
+    case RockBandDrumsBack:
+        report->back |= m_lastValue;
+        break;
+    case RockBandDrumsStart:
+        report->start |= m_lastValue;
+        break;
+    case RockBandDrumsGuide:
+        report->guide |= m_lastValue;
+        break;
+    case RockBandDrumsDpadUp:
+        report->dpadUp |= m_lastValue;
+        break;
+    case RockBandDrumsDpadDown:
+        report->dpadDown |= m_lastValue;
+        break;
+    case RockBandDrumsDpadLeft:
+        report->dpadLeft |= m_lastValue;
+        break;
+    case RockBandDrumsDpadRight:
+        report->dpadRight |= m_lastValue;
+        break;
+    }
 }

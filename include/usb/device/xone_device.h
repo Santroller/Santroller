@@ -64,6 +64,7 @@ private:
     bool xbox_one_powered_on;
     uint8_t report_led_mode;
     uint8_t report_led_brightness;
+    uint8_t input_report_length = 0;
 
     XGIPProtocol *outgoingXGIP = nullptr;
     XGIPProtocol *incomingXGIP = nullptr;

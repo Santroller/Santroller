@@ -42,6 +42,7 @@ void CycleDevice::cycle(bool forward)
     proto_Event event = {which_event : proto_Event_cycle_tag, event : {cycle : {m_id, m_current_index}}};
     HIDConfigDevice::send_event(event, true);
     m_current_value = m_states[m_current_index];
+    printf("cycle updated: %d %d\r\n", m_current_index, m_current_value);
     update_aux(m_id, m_current_index);
 }
 

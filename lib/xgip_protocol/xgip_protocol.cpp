@@ -198,15 +198,16 @@ bool XGIPProtocol::setData(const uint8_t *buffer, uint16_t len)
     return true;
 }
 
-void XGIPProtocol::writeLeb128(uint8_t *dest, uint16_t len)
+uint16_t XGIPProtocol::writeLeb128(uint8_t *dest, uint16_t len)
 {
     // if < 127, length is put in the second byte
     if (len < 0x7f)
     {
         dest[0] = 0;
         dest[1] = len;
-        return;
+        return 2;
     }
+    uint16_t temp = 0;
     do
     {
         uint8_t byte = len & 0x7f; /* low-order 7 bits of value */
@@ -214,7 +215,9 @@ void XGIPProtocol::writeLeb128(uint8_t *dest, uint16_t len)
         if (len != 0)     /* more bytes to come */
             byte |= 0x80; /* set high-order bit of byte */
         *dest++ = byte;
+        temp++;
     } while (len != 0);
+    return temp;
 }
 // Generate XGIP Packet for output
 uint8_t *XGIPProtocol::generatePacket()
@@ -282,7 +285,7 @@ uint8_t *XGIPProtocol::generatePacket()
                 end = true;
             }
 
-            if (numberOfChunksSent > 0 && !end)
+            if (numberOfChunksSent > 0 && !end && totalDataSent < 0x80)
             {
                 // extend if there are more packets to write
                 header.length = dataToSend | 0x80;
@@ -300,20 +303,20 @@ uint8_t *XGIPProtocol::generatePacket()
 
             // Copy our header and data to the packet
             memcpy(packet, &header, sizeof(GipHeader_t));
-            memcpy((void *)&packet[6], &data[totalDataSent], dataToSend);
 
             // Set our packet length
             packetLength = sizeof(GipHeader_t) + 2 + dataToSend;
-
+            uint16_t lebLen = 2;
             if (numberOfChunksSent == 0)
             {
-                writeLeb128(packet + 4, dataLength);
+                lebLen = writeLeb128(packet + 4, dataLength);
             }
             else
             {
-                writeLeb128(packet + 4, totalDataSent);
+                lebLen = writeLeb128(packet + 4, totalDataSent);
             }
 
+            memcpy(packet + 4 + lebLen, &data[totalDataSent], dataToSend);
             totalDataSent += dataToSend; // Total Data Sent in bytes
             numberOfChunksSent++;        // Number of Chunks sent so far
         }
@@ -353,7 +356,7 @@ uint8_t *XGIPProtocol::generateAckPacket()
 }
 
 // Get last generated output packet length
-uint8_t XGIPProtocol::getPacketLength()
+uint16_t XGIPProtocol::getPacketLength()
 {
     return packetLength;
 }

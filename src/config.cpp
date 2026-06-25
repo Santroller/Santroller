@@ -1042,6 +1042,7 @@ void reload()
 
 void update_aux(uint32_t id, uint32_t state)
 {
+    printf("update aux: %d %d %d\r\n", id, state, reinit);
     if (reinit)
     {
         return;
@@ -1061,7 +1062,7 @@ void update_aux(uint32_t id, uint32_t state)
     // Move the encoded data to end where it should be
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize, EEPROM.writeCache, footer->dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize);
-    EEPROM.commit();
+    EEPROM.commit_now();
 }
 
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
@@ -1092,7 +1093,7 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     memcpy(EEPROM.writeCache + start, buffer, bufsize);
     if (start + bufsize < footer.dataSize)
     {
-        printf("writing up to: %d < %d\r\n", start + bufsize, footer.dataSize);
+        // printf("writing up to: %d < %d\r\n", start + bufsize, footer.dataSize);
         working = true;
         return true;
     }

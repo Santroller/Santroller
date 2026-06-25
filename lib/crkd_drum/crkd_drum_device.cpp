@@ -49,6 +49,18 @@ void CrkdDrum::tick()
     // {
     //     m_param_cmd = 0x60;
     // }
+    if (!m_connected) {
+        red_pad = 0;
+        yellow_pad = 0;
+        blue_pad = 0;
+        green_pad = 0;
+        orange_pad = 0;
+        yellow_cymbal = 0;
+        blue_cymbal = 0;
+        green_cymbal = 0;
+        kick1 = 0;
+        kick2 = 0;
+    }
     if (m_connected && m_CrkdDrum.cmd == 0x50)
     {
         red_pad = m_CrkdDrum.red_pad;

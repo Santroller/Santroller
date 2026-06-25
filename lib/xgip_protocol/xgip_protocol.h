@@ -69,13 +69,13 @@ typedef enum {
      uint8_t getSequence();                      // Get sequence of a parsed packet
      uint8_t getChunked();                       // Is this packet chunked?
      uint8_t getPacketAck();                     // Did the packet require an ACK?
-     uint8_t getPacketLength();                  // Get packet length of our last output
+     uint16_t getPacketLength();                  // Get packet length of our last output
      uint8_t * getData();                        // Get data from a packet or packet-chunk
      uint16_t getDataLength();                   // Get length of a packet or packet-chunk
      bool getChunkData(XGIPProtocol & packet);   // Get chunk data from incoming packet
      bool ackRequired();                         // Did our last parsed packet require an ack?
  private:
-     void writeLeb128(uint8_t* dest, uint16_t len);
+     uint16_t writeLeb128(uint8_t* dest, uint16_t len);
      GipHeader_t header;             // On-going GIP header
      uint16_t totalChunkLength;      // How big is the chunk?
      uint16_t actualDataReceived;    // How much actual data have we received?

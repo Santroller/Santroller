@@ -235,4 +235,27 @@ void GuitarHeroGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 }
 void GuitarHeroGuitarAxisMapping::update_xboxone(uint8_t *buf)
 {
+    if (m_centered)
+    {
+        return;
+    }
+    XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)buf;
+    switch (m_mapping.mapping.ghAxis)
+    {
+    case GuitarHeroGuitarLeftStickX:
+        // shove stick on the slider, then it can be used in menus
+        report->joystickX = m_calibratedValue - 32768;
+        break;
+    case GuitarHeroGuitarLeftStickY:
+        report->joystickY = m_calibratedValue - 32768;
+        break;
+    case GuitarHeroGuitarWhammy:
+        report->whammy = m_calibratedValue >> 8;
+        break;
+    case GuitarHeroGuitarTilt:
+        report->tilt = m_calibratedValue >> 8;
+        break;
+    default:
+        break;
+    }
 }

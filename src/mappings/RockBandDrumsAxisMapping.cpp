@@ -299,4 +299,56 @@ void RockBandDrumsAxisMapping::update_ogxbox(uint8_t *buf)
 }
 void RockBandDrumsAxisMapping::update_xboxone(uint8_t *buf)
 {
+    
+    if (m_centered)
+    {
+        return;
+    }
+    XboxOneRockBandDrums_Data_t *report = (XboxOneRockBandDrums_Data_t *)buf;
+
+    switch (m_mapping.mapping.rbDrumAxis)
+    {
+    case RockBandDrumsRedPad:
+        report->redVelocity = m_calibratedValue >> 12;
+        report->b = true;
+        break;
+    case RockBandDrumsYellowPad:
+        report->yellowVelocity = m_calibratedValue >> 12;
+        report->y = true;
+        break;
+    case RockBandDrumsBluePad:
+        report->blueVelocity = m_calibratedValue >> 12;
+        report->x = true;
+        break;
+    case RockBandDrumsGreenPad:
+        report->greenVelocity = m_calibratedValue >> 12;
+        report->a = true;
+        break;
+    case RockBandDrumsYellowCymbal:
+        report->yellowCymbalVelocity = m_calibratedValue >> 12;
+        report->y = true;
+        break;
+    case RockBandDrumsBlueCymbal:
+        report->blueCymbalVelocity = m_calibratedValue >> 12;
+        report->x = true;
+        break;
+    case RockBandDrumsGreenCymbal:
+        report->greenCymbalVelocity = m_calibratedValue >> 12;
+        report->a = true;
+        break;
+    // case RockBandDrumsLeftStickX:
+    //     if (!m_centered)
+    //     {
+    //         report->redVelocity = m_calibratedValue - 32768;
+    //     }
+    //     break;
+    // case RockBandDrumsLeftStickY:
+    //     if (!m_centered)
+    //     {
+    //         report->yellowVelocity = m_calibratedValue - 32768;
+    //     }
+    //     break;
+    default:
+        break;
+    }
 }

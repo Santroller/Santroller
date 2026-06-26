@@ -2,6 +2,7 @@
 #include "stdio.h"
 #include "utils.h"
 #include "hardware/gpio.h"
+#include "usb/device/hid_device.h"
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
     Accelerometer *inst = (Accelerometer *)user_data;
@@ -75,14 +76,28 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                 accel[0] = bufferRx[1] << 8 | bufferRx[0];
                 accel[1] = bufferRx[3] << 8 | bufferRx[2];
                 accel[2] = bufferRx[5] << 8 | bufferRx[4];
-                restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+                if (HIDConfigDevice::tool_closed())
+                {
+                    restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+                }
+                else
+                {
+                    restart_alarm_id = add_alarm_in_us(5000, restart_handler, this, true);
+                }
                 break;
             case ADXL_POLL:
                 // ADXL345 needs to be scaled
                 accel[0] = (bufferRx[1] << 8 | bufferRx[0]) * 64;
                 accel[1] = (bufferRx[3] << 8 | bufferRx[2]) * 64;
                 accel[2] = (bufferRx[5] << 8 | bufferRx[4]) * 64;
-                restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+                if (HIDConfigDevice::tool_closed())
+                {
+                    restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+                }
+                else
+                {
+                    restart_alarm_id = add_alarm_in_us(5000, restart_handler, this, true);
+                }
                 break;
             case LIS3DH_POLL:
                 accel[0] = bufferRx[1] << 8 | bufferRx[0];
@@ -95,7 +110,14 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                 lis3dhAdc[0] = bufferRx[1] << 8 | bufferRx[0];
                 lis3dhAdc[1] = bufferRx[3] << 8 | bufferRx[2];
                 lis3dhAdc[2] = bufferRx[5] << 8 | bufferRx[4];
-                restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+                if (HIDConfigDevice::tool_closed())
+                {
+                    restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+                }
+                else
+                {
+                    restart_alarm_id = add_alarm_in_us(5000, restart_handler, this, true);
+                }
                 status = LIS3DH_POLL;
                 break;
             case ACCEL_INIT:

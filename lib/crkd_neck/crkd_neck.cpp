@@ -23,23 +23,41 @@ void CrkdNeck::end() {
 }
 void CrkdNeck::tick()
 {
-    green = m_crkdNeck.green;
-    red = m_crkdNeck.red;
-    yellow = m_crkdNeck.yellow;
-    blue = m_crkdNeck.blue;
-    orange = m_crkdNeck.orange;
-    rb = m_crkdNeck.footer[0] == 0x03;
-    soloGreen = m_crkdNeck.soloGreen && rb;
-    soloRed = m_crkdNeck.soloRed && rb;
-    soloYellow = m_crkdNeck.soloYellow && rb;
-    soloBlue = m_crkdNeck.soloBlue && rb;
-    soloOrange = m_crkdNeck.soloOrange && rb;
-    dpadUp = m_crkdNeck.dpadUpDown == 0x00;
-    dpadDown = m_crkdNeck.dpadUpDown == 0xFF;
-    dpadRight = m_crkdNeck.dpadLeftRight == 0x00;
-    dpadLeft = m_crkdNeck.dpadLeftRight == 0xFF;
     m_lastPoll = interface.last_read_time();
     m_connected = millis() - m_lastPoll < 10;
+    if (m_connected) {
+        green = m_crkdNeck.green;
+        red = m_crkdNeck.red;
+        yellow = m_crkdNeck.yellow;
+        blue = m_crkdNeck.blue;
+        orange = m_crkdNeck.orange;
+        rb = m_crkdNeck.footer[0] == 0x03;
+        soloGreen = m_crkdNeck.soloGreen && rb;
+        soloRed = m_crkdNeck.soloRed && rb;
+        soloYellow = m_crkdNeck.soloYellow && rb;
+        soloBlue = m_crkdNeck.soloBlue && rb;
+        soloOrange = m_crkdNeck.soloOrange && rb;
+        dpadUp = m_crkdNeck.dpadUpDown == 0x00;
+        dpadDown = m_crkdNeck.dpadUpDown == 0xFF;
+        dpadRight = m_crkdNeck.dpadLeftRight == 0x00;
+        dpadLeft = m_crkdNeck.dpadLeftRight == 0xFF;
+    } else if (millis() - m_lastPoll > 500) {
+        green = false;
+        red = false;
+        yellow = false;
+        blue = false;
+        orange = false;
+        rb = false;
+        soloGreen = false;
+        soloRed = false;
+        soloYellow = false;
+        soloBlue = false;
+        soloOrange = false;
+        dpadUp = false;
+        dpadDown = false;
+        dpadRight = false;
+        dpadLeft = false;
+    }
     if (m_connected && millis() - m_lastSend > 500)
     {
         // kick the neck over to polling at 1ms

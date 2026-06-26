@@ -189,13 +189,13 @@ void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
     XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
-    case GuitarHeroGuitarLeftStickX:
-        // shove stick on the slider, then it can be used in menus
-        report->slider = m_calibratedValue - 32768;
-        break;
-    case GuitarHeroGuitarLeftStickY:
-        report->leftStickY = m_calibratedValue - 32768;
-        break;
+    // case GuitarHeroGuitarLeftStickX:
+    //     // shove stick on the slider, then it can be used in menus
+    //     report->slider = m_calibratedValue - 32768;
+    //     break;
+    // case GuitarHeroGuitarLeftStickY:
+    //     report->leftStickY = m_calibratedValue - 32768;
+    //     break;
     case GuitarHeroGuitarWhammy:
         report->whammy = m_calibratedValue - 32768;
         break;

@@ -80,7 +80,10 @@ message MultiplexerDevice {
   required int32 s2Pin = 5;
   required int32 s3Pin = 6;
 }
-message WorldTourDrumDevice { required SPIDevice spi = 1; }
+message WorldTourDrumDevice { 
+  required SPIDevice spi = 1;
+  required int32 csPin = 2;
+}
 message PSXDevice {
   required SPIDevice spi = 1;
   required int32 attPin = 2;

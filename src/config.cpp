@@ -24,6 +24,7 @@
 #include "devices/multiplexer.hpp"
 #include "devices/wii.hpp"
 #include "devices/bhdrum.hpp"
+#include "devices/wtdrum.hpp"
 #include "devices/crazyneck.hpp"
 #include "devices/debug.hpp"
 #include "devices/djh.hpp"
@@ -153,6 +154,9 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Device_bhDrum_tag:
         active_devices.emplace_back(new BandHeroDrumDevice(device.device.bhDrum, dev_id));
+        break;
+    case proto_Device_worldTourDrum_tag:
+        active_devices.emplace_back(new WorldTourDrumDevice(device.device.worldTourDrum, dev_id));
         break;
     case proto_Device_crazyGuitarNeck_tag:
         active_devices.emplace_back(new CrazyGuitarNeckDevice(device.device.crazyGuitarNeck, dev_id));

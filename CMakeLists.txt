@@ -201,6 +201,7 @@ add_executable(
   src/devices/device.cpp
   src/devices/accelerometer.cpp
   src/devices/bhdrum.cpp
+  src/devices/wtdrum.cpp
   src/devices/protar_neck.cpp
   src/devices/debug.cpp
   src/devices/matrix.cpp

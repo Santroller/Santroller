@@ -94,17 +94,17 @@ void USBHostHardwareDevice::update(bool full_poll, bool send_events)
 }
 void USBHostHardwareDevice::rescan(bool first)
 {
-    printf("usbhosthardware rescan\r\n");
+    // printf("usbhosthardware rescan\r\n");
     if (first)
     {
-        printf("assignable_devices before: %d\r\n", assignable_usb_devices.size());
+        // printf("assignable_devices before: %d\r\n", assignable_usb_devices.size());
 
         for (auto dev : assignable_usb_devices)
         {
             assignable_devices.push_back(dev);
             dev->rescan(true);
         }
-        printf("assignable_devices after: %d\r\n", assignable_usb_devices.size());
+        // printf("assignable_devices after: %d\r\n", assignable_usb_devices.size());
     }
 }
 
@@ -115,7 +115,7 @@ bool USBHostHardwareDevice::using_pin(uint8_t pin)
 std::shared_ptr<UsbHostDevice> host_devices[127];
 bool usbh_init(void)
 {
-    printf("usbh init\r\n");
+    // printf("usbh init\r\n");
     for (size_t i = 0; i < TU_ARRAY_SIZE(host_devices); i++)
     {
         host_devices[i] = std::shared_ptr<UsbHostDevice>();
@@ -208,7 +208,7 @@ static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<
 
 uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
-    printf("usbh open %d %d %d\r\n", dev_addr, desc_itf->bInterfaceNumber, desc_itf->bAlternateSetting);
+    // printf("usbh open %d %d %d\r\n", dev_addr, desc_itf->bInterfaceNumber, desc_itf->bAlternateSetting);
     if (!host_devices[dev_addr])
     {
         host_devices[dev_addr] = std::make_shared<UsbHostDevice>(dev_addr, usb_host_id);
@@ -220,7 +220,7 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
         if (dev)
         {
             host_devices[dev_addr]->host_devices_by_itf[desc_itf->bInterfaceNumber] = dev;
-            printf("done\r\n");
+            // printf("done\r\n");
             return out_len;
         }
     }
@@ -264,7 +264,7 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
 
 void usbh_close(uint8_t dev_addr)
 {
-    printf("usbh close %d %d\r\n", dev_addr);
+    // printf("usbh close %d %d\r\n", dev_addr);
     if (host_devices[dev_addr])
     {
         host_devices[dev_addr]->disconnect();

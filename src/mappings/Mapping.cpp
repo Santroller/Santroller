@@ -136,19 +136,36 @@ void AxisMapping::update(bool full_poll, bool send_events)
     auto val = m_input->tickAnalog();
     if (m_mapping.has_pressed)
     {
-        if (m_input->tickDigital()) {
-            m_calibratedValue = m_mapping.pressed;
-        } else if (m_mapping.has_released) {
-            m_calibratedValue = m_mapping.released;
-        } else {
-            m_calibratedValue = m_mapping.center;
+        if (m_input->tickDigital())
+        {
+            val = m_mapping.pressed;
+        }
+        else if (m_mapping.has_released)
+        {
+            val = m_mapping.released;
+        }
+        else
+        {
+            val = m_mapping.center;
         }
     }
     else
     {
-        m_calibratedValue = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
+        val = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
     }
-    m_centered = m_calibratedValue == m_mapping.center;
+    m_centered = val == m_mapping.center;
+    if (!m_centered)
+    {
+        m_lastPoll = micros();
+        if ((!m_mapping.has_peakBased && !m_mapping.peakBased) || val > m_calibratedValue)
+        {
+            m_calibratedValue = val;
+        }
+    }
+    else if (!m_mapping.has_debounce || (micros() - m_lastPoll) > m_mapping.debounce)
+    {
+        m_calibratedValue = val;
+    }
 
     if (send_events && (val != m_last_sent_value || full_poll))
     {

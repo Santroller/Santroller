@@ -52,7 +52,9 @@
 - [ ] Other analog filters - Low pass, high pass, zero point crossing
 - [ ] Filters needed for hall effect
 - [ ] Shortcut input masking - aka if you have start + select to home, it shouldnt keep pressing start and select
-- [x] matrix inputs
+- [x] matrix 
+- [ ] latching inputs - hit a button once to turn it on, and then again to turn it off
+- [ ] debounce for drum outputs
 
 ## Led / rumble features
 - [ ] Gamepad rumble, including passthrough with usb host

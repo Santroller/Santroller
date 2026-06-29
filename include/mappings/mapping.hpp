@@ -72,6 +72,8 @@ protected:
     uint32_t m_calibratedValue = 0;
     bool m_centered = false;
     bool m_trigger;
+    uint32_t m_lastValue = 0;
+    uint64_t m_lastPoll = 0;
 };
 class GamepadAxisMapping : public AxisMapping
 {

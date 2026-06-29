@@ -281,9 +281,9 @@ void usbh_close(uint8_t dev_addr)
         host_devices[dev_addr] = std::shared_ptr<UsbHostDevice>();
         if (HIDConfigDevice::tool_closed())
         {
-            fflush(stdout);
-            sleep_ms(500);
-            printf("reload\r\n");
+            // fflush(stdout);
+            // sleep_ms(500);
+            // printf("reload\r\n");
             reload();
         }
     }

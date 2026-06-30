@@ -18,6 +18,8 @@ static uint8_t usb_host_id;
 static bool m_initialized = false;
 static uint8_t m_last_first_pin = -1;
 static bool m_last_dp_first = false;
+static volatile bool m_devices_changed = false;
+std::shared_ptr<UsbHostDevice> host_devices[127];
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : UsbHostInterface(0, 0, id), m_device(device)
 {
     printf("UsbHostHardwareDevice: %p\r\n", this);
@@ -91,6 +93,14 @@ void USBHostHardwareDevice::end(bool full)
 
 void USBHostHardwareDevice::update(bool full_poll, bool send_events)
 {
+    if (m_devices_changed) {
+        printf("devices changed! count: %d\r\n", assignable_usb_devices.size());
+        m_devices_changed = false;
+        if (HIDConfigDevice::tool_closed())
+        {
+            reload();
+        }
+    }
 }
 void USBHostHardwareDevice::rescan(bool first)
 {
@@ -112,7 +122,6 @@ bool USBHostHardwareDevice::using_pin(uint8_t pin)
 {
     return pin == m_device.firstPin || pin == m_device.firstPin + 1;
 }
-std::shared_ptr<UsbHostDevice> host_devices[127];
 bool usbh_init(void)
 {
     // printf("usbh init\r\n");
@@ -233,10 +242,7 @@ bool usbh_set_config(uint8_t dev_addr, uint8_t itf_num)
     {
         return true;
     }
-    if (HIDConfigDevice::tool_closed())
-    {
-        reload();
-    }
+    m_devices_changed = true;
     return host_devices[dev_addr]->host_devices_by_itf[itf_num]->set_config();
 }
 
@@ -279,13 +285,7 @@ void usbh_close(uint8_t dev_addr)
                                                          { return dev->dev_addr() == dev_addr; }));
         }
         host_devices[dev_addr] = std::shared_ptr<UsbHostDevice>();
-        if (HIDConfigDevice::tool_closed())
-        {
-            // fflush(stdout);
-            // sleep_ms(500);
-            // printf("reload\r\n");
-            reload();
-        }
+        m_devices_changed = true;
     }
 }
 

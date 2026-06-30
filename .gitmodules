@@ -13,3 +13,6 @@
 [submodule "lib/pico_fota_bootloader"]
 	path = lib/pico_fota_bootloader
 	url = https://github.com/sanjay900/pico_fota_bootloader
+[submodule "lib/dmx"]
+	path = lib/dmx
+	url = https://github.com/jostlowe/Pico-DMX

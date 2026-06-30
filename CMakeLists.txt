@@ -219,6 +219,7 @@ add_executable(
   src/devices/mpr121.cpp
   src/devices/ws2812.cpp
   src/devices/apa102.cpp
+  src/devices/dmx.cpp
   src/devices/led.cpp
   src/devices/bluetooth.cpp
   src/devices/stp16cpc.cpp
@@ -281,6 +282,7 @@ target_link_libraries(
   mpr121
   ads1115
   multiplexer
+  picodmx
   psx_controller
   secondary_pico
   wii_extensions

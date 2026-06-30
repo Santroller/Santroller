@@ -153,6 +153,12 @@ message CyclingInputState {
   required int32 state = 2;
 }
 
+message ToggleInputState {
+  required int32 id = 1;
+  required bool state = 2;
+}
+
 message AuxConfigBlock {
   repeated CyclingInputState states = 1;
+  repeated ToggleInputState toggleStates = 2;
 }

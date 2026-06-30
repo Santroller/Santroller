@@ -43,7 +43,7 @@ void CycleDevice::cycle(bool forward)
     HIDConfigDevice::send_event(event, true);
     m_current_value = m_states[m_current_index];
     printf("cycle updated: %d %d\r\n", m_current_index, m_current_value);
-    update_aux(m_id, m_current_index);
+    update_aux_cycle(m_id, m_current_index);
 }
 
 bool CycleDevice::using_pin(uint8_t pin)

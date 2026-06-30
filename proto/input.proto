@@ -8,6 +8,10 @@ message CycleInput {
   optional Input input = 2;
   optional Input inputReverse = 3;
 }
+message ToggleInput {
+  required int32 deviceid = 1;
+  optional Input input = 2;
+}
 message GPIOInput {
   required int32 pin = 1;
   required PinMode pinMode = 2;
@@ -178,6 +182,7 @@ message Input {
     MatrixInput matrix = 30;
     CrkdDrumAxisInput crkdDrum = 31;
     CycleInput cycle = 32;
+    ToggleInput toggle = 33;
   }
 }
 message InputActivationTrigger {

@@ -145,6 +145,12 @@ message CycleDevice {
   required CycleType type = 1;
   repeated int32 values = 2;
 }
+message ToggleDevice {
+}
+
+message DMXDevice {
+  required int32 pin = 1;
+}
 
 message Device {
   required int32 deviceid = 1;
@@ -181,5 +187,7 @@ message Device {
     MatrixDevice matrix = 32;
     CrkdDrumDevice crkdDrum = 33;
     CycleDevice cycle = 34;
+    ToggleDevice toggle = 35;
+    DMXDevice dmx = 36;
   }
 }

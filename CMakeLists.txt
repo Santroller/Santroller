@@ -142,6 +142,7 @@ add_executable(
   src/input/protarNeck.cpp
   src/input/vtechexpander.cpp
   src/input/cycle.cpp
+  src/input/toggle.cpp
   src/input/held.cpp
   src/input/fixed.cpp
   src/input/ads1115.cpp
@@ -207,6 +208,7 @@ add_executable(
   src/devices/matrix.cpp
   src/devices/vtechexpander.cpp
   src/devices/cycle.cpp
+  src/devices/toggle.cpp
   src/devices/crazyneck.cpp
   src/devices/multiplexer.cpp
   src/devices/midiserial.cpp

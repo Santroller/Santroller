@@ -9,6 +9,7 @@
 #include "input/protarNeck.hpp"
 #include "input/held.hpp"
 #include "input/cycle.hpp"
+#include "input/toggle.hpp"
 #include "input/usb.hpp"
 #include "input/crkd.hpp"
 #include "input/crkd_drum.hpp"
@@ -86,6 +87,7 @@ std::shared_ptr<UsbDevice> usb_instances[32];
 std::shared_ptr<UsbDevice> usb_instances_by_epin[16];
 std::shared_ptr<UsbDevice> usb_instances_by_epout[16];
 std::map<int32_t, int32_t> cycle_input_states;
+std::map<int32_t, bool> toggle_input_states;
 std::vector<uint32_t> last_cycle_states;
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
@@ -209,6 +211,9 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Device_cycle_tag:
         active_devices.emplace_back(new CycleDevice(device.device.cycle, dev_id, cycle_input_states[dev_id], last_cycle_states));
         last_cycle_states.clear();
+        break;
+    case proto_Device_toggle_tag:
+        active_devices.emplace_back(new ToggleDevice(device.device.toggle, dev_id, toggle_input_states[dev_id]));
         break;
     }
     if (prevDevice)
@@ -385,6 +390,7 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
         return std::unique_ptr<Input>(new USBAxisInput(input.input.usbAxis, std::static_pointer_cast<UsbHostInterface>(profile->devices[input.input.usbAxis.deviceid])));
     case proto_Input_held_tag:
     case proto_Input_cycle_tag:
+    case proto_Input_toggle_tag:
     case proto_Input_shortcut_tag:
     case 0:
     {
@@ -476,6 +482,32 @@ bool load_cycle(pb_istream_t *stream, const pb_field_t *field, void **arg)
     printf("loaded cycle\r\n");
     return true;
 }
+bool load_toggle(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+   auto profile = working_profile;
+    printf("found toggle! %p\r\n", profile.get());
+    auto last_toggle = new ToggleInput();
+    last_special = last_toggle;
+    proto_ToggleInput input;
+    input.input.cb_input.funcs.decode = load_input_dev;
+    input.input.cb_input.arg = arg;
+    if (!pb_decode(stream, proto_ToggleInput_fields, &input))
+    {
+        printf("couldnt decode toggle input?\r\n");
+        return false;
+    }
+
+    printf("check %d %d\r\n", input.deviceid, profile->devices.size());
+    if (profile->devices.find(input.deviceid) == profile->devices.end())
+    {
+        printf("why tho\r\n");
+        return true;
+    }
+    printf("loading toggle\r\n");
+    last_toggle->load(input, std::static_pointer_cast<ToggleDevice>(profile->devices[input.deviceid]), input.has_input ? make_input(input.input, profile, stream) : nullptr);
+    printf("loaded toggle\r\n");
+    return true;
+}
 
 bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
@@ -486,6 +518,12 @@ bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
         pb_callback_t *msg = (pb_callback_t *)field->pData;
         msg->funcs.decode = &load_cycle;
+        msg->arg = arg;
+    }
+    if (field->tag == proto_Input_toggle_tag)
+    {
+        pb_callback_t *msg = (pb_callback_t *)field->pData;
+        msg->funcs.decode = &load_toggle;
         msg->arg = arg;
     }
     if (field->tag == proto_Input_held_tag)
@@ -928,6 +966,25 @@ bool encode_cycle_input_states(pb_ostream_t *stream, const pb_field_t *field, vo
     }
     return true;
 }
+bool decode_toggle_input_states(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    proto_ToggleInputState proto_toggle;
+    auto ret = pb_decode(stream, proto_ToggleInputState_fields, &proto_toggle);
+    toggle_input_states[proto_toggle.id] = proto_toggle.state;
+    return ret;
+}
+bool encode_toggle_input_states(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+{
+    proto_ToggleInputState proto_toggle;
+    for (auto &state : toggle_input_states)
+    {
+        proto_toggle.id = state.first;
+        proto_toggle.state = state.second;
+        pb_encode_tag_for_field(stream, field);
+        pb_encode_submessage(stream, proto_ToggleInputState_fields, &proto_toggle);
+    }
+    return true;
+}
 bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t size, uint32_t mainSize, uint32_t auxSize)
 {
 
@@ -937,6 +994,7 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
     pb_istream_t auxInputStream = pb_istream_from_buffer(dataPtr + mainSize, auxSize);
     proto_AuxConfigBlock block proto_AuxConfigBlock_init_zero;
     block.states.funcs.decode = decode_cycle_input_states;
+    block.toggleStates.funcs.decode = decode_toggle_input_states;
     pb_decode(&auxInputStream, proto_AuxConfigBlock_fields, &block);
     // We are now sufficiently confident that the data is valid so we run the deserialization
     // load just the current profile to begin with
@@ -1044,7 +1102,33 @@ void reload()
     reinit = true;
 }
 
-void update_aux(uint32_t id, uint32_t state)
+void update_aux_cycle(uint32_t id, uint32_t state)
+{
+    printf("update aux: %d %d %d\r\n", id, state, reinit);
+    if (reinit)
+    {
+        return;
+    }
+    cycle_input_states[id] = state;
+    // Aux region contains data that the firmware can update itself
+    ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
+    // move data to start of cache to make modifying easier
+    memmove(EEPROM.writeCache, EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize, footer->dataSize);
+    pb_ostream_t auxOutputStream = pb_ostream_from_buffer(EEPROM.writeCache + footer->mainSize, EEPROM_SIZE_BYTES - footer->mainSize - sizeof(ConfigFooter));
+    proto_AuxConfigBlock block;
+    block.states.funcs.encode = encode_cycle_input_states;
+    pb_encode(&auxOutputStream, proto_AuxConfigBlock_fields, &block);
+    footer->auxSize = auxOutputStream.bytes_written;
+    footer->dataSize = footer->mainSize + footer->auxSize;
+    footer->dataCrc = CRC32::calculate(EEPROM.writeCache, footer->dataSize);
+    // Move the encoded data to end where it should be
+    memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize, EEPROM.writeCache, footer->dataSize);
+    memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize);
+    EEPROM.commit_now();
+}
+
+
+void update_aux_toggle(uint32_t id, bool state)
 {
     printf("update aux: %d %d %d\r\n", id, state, reinit);
     if (reinit)

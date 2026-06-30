@@ -44,6 +44,10 @@ message RGBLedDevice {
   repeated int32 activeLed = 10;
   required bool hasStart = 11;
 }
+message DMXLedDevice {
+  required int32 deviceId = 1;
+  required int32 channel = 2;
+}
 message GpioLedDevice {
   required int32 pin = 1;
   required bool analog = 3;
@@ -62,6 +66,7 @@ message LedDevice {
     GpioLedDevice gpio = 5;
     STP16CPCLedDevice stp16 = 6;
     VTechGuitarIOExpanderLedDevice vtechExpander = 7;
+    DMXLedDevice dmx = 8;
   }
 }
 message LedMapping {

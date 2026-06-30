@@ -36,8 +36,8 @@ public:
     bool supports_brightness() { return m_supportsBrightness; }
 
 protected:
-    uint32_t led_state[255];
-    uint32_t prev_led_state[255];
+    uint32_t led_state[256];
+    uint32_t prev_led_state[256];
     bool m_supportsColour;
     bool m_supportsBrightness;
 };

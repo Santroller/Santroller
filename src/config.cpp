@@ -46,6 +46,7 @@
 #include "devices/midiserial.hpp"
 #include "devices/stp16cpc.hpp"
 #include "devices/bluetooth.hpp"
+#include "devices/dmx.hpp"
 #include "mappings/mapping.hpp"
 #include "leds/leds.hpp"
 #include "tusb.h"
@@ -214,6 +215,9 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     case proto_Device_toggle_tag:
         active_devices.emplace_back(new ToggleDevice(device.device.toggle, dev_id, toggle_input_states[dev_id]));
+        break;
+    case proto_Device_dmx_tag:
+        active_devices.emplace_back(new DMXDevice(device.device.dmx, dev_id));
         break;
     }
     if (prevDevice)
@@ -779,6 +783,10 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_LedDevice_gpio_tag:
         device = std::make_unique<GpioLedDevice>(proto_led.device.device.gpio);
         printf("dev gpio%d\r\n", profile->leds.size());
+        break;
+    case proto_LedDevice_dmx_tag:
+        device = std::make_unique<DMXLedDevice>(proto_led.device.device.dmx, std::static_pointer_cast<DMXDevice>(profile->devices[proto_led.device.device.dmx.deviceId]));
+        printf("dev dmx%d\r\n", profile->leds.size());
         break;
     case proto_LedDevice_stp16_tag:
         device = std::make_unique<STP16CPCLedDevice>(proto_led.device.device.stp16, std::static_pointer_cast<STP16CPCDevice>(profile->devices[proto_led.device.device.stp16.deviceId]));

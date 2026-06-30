@@ -150,6 +150,7 @@ message ToggleDevice {
 
 message DMXDevice {
   required int32 pin = 1;
+  required int32 channelCount = 2;
 }
 
 message Device {

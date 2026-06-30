@@ -294,3 +294,22 @@ void StaticLedMapping::reload()
 {
     m_device->setup();
 }
+void DMXLedDevice::setup() {
+    
+}
+void DMXLedDevice::set_val(uint16_t val)
+{
+    m_led_device->set_led(m_device.channel, val, val, val, 0);
+}
+void DMXLedDevice::set_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
+{
+    m_led_device->set_led(m_device.channel, r, g, b, brightness);
+}
+uint8_t DMXLedDevice::led_count()
+{
+    return 1;
+}
+bool DMXLedDevice::supports_brightness()
+{
+    return true;
+}

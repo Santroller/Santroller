@@ -2,7 +2,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "config.hpp"
-DMXDevice::DMXDevice(proto_DMXDevice device, uint16_t id) : LedDevice(id, false, false), m_device(device)
+DMXDevice::DMXDevice(proto_DMXDevice device, uint16_t id) : LedDevice(id, false, true), m_device(device)
 {
 }
 void DMXDevice::begin()
@@ -19,7 +19,7 @@ void DMXDevice::update(bool full_poll, bool send_events)
     if (m_dmx.busy()) {
         return;
     }
-    // m_dmx.write(led_state, m_device.count);
+    m_dmx.write((uint8_t*)led_state, m_device.channelCount);
     // m_dmx.putLeds((uint8_t *)led_state);
 }
 

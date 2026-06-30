@@ -4,6 +4,7 @@
 #include "input.pb.h"
 #include "config.pb.h"
 #include "devices/base.hpp"
+#include "devices/dmx.hpp"
 #include "devices/stp16cpc.hpp"
 #include "devices/vtechexpander.hpp"
 #include <memory>
@@ -98,6 +99,23 @@ public:
 protected:
     proto_STP16CPCLedDevice m_device;
     std::shared_ptr<STP16CPCDevice> m_led_device;
+};
+class DMXLedDevice : public LedMappingDevice
+{
+public:
+    DMXLedDevice(proto_DMXLedDevice device, std::shared_ptr<DMXDevice> led_device) : LedMappingDevice(), m_device(device), m_led_device(std::move(led_device))
+    {
+        setup();
+    }
+    void set_val(uint16_t val);
+    void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
+    void setup();
+    bool supports_brightness();
+    uint8_t led_count();
+
+protected:
+    proto_DMXLedDevice m_device;
+    std::shared_ptr<DMXDevice> m_led_device;
 };
 class LedMapping
 {

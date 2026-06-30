@@ -4,13 +4,16 @@
 #include "config.hpp"
 void LedDevice::set_led(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
-    if (m_supportsBrightness)
+    if (m_supportsBrightness && m_supportsColour)
     {
         led_state[i] = (r) | (g << 8) | (b << 16) | (brightness << 24);
     }
     else if (m_supportsColour)
     {
         led_state[i] = (r) | (g << 8) | (b << 16);
+    }
+    else if (m_supportsBrightness) {
+        ((uint8_t*)led_state)[i] = r;
     }
     else if (r || g || b)
     {

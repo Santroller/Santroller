@@ -123,10 +123,10 @@ void ButtonMapping::update(bool full_poll, bool send_events)
     }
     if (calcVal)
     {
-        m_lastPoll = micros();
+        m_lastPoll = millis();
         m_lastValue = calcVal;
     }
-    else if (!m_mapping.has_debounce || (micros() - m_lastPoll) > m_mapping.debounce)
+    else if (!m_mapping.has_debounce || (millis() - m_lastPoll) > m_mapping.debounce)
     {
         m_lastValue = calcVal;
     }
@@ -153,19 +153,19 @@ void AxisMapping::update(bool full_poll, bool send_events)
     {
         val = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
     }
-    m_centered = val == m_mapping.center;
-    if (!m_centered)
+    if (val != m_mapping.center)
     {
-        m_lastPoll = micros();
+        m_lastPoll = millis();
         if ((!m_mapping.has_peakBased && !m_mapping.peakBased) || val > m_calibratedValue)
         {
             m_calibratedValue = val;
         }
     }
-    else if (!m_mapping.has_debounce || (micros() - m_lastPoll) > m_mapping.debounce)
+    else if (!m_mapping.has_debounce || (millis() - m_lastPoll) > m_mapping.debounce)
     {
         m_calibratedValue = val;
     }
+    m_centered = m_calibratedValue == m_mapping.center;
 
     if (send_events && (val != m_last_sent_value || full_poll))
     {

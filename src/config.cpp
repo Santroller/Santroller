@@ -1125,6 +1125,7 @@ void update_aux_cycle(uint32_t id, uint32_t state)
     pb_ostream_t auxOutputStream = pb_ostream_from_buffer(EEPROM.writeCache + footer->mainSize, EEPROM_SIZE_BYTES - footer->mainSize - sizeof(ConfigFooter));
     proto_AuxConfigBlock block;
     block.states.funcs.encode = encode_cycle_input_states;
+    block.toggleStates.funcs.encode = encode_toggle_input_states;
     pb_encode(&auxOutputStream, proto_AuxConfigBlock_fields, &block);
     footer->auxSize = auxOutputStream.bytes_written;
     footer->dataSize = footer->mainSize + footer->auxSize;
@@ -1151,6 +1152,7 @@ void update_aux_toggle(uint32_t id, bool state)
     pb_ostream_t auxOutputStream = pb_ostream_from_buffer(EEPROM.writeCache + footer->mainSize, EEPROM_SIZE_BYTES - footer->mainSize - sizeof(ConfigFooter));
     proto_AuxConfigBlock block;
     block.states.funcs.encode = encode_cycle_input_states;
+    block.toggleStates.funcs.encode = encode_toggle_input_states;
     pb_encode(&auxOutputStream, proto_AuxConfigBlock_fields, &block);
     footer->auxSize = auxOutputStream.bytes_written;
     footer->dataSize = footer->mainSize + footer->auxSize;

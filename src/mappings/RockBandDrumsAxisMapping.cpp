@@ -49,13 +49,11 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
         report->yellowVelocity = m_calibratedValue >> 8;
         report->y = true;
         report->padFlag = true;
-        report->dpadUp = true;
         break;
     case RockBandDrumsBluePad:
         report->blueVelocity = m_calibratedValue >> 8;
         report->x = true;
         report->padFlag = true;
-        report->dpadDown = true;
         break;
     case RockBandDrumsGreenPad:
         report->greenVelocity = m_calibratedValue >> 8;
@@ -72,11 +70,13 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
         report->yellowVelocity = m_calibratedValue >> 8;
         report->y = true;
         report->cymbalFlag = true;
+        report->dpadUp = true;
         break;
     case RockBandDrumsBlueCymbal:
         report->blueVelocity = m_calibratedValue >> 8;
         report->x = true;
         report->cymbalFlag = true;
+        report->dpadDown = true;
         break;
     case RockBandDrumsGreenCymbal:
         report->greenVelocity = m_calibratedValue >> 8;
@@ -195,18 +195,22 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
     case RockBandDrumsRedPad:
         report->redVelocity = m_calibratedValue - 32768;
         report->b = true;
+        report->padFlag = true;
         break;
     case RockBandDrumsYellowPad:
         report->yellowVelocity = m_calibratedValue - 32768;
         report->y = true;
+        report->padFlag = true;
         break;
     case RockBandDrumsBluePad:
         report->blueVelocity = m_calibratedValue - 32768;
         report->x = true;
+        report->padFlag = true;
         break;
     case RockBandDrumsGreenPad:
         report->greenVelocity = m_calibratedValue - 32768;
         report->a = true;
+        report->padFlag = true;
         break;
     case RockBandDrumsYellowCymbal:
         report->yellowVelocity = m_calibratedValue - 32768;
@@ -274,11 +278,13 @@ void RockBandDrumsAxisMapping::update_ogxbox(uint8_t *buf)
         report->yellowVelocity = m_calibratedValue - 32768;
         report->y = true;
         report->cymbalFlag = true;
+        report->dpadUp = true;
         break;
     case RockBandDrumsBlueCymbal:
         report->blueVelocity = m_calibratedValue - 32768;
         report->x = true;
         report->cymbalFlag = true;
+        report->dpadDown = true;
         break;
     case RockBandDrumsGreenCymbal:
         report->greenVelocity = m_calibratedValue - 32768;

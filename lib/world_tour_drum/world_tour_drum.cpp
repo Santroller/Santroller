@@ -2,23 +2,51 @@
 #include <hardware/gpio.h>
 #include <pico/time.h>
 #include "utils.h"
-
-WorldTourDrum::WorldTourDrum(MidiDevice *midiDevice, int8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t csPin)
+static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
+{
+    WorldTourDrum *inst = (WorldTourDrum *)user_data;
+    if (inst)
+    {
+        inst->processData();
+    }
+    return 0;
+}
+WorldTourDrum::WorldTourDrum(MidiDevice *midiDevice, int8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, int8_t csPin)
     : mInterface(block, SPI_CPHA_1, SPI_CPOL_0, sck, mosi, miso, false, clock), mCsPin(csPin), m_device(midiDevice)
 {
-    gpio_init(csPin);
-    gpio_set_dir(csPin, true);
-    gpio_set_pulls(csPin, false, false);
-};
-
-void WorldTourDrum::tick()
-{
-    if (micros() - last > 500)
+    if (csPin != -1)
     {
-        last = micros();
+        gpio_init(csPin);
+        gpio_set_dir(csPin, true);
+        gpio_set_pulls(csPin, false, false);
+    }
+};
+void WorldTourDrum::begin()
+{
+    if (mCsPin == -1) {
+        return;
+    }
+    processData();
+}
+void WorldTourDrum::end()
+{
+    cancel_alarm(restart_alarm_id);
+    finished = true;
+}
+void WorldTourDrum::processData()
+{
+    if (finished) {
+        return;
+    }
+    if (status == WT_DRUM_REQUEST_STATUS)
+    {
         gpio_put(mCsPin, false);
-        sleep_us(50);
-        // 1: Send 0xAA, resp 0xAA
+        status = WT_DRUM_REQUEST_STATUS;
+        restart_alarm_id = add_alarm_in_us(50, restart_handler, this, true);
+        return;
+    }
+    if (status == WT_DRUM_CHECK_STATUS)
+    {
         uint8_t resp = mInterface.transfer(0xAA);
         if (resp != 0xAA)
         {
@@ -29,6 +57,8 @@ void WorldTourDrum::tick()
                 missing = 0;
             }
             gpio_put(mCsPin, true);
+            restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+            status = WT_DRUM_REQUEST_STATUS;
             return;
         }
         connected = true;
@@ -50,5 +80,11 @@ void WorldTourDrum::tick()
             sleep_us(50);
         }
         gpio_put(mCsPin, true);
+        restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+        status = WT_DRUM_REQUEST_STATUS;
+        return;
     }
+}
+void WorldTourDrum::tick()
+{
 };

@@ -8,10 +8,12 @@ BandHeroDrumDevice::BandHeroDrumDevice(proto_BandHeroDrumDevice device, uint16_t
 }
 void BandHeroDrumDevice::begin()
 {
+    m_band_hero_drum.begin();
 }
 
 void BandHeroDrumDevice::end(bool full)
 {
+    m_band_hero_drum.end();
 }
 void BandHeroDrumDevice::update(bool full_poll, bool send_events)
 {

@@ -8,10 +8,12 @@ WorldTourDrumDevice::WorldTourDrumDevice(proto_WorldTourDrumDevice device, uint1
 }
 void WorldTourDrumDevice::begin()
 {
+    m_world_tour_drum.begin();
 }
 
 void WorldTourDrumDevice::end(bool full)
 {
+    m_world_tour_drum.end();
 }
 void WorldTourDrumDevice::update(bool full_poll, bool send_events)
 {
@@ -27,5 +29,5 @@ void WorldTourDrumDevice::update(bool full_poll, bool send_events)
 
 bool WorldTourDrumDevice::using_pin(uint8_t pin)
 {
-    return pin == m_device.spi.miso ||pin == m_device.spi.mosi || pin == m_device.spi.sck || pin == m_device.csPin;
+    return pin == m_device.spi.miso || pin == m_device.spi.mosi || pin == m_device.spi.sck || pin == m_device.csPin;
 }

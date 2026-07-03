@@ -14,6 +14,7 @@ typedef enum
 class WorldTourDrum
 {
 public:
+    ~WorldTourDrum(){};
     WorldTourDrum(MidiDevice *midiDevice, int8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, int8_t csPin);
     void tick();
     void processData();

@@ -14,6 +14,7 @@ typedef enum
 class BandHeroDrum : public I2CDMAInterface
 {
 public:
+    ~BandHeroDrum(){};
     BandHeroDrum(MidiDevice *midiDevice, uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock)
         : interface(block, sda, scl, clock), m_device(midiDevice) {};
     void tick();

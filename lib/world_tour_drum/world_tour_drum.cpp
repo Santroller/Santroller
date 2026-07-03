@@ -13,17 +13,21 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 }
 WorldTourDrum::WorldTourDrum(MidiDevice *midiDevice, int8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, int8_t csPin)
     : mInterface(block, SPI_CPHA_1, SPI_CPOL_0, sck, mosi, miso, false, clock), mCsPin(csPin), m_device(midiDevice)
-{
-    if (csPin != -1)
+{   printf("wt drum: %d\r\n", csPin);
+    if (csPin != -1 && sck != -1 && mosi != -1 && miso != -1)
     {
         gpio_init(csPin);
         gpio_set_dir(csPin, true);
         gpio_set_pulls(csPin, false, false);
+    } else {
+        printf("wt spi invalid, aborting\r\n");
+        finished = true;
     }
 };
 void WorldTourDrum::begin()
 {
-    if (mCsPin == -1) {
+    printf("wt begin! %d\r\n", finished);
+    if (finished) {
         return;
     }
     processData();
@@ -32,6 +36,7 @@ void WorldTourDrum::end()
 {
     cancel_alarm(restart_alarm_id);
     finished = true;
+    printf("wt end\r\n");
 }
 void WorldTourDrum::processData()
 {

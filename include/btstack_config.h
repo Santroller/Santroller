@@ -1,19 +1,37 @@
-#pragma once
+#ifndef _PICO_BTSTACK_BTSTACK_CONFIG_H
+#define _PICO_BTSTACK_BTSTACK_CONFIG_H
+
+// Copy & paste from, with some custom changes:
+// https://github.com/raspberrypi/pico-examples/blob/master/pico_w/bt/config/btstack_config.h
 
 // BTstack features that can be enabled
 #define ENABLE_LOG_INFO
 #define ENABLE_LOG_ERROR
+#define ENABLE_LOG_DEBUG
 #define ENABLE_PRINTF_HEXDUMP
 #define ENABLE_SCO_OVER_HCI
 
-#ifdef ENABLE_CLASSIC
-#define ENABLE_L2CAP_ENHANCED_RETRANSMISSION_MODE
+#ifdef ENABLE_BLE
+#define ENABLE_GATT_CLIENT_PAIRING
+#define ENABLE_L2CAP_LE_CREDIT_BASED_FLOW_CONTROL_MODE
+#define ENABLE_LE_CENTRAL
+#define ENABLE_LE_DATA_LENGTH_EXTENSION
+#define ENABLE_LE_PERIPHERAL
+#define ENABLE_LE_PRIVACY_ADDRESS_RESOLUTION
+#define ENABLE_LE_SECURE_CONNECTIONS
+#else
+#error "BP32: ENABLE_BLE should be defined"
 #endif
 
-#ifdef ENABLE_BLE
-#define ENABLE_L2CAP_LE_CREDIT_BASED_FLOW_CONTROL_MODE
-#define ENABLE_LE_PERIPHERAL
-#define ENABLE_LE_CENTRAL
+#ifdef ENABLE_CLASSIC
+#define ENABLE_L2CAP_ENHANCED_RETRANSMISSION_MODE
+#define ENABLE_GOEP_L2CAP
+#else
+#error "BP32: ENABLE_CLASSIC should be defined"
+#endif
+
+#if defined(ENABLE_CLASSIC) && defined(ENABLE_BLE)
+#define ENABLE_CROSS_TRANSPORT_KEY_DERIVATION
 #endif
 
 // BTstack configuration. buffers, sizes, ...
@@ -25,14 +43,14 @@
 #define MAX_NR_AVRCP_CONNECTIONS 2
 #define MAX_NR_BNEP_CHANNELS 1
 #define MAX_NR_BNEP_SERVICES 1
-#define MAX_NR_BTSTACK_LINK_KEY_DB_MEMORY_ENTRIES  2
-#define MAX_NR_GATT_CLIENTS 1
-#define MAX_NR_HCI_CONNECTIONS 2
-#define MAX_NR_HID_HOST_CONNECTIONS 1
-#define MAX_NR_HIDS_CLIENTS 1
+#define MAX_NR_BTSTACK_LINK_KEY_DB_MEMORY_ENTRIES 2
+#define MAX_NR_GATT_CLIENTS 4
+#define MAX_NR_HCI_CONNECTIONS 4
+#define MAX_NR_HID_HOST_CONNECTIONS 4
+#define MAX_NR_HIDS_HOSTS 4
 #define MAX_NR_HFP_CONNECTIONS 1
-#define MAX_NR_L2CAP_CHANNELS  4
-#define MAX_NR_L2CAP_SERVICES  3
+#define MAX_NR_L2CAP_CHANNELS 6
+#define MAX_NR_L2CAP_SERVICES 5
 #define MAX_NR_RFCOMM_CHANNELS 1
 #define MAX_NR_RFCOMM_MULTIPLEXERS 1
 #define MAX_NR_RFCOMM_SERVICES 1
@@ -71,4 +89,9 @@
 #define ENABLE_SOFTWARE_AES128
 #define ENABLE_MICRO_ECC_FOR_LE_SECURE_CONNECTIONS
 
-#undef HAVE_BTSTACK_STDIN
+#define HAVE_BTSTACK_STDIN
+
+// To get the audio demos working even with HCI dump at 115200, this truncates long ACL packets
+// #define HCI_DUMP_STDOUT_MAX_SIZE_ACL 100
+
+#endif  // _PICO_BTSTACK_BTSTACK_CONFIG_H

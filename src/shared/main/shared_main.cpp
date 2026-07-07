@@ -2244,12 +2244,15 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             usb_host_data->dpadRight |= dpad == 3 || dpad == 2 || dpad == 1;
             usb_host_data->dpadUp |= dpad == 0 || dpad == 1 || dpad == 7;
             usb_host_data->dpadDown |= dpad == 5 || dpad == 4 || dpad == 3;
+
+#if DEVICE_TYPE_IS_GUITAR
             // Festival pro mode mappings
             usb_host_data->green |= dpad == 6 || dpad == 5 || dpad == 7;
             usb_host_data->red |= dpad == 0 || dpad == 1 || dpad == 7;
             usb_host_data->yellow |= report->x;
             usb_host_data->blue |= report->y;
             usb_host_data->orange |= report->b;
+#endif
             // Festival expert mappings
             // usb_host_data->green |= dpad == 6 || dpad == 5 || dpad == 7;
             // usb_host_data->red |= dpad == 3 || dpad == 2 || dpad == 1;

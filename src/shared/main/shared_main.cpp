@@ -4531,6 +4531,7 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
             type->sub_type = GAMEPAD;
             break;
         case PS5_DS_PID:
+        case PS5_DS_EDGE_PID:
             type->console_type = PS5;
             type->sub_type = GAMEPAD;
             break;

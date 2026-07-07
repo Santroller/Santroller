@@ -105,6 +105,7 @@
 #define STADIA 30
 #define XINPUTCOMPAT 31
 #define SWITCH2 32
+#define XINPUTCOMPAT_NEO_S 33
 #define NON_CONTROLLER 0xFE
 #define UNKNOWN 0xFF
 

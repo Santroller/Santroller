@@ -133,7 +133,48 @@ typedef struct
     uint8_t reserved_1[6];
 
 } __attribute__((packed)) XInputGamepad_Data_t;
+// 0x01
+// 0x02
+// 0x08
+// 0x10
+// 0x40
+// 0x80
+typedef struct
+{
+    uint8_t rid;
+    uint16_t leftStickX;
+    uint16_t leftStickY;
+    uint16_t rightStickX;
+    uint16_t rightStickY;
+    uint16_t leftTrigger;
+    uint16_t rightTrigger;
 
+    uint8_t dpad : 4;
+    uint8_t : 4;
+
+    uint8_t a : 1;
+    uint8_t b : 1;
+    uint8_t : 1;
+    uint8_t x : 1;
+
+    uint8_t y : 1;
+    uint8_t :1;
+    uint8_t leftShoulder : 1;
+    uint8_t rightShoulder : 1;
+
+    uint8_t :1;
+    uint8_t :1;
+    uint8_t back : 1;
+    uint8_t start : 1;
+
+    uint8_t guide:1;
+    uint8_t leftThumbClick : 1;
+    uint8_t rightThumbClick : 1;
+    uint8_t : 1;
+
+    uint8_t capture : 1;
+    uint8_t : 3;
+} __attribute__((packed)) XInputCompatGamepad_Data_t;
 typedef struct
 {
     uint8_t rid;
@@ -159,7 +200,7 @@ typedef struct
     uint8_t leftThumbClick : 1;
     uint8_t rightThumbClick : 1;
     uint8_t : 6;
-} __attribute__((packed)) XInputCompatGamepad_Data_t;
+} __attribute__((packed)) XInputCompatGamepad2_Data_t;
 
 typedef struct
 {
@@ -548,13 +589,13 @@ typedef struct
     uint8_t y : 1;
 
     uint8_t penPressure; // starts at 0x72, goes up to 0xff
-    uint8_t accelZ; // 0x0a to 0x35
-    uint8_t penX; //
-    uint8_t penY; 
-    uint8_t status; // 0x40 = pen touch, 0x80 = single finger, anything else = multi touch
+    uint8_t accelZ;      // 0x0a to 0x35
+    uint8_t penX;        //
+    uint8_t penY;
+    uint8_t status;   // 0x40 = pen touch, 0x80 = single finger, anything else = multi touch
     uint8_t distance; // distance between fingers for multitouch
-    uint8_t accelX; // 0x0a to 0x35
-    uint8_t accelY; // 0x0a to 0x35
+    uint8_t accelX;   // 0x0a to 0x35
+    uint8_t accelY;   // 0x0a to 0x35
     uint8_t reserved_1[6];
 
 } __attribute__((packed)) XInputUDraw_Data_t;

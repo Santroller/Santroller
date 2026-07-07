@@ -2229,9 +2229,9 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
         break;
     }
 
-    case XINPUTCOMPAT:
+    case XINPUTCOMPAT_NEO_S:
     {
-        XInputCompatGamepad_Data_t *report = (XInputCompatGamepad_Data_t *)data;
+        XInputCompatGamepad2_Data_t *report = (XInputCompatGamepad2_Data_t *)data;
         if (report->rid == 2)
         {
             usb_host_data->guide = data[1];
@@ -2299,6 +2299,56 @@ void convert_report(const uint8_t *data, uint8_t len, USB_Device_Type_t device_t
             if (report->rightStickY)
             {
                 usb_host_data->rightStickY = -(report->rightStickY - INT16_MAX);
+            }
+        }
+        break;
+    }
+    case XINPUTCOMPAT:
+    {
+        XInputCompatGamepad_Data_t *report = (XInputCompatGamepad_Data_t *)data;
+        if (report->rid == 1)
+        {
+            uint8_t dpad = report->dpad - 1;
+            usb_host_data->dpadLeft |= dpad == 6 || dpad == 5 || dpad == 7;
+            usb_host_data->dpadRight |= dpad == 3 || dpad == 2 || dpad == 1;
+            usb_host_data->dpadUp |= dpad == 0 || dpad == 1 || dpad == 7;
+            usb_host_data->dpadDown |= dpad == 5 || dpad == 4 || dpad == 3;
+
+            usb_host_data->a |= report->a;
+            usb_host_data->b |= report->b;
+            usb_host_data->x |= report->x;
+            usb_host_data->y |= report->y;
+            usb_host_data->leftShoulder |= report->leftShoulder;
+            usb_host_data->rightShoulder |= report->rightShoulder;
+            usb_host_data->back |= report->back;
+            usb_host_data->start |= report->start;
+            usb_host_data->guide |= report->guide;
+            usb_host_data->capture |= report->capture;
+            usb_host_data->leftThumbClick |= report->leftThumbClick;
+            usb_host_data->rightThumbClick |= report->rightThumbClick;
+            if (report->leftTrigger)
+            {
+                usb_host_data->leftTrigger = report->leftTrigger << 6;
+            }
+            if (report->rightTrigger)
+            {
+                usb_host_data->rightTrigger = report->rightTrigger << 6;
+            }
+            if (report->leftStickX != 0x8000)
+            {
+                usb_host_data->leftStickX = report->leftStickX - 0x8000;
+            }
+            if (report->leftStickY != 0x8000)
+            {
+                usb_host_data->leftStickY = ((UINT16_MAX - report->leftStickY) - 0x8000);
+            }
+            if (report->rightStickX != 0x8000)
+            {
+                usb_host_data->rightStickX = report->rightStickX - 0x8000;
+            }
+            if (report->rightStickY != 0x8000)
+            {
+                usb_host_data->rightStickY = ((UINT16_MAX - report->rightStickY) - 0x8000);
             }
         }
         break;

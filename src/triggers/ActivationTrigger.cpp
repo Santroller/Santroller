@@ -117,8 +117,10 @@ bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
     }
     if (!m_config.has_consoleType)
     {
-        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
-        HIDConfigDevice::send_event(event, true);
+        if (send_events && full_poll) {
+            proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
+            HIDConfigDevice::send_event(event, true);
+        }
         return true;
     }
     bool matched = false;
@@ -258,6 +260,7 @@ bool UsbTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
 SpecificUsbDeviceActivationTrigger::SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_device(device)
 {
 }
+
 
 bool SpecificUsbDeviceActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {

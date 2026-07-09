@@ -157,13 +157,13 @@ void update()
     // if (HIDConfigDevice::tool_closed())
     // {
 
-        for (const auto &profile : all_profiles)
+    for (const auto &profile : all_profiles)
+    {
+        for (auto &mapping : profile.second->triggers)
         {
-            for (auto &mapping : profile.second->triggers)
-            {
-                mapping->validate(false, false, false);
-            }
+            mapping->validate(false, false, false);
         }
+    }
     // }
 }
 
@@ -176,7 +176,6 @@ void deinitDebug()
 {
     stdio_set_driver_enabled(&usb_driver, false);
 }
-
 
 void core1()
 {

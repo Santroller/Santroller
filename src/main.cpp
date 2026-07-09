@@ -111,12 +111,12 @@ void hid_task(void)
         seenOsDescriptorRead = false;
         seenReadAnyDeviceString = false;
         seenHidDescriptorRead = false;
-        tud_deinit(BOARD_TUD_RHPORT);
+        tud_deinit(TUD_OPT_RHPORT);
         load();
         const tusb_rhport_init_t rh_init = {
             .role = TUSB_ROLE_DEVICE,
             .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};
-        tud_rhport_init(BOARD_TUD_RHPORT, &rh_init);
+        tud_rhport_init(TUD_OPT_RHPORT, &rh_init);
         timeSinceMode = millis();
         return;
     }
@@ -217,7 +217,7 @@ int main()
     const tusb_rhport_init_t rh_init = {
         .role = TUSB_ROLE_DEVICE,
         .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};
-    tud_rhport_init(BOARD_TUD_RHPORT, &rh_init);
+    tud_rhport_init(TUD_OPT_RHPORT, &rh_init);
     timeSinceMode = millis();
     while (1)
     {

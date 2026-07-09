@@ -121,15 +121,16 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     pb_decode(stream, proto_Device_fields, &device);
     auto dev_id = device.deviceid;
     // If we are loading a new config, we grab the previous device so we can make sure its state is restored
-    auto prevDeviceIt = prev_root_devices.find(dev_id);
-    auto prevDevice = prevDeviceIt == prev_root_devices.end() ? std::shared_ptr<Device>() : prevDeviceIt->second;
-    if (prevDevice)
+    auto prevDevice = std::shared_ptr<Device>();
+    if (auto it = prev_root_devices.find(dev_id); it != prev_root_devices.end())
     {
+        prevDevice = it->second;
         // signal devices that they are being torn down, but in a way where if they are being replaced, they aren't fully torn down
         // This is so that things like PS2 controllers, Wii extensions and USB host and bluetooth aren't restarted during a config change
         prevDevice->end(false);
+        prev_root_devices.erase(it);
     }
-    printf("found device! %d\r\n", prevDeviceIt != prev_root_devices.end());
+    printf("found device! %d\r\n", prevDevice != nullptr);
     printf("device id: %d, type: %d\r\n", dev_id, device.which_device);
     switch (device.which_device)
     {
@@ -219,11 +220,6 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Device_dmx_tag:
         active_devices.emplace_back(new DMXDevice(device.device.dmx, dev_id));
         break;
-    }
-    if (prevDevice)
-    {
-        prev_root_devices.erase(prevDeviceIt);
-        prevDevice = nullptr;
     }
     root_devices[dev_id] = active_devices.back();
     active_devices.back()->begin();
@@ -410,7 +406,7 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
 bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg);
 bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-   auto profile = working_profile;
+    auto profile = working_profile;
     proto_Input input;
     if (!pb_decode(stream, proto_Input_fields, &input))
     {
@@ -428,7 +424,7 @@ bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **a
 }
 bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-   auto profile = working_profile;
+    auto profile = working_profile;
     printf("found shortcut!\r\n");
     last_shortcut = new ShortcutInput();
     last_special = last_shortcut;
@@ -445,7 +441,7 @@ bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_held(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-   auto profile = working_profile;
+    auto profile = working_profile;
     printf("found held!\r\n");
     auto last_held = new HeldInput();
     last_special = last_held;
@@ -462,7 +458,7 @@ bool load_held(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_cycle(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-   auto profile = working_profile;
+    auto profile = working_profile;
     printf("found cycle! %p\r\n", profile.get());
     auto last_cycle = new CycleInput();
     last_special = last_cycle;
@@ -488,7 +484,7 @@ bool load_cycle(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_toggle(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-   auto profile = working_profile;
+    auto profile = working_profile;
     printf("found toggle! %p\r\n", profile.get());
     auto last_toggle = new ToggleInput();
     last_special = last_toggle;
@@ -515,7 +511,7 @@ bool load_toggle(pb_istream_t *stream, const pb_field_t *field, void **arg)
 
 bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-   auto profile = working_profile;
+    auto profile = working_profile;
     printf("input_dev: %d %p\r\n", field->tag, profile.get());
 
     if (field->tag == proto_Input_cycle_tag)
@@ -546,7 +542,7 @@ bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-   auto profile = working_profile;
+    auto profile = working_profile;
     printf("load_mapping: %p\r\n", profile.get());
     proto_Mapping mapping;
     mapping.input.cb_input.funcs.decode = load_input_dev;
@@ -647,7 +643,7 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 
 bool load_assignment_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-   auto profile = working_profile;
+    auto profile = working_profile;
     printf("load_assignment_dev: %d %p\r\n", field->tag, profile.get());
     proto_ProfileAssignmentInfo *info = (proto_ProfileAssignmentInfo *)field->message;
     if (field->tag == proto_ProfileAssignmentInfo_input_tag)
@@ -666,7 +662,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
 {
     printf("load assignment info before %p\r\n", arg);
     fflush(stdout);
-   auto profile = working_profile;
+    auto profile = working_profile;
     printf("load assignment info before 2 %p\r\n", profile);
     fflush(stdout);
     printf("load_assignment_info: %p\r\n", profile.get());
@@ -740,7 +736,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
 
 bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-   auto profile = working_profile;
+    auto profile = working_profile;
     printf("load_assignments: %p\r\n", profile.get());
     auto list = new ActivationTriggerList();
     profile->triggers.emplace_back(list);
@@ -755,7 +751,7 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-   auto profile = working_profile;
+    auto profile = working_profile;
     printf("load_uid: %p\r\n", profile.get());
     uint64_t value;
     if (!pb_decode_varint(stream, &value))
@@ -766,7 +762,7 @@ bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-   auto profile = working_profile;
+    auto profile = working_profile;
     printf("load_leds: %p\r\n", profile.get());
     std::unique_ptr<LedMappingDevice> device;
     proto_Led proto_led;
@@ -1135,7 +1131,6 @@ void update_aux_cycle(uint32_t id, uint32_t state)
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize);
     EEPROM.commit_now();
 }
-
 
 void update_aux_toggle(uint32_t id, bool state)
 {

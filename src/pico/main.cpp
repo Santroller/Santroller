@@ -292,7 +292,7 @@ void setup()
         skip_alarm_pool : false,
         pinout : PIO_USB_PINOUT_DPDM
     };
-    tuh_configure(0, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
+    tuh_configure(TUH_OPT_RHPORT, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &config);
     const tusb_rhport_init_t rh_init = {
         .role = TUSB_ROLE_HOST,
         .speed = TUH_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL,

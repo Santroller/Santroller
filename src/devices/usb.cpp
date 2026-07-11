@@ -301,7 +301,7 @@ void usbh_close(uint8_t dev_addr)
             enumerating_usb_devices.erase(std::remove_if(enumerating_usb_devices.begin(), enumerating_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
                                                          { return dev->dev_addr() == dev_addr; }));
         }
-        host_devices[dev_addr] = std::shared_ptr<UsbHostDevice>();
+        host_devices[dev_addr].reset();
         m_devices_changed = millis() + 500;
     }
 }

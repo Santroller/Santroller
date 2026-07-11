@@ -20,6 +20,7 @@ public:
     virtual bool using_pin(uint8_t pin) = 0;
     virtual void rescan(bool first);
     uint16_t m_id;
+    bool still_connected = false;
 
 protected:
     bool m_lastConnected;

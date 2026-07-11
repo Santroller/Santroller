@@ -78,7 +78,6 @@ std::unordered_map<uint32_t, std::shared_ptr<Profile>> all_profiles;
 std::set<uint32_t> active_profiles;
 std::vector<std::shared_ptr<Device>> active_devices;
 std::unordered_map<uint32_t, std::shared_ptr<Device>> root_devices;
-std::unordered_map<uint32_t, std::shared_ptr<Device>> prev_root_devices;
 // devices that have not yet been assigned to a profile
 std::vector<std::shared_ptr<Device>> assignable_devices;
 std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
@@ -122,13 +121,13 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     auto dev_id = device.deviceid;
     // If we are loading a new config, we grab the previous device so we can make sure its state is restored
     auto prevDevice = std::shared_ptr<Device>();
-    if (auto it = prev_root_devices.find(dev_id); it != prev_root_devices.end())
+    if (auto it = root_devices.find(dev_id); it != root_devices.end())
     {
         prevDevice = it->second;
         // signal devices that they are being torn down, but in a way where if they are being replaced, they aren't fully torn down
         // This is so that things like PS2 controllers, Wii extensions and USB host and bluetooth aren't restarted during a config change
         prevDevice->end(false);
-        prev_root_devices.erase(it);
+        prevDevice->still_connected = true;
     }
     printf("found device! %d\r\n", prevDevice != nullptr);
     printf("device id: %d, type: %d\r\n", dev_id, device.which_device);
@@ -1012,22 +1011,24 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
     seenMasks = 0;
     for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances); i++)
     {
-        usb_instances[i] = std::shared_ptr<UsbDevice>();
+        usb_instances[i].reset();
     }
     for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epin); i++)
     {
-        usb_instances_by_epin[i] = std::shared_ptr<UsbDevice>();
+        usb_instances_by_epin[i].reset();
     }
     for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epout); i++)
     {
-        usb_instances_by_epout[i] = std::shared_ptr<UsbDevice>();
+        usb_instances_by_epout[i].reset();
     }
-    prev_root_devices = root_devices;
     active_devices.clear();
-    root_devices.clear();
+    for (auto &device : root_devices)
+    {
+        device.second->still_connected = false;
+    }
     if (fullReload)
     {
-        prev_root_devices.clear();
+        root_devices.clear();
     }
     active_profiles.clear();
     all_profiles.clear();
@@ -1074,11 +1075,19 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
         usb_instances[confDevice2->interface_id] = confDevice2;
         confDevice2->initialize();
     }
-    for (const auto &prev : prev_root_devices)
+    auto iter = root_devices.begin();
+    auto endIter = root_devices.end();
+    for (; iter != endIter;)
     {
-        prev.second->end(true);
+        if (!iter->second->still_connected)
+        {
+            iter = root_devices.erase(iter);
+        }
+        else
+        {
+            ++iter;
+        }
     }
-    prev_root_devices.clear();
     return ret;
 }
 uint32_t copy_config_info(uint8_t *buffer)

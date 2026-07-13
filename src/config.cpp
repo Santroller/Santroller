@@ -140,7 +140,8 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new CrkdDevice(device.device.crkdNeck, dev_id));
         break;
     case proto_Device_crkdDrum_tag:
-        active_devices.emplace_back(new CrkdDrumDevice(device.device.crkdDrum, dev_id));
+        return true;
+        // active_devices.emplace_back(new CrkdDrumDevice(device.device.crkdDrum, dev_id));
         break;
     case proto_Device_wii_tag:
         // we pass in the previous device here so we can make sure the state is kept between reloads
@@ -189,6 +190,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new MidiSerialDevice(device.device.midiSerial, dev_id));
         break;
     case proto_Device_ws2812_tag:
+        return true;
         active_devices.emplace_back(new WS2812Device(device.device.ws2812, dev_id));
         break;
     case proto_Device_stp16cpc_tag:
@@ -428,7 +430,6 @@ bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
     last_shortcut = new ShortcutInput();
     last_special = last_shortcut;
     proto_ShortcutInput input;
-    input.inputs.arg = arg;
     input.inputs.funcs.decode = &load_shortcut_input;
     if (!pb_decode(stream, proto_ShortcutInput_fields, &input))
     {
@@ -446,7 +447,6 @@ bool load_held(pb_istream_t *stream, const pb_field_t *field, void **arg)
     last_special = last_held;
     proto_HeldInput input;
     input.input.cb_input.funcs.decode = load_input_dev;
-    input.input.cb_input.arg = arg;
     if (!pb_decode(stream, proto_HeldInput_fields, &input))
     {
         printf("couldnt decode held input?\r\n");
@@ -463,7 +463,6 @@ bool load_cycle(pb_istream_t *stream, const pb_field_t *field, void **arg)
     last_special = last_cycle;
     proto_CycleInput input;
     input.input.cb_input.funcs.decode = load_input_dev;
-    input.input.cb_input.arg = arg;
     if (!pb_decode(stream, proto_CycleInput_fields, &input))
     {
         printf("couldnt decode cycle input?\r\n");
@@ -489,7 +488,6 @@ bool load_toggle(pb_istream_t *stream, const pb_field_t *field, void **arg)
     last_special = last_toggle;
     proto_ToggleInput input;
     input.input.cb_input.funcs.decode = load_input_dev;
-    input.input.cb_input.arg = arg;
     if (!pb_decode(stream, proto_ToggleInput_fields, &input))
     {
         printf("couldnt decode toggle input?\r\n");
@@ -517,25 +515,21 @@ bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
         pb_callback_t *msg = (pb_callback_t *)field->pData;
         msg->funcs.decode = &load_cycle;
-        msg->arg = arg;
     }
     if (field->tag == proto_Input_toggle_tag)
     {
         pb_callback_t *msg = (pb_callback_t *)field->pData;
         msg->funcs.decode = &load_toggle;
-        msg->arg = arg;
     }
     if (field->tag == proto_Input_held_tag)
     {
         pb_callback_t *msg = (pb_callback_t *)field->pData;
         msg->funcs.decode = &load_held;
-        msg->arg = arg;
     }
     if (field->tag == proto_Input_shortcut_tag)
     {
         pb_callback_t *msg = (pb_callback_t *)field->pData;
         msg->funcs.decode = &load_shortcut;
-        msg->arg = arg;
     }
     return true;
 }
@@ -545,7 +539,6 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     printf("load_mapping: %p\r\n", profile.get());
     proto_Mapping mapping;
     mapping.input.cb_input.funcs.decode = load_input_dev;
-    mapping.input.cb_input.arg = arg;
     pb_decode(stream, proto_Mapping_fields, &mapping);
     std::unique_ptr<Input> input = make_input(mapping.input, profile, stream);
     if (!input)
@@ -648,19 +641,15 @@ bool load_assignment_dev(pb_istream_t *stream, const pb_field_t *field, void **a
     if (field->tag == proto_ProfileAssignmentInfo_input_tag)
     {
         info->assignment.input.input.cb_input.funcs.decode = load_input_dev;
-        info->assignment.input.input.cb_input.arg = arg;
     }
     if (field->tag == proto_ProfileAssignmentInfo_inputAnyTime_tag)
     {
         info->assignment.inputAnyTime.input.cb_input.funcs.decode = load_input_dev;
-        info->assignment.inputAnyTime.input.cb_input.arg = arg;
     }
     return true;
 }
 bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    printf("load assignment info before %p\r\n", arg);
-    fflush(stdout);
     auto profile = working_profile;
     printf("load assignment info before 2 %p\r\n", profile);
     fflush(stdout);
@@ -669,7 +658,6 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
     auto &list = profile->triggers.back();
     proto_ProfileAssignmentInfo assignment;
     assignment.cb_assignment.funcs.decode = load_assignment_dev;
-    assignment.cb_assignment.arg = arg;
     pb_decode(stream, proto_ProfileAssignmentInfo_fields, &assignment);
     switch (assignment.which_assignment)
     {
@@ -741,7 +729,6 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->triggers.emplace_back(list);
     proto_ProfileAssignment proto_assignment;
     proto_assignment.assignments.funcs.decode = &load_assignment_info;
-    proto_assignment.assignments.arg = arg;
     printf("load_assignments start?\r\n");
     pb_decode(stream, proto_ProfileAssignment_fields, &proto_assignment);
     printf("load_assignments done?\r\n");
@@ -766,7 +753,6 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     std::unique_ptr<LedMappingDevice> device;
     proto_Led proto_led;
     proto_led.mapping.led.inputMapping.input.cb_input.funcs.decode = load_input_dev;
-    proto_led.mapping.led.inputMapping.input.cb_input.arg = arg;
     pb_decode(stream, proto_Led_fields, &proto_led);
     printf("load led%d %d\r\n", profile->leds.size(), proto_led.device.which_device);
     switch (proto_led.device.which_device)
@@ -826,12 +812,8 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_Profile proto_profile;
     memset(&proto_profile, 0, sizeof(proto_profile));
     proto_profile.assignments.funcs.decode = &load_assignments;
-    proto_profile.assignments.arg = &profile;
     proto_profile.mappings.funcs.decode = &load_mapping;
-    proto_profile.mappings.arg = &profile;
-    proto_profile.uid.arg = &profile;
     proto_profile.uid.funcs.decode = &load_uid;
-    proto_profile.leds.arg = &profile;
     proto_profile.leds.funcs.decode = &load_leds;
     pb_decode(stream, proto_Profile_fields, &proto_profile);
     memcpy(profile->name, proto_profile.name, sizeof(profile->name));

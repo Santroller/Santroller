@@ -23,6 +23,9 @@ void GPIOInput::setup()
 {
     m_pin = m_input.pin;
     printf("gpio: %d %d\r\n", m_pin, m_analog);
+    if (m_pin == 0 || m_pin == 1) {
+        return;
+    }
     if (m_analog && m_pin >= ADC_BASE_PIN)
     {
         adc_gpio_init(m_pin);

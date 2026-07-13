@@ -200,9 +200,9 @@ int main()
     set_sys_clock_khz(120000, true);
     multicore_launch_core1(core1);
     adc_init();
-    // stdio_uart_init_full(uart_get_instance(1), 115200, 8, 9);
     ring_buffer_init(&console_buf, console_buf_data, sizeof(console_buf_data), 0);
 
+    stdio_uart_init_full(uart_get_instance(0), 115200, 0, 1);
     EEPROM.start();
     if (!load())
     {

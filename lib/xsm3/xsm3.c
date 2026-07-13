@@ -159,7 +159,7 @@ void xsm3_set_identification_data(const uint8_t id_data[0x1D]) {
 void xsm3_generate_kv_keys(const uint8_t console_id[0x8]) {
     // make a sha-1 hash of the console id
     uint8_t console_id_hash[0x14];
-    ExCryptSha(console_id, 0x8, NULL, 0, NULL, 0, console_id_hash, 0x14);
+    ExCryptSha(console_id, 0x8, console_id_hash, 0x14);
     // encrypt it with the root keys for 1st party controllers
     UsbdSecXSM3AuthenticationCrypt(xsm3_root_key_0x23, console_id_hash, 0x10, xsm3_kv_2des_key_1, 1);
     UsbdSecXSM3AuthenticationCrypt(xsm3_root_key_0x24, console_id_hash + 0x4, 0x10, xsm3_kv_2des_key_2, 1);
@@ -212,7 +212,7 @@ void xsm3_do_challenge_init(uint8_t challenge_packet[0x22]) {
     memcpy(xsm3_decryption_buffer, xsm3_random_controller_data, 0x10);
     memcpy(xsm3_decryption_buffer + 0x10, xsm3_random_console_data, 0x10);
     // save the sha1 hash of the decrypted contents for later
-    ExCryptSha(xsm3_decryption_buffer, 0x20, NULL, 0, NULL, 0, xsm3_challenge_init_hash, 0x14);
+    ExCryptSha(xsm3_decryption_buffer, 0x20, xsm3_challenge_init_hash, 0x14);
 
     // encrypt challenge response packet using the encrypted random key
     UsbdSecXSM3AuthenticationCrypt(xsm3_random_console_data_enc, xsm3_decryption_buffer, 0x20, xsm3_challenge_response + 0x5, 1);

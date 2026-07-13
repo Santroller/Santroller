@@ -79,11 +79,15 @@ void HIDConfigDevice::process()
     {
       for (const auto &device : profile.second->devices)
       {
-        device.second->update(true, true);
+        if (device.second)
+        {
+          device.second->update(true, true);
+        }
       }
       for (const auto &device : profile.second->midiDevices)
       {
-        if (device.second) {
+        if (device.second)
+        {
           device.second->update(true, true);
         }
       }

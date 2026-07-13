@@ -330,6 +330,11 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     if (wIndex == 0x00 && request->wValue == INPUT_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
     {
       wIndex = XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntf];
+      if (wIndex == 0xFF)
+      {
+        XInputGamepadDevice::lastIntf = 0;
+        wIndex = XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntf];
+      }
       // caps read, on to the next set for the next read
       if (stage == CONTROL_STAGE_ACK)
       {

@@ -41,7 +41,7 @@ message RGBLedDevice {
   required int32 endG = 7;
   required int32 endB = 8;
   required int32 endW = 9;
-  repeated int32 activeLed = 10;
+  repeated uint32 activeLed = 10;
   required bool hasStart = 11;
 }
 message DMXLedDevice {

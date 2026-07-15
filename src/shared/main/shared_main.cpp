@@ -90,7 +90,7 @@ long clone_guitar_ready_timer = 0;
 bool clone_ready = false;
 bool reading = false;
 Buffer_Report_t last_queue_report;
-long last_queue = 0;
+uint32_t last_queue = 0;
 uint8_t brightness = LED_BRIGHTNESS;
 uint8_t queue_size = 0;
 uint8_t led_tmp;
@@ -2981,6 +2981,29 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DIGITAL_COUNT
     bool drumSeen[DIGITAL_COUNT] = {false};
 #endif
+    if (INPUT_QUEUE)
+    {
+        if (micros() - last_queue > 100)
+        {
+            last_queue = micros();
+            for (int i = 0; i < DIGITAL_COUNT; i++)
+            {
+                if (debounce[i])
+                {
+                    debounce[i]--;
+                }
+            }
+#if REQUIRE_LED_DEBOUNCE
+            for (int i = 0; i < LED_DEBOUNCE_COUNT; i++)
+            {
+                if (ledDebounce[i])
+                {
+                    ledDebounce[i]--;
+                }
+            }
+#endif
+        }
+    }
 // Tick Inputs
 #include "inputs/accel.h"
 #include "inputs/bh_drum.h"
@@ -3019,41 +3042,21 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
     // if input queues are enabled, then we just tick as often as possible
-    if (!buf)
+    if (INPUT_QUEUE)
     {
-        if (INPUT_QUEUE)
+        if (current_queue_report.val != last_queue_report.val)
         {
-            if (micros() - last_queue > 100)
+            queue[queue_tail] = current_queue_report;
+            last_queue_report = current_queue_report;
+            if (queue_size < BUFFER_SIZE_QUEUE)
             {
-                last_queue = micros();
-                for (int i = 0; i < DIGITAL_COUNT; i++)
-                {
-                    if (debounce[i])
-                    {
-                        debounce[i]--;
-                    }
-                }
-#if REQUIRE_LED_DEBOUNCE
-                for (int i = 0; i < LED_DEBOUNCE_COUNT; i++)
-                {
-                    if (ledDebounce[i])
-                    {
-                        ledDebounce[i]--;
-                    }
-                }
-#endif
-            }
-            if (current_queue_report.val != last_queue_report.val)
-            {
-                queue[queue_tail] = current_queue_report;
-                last_queue_report = current_queue_report;
-                if (queue_size < BUFFER_SIZE_QUEUE)
-                {
-                    queue_size++;
-                    queue_tail++;
-                }
+                queue_size++;
+                queue_tail++;
             }
         }
+    }
+    if (!buf)
+    {
         return 0;
     }
 

@@ -38,4 +38,5 @@ void slaveSetWtCounter(uint16_t counter);
 void slaveInitLED(uint8_t instance);
 void slaveWriteLED(uint8_t data);
 void slaveWriteAnalog(uint8_t pin, uint8_t val);
+int slaveReadQuad();
 #endif

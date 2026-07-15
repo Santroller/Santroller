@@ -3291,6 +3291,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->b |= midiData.proGuitarData.b;
             report->x |= midiData.proGuitarData.x;
             report->y |= midiData.proGuitarData.y;
+
+            uint8_t dpad = midiData.proGuitarData.dpad >= 0x08 ? 0 : dpad_bindings_reverse[midiData.proGuitarData.dpad];
+            report->dpadUp |= dpad & UP;
+            report->dpadLeft |= dpad & LEFT;
+            report->dpadDown |= dpad & DOWN;
+            report->dpadRight |= dpad & RIGHT;
             for (size_t i = 0; i < TU_ARRAY_SIZE(midiData.midiFrets); i++)
             {
                 uint8_t fret = fret;

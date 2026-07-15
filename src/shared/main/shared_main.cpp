@@ -3299,7 +3299,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->dpadRight |= dpad & RIGHT;
             for (size_t i = 0; i < TU_ARRAY_SIZE(midiData.midiFrets); i++)
             {
-                uint8_t fret = fret;
+                uint8_t fret = midiData.midiFrets[i];
                 report->green |= fret == 1 || fret == 6 || fret == 13;
                 report->red |= fret == 2 || fret == 7 || fret == 14;
                 report->yellow |= fret == 3 || fret == 8 || fret == 15;

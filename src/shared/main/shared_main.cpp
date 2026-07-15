@@ -3284,6 +3284,13 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->bFretVelocity = midiData.midiVelocities[4];
             report->highEFretVelocity = midiData.midiVelocities[5];
             report->tilt = midiData.proGuitarData.tilt == INT16_MAX ? 0x7F : 0x60;
+            report->start |= midiData.proGuitarData.start;
+            report->back |= midiData.proGuitarData.back;
+            report->guide |= midiData.proGuitarData.guide;
+            report->a |= midiData.proGuitarData.a;
+            report->b |= midiData.proGuitarData.b;
+            report->x |= midiData.proGuitarData.x;
+            report->y |= midiData.proGuitarData.y;
             for (size_t i = 0; i < TU_ARRAY_SIZE(midiData.midiFrets); i++)
             {
                 uint8_t fret = fret;

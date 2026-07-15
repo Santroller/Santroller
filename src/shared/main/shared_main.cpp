@@ -3277,12 +3277,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
         if (midiData.seenProGuitar)
         {
-            report->lowEFretVelocity = midiData.midiVelocities[0];
-            report->aFretVelocity = midiData.midiVelocities[1];
-            report->dFretVelocity = midiData.midiVelocities[2];
-            report->gFretVelocity = midiData.midiVelocities[3];
-            report->bFretVelocity = midiData.midiVelocities[4];
-            report->highEFretVelocity = midiData.midiVelocities[5];
+            report->lowEFretVelocity = midiData.midiStringVelocities[5];
+            report->aFretVelocity = midiData.midiStringVelocities[4];
+            report->dFretVelocity = midiData.midiStringVelocities[3];
+            report->gFretVelocity = midiData.midiStringVelocities[2];
+            report->bFretVelocity = midiData.midiStringVelocities[1];
+            report->highEFretVelocity = midiData.midiStringVelocities[0];
             report->tilt = midiData.proGuitarData.tilt == INT16_MAX ? 0x7F : 0x60;
             report->start |= midiData.proGuitarData.start;
             report->back |= midiData.proGuitarData.back;
@@ -3292,9 +3292,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->x |= midiData.proGuitarData.x;
             report->y |= midiData.proGuitarData.y;
 
-            uint8_t dpad = midiData.proGuitarData.dpad >= 0x08 ? 0 : dpad_bindings_reverse[midiData.proGuitarData.dpad];
-        asm volatile("" ::
-                         : "memory");
+            uint8_t dpad = midiData.proGuitarData.dpad & 0x0f;
+            dpad = dpad >= 0x08 ? 0 : dpad_bindings_reverse[dpad];
+            asm volatile("" ::
+                             : "memory");
             report->dpadUp |= dpad & UP;
             report->dpadLeft |= dpad & LEFT;
             report->dpadDown |= dpad & DOWN;
@@ -3309,12 +3310,12 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 report->orange |= fret == 5 || fret == 10 || fret == 17;
                 report->solo |= fret >= 13 && fret <= 17;
             }
-            report->lowEFret = midiData.midiFrets[0];
-            report->aFret = midiData.midiFrets[1];
-            report->dFret = midiData.midiFrets[2];
-            report->gFret = midiData.midiFrets[3];
-            report->bFret = midiData.midiFrets[4];
-            report->highEFret = midiData.midiFrets[5];
+            report->lowEFret = midiData.midiFrets[5];
+            report->aFret = midiData.midiFrets[4];
+            report->dFret = midiData.midiFrets[3];
+            report->gFret = midiData.midiFrets[2];
+            report->bFret = midiData.midiFrets[1];
+            report->highEFret = midiData.midiFrets[0];
         }
 #endif
 #if PRO_GUITAR && BLUETOOTH_RX
@@ -3536,6 +3537,50 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->blue = lastProtar.blue;
             report->orange = lastProtar.orange;
 #endif
+#if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
+            if (midiData.seenProGuitar)
+            {
+                report->lowEFretVelocity = midiData.midiStringVelocities[5];
+                report->aFretVelocity = midiData.midiStringVelocities[4];
+                report->dFretVelocity = midiData.midiStringVelocities[3];
+                report->gFretVelocity = midiData.midiStringVelocities[2];
+                report->bFretVelocity = midiData.midiStringVelocities[1];
+                report->highEFretVelocity = midiData.midiStringVelocities[0];
+                report->tilt = midiData.proGuitarData.tilt == INT16_MAX ? 0x7F : 0x60;
+                report->start |= midiData.proGuitarData.start;
+                report->back |= midiData.proGuitarData.back;
+                report->guide |= midiData.proGuitarData.guide;
+                report->a |= midiData.proGuitarData.a;
+                report->b |= midiData.proGuitarData.b;
+                report->x |= midiData.proGuitarData.x;
+                report->y |= midiData.proGuitarData.y;
+
+                uint8_t dpad = midiData.proGuitarData.dpad & 0x0f;
+                dpad = dpad >= 0x08 ? 0 : dpad_bindings_reverse[dpad];
+                asm volatile("" ::
+                                 : "memory");
+                report->dpadUp |= dpad & UP;
+                report->dpadLeft |= dpad & LEFT;
+                report->dpadDown |= dpad & DOWN;
+                report->dpadRight |= dpad & RIGHT;
+                for (size_t i = 0; i < TU_ARRAY_SIZE(midiData.midiFrets); i++)
+                {
+                    uint8_t fret = midiData.midiFrets[i];
+                    report->green |= fret == 1 || fret == 6 || fret == 13;
+                    report->red |= fret == 2 || fret == 7 || fret == 14;
+                    report->yellow |= fret == 3 || fret == 8 || fret == 15;
+                    report->blue |= fret == 4 || fret == 9 || fret == 16;
+                    report->orange |= fret == 5 || fret == 10 || fret == 17;
+                    // report->soloFlag |= fret >= 13 && fret <= 17;
+                }
+                report->lowEFret = midiData.midiFrets[5];
+                report->aFret = midiData.midiFrets[4];
+                report->dFret = midiData.midiFrets[3];
+                report->gFret = midiData.midiFrets[2];
+                report->bFret = midiData.midiFrets[1];
+                report->highEFret = midiData.midiFrets[0];
+            }
+#endif
 #if PRO_GUITAR && BLUETOOTH_RX
             TRANSLATE_TO_PRO_GUITAR(bt_data)
 #endif
@@ -3732,6 +3777,50 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 report->blue = lastProtar.blue;
                 report->orange = lastProtar.orange;
                 report->soloFlag = lastProtar.soloFlag;
+#endif
+#if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
+                if (midiData.seenProGuitar)
+                {
+                    report->lowEFretVelocity = midiData.midiStringVelocities[5];
+                    report->aFretVelocity = midiData.midiStringVelocities[4];
+                    report->dFretVelocity = midiData.midiStringVelocities[3];
+                    report->gFretVelocity = midiData.midiStringVelocities[2];
+                    report->bFretVelocity = midiData.midiStringVelocities[1];
+                    report->highEFretVelocity = midiData.midiStringVelocities[0];
+                    report->tilt = midiData.proGuitarData.tilt == INT16_MAX ? 0x7F : 0x60;
+                    report->start |= midiData.proGuitarData.start;
+                    report->back |= midiData.proGuitarData.back;
+                    report->guide |= midiData.proGuitarData.guide;
+                    report->a |= midiData.proGuitarData.a;
+                    report->b |= midiData.proGuitarData.b;
+                    report->x |= midiData.proGuitarData.x;
+                    report->y |= midiData.proGuitarData.y;
+
+                    uint8_t dpad = midiData.proGuitarData.dpad & 0x0f;
+                    dpad = dpad >= 0x08 ? 0 : dpad_bindings_reverse[dpad];
+                    asm volatile("" ::
+                                     : "memory");
+                    report->dpadUp |= dpad & UP;
+                    report->dpadLeft |= dpad & LEFT;
+                    report->dpadDown |= dpad & DOWN;
+                    report->dpadRight |= dpad & RIGHT;
+                    for (size_t i = 0; i < TU_ARRAY_SIZE(midiData.midiFrets); i++)
+                    {
+                        uint8_t fret = midiData.midiFrets[i];
+                        report->green |= fret == 1 || fret == 6 || fret == 13;
+                        report->red |= fret == 2 || fret == 7 || fret == 14;
+                        report->yellow |= fret == 3 || fret == 8 || fret == 15;
+                        report->blue |= fret == 4 || fret == 9 || fret == 16;
+                        report->orange |= fret == 5 || fret == 10 || fret == 17;
+                        report->soloFlag |= fret >= 13 && fret <= 17;
+                    }
+                    report->lowEFret = midiData.midiFrets[5];
+                    report->aFret = midiData.midiFrets[4];
+                    report->dFret = midiData.midiFrets[3];
+                    report->gFret = midiData.midiFrets[2];
+                    report->bFret = midiData.midiFrets[1];
+                    report->highEFret = midiData.midiFrets[0];
+                }
 #endif
 #if PRO_GUITAR && BLUETOOTH_RX
                 TRANSLATE_TO_PRO_GUITAR(bt_data)

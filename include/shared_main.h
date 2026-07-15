@@ -1,6 +1,7 @@
 #include "pin_funcs.h"
 #include "reports/controller_reports.h"
 #include "config.h"
+#include "midi.hpp"
 
 typedef struct {
     uint8_t console_type;
@@ -111,6 +112,8 @@ extern USB_Host_Data_t last_usb_host_data;
 #endif
 extern USB_Host_Data_t bt_data;
 extern USB_LastReport_Data_t last_report_bt;
+extern MidiDevice usbMidi;
+extern MidiDevice serialMidi;
 
 
 #if BLUETOOTH_RX

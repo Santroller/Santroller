@@ -11,6 +11,7 @@
 #include "usbhid.h"
 #include "util.h"
 #include "xsm3/xsm3.h"
+#include "Arduino.h"
 
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
 
@@ -1248,7 +1249,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         }
 #endif
         bool test = true;
-        uint8_t size = handle_serial_command(request, wValue, requestBuffer, &test);
+        uint16_t size = handle_serial_command(request, wValue, requestBuffer, &test);
         if (test)
         {
             return size;
@@ -1762,7 +1763,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
         }
         else if (descriptorNumber < 4)
         {
-            str = (uint8_t *)pgm_read_pointer(descriptorStrings + descriptorNumber);
+            str = (uint8_t *)descriptorStrings[descriptorNumber];
         }
         else if (descriptorNumber == 0xEE)
         {

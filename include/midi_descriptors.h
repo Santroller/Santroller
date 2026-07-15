@@ -340,9 +340,41 @@ typedef struct
 
 typedef struct
 {
+    uint8_t header[5];
+    uint8_t x : 1; // square
+    uint8_t a : 1; // cross
+    uint8_t b : 1; // circle
+    uint8_t y : 1; // triangle
+
+    uint8_t : 1; // orange, l1
+    uint8_t : 1; // tilt, r1
+    uint8_t : 1; // l2
+    uint8_t : 1; // r2
+
+    uint8_t back : 1; // select
+    uint8_t start : 1;
+    uint8_t : 1;
+    uint8_t : 1;
+
+    uint8_t guide : 1;   // ps
+    uint8_t capture : 1; // switch capture button
+    uint8_t : 2;
+
+    uint8_t dpad : 4;
+    uint8_t : 2;
+    uint8_t tilt : 1;
+    uint8_t : 1;
+} __attribute__((packed)) ProGuitar_Sysex_Buttons_t;
+typedef struct
+{
     uint8_t midiVelocitiesTemp[128];
     uint8_t midiVelocities[128];
+    uint8_t midiControlChanges[128];
     int16_t midiPitchWheel;
     uint8_t midiModWheel;
     uint8_t midiSustainPedal;
+    bool seenProGuitar;
+    uint8_t midiFrets[6];
+    uint8_t midiStringVelocities[6];
+    ProGuitar_Sysex_Buttons_t proGuitarData;
 } __attribute__((packed)) Midi_Data_t;

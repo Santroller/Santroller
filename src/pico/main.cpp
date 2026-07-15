@@ -17,7 +17,6 @@
 #include "hardware/structs/usb.h"
 #include "hardware/watchdog.h"
 #include "hid.h"
-#include "hidescriptorparser.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
 #include "io.h"
@@ -30,9 +29,6 @@
 #include "shared_main.h"
 #include "xinput_device.h"
 #include "xinput_host.h"
-#if defined(INPUT_USB_HOST) || defined(INPUT_SERIAL_MIDI)
-#include "TUSB-MIDI.hpp"
-#endif
 #if BLUETOOTH
 #include "bt.h"
 #include "pico/cyw43_arch.h"
@@ -90,21 +86,6 @@ typedef struct
 uint8_t prev_bt_report[32];
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t xbox360w_prescence[] = {0x08, 0x00, 0x0f, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-#if defined(INPUT_USB_HOST) || defined(INPUT_SERIAL_MIDI)
-using namespace usbMidi;
-#endif
-#ifdef INPUT_USB_HOST
-UsbMidiTransport usbMIDITransport(0);
-MidiInterface<UsbMidiTransport> MIDI(usbMIDITransport);
-#endif
-#ifdef INPUT_SERIAL_MIDI
-#if SERIAL_MIDI_PIN == 5 || SERIAL_MIDI_PIN == 9 || SERIAL_MIDI_PIN == 20
-SerialMIDI<HardwareSerial> serialMIDI(Serial2);
-#else
-SerialMIDI<HardwareSerial> serialMIDI(Serial1);
-#endif
-MidiInterface<SerialMIDI<HardwareSerial>> MIDI2(serialMIDI);
-#endif
 bool ready_for_next_packet()
 {
     return tud_xinput_n_ready(0) && tud_ready_for_packet();
@@ -144,6 +125,23 @@ bool foundXB = false;
 bool authReady = false;
 bool authDone = false;
 long test3 = 0;
+static void on_uart_rx_0()
+{
+    while (uart_is_readable(uart0))
+    {
+        uint8_t data = uart_getc(uart0);
+        serialMidi.processMidiData(&data, 1);
+    }
+}
+
+static void on_uart_rx_1()
+{
+    while (uart_is_readable(uart1))
+    {
+        uint8_t data = uart_getc(uart1);
+        serialMidi.processMidiData(&data, 1);
+    }
+}
 static void tick_usb()
 {
     tud_task();
@@ -151,12 +149,6 @@ static void tick_usb()
     tuh_task();
 #endif
     tick();
-#ifdef INPUT_USB_HOST
-    MIDI.read();
-#endif
-#ifdef INPUT_SERIAL_MIDI
-    MIDI2.read();
-#endif
 }
 #if BLUETOOTH_RX
 void tick_bluetooth(const void *buf, uint8_t len, USB_Device_Type_t type)
@@ -232,11 +224,22 @@ void setup()
 #if USB_HOST_STACK
     set_sys_clock_khz(120000, true);
 #endif
+
 #ifdef INPUT_SERIAL_MIDI
-#if SERIAL_MIDI_PIN == 5 || SERIAL_MIDI_PIN == 9 || SERIAL_MIDI_PIN == 20
-    Serial2.setRX(SERIAL_MIDI_PIN);
+#if SERIAL_MIDI_PIN == 1 || SERIAL_MIDI_PIN == 13 || SERIAL_MIDI_PIN == 17
+    uart_init(uart0, 31250);
+    gpio_set_function(SERIAL_MIDI_PIN, GPIO_FUNC_UART);
+    irq_set_exclusive_handler(UART0_IRQ, on_uart_rx_0);
+    irq_set_enabled(UART0_IRQ, true);
+
+    uart_set_irqs_enabled(uart0, true, false);
 #else
-    Serial1.setRX(SERIAL_MIDI_PIN);
+    uart_init(uart1, 31250);
+    gpio_set_function(SERIAL_MIDI_PIN, GPIO_FUNC_UART);
+    irq_set_exclusive_handler(UART1_IRQ, on_uart_rx_1);
+    irq_set_enabled(UART1_IRQ, true);
+
+    uart_set_irqs_enabled(uart1, true, false);
 #endif
 #endif
     if (persistedConsoleTypeValid == PERSISTED_CONSOLE_TYPE_VALID)
@@ -298,37 +301,18 @@ void setup()
         .speed = TUH_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL,
     };
     tuh_rhport_init(TUH_OPT_RHPORT, &rh_init);
-#ifdef INPUT_USB_HOST
-    MIDI.begin(0);
-    MIDI.setHandleNoteOn(onNote);
-    MIDI.setHandleNoteOff(offNote);
-    MIDI.setHandleControlChange(onControlChange);
-    MIDI.setHandlePitchBend(onPitchBend);
-    MIDI.setHandleSystemExclusive(onSysEx);
-#endif
-#ifdef INPUT_SERIAL_MIDI
-    MIDI2.begin(0);
-    MIDI2.setHandleNoteOn(onNote);
-    MIDI2.setHandleNoteOff(offNote);
-    MIDI2.setHandleControlChange(onControlChange);
-    MIDI2.setHandlePitchBend(onPitchBend);
-    MIDI2.setHandleSystemExclusive(onSysEx);
-#endif
 #endif
 }
 
 #ifdef INPUT_USB_HOST
 void tuh_midi_rx_cb(uint8_t dev_addr, uint32_t num_packets)
 {
-    usbMIDITransport.tuh_midi_rx_cb(dev_addr, num_packets);
 }
 
 void tuh_midi_mount_cb(uint8_t idx, const tuh_midi_mount_cb_t *mount_cb_data)
 {
     printf("MIDI device address = %u, IN endpoint has %u cables, OUT endpoint has %u cables\r\n",
            mount_cb_data->daddr, mount_cb_data->rx_cable_count, mount_cb_data->tx_cable_count);
-
-    usbMIDITransport.midi_idx = idx;
 
     USB_Device_Type_t type = {MIDI_ID, 0, mount_cb_data->daddr, 0};
     usb_host_devices[total_usb_host_devices].type = type;
@@ -340,7 +324,6 @@ void tuh_midi_umount_cb(uint8_t dev_addr, uint8_t instance)
 {
     printf("MIDI device address = %d, instance = %d is unmounted\r\n", dev_addr, instance);
 
-    usbMIDITransport.midi_idx = 0;
     // Probably should actulaly work out what was unplugged and all that
     total_usb_host_devices = 0;
 }

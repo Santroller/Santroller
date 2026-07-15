@@ -100,7 +100,7 @@ void handle_keyboard_leds(uint8_t leds);
 void tick_leds(void);
 void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id);
 uint8_t hid_get_report(uint8_t *data, uint8_t reqLen, uint8_t reportType, uint8_t report_id);
-uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t* response_buffer, bool* success);
+uint16_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t* response_buffer, bool* success);
 #if BLUETOOTH_RX
 void bt_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id);
 #endif

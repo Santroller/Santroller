@@ -12,6 +12,7 @@
 #include "device/usbd_pvt.h"
 #include "hid.h"
 #include "xinput_device.h"
+#include <stdio.h>
 
 //--------------------------------------------------------------------+
 // MACRO CONSTANT TYPEDEF

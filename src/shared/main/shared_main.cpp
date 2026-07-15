@@ -27,6 +27,7 @@
 #include "wt_drum.h"
 #include "quadrature_encoder.pio.h"
 #include "protar_neck.h"
+#include "midi.hpp"
 #define UP 1 << 0
 #define DOWN 1 << 1
 #define LEFT 1 << 2
@@ -74,6 +75,8 @@ crkd_neck_t lastCrkd;
 protarneck_t lastProtar;
 unsigned long lastMidi = 0;
 Midi_Data_t midiData = {0};
+MidiDevice usbMidi(true, &midiData);
+MidiDevice serialMidi(false, &midiData);
 
 uint8_t *dj_left = lastSuccessfulTurntablePacketLeft;
 uint8_t *dj_right = lastSuccessfulTurntablePacketRight;
@@ -81,126 +84,6 @@ int8_t dj_turntable_left = 0;
 int8_t dj_turntable_right = 0;
 bool djLeftValid = true;
 bool djRightValid = true;
-void onNote(uint8_t channel, uint8_t note, uint8_t velocity)
-{
-    // velocities are 7 bit
-    // printf("Note ON ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
-    velocity = velocity << 1;
-#if DEVICE_TYPE_IS_DRUM
-    // drums, base inputs on triggers
-    if (velocity > midiData.midiVelocitiesTemp[note])
-    {
-        midiData.midiVelocities[note] = velocity;
-        midiData.midiVelocitiesTemp[note] = velocity;
-    }
-#else
-    // Handle midi normally
-    midiData.midiVelocities[note] = velocity;
-    midiData.midiVelocitiesTemp[note] = velocity;
-#endif
-    lastMidi = millis();
-}
-
-void offNote(uint8_t channel, uint8_t note, uint8_t velocity)
-{
-    // printf("Note OFF ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
-    // ignore note off for drums as we handle that ourselves, and not all drums send it
-#if !(DEVICE_TYPE_IS_DRUM)
-    midiData.midiVelocities[note] = 0;
-    midiData.midiVelocitiesTemp[note] = 0;
-#endif
-}
-
-void onControlChange(uint8_t channel, uint8_t b1, uint8_t b2)
-{
-    // cc are 7 bit
-    printf("ControlChange ch=%d, b1=%d, b2=%d\r\n", channel, b1, b2);
-    if (b1 == MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL)
-    {
-        midiData.midiSustainPedal = b2 << 1;
-    }
-    if (b1 == MIDI_CONTROL_COMMAND_MOD_WHEEL)
-    {
-        midiData.midiModWheel = b2 << 1;
-    }
-}
-
-void onPitchBend(uint8_t channel, int pitch)
-{
-    // pitchbend is signed 14 bit
-    printf("PitchBend ch=%d, pitch=%d\r\n", channel, pitch);
-    midiData.midiPitchWheel = pitch << 2;
-}
-PS3RockBandProGuitar_Data_t sysexGuitar = {0};
-void onSysEx(uint8_t *data, unsigned size)
-{
-#if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
-    uint8_t type, fret, velocity;
-    type = data[5];
-    uint8_t string = (size >= 5) ? (data[6] - 1) % 6 : 0;
-    // changes to the fret state
-    if ((type == 0x01) && (size >= 6))
-    {
-        fret = data[7];
-        // offset fret numbers relative to the base note of each string
-        switch (string)
-        {
-        case 0:
-            sysexGuitar.lowEFret = fret - 0x40;
-            break;
-        case 1:
-            sysexGuitar.aFret = fret - 0x3B;
-            break;
-        case 2:
-            sysexGuitar.dFret = fret - 0x37;
-            break;
-        case 3:
-            sysexGuitar.gFret = fret - 0x32;
-            break;
-        case 4:
-            sysexGuitar.bFret = fret - 0x2D;
-            break;
-        case 5:
-            sysexGuitar.highEFret = fret - 0x28;
-            break;
-        }
-    }
-    // picking events
-    else if ((type == 0x05) && (size >= 6))
-    {
-        velocity = data[7];
-        switch (string)
-        {
-        case 0:
-            sysexGuitar.lowEFretVelocity = velocity;
-            break;
-        case 1:
-            sysexGuitar.aFretVelocity = velocity;
-            break;
-        case 2:
-            sysexGuitar.dFretVelocity = velocity;
-            break;
-        case 3:
-            sysexGuitar.gFretVelocity = velocity;
-            break;
-        case 4:
-            sysexGuitar.bFretVelocity = velocity;
-            break;
-        case 5:
-            sysexGuitar.highEFretVelocity = velocity;
-            break;
-        }
-    }
-    // button events
-    else if ((type == 0x08) && (size >= 7))
-    {
-        // PS3 style report starts at byte 4
-        memcpy(&sysexGuitar, data + 6, 3);
-        // tilt however is not in the same spot as a ps3 report
-        sysexGuitar.tilt = (data[8] & 0x40) ? 0x7f : 0x40;
-    }
-#endif
-}
 uint8_t tmp = 0;
 long clone_guitar_timer = 0;
 long clone_guitar_ready_timer = 0;
@@ -407,6 +290,15 @@ void init_main(void)
 #ifdef TICK_WII
     initWiiOutput();
 #endif
+
+    memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
+    midiData.midiPitchWheel = 0;
+    memset(midiData.midiControlChanges, 0, sizeof(midiData.midiControlChanges));
+    memset(midiData.midiFrets, 0, sizeof(midiData.midiFrets));
+    memset(midiData.midiStringVelocities, 0, sizeof(midiData.midiStringVelocities));
+    memset(&midiData.proGuitarData, 0, sizeof(midiData.proGuitarData));
+    // default to neutral
+    midiData.proGuitarData.dpad = 8;
 }
 #ifdef SLAVE_TWI_PORT
 bool slave_initted = false;
@@ -3104,9 +2996,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/mustang_neck.h"
 #include "inputs/crkd.h"
 #include "inputs/turntable.h"
-    // #if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
-    //     convert_report((uint8_t *)&sysexGuitar, sizeof(sysexGuitar), {PS3, ROCK_BAND_PRO_GUITAR_SQUIRE, 0, 0, 0, false}, &usb_host_data);
-    // #endif
     TICK_SHARED;
     if (!startedInactivityPulse)
     {
@@ -3383,6 +3272,35 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         report->blue = lastProtar.blue;
         report->orange = lastProtar.orange;
         report->soloFlag = lastProtar.soloFlag;
+#endif
+
+#if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
+        if (midiData.seenProGuitar)
+        {
+            report->lowEFretVelocity = midiData.midiVelocities[0];
+            report->aFretVelocity = midiData.midiVelocities[1];
+            report->dFretVelocity = midiData.midiVelocities[2];
+            report->gFretVelocity = midiData.midiVelocities[3];
+            report->bFretVelocity = midiData.midiVelocities[4];
+            report->highEFretVelocity = midiData.midiVelocities[5];
+            report->tilt = midiData.proGuitarData.tilt == INT16_MAX ? 0x7F : 0x60;
+            for (size_t i = 0; i < TU_ARRAY_SIZE(midiData.midiFrets); i++)
+            {
+                uint8_t fret = fret;
+                report->green |= fret == 1 || fret == 6 || fret == 13;
+                report->red |= fret == 2 || fret == 7 || fret == 14;
+                report->yellow |= fret == 3 || fret == 8 || fret == 15;
+                report->blue |= fret == 4 || fret == 9 || fret == 16;
+                report->orange |= fret == 5 || fret == 10 || fret == 17;
+                report->solo |= fret >= 13 && fret <= 17;
+            }
+            report->lowEFret = midiData.midiFrets[0];
+            report->aFret = midiData.midiFrets[1];
+            report->dFret = midiData.midiFrets[2];
+            report->gFret = midiData.midiFrets[3];
+            report->bFret = midiData.midiFrets[4];
+            report->highEFret = midiData.midiFrets[5];
+        }
 #endif
 #if PRO_GUITAR && BLUETOOTH_RX
         TRANSLATE_TO_PRO_GUITAR(bt_data)
@@ -4053,6 +3971,56 @@ bool tick_usb(void)
     report_requested = true;
     return ready;
 }
+void onNote(uint8_t channel, uint8_t note, uint8_t velocity)
+{
+    // velocities are 7 bit
+    // printf("Note ON ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
+    velocity = velocity << 1;
+#if DEVICE_TYPE_IS_DRUM
+    // drums, base inputs on triggers
+    if (velocity > midiData.midiVelocitiesTemp[note])
+    {
+        midiData.midiVelocities[note] = velocity;
+        midiData.midiVelocitiesTemp[note] = velocity;
+    }
+#else
+    // Handle midi normally
+    midiData.midiVelocities[note] = velocity;
+    midiData.midiVelocitiesTemp[note] = velocity;
+#endif
+    lastMidi = millis();
+}
+
+void offNote(uint8_t channel, uint8_t note, uint8_t velocity)
+{
+    // printf("Note OFF ch=%d, note=%d, vel=%d\r\n", channel, note, velocity);
+    // ignore note off for drums as we handle that ourselves, and not all drums send it
+#if !(DEVICE_TYPE_IS_DRUM)
+    midiData.midiVelocities[note] = 0;
+    midiData.midiVelocitiesTemp[note] = 0;
+#endif
+}
+
+void onControlChange(uint8_t channel, uint8_t b1, uint8_t b2)
+{
+    // cc are 7 bit
+    printf("ControlChange ch=%d, b1=%d, b2=%d\r\n", channel, b1, b2);
+    if (b1 == MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL)
+    {
+        midiData.midiSustainPedal = b2 << 1;
+    }
+    if (b1 == MIDI_CONTROL_COMMAND_MOD_WHEEL)
+    {
+        midiData.midiModWheel = b2 << 1;
+    }
+}
+
+void onPitchBend(uint8_t channel, int pitch)
+{
+    // pitchbend is signed 14 bit
+    printf("PitchBend ch=%d, pitch=%d\r\n", channel, pitch);
+    midiData.midiPitchWheel = pitch << 2;
+}
 #if BLUETOOTH_RX
 int tick_bluetooth_inputs(const void *data, uint8_t len, USB_Device_Type_t device_type)
 {
@@ -4076,6 +4044,9 @@ void tick(void)
 #ifdef TICK_LED_BLUETOOTH
     TICK_LED_BLUETOOTH;
 #endif
+
+    usbMidi.update(false, false);
+    serialMidi.update(false, false);
 
     if (reset_after_360 && millis() > reset_after_360)
     {

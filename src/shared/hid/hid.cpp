@@ -18,6 +18,7 @@
 #include "usbhid.h"
 #include "util.h"
 #include "wii.h"
+#include "Arduino.h"
 
 const PROGMEM char board[] = ARDWIINO_BOARD;
 const PROGMEM char f_cpu_descriptor_str[] = STR(F_CPU);
@@ -913,7 +914,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         }
 }
 long millis_since_command = 0;
-uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *response_buffer, bool *success)
+uint16_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *response_buffer, bool *success)
 {
     switch (request)
     {

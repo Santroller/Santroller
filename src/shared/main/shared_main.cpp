@@ -3291,6 +3291,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->start |= midiData.proGuitarData.start;
             report->back |= midiData.proGuitarData.back;
             report->guide |= midiData.proGuitarData.guide;
+#if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
+            report->guide |= midiData.proGuitarData.start && midiData.proGuitarData.back;
+#endif
             report->a |= midiData.proGuitarData.a;
             report->b |= midiData.proGuitarData.b;
             report->x |= midiData.proGuitarData.x;
@@ -3323,8 +3326,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         }
 #endif
 #if PRO_GUITAR
-                report->autoCal_Light = report->tilt;
-                report->autoCal_Microphone = report->tilt;
+        report->autoCal_Light = report->tilt;
+        report->autoCal_Microphone = report->tilt;
 #endif
         asm volatile("" ::
                          : "memory");
@@ -3556,6 +3559,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 report->start |= midiData.proGuitarData.start;
                 report->back |= midiData.proGuitarData.back;
                 report->guide |= midiData.proGuitarData.guide;
+#if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
+                report->guide |= midiData.proGuitarData.start && midiData.proGuitarData.back;
+#endif
                 report->a |= midiData.proGuitarData.a;
                 report->b |= midiData.proGuitarData.b;
                 report->x |= midiData.proGuitarData.x;
@@ -3795,6 +3801,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                     report->start |= midiData.proGuitarData.start;
                     report->back |= midiData.proGuitarData.back;
                     report->guide |= midiData.proGuitarData.guide;
+#if DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
+                    report->guide |= midiData.proGuitarData.start && midiData.proGuitarData.back;
+#endif
                     report->a |= midiData.proGuitarData.a;
                     report->b |= midiData.proGuitarData.b;
                     report->x |= midiData.proGuitarData.x;

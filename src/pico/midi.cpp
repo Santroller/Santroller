@@ -156,6 +156,11 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 // proto_Event event = {which_event : proto_Event_midiDebug_tag, event : {midiDebug : {data : {size : data_size, bytes : {0}}}}};
                 // memcpy(event.event.midiDebug.data.bytes, cable_state->data, data_size);
                 // HIDConfigDevice::send_event(event, false);
+                // printf("data: ");
+                // for (uint8_t i = 0; i < data_size; i++) {
+                //     printf("%02X ", cable_state->data[i]);
+                // }
+                // printf("\r\n");
             }
             uint8_t status = (cable_state->data[0] & 0xf0) >> 4;
             uint8_t channel = cable_state->data[0] & 0x0f;

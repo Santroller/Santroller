@@ -3259,8 +3259,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 #if PRO_GUITAR && USB_HOST_STACK
         TRANSLATE_TO_PRO_GUITAR(usb_host_data)
-        report->autoCal_Light = report->tilt;
-        report->autoCal_Microphone = report->tilt;
+#endif
+#if PRO_GUITAR && BLUETOOTH_RX
+        TRANSLATE_TO_PRO_GUITAR(bt_data)
 #endif
 #ifdef MUSTANG_NECK_SPI_PORT
         report->lowEFret = lastProtar.lowEFret;
@@ -3286,7 +3287,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->gFretVelocity = midiData.midiStringVelocities[2];
             report->bFretVelocity = midiData.midiStringVelocities[1];
             report->highEFretVelocity = midiData.midiStringVelocities[0];
-            report->tilt = midiData.proGuitarData.tilt ? 0x7F : 0x60;
+            report->tilt = midiData.proGuitarData.tilt ? 0x7F : 0x40;
             report->start |= midiData.proGuitarData.start;
             report->back |= midiData.proGuitarData.back;
             report->guide |= midiData.proGuitarData.guide;
@@ -3299,10 +3300,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             dpad = dpad >= 0x08 ? 0 : dpad_bindings_reverse[dpad];
             asm volatile("" ::
                              : "memory");
-            report->dpadUp |= dpad & UP;
-            report->dpadLeft |= dpad & LEFT;
-            report->dpadDown |= dpad & DOWN;
-            report->dpadRight |= dpad & RIGHT;
+            report->dpadUp |= (dpad & UP) != 0;
+            report->dpadLeft |= (dpad & LEFT) != 0;
+            report->dpadDown |= (dpad & DOWN) != 0;
+            report->dpadRight |= (dpad & RIGHT) != 0;
             for (size_t i = 0; i < TU_ARRAY_SIZE(midiData.midiFrets); i++)
             {
                 uint8_t fret = midiData.midiFrets[i];
@@ -3321,10 +3322,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->highEFret = midiData.midiFrets[0];
         }
 #endif
-#if PRO_GUITAR && BLUETOOTH_RX
-        TRANSLATE_TO_PRO_GUITAR(bt_data)
-        report->autoCal_Light = report->tilt;
-        report->autoCal_Microphone = report->tilt;
+#if PRO_GUITAR
+                report->autoCal_Light = report->tilt;
+                report->autoCal_Microphone = report->tilt;
 #endif
         asm volatile("" ::
                          : "memory");
@@ -3527,6 +3527,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             TRANSLATE_TO_PRO_GUITAR(usb_host_data)
 #endif
 
+#if PRO_GUITAR && BLUETOOTH_RX
+            TRANSLATE_TO_PRO_GUITAR(bt_data)
+#endif
 #ifdef MUSTANG_NECK_SPI_PORT
             report->lowEFret = lastProtar.lowEFret;
             report->aFret = lastProtar.aFret;
@@ -3549,7 +3552,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 report->gFretVelocity = midiData.midiStringVelocities[2];
                 report->bFretVelocity = midiData.midiStringVelocities[1];
                 report->highEFretVelocity = midiData.midiStringVelocities[0];
-                report->tilt = midiData.proGuitarData.tilt ? 0x7F : 0x60;
+                report->tilt = midiData.proGuitarData.tilt ? 0x7F : 0x40;
                 report->start |= midiData.proGuitarData.start;
                 report->back |= midiData.proGuitarData.back;
                 report->guide |= midiData.proGuitarData.guide;
@@ -3562,10 +3565,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 dpad = dpad >= 0x08 ? 0 : dpad_bindings_reverse[dpad];
                 asm volatile("" ::
                                  : "memory");
-                report->dpadUp |= dpad & UP;
-                report->dpadLeft |= dpad & LEFT;
-                report->dpadDown |= dpad & DOWN;
-                report->dpadRight |= dpad & RIGHT;
+                report->dpadUp |= (dpad & UP) != 0;
+                report->dpadLeft |= (dpad & LEFT) != 0;
+                report->dpadDown |= (dpad & DOWN) != 0;
+                report->dpadRight |= (dpad & RIGHT) != 0;
                 for (size_t i = 0; i < TU_ARRAY_SIZE(midiData.midiFrets); i++)
                 {
                     uint8_t fret = midiData.midiFrets[i];
@@ -3583,9 +3586,6 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 report->bFret = midiData.midiFrets[1];
                 report->highEFret = midiData.midiFrets[0];
             }
-#endif
-#if PRO_GUITAR && BLUETOOTH_RX
-            TRANSLATE_TO_PRO_GUITAR(bt_data)
 #endif
             asm volatile("" ::
                              : "memory");
@@ -3763,8 +3763,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
 #if PRO_GUITAR && USB_HOST_STACK
                 TRANSLATE_TO_PRO_GUITAR(usb_host_data)
-                report->autoCal_Light = report->tilt;
-                report->autoCal_Microphone = report->tilt;
+#endif
+#if PRO_GUITAR && BLUETOOTH_RX
+                TRANSLATE_TO_PRO_GUITAR(bt_data)
 #endif
 
 #ifdef MUSTANG_NECK_SPI_PORT
@@ -3790,7 +3791,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                     report->gFretVelocity = midiData.midiStringVelocities[2];
                     report->bFretVelocity = midiData.midiStringVelocities[1];
                     report->highEFretVelocity = midiData.midiStringVelocities[0];
-                    report->tilt = midiData.proGuitarData.tilt ? 0x7F : 0x60;
+                    report->tilt = midiData.proGuitarData.tilt ? 0x7F : 0x40;
                     report->start |= midiData.proGuitarData.start;
                     report->back |= midiData.proGuitarData.back;
                     report->guide |= midiData.proGuitarData.guide;
@@ -3803,10 +3804,10 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                     dpad = dpad >= 0x08 ? 0 : dpad_bindings_reverse[dpad];
                     asm volatile("" ::
                                      : "memory");
-                    report->dpadUp |= dpad & UP;
-                    report->dpadLeft |= dpad & LEFT;
-                    report->dpadDown |= dpad & DOWN;
-                    report->dpadRight |= dpad & RIGHT;
+                    report->dpadUp |= (dpad & UP) != 0;
+                    report->dpadLeft |= (dpad & LEFT) != 0;
+                    report->dpadDown |= (dpad & DOWN) != 0;
+                    report->dpadRight |= (dpad & RIGHT) != 0;
                     for (size_t i = 0; i < TU_ARRAY_SIZE(midiData.midiFrets); i++)
                     {
                         uint8_t fret = midiData.midiFrets[i];
@@ -3825,8 +3826,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                     report->highEFret = midiData.midiFrets[0];
                 }
 #endif
-#if PRO_GUITAR && BLUETOOTH_RX
-                TRANSLATE_TO_PRO_GUITAR(bt_data)
+
+#if PRO_GUITAR
                 report->autoCal_Light = report->tilt;
                 report->autoCal_Microphone = report->tilt;
 #endif

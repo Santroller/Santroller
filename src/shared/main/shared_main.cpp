@@ -3293,6 +3293,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->y |= midiData.proGuitarData.y;
 
             uint8_t dpad = midiData.proGuitarData.dpad >= 0x08 ? 0 : dpad_bindings_reverse[midiData.proGuitarData.dpad];
+        asm volatile("" ::
+                         : "memory");
             report->dpadUp |= dpad & UP;
             report->dpadLeft |= dpad & LEFT;
             report->dpadDown |= dpad & DOWN;

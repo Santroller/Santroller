@@ -361,9 +361,11 @@ typedef struct
     uint8_t : 2;
 
     uint8_t dpad : 4;
+
     uint8_t : 2;
     uint8_t tilt : 1;
     uint8_t : 1;
+    uint8_t end[2];
 } __attribute__((packed)) ProGuitar_Sysex_Buttons_t;
 typedef struct
 {

@@ -3283,7 +3283,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->gFretVelocity = midiData.midiStringVelocities[2];
             report->bFretVelocity = midiData.midiStringVelocities[1];
             report->highEFretVelocity = midiData.midiStringVelocities[0];
-            report->tilt = midiData.proGuitarData.tilt == INT16_MAX ? 0x7F : 0x60;
+            report->tilt = midiData.proGuitarData.tilt ? 0x7F : 0x60;
             report->start |= midiData.proGuitarData.start;
             report->back |= midiData.proGuitarData.back;
             report->guide |= midiData.proGuitarData.guide;
@@ -3292,7 +3292,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->x |= midiData.proGuitarData.x;
             report->y |= midiData.proGuitarData.y;
 
-            uint8_t dpad = midiData.proGuitarData.dpad & 0x0f;
+            uint8_t dpad = midiData.proGuitarData.dpad;
             dpad = dpad >= 0x08 ? 0 : dpad_bindings_reverse[dpad];
             asm volatile("" ::
                              : "memory");
@@ -3546,7 +3546,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 report->gFretVelocity = midiData.midiStringVelocities[2];
                 report->bFretVelocity = midiData.midiStringVelocities[1];
                 report->highEFretVelocity = midiData.midiStringVelocities[0];
-                report->tilt = midiData.proGuitarData.tilt == INT16_MAX ? 0x7F : 0x60;
+                report->tilt = midiData.proGuitarData.tilt ? 0x7F : 0x60;
                 report->start |= midiData.proGuitarData.start;
                 report->back |= midiData.proGuitarData.back;
                 report->guide |= midiData.proGuitarData.guide;
@@ -3555,7 +3555,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                 report->x |= midiData.proGuitarData.x;
                 report->y |= midiData.proGuitarData.y;
 
-                uint8_t dpad = midiData.proGuitarData.dpad & 0x0f;
+                uint8_t dpad = midiData.proGuitarData.dpad;
                 dpad = dpad >= 0x08 ? 0 : dpad_bindings_reverse[dpad];
                 asm volatile("" ::
                                  : "memory");
@@ -3787,7 +3787,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                     report->gFretVelocity = midiData.midiStringVelocities[2];
                     report->bFretVelocity = midiData.midiStringVelocities[1];
                     report->highEFretVelocity = midiData.midiStringVelocities[0];
-                    report->tilt = midiData.proGuitarData.tilt == INT16_MAX ? 0x7F : 0x60;
+                    report->tilt = midiData.proGuitarData.tilt ? 0x7F : 0x60;
                     report->start |= midiData.proGuitarData.start;
                     report->back |= midiData.proGuitarData.back;
                     report->guide |= midiData.proGuitarData.guide;
@@ -3796,7 +3796,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
                     report->x |= midiData.proGuitarData.x;
                     report->y |= midiData.proGuitarData.y;
 
-                    uint8_t dpad = midiData.proGuitarData.dpad & 0x0f;
+                    uint8_t dpad = midiData.proGuitarData.dpad;
                     dpad = dpad >= 0x08 ? 0 : dpad_bindings_reverse[dpad];
                     asm volatile("" ::
                                      : "memory");

@@ -328,7 +328,7 @@ void tick_slave()
     slaveInitWt();
 #endif
 #ifdef INPUT_QUAD_SLAVE
-    slaveInitQuad(INPUT_QUAD_SLAVE, 1);
+    slaveInitQuad(INPUT_QUAD_SLAVE, 8);
 #endif
 }
 #endif

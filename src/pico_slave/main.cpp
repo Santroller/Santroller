@@ -218,7 +218,7 @@ void loop() {
         checkWtSlave(6);
         rawWt = checkWtSlave(1) | (checkWtSlave(0) << 1) | (checkWtSlave(2) << 2) | (checkWtSlave(3) << 3) | (checkWtSlave(4) << 4);
     }
-    if (hasInitQuad && (lastQuadPoll - millis()) > quadPollRate) {
+    if (hasInitQuad && (millis()-lastQuadPoll) > quadPollRate) {
         lastQuadPoll = millis();
         new_value = quadrature_encoder_get_count(pio, sm);
         delta = new_value - old_value;

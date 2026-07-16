@@ -7,6 +7,7 @@ WiiDevice::WiiDevice(std::shared_ptr<WiiDevice> old, proto_WiiDevice device, uin
 {
     if (old)
     {
+        printf("old\r\n");
         m_lastExtType = old->m_lastExtType;
         m_lastValue = old->m_lastValue;
         m_extension.load_state(&old->m_extension);
@@ -37,8 +38,8 @@ void WiiDevice::update(bool full_poll, bool send_events)
     if (m_extension.mType != m_lastExtType || full_poll)
     {
         bool changed = m_extension.mType != m_lastExtType;
+        printf("found wii ext: %d %d\r\n", m_lastExtType, m_extension.mType);
         m_lastExtType = m_extension.mType;
-        printf("found wii ext: %d\r\n", m_lastExtType);
         proto_Event event = {which_event : proto_Event_wii_tag, event : {wii : {m_id, m_lastExtType}}};
         HIDConfigDevice::send_event(event, true);
         if (changed && HIDConfigDevice::tool_closed())

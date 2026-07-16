@@ -114,22 +114,22 @@ bool load_device_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    printf("load_device");
+    printf("load_device\r\n");
     proto_Device device proto_Device_init_zero;
     device.cb_device.funcs.decode = load_device_dev;
     pb_decode(stream, proto_Device_fields, &device);
     auto dev_id = device.deviceid;
     // If we are loading a new config, we grab the previous device so we can make sure its state is restored
     auto prevDevice = std::shared_ptr<Device>();
+    printf("root_devices: %d\r\n", root_devices.size());
     if (auto it = root_devices.find(dev_id); it != root_devices.end())
     {
         prevDevice = it->second;
         // signal devices that they are being torn down, but in a way where if they are being replaced, they aren't fully torn down
         // This is so that things like PS2 controllers, Wii extensions and USB host and bluetooth aren't restarted during a config change
         prevDevice->end(false);
-        prevDevice->still_connected = true;
     }
-    printf("found device! %d\r\n", prevDevice != nullptr);
+    printf("found device! %p\r\n", prevDevice);
     printf("device id: %d, type: %d\r\n", dev_id, device.which_device);
     switch (device.which_device)
     {
@@ -223,6 +223,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         break;
     }
     root_devices[dev_id] = active_devices.back();
+    active_devices.back()->still_connected = true;
     active_devices.back()->begin();
     active_devices.back()->rescan(true);
     return true;

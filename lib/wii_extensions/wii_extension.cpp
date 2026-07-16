@@ -385,7 +385,7 @@ void WiiExtension::setEuphoriaLed(bool state)
 }
 void WiiExtension::tick()
 {
-    // fully driven by DMA and interrupts
+    mInterface.tick();
 }
 
 uint16_t atanAxis(uint16_t y, uint16_t x)

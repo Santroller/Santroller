@@ -256,6 +256,9 @@ void MidiDevice::update(bool full_poll, bool send_events)
                         // picking events
                         uint8_t string = cable_state->data[5] - 1;
                         uint8_t velocity = cable_state->data[6];
+                        if (midiData->midiStringVelocities[string] == velocity) {
+                            velocity ^= 1;
+                        }
                         midiData->midiStringVelocities[string] = velocity;
                     }
                 }

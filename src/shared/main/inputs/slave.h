@@ -111,7 +111,9 @@ int slaveReadQuad() {
     for (int i = 0; i < RETRY_COUNT; i++) {
         int data = 0;
         slave_initted = twi_readFromPointer(SLAVE_TWI_PORT, SLAVE_ADDR, SLAVE_COMMAND_GET_QUAD, sizeof(data), (uint8_t*)&data);
-
+        #if DEVICE_TYPE == DJ_HERO_TURNTABLE
+            data <<= 9;
+        #endif
         if (slave_initted) {
             return data;
         }

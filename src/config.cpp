@@ -464,6 +464,7 @@ bool load_cycle(pb_istream_t *stream, const pb_field_t *field, void **arg)
     last_special = last_cycle;
     proto_CycleInput input;
     input.input.cb_input.funcs.decode = load_input_dev;
+    input.inputReverse.cb_input.funcs.decode = load_input_dev;
     if (!pb_decode(stream, proto_CycleInput_fields, &input))
     {
         printf("couldnt decode cycle input?\r\n");
@@ -803,6 +804,7 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
+    printf("load_profile\r\n");
     auto profile = std::make_shared<Profile>();
     for (auto &device : active_devices)
     {

@@ -293,7 +293,10 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             switch (incomingXGIP->getData()[0])
             {
             case GIP_STATE_START:
-                xboneDriverState = XboxOneDriverState::SETUP_AUTH;
+            // TODO: at this point, if auth is available do it other wise dont
+                // xboneDriverState = XboxOneDriverState::SETUP_AUTH;
+                xboneDriverState = XboxOneDriverState::AUTH_DONE;
+                auth_completed = true;
                 xbox_one_powered_on = true;
                 break;
             default:
@@ -637,8 +640,10 @@ size_t XboxOneGamepadDevice::device_name(uint8_t idx, char *desc)
 
 void XboxOneGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
-    desc->idVendor = XBOX_ONE_CONTROLLER_VID;
-    desc->idProduct = XBOX_ONE_CONTROLLER_PID;
+    if (subtype == Gamepad) {
+        desc->idVendor = XBOX_ONE_CONTROLLER_VID;
+        desc->idProduct = XBOX_ONE_CONTROLLER_PID;
+    }
     desc->bDeviceClass = 0xff;
     desc->bDeviceSubClass = 0x47;
     desc->bDeviceProtocol = 0xd0;

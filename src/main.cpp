@@ -201,8 +201,6 @@ int main()
     multicore_launch_core1(core1);
     adc_init();
     ring_buffer_init(&console_buf, console_buf_data, sizeof(console_buf_data), 0);
-
-    stdio_uart_init_full(uart_get_instance(0), 115200, 0, 1);
     EEPROM.start();
     if (!load())
     {

@@ -140,8 +140,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new CrkdDevice(device.device.crkdNeck, dev_id));
         break;
     case proto_Device_crkdDrum_tag:
-        return true;
-        // active_devices.emplace_back(new CrkdDrumDevice(device.device.crkdDrum, dev_id));
+        active_devices.emplace_back(new CrkdDrumDevice(device.device.crkdDrum, dev_id));
         break;
     case proto_Device_wii_tag:
         // we pass in the previous device here so we can make sure the state is kept between reloads
@@ -190,7 +189,6 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new MidiSerialDevice(device.device.midiSerial, dev_id));
         break;
     case proto_Device_ws2812_tag:
-        return true;
         active_devices.emplace_back(new WS2812Device(device.device.ws2812, dev_id));
         break;
     case proto_Device_stp16cpc_tag:

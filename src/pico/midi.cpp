@@ -1,5 +1,6 @@
 #include "midi.hpp"
 #include "config.h"
+#include "shared_main.h"
 MidiDevice::MidiDevice(bool usbBased, Midi_Data_t* data) : usbBased(usbBased), midiData(data)
 {
     tu_memclr(&ep_stream, sizeof(ep_stream));
@@ -167,21 +168,16 @@ void MidiDevice::update(bool full_poll, bool send_events)
             switch (status)
             {
             case MIDI_CIN_NOTE_OFF:
-                // ignore note off since some drums don't send it, or they sent it too quick so we make our own note off later
-                #if DEVICE_TYPE_IS_DRUM
-                    break;
-                #endif
-                // velocity 0 for note off
-                cable_state->data[2] = 0;
-                [[fallthrough]];
+                offNote(channel, cable_state->data[1], 0);
+                break;
             case MIDI_CIN_NOTE_ON:
-                midiData->midiVelocities[cable_state->data[1]] = cable_state->data[2];
+                onNote(channel, cable_state->data[1], cable_state->data[2]);
                 break;
             case MIDI_CIN_CONTROL_CHANGE:
-                midiData->midiControlChanges[cable_state->data[1]] = cable_state->data[2];
+                onControlChange(channel, cable_state->data[1], cable_state->data[2]);
                 break;
             case MIDI_CIN_PITCH_BEND_CHANGE:
-                midiData->midiPitchWheel = ((int16_t)cable_state->data[3] << 7) | cable_state->data[2];
+                onPitchBend(channel, ((int16_t)cable_state->data[3] << 7) | cable_state->data[2]);
                 break;
             case MIDI_CIN_POLY_KEYPRESS:
                 break;

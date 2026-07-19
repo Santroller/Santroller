@@ -509,7 +509,7 @@ bool load_toggle(pb_istream_t *stream, const pb_field_t *field, void **arg)
 bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = working_profile;
-    printf("input_dev: %d %p\r\n", field->tag, profile.get());
+    // printf("input_dev: %d %p\r\n", field->tag, profile.get());
 
     if (field->tag == proto_Input_cycle_tag)
     {

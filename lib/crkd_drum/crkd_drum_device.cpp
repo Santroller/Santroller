@@ -13,11 +13,15 @@ CrkdDrum::CrkdDrum(uint8_t block, uint8_t tx, uint8_t rx, uint32_t clock) : inte
 {
     printf("setup drum!\r\n");
 }
-void CrkdDrum::begin() {
+void CrkdDrum::begin()
+{
     printf("crkd drum begin!\r\n");
+    m_read_param = false;
+    m_param_cmd = 0x60;
     interface.setup_interrupts((uint8_t *)&m_CrkdDrum, 0xA5, sizeof(m_CrkdDrum));
 }
-void CrkdDrum::end() {
+void CrkdDrum::end()
+{
     printf("crkd drum end!\r\n");
     interface.disable_interrupts();
 }
@@ -41,15 +45,60 @@ void update_crc(uint8_t *buf, uint8_t len)
     }
     buf[len - 1] = crc;
 }
+void CrkdDrum::setParam(CrkdDrumCalibrationType type, CrkdDrumAxisType axisType, uint32_t val)
+{
+    crkd_drum_t *data;
+    switch (type)
+    {
+    case CrkdDrumCalibrationType::Min:
+        data = &m_minParams;
+        break;
+    case CrkdDrumCalibrationType::Max:
+        data = &m_maxParams;
+        break;
+    case CrkdDrumCalibrationType::Debounce:
+        data = &m_debounceParams;
+        break;
+    }
+    switch (axisType)
+    {
+    case CrkdDrumAxisType::CrkdRedPad:
+        data->red_pad = val;
+        break;
+    case CrkdDrumAxisType::CrkdYellowPad:
+        data->yellow_pad = val;
+        break;
+    case CrkdDrumAxisType::CrkdBluePad:
+        data->blue_pad = val;
+        break;
+    case CrkdDrumAxisType::CrkdGreenPad:
+        data->green_pad = val;
+        break;
+    case CrkdDrumAxisType::CrkdYellowCymbal:
+        data->yellow_cymbal = val;
+        break;
+    case CrkdDrumAxisType::CrkdBlueCymbal:
+        data->blue_cymbal = val;
+        break;
+    case CrkdDrumAxisType::CrkdGreenCymbal:
+        data->green_cymbal = val;
+        break;
+    case CrkdDrumAxisType::CrkdKick1:
+        data->kick1 = val;
+        break;
+    case CrkdDrumAxisType::CrkdKick2:
+        data->kick2 = val;
+        break;
+    }
+    update_crc((uint8_t *)data, sizeof(crkd_drum_t));
+    interface.send((uint8_t *)data, sizeof(crkd_drum_t));
+}
 void CrkdDrum::tick()
 {
     m_lastPoll = interface.last_read_time();
     m_connected = millis() - m_lastPoll < 20;
-    // if (!m_connected)
-    // {
-    //     m_param_cmd = 0x60;
-    // }
-    if (!m_connected) {
+    if (!m_connected)
+    {
         red_pad = 0;
         yellow_pad = 0;
         blue_pad = 0;
@@ -60,6 +109,8 @@ void CrkdDrum::tick()
         green_cymbal = 0;
         kick1 = 0;
         kick2 = 0;
+        m_read_param = false;
+        m_param_cmd = 0x60;
     }
     if (m_connected && m_CrkdDrum.cmd == 0x50)
     {
@@ -74,10 +125,10 @@ void CrkdDrum::tick()
         kick1 = m_CrkdDrum.kick1;
         kick2 = m_CrkdDrum.kick2;
         m_CrkdDrum.cmd = 0;
-        // if (m_param_cmd == 0)
-        // {
+        if (m_param_cmd == 0)
+        {
             interface.send(ack, sizeof(ack));
-        // }
+        }
     }
 
     if (m_connected && m_param_cmd && (m_CrkdDrum.cmd == m_param_cmd || m_param_cmd == 0x60))
@@ -86,12 +137,15 @@ void CrkdDrum::tick()
         {
         case 0x61:
             m_debounceParams = m_CrkdDrum;
+            m_debounceParams.cmd = 0x51;
             break;
         case 0x62:
             m_minParams = m_CrkdDrum;
+            m_minParams.cmd = 0x52;
             break;
         case 0x63:
             m_maxParams = m_CrkdDrum;
+            m_maxParams.cmd = 0x53;
             break;
         default:
             break;
@@ -103,34 +157,12 @@ void CrkdDrum::tick()
             update_crc(data, sizeof(data));
             interface.send(data, sizeof(data));
         }
-        else
+        else if (m_CrkdDrum.cmd == 0x63)
         {
+            m_CrkdDrum.cmd = 0;
             m_param_cmd = 0;
-            // if (m_minParams.green_cymbal != 0x10)
-            // {
-            //     printf("before: ");
-            //     for (int i = 0; i < sizeof(m_minParams); i++)
-            //     {
-            //         printf("%02x, ", ((uint8_t *)&m_minParams)[i]);
-            //     }
-            //     printf("\r\n");
-            //     printf("set green cymbal to 0x10 (was %02x)\r\n", m_minParams.green_cymbal);
-            //     m_minParams.cmd = 0x52;
-            //     m_minParams.green_cymbal = 0x10;
-            //     update_crc((uint8_t *)&m_minParams, sizeof(m_minParams));
-
-            //     printf("got resp: ");
-            //     for (int i = 0; i < sizeof(m_minParams); i++)
-            //     {
-            //         printf("%02x, ", ((uint8_t *)&m_minParams)[i]);
-            //     }
-            //     printf("\r\n");
-            //     interface.send((uint8_t *)&m_minParams, sizeof(m_minParams));
-            // }
-            // else
-            // {
-                interface.send(ack, sizeof(ack));
-            // }
+            m_read_param = true;
+            interface.send(ack, sizeof(ack));
         }
     }
 };

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "uart.hpp"
+#include "input_enums.pb.h"
+#include "commands.pb.h"
 
 typedef struct
 {
@@ -27,9 +29,10 @@ public:
     void tick();
     void begin();
     void end();
+    void setParam(CrkdDrumCalibrationType type, CrkdDrumAxisType axisType, uint32_t val);
     inline bool is_connected()
     {
-        return m_connected;
+        return m_connected && m_read_param;
     }
     
     uint8_t red_pad;

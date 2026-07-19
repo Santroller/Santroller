@@ -42,6 +42,9 @@ public:
     uint8_t green_cymbal;
     uint8_t kick1;
     uint8_t kick2;
+    crkd_drum_t m_debounceParams;
+    crkd_drum_t m_minParams;
+    crkd_drum_t m_maxParams;
 
 private:
 
@@ -49,9 +52,6 @@ private:
     bool m_connected = false;
     bool m_updating = false;
     crkd_drum_t m_CrkdDrum;
-    crkd_drum_t m_debounceParams;
-    crkd_drum_t m_minParams;
-    crkd_drum_t m_maxParams;
     long m_lastPoll;
     bool m_error = false;
     long m_lastSend;

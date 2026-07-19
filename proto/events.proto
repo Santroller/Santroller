@@ -2,6 +2,25 @@ syntax = "proto2";
 package proto;
 import "enums.proto";
 
+message CrkdCalibrationData {
+    required uint32 red_pad = 1;
+    required uint32 yellow_pad = 2;
+    required uint32 blue_pad = 3;
+    required uint32 green_pad = 4;
+    required uint32 orange_pad = 5;
+    required uint32 yellow_cymbal = 6;
+    required uint32 blue_cymbal = 7;
+    required uint32 green_cymbal = 8;
+    required uint32 kick1 = 9;
+    required uint32 kick2 = 10;
+}
+message CrkdCalibrationDataEvent {
+    required uint32 id = 1;
+    required CrkdCalibrationData debounce = 2;
+    required CrkdCalibrationData min = 3;
+    required CrkdCalibrationData max = 4;
+}
+
 message ButtonEvent {
     required uint32 id = 1;
     required bool stateRaw = 2;
@@ -98,6 +117,7 @@ message Event {
         ConsoleEvent console = 13;
         CycleEvent cycle = 14;
         ToggleEvent toggle = 15;
+        CrkdCalibrationDataEvent crkdDrum = 16;
     };
 }
 

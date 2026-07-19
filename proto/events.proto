@@ -16,9 +16,8 @@ message CrkdCalibrationData {
 }
 message CrkdCalibrationDataEvent {
     required uint32 id = 1;
-    required CrkdCalibrationData debounce = 2;
-    required CrkdCalibrationData min = 3;
-    required CrkdCalibrationData max = 4;
+    required CrkdDrumCalibrationType type = 2;
+    required CrkdCalibrationData data = 3;
 }
 
 message ButtonEvent {

@@ -248,3 +248,9 @@ enum CycleType {
   custom=1;
   pickup=2;
 }
+
+enum CrkdDrumCalibrationType {
+  Debounce=1;
+  Min=2;
+  Max=3;
+}

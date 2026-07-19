@@ -28,7 +28,8 @@ void CrkdDrumDevice::update(bool full_poll, bool send_events)
             event : {
                 crkdDrum : {
                     m_id,
-                    debounce : {
+                    type : CrkdDrumCalibrationType_Debounce,
+                    data : {
                         drum.m_debounceParams.red_pad,
                         drum.m_debounceParams.yellow_pad,
                         drum.m_debounceParams.blue_pad,
@@ -39,7 +40,17 @@ void CrkdDrumDevice::update(bool full_poll, bool send_events)
                         drum.m_debounceParams.green_cymbal,
                         drum.m_debounceParams.kick1,
                         drum.m_debounceParams.kick2},
-                    min : {
+                }
+            }
+        };
+        HIDConfigDevice::send_event(event, true);
+        event = {
+            which_event : proto_Event_crkdDrum_tag,
+            event : {
+                crkdDrum : {
+                    m_id,
+                    type : CrkdDrumCalibrationType_Min,
+                    data : {
                         drum.m_minParams.red_pad,
                         drum.m_minParams.yellow_pad,
                         drum.m_minParams.blue_pad,
@@ -50,7 +61,17 @@ void CrkdDrumDevice::update(bool full_poll, bool send_events)
                         drum.m_minParams.green_cymbal,
                         drum.m_minParams.kick1,
                         drum.m_minParams.kick2},
-                    max : {
+                }
+            }
+        };
+        HIDConfigDevice::send_event(event, true);
+        event = {
+            which_event : proto_Event_crkdDrum_tag,
+            event : {
+                crkdDrum : {
+                    m_id,
+                    type : CrkdDrumCalibrationType_Max,
+                    data : {
                         drum.m_maxParams.red_pad,
                         drum.m_maxParams.yellow_pad,
                         drum.m_maxParams.blue_pad,

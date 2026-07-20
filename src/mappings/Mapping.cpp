@@ -88,6 +88,9 @@ void ButtonMapping::update(bool full_poll, bool send_events)
 {
     auto calcVal = m_input->tickDigital();
 
+    if (m_mapping.inverted) {
+        calcVal = !calcVal;
+    }
     if (m_mapping.has_trigger)
     {
         auto val = m_input->tickAnalog();
@@ -107,6 +110,9 @@ void ButtonMapping::update(bool full_poll, bool send_events)
         else if (m_mapping.trigger == AnalogToDigitalTriggerType_Range)
         {
             calcVal = m_input->tickAnalog() > m_mapping.triggerValue && m_input->tickAnalog() < m_mapping.maxTriggerValue;
+        }
+        if (m_mapping.inverted) {
+            calcVal = !calcVal;
         }
         if (send_events && (val != m_last_sent_value || full_poll))
         {

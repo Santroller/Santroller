@@ -130,6 +130,10 @@ void CrkdDrum::tick()
             interface.send(ack, sizeof(ack));
         }
     }
+    if (m_connected && m_CrkdDrum.cmd >= 0x51 && m_CrkdDrum.cmd <= 0x53)
+    {
+        interface.send(ack, sizeof(ack));
+    }
 
     if (m_connected && m_param_cmd && (m_CrkdDrum.cmd == m_param_cmd || m_param_cmd == 0x60))
     {

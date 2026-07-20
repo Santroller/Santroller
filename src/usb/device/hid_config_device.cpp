@@ -7,6 +7,7 @@
 #include "usb/device/hid_device.h"
 #include "usb/device/ps3_device.h"
 #include "usb/device/ps4_device.h"
+#include "devices/crkd_drum.hpp"
 #include "device/usbd.h"
 #include "hid_reports.h"
 #include "device/usbd_pvt.h"
@@ -288,6 +289,11 @@ void HIDConfigDevice::handle_command(proto_Command command)
   {
     reload();
     return;
+  }
+  case proto_Command_crkdDrum_tag:
+  {
+    std::static_pointer_cast<CrkdDrumDevice>(root_devices[command.command.crkdDrum.id])->drum.setParam(command.command.crkdDrum.type, command.command.crkdDrum.axisType, command.command.crkdDrum.val);
+    break;
   }
   case proto_Command_detectPin_tag:
   {

@@ -31,12 +31,8 @@ void BluetoothDevice::begin()
 
 void BluetoothDevice::end(bool full)
 {
-    if (full)
-    {
-        printf("bt device deinit\r\n");
-        cyw43_arch_deinit();
-        bluetooth_initted = false;
-    }
+    cyw43_arch_deinit();
+    bluetooth_initted = false;
 }
 BluetoothDevice::~BluetoothDevice()
 {

@@ -59,6 +59,11 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
 {
     // printf("check trigger: %d %d\r\n", m_input->tickAnalog(), m_activation_trigger.triggerValue);
     auto val = m_input->tickDigital();
+
+    if (m_activation_trigger.inverted)
+    {
+        val = !val;
+    }
     if (m_activation_trigger.has_trigger)
     {
         auto analog_val = m_input->tickAnalog();
@@ -77,6 +82,10 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
         else if (m_activation_trigger.trigger == AnalogToDigitalTriggerType_Range)
         {
             val = m_input->tickAnalog() > m_activation_trigger.triggerValue && m_input->tickAnalog() < m_activation_trigger.maxTriggerValue;
+        }
+        if (m_activation_trigger.inverted)
+        {
+            val = !val;
         }
         if (send_events && (analog_val != m_last_analog_val || full_poll))
         {
@@ -117,7 +126,8 @@ bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
     }
     if (!m_config.has_consoleType)
     {
-        if (send_events && full_poll) {
+        if (send_events && full_poll)
+        {
             proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
             HIDConfigDevice::send_event(event, true);
         }
@@ -260,7 +270,6 @@ bool UsbTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
 SpecificUsbDeviceActivationTrigger::SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_device(device)
 {
 }
-
 
 bool SpecificUsbDeviceActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {

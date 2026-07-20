@@ -16,8 +16,11 @@ CrkdDrum::CrkdDrum(uint8_t block, uint8_t tx, uint8_t rx, uint32_t clock) : inte
 void CrkdDrum::begin()
 {
     printf("crkd drum begin!\r\n");
-    m_read_param = false;
-    m_param_cmd = 0x60;
+    m_parameters_read = false;
+    m_param_cmd = 0x61;
+    m_param_reading = false;
+    m_nextParam = millis();
+    m_CrkdDrum = {0};
     interface.setup_interrupts((uint8_t *)&m_CrkdDrum, 0xA5, sizeof(m_CrkdDrum));
 }
 void CrkdDrum::end()
@@ -59,6 +62,8 @@ void CrkdDrum::setParam(CrkdDrumCalibrationType type, CrkdDrumAxisType axisType,
     case CrkdDrumCalibrationType::Debounce:
         data = &m_debounceParams;
         break;
+    default:
+        return;
     }
     switch (axisType)
     {
@@ -90,8 +95,18 @@ void CrkdDrum::setParam(CrkdDrumCalibrationType type, CrkdDrumAxisType axisType,
         data->kick2 = val;
         break;
     }
-    update_crc((uint8_t *)data, sizeof(crkd_drum_t));
-    interface.send((uint8_t *)data, sizeof(crkd_drum_t));
+    switch (type)
+    {
+    case CrkdDrumCalibrationType::Min:
+        m_min_updated = true;
+        break;
+    case CrkdDrumCalibrationType::Max:
+        m_max_updated = true;
+        break;
+    case CrkdDrumCalibrationType::Debounce:
+        m_debounce_updated = true;
+        break;
+    }
 }
 void CrkdDrum::tick()
 {
@@ -109,8 +124,30 @@ void CrkdDrum::tick()
         green_cymbal = 0;
         kick1 = 0;
         kick2 = 0;
-        m_read_param = false;
-        m_param_cmd = 0x60;
+        m_parameters_read = false;
+        m_param_cmd = 0x61;
+        m_param_reading = true;
+    }
+    if (m_connected && m_min_updated)
+    {
+        update_crc((uint8_t *)&m_minParams, sizeof(crkd_drum_t));
+        interface.send((uint8_t *)&m_minParams, sizeof(crkd_drum_t));
+        m_min_updated = false;
+        m_CrkdDrum.cmd = 0;
+    }
+    if (m_connected && m_max_updated)
+    {
+        update_crc((uint8_t *)&m_maxParams, sizeof(crkd_drum_t));
+        interface.send((uint8_t *)&m_maxParams, sizeof(crkd_drum_t));
+        m_max_updated = false;
+        m_CrkdDrum.cmd = 0;
+    }
+    if (m_connected && m_debounce_updated)
+    {
+        update_crc((uint8_t *)&m_debounceParams, sizeof(crkd_drum_t));
+        interface.send((uint8_t *)&m_debounceParams, sizeof(crkd_drum_t));
+        m_debounce_updated = false;
+        m_CrkdDrum.cmd = 0;
     }
     if (m_connected && m_CrkdDrum.cmd == 0x50)
     {
@@ -132,41 +169,52 @@ void CrkdDrum::tick()
     }
     if (m_connected && m_CrkdDrum.cmd >= 0x51 && m_CrkdDrum.cmd <= 0x53)
     {
+        m_CrkdDrum.cmd = 0;
         interface.send(ack, sizeof(ack));
     }
-
-    if (m_connected && m_param_cmd && (m_CrkdDrum.cmd == m_param_cmd || m_param_cmd == 0x60))
+    if (m_connected && m_parameters_read && m_CrkdDrum.cmd >= 0x61 && m_CrkdDrum.cmd <= 0x63)
     {
-        switch (m_param_cmd)
+        m_CrkdDrum.cmd = 0;
+        interface.send(ack, sizeof(ack));
+    }
+    if (m_connected && m_param_cmd && !m_param_reading && millis() > m_nextParam)
+    {
+        uint8_t data[] = {0xA5, m_param_cmd, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00};
+        update_crc(data, sizeof(data));
+        interface.send(data, sizeof(data));
+        m_param_reading = true;
+    }
+    if (m_connected && m_CrkdDrum.cmd == m_param_cmd && m_param_reading)
+    {
+        m_param_reading = false;
+        m_nextParam = millis() + 100;
+        uint8_t crc = m_CrkdDrum.crc;
+        update_crc((uint8_t *)&m_CrkdDrum, sizeof(m_CrkdDrum));
+        if (crc == m_CrkdDrum.crc)
         {
-        case 0x61:
-            m_debounceParams = m_CrkdDrum;
-            m_debounceParams.cmd = 0x51;
-            break;
-        case 0x62:
-            m_minParams = m_CrkdDrum;
-            m_minParams.cmd = 0x52;
-            break;
-        case 0x63:
-            m_maxParams = m_CrkdDrum;
-            m_maxParams.cmd = 0x53;
-            break;
-        default:
-            break;
-        }
-        m_param_cmd++;
-        if (m_param_cmd <= 0x63)
-        {
-            uint8_t data[] = {0xA5, m_param_cmd, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00};
-            update_crc(data, sizeof(data));
-            interface.send(data, sizeof(data));
-        }
-        else if (m_CrkdDrum.cmd == 0x63)
-        {
-            m_CrkdDrum.cmd = 0;
-            m_param_cmd = 0;
-            m_read_param = true;
-            interface.send(ack, sizeof(ack));
+            switch (m_param_cmd)
+            {
+            case 0x61:
+                m_debounceParams = m_CrkdDrum;
+                m_debounceParams.cmd = 0x51;
+                m_param_cmd = 0x62;
+                break;
+            case 0x62:
+                m_minParams = m_CrkdDrum;
+                m_minParams.cmd = 0x52;
+                m_param_cmd = 0x63;
+                break;
+            case 0x63:
+                m_maxParams = m_CrkdDrum;
+                m_maxParams.cmd = 0x53;
+                m_CrkdDrum.cmd = 0;
+                m_param_cmd = 0;
+                m_parameters_read = true;
+                interface.send(ack, sizeof(ack));
+                return;
+            default:
+                break;
+            }
         }
     }
 };

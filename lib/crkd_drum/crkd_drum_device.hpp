@@ -32,7 +32,7 @@ public:
     void setParam(CrkdDrumCalibrationType type, CrkdDrumAxisType axisType, uint32_t val);
     inline bool is_connected()
     {
-        return m_connected && m_read_param;
+        return m_connected && m_parameters_read;
     }
     
     uint8_t red_pad;
@@ -55,9 +55,14 @@ private:
     bool m_connected = false;
     bool m_updating = false;
     crkd_drum_t m_CrkdDrum;
-    long m_lastPoll;
+    uint32_t m_lastPoll;
+    uint32_t m_nextParam;
     bool m_error = false;
-    long m_lastSend;
-    bool m_read_param = false;
+    uint32_t m_lastSend;
+    bool m_parameters_read = false;
     uint8_t m_param_cmd = 0;
+    bool m_param_reading = false;
+    bool m_debounce_updated = false;
+    bool m_max_updated = false;
+    bool m_min_updated = false;
 };

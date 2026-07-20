@@ -900,7 +900,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     }
     return true;
 }
-struct ConfigFooter
+struct __attribute__((packed)) ConfigFooter
 {
     uint32_t dataSize;
     uint32_t dataCrc;

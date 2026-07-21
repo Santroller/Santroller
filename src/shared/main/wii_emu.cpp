@@ -37,7 +37,7 @@ const unsigned char id[6] = {0x01, 0x00, 0xA4, 0x20, 0x01, 0x01};
 
 // virtual register
 static unsigned char twi_reg[256];
-
+static bool wiiOutEnabled = false;
 void initWiiOutput() {
     memset(twi_reg, 0, sizeof(twi_reg));
     twi_reg[0xF0] = 0;  // disable encryption
@@ -52,6 +52,18 @@ void initWiiOutput() {
     }
 }
 void setInputs(uint8_t* inputs, uint8_t len) {
+#ifdef WII_OUTPUT_EN_READ
+    if (!wiiOutEnabled && WII_OUTPUT_EN_READ()) {
+        wiiOutEnabled = true;
+        initWiiOutput();
+    }
+    if (wiiOutEnabled && !WII_OUTPUT_EN_READ()) {
+        wiiOutEnabled = false;
+    }
+    if (!wiiOutEnabled) {
+        return;
+    }
+#endif
     memcpy(twi_reg, inputs, len);
 }
 /*

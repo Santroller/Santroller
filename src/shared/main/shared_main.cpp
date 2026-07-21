@@ -287,7 +287,8 @@ void init_main(void)
     ps2_emu_init();
 #endif
     memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
-#ifdef TICK_WII
+    // if we have an enable line, we defer init until it goes high
+#if defined(TICK_WII) && !defined(WII_OUTPUT_EN_READ)
     initWiiOutput();
 #endif
 

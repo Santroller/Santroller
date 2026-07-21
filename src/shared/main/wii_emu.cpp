@@ -9,6 +9,7 @@
 #include "shared_main.h"
 #include "wii.h"
 #include "wm_crypto.h"
+#include <Wire.h>
 
 #ifdef TICK_WII
 static volatile unsigned char wm_rand[10];
@@ -38,29 +39,44 @@ const unsigned char id[6] = {0x01, 0x00, 0xA4, 0x20, 0x01, 0x01};
 // virtual register
 static unsigned char twi_reg[256];
 static bool wiiOutEnabled = false;
-void initWiiOutput() {
+void initWiiOutput()
+{
+#ifdef TWI_1_OUTPUT
+    RXWIRE.end();
+    RXWIRE.begin(WII_ADDR);
+#endif
+#ifdef TWI_0_OUTPUT
+    RXWIRE.end();
+    RXWIRE.begin(WII_ADDR);
+#endif
     memset(twi_reg, 0, sizeof(twi_reg));
-    twi_reg[0xF0] = 0;  // disable encryption
+    twi_reg[0xF0] = 0; // disable encryption
     // set id
-    for (unsigned int i = 0, j = 0xFA; i < 6; i++, j++) {
+    for (unsigned int i = 0, j = 0xFA; i < 6; i++, j++)
+    {
         twi_reg[j] = id[i];
     }
 
     // set calibration data
-    for (unsigned int i = 0, j = 0x20; i < 6; i++, j++) {
+    for (unsigned int i = 0, j = 0x20; i < 6; i++, j++)
+    {
         twi_reg[j] = cal_data[i];
     }
 }
-void setInputs(uint8_t* inputs, uint8_t len) {
+void setInputs(uint8_t *inputs, uint8_t len)
+{
 #ifdef WII_OUTPUT_EN_READ
-    if (!wiiOutEnabled && WII_OUTPUT_EN_READ()) {
+    if (!wiiOutEnabled && WII_OUTPUT_EN_READ())
+    {
         wiiOutEnabled = true;
         initWiiOutput();
     }
-    if (wiiOutEnabled && !WII_OUTPUT_EN_READ()) {
+    if (wiiOutEnabled && !WII_OUTPUT_EN_READ())
+    {
         wiiOutEnabled = false;
     }
-    if (!wiiOutEnabled) {
+    if (!wiiOutEnabled)
+    {
         return;
     }
 #endif
@@ -74,29 +90,35 @@ Decryption method found at https://web.archive.org/web/20131106235350/http://www
 
 */
 
-unsigned char wm_ror8(unsigned char a, unsigned char b) {
+unsigned char wm_ror8(unsigned char a, unsigned char b)
+{
     // bit shift with roll-over
     return (a >> b) | ((a << (8 - b)) & 0xFF);
 }
 
-uint8_t wii_data_format() {
+uint8_t wii_data_format()
+{
     return twi_reg[0xFE];
 }
 
-void wm_gentabs() {
+void wm_gentabs()
+{
     unsigned char idx;
 
     // check all idx
-    for (idx = 0; idx < 7; idx++) {
+    for (idx = 0; idx < 7; idx++)
+    {
         // generate test key
         unsigned char ans[6];
         unsigned char tkey[6];
         unsigned char t0[10];
 
-        for (unsigned char i = 0; i < 6; i++) {
+        for (unsigned char i = 0; i < 6; i++)
+        {
             ans[i] = pgm_read_byte(&(ans_tbl[idx][i]));
         }
-        for (unsigned char i = 0; i < 10; i++) {
+        for (unsigned char i = 0; i < 10; i++)
+        {
             t0[i] = pgm_read_byte(&(sboxes[0][wm_rand[i]]));
         }
 
@@ -109,13 +131,16 @@ void wm_gentabs() {
 
         // compare with actual key
         bool found = true;
-        for (unsigned char i = 0; i < 6; i++) {
-            if (tkey[i] != wm_key[i]) {
+        for (unsigned char i = 0; i < 6; i++)
+        {
+            if (tkey[i] != wm_key[i])
+            {
                 found = false;
                 break;
             }
         }
-        if (found) break;  // if match, then use this idx
+        if (found)
+            break; // if match, then use this idx
     }
 
     // generate encryption from idx key and rand
@@ -137,38 +162,53 @@ void wm_gentabs() {
     wm_sb[6] = pgm_read_byte(&(sboxes[idx + 1][wm_rand[3]])) ^ pgm_read_byte(&(sboxes[idx + 2][wm_rand[5]]));
     wm_sb[7] = pgm_read_byte(&(sboxes[idx + 1][wm_rand[2]])) ^ pgm_read_byte(&(sboxes[idx + 2][wm_rand[6]]));
 }
-void recv_data(uint8_t addr, uint8_t data) {
-    if (twi_reg[0xF0] == 0xAA && addr != 0xF0)  // if encryption is on
+void recv_data(uint8_t addr, uint8_t data)
+{
+    if (twi_reg[0xF0] == 0xAA && addr != 0xF0) // if encryption is on
     {
         // decrypt
         twi_reg[addr] = (data ^ wm_sb[addr % 8]) + wm_ft[addr % 8];
-    } else {
+    }
+    else
+    {
         twi_reg[addr] = data;
     }
     // Euphoria LED
 #if DEVICE_TYPE == DJ_HERO_TURNTABLE
-    if (addr == 0xFB) {
+    if (addr == 0xFB)
+    {
         handle_rumble(twi_reg[addr] * 0xFF, RUMBLE_SANTROLLER_EUPHORIA_LED);
     }
 #endif
 }
-void recv_end(uint8_t addr, uint8_t len) {
-    if (addr >= 0x40 && addr < 0x46) {
-        for (unsigned int i = 0; i < 6; i++) {
+void recv_end(uint8_t addr, uint8_t len)
+{
+    if (addr >= 0x40 && addr < 0x46)
+    {
+        for (unsigned int i = 0; i < 6; i++)
+        {
             wm_rand[9 - i] = twi_reg[0x40 + i];
         }
-    } else if (addr >= 0x46 && addr < 0x4C) {
-        for (unsigned int i = 6; i < 10; i++) {
+    }
+    else if (addr >= 0x46 && addr < 0x4C)
+    {
+        for (unsigned int i = 6; i < 10; i++)
+        {
             wm_rand[9 - i] = twi_reg[0x40 + i];
         }
-        for (unsigned int i = 0; i < 2; i++) {
+        for (unsigned int i = 0; i < 2; i++)
+        {
             wm_key[5 - i] = twi_reg[0x40 + 10 + i];
         }
-    } else if (addr >= 0x4C && addr < 0x50) {
-        for (unsigned int i = 2; i < 6; i++) {
+    }
+    else if (addr >= 0x4C && addr < 0x50)
+    {
+        for (unsigned int i = 2; i < 6; i++)
+        {
             wm_key[5 - i] = twi_reg[0x40 + 10 + i];
         }
-        if (addr + len == 0x50) {
+        if (addr + len == 0x50)
+        {
             // generate decryption once all data is loaded
             wm_gentabs();
         }
@@ -176,12 +216,15 @@ void recv_end(uint8_t addr, uint8_t len) {
 }
 
 // Called when the I2C slave is read from
-uint8_t req_data(uint8_t addr) {
-    if (twi_reg[0xF0] == 0xAA)  // encryption is on
+uint8_t req_data(uint8_t addr)
+{
+    if (twi_reg[0xF0] == 0xAA) // encryption is on
     {
         // encrypt
         return (twi_reg[addr] - wm_ft[addr % 8]) ^ wm_sb[addr % 8];
-    } else {
+    }
+    else
+    {
         return twi_reg[addr];
     }
 }

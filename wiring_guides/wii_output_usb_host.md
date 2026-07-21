@@ -10,10 +10,12 @@ sort: 13
 * A USB Extension cable, or a USB breakout
 - A Pi Pico
 - A Wii extension plug
-- A Schottky diode (a 20A diode should be plenty for this application, just needs to handle a >10V maximum reverse voltage)
+- A Schottky diode (a 20V diode should be plenty for this application, just needs to handle a >10V maximum reverse voltage)
 - Some Wire
-- A Soldering Iron  
-- A boost converter that can step up 3.3v to 5V
+- A Soldering Iron
+
+## Information
+Wii remotes don't provide enough power for USB Host. Because of this, you will need to power your pico from another power source when using wii extension emulation with usb host.
 
 ## Steps
 
@@ -41,11 +43,9 @@ sort: 13
     | Pi Pico (Advanced, Channel 0) | GP0, GP4, GP8, GP12, GP16, GP20  | GP1, GP5, GP9, GP13, GP17, GP21  |
     | Pi Pico (Advanced, Channel 1) | GP2, GP6, GP10, GP14, GP18, GP26 | GP3, GP7, GP11, GP15, GP19, GP27 |
 
-2. Connect the V<sub>CC</sub> from the Wii Extension to the voltage input for your boost converter
-3. Connect the voltage output from the boost converter to VBUS the pico, via the Schottky diode
-4. Connect the ground pin from the boost converter to the pico
-5. Connect the gnd pin to the gnd on your microcontroller.
-6. If your plug doesn't already connect device detect to V<sub>CC</sub> inside the cable, connect device detect to V<sub>CC</sub>.
+2. Connect the V<sub>CC</sub> from the Wii Extension to any GP pin that is free on the Pico
+3. Connect the gnd pin to the gnd on your microcontroller.
+4. If your plug doesn't already connect device detect to V<sub>CC</sub> inside the cable, connect device detect to V<sub>CC</sub>.
 
 ## Programming
 
@@ -54,6 +54,8 @@ sort: 13
 4.  Click on `Add Setting`
 5.  Find `Wii Extension Emulation` in the dropdown and add it 
 6.  For the Pi Pico, set your SDA and SCL pins.
+7.  Turn on `Use enable pin`
+8.  Set the `Enable Pin` to the pin you connected V<sub>CC</sub> from the Wii extension plug to.
 1.  Click on Add setting
 2.  Find and add `USB Host inputs`
 3.  Bind D+

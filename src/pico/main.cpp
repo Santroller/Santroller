@@ -34,7 +34,7 @@
 #include "pico/cyw43_arch.h"
 #endif
 
-CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[255];
+CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf[512];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN uint8_t buf2[255];
 CFG_TUSB_MEM_SECTION CFG_TUSB_MEM_ALIGN STRING_DESCRIPTOR_PICO serialstring = {
     .bLength = (sizeof(uint8_t) + sizeof(uint8_t) + (SERIAL_LEN + 3) * 2),

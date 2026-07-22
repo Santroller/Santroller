@@ -288,9 +288,9 @@ void init_main(void)
 #endif
     memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
     // if we have an enable line, we defer init until it goes high
-// #if defined(TICK_WII) && !defined(WII_OUTPUT_EN_READ)
+#if defined(TICK_WII)
     initWiiOutput();
-// #endif
+#endif
 
     memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
     midiData.midiPitchWheel = 0;

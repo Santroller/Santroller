@@ -39,16 +39,9 @@ const unsigned char id[6] = {0x01, 0x00, 0xA4, 0x20, 0x01, 0x01};
 // virtual register
 static unsigned char twi_reg[256];
 static bool wiiOutEnabled = false;
+static uint32_t startTimer = 0;
 void initWiiOutput()
 {
-#ifdef TWI_1_OUTPUT
-    RXWIRE.end();
-    RXWIRE.begin(WII_ADDR);
-#endif
-#ifdef TWI_0_OUTPUT
-    RXWIRE.end();
-    RXWIRE.begin(WII_ADDR);
-#endif
     memset(twi_reg, 0, sizeof(twi_reg));
     twi_reg[0xF0] = 0; // disable encryption
     // set id
@@ -66,18 +59,24 @@ void initWiiOutput()
 void setInputs(uint8_t *inputs, uint8_t len)
 {
 #ifdef WII_OUTPUT_EN_READ
-    if (!wiiOutEnabled && WII_OUTPUT_EN_READ())
+
+    if (!startTimer)
     {
-        wiiOutEnabled = true;
-        initWiiOutput();
+        startTimer = millis();
+        if (WII_OUTPUT_EN_READ())
+        {
+            wiiOutEnabled = true;
+        }
     }
-    if (wiiOutEnabled && !WII_OUTPUT_EN_READ())
+    if (millis() - startTimer > 1000)
     {
-        wiiOutEnabled = false;
-    }
-    if (!wiiOutEnabled)
-    {
-        return;
+        if (!wiiOutEnabled && (WII_OUTPUT_EN_READ()))
+        {
+            reset_usb();
+        }
+        if (wiiOutEnabled && !(WII_OUTPUT_EN_READ())) {
+            wiiOutEnabled = false;
+        }
     }
 #endif
     memcpy(twi_reg, inputs, len);

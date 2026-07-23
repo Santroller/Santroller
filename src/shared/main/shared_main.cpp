@@ -3734,8 +3734,33 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         gamepad->rightStickY = PS3_STICK_CENTER;
 #endif
 
+#if DEVICE_TYPE_IS_GUITAR
+        
+        if (output_console_type == SWITCH)
+        {
+            SwitchFestivalGuitar_Data_t *report = (SwitchFestivalGuitar_Data_t *)report_data;
+            TICK_PS3;
+            bool dpadLeft = report->dpadLeft;
+            bool back = report->back;
+            report->dpadLeft = false;
+            report->back = false;
+            report->whammy = 255 - report->whammy;
+            if (dpadLeft) {
+                report->back = true;
+            }
+            if (back) {
+                report->dpadLeft = true;
+            }
+            if (report->tilt < 0x190) {
+                report->dpadLeft = true;
+            }
+            asm volatile("" ::
+                             : "memory");
+            gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
+        }
+#endif
 #if DEVICE_TYPE == GUITAR_HERO_GUITAR
-        if (output_console_type == PS2_ON_PS3)
+        else if (output_console_type == PS2_ON_PS3)
         {
             PS2GuitarOnPS3_Data_t *report = (PS2GuitarOnPS3_Data_t *)report_data;
 

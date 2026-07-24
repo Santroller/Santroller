@@ -62,7 +62,7 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 cable_state->actual_size = 0xFF;
             }
             // Running status
-            if (status < MIDI_MAX_DATA_VAL) {
+            if (status <= MIDI_MAX_DATA_VAL) {
                 // The status byte is reused, so shift the packet and insert it back
                 status = cable_state->status;
                 cable_state->data[1] = cable_state->data[0];

@@ -13,6 +13,7 @@
 
 typedef struct
 {
+    uint status;
     uint pos;
     uint actual_size;
     uint8_t data[32];

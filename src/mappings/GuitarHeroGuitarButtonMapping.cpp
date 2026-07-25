@@ -531,6 +531,9 @@ void GuitarHeroGuitarButtonMapping::update_xboxone(uint8_t *buf)
     // case GuitarHeroGuitarTapOrange:
     //     report->tapOrange |= m_lastValue;
     //     break;
+    case GuitarHeroGuitarGuide:
+        report->guide |= m_lastValue;
+        break;
     case GuitarHeroGuitarBack:
         report->back |= m_lastValue;
         break;

@@ -111,7 +111,7 @@ typedef struct
     uint8_t dpadRight : 1;
 
     uint8_t leftShoulder : 1; // orange
-    uint8_t : 1;
+    uint8_t rightShoulder: 1;
     uint8_t solo : 1; // leftThumbClick
     uint8_t : 1;
 

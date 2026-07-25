@@ -139,7 +139,8 @@ void ButtonMapping::update(bool full_poll, bool send_events)
 }
 void AxisMapping::update(bool full_poll, bool send_events)
 {
-    auto val = m_input->tickAnalog();
+    auto uncalibrated = m_input->tickAnalog();
+    auto val = uncalibrated;
     if (m_mapping.has_pressed)
     {
         if (m_input->tickDigital())
@@ -173,10 +174,10 @@ void AxisMapping::update(bool full_poll, bool send_events)
     }
     m_centered = m_calibratedValue == m_mapping.center;
 
-    if (send_events && (val != m_last_sent_value || full_poll))
+    if (send_events && (uncalibrated != m_last_sent_value || full_poll))
     {
-        m_last_sent_value = val;
-        proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, val, m_calibratedValue}}};
+        m_last_sent_value = uncalibrated;
+        proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, uncalibrated, m_calibratedValue}}};
         HIDConfigDevice::send_event(event, false);
     }
 }

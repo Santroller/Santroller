@@ -271,16 +271,16 @@ void GamepadAxisMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
-        report->leftStickX = m_calibratedValue + INT16_MIN;
+        report->leftStickX = m_calibratedValue - 32768;
         break;
     case GamepadLeftStickY:
-        report->leftStickY = m_calibratedValue + INT16_MIN;
+        report->leftStickY = m_calibratedValue - 32768;
         break;
     case GamepadRightStickX:
-        report->rightStickX = m_calibratedValue + INT16_MIN;
+        report->rightStickX = m_calibratedValue - 32768;
         break;
     case GamepadRightStickY:
-        report->rightStickY = m_calibratedValue + INT16_MIN;
+        report->rightStickY = m_calibratedValue - 32768;
         break;
     case GamepadLeftTrigger:
         report->leftTrigger = m_calibratedValue >> 8;

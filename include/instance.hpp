@@ -31,6 +31,7 @@ public:
     bool xinput_on_windows;
     bool invert_y_axis_hid;
     bool supports_ps4;
+    bool supports_slider;
     ConsoleMode mode;
     uint32_t profile_id;
     std::vector<std::unique_ptr<Mapping>> mappings;

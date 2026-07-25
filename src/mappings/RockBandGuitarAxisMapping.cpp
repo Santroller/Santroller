@@ -119,6 +119,12 @@ void RockBandGuitarAxisMapping::update_ps3(uint8_t *buf)
     case RockBandGuitarPickup:
         report->pickup = pickupUniversal[m_calibratedValue];
         break;
+    case RockBandGuitarLeftTrigger:
+        report->leftTrigger = m_calibratedValue >> 8;
+        break;
+    case RockBandGuitarRightTrigger:
+        report->rightTrigger = m_calibratedValue >> 8;
+        break;
     }
 }
 
@@ -145,6 +151,12 @@ void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
         break;
     case RockBandGuitarPickup:
         report->pickup = m_calibratedValue;
+        break;
+    case RockBandGuitarLeftTrigger:
+        report->leftTrigger = m_calibratedValue >> 8;
+        break;
+    case RockBandGuitarRightTrigger:
+        report->rightTrigger = m_calibratedValue >> 8;
         break;
     default:
         break;
@@ -175,6 +187,12 @@ void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
     case RockBandGuitarPickup:
         report->pickup = m_calibratedValue;
         break;
+    case RockBandGuitarLeftTrigger:
+        report->leftTrigger = m_calibratedValue >> 8;
+        break;
+    case RockBandGuitarRightTrigger:
+        report->rightTrigger = m_calibratedValue >> 8;
+        break;
     default:
         break;
     }
@@ -203,6 +221,12 @@ void RockBandGuitarAxisMapping::update_xinput(uint8_t *buf)
         break;
     case RockBandGuitarPickup:
         report->pickup = pickupUniversal[m_calibratedValue];
+        break;
+    case RockBandGuitarLeftTrigger:
+        report->pickup = m_calibratedValue >> 8;
+        break;
+    case RockBandGuitarRightTrigger:
+        report->unused1 = m_calibratedValue >> 8;
         break;
     default:
         break;

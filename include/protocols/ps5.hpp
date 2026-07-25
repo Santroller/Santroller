@@ -145,8 +145,12 @@ typedef struct
     uint8_t report_id;
     uint8_t leftStickX;
     uint8_t leftStickY;
+    uint8_t rightStickX;
+    uint8_t rightStickY;
+    uint8_t leftTrigger : 8;
+    uint8_t rightTrigger : 8;
 
-    uint8_t unused1[5];
+    uint8_t reserved;
 
     //     0
     //   7   1

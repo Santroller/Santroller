@@ -822,6 +822,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->xinput_on_windows = proto_profile.has_xinputOnWindows && proto_profile.xinputOnWindows;
     profile->invert_y_axis_hid = proto_profile.has_invertYAxisHid && proto_profile.invertYAxisHid;
     profile->supports_ps4 = proto_profile.has_ps4OrPs5Mode && proto_profile.ps4OrPs5Mode;
+    profile->supports_slider = proto_profile.has_supportsSlider && proto_profile.supportsSlider;
     //printf("profile loaded: %d %d %d\r\n", profile->profile_id, profile->xinput_on_windows, profile->invert_y_axis_hid);
     std::shared_ptr<UsbDevice> usbInstance;
     std::shared_ptr<BTGamepadDevice> btGamepadInstance;

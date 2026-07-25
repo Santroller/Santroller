@@ -34,6 +34,10 @@ XInputGamepadDevice::XInputGamepadDevice()
 {
     lastIntf = 0;
     memset(xinputInterfaces, 0xFF, sizeof(xinputInterfaces));
+    for (const auto &profile : profiles)
+    {
+        m_has_slider |= profile->supports_slider;
+    }
 }
 void XInputGamepadDevice::initialize()
 {
@@ -167,7 +171,7 @@ void XInputGamepadDevice::process()
             led->update(false, false);
         }
     }
-    if (subtype == GuitarHeroGuitar)
+    if (subtype == GuitarHeroGuitar && m_has_slider)
     {
         // convert bitmask slider to actual hid slider
         XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;

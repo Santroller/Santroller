@@ -113,6 +113,8 @@ enum GuitarHeroGuitarAxisType {
   GuitarHeroGuitarTilt = 2;
   GuitarHeroGuitarLeftStickX = 3;
   GuitarHeroGuitarLeftStickY = 4;
+  GuitarHeroGuitarLeftTrigger = 5;
+  GuitarHeroGuitarRightTrigger = 6;
 }
 
 enum GuitarHeroArcadeButtonType {
@@ -184,6 +186,8 @@ enum RockBandGuitarAxisType {
   RockBandGuitarPickup = 3;
   RockBandGuitarLeftStickX = 4;
   RockBandGuitarLeftStickY = 5;
+  RockBandGuitarLeftTrigger = 6;
+  RockBandGuitarRightTrigger = 7;
 }
 enum RockBandDrumsButtonType {
   RockBandDrumsA = 1;

@@ -530,7 +530,9 @@ typedef struct
     uint8_t pressure_dpadDown_orange;  // orange
     uint8_t pressure_blue;
     uint8_t pressure_red;
-    uint8_t unused2[6];
+    uint8_t unused2[4];
+    uint8_t leftTrigger;   //  pressure_l2
+    uint8_t rightTrigger;  // pressure_r2
 
     // Reminder that these values are 10-bit in range
     uint16_t tilt;  // accelX
@@ -572,7 +574,9 @@ typedef struct
     uint8_t whammy;
     uint8_t pickup;
 
-    uint8_t unused2[12];
+    uint8_t unused2[10];
+    uint8_t leftTrigger;   //  pressure_l2
+    uint8_t rightTrigger;  // pressure_r2
     uint16_t unused3[4];
 } __attribute__((packed)) PS3RockBandGuitar_Data_t;
 

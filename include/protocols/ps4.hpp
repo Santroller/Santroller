@@ -130,7 +130,9 @@ typedef struct
     uint8_t capture : 1;  // touchpad click
     uint8_t : 6;
 
-    uint8_t unused2[22];
+    uint8_t leftTrigger : 8;
+    uint8_t rightTrigger : 8;
+    uint8_t unused2[20];
 
     uint8_t powerLevel : 4;
     uint8_t : 4;

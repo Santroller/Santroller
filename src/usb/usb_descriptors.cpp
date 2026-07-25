@@ -68,6 +68,7 @@ uint8_t const *tud_descriptor_device_cb(void)
       continue;
     }
     instance->device_descriptor((tusb_desc_device_t *)descriptor_buffer);
+    
   }
   return descriptor_buffer;
 }

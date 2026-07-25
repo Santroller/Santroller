@@ -398,6 +398,13 @@ void XboxOneGamepadDevice::process()
 {
     if (!tud_ready())
     {
+        for (const auto &profile : profiles)
+        {
+            for (const auto &led : profile->leds)
+            {
+                led->update(false, false);
+            }
+        }
         return;
     }
     uint16_t xboneReportSize = 0;

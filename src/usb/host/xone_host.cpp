@@ -106,6 +106,7 @@ void XboxOneHost::queue_xbone_report(void *report, uint16_t report_size)
 
 bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
+    printf("ep_addr: %02x, result: %d, xferred_bytes: %d\r\n", ep_addr, result, xferred_bytes);
     if (ep_addr & 0x80 && result != XFER_RESULT_FAILED)
     {
         if (xferred_bytes == 0)
@@ -115,7 +116,7 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
         }
         incomingXGIP->parse(m_ep_in_buf, xferred_bytes);
 
-        // printf("cmd: %02x %02x %02x %02x\r\n", incomingXGIP->getCommand(), incomingXGIP->ackRequired(), incomingXGIP->endOfChunk(), xferred_bytes);
+        printf("cmd: %02x %02x %02x %02x\r\n", incomingXGIP->getCommand(), incomingXGIP->ackRequired(), incomingXGIP->endOfChunk(), xferred_bytes);
         if (incomingXGIP->ackRequired())
         {
             printf("send ack!\r\n");
@@ -200,6 +201,7 @@ void XboxOneHost::update(bool full_poll, bool send_events)
     {
         if (send_intr_xfer(m_ep_out, &report_queue.front().report, report_queue.front().len))
         {
+            printf("sent\r\n");
             report_queue.pop();
         }
     }

@@ -107,6 +107,17 @@ void GHArcadeGamepadDevice::initialize()
 }
 void GHArcadeGamepadDevice::process()
 {
+    if (!tud_ready())
+    {
+        for (const auto &profile : profiles)
+        {
+            for (const auto &led : profile->leds)
+            {
+                led->update(false, false);
+            }
+        }
+        return;
+    }
     if (!ready())
         return;
     ArcadeGuitarHeroGuitar_Data_t *report = (ArcadeGuitarHeroGuitar_Data_t *)epin_buf;

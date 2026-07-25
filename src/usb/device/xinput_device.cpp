@@ -140,6 +140,17 @@ uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16
 }
 void XInputGamepadDevice::process()
 {
+    if (!tud_ready())
+    {
+        for (const auto &profile : profiles)
+        {
+            for (const auto &led : profile->leds)
+            {
+                led->update(false, false);
+            }
+        }
+        return;
+    }
     if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
     memcpy(epin_buf, &initialReport, sizeof(initialReport));

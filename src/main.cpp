@@ -209,7 +209,6 @@ int main()
         load();
     }
     printf("init %d\r\n", mode);
-
     // init device stack on configured roothub port
     const tusb_rhport_init_t rh_init = {
         .role = TUSB_ROLE_DEVICE,

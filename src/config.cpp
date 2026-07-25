@@ -114,14 +114,14 @@ bool load_device_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    printf("load_device\r\n");
+    //printf("load_device\r\n");
     proto_Device device proto_Device_init_zero;
     device.cb_device.funcs.decode = load_device_dev;
     pb_decode(stream, proto_Device_fields, &device);
     auto dev_id = device.deviceid;
     // If we are loading a new config, we grab the previous device so we can make sure its state is restored
     auto prevDevice = std::shared_ptr<Device>();
-    printf("root_devices: %d\r\n", root_devices.size());
+    //printf("root_devices: %d\r\n", root_devices.size());
     if (auto it = root_devices.find(dev_id); it != root_devices.end())
     {
         prevDevice = it->second;
@@ -129,8 +129,8 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         // This is so that things like PS2 controllers, Wii extensions and USB host and bluetooth aren't restarted during a config change
         prevDevice->end(false);
     }
-    printf("found device! %p\r\n", prevDevice);
-    printf("device id: %d, type: %d\r\n", dev_id, device.which_device);
+    //printf("found device! %p\r\n", prevDevice);
+    //printf("device id: %d, type: %d\r\n", dev_id, device.which_device);
     switch (device.which_device)
     {
     case proto_Device_accelerometer_tag:
@@ -231,7 +231,7 @@ Input *last_special = nullptr;
 
 std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> profile, pb_istream_t *stream)
 {
-    printf("make input: %d %p\r\n", input.which_input, profile.get());
+    //printf("make input: %d %p\r\n", input.which_input, profile.get());
     switch (input.which_input)
     {
     case proto_Input_wiiAxis_tag:
@@ -410,7 +410,7 @@ bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **a
     proto_Input input;
     if (!pb_decode(stream, proto_Input_fields, &input))
     {
-        printf("couldnt decode shortcut input?\r\n");
+        //printf("couldnt decode shortcut input?\r\n");
         return false;
     }
     auto inputPtr = make_input(input, profile, stream);
@@ -419,36 +419,36 @@ bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **a
         return true;
     }
     last_shortcut->inputs.push_back(std::move(inputPtr));
-    printf("shortcut added: %d\r\n", last_shortcut->inputs.size());
+    //printf("shortcut added: %d\r\n", last_shortcut->inputs.size());
     return true;
 }
 bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = working_profile;
-    printf("found shortcut!\r\n");
+    //printf("found shortcut!\r\n");
     last_shortcut = new ShortcutInput();
     last_special = last_shortcut;
     proto_ShortcutInput input;
     input.inputs.funcs.decode = &load_shortcut_input;
     if (!pb_decode(stream, proto_ShortcutInput_fields, &input))
     {
-        printf("couldnt decode shortcut input?\r\n");
+        //printf("couldnt decode shortcut input?\r\n");
         return false;
     }
-    printf("loaded shortcut\r\n");
+    //printf("loaded shortcut\r\n");
     return true;
 }
 bool load_held(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = working_profile;
-    printf("found held!\r\n");
+    //printf("found held!\r\n");
     auto last_held = new HeldInput();
     last_special = last_held;
     proto_HeldInput input;
     input.input.cb_input.funcs.decode = load_input_dev;
     if (!pb_decode(stream, proto_HeldInput_fields, &input))
     {
-        printf("couldnt decode held input?\r\n");
+        //printf("couldnt decode held input?\r\n");
         return false;
     }
     last_held->load(input, make_input(input.input, profile, stream));
@@ -457,7 +457,7 @@ bool load_held(pb_istream_t *stream, const pb_field_t *field, void **arg)
 bool load_cycle(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = working_profile;
-    printf("found cycle! %p\r\n", profile.get());
+    //printf("found cycle! %p\r\n", profile.get());
     auto last_cycle = new CycleInput();
     last_special = last_cycle;
     proto_CycleInput input;
@@ -465,51 +465,51 @@ bool load_cycle(pb_istream_t *stream, const pb_field_t *field, void **arg)
     input.inputReverse.cb_input.funcs.decode = load_input_dev;
     if (!pb_decode(stream, proto_CycleInput_fields, &input))
     {
-        printf("couldnt decode cycle input?\r\n");
+        //printf("couldnt decode cycle input?\r\n");
         return false;
     }
 
-    printf("check %d %d\r\n", input.deviceid, profile->devices.size());
+    //printf("check %d %d\r\n", input.deviceid, profile->devices.size());
     if (profile->devices.find(input.deviceid) == profile->devices.end())
     {
-        printf("why tho\r\n");
+        //printf("why tho\r\n");
         return true;
     }
-    printf("loading cycle\r\n");
+    //printf("loading cycle\r\n");
     last_cycle->load(input, std::static_pointer_cast<CycleDevice>(profile->devices[input.deviceid]), input.has_input ? make_input(input.input, profile, stream) : nullptr, input.has_inputReverse ? make_input(input.inputReverse, profile, stream) : nullptr);
-    printf("loaded cycle\r\n");
+    //printf("loaded cycle\r\n");
     return true;
 }
 bool load_toggle(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = working_profile;
-    printf("found toggle! %p\r\n", profile.get());
+    //printf("found toggle! %p\r\n", profile.get());
     auto last_toggle = new ToggleInput();
     last_special = last_toggle;
     proto_ToggleInput input;
     input.input.cb_input.funcs.decode = load_input_dev;
     if (!pb_decode(stream, proto_ToggleInput_fields, &input))
     {
-        printf("couldnt decode toggle input?\r\n");
+        //printf("couldnt decode toggle input?\r\n");
         return false;
     }
 
-    printf("check %d %d\r\n", input.deviceid, profile->devices.size());
+    //printf("check %d %d\r\n", input.deviceid, profile->devices.size());
     if (profile->devices.find(input.deviceid) == profile->devices.end())
     {
-        printf("why tho\r\n");
+        //printf("why tho\r\n");
         return true;
     }
-    printf("loading toggle\r\n");
+    //printf("loading toggle\r\n");
     last_toggle->load(input, std::static_pointer_cast<ToggleDevice>(profile->devices[input.deviceid]), input.has_input ? make_input(input.input, profile, stream) : nullptr);
-    printf("loaded toggle\r\n");
+    //printf("loaded toggle\r\n");
     return true;
 }
 
 bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = working_profile;
-    // printf("input_dev: %d %p\r\n", field->tag, profile.get());
+    // //printf("input_dev: %d %p\r\n", field->tag, profile.get());
 
     if (field->tag == proto_Input_cycle_tag)
     {
@@ -536,7 +536,7 @@ bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = working_profile;
-    printf("load_mapping: %p\r\n", profile.get());
+    //printf("load_mapping: %p\r\n", profile.get());
     proto_Mapping mapping;
     mapping.input.cb_input.funcs.decode = load_input_dev;
     pb_decode(stream, proto_Mapping_fields, &mapping);
@@ -636,7 +636,7 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 bool load_assignment_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = working_profile;
-    printf("load_assignment_dev: %d %p\r\n", field->tag, profile.get());
+    //printf("load_assignment_dev: %d %p\r\n", field->tag, profile.get());
     proto_ProfileAssignmentInfo *info = (proto_ProfileAssignmentInfo *)field->message;
     if (field->tag == proto_ProfileAssignmentInfo_input_tag)
     {
@@ -651,9 +651,9 @@ bool load_assignment_dev(pb_istream_t *stream, const pb_field_t *field, void **a
 bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = working_profile;
-    printf("load assignment info before 2 %p\r\n", profile);
+    //printf("load assignment info before 2 %p\r\n", profile);
     fflush(stdout);
-    printf("load_assignment_info: %p\r\n", profile.get());
+    //printf("load_assignment_info: %p\r\n", profile.get());
     fflush(stdout);
     auto &list = profile->triggers.back();
     proto_ProfileAssignmentInfo assignment;
@@ -680,7 +680,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
         {
             return true;
         }
-        printf("input any time! %p\r\n", input.get());
+        //printf("input any time! %p\r\n", input.get());
         list->triggers.emplace_back(new InputActivationTrigger(true, assignment.assignment.inputAnyTime, std::move(input), profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
         break;
     }
@@ -724,21 +724,21 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
 bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = working_profile;
-    printf("load_assignments: %p\r\n", profile.get());
+    //printf("load_assignments: %p\r\n", profile.get());
     auto list = new ActivationTriggerList();
     profile->triggers.emplace_back(list);
     proto_ProfileAssignment proto_assignment;
     proto_assignment.assignments.funcs.decode = &load_assignment_info;
-    printf("load_assignments start?\r\n");
+    //printf("load_assignments start?\r\n");
     pb_decode(stream, proto_ProfileAssignment_fields, &proto_assignment);
-    printf("load_assignments done?\r\n");
+    //printf("load_assignments done?\r\n");
     list->validate(true, false, false);
     return true;
 }
 bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = working_profile;
-    printf("load_uid: %p\r\n", profile.get());
+    //printf("load_uid: %p\r\n", profile.get());
     uint64_t value;
     if (!pb_decode_varint(stream, &value))
         return false;
@@ -749,65 +749,65 @@ bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
 bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto profile = working_profile;
-    printf("load_leds: %p\r\n", profile.get());
+    //printf("load_leds: %p\r\n", profile.get());
     std::unique_ptr<LedMappingDevice> device;
     proto_Led proto_led;
     proto_led.mapping.led.inputMapping.input.cb_input.funcs.decode = load_input_dev;
     pb_decode(stream, proto_Led_fields, &proto_led);
-    printf("load led%d %d\r\n", profile->leds.size(), proto_led.device.which_device);
+    //printf("load led%d %d\r\n", profile->leds.size(), proto_led.device.which_device);
     switch (proto_led.device.which_device)
     {
     case proto_LedDevice_rgb_tag:
         device = std::make_unique<RgbLedDevice>(proto_led.device.device.rgb, std::static_pointer_cast<LedDevice>(profile->devices[proto_led.device.device.rgb.deviceId]));
-        printf("dev rgb%d\r\n", profile->leds.size());
+        //printf("dev rgb%d\r\n", profile->leds.size());
         break;
     case proto_LedDevice_gpio_tag:
         device = std::make_unique<GpioLedDevice>(proto_led.device.device.gpio);
-        printf("dev gpio%d\r\n", profile->leds.size());
+        //printf("dev gpio%d\r\n", profile->leds.size());
         break;
     case proto_LedDevice_dmx_tag:
         device = std::make_unique<DMXLedDevice>(proto_led.device.device.dmx, std::static_pointer_cast<DMXDevice>(profile->devices[proto_led.device.device.dmx.deviceId]));
-        printf("dev dmx%d\r\n", profile->leds.size());
+        //printf("dev dmx%d\r\n", profile->leds.size());
         break;
     case proto_LedDevice_stp16_tag:
         device = std::make_unique<STP16CPCLedDevice>(proto_led.device.device.stp16, std::static_pointer_cast<STP16CPCDevice>(profile->devices[proto_led.device.device.stp16.deviceId]));
-        printf("dev stp16%d\r\n", profile->leds.size());
+        //printf("dev stp16%d\r\n", profile->leds.size());
         break;
     case proto_LedDevice_vtechExpander_tag:
         device = std::make_unique<VTechGuitarIoExpanderLedDevice>(proto_led.device.device.vtechExpander, std::static_pointer_cast<VTechGuitarIOExpanderDevice>(profile->devices[proto_led.device.device.vtechExpander.deviceId]));
-        printf("dev stp16%d\r\n", profile->leds.size());
+        //printf("dev stp16%d\r\n", profile->leds.size());
         break;
     }
     if (!device)
     {
-        printf("cant load led%d\r\n", profile->leds.size());
+        //printf("cant load led%d\r\n", profile->leds.size());
         return false;
     }
     switch (proto_led.mapping.which_led)
     {
     case proto_LedMapping_inputMapping_tag:
         profile->leds.emplace_back(new InputLedMapping(std::move(device), proto_led.mapping.led.inputMapping, make_input(proto_led.mapping.led.inputMapping.input, profile, stream), profile->profile_id, profile->leds.size()));
-        printf("loaded led input%d\r\n", profile->leds.size());
+        //printf("loaded led input%d\r\n", profile->leds.size());
         return true;
     case proto_LedMapping_staticMapping_tag:
         profile->leds.emplace_back(new StaticLedMapping(std::move(device), proto_led.mapping.led.staticMapping, profile->profile_id, profile->leds.size()));
-        printf("loaded led static%d\r\n", profile->leds.size());
+        //printf("loaded led static%d\r\n", profile->leds.size());
         return true;
     case proto_LedMapping_patternMapping_tag:
         profile->leds.emplace_back(new PatternLedMapping(std::move(device), proto_led.mapping.led.patternMapping, profile->profile_id, profile->leds.size()));
-        printf("loaded led pattern%d\r\n", profile->leds.size());
+        //printf("loaded led pattern%d\r\n", profile->leds.size());
         return true;
     }
     return true;
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    printf("load_profile\r\n");
+    //printf("load_profile\r\n");
     auto profile = std::make_shared<Profile>();
     for (auto &device : active_devices)
     {
         profile->devices.emplace(device->m_id, device);
-        printf("load device: %p %p %d\r\n", profile.get(), device.get(), device->m_id);
+        //printf("load device: %p %p %d\r\n", profile.get(), device.get(), device->m_id);
     }
     working_profile = profile;
     proto_Profile proto_profile;
@@ -822,7 +822,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->xinput_on_windows = proto_profile.has_xinputOnWindows && proto_profile.xinputOnWindows;
     profile->invert_y_axis_hid = proto_profile.has_invertYAxisHid && proto_profile.invertYAxisHid;
     profile->supports_ps4 = proto_profile.has_ps4OrPs5Mode && proto_profile.ps4OrPs5Mode;
-    printf("profile loaded: %d %d %d\r\n", profile->profile_id, profile->xinput_on_windows, profile->invert_y_axis_hid);
+    //printf("profile loaded: %d %d %d\r\n", profile->profile_id, profile->xinput_on_windows, profile->invert_y_axis_hid);
     std::shared_ptr<UsbDevice> usbInstance;
     std::shared_ptr<BTGamepadDevice> btGamepadInstance;
     for (auto &list : profile->triggers)
@@ -830,7 +830,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         if (list->validate(true, false, false))
         {
             int assignedDevices = list->assignedDevices();
-            printf("profile assigned! %d\r\n", profile->profile_id);
+            // printf("profile assigned! %d\r\n", profile->profile_id);
             if ((assignedDevices & ProfileAssignMask_AssignBluetoothGamepad) && !(seenMasks & ProfileAssignMask_AssignBluetoothGamepad) && isPicoW)
             {
                 btGamepadInstance = std::make_shared<BTGamepadDevice>();
@@ -844,7 +844,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                 btGamepadInstance->initialize();
                 active_profiles.insert(profile->profile_id);
                 seenMasks |= ProfileAssignMask_AssignBluetoothGamepad;
-                printf("assigned bluetooth!\r\n");
+                //printf("assigned bluetooth!\r\n");
             }
             if (!usbInstance && (assignedDevices & ProfileAssignMask_AssignUsb))
             {
@@ -893,7 +893,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                 usb_instances[usbInstance->interface_id] = usbInstance;
                 usbInstance->initialize();
                 active_profiles.insert(profile->profile_id);
-                printf("instance: %d\r\n", usbInstance->interface_id);
+                //printf("instance: %d\r\n", usbInstance->interface_id);
             }
             break;
         }
@@ -975,7 +975,7 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
 {
 
     proto_Config config proto_Config_init_zero;
-    printf("inner_load\r\n");
+    //printf("inner_load\r\n");
     cycle_input_states.clear();
     pb_istream_t auxInputStream = pb_istream_from_buffer(dataPtr + mainSize, auxSize);
     proto_AuxConfigBlock block proto_AuxConfigBlock_init_zero;
@@ -1093,14 +1093,14 @@ uint32_t copy_config_info(uint8_t *buffer)
 
 void reload()
 {
-    printf("reload called\r\n");
+    //printf("reload called\r\n");
     fullReload = false;
     reinit = true;
 }
 
 void update_aux_cycle(uint32_t id, uint32_t state)
 {
-    printf("update aux: %d %d %d\r\n", id, state, reinit);
+    //printf("update aux: %d %d %d\r\n", id, state, reinit);
     if (reinit)
     {
         return;
@@ -1126,7 +1126,7 @@ void update_aux_cycle(uint32_t id, uint32_t state)
 
 void update_aux_toggle(uint32_t id, bool state)
 {
-    printf("update aux: %d %d %d\r\n", id, state, reinit);
+    //printf("update aux: %d %d %d\r\n", id, state, reinit);
     if (reinit)
     {
         return;
@@ -1157,7 +1157,7 @@ bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
     pb_istream_t inputStream = pb_istream_from_buffer(buffer, bufsize);
     if (!pb_decode_delimited(&inputStream, proto_ConfigInfo_fields, &info))
     {
-        printf("Didn't decode info?\r\n");
+        //printf("Didn't decode info?\r\n");
         return false;
     }
     footer->dataCrc = info.dataCrc;
@@ -1178,17 +1178,17 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     memcpy(EEPROM.writeCache + start, buffer, bufsize);
     if (start + bufsize < footer.dataSize)
     {
-        // printf("writing up to: %d < %d\r\n", start + bufsize, footer.dataSize);
+        // //printf("writing up to: %d < %d\r\n", start + bufsize, footer.dataSize);
         working = true;
         return true;
     }
     uint32_t crc = CRC32::calculate(EEPROM.writeCache, footer.dataSize);
     if (crc != footer.dataCrc)
     {
-        printf("Crc didnt match after writing? %d\r\n", footer.dataCrc);
+        //printf("Crc didnt match after writing? %d\r\n", footer.dataCrc);
         return false;
     }
-    printf("Everything matched, saving!\r\n");
+    //printf("Everything matched, saving!\r\n");
     // Move the encoded data in memory down to the footer
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, EEPROM.writeCache, footer.dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
@@ -1235,7 +1235,7 @@ bool load()
     // Check for presence of magic value
     if (footer.magic != FOOTER_MAGIC)
     {
-        printf("footer wrong %x != %x\r\n", footer.magic, FOOTER_MAGIC);
+        //printf("footer wrong %x != %x\r\n", footer.magic, FOOTER_MAGIC);
         return false;
     }
 

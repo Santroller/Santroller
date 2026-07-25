@@ -69,6 +69,17 @@ void HIDGamepadDevice::initialize()
 }
 void HIDGamepadDevice::process()
 {
+    if (!tud_ready())
+    {
+        for (const auto &profile : profiles)
+        {
+            for (const auto &led : profile->leds)
+            {
+                led->update(false, false);
+            }
+        }
+        return;
+    }
   // Deal with devices that don't have easy detection methods
   if (!mode_recently_changed() && !seenWindowsXb1 && !seenOsDescriptorRead && !seenReadAnyDeviceString && tud_connected())
   {

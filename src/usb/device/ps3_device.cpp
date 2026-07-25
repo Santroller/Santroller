@@ -248,6 +248,17 @@ void PS3GamepadDevice::initialize()
 }
 void PS3GamepadDevice::process()
 {
+    if (!tud_ready())
+    {
+        for (const auto &profile : profiles)
+        {
+            for (const auto &led : profile->leds)
+            {
+                led->update(false, false);
+            }
+        }
+        return;
+    }
     if (!ready())
         return;
     memcpy(epin_buf, &initialReport, sizeof(initialReport));

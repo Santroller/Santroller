@@ -183,6 +183,17 @@ void OGXboxGamepadDevice::initialize()
 }
 void OGXboxGamepadDevice::process()
 {
+    if (!tud_ready())
+    {
+        for (const auto &profile : profiles)
+        {
+            for (const auto &led : profile->leds)
+            {
+                led->update(false, false);
+            }
+        }
+        return;
+    }
     if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
     OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)epin_buf;

@@ -103,6 +103,17 @@ bool SwitchGamepadDevice::sendReport(uint8_t reportID, void const *reportData, u
 }
 void SwitchGamepadDevice::process()
 {
+    if (!tud_ready())
+    {
+        for (const auto &profile : profiles)
+        {
+            for (const auto &led : profile->leds)
+            {
+                led->update(false, false);
+            }
+        }
+        return;
+    }
     uint32_t now = to_ms_since_boot(get_absolute_time());
     reportSent = false;
     if (isReportQueued)

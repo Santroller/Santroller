@@ -8,6 +8,8 @@ WS2812Device::WS2812Device(proto_WS2812Device device, uint16_t id) : LedDevice(i
 
 void WS2812Device::begin()
 {
+    memset(led_state, 0, sizeof(led_state));
+    m_ws2812.putLeds(led_state, m_device.count);
     m_ws2812.begin();
 }
 void WS2812Device::end(bool full)

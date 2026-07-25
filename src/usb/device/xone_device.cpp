@@ -228,7 +228,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             outgoingXGIP->setAttributes(GIP_DEVICE_DESCRIPTOR, incomingXGIP->getSequence(), 1, 1, 0);
 
             const uint8_t *xboxOneDescriptor = nullptr;
-            size_t len = 0;
+            uint16_t len = 0;
             switch (subtype)
             {
             case KeyboardMouse:
@@ -293,11 +293,18 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             switch (incomingXGIP->getData()[0])
             {
             case GIP_STATE_START:
-            // TODO: at this point, if auth is available do it other wise dont
+                // TODO: at this point, if auth is available do it other wise dont
                 // xboneDriverState = XboxOneDriverState::SETUP_AUTH;
                 xboneDriverState = XboxOneDriverState::AUTH_DONE;
                 auth_completed = true;
                 xbox_one_powered_on = true;
+                break;
+            case GIP_STATE_RESET:
+                xboneDriverState = XboxOneDriverState::READY_ANNOUNCE;
+                incomingXGIP->reset();
+                outgoingXGIP->reset();
+                report_queue = {}; // clear the report queue
+                // timer_wait_for_announce = to_ms_since_boot(get_absolute_time());
                 break;
             default:
                 break;
@@ -602,7 +609,7 @@ void XboxOneGamepadDevice::process()
     // this was set temporarily to make things easier for mapping, so don't actually send it
     xboneReport->guide = false;
     // We changed inputs since generating our last report, increment last report counter (but don't update until success)
-    if (memcmp(last_report, epin_buf, xboneReportSize) != 0)
+    if (memcmp(last_report, epin_buf, xboneReportSize) != 0 && xboneDriverState > SEND_DESCRIPTOR)
     {
         memcpy(last_report, epin_buf, xboneReportSize);
         outgoingXGIP->reset();
@@ -647,7 +654,8 @@ size_t XboxOneGamepadDevice::device_name(uint8_t idx, char *desc)
 
 void XboxOneGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
-    if (subtype == Gamepad) {
+    if (subtype == Gamepad)
+    {
         desc->idVendor = XBOX_ONE_CONTROLLER_VID;
         desc->idProduct = XBOX_ONE_CONTROLLER_PID;
     }

@@ -126,6 +126,12 @@ void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
     case GuitarHeroGuitarTilt:
         report->tilt = tilt;
         break;
+    case GuitarHeroGuitarLeftTrigger:
+        report->leftTrigger = m_calibratedValue >> 8;
+        break;
+    case GuitarHeroGuitarRightTrigger:
+        report->rightTrigger = m_calibratedValue >> 8;
+        break;
     }
 }
 

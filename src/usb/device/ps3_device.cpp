@@ -248,7 +248,7 @@ void PS3GamepadDevice::initialize()
 }
 void PS3GamepadDevice::process()
 {
-    if (!tud_ready())
+    if (!ready())
     {
         for (const auto &profile : profiles)
         {
@@ -259,8 +259,6 @@ void PS3GamepadDevice::process()
         }
         return;
     }
-    if (!ready())
-        return;
     memcpy(epin_buf, &initialReport, sizeof(initialReport));
     for (const auto &profile : profiles)
     {

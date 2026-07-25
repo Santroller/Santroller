@@ -107,6 +107,7 @@ enum GuitarHeroGuitarButtonType {
   GuitarHeroGuitarStrumDown = 15;
   GuitarHeroGuitarDpadLeft = 16;
   GuitarHeroGuitarDpadRight = 17;
+  GuitarHeroGuitarPedal = 18;
 }
 enum GuitarHeroGuitarAxisType {
   GuitarHeroGuitarWhammy = 1;
@@ -179,6 +180,7 @@ enum RockBandGuitarButtonType {
   RockBandGuitarStrumDown = 15;
   RockBandGuitarDpadLeft = 16;
   RockBandGuitarDpadRight = 17;
+  RockBandGuitarPedal = 18;
 }
 enum RockBandGuitarAxisType {
   RockBandGuitarWhammy = 1;

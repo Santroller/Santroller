@@ -38,6 +38,9 @@ void RockBandGuitarButtonMapping::update_switch(uint8_t *buf)
     case RockBandGuitarOrange:
         report->leftShoulder |= m_lastValue;
         break;
+    case RockBandGuitarPedal:
+        report->rightShoulder |= m_lastValue;
+        break;
     case RockBandGuitarSoloGreen:
         report->a |= m_lastValue;
         break;
@@ -101,6 +104,9 @@ void RockBandGuitarButtonMapping::update_ps3(uint8_t *buf)
         break;
     case RockBandGuitarOrange:
         report->leftShoulder |= m_lastValue;
+        break;
+    case RockBandGuitarPedal:
+        report->tilt |= m_lastValue;
         break;
     case RockBandGuitarSoloGreen:
         report->a |= m_lastValue;
@@ -166,6 +172,9 @@ void RockBandGuitarButtonMapping::update_ps4(uint8_t *buf)
     case RockBandGuitarOrange:
         report->leftShoulder |= m_lastValue;
         break;
+    case RockBandGuitarPedal:
+        report->rightShoulder |= m_lastValue;
+        break;
     case RockBandGuitarSoloGreen:
         report->a |= m_lastValue;
         report->solo |= m_lastValue;
@@ -229,6 +238,9 @@ void RockBandGuitarButtonMapping::update_ps5(uint8_t *buf)
         break;
     case RockBandGuitarOrange:
         report->leftShoulder |= m_lastValue;
+        break;
+    case RockBandGuitarPedal:
+        report->rightShoulder |= m_lastValue;
         break;
     case RockBandGuitarSoloGreen:
         report->a |= m_lastValue;
@@ -294,6 +306,9 @@ void RockBandGuitarButtonMapping::update_xinput(uint8_t *buf)
     case RockBandGuitarOrange:
         report->leftShoulder |= m_lastValue;
         break;
+    case RockBandGuitarPedal:
+        report->rightShoulder |= m_lastValue;
+        break;
     case RockBandGuitarSoloGreen:
         report->a |= m_lastValue;
         report->solo |= m_lastValue;
@@ -356,6 +371,9 @@ void RockBandGuitarButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     case RockBandGuitarOrange:
         report->leftShoulder |= m_lastValue;
+        break;
+    case RockBandGuitarPedal:
+        report->rightShoulder |= m_lastValue;
         break;
     case RockBandGuitarSoloGreen:
         report->a |= m_lastValue;

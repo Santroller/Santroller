@@ -279,7 +279,7 @@ typedef struct
     uint8_t y; // yellow
 
     uint8_t leftShoulder; // orange
-    uint8_t padding2;
+    uint8_t rightShoulder;
 
     uint8_t pickup;
     uint8_t unused1;

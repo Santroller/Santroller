@@ -117,7 +117,7 @@ typedef struct
     uint8_t y : 1;  // yellow
 
     uint8_t leftShoulder : 1;   // orange
-    uint8_t : 1;  
+    uint8_t rightShoulder: 1;  
     uint8_t : 1;                // l2
     uint8_t : 1;                // r2
 

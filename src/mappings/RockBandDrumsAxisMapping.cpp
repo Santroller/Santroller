@@ -66,6 +66,12 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
     case RockBandDrumsLeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
+    case RockBandDrumsLeftTrigger:
+        report->redVelocity = m_calibratedValue >> 8;
+        break;
+    case RockBandDrumsRightTrigger:
+        report->yellowVelocity = m_calibratedValue >> 8;
+        break;
     case RockBandDrumsYellowCymbal:
         report->yellowVelocity = m_calibratedValue >> 8;
         report->y = true;
@@ -240,6 +246,12 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
         {
             report->yellowVelocity = m_calibratedValue - 32768;
         }
+        break;
+    case RockBandDrumsLeftTrigger:
+        report->leftTrigger = m_calibratedValue >> 8;
+        break;
+    case RockBandDrumsRightTrigger:
+        report->rightTrigger = m_calibratedValue >> 8;
         break;
     default:
         break;

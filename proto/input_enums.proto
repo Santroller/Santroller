@@ -219,6 +219,8 @@ enum RockBandDrumsAxisType {
   RockBandDrumsGreenCymbal = 7;
   RockBandDrumsLeftStickX = 8;
   RockBandDrumsLeftStickY = 9;
+  RockBandDrumsLeftTrigger = 10;
+  RockBandDrumsRightTrigger = 11;
 }
 enum GuitarHeroDrumsButtonType {
   GuitarHeroDrumsA = 1;
@@ -245,6 +247,8 @@ enum GuitarHeroDrumsAxisType {
   GuitarHeroDrumsKickPedal = 6;
   GuitarHeroDrumsLeftStickX = 7;
   GuitarHeroDrumsLeftStickY = 8;
+  GuitarHeroDrumsLeftTrigger = 9;
+  GuitarHeroDrumsRightTrigger = 10;
 }
 enum DJHTurntableButtonType {
   DJHTurntableLeftBlue = 1;

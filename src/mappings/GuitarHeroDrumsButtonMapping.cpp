@@ -113,6 +113,12 @@ void GuitarHeroDrumsButtonMapping::update_ps3(uint8_t *buf)
     case GuitarHeroDrumsY:
         report->y |= m_lastValue;
         break;
+    case GuitarHeroDrumsLeftShoulder:
+        report->leftShoulder |= m_lastValue;
+        break;
+    case GuitarHeroDrumsRightShoulder:
+        report->rightShoulder |= m_lastValue;
+        break;
     case GuitarHeroDrumsBack:
         report->back |= m_lastValue;
         break;
@@ -162,6 +168,12 @@ void GuitarHeroDrumsButtonMapping::update_xinput(uint8_t *buf)
     case GuitarHeroDrumsY:
         report->y |= m_lastValue;
         break;
+    case GuitarHeroDrumsLeftShoulder:
+        report->leftShoulder |= m_lastValue;
+        break;
+    case GuitarHeroDrumsRightShoulder:
+        report->rightShoulder |= m_lastValue;
+        break;
     case GuitarHeroDrumsBack:
         report->back |= m_lastValue;
         break;
@@ -201,6 +213,12 @@ void GuitarHeroDrumsButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     case GuitarHeroDrumsY:
         report->y |= m_lastValue;
+        break;
+    case GuitarHeroDrumsLeftShoulder:
+        report->leftShoulder |= m_lastValue;
+        break;
+    case GuitarHeroDrumsRightShoulder:
+        report->rightShoulder |= m_lastValue;
         break;
     case GuitarHeroDrumsBack:
         report->back |= m_lastValue;

@@ -44,9 +44,11 @@ void RockBandDrumsButtonMapping::update_ps3(uint8_t *buf)
     case RockBandDrumsY:
         report->y |= m_lastValue;
         break;
+    case RockBandDrumsLeftShoulder:
     case RockBandDrumsKick1Pedal:
         report->kick1 |= m_lastValue;
         break;
+    case RockBandDrumsRightShoulder:
     case RockBandDrumsKick2Pedal:
         report->kick2 |= m_lastValue;
         break;
@@ -93,9 +95,11 @@ void RockBandDrumsButtonMapping::update_ps4(uint8_t *buf)
     case RockBandDrumsY:
         report->y |= m_lastValue;
         break;
+    case RockBandDrumsLeftShoulder:
     case RockBandDrumsKick1Pedal:
         report->kick1 |= m_lastValue;
         break;
+    case RockBandDrumsRightShoulder:
     case RockBandDrumsKick2Pedal:
         report->kick2 |= m_lastValue;
         break;
@@ -142,9 +146,11 @@ void RockBandDrumsButtonMapping::update_ps5(uint8_t *buf)
     case RockBandDrumsY:
         report->y |= m_lastValue;
         break;
+    case RockBandDrumsLeftShoulder:
     case RockBandDrumsKick1Pedal:
         report->kick1 |= m_lastValue;
         break;
+    case RockBandDrumsRightShoulder:
     case RockBandDrumsKick2Pedal:
         report->kick2 |= m_lastValue;
         break;
@@ -191,11 +197,15 @@ void RockBandDrumsButtonMapping::update_xinput(uint8_t *buf)
     case RockBandDrumsY:
         report->y |= m_lastValue;
         break;
+    case RockBandDrumsLeftShoulder:
     case RockBandDrumsKick1Pedal:
         report->kick1 |= m_lastValue;
         break;
     case RockBandDrumsKick2Pedal:
         report->kick2 |= m_lastValue;
+        break;
+    case RockBandDrumsRightShoulder:
+        report->cymbalFlag |= m_lastValue;
         break;
     case RockBandDrumsBack:
         report->back |= m_lastValue;

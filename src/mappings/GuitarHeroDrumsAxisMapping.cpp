@@ -104,6 +104,12 @@ void GuitarHeroDrumsAxisMapping::update_ps3(uint8_t *buf)
     case GuitarHeroDrumsLeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
+    case GuitarHeroDrumsLeftTrigger:
+        report->redVelocity = m_calibratedValue >> 8;
+        break;
+    case GuitarHeroDrumsRightTrigger:
+        report->yellowVelocity = m_calibratedValue >> 8;
+        break;
     }
 }
 
@@ -159,6 +165,12 @@ void GuitarHeroDrumsAxisMapping::update_xinput(uint8_t *buf)
         {
             report->leftStickY = m_calibratedValue - 32768;
         }
+        break;
+    case GuitarHeroDrumsLeftTrigger:
+        report->leftTrigger = m_calibratedValue >> 8;
+        break;
+    case GuitarHeroDrumsRightTrigger:
+        report->rightTrigger = m_calibratedValue >> 8;
         break;
     }
 }

@@ -376,7 +376,8 @@ typedef struct
     uint8_t x : 1; // blue
     uint8_t y : 1; // yellow
 
-    uint8_t unused1[2];
+    uint8_t leftTrigger;
+    uint8_t rightTrigger;
     int16_t leftStickX;
     union
     {

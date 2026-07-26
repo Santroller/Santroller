@@ -333,16 +333,16 @@ void GamepadAxisMapping::update_xboxone(uint8_t *buf)
     switch (m_mapping.mapping.gamepadAxis)
     {
     case GamepadLeftStickX:
-        report->leftStickX = m_calibratedValue - INT16_MAX;
+        report->leftStickX = m_calibratedValue - 32768;
         break;
     case GamepadLeftStickY:
-        report->leftStickY = m_calibratedValue - INT16_MAX;
+        report->leftStickY = m_calibratedValue - 32768;
         break;
     case GamepadRightStickX:
-        report->rightStickX = m_calibratedValue - INT16_MAX;
+        report->rightStickX = m_calibratedValue - 32768;
         break;
     case GamepadRightStickY:
-        report->rightStickY = m_calibratedValue - INT16_MAX;
+        report->rightStickY = m_calibratedValue - 32768;
         break;
     case GamepadLeftTrigger:
         report->leftTrigger = m_calibratedValue >> 6;

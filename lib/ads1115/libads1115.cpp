@@ -148,6 +148,7 @@ void ADS1115::begin()
 
 void ADS1115::end()
 {
+    printf("ads1115 end\r\n");
     cancel_alarm(restart_alarm_id);
     interface.dmaDeinit(ADS1115_ADDRESS_ADDR_GND);
     interface.dmaDeinit(ADS1115_ADDRESS_ADDR_VDD);

@@ -871,19 +871,20 @@
         HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE), \
         HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                \
         HID_USAGE(HID_USAGE_DESKTOP_HAT_SWITCH),               \
-        HID_LOGICAL_MIN(1),                                    \
-        HID_LOGICAL_MAX(8),                                    \
+        HID_LOGICAL_MAX(7),                                    \
         HID_PHYSICAL_MAX_N(315, 2),                            \
         HID_REPORT_COUNT(1),                                   \
-        HID_REPORT_SIZE(8),                                    \
+        HID_REPORT_SIZE(4),                                    \
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),     \
+        HID_REPORT_COUNT(1),                                   \
+        HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE), \
         HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                \
+        HID_LOGICAL_MAX_N(255, 2),                             \
+        HID_PHYSICAL_MAX_N(255, 2),                            \
         HID_USAGE(HID_USAGE_DESKTOP_X),                        \
         HID_USAGE(HID_USAGE_DESKTOP_Y),                        \
         HID_USAGE(HID_USAGE_DESKTOP_Z),                        \
         HID_USAGE(HID_USAGE_DESKTOP_RZ),                       \
-        HID_LOGICAL_MIN(0x00),                                 \
-        HID_LOGICAL_MAX(0x01),                                 \
         HID_REPORT_COUNT(4),                                   \
         HID_REPORT_SIZE(8),                                    \
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),     \

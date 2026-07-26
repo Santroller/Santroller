@@ -125,6 +125,7 @@ message ProfileAssignment {
 }
 message GuiDevice {
   required string label = 1;
+  required int32 pin = 2;
 }
 message GuiConfig {
   required int32 deviceid = 1;

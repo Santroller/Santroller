@@ -168,7 +168,8 @@ typedef struct
 
     uint8_t leftShoulder : 1; // orange
     uint8_t rightShoulder : 1;
-    uint8_t : 2;
+    uint8_t l2 : 1;
+    uint8_t r2 : 1;
     uint8_t back : 1;  // share
     uint8_t start : 1; // options
     uint8_t solo : 1;
@@ -215,8 +216,10 @@ typedef struct
     uint8_t report_id;
     uint8_t leftStickX;
     uint8_t leftStickY;
-
-    uint8_t unused1[5];
+    uint8_t rightStickX;
+    uint8_t rightStickY;
+    uint8_t leftTrigger : 8;
+    uint8_t rightTrigger : 8;
 
     //     0
     //   7   1
@@ -234,7 +237,8 @@ typedef struct
 
     uint8_t kick1 : 1; // orange
     uint8_t kick2 : 1; // orange
-    uint8_t : 2;
+    uint8_t l2 : 1;
+    uint8_t r2 : 1;
     uint8_t back : 1;  // share
     uint8_t start : 1; // options
     uint8_t : 2;

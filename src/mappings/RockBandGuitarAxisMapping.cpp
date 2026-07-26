@@ -121,9 +121,11 @@ void RockBandGuitarAxisMapping::update_ps3(uint8_t *buf)
         break;
     case RockBandGuitarLeftTrigger:
         report->leftTrigger = m_calibratedValue >> 8;
+        report->solo = m_calibratedValue > 65000;
         break;
     case RockBandGuitarRightTrigger:
         report->rightTrigger = m_calibratedValue >> 8;
+        report->r2 = m_calibratedValue > 65000;
         break;
     }
 }
@@ -154,9 +156,11 @@ void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
         break;
     case RockBandGuitarLeftTrigger:
         report->leftTrigger = m_calibratedValue >> 8;
+        report->l2 = m_calibratedValue > 65000;
         break;
     case RockBandGuitarRightTrigger:
         report->rightTrigger = m_calibratedValue >> 8;
+        report->r2 = m_calibratedValue > 65000;
         break;
     default:
         break;
@@ -189,9 +193,11 @@ void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
         break;
     case RockBandGuitarLeftTrigger:
         report->leftTrigger = m_calibratedValue >> 8;
+        report->l2 = m_calibratedValue > 65000;
         break;
     case RockBandGuitarRightTrigger:
         report->rightTrigger = m_calibratedValue >> 8;
+        report->r2 = m_calibratedValue > 65000;
         break;
     default:
         break;

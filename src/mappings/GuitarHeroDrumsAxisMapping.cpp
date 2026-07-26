@@ -106,9 +106,11 @@ void GuitarHeroDrumsAxisMapping::update_ps3(uint8_t *buf)
         break;
     case GuitarHeroDrumsLeftTrigger:
         report->redVelocity = m_calibratedValue >> 8;
+        report->l2 = m_calibratedValue > 65000;
         break;
     case GuitarHeroDrumsRightTrigger:
         report->yellowVelocity = m_calibratedValue >> 8;
+        report->r2 = m_calibratedValue > 65000;
         break;
     }
 }

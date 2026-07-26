@@ -118,8 +118,8 @@ typedef struct
 
     uint8_t leftShoulder : 1;   // orange
     uint8_t rightShoulder: 1;  
-    uint8_t : 1;                // l2
-    uint8_t : 1;                // r2
+    uint8_t l2: 1;                // l2
+    uint8_t r2: 1;                // r2
 
     uint8_t back : 1;             // share
     uint8_t start : 1;           // pause, options
@@ -187,7 +187,8 @@ typedef struct
 
     uint8_t kick1 : 1;   // kick1
     uint8_t kick2 : 1;  // kick2
-    uint8_t : 2;
+    uint8_t l2: 1;
+    uint8_t r2: 1;
     uint8_t back : 1;
     uint8_t start : 1;
     uint8_t : 2;
@@ -196,7 +197,9 @@ typedef struct
     uint8_t capture : 1;
     uint8_t : 6;
 
-    uint8_t unused2[22];
+    uint8_t leftTrigger : 8;
+    uint8_t rightTrigger : 8;
+    uint8_t unused2[20];
 
     uint8_t powerLevel : 4; // seems to range differently, packets listed in Minatsuki have 0x0C
     uint8_t : 4;

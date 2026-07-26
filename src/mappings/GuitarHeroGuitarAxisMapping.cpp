@@ -128,9 +128,11 @@ void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
         break;
     case GuitarHeroGuitarLeftTrigger:
         report->leftTrigger = m_calibratedValue >> 8;
+        report->l2 = m_calibratedValue > 65000;
         break;
     case GuitarHeroGuitarRightTrigger:
         report->rightTrigger = m_calibratedValue >> 8;
+        report->r2 = m_calibratedValue > 65000;
         break;
     }
 }
@@ -158,9 +160,11 @@ void GuitarHeroGuitarAxisMapping::update_ps4(uint8_t *buf)
         break;
     case GuitarHeroGuitarLeftTrigger:
         report->leftTrigger = m_calibratedValue >> 8;
+        report->l2 = m_calibratedValue > 65000;
         break;
     case GuitarHeroGuitarRightTrigger:
         report->rightTrigger = m_calibratedValue >> 8;
+        report->r2 = m_calibratedValue > 65000;
         break;
     default:
         break;
@@ -189,9 +193,11 @@ void GuitarHeroGuitarAxisMapping::update_ps5(uint8_t *buf)
         break;
     case GuitarHeroGuitarLeftTrigger:
         report->leftTrigger = m_calibratedValue >> 8;
+        report->l2 = m_calibratedValue > 65000;
         break;
     case GuitarHeroGuitarRightTrigger:
         report->rightTrigger = m_calibratedValue >> 8;
+        report->r2 = m_calibratedValue > 65000;
         break;
     default:
         break;

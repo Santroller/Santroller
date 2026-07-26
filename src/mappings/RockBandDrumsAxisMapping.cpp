@@ -67,10 +67,12 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
         report->leftStickY = m_calibratedValue >> 8;
         break;
     case RockBandDrumsLeftTrigger:
-        report->redVelocity = m_calibratedValue >> 8;
+        report->leftTrigger = m_calibratedValue >> 8;
+        report->l2 = true;
         break;
     case RockBandDrumsRightTrigger:
-        report->yellowVelocity = m_calibratedValue >> 8;
+        report->rightTrigger = m_calibratedValue >> 8;
+        report->r2 = true;
         break;
     case RockBandDrumsYellowCymbal:
         report->yellowVelocity = m_calibratedValue >> 8;
@@ -135,6 +137,14 @@ void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
     case RockBandDrumsLeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
+    case RockBandDrumsLeftTrigger:
+        report->leftTrigger = m_calibratedValue >> 8;
+        report->l2 = true;
+        break;
+    case RockBandDrumsRightTrigger:
+        report->rightTrigger = m_calibratedValue >> 8;
+        report->r2 = true;
+        break;
     default:
         break;
     }
@@ -182,6 +192,14 @@ void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
         break;
     case RockBandDrumsLeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
+        break;
+    case RockBandDrumsLeftTrigger:
+        report->leftTrigger = m_calibratedValue >> 8;
+        report->l2 = true;
+        break;
+    case RockBandDrumsRightTrigger:
+        report->rightTrigger = m_calibratedValue >> 8;
+        report->r2 = true;
         break;
     default:
         break;

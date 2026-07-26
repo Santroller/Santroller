@@ -293,9 +293,11 @@ void RockBandDrumsButtonMapping::update_xboxone(uint8_t *buf)
     case RockBandDrumsY:
         report->y |= m_lastValue;
         break;
+    case RockBandDrumsLeftShoulder:
     case RockBandDrumsKick1Pedal:
         report->leftShoulder |= m_lastValue;
         break;
+    case RockBandDrumsRightShoulder:
     case RockBandDrumsKick2Pedal:
         report->rightShoulder |= m_lastValue;
         break;

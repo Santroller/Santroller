@@ -157,7 +157,7 @@ void ADS1115::end()
 }
 void ADS1115::tick()
 {
-    if (rdy[alert])
+    if (rdy[alert] && status == ADS1115_POLL_WAIT)
     {
         rdy[alert] = false;
         status = ADS1115_POLL;

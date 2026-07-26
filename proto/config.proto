@@ -123,10 +123,19 @@ message ProfileAssignmentInfo {
 message ProfileAssignment {
   repeated ProfileAssignmentInfo assignments = 1;
 }
+message GuiDevice {
+  required string label = 1;
+}
+message GuiConfig {
+  oneof config {
+    GuiDevice label = 1;
+  }
+}
 
 message Config {
   repeated Device devices = 2;
   repeated Profile profiles = 3;
+  repeated GuiConfig guiConfig = 4;
 }
 
 message ConfigInfo {

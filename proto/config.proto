@@ -127,8 +127,9 @@ message GuiDevice {
   required string label = 1;
 }
 message GuiConfig {
+  required int32 deviceid = 1;
   oneof config {
-    GuiDevice label = 1;
+    GuiDevice label = 2;
   }
 }
 

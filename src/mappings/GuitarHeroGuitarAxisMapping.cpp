@@ -6,6 +6,7 @@
 #include <pb_encode.h>
 #include <utils.h>
 #include <stdint.h>
+#include "config.hpp"
 
 const uint8_t GuitarHeroGuitarAxisMapping::gh5_slider_mapping[] = {
     0x80, 0x15, 0x4D, 0x30, 0x9A, 0x99, 0x66,
@@ -206,6 +207,11 @@ void GuitarHeroGuitarAxisMapping::update_ps5(uint8_t *buf)
 
 void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
 {
+    if (!m_checked_slider)
+    {
+        m_checked_slider = true;
+        m_supports_slider = all_profiles[m_profile]->supports_slider;
+    }
     if (m_centered)
     {
         return;
@@ -214,11 +220,39 @@ void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitarLeftStickX:
-        // shove stick on the slider, then it can be used in menus
-        report->slider = m_calibratedValue - 32768;
+        if (!m_supports_slider)
+        {
+            // shove stick on the slider, then it can be used in menus
+            report->slider = m_calibratedValue - 32768;
+        }
+        else
+        {
+            if (m_calibratedValue < 10000)
+            {
+                report->dpadRight = true;
+            }
+            if (m_calibratedValue > 50000)
+            {
+                report->dpadLeft = true;
+            }
+        }
         break;
     case GuitarHeroGuitarLeftStickY:
-        report->leftStickY = m_calibratedValue - 32768;
+        if (!m_supports_slider)
+        {
+            report->leftStickY = m_calibratedValue - 32768;
+        }
+        else
+        {
+            if (m_calibratedValue < 10000)
+            {
+                report->dpadUp = true;
+            }
+            if (m_calibratedValue > 50000)
+            {
+                report->dpadDown = true;
+            }
+        }
         break;
     case GuitarHeroGuitarWhammy:
         report->whammy = m_calibratedValue - 32768;
@@ -261,6 +295,8 @@ void GuitarHeroGuitarAxisMapping::update_ogxbox(uint8_t *buf)
     case GuitarHeroGuitarTilt:
         report->tilt = m_calibratedValue - 32768;
         break;
+    default:
+        break;
     }
 }
 void GuitarHeroGuitarAxisMapping::update_xboxone(uint8_t *buf)
@@ -272,18 +308,31 @@ void GuitarHeroGuitarAxisMapping::update_xboxone(uint8_t *buf)
     XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
-    case GuitarHeroGuitarLeftStickX:
-        // shove stick on the slider, then it can be used in menus
-        report->joystickX = m_calibratedValue - 32768;
-        break;
-    case GuitarHeroGuitarLeftStickY:
-        report->joystickY = m_calibratedValue - 32768;
-        break;
     case GuitarHeroGuitarWhammy:
         report->whammy = m_calibratedValue >> 8;
         break;
     case GuitarHeroGuitarTilt:
         report->tilt = m_calibratedValue >> 8;
+        break;
+    case GuitarHeroGuitarLeftStickX:
+        if (m_calibratedValue < 10000)
+        {
+            report->dpadRight = true;
+        }
+        if (m_calibratedValue > 50000)
+        {
+            report->dpadLeft = true;
+        }
+        break;
+    case GuitarHeroGuitarLeftStickY:
+        if (m_calibratedValue < 10000)
+        {
+            report->dpadUp = true;
+        }
+        if (m_calibratedValue > 50000)
+        {
+            report->dpadDown = true;
+        }
         break;
     default:
         break;

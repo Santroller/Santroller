@@ -127,10 +127,15 @@ message GuiDevice {
   required string label = 1;
   required int32 pin = 2;
 }
+message SellerConfig {
+  required bytes logo = 1;
+  required string name = 2;
+}
 message GuiConfig {
   required int32 deviceid = 1;
   oneof config {
     GuiDevice label = 2;
+    SellerConfig seller = 3;
   }
 }
 

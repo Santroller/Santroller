@@ -557,6 +557,10 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
     static const uint8_t gh5_slider_mapping[32];
+
+private:
+    bool m_supports_slider = false;
+    bool m_checked_slider = false;
 };
 
 class DJHTurntableButtonMapping : public ButtonMapping
@@ -873,6 +877,7 @@ public:
     ~CatchAllActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0xFF; }
+
 private:
     proto_CatchallAssignment m_config;
 };
@@ -905,6 +910,7 @@ public:
     ~BluetoothModeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignBluetoothGamepad; }
+
 private:
     proto_BluetoothMode m_mode;
 };
@@ -915,6 +921,7 @@ public:
     ~WiiExtensionEmulationActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignWiimoteExtension; }
+
 private:
     proto_WiimoteAssignment m_config;
 };
@@ -925,6 +932,7 @@ public:
     ~PS2ControllerEmulationActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignPsx; }
+
 private:
     proto_PSXAssignment m_config;
 };

@@ -127,6 +127,11 @@ message GuiDevice {
   required string label = 1;
   required int32 pin = 2;
 }
+message GuiLed {
+  required string label = 1;
+  required int32 deviceid = 2;
+  required int32 pin = 3;
+}
 message SellerConfig {
   required bytes logo = 1;
   required string name = 2;
@@ -143,6 +148,7 @@ message Config {
   repeated Device devices = 2;
   repeated Profile profiles = 3;
   repeated GuiConfig guiConfig = 4;
+  optional bool syncCalibrations = 5;
 }
 
 message ConfigInfo {

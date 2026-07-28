@@ -22,6 +22,9 @@ uint16_t GPIOInput::tickAnalog()
 void GPIOInput::setup()
 {
     m_pin = m_input.pin;
+    if (m_input.pin < 0) {
+        return;
+    }
     if (m_analog && m_pin >= ADC_BASE_PIN)
     {
         adc_gpio_init(m_pin);

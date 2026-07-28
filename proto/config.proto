@@ -141,6 +141,7 @@ message GuiConfig {
   oneof config {
     GuiDevice label = 2;
     SellerConfig seller = 3;
+    GuiLed ledLabel = 4;
   }
 }
 

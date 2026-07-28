@@ -59,7 +59,7 @@ enum STATE state = INIT;
 
 static uint16_t hid_host_cid = 0;
 static bool hid_host_descriptor_available = false;
-static hid_protocol_mode_t hid_host_report_mode = HID_PROTOCOL_MODE_REPORT_WITH_FALLBACK_TO_BOOT;
+static hid_protocol_mode_t hid_host_report_mode = HID_PROTOCOL_MODE_REPORT;
 static HID_ReportInfo_t *info;
 
 int get_bt_address(uint8_t *addr) {

@@ -130,7 +130,7 @@ message GuiDevice {
 message GuiLed {
   required string label = 1;
   required int32 deviceid = 2;
-  required int32 pin = 3;
+  repeated uint32 activeLed = 3;
 }
 message SellerConfig {
   required bytes logo = 1;

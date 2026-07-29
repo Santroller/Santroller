@@ -132,6 +132,17 @@ message GuiLed {
   required int32 deviceid = 2;
   repeated uint32 activeLed = 3;
 }
+message GuiMultiplexerDevice {
+  required string label = 1;
+  required int32 deviceid = 2;
+  repeated uint32 channel = 3;
+}
+message GuiMatrixDevice {
+  required string label = 1;
+  required int32 deviceid = 2;
+  required uint32 inputPin = 3;
+  required uint32 outputPin = 4;
+}
 message SellerConfig {
   required bytes logo = 1;
   required string name = 2;
@@ -142,6 +153,8 @@ message GuiConfig {
     GuiDevice label = 2;
     SellerConfig seller = 3;
     GuiLed ledLabel = 4;
+    GuiMultiplexerDevice multiplexerLabel = 5;
+    GuiMatrixDevice matrixLabel = 6;
   }
 }
 

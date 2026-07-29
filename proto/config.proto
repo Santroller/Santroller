@@ -135,7 +135,7 @@ message GuiLed {
 message GuiMultiplexerDevice {
   required string label = 1;
   required int32 deviceid = 2;
-  repeated uint32 channel = 3;
+  required uint32 channel = 3;
 }
 message GuiMatrixDevice {
   required string label = 1;

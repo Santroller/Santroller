@@ -108,6 +108,7 @@ enum GuitarHeroGuitarButtonType {
   GuitarHeroGuitarDpadLeft = 16;
   GuitarHeroGuitarDpadRight = 17;
   GuitarHeroGuitarPedal = 18;
+  GuitarHeroGuitarCapture = 19;
 }
 enum GuitarHeroGuitarAxisType {
   GuitarHeroGuitarWhammy = 1;
@@ -181,6 +182,7 @@ enum RockBandGuitarButtonType {
   RockBandGuitarDpadLeft = 16;
   RockBandGuitarDpadRight = 17;
   RockBandGuitarPedal = 18;
+  RockBandGuitarCapture = 19;
 }
 enum RockBandGuitarAxisType {
   RockBandGuitarWhammy = 1;
@@ -210,6 +212,7 @@ enum RockBandDrumsButtonType {
   RockBandDrumsKick2Pedal = 13;
   RockBandDrumsLeftShoulder = 14;
   RockBandDrumsRightShoulder = 15;
+  RockBandDrumsCapture = 16;
 }
 enum RockBandDrumsAxisType {
   RockBandDrumsRedPad = 1;
@@ -241,6 +244,7 @@ enum GuitarHeroDrumsButtonType {
   GuitarHeroDrumsDpadRight = 11;
   GuitarHeroDrumsLeftShoulder = 12;
   GuitarHeroDrumsRightShoulder = 13;
+  GuitarHeroDrumsCapture = 14;
 }
 enum GuitarHeroDrumsAxisType {
   GuitarHeroDrumsRedPad = 1;

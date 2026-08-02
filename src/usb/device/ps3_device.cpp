@@ -248,6 +248,16 @@ void PS3GamepadDevice::initialize()
 }
 void PS3GamepadDevice::process()
 {
+    if (tud_suspended()) {
+        for (const auto &profile : profiles)
+        {
+            for (const auto &led : profile->leds)
+            {
+                led->off();
+            }
+        }
+        return;
+    }
     if (!ready())
     {
         for (const auto &profile : profiles)

@@ -9,7 +9,7 @@
 - [ ] input to put controller to sleep
 - [ ] input for waking the controller up from sleep
 - [ ] xbox 360 wakeup
-- [ ] Properly deal with sleep, so if the console goes to sleep, so does the controller
+- [ ] When a bt receivers USB is suspended, we should give users the option to suspend BT itself as well.
 
 ## Emulation
 - [ ] Emulation of PS2 controllers
@@ -41,7 +41,6 @@
 - [ ] Defaults for inputs, such as loading all the wii extension inputs for you with one click
 - [ ] Defaults for outputs, like clicking a button that gives you all the keyboard inputs youd need for festival
 - [ ] Reverse debounce - https://github.com/Santroller/Santroller/issues/101
-- [ ] Link inputs across profiles - so like whammy calibration being mirrored in multiple profiles
 - [ ] Copy profiles
 - [ ] Advanced joystick mapping - allow for mapping to just a specific range of motion instead of the entire stick. Some games need the ability to map an axis to only the top half of a stick for example
 - [ ] Better analog filtering - https://github.com/dxinteractive/ResponsiveAnalogRead
@@ -49,16 +48,9 @@
 - [ ] Other analog filters - Low pass, high pass, zero point crossing
 - [ ] Filters needed for hall effect
 - [ ] Shortcut input masking - aka if you have start + select to home, it shouldnt keep pressing start and select
-- [x] matrix 
-- [x] toggle inputs - hit a button once to turn it on, and then again to turn it off
-- [x] debounce for drum outputs
-- [x] Cycling mapping - you give it a range of values (like say all the notches on a rb pickup), and then each time an input is pressed, it jumps to the next value, cycling back to the beginning after it hits the last one
-    For this i think the easiest method for implementation would be to have a seperate config area we store that state in
-- [x] Pin labels - Add the ability to define names for pins, so that a tool like RCM can let users reconfigure their guitars, but the pins are all given labels so a user knows what the defaults are
 
 ## Led / rumble features
 - [ ] Gamepad rumble, including passthrough with usb host
-- [ ] DMX
 - [ ] Allow mapping stage kit led count to brightness
 - [ ] Support Spice2X serial API for games that run on that
 - [ ] Support directoutput (if we want to start supporting pinball cabs)

@@ -103,6 +103,16 @@ bool SwitchGamepadDevice::sendReport(uint8_t reportID, void const *reportData, u
 }
 void SwitchGamepadDevice::process()
 {
+    if (tud_suspended()) {
+        for (const auto &profile : profiles)
+        {
+            for (const auto &led : profile->leds)
+            {
+                led->off();
+            }
+        }
+        return;
+    }
     if (!tud_ready())
     {
         for (const auto &profile : profiles)

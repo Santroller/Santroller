@@ -383,7 +383,6 @@ void XboxOneGamepadDevice::process_report_queue(uint32_t now)
         {
             memcpy(last_report, &report_queue.front().report, report_queue.front().len);
             report_queue.pop();
-            lastReportQueue = now;
         }
         else
         {
@@ -405,6 +404,16 @@ void XboxOneGamepadDevice::set_ack_wait()
 }
 void XboxOneGamepadDevice::process()
 {
+    if (tud_suspended()) {
+        for (const auto &profile : profiles)
+        {
+            for (const auto &led : profile->leds)
+            {
+                led->off();
+            }
+        }
+        return;
+    }
     if (!tud_ready())
     {
         for (const auto &profile : profiles)

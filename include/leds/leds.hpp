@@ -18,6 +18,7 @@ public:
     virtual void set_val(uint16_t val) = 0;
     virtual void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness) = 0;
     virtual void setup() = 0;
+    virtual void off() = 0;
     virtual bool supports_brightness() = 0;
     virtual uint8_t led_count() = 0;
 };
@@ -28,6 +29,7 @@ public:
     {
         setup();
     }
+    void off();
     void set_val(uint16_t val);
     void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
     void setup();
@@ -56,6 +58,7 @@ public:
     {
         setup();
     }
+    void off();
     void set_val(uint16_t val);
     void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
     void setup();
@@ -72,6 +75,7 @@ public:
     {
         setup();
     }
+    void off();
     void set_val(uint16_t val);
     void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
     void setup();
@@ -90,6 +94,7 @@ public:
     {
         setup();
     }
+    void off();
     void set_val(uint16_t val);
     void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
     void setup();
@@ -107,6 +112,7 @@ public:
     {
         setup();
     }
+    void off();
     void set_val(uint16_t val);
     void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
     void setup();
@@ -122,6 +128,7 @@ class LedMapping
 public:
     LedMapping(std::unique_ptr<LedMappingDevice> device, uint32_t profile_id, uint32_t id) : m_device(std::move(device)), m_id(id), m_profile_id(profile_id) {}
     virtual ~LedMapping() {}
+    void off();
     virtual void update(bool full_poll, bool send_events) = 0;
     virtual void reload() = 0;
 

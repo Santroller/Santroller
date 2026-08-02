@@ -435,7 +435,7 @@ void GamepadButtonMapping::update_xinput(uint8_t *buf)
         report->guide |= m_lastValue;
         break;
     case GamepadCapture:
-        report->touchpad |= m_lastValue;
+        report->capture |= m_lastValue;
         break;
     case GamepadLeftShoulder:
         report->leftShoulder |= m_lastValue;

@@ -270,7 +270,7 @@ typedef struct
     uint8_t leftShoulder : 1;
     uint8_t rightShoulder : 1;
     uint8_t guide : 1;
-    uint8_t : 1;
+    uint8_t capture: 1;
 
     uint8_t a : 1;
     uint8_t b : 1;

@@ -218,11 +218,20 @@ uint8_t VTechGuitarIoExpanderLedDevice::led_count()
 
 void GpioLedDevice::set_val(uint16_t val)
 {
-    pwm_set_gpio_level(m_device.pin, val);
+    if (m_device.analog)
+    {
+        pwm_set_gpio_level(m_device.pin, val);
+        return;
+    }
+    gpio_put(m_device.pin, val);
 }
 void GpioLedDevice::set_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
-    pwm_set_gpio_level(m_device.pin, r);
+    if (m_device.analog)
+    {
+        pwm_set_gpio_level(m_device.pin, r);
+    }
+    gpio_put(m_device.pin, r || g || b);
 }
 uint8_t GpioLedDevice::led_count()
 {
@@ -294,8 +303,8 @@ void StaticLedMapping::reload()
 {
     m_device->setup();
 }
-void DMXLedDevice::setup() {
-    
+void DMXLedDevice::setup()
+{
 }
 void DMXLedDevice::set_val(uint16_t val)
 {

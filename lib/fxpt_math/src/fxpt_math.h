@@ -47,6 +47,9 @@ extern "C" {
 #endif
 uint16_t fxpt_atan2(const int16_t y, const int16_t x);
 uint16_t fxpt_asin(int16_t x);
+inline int16_t fxpt_atan2s(const int16_t y, const int16_t x) {
+    return fxpt_atan2(y, x);
+}
 
 #ifdef __cplusplus
 }

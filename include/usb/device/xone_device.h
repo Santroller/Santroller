@@ -52,10 +52,11 @@ private:
     uint8_t last_report[CFG_TUD_XONE_RX_BUFSIZE] = {};
     uint8_t last_report_counter;
     uint32_t keep_alive_timer;
-    uint8_t keep_alive_sequence;
-    uint8_t virtual_keycode_sequence;
+    uint8_t global_sequence;
+    uint8_t security_sequence;
     bool auth_completed = false;
     bool xb1_guide_pressed = false;
+    bool xb1_share_pressed = false;
     uint8_t xbone_led_mode;
 
     bool waiting_ack = false;

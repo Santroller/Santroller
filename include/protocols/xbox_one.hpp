@@ -64,7 +64,7 @@ typedef struct
 } __attribute__((packed)) BinaryDeviceMetadata;
 typedef struct
 {
-    uint8_t sync : 1;
+    uint8_t sync : 1; 
     uint8_t guide : 1;
     uint8_t start : 1; // menu
     uint8_t back : 1;  // view
@@ -91,6 +91,7 @@ typedef struct
     int16_t leftStickY;
     int16_t rightStickX;
     int16_t rightStickY;
+    uint8_t consoleFunctions[18];
 } __attribute__((packed)) XboxOneGamepad_Data_t;
 
 typedef struct
@@ -138,7 +139,7 @@ typedef struct
     int16_t joystickX;
     int16_t joystickY;
 
-    uint8_t consoleFunctions[14];
+    uint8_t consoleFunctions[18];
 } __attribute__((packed)) XboxOneRockBandGuitar_Data_t;
 
 typedef struct
@@ -290,6 +291,7 @@ typedef struct
     uint8_t yellowCymbalVelocity : 4;
     uint8_t : 4;
     uint8_t greenCymbalVelocity : 4;
+    uint8_t consoleFunctions[18];
 } __attribute__((packed)) XboxOneRockBandDrums_Data_t;
 
 // This isnt actually real but by doing this we can get some sane gamepad mappings in turntable mode

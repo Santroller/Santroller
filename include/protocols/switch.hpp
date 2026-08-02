@@ -197,7 +197,8 @@ typedef struct
     uint8_t start : 1;    // start
 
     uint8_t guide : 1; // ps
-    uint8_t : 2;
+    uint8_t capture :1;
+    uint8_t : 1;
     uint8_t whammy : 1;
     uint8_t tilt : 1;
     uint8_t : 2;

@@ -39,6 +39,9 @@ void GamepadButtonMapping::update_wii(uint8_t *buf)
     case GamepadBack:
         report->back |= m_lastValue;
         break;
+    case GamepadCapture:
+        // report->capture |= m_lastValue;
+        break;
     case GamepadGuide:
         report->guide |= m_lastValue;
         break;
@@ -144,6 +147,9 @@ void GamepadButtonMapping::update_ps2(uint8_t *buf)
     case GamepadBack:
         report->back |= m_lastValue;
         break;
+    case GamepadCapture:
+        // report->capture |= m_lastValue;
+        break;
     case GamepadLeftShoulder:
         report->leftShoulder |= m_lastValue;
         break;
@@ -201,6 +207,9 @@ void GamepadButtonMapping::update_ps3(uint8_t *buf)
         case GamepadGuide:
             report->guide |= m_lastValue;
             break;
+        case GamepadCapture:
+            report->capture |= m_lastValue;
+            break;
         case GamepadLeftShoulder:
             report->leftShoulder |= m_lastValue;
             break;
@@ -253,6 +262,9 @@ void GamepadButtonMapping::update_ps3(uint8_t *buf)
         break;
     case GamepadGuide:
         report->guide |= m_lastValue;
+        break;
+    case GamepadCapture:
+        report->capture |= m_lastValue;
         break;
     case GamepadLeftShoulder:
         report->leftShoulder |= m_lastValue;
@@ -308,6 +320,9 @@ void GamepadButtonMapping::update_ps4(uint8_t *buf)
     case GamepadGuide:
         report->guide |= m_lastValue;
         break;
+    case GamepadCapture:
+        report->capture |= m_lastValue;
+        break;
     case GamepadLeftShoulder:
         report->leftShoulder |= m_lastValue;
         break;
@@ -362,6 +377,9 @@ void GamepadButtonMapping::update_ps5(uint8_t *buf)
     case GamepadGuide:
         report->guide |= m_lastValue;
         break;
+    case GamepadCapture:
+        report->touchpad |= m_lastValue;
+        break;
     case GamepadLeftShoulder:
         report->leftShoulder |= m_lastValue;
         break;
@@ -415,6 +433,9 @@ void GamepadButtonMapping::update_xinput(uint8_t *buf)
         break;
     case GamepadGuide:
         report->guide |= m_lastValue;
+        break;
+    case GamepadCapture:
+        report->touchpad |= m_lastValue;
         break;
     case GamepadLeftShoulder:
         report->leftShoulder |= m_lastValue;
@@ -521,6 +542,12 @@ void GamepadButtonMapping::update_xboxone(uint8_t *buf)
         break;
     case GamepadGuide:
         report->guide |= m_lastValue;
+        break;
+    case GamepadCapture:
+        if (m_lastValue)
+        {
+            report->consoleFunctions[0] = 0x01;
+        }
         break;
     case GamepadLeftShoulder:
         report->leftShoulder |= m_lastValue;

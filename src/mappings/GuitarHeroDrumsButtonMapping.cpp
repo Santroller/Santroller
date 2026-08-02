@@ -40,6 +40,9 @@ void GuitarHeroDrumsButtonMapping::update_wii(uint8_t *buf)
     case GuitarHeroDrumsGuide:
         report->guide |= m_lastValue;
         break;
+    case GuitarHeroDrumsCapture:
+        // report->capture |= m_lastValue;
+        break;
     case GuitarHeroDrumsDpadUp:
         break;
     case GuitarHeroDrumsDpadDown:
@@ -47,6 +50,12 @@ void GuitarHeroDrumsButtonMapping::update_wii(uint8_t *buf)
     case GuitarHeroDrumsDpadLeft:
         break;
     case GuitarHeroDrumsDpadRight:
+        break;
+    case GuitarHeroDrumsLeftShoulder:
+        report->leftShoulder |= m_lastValue;
+        break;
+    case GuitarHeroDrumsRightShoulder:
+        report->rightShoulder |= m_lastValue;
         break;
     }
 }
@@ -76,6 +85,9 @@ void GuitarHeroDrumsButtonMapping::update_switch(uint8_t *buf)
     case GuitarHeroDrumsGuide:
         report->guide |= m_lastValue;
         break;
+    case GuitarHeroDrumsCapture:
+        report->capture |= m_lastValue;
+        break;
     case GuitarHeroDrumsDpadUp:
         report->dpadUp |= m_lastValue;
         break;
@@ -87,6 +99,12 @@ void GuitarHeroDrumsButtonMapping::update_switch(uint8_t *buf)
         break;
     case GuitarHeroDrumsDpadRight:
         report->dpadRight |= m_lastValue;
+        break;
+    case GuitarHeroDrumsLeftShoulder:
+        report->leftShoulder |= m_lastValue;
+        break;
+    case GuitarHeroDrumsRightShoulder:
+        report->rightShoulder |= m_lastValue;
         break;
     }
 }
@@ -127,6 +145,9 @@ void GuitarHeroDrumsButtonMapping::update_ps3(uint8_t *buf)
         break;
     case GuitarHeroDrumsGuide:
         report->guide |= m_lastValue;
+        break;
+    case GuitarHeroDrumsCapture:
+        report->capture |= m_lastValue;
         break;
     case GuitarHeroDrumsDpadUp:
         report->dpadUp |= m_lastValue;
@@ -183,6 +204,9 @@ void GuitarHeroDrumsButtonMapping::update_xinput(uint8_t *buf)
     case GuitarHeroDrumsGuide:
         report->guide |= m_lastValue;
         break;
+    case GuitarHeroDrumsCapture:
+        report->capture |= m_lastValue;
+        break;
     case GuitarHeroDrumsDpadUp:
         report->dpadUp |= m_lastValue;
         break;
@@ -222,6 +246,9 @@ void GuitarHeroDrumsButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     case GuitarHeroDrumsBack:
         report->back |= m_lastValue;
+        break;
+    case GuitarHeroDrumsCapture:
+        // report->capture |= m_lastValue;
         break;
     case GuitarHeroDrumsStart:
         report->start |= m_lastValue;

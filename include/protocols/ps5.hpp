@@ -176,7 +176,8 @@ typedef struct
     uint8_t p1 : 1;
 
     uint8_t guide : 1;
-    uint8_t : 7;
+    uint8_t capture : 1;
+    uint8_t : 6;
 
     uint8_t unused2;
 
@@ -244,7 +245,8 @@ typedef struct
     uint8_t : 2;
 
     uint8_t guide : 1;
-    uint8_t : 7;
+    uint8_t capture : 1;
+    uint8_t : 6;
 
     uint8_t unused2;
 

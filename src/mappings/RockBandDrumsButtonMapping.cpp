@@ -61,6 +61,9 @@ void RockBandDrumsButtonMapping::update_ps3(uint8_t *buf)
     case RockBandDrumsGuide:
         report->guide |= m_lastValue;
         break;
+    case RockBandDrumsCapture:
+        report->capture |= m_lastValue;
+        break;
     case RockBandDrumsDpadUp:
         report->dpadUp |= m_lastValue;
         break;
@@ -112,6 +115,9 @@ void RockBandDrumsButtonMapping::update_ps4(uint8_t *buf)
     case RockBandDrumsGuide:
         report->guide |= m_lastValue;
         break;
+    case RockBandDrumsCapture:
+        report->capture |= m_lastValue;
+        break;
     case RockBandDrumsDpadUp:
         report->dpadUp |= m_lastValue;
         break;
@@ -162,6 +168,9 @@ void RockBandDrumsButtonMapping::update_ps5(uint8_t *buf)
         break;
     case RockBandDrumsGuide:
         report->guide |= m_lastValue;
+        break;
+    case RockBandDrumsCapture:
+        report->capture |= m_lastValue;
         break;
     case RockBandDrumsDpadUp:
         report->dpadUp |= m_lastValue;
@@ -216,6 +225,9 @@ void RockBandDrumsButtonMapping::update_xinput(uint8_t *buf)
     case RockBandDrumsGuide:
         report->guide |= m_lastValue;
         break;
+    case RockBandDrumsCapture:
+        report->capture |= m_lastValue;
+        break;
     case RockBandDrumsDpadUp:
         report->dpadUp |= m_lastValue;
         break;
@@ -258,6 +270,9 @@ void RockBandDrumsButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     case RockBandDrumsStart:
         report->start |= m_lastValue;
+        break;
+    case RockBandDrumsCapture:
+        // report->capture |= m_lastValue;
         break;
     case RockBandDrumsDpadUp:
         report->dpadUp |= m_lastValue;
@@ -309,6 +324,12 @@ void RockBandDrumsButtonMapping::update_xboxone(uint8_t *buf)
         break;
     case RockBandDrumsGuide:
         report->guide |= m_lastValue;
+        break;
+    case RockBandDrumsCapture:
+        if (m_lastValue)
+        {
+            report->consoleFunctions[0] = 0x01;
+        }
         break;
     case RockBandDrumsDpadUp:
         report->dpadUp |= m_lastValue;

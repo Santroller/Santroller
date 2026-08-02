@@ -58,6 +58,9 @@ void GuitarHeroGuitarButtonMapping::update_wii(uint8_t *buf)
     case GuitarHeroGuitarStart:
         report->start |= m_lastValue;
         break;
+    case GuitarHeroGuitarCapture:
+        // report->capture |= m_lastValue;
+        break;
     case GuitarHeroGuitarGuide:
         report->guide |= m_lastValue;
         break;
@@ -106,6 +109,9 @@ void GuitarHeroGuitarButtonMapping::update_switch(uint8_t *buf)
         break;
     case GuitarHeroGuitarGuide:
         report->guide |= m_lastValue;
+        break;
+    case GuitarHeroGuitarCapture:
+        report->capture |= m_lastValue;
         break;
     case GuitarHeroGuitarStrumUp:
         report->dpadUp |= m_lastValue;
@@ -167,6 +173,9 @@ void GuitarHeroGuitarButtonMapping::update_ps2(uint8_t *buf)
     case GuitarHeroGuitarStart:
         report->start |= m_lastValue;
         break;
+    case GuitarHeroGuitarCapture:
+        // report->capture |= m_lastValue;
+        break;
     case GuitarHeroGuitarStrumUp:
         report->dpadUp |= m_lastValue;
         break;
@@ -224,6 +233,9 @@ void GuitarHeroGuitarButtonMapping::update_ps3(uint8_t *buf)
         break;
     case GuitarHeroGuitarGuide:
         report->guide |= m_lastValue;
+        break;
+    case GuitarHeroGuitarCapture:
+        report->capture |= m_lastValue;
         break;
     case GuitarHeroGuitarStrumUp:
         report->dpadUp |= m_lastValue;
@@ -289,6 +301,9 @@ void GuitarHeroGuitarButtonMapping::update_ps4(uint8_t *buf)
     case GuitarHeroGuitarGuide:
         report->guide |= m_lastValue;
         break;
+    case GuitarHeroGuitarCapture:
+        report->capture |= m_lastValue;
+        break;
     case GuitarHeroGuitarStrumUp:
         report->dpadUp |= m_lastValue;
         break;
@@ -352,6 +367,9 @@ void GuitarHeroGuitarButtonMapping::update_ps5(uint8_t *buf)
         break;
     case GuitarHeroGuitarGuide:
         report->guide |= m_lastValue;
+        break;
+    case GuitarHeroGuitarCapture:
+        report->capture |= m_lastValue;
         break;
     case GuitarHeroGuitarStrumUp:
         report->dpadUp |= m_lastValue;
@@ -417,6 +435,9 @@ void GuitarHeroGuitarButtonMapping::update_xinput(uint8_t *buf)
     case GuitarHeroGuitarGuide:
         report->guide |= m_lastValue;
         break;
+    case GuitarHeroGuitarCapture:
+        report->capture |= m_lastValue;
+        break;
     case GuitarHeroGuitarStrumUp:
         report->dpadUp |= m_lastValue;
         break;
@@ -477,6 +498,12 @@ void GuitarHeroGuitarButtonMapping::update_ogxbox(uint8_t *buf)
     case GuitarHeroGuitarStart:
         report->start |= m_lastValue;
         break;
+    case GuitarHeroGuitarGuide:
+        // report->guide |= m_lastValue;
+        break;
+    case GuitarHeroGuitarCapture:
+        // report->capture |= m_lastValue;
+        break;
     case GuitarHeroGuitarStrumUp:
         report->dpadUp |= m_lastValue;
         break;
@@ -533,6 +560,12 @@ void GuitarHeroGuitarButtonMapping::update_xboxone(uint8_t *buf)
     //     break;
     case GuitarHeroGuitarGuide:
         report->guide |= m_lastValue;
+        break;
+    case GuitarHeroGuitarCapture:
+        if (m_lastValue)
+        {
+            report->consoleFunctions[0] = 0x01;
+        }
         break;
     case GuitarHeroGuitarBack:
         report->back |= m_lastValue;

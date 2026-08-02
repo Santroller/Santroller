@@ -336,7 +336,7 @@ typedef struct
     uint8_t kick1 : 1;      // pedal1
     uint8_t cymbalFlag : 1; // right shoulder click
     uint8_t guide : 1;
-    uint8_t : 1;
+    uint8_t capture : 1;
 
     uint8_t a : 1; // green
     uint8_t b : 1; // red
@@ -369,7 +369,7 @@ typedef struct
     uint8_t leftShoulder : 1;  // kick
     uint8_t rightShoulder : 1; // orange
     uint8_t guide : 1;
-    uint8_t : 1;
+    uint8_t capture : 1;
 
     uint8_t a : 1; // green
     uint8_t b : 1; // red
@@ -412,7 +412,7 @@ typedef struct
     uint8_t leftShoulder : 1;  // orange
     uint8_t rightShoulder : 1; // pedal
     uint8_t guide : 1;
-    uint8_t : 1;
+    uint8_t capture : 1;
 
     uint8_t a : 1; // green
     uint8_t b : 1; // red
@@ -457,7 +457,7 @@ typedef struct
     uint8_t leftShoulder : 1; // orange
     uint8_t rightShoulder : 1;
     uint8_t guide : 1;
-    uint8_t : 1;
+    uint8_t capture : 1;
 
     uint8_t a : 1; // green
     uint8_t b : 1; // red

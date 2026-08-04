@@ -222,6 +222,15 @@ void MidiDevice::update(bool full_poll, bool send_events)
                     //         reload();
                     //     }
                     // }
+
+                    if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_MUSTANG && DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != ROCK_BAND_PRO_GUITAR_MUSTANG) {
+                        proGuitarType = ROCK_BAND_PRO_GUITAR_MUSTANG;
+                        reset_usb();
+                    }
+                    if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_SQUIER && DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != ROCK_BAND_PRO_GUITAR_SQUIRE) {
+                        proGuitarType = ROCK_BAND_PRO_GUITAR_SQUIRE;
+                        reset_usb();
+                    }
                     midiData->seenProGuitar = true;
                     if (cable_state->data[4] == 0x08)
                     {

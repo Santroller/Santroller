@@ -46,6 +46,7 @@ static uint32_t __uninitialized_ram(windows_in_hid);
 static uint32_t __uninitialized_ram(persistedConsoleTypeValid);
 static uint32_t __uninitialized_ram(xboxAuthValid);
 static uint32_t __uninitialized_ram(pico_is_sleeping);
+static uint32_t __uninitialized_ram(persistedProGuitarType);
 #if USB_HOST_STACK
 USB_Device_Type_t xone_dev_addr = {};
 USB_Device_Type_t x360_dev_addr = {};
@@ -222,7 +223,7 @@ void wakeup_360()
 void setup()
 {
 #if USB_HOST_STACK
-    set_sys_clock_khz(120000, true);
+    set_sys_clock_khz(180000, true);
 #endif
 
 #ifdef INPUT_SERIAL_MIDI
@@ -245,6 +246,7 @@ void setup()
     if (persistedConsoleTypeValid == PERSISTED_CONSOLE_TYPE_VALID)
     {
         consoleType = persistedConsoleType;
+        proGuitarType = persistedProGuitarType;
         if (SLEEP_PIN != -1)
         {
             // Sleep works best when nothing else is started, so we reboot the pico before and after sleep
@@ -264,6 +266,7 @@ void setup()
         windows_in_hid = false;
         xboxAuthValid = false;
         consoleType = UNIVERSAL;
+        proGuitarType = DEVICE_TYPE;
         pico_is_sleeping = false;
     }
     generateSerialString(&serialstring, consoleType);
@@ -768,6 +771,16 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                             usb_host_devices[i].type.sub_type = XINPUT_GUITAR_WT;
                             printf("Found wt\r\n");
                         }
+
+                        if (DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != ROCK_BAND_PRO_GUITAR_MUSTANG && caps->leftStickY == XBOX_360_MUSTANG_PID) {
+                            proGuitarType = ROCK_BAND_PRO_GUITAR_MUSTANG;
+                            reset_usb();
+                        }
+
+                        if (DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != ROCK_BAND_PRO_GUITAR_SQUIRE && caps->leftStickY == XBOX_360_SQUIRE_PID) {
+                            proGuitarType = ROCK_BAND_PRO_GUITAR_SQUIRE;
+                            reset_usb();
+                        }
                     }
                 }
                 continue;
@@ -1056,5 +1069,6 @@ void reset_usb(void)
 {
     persistedConsoleType = consoleType;
     persistedConsoleTypeValid = PERSISTED_CONSOLE_TYPE_VALID;
+    persistedProGuitarType = proGuitarType;
     reboot();
 }

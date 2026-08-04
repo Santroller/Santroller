@@ -14,6 +14,7 @@ extern "C" {
 // ConsoleType can change due to console detection
 extern uint8_t consoleType;
 extern uint8_t arcadeSide;
+extern uint8_t proGuitarType;
 void setArcadeSide(uint8_t side);
 #ifdef CONFIGURABLE_BLOBS
 extern const uint8_t* config;
@@ -33,6 +34,7 @@ extern const uint8_t config[CONFIGURATION_LEN];
 #define DEVICE_TYPE_IS_KEYBOARD (DEVICE_TYPE == KEYBOARD_MOUSE_TYPE)
 #define DEVICE_TYPE_IS_GAMEPAD (!(DEVICE_TYPE_IS_KEYBOARD))
 #define DEVICE_TYPE_IS_PRO (DEVICE_TYPE == ROCK_BAND_PRO_DRUM || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE || DEVICE_TYPE == ROCK_BAND_PRO_KEYS)
+#define DEVICE_TYPE_IS_PRO_GUITAR (DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_MUSTANG || DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE)
 #if DEVICE_TYPE == SKYLANDERS
 #define SUB_TYPE XINPUT_SKYLANDERS
 #define OG_XBOX_REPORT OGXboxGamepad_Data_t

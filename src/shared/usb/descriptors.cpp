@@ -1311,6 +1311,19 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         else if (request == HID_REQUEST_GET_REPORT && wIndex == INTERFACE_ID_Device && wValue == INPUT_CAPABILITIES_WVALUE)
         {
             memcpy_P(requestBuffer, &XInputInputCapabilities, sizeof(XInputInputCapabilities));
+
+            if (DEVICE_TYPE_IS_PRO_GUITAR)
+            {
+                XInputInputCapabilities_t *caps = (XInputInputCapabilities_t *)requestBuffer;
+                if (proGuitarType == ROCK_BAND_PRO_GUITAR_MUSTANG)
+                {
+                    caps->leftThumbY = XBOX_360_SQUIRE_PID;
+                }
+                if (proGuitarType == ROCK_BAND_PRO_GUITAR_SQUIRE)
+                {
+                    caps->leftThumbY = XBOX_360_MUSTANG_PID;
+                }
+            }
             return sizeof(XInputInputCapabilities);
         }
     }
@@ -1487,6 +1500,17 @@ uint16_t descriptorRequest(const uint16_t wValue,
         {
             dev->idVendor = HARMONIX_VID;
             dev->idProduct = WII_TYPE;
+            if (DEVICE_TYPE_IS_PRO_GUITAR)
+            {
+                if (proGuitarType == ROCK_BAND_PRO_GUITAR_MUSTANG)
+                {
+                    dev->idProduct = WII_SQUIRE_PID;
+                }
+                if (proGuitarType == ROCK_BAND_PRO_GUITAR_SQUIRE)
+                {
+                    dev->idProduct = WII_MUSTANG_PID;
+                }
+            }
         }
 #endif
 #ifdef PS3_TYPE
@@ -1494,6 +1518,17 @@ uint16_t descriptorRequest(const uint16_t wValue,
         {
             dev->idVendor = REDOCTANE_VID;
             dev->idProduct = PS3_TYPE;
+            if (DEVICE_TYPE_IS_PRO_GUITAR)
+            {
+                if (proGuitarType == ROCK_BAND_PRO_GUITAR_MUSTANG)
+                {
+                    dev->idProduct = PS3_SQUIRE_PID;
+                }
+                if (proGuitarType == ROCK_BAND_PRO_GUITAR_SQUIRE)
+                {
+                    dev->idProduct = PS3_MUSTANG_PID;
+                }
+            }
         }
 #elif DEVICE_TYPE == GAMEPAD
         else if (consoleType == PS3)

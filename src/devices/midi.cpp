@@ -111,6 +111,14 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 // we don't know the actual size of the message yet
                 cable_state->actual_size = 0xFF;
             }
+            // Running status
+            if (status <= MIDI_MAX_DATA_VAL) {
+                // The status byte is reused, so shift the packet and insert it back
+                status = cable_state->status;
+                cable_state->data[1] = cable_state->data[0];
+                cable_state->data[0] = status;
+                cable_state->pos++;
+            }
             if (status < MIDI_STATUS_SYSEX_START)
             {
                 // then it is a channel message either three bytes or two
@@ -164,6 +172,7 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 cable_state->actual_size = 1;
                 cable_state->sysex_in_progress = false;
             }
+            cable_state->status = status;
         }
         else
         {

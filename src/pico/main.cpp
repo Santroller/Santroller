@@ -732,7 +732,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                                 usb_host_devices[i].type.drum_type = DRUM_RB2;
                             }
                         }
-                        if (usb_host_devices[i].type.sub_type == XINPUT_GUITAR_ALTERNATE && usb_host_devices[i].type.drum_type == GUITAR_CHECK)
+                        if ((usb_host_devices[i].type.sub_type == XINPUT_GUITAR_ALTERNATE || usb_host_devices[i].type.sub_type == XINPUT_PRO_GUITAR) && usb_host_devices[i].type.drum_type == GUITAR_CHECK)
                         {
                             // request capabilities
                             send_report_to_controller(dev_addr, instance, capabilitiesRequest, sizeof(capabilitiesRequest));
@@ -752,7 +752,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         printf("Found subtype: %02x %02x %02x\r\n", sub_type, dev_addr, instance);
                         xinput_w_controller_connected();
                         // Request capabilities so we can figure out WT guitars
-                        if (sub_type == XINPUT_GUITAR_ALTERNATE)
+                        if (sub_type == XINPUT_GUITAR_ALTERNATE || sub_type == XINPUT_PRO_GUITAR)
                         {
                             usb_host_devices[i].type.drum_type = GUITAR_CHECK;
                         }
@@ -772,12 +772,12 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                             printf("Found wt\r\n");
                         }
 
-                        if (DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != ROCK_BAND_PRO_GUITAR_MUSTANG && caps->leftStickY == XBOX_360_MUSTANG_PID) {
+                        if (DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != ROCK_BAND_PRO_GUITAR_MUSTANG && (caps->leftStickY == XBOX_360_MUSTANG_PID || caps->leftStickY == XBOX_360_MUSTANG_MPA_PID) ) {
                             proGuitarType = ROCK_BAND_PRO_GUITAR_MUSTANG;
                             reset_usb();
                         }
 
-                        if (DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != ROCK_BAND_PRO_GUITAR_SQUIRE && caps->leftStickY == XBOX_360_SQUIRE_PID) {
+                        if (DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != ROCK_BAND_PRO_GUITAR_SQUIRE && caps->leftStickY == XBOX_360_SQUIRE_MPA_PID) {
                             proGuitarType = ROCK_BAND_PRO_GUITAR_SQUIRE;
                             reset_usb();
                         }

@@ -25,7 +25,7 @@ const XInputInputCapabilities_t PROGMEM XInputInputCapabilities = {
     leftThumbY : XBOX_360_MUSTANG_PID,
     #elif DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
     leftThumbX : HARMONIX_VID,
-    leftThumbY : XBOX_360_SQUIRE_PID,
+    leftThumbY : XBOX_360_SQUIRE_MPA_PID,
     #else
     leftThumbX : ARDWIINO_VID,
     leftThumbY : ARDWIINO_PID,

@@ -1317,7 +1317,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
                 XInputInputCapabilities_t *caps = (XInputInputCapabilities_t *)requestBuffer;
                 if (proGuitarType == ROCK_BAND_PRO_GUITAR_MUSTANG)
                 {
-                    caps->leftThumbY = XBOX_360_SQUIRE_PID;
+                    caps->leftThumbY = XBOX_360_SQUIRE_MPA_PID;
                 }
                 if (proGuitarType == ROCK_BAND_PRO_GUITAR_SQUIRE)
                 {
@@ -1504,7 +1504,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             {
                 if (proGuitarType == ROCK_BAND_PRO_GUITAR_MUSTANG)
                 {
-                    dev->idProduct = WII_SQUIRE_PID;
+                    dev->idProduct = WII_SQUIRE_MPA_PID;
                 }
                 if (proGuitarType == ROCK_BAND_PRO_GUITAR_SQUIRE)
                 {
@@ -1522,7 +1522,7 @@ uint16_t descriptorRequest(const uint16_t wValue,
             {
                 if (proGuitarType == ROCK_BAND_PRO_GUITAR_MUSTANG)
                 {
-                    dev->idProduct = PS3_SQUIRE_PID;
+                    dev->idProduct = PS3_SQUIRE_MPA_PID;
                 }
                 if (proGuitarType == ROCK_BAND_PRO_GUITAR_SQUIRE)
                 {

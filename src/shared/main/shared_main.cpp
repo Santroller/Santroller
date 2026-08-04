@@ -4706,7 +4706,6 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
                 reset_usb();
             }
             break;
-        case PS3_SQUIRE_PID:
         case PS3_SQUIRE_MPA_PID:
             type->console_type = PS3;
             type->sub_type = ROCK_BAND_PRO_GUITAR_SQUIRE;
@@ -4757,7 +4756,6 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
             type->console_type = PS3;
             type->sub_type = ROCK_BAND_PRO_GUITAR_MUSTANG;
             break;
-        case WII_SQUIRE_PID:
         case WII_SQUIRE_MPA_PID:
             type->console_type = PS3;
             type->sub_type = ROCK_BAND_PRO_GUITAR_SQUIRE;

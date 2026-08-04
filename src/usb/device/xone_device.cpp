@@ -50,7 +50,7 @@ const uint8_t announce_drum[] = {
     0x7e, 0xed, 0x81, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x38, 0x07, 0x62, 0x42,
     0x01, 0x00, 0x00, 0x00, 0xe6, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
 const uint8_t xb1_descriptor_drum[] = {
-     0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE5, 0x00,
+    0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE5, 0x00,
     0xBD, 0x00, 0x16, 0x00, 0x1B, 0x00, 0x1C, 0x00, 0x23, 0x00, 0x29, 0x00, 0x6C, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x06, 0x01, 0x02, 0x03,
     0x04, 0x06, 0x07, 0x05, 0x01, 0x04, 0x05, 0x06, 0x0A, 0x02, 0x17, 0x00, 0x4D, 0x61, 0x64, 0x43,
@@ -404,7 +404,8 @@ void XboxOneGamepadDevice::set_ack_wait()
 }
 void XboxOneGamepadDevice::process()
 {
-    if (tud_suspended()) {
+    if (tud_suspended())
+    {
         for (const auto &profile : profiles)
         {
             for (const auto &led : profile->leds)
@@ -665,10 +666,48 @@ size_t XboxOneGamepadDevice::device_name(uint8_t idx, char *desc)
 
 void XboxOneGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
-    if (subtype == Gamepad)
+    switch (subtype)
     {
+    case KeyboardMouse:
+    case Gamepad:
+    case Dancepad:
+    case DjHeroTurntable:
+    case ProKeys:
+    case Taiko:
+    case StageKit:
+    case Wheel:
+    case FlightStick:
+    case FightStick:
+    case PopNMusic:
+    case DJMax:
+    case ProjectDiva:
         desc->idVendor = XBOX_ONE_CONTROLLER_VID;
         desc->idProduct = XBOX_ONE_CONTROLLER_PID;
+        break;
+    case GuitarHeroGuitar:
+    case RockBandGuitar:
+    case ProGuitarMustang:
+    case ProGuitarSquire:
+    case GuitarFreaks:
+    case PowerGigGuitar:
+    case RockRevolutionGuitar:
+        desc->idVendor = PDP_VID;
+        desc->idProduct = XBOX_ONE_RIFFMASTER_PID;
+        break;
+    case GuitarHeroDrums:
+    case RockBandDrums:
+    case PowerGigDrum:
+        desc->idVendor = PDP_VID;
+        desc->idProduct = XBOX_ONE_PDP_DRUM_PID;
+        break;
+    case LiveGuitar:
+        desc->idVendor = XBOX_REDOCTANE_VID;
+        desc->idProduct = XBOX_ONE_GHLIVE_DONGLE_PID;
+        break;
+    default:
+        desc->idVendor = XBOX_ONE_CONTROLLER_VID;
+        desc->idProduct = XBOX_ONE_CONTROLLER_PID;
+        break;
     }
     desc->bDeviceClass = 0xff;
     desc->bDeviceSubClass = 0x47;

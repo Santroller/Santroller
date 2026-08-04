@@ -197,7 +197,7 @@ int main()
     }
     pfb_firmware_commit();
     newMode = mode;
-    set_sys_clock_khz(120000, true);
+    set_sys_clock_khz(180000, true);
     multicore_launch_core1(core1);
     adc_init();
     ring_buffer_init(&console_buf, console_buf_data, sizeof(console_buf_data), 0);

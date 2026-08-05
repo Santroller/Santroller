@@ -163,7 +163,6 @@ bool UsbHostInterface::set_config()
 {
     // TODO: get lang id and use it
     // also, deal with devices that dont have product names
-    memset(m_name, 0, sizeof(m_name));
     if (m_has_name) {
         update(true, true);
     } else {

@@ -163,7 +163,12 @@ bool UsbHostInterface::set_config()
 {
     // TODO: get lang id and use it
     // also, deal with devices that dont have product names
-    tuh_descriptor_get_product_string(m_dev_addr, 0x0409, m_name, sizeof(m_name), process_product_string, 0);
+    memset(m_name, 0, sizeof(m_name));
+    if (m_has_name) {
+        update(true, true);
+    } else {
+        tuh_descriptor_get_product_string(m_dev_addr, 0x0409, m_name, sizeof(m_name), process_product_string, (uintptr_t)this);
+    }
     usbh_driver_set_config_complete(m_dev_addr, m_interface);
     m_devices_changed = millis() + 500;
     return true;
@@ -171,9 +176,14 @@ bool UsbHostInterface::set_config()
 
 void UsbHostInterface::update(bool full_poll, bool send_events)
 {
+    // sometimes the name comes through slightly corrupted so catch that
+    if (!m_has_name && m_name[2]) {
+        memmove(m_name, m_name+2, sizeof(m_name)-2);
+        m_has_name = true;
+    }
     if (full_poll)
     {
-        printf("UsbHostInterface update %d %d\r\n", full_poll, send_events);
+        printf("UsbHostInterface update %d %d %s\r\n", full_poll, send_events, m_name);
     }
     MidiDevice::update(full_poll, send_events);
     if (send_events && full_poll)
@@ -182,8 +192,9 @@ void UsbHostInterface::update(bool full_poll, bool send_events)
         proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, m_dev_addr, m_interface, true}}};
         for (size_t i = 0; i < sizeof(event.event.usb.name); i++)
         {
-            event.event.usb.name[i] = m_name[(i + 1) * 2];
+            event.event.usb.name[i] = m_name[i * 2];
         }
+        printf("UsbHostInterface update %d %d %s\r\n", full_poll, send_events, event.event.usb.name);
         HIDConfigDevice::send_event(event, true);
     }
 }

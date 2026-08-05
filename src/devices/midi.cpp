@@ -43,7 +43,7 @@ void MidiDevice::rescan(bool first)
                 printf("Assigning MIDI channel: %d on device %d\r\n", i, m_id);
             }
         }
-        if (seenChannels.find({m_id, MIDI_CHANNEL_PROGUITAR}) != seenChannels.end())
+        if (seenChannels.find({m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG}) != seenChannels.end() || seenChannels.find({m_id, MIDI_CHANNEL_PROGUITAR_SQUIER}) != seenChannels.end())
         {
             if (usbBased)
             {
@@ -264,10 +264,21 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 uint8_t buttons_header[] = {MIDI_STATUS_SYSEX_START, 0x08, 0x40};
                 if (memcmp(cable_state->data, buttons_header, sizeof(buttons_header)) == 0)
                 {
-                    if (seenChannels.find({m_id, MIDI_CHANNEL_PROGUITAR}) == seenChannels.end())
+                    if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_SQUIER && seenChannels.find({m_id, MIDI_CHANNEL_PROGUITAR_SQUIER}) == seenChannels.end())
                     {
-                        printf("Seen new MIDI channel: proguitar on device %d\r\n", m_id);
-                        seenChannels[{m_id, MIDI_CHANNEL_PROGUITAR}] = true;
+                        printf("Seen new MIDI channel: proguitar squier on device %d\r\n", m_id);
+                        seenChannels[{m_id, MIDI_CHANNEL_PROGUITAR_SQUIER}] = true;
+                        seenChannels.erase({m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG});
+                        if (HIDConfigDevice::tool_closed())
+                        {
+                            reload();
+                        }
+                    }
+                    if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_MUSTANG && seenChannels.find({m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG}) == seenChannels.end())
+                    {
+                        printf("Seen new MIDI channel: proguitar mustang on device %d\r\n", m_id);
+                        seenChannels[{m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG}] = true;
+                        seenChannels.erase({m_id, MIDI_CHANNEL_PROGUITAR_SQUIER});
                         if (HIDConfigDevice::tool_closed())
                         {
                             reload();

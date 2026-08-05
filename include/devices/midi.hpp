@@ -12,7 +12,10 @@
 
 #define MIDI_CONTROL_COMMAND_MOD_WHEEL 1
 #define MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL 64
-#define MIDI_CHANNEL_PROGUITAR 16
+#define MIDI_CHANNEL_PROGUITAR_SQUIER 16
+#define MIDI_CHANNEL_PROGUITAR_MUSTANG 17
+#define MIDI_SYSEX_ID_PROGUITAR_SQUIER 0x08
+#define MIDI_SYSEX_ID_PROGUITAR_MUSTANG 0x0A
 #define USB_PACKET_SIZE 4
 typedef struct
 {
@@ -105,7 +108,7 @@ public:
     bool is_bluetooth_device(proto_SpecificUsbDevice type) { return false; }
     bool is_bluetooth_type(SubType type) { return false; }
     bool is_ps2_device(PS2ControllerType type) { return false; }
-    bool has_midi_channel(uint8_t channel) { return MIDI_CHANNEL_PROGUITAR == channel; }
+    bool has_midi_channel(uint8_t channel) { return MIDI_CHANNEL_PROGUITAR_MUSTANG == channel || MIDI_CHANNEL_PROGUITAR_SQUIER == channel; }
     bool using_pin(uint8_t pin) { return m_midi_device->using_pin(pin); }
 
 private:

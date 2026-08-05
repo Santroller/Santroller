@@ -12,6 +12,8 @@
 #include <algorithm>
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t xbox360w_prescence[] = {0x08, 0x00, 0x0f, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const char xinput_wireless_gamepad_name[] = "X360 Wireless 0";
+static const char xinput_wireless_gamepad_disconnected_name[] = "X360 Wireless Receiver Slot 0";
 std::shared_ptr<UsbHostInterface> XInputWirelessGamepadHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass && desc_itf->bInterfaceSubClass == 0x5D && desc_itf->bInterfaceProtocol == 0x81, nullptr);
@@ -62,6 +64,12 @@ std::shared_ptr<UsbHostInterface> XInputWirelessGamepadHost::open(std::shared_pt
 
 bool XInputWirelessGamepadHost::set_config()
 {
+    m_has_name = true;
+    for (size_t i = 0; i < sizeof(xinput_wireless_gamepad_disconnected_name); i++)
+    {
+        m_name[i * 2] = xinput_wireless_gamepad_disconnected_name[i];
+    }
+    m_name[(sizeof(xinput_wireless_gamepad_disconnected_name) - 2) * 2] = '1' + (m_ep_out / 2);
     UsbHostInterface::set_config();
     send_intr_xfer(m_ep_out, xbox360w_prescence, sizeof(xbox360w_prescence));
     send_intr_xfer(m_ep_out, xbox360w_prescence, sizeof(xbox360w_prescence));
@@ -87,6 +95,11 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                                                                     { return intf.get() == this; }));
                     }
                     enumerating_usb_devices.push_back(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
+                    for (size_t i = 0; i < sizeof(xinput_wireless_gamepad_disconnected_name); i++)
+                    {
+                        m_name[i * 2] = xinput_wireless_gamepad_disconnected_name[i];
+                    }
+                    m_name[(sizeof(xinput_wireless_gamepad_disconnected_name) - 2) * 2] = '1' + (m_ep_out / 2);
                     m_found = false;
                     reload();
                 }
@@ -107,6 +120,11 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                 {
                     m_subtype = get_subtype_from_xinput(linkReport->subtype & ~0x80);
                     printf("Found subtype: %02x %02x %02x\r\n", m_subtype, m_dev_addr, m_interface);
+                    for (size_t i = 0; i < sizeof(xinput_wireless_gamepad_name); i++)
+                    {
+                        m_name[i * 2] = xinput_wireless_gamepad_name[i];
+                    }
+                    m_name[(sizeof(xinput_wireless_gamepad_name) - 2) * 2] = '0' + m_subtype;
                     send_intr_xfer(m_ep_out, capabilitiesRequest, sizeof(capabilitiesRequest));
                     m_check_caps = millis() + 1000;
                     m_found = true;
@@ -119,6 +137,10 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                     if (HIDConfigDevice::tool_closed())
                     {
                         reload();
+                    }
+                    else
+                    {
+                        update(true, true);
                     }
                 }
             }

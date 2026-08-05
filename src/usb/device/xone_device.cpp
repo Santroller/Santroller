@@ -641,7 +641,7 @@ size_t XboxOneGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t
 {
     OS_COMPATIBLE_SECTION section = {
         FirstInterfaceNumber : interface_id,
-        Reserved : 0x01,
+        Reserved : 0x00,
         CompatibleID : "XGIP10",
         SubCompatibleID : {0},
         Reserved2 : {0}
@@ -666,48 +666,9 @@ size_t XboxOneGamepadDevice::device_name(uint8_t idx, char *desc)
 
 void XboxOneGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
-    switch (subtype)
-    {
-    case KeyboardMouse:
-    case Gamepad:
-    case Dancepad:
-    case DjHeroTurntable:
-    case ProKeys:
-    case Taiko:
-    case StageKit:
-    case Wheel:
-    case FlightStick:
-    case FightStick:
-    case PopNMusic:
-    case DJMax:
-    case ProjectDiva:
+    if (subtype == Gamepad) {
         desc->idVendor = XBOX_ONE_CONTROLLER_VID;
         desc->idProduct = XBOX_ONE_CONTROLLER_PID;
-        break;
-    case GuitarHeroGuitar:
-    case RockBandGuitar:
-    case ProGuitarMustang:
-    case ProGuitarSquire:
-    case GuitarFreaks:
-    case PowerGigGuitar:
-    case RockRevolutionGuitar:
-        desc->idVendor = PDP_VID;
-        desc->idProduct = XBOX_ONE_RIFFMASTER_PID;
-        break;
-    case GuitarHeroDrums:
-    case RockBandDrums:
-    case PowerGigDrum:
-        desc->idVendor = PDP_VID;
-        desc->idProduct = XBOX_ONE_PDP_DRUM_PID;
-        break;
-    case LiveGuitar:
-        desc->idVendor = XBOX_REDOCTANE_VID;
-        desc->idProduct = XBOX_ONE_GHLIVE_DONGLE_PID;
-        break;
-    default:
-        desc->idVendor = XBOX_ONE_CONTROLLER_VID;
-        desc->idProduct = XBOX_ONE_CONTROLLER_PID;
-        break;
     }
     desc->bDeviceClass = 0xff;
     desc->bDeviceSubClass = 0x47;

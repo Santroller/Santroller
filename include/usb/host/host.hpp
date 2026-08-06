@@ -6,6 +6,7 @@
 #include "devices/midi.hpp"
 #include <vector>
 #include <memory>
+#include <array>
 
 class UsbHostInterface : public MidiDevice
 {
@@ -70,9 +71,11 @@ protected:
 class UsbHostDevice : public Device
 {
 public:
-    ~UsbHostDevice() { printf("~UsbHostDevice()\r\n"); }
+    ~UsbHostDevice() { printf("~UsbHostDevice(%p)\r\n", this); }
+
     UsbHostDevice(uint8_t d_addr, uint16_t id) : Device(id), m_dev_addr(d_addr)
     {
+         printf("UsbHostDevice(%p)\r\n", this);
     }
     void disconnect();
     void begin() {};
@@ -112,9 +115,9 @@ public:
     {
         return false;
     }
-    std::shared_ptr<UsbHostInterface> host_devices_by_itf[30];
-    std::shared_ptr<UsbHostInterface> host_devices_by_endpoint_in[16];
-    std::shared_ptr<UsbHostInterface> host_devices_by_endpoint_out[16];
+    std::array<std::shared_ptr<UsbHostInterface>,30> host_devices_by_itf;
+    std::array<std::shared_ptr<UsbHostInterface>,16> host_devices_by_endpoint_in;
+    std::array<std::shared_ptr<UsbHostInterface>,16> host_devices_by_endpoint_out;
 
 protected:
     uint8_t m_dev_addr;

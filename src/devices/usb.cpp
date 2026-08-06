@@ -19,7 +19,7 @@ static bool m_initialized = false;
 static int8_t m_last_first_pin = -1;
 static bool m_last_dp_first = false;
 static volatile uint32_t m_devices_changed = 0;
-std::shared_ptr<UsbHostDevice> host_devices[127];
+std::array<std::shared_ptr<UsbHostDevice>,127> host_devices;
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : UsbHostInterface(0, 0, id), m_device(device)
 {
     printf("UsbHostHardwareDevice: %p\r\n", this);
@@ -138,10 +138,6 @@ bool USBHostHardwareDevice::using_pin(uint8_t pin)
 bool usbh_init(void)
 {
     printf("usbh init\r\n");
-    for (size_t i = 0; i < TU_ARRAY_SIZE(host_devices); i++)
-    {
-        host_devices[i] = std::shared_ptr<UsbHostDevice>();
-    }
     return true;
 }
 
@@ -289,10 +285,9 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
 void usbh_close(uint8_t dev_addr)
 {
     printf("usbh close %d %d\r\n", dev_addr);
-    auto dev = host_devices[dev_addr];
-    if (dev)
+    if (host_devices[dev_addr])
     {
-        dev->disconnect();
+        host_devices[dev_addr]->disconnect();
         if (assignable_usb_devices.size() > 0)
         {
             assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
@@ -303,8 +298,8 @@ void usbh_close(uint8_t dev_addr)
             enumerating_usb_devices.erase(std::remove_if(enumerating_usb_devices.begin(), enumerating_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
                                                          { return dev->dev_addr() == dev_addr; }), enumerating_usb_devices.end());
         }
-        dev.reset();
         m_devices_changed = millis() + 500;
+        host_devices[dev_addr] = nullptr;
     }
 }
 

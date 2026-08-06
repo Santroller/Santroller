@@ -52,6 +52,7 @@ bool seenOsDescriptorRead = false;
 bool seenReadAnyDeviceString = false;
 bool seenHidDescriptorRead = false;
 bool reinit = false;
+bool reloading = false;
 proto_Event console_event = {which_event : proto_Event_console_tag, event : {console : {data : {}}}};
 ring_buffer_t console_buf;
 char console_buf_data[1024];
@@ -65,7 +66,7 @@ void out_chars(const char *buf, int len)
 }
 void out_flush(void)
 {
-    if (HIDConfigDevice::tool_closed())
+    if (HIDConfigDevice::tool_closed() || reloading)
     {
         return;
     }
@@ -105,6 +106,7 @@ void hid_task(void)
     {
         printf("new: %d old: %d init: %d\r\n", newMode, mode, reinit);
         mode = newMode;
+        reloading = true;
         reinit = false;
         seenPs4 = false;
         seenWindowsXb1 = false;
@@ -118,6 +120,7 @@ void hid_task(void)
             .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};
         tud_rhport_init(TUD_OPT_RHPORT, &rh_init);
         timeSinceMode = millis();
+        reloading = false;
         return;
     }
     update();

@@ -5,7 +5,7 @@
 #include "device.pb.h"
 #include "libmpr121.hpp"
 #include "usb/host/host.hpp"
-extern std::shared_ptr<UsbHostDevice> host_devices[127];
+extern std::array<std::shared_ptr<UsbHostDevice>,127> host_devices;
 class USBHostHardwareDevice : public UsbHostInterface
 {
 public:

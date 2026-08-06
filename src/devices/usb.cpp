@@ -175,11 +175,6 @@ bool UsbHostInterface::set_config()
 
 void UsbHostInterface::update(bool full_poll, bool send_events)
 {
-    // sometimes the name comes through slightly corrupted so catch that
-    if (!m_has_name && m_name[2]) {
-        memmove(m_name, m_name+2, sizeof(m_name)-2);
-        m_has_name = true;
-    }
     MidiDevice::update(full_poll, send_events);
     if (send_events && full_poll)
     {
@@ -187,7 +182,8 @@ void UsbHostInterface::update(bool full_poll, bool send_events)
         proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, m_dev_addr, m_interface, true}}};
         for (size_t i = 0; i < sizeof(event.event.usb.name); i++)
         {
-            event.event.usb.name[i] = m_name[i * 2];
+            // skip header
+            event.event.usb.name[i] = m_name[(i+1) * 2];
         }
         HIDConfigDevice::send_event(event, true);
     }
@@ -292,21 +288,22 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
 
 void usbh_close(uint8_t dev_addr)
 {
-    // printf("usbh close %d %d\r\n", dev_addr);
-    if (host_devices[dev_addr])
+    printf("usbh close %d %d\r\n", dev_addr);
+    auto dev = host_devices[dev_addr];
+    if (dev)
     {
-        host_devices[dev_addr]->disconnect();
+        dev->disconnect();
         if (assignable_usb_devices.size() > 0)
         {
             assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
-                                                        { return dev->dev_addr() == dev_addr; }));
+                                                        { return dev->dev_addr() == dev_addr; }), assignable_usb_devices.end());
         }
         if (enumerating_usb_devices.size() > 0)
         {
             enumerating_usb_devices.erase(std::remove_if(enumerating_usb_devices.begin(), enumerating_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
-                                                         { return dev->dev_addr() == dev_addr; }));
+                                                         { return dev->dev_addr() == dev_addr; }), enumerating_usb_devices.end());
         }
-        host_devices[dev_addr].reset();
+        dev.reset();
         m_devices_changed = millis() + 500;
     }
 }

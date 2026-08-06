@@ -297,7 +297,7 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
 
 void usbh_close(uint8_t dev_addr)
 {
-    printf("usbh close %d %d\r\n", dev_addr);
+    // printf("usbh close %d %d\r\n", dev_addr);
     if (host_devices[dev_addr])
     {
         host_devices[dev_addr]->disconnect();

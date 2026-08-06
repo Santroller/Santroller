@@ -1096,7 +1096,11 @@ uint32_t copy_config_info(uint8_t *buffer)
 
 void reload()
 {
-    // printf("reload called\r\n");
+    printf("reload called\r\n");
+    if (!HIDConfigDevice::tool_closed()) {
+        proto_Event event = {which_event : proto_Event_reload_tag, event : {reload : {}}};
+        HIDConfigDevice::send_event(event, true);
+    }
     fullReload = false;
     reinit = true;
 }

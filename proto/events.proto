@@ -99,6 +99,10 @@ message MidiEvent {
     required bytes data = 1;  
 }
 
+message ReloadEvent {
+
+}
+
 message Event {
     oneof event{
         ButtonEvent button = 1;   
@@ -117,6 +121,7 @@ message Event {
         CycleEvent cycle = 14;
         ToggleEvent toggle = 15;
         CrkdCalibrationDataEvent crkdDrum = 16;
+        ReloadEvent reload = 17;
     };
 }
 

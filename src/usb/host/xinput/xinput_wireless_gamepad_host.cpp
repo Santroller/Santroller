@@ -137,14 +137,14 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                                                                      { return intf.get() == this; }), enumerating_usb_devices.end());
                     }
                     assignable_usb_devices.push_back(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
-                    if (HIDConfigDevice::tool_closed())
-                    {
+                    // if (HIDConfigDevice::tool_closed())
+                    // {
                         reload();
-                    }
-                    else
-                    {
-                        update(true, true);
-                    }
+                    // }
+                    // else
+                    // {
+                    //     update(true, true);
+                    // }
                 }
             }
             // Capabilities report

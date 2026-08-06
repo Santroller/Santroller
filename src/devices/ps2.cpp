@@ -39,7 +39,7 @@ void PS2Device::update(bool full_poll, bool send_events)
         m_lastControllerType = m_controller.type;
         proto_Event event = {which_event : proto_Event_ps2_tag, event : {ps2 : {m_id, m_lastControllerType}}};
         HIDConfigDevice::send_event(event, true);
-        if (changed && HIDConfigDevice::tool_closed())
+        if (changed)
         {
             reload();
         }

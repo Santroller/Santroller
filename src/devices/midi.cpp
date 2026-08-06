@@ -251,12 +251,12 @@ void MidiDevice::update(bool full_poll, bool send_events)
             {
                 if (seenChannels.find({m_id, channel}) == seenChannels.end())
                 {
-                    if (HIDConfigDevice::tool_closed())
-                    {
+                    // if (HIDConfigDevice::tool_closed())
+                    // {
                         printf("Seen new MIDI channel: %d on device %d\r\n", channel, m_id);
                         seenChannels.insert_or_assign({m_id, channel}, true);
                         reload();
-                    }
+                    // }
                 }
             }
             if (cable_state->data[0] == MIDI_STATUS_SYSEX_START)
@@ -269,20 +269,20 @@ void MidiDevice::update(bool full_poll, bool send_events)
                         printf("Seen new MIDI channel: proguitar squier on device %d\r\n", m_id);
                         seenChannels[{m_id, MIDI_CHANNEL_PROGUITAR_SQUIER}] = true;
                         seenChannels.erase({m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG});
-                        if (HIDConfigDevice::tool_closed())
-                        {
+                        // if (HIDConfigDevice::tool_closed())
+                        // {
                             reload();
-                        }
+                        // }
                     }
                     if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_MUSTANG && seenChannels.find({m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG}) == seenChannels.end())
                     {
                         printf("Seen new MIDI channel: proguitar mustang on device %d\r\n", m_id);
                         seenChannels[{m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG}] = true;
                         seenChannels.erase({m_id, MIDI_CHANNEL_PROGUITAR_SQUIER});
-                        if (HIDConfigDevice::tool_closed())
-                        {
+                        // if (HIDConfigDevice::tool_closed())
+                        // {
                             reload();
-                        }
+                        // }
                     }
                     if (cable_state->data[4] == 0x08)
                     {

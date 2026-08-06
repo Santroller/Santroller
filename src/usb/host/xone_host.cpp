@@ -153,10 +153,10 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
                         enumerating_usb_devices.erase(std::remove_if(enumerating_usb_devices.begin(), enumerating_usb_devices.end(), [this](std::shared_ptr<UsbHostInterface> intf)
                                                                      { return intf.get() == this; }));
                         assignable_usb_devices.push_back(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
-                        if (HIDConfigDevice::tool_closed())
-                        {
+                        // if (HIDConfigDevice::tool_closed())
+                        // {
                             reload();
-                        }
+                        // }
                         found = true;
                         break;
                     }

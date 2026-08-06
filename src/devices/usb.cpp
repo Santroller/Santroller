@@ -100,10 +100,10 @@ void USBHostHardwareDevice::update(bool full_poll, bool send_events)
     {
         printf("devices changed! count: %d\r\n", assignable_usb_devices.size());
         m_devices_changed = 0;
-        if (HIDConfigDevice::tool_closed())
-        {
+        // if (HIDConfigDevice::tool_closed())
+        // {
             reload();
-        }
+        // }
     }
     if (full_poll)
     {

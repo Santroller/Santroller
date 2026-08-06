@@ -180,10 +180,6 @@ void UsbHostInterface::update(bool full_poll, bool send_events)
         memmove(m_name, m_name+2, sizeof(m_name)-2);
         m_has_name = true;
     }
-    if (full_poll)
-    {
-        printf("UsbHostInterface update %d %d %s\r\n", full_poll, send_events, m_name);
-    }
     MidiDevice::update(full_poll, send_events);
     if (send_events && full_poll)
     {
@@ -193,7 +189,6 @@ void UsbHostInterface::update(bool full_poll, bool send_events)
         {
             event.event.usb.name[i] = m_name[i * 2];
         }
-        printf("UsbHostInterface update %d %d %s\r\n", full_poll, send_events, event.event.usb.name);
         HIDConfigDevice::send_event(event, true);
     }
 }

@@ -3740,6 +3740,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         {
             SwitchFestivalGuitar_Data_t *report = (SwitchFestivalGuitar_Data_t *)report_data;
             TICK_PS3;
+            asm volatile("" ::
+                             : "memory");
             bool dpadLeft = report->dpadLeft;
             bool back = report->back;
             report->dpadLeft = false;

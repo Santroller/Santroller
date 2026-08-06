@@ -212,6 +212,7 @@ typedef struct
     uint8_t whammy;
     uint8_t unused;
 
+    uint8_t unused2[12];
     uint16_t tilt;  // accelX
     uint16_t accelZ;
     uint16_t accelY;

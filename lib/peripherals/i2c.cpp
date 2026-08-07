@@ -304,7 +304,6 @@ void I2CMasterInterface::dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface)
         i2c_dma->i2c = i2c0;
         i2c_dma->irq_num = I2C0_IRQ;
         i2c_dma->irq_handler = i2c0_dma_irq_handler;
-        printf("i2c init %d\n", addr);
         i2c_dma->dmaInterface[addr] = dmaInterface;
     }
 
@@ -314,7 +313,6 @@ void I2CMasterInterface::dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface)
         i2c_dma->i2c = i2c1;
         i2c_dma->irq_num = I2C1_IRQ;
         i2c_dma->irq_handler = i2c1_dma_irq_handler;
-        printf("i2c init %d\n", addr);
         i2c_dma->dmaInterface[addr] = dmaInterface;
     }
     i2c_dma->baudrate = m_clock;

@@ -62,6 +62,7 @@ public:
   void initialize();
   void process();
   static bool tool_closed();
+  static void reset_keepalive();
   size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
   size_t config_descriptor(uint8_t *desc, size_t remaining);
   size_t device_name(uint8_t idx, char *desc);

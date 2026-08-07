@@ -559,4 +559,10 @@ bool HIDConfigDevice::send_event(proto_Event event, bool now)
   return true;
 }
 
+void HIDConfigDevice::reset_keepalive() {
+  auto dev = HIDConfigDevice::instance;
+  dev->lastKeepAlive = 0;
+  dev->tool_seen = false;
+}
+
 std::shared_ptr<HIDConfigDevice> HIDConfigDevice::instance = std::make_shared<HIDConfigDevice>();

@@ -10,6 +10,7 @@ ToggleDevice::ToggleDevice(proto_ToggleDevice device, uint16_t id, bool current)
 
 void ToggleDevice::begin()
 {
+    m_last = millis();
 }
 void ToggleDevice::end(bool full)
 {

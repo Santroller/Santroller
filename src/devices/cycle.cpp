@@ -10,6 +10,7 @@ CycleDevice::CycleDevice(proto_CycleDevice device, uint16_t id, uint32_t current
 
 void CycleDevice::begin()
 {
+    m_last = millis();
 }
 void CycleDevice::end(bool full)
 {

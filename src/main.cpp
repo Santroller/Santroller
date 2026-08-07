@@ -104,6 +104,13 @@ void hid_task(void)
     }
     if (newMode != mode || reinit)
     {
+        if (!HIDConfigDevice::tool_closed())
+        {
+            proto_Event event = {which_event : proto_Event_reload_tag, event : {reload : {}}};
+            HIDConfigDevice::send_event(event, true);
+            tud_task();
+            HIDConfigDevice::reset_keepalive();
+        }
         reloading = true;
         printf("new: %d old: %d init: %d\r\n", newMode, mode, reinit);
         mode = newMode;
@@ -113,13 +120,6 @@ void hid_task(void)
         seenOsDescriptorRead = false;
         seenReadAnyDeviceString = false;
         seenHidDescriptorRead = false;
-        if (!HIDConfigDevice::tool_closed())
-        {
-            proto_Event event = {which_event : proto_Event_reload_tag, event : {reload : {}}};
-            HIDConfigDevice::send_event(event, true);
-            tud_task();
-            HIDConfigDevice::reset_keepalive();
-        }
         tud_deinit(TUD_OPT_RHPORT);
         load();
         const tusb_rhport_init_t rh_init = {

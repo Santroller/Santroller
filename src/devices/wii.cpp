@@ -42,7 +42,7 @@ void WiiDevice::update(bool full_poll, bool send_events)
         m_lastExtType = m_extension.mType;
         proto_Event event = {which_event : proto_Event_wii_tag, event : {wii : {m_id, m_lastExtType}}};
         HIDConfigDevice::send_event(event, true);
-        if (changed && HIDConfigDevice::tool_closed())
+        if (changed)
         {
             reload();
         }

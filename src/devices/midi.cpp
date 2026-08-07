@@ -112,7 +112,8 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 cable_state->actual_size = 0xFF;
             }
             // Running status
-            if (status <= MIDI_MAX_DATA_VAL) {
+            if (status <= MIDI_MAX_DATA_VAL)
+            {
                 // The status byte is reused, so shift the packet and insert it back
                 status = cable_state->status;
                 cable_state->data[1] = cable_state->data[0];
@@ -251,12 +252,9 @@ void MidiDevice::update(bool full_poll, bool send_events)
             {
                 if (seenChannels.find({m_id, channel}) == seenChannels.end())
                 {
-                    // if (HIDConfigDevice::tool_closed())
-                    // {
-                        printf("Seen new MIDI channel: %d on device %d\r\n", channel, m_id);
-                        seenChannels.insert_or_assign({m_id, channel}, true);
-                        reload();
-                    // }
+                    printf("Seen new MIDI channel: %d on device %d\r\n", channel, m_id);
+                    seenChannels.insert_or_assign({m_id, channel}, true);
+                    reload();
                 }
             }
             if (cable_state->data[0] == MIDI_STATUS_SYSEX_START)
@@ -269,20 +267,14 @@ void MidiDevice::update(bool full_poll, bool send_events)
                         printf("Seen new MIDI channel: proguitar squier on device %d\r\n", m_id);
                         seenChannels[{m_id, MIDI_CHANNEL_PROGUITAR_SQUIER}] = true;
                         seenChannels.erase({m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG});
-                        // if (HIDConfigDevice::tool_closed())
-                        // {
-                            reload();
-                        // }
+                        reload();
                     }
                     if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_MUSTANG && seenChannels.find({m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG}) == seenChannels.end())
                     {
                         printf("Seen new MIDI channel: proguitar mustang on device %d\r\n", m_id);
                         seenChannels[{m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG}] = true;
                         seenChannels.erase({m_id, MIDI_CHANNEL_PROGUITAR_SQUIER});
-                        // if (HIDConfigDevice::tool_closed())
-                        // {
-                            reload();
-                        // }
+                        reload();
                     }
                     if (cable_state->data[4] == 0x08)
                     {
@@ -322,7 +314,8 @@ void MidiDevice::update(bool full_poll, bool send_events)
                         // picking events
                         uint8_t string = cable_state->data[5] - 1;
                         uint8_t velocity = cable_state->data[6];
-                        if (midiStringVelocities[string] == velocity) {
+                        if (midiStringVelocities[string] == velocity)
+                        {
                             velocity ^= 1;
                         }
                         midiStringVelocities[string] = velocity;

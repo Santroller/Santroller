@@ -157,8 +157,6 @@ void update()
     {
         device->update(false, false);
     }
-    // if (HIDConfigDevice::tool_closed())
-    // {
 
     for (const auto &profile : all_profiles)
     {
@@ -167,7 +165,6 @@ void update()
             mapping->validate(false, false, false);
         }
     }
-    // }
 }
 
 void initDebug()

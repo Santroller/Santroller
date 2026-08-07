@@ -76,6 +76,7 @@ std::vector<std::shared_ptr<Instance>> instances;
 std::vector<std::shared_ptr<Instance>> active_instances;
 std::unordered_map<uint32_t, std::shared_ptr<Profile>> all_profiles;
 std::set<uint32_t> active_profiles;
+std::set<uint32_t> previous_profiles;
 std::vector<std::shared_ptr<Device>> active_devices;
 std::unordered_map<uint32_t, std::shared_ptr<Device>> root_devices;
 // devices that have not yet been assigned to a profile
@@ -831,7 +832,10 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         if (list->validate(true, false, false))
         {
             int assignedDevices = list->assignedDevices();
-            // printf("profile assigned! %d\r\n", profile->profile_id);
+            printf("profile assigned! %d\r\n", profile->profile_id);
+            if (previous_profiles.erase(profile->profile_id) == 0) {
+                previous_profiles.insert(profile->profile_id);
+            }
             if ((assignedDevices & ProfileAssignMask_AssignBluetoothGamepad) && !(seenMasks & ProfileAssignMask_AssignBluetoothGamepad) && isPicoW)
             {
                 btGamepadInstance = std::make_shared<BTGamepadDevice>();
@@ -1017,6 +1021,7 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
     {
         root_devices.clear();
     }
+    previous_profiles = active_profiles;
     active_profiles.clear();
     all_profiles.clear();
     UsbDevice::reset_ep();
@@ -1053,6 +1058,7 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
     }
     }
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
+
     if (active_instances.empty() || mode == ModeHid || mode == ModeXbox360)
     {
         auto confDevice2 = HIDConfigDevice::instance;
@@ -1074,6 +1080,15 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
         {
             ++iter;
         }
+    }
+    // the profile assignments changed, so reload the entire device
+    if (previous_profiles.size() > 0)
+    {
+        tud_deinit(TUD_OPT_RHPORT);
+        const tusb_rhport_init_t rh_init = {
+            .role = TUSB_ROLE_DEVICE,
+            .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};
+        tud_rhport_init(TUD_OPT_RHPORT, &rh_init);
     }
     return ret;
 }
@@ -1192,12 +1207,12 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
         // printf("Crc didnt match after writing? %d\r\n", footer.dataCrc);
         return false;
     }
-    // printf("Everything matched, saving!\r\n");
+    printf("Everything matched, saving!\r\n");
     //  Move the encoded data in memory down to the footer
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, EEPROM.writeCache, footer.dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
     EEPROM.commit();
-    reload();
+    inner_load(footer.currentProfile, EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, footer.dataSize, footer.mainSize, footer.auxSize);
     working = false;
     return true;
 }

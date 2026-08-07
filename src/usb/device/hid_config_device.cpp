@@ -445,8 +445,12 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       initDebug();
       break;
     case ReportId::ReportIdKeepalive:
-      lastKeepAlive = millis();
-      tool_seen = true;
+      if (!working)
+      {
+        // ignore keepalives until we are ready
+        lastKeepAlive = millis();
+        tool_seen = true;
+      }
       break;
     case ReportId::ReportIdBootloader:
       reset_usb_boot(0, 0);
@@ -537,7 +541,7 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
 bool HIDConfigDevice::tool_closed()
 {
   auto dev = HIDConfigDevice::instance;
-  if (!dev || !dev->tool_seen)
+  if (!dev || !dev->tool_seen || working)
   {
     return true;
   }

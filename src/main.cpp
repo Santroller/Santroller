@@ -66,7 +66,7 @@ void out_chars(const char *buf, int len)
 }
 void out_flush(void)
 {
-    if (HIDConfigDevice::tool_closed() || reloading)
+    if (HIDConfigDevice::tool_closed() || reloading || working)
     {
         return;
     }
@@ -109,8 +109,8 @@ void hid_task(void)
             proto_Event event = {which_event : proto_Event_reload_tag, event : {reload : {}}};
             HIDConfigDevice::send_event(event, true);
             tud_task();
-            HIDConfigDevice::reset_keepalive();
         }
+        HIDConfigDevice::reset_keepalive();
         reloading = true;
         printf("new: %d old: %d init: %d\r\n", newMode, mode, reinit);
         mode = newMode;

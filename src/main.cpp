@@ -193,7 +193,7 @@ void core1()
 }
 
 int main()
-{
+ {
     if (pfb_is_after_firmware_update())
     {
         // handle new firmare info if needed

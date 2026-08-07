@@ -58,6 +58,18 @@ void HIDConfigDevice::process()
     deinitDebug();
     return;
   }
+  bool profile_just_changed = profile_changed;
+  if (profile_changed)
+  {
+    profile_changed = false;
+    for (const auto &profile : all_profiles)
+    {
+      for (const auto &led : profile.second->leds)
+      {
+        led->off();
+      }
+    }
+  }
   if (just_loaded)
   {
     for (const auto &device : active_devices)
@@ -186,7 +198,7 @@ void HIDConfigDevice::process()
     }
     else
     {
-      if (profile_changed)
+      if (profile_just_changed)
       {
         for (const auto &device : active_devices)
         {
@@ -220,7 +232,6 @@ void HIDConfigDevice::process()
     }
   }
   process_events();
-  profile_changed = false;
 }
 
 void HIDConfigDevice::process_events()
@@ -559,7 +570,8 @@ bool HIDConfigDevice::send_event(proto_Event event, bool now)
   return true;
 }
 
-void HIDConfigDevice::reset_keepalive() {
+void HIDConfigDevice::reset_keepalive()
+{
   auto dev = HIDConfigDevice::instance;
   dev->lastKeepAlive = 0;
   dev->tool_seen = false;

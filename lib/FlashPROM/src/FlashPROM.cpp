@@ -46,6 +46,8 @@ void FlashPROM::commit()
 	flashWriteAlarm = add_alarm_in_ms(EEPROM_WRITE_WAIT, writeToFlash, writeCache, true);
 }
 
+
+
 void FlashPROM::commit_now()
 {
 	writeToFlash(0, writeCache);

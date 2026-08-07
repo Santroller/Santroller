@@ -931,7 +931,7 @@ bool save_empty()
     footer->dataCrc = CRC32::calculate(EEPROM.writeCache, 0);
     footer->magic = FOOTER_MAGIC;
     footer->currentProfile = 0;
-    EEPROM.commit_now();
+    EEPROM.commit();
     return true;
 }
 
@@ -1130,7 +1130,7 @@ void update_aux_cycle(uint32_t id, uint32_t state)
     // Move the encoded data to end where it should be
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize, EEPROM.writeCache, footer->dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize);
-    EEPROM.commit_now();
+    EEPROM.commit();
 }
 
 void update_aux_toggle(uint32_t id, bool state)
@@ -1156,7 +1156,7 @@ void update_aux_toggle(uint32_t id, bool state)
     // Move the encoded data to end where it should be
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize, EEPROM.writeCache, footer->dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize);
-    EEPROM.commit_now();
+    EEPROM.commit();
 }
 
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
@@ -1202,7 +1202,7 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, EEPROM.writeCache, footer.dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
     EEPROM.commit();
-    inner_load(footer.currentProfile, EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, footer.dataSize, footer.mainSize, footer.auxSize);
+    reload();
     working = false;
     return true;
 }
@@ -1238,8 +1238,8 @@ uint32_t copy_config(uint8_t *buffer, uint32_t start)
 }
 bool load()
 {
-    const uint8_t *flashEnd = reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START) + EEPROM_SIZE_BYTES;
-    const ConfigFooter &footer = *reinterpret_cast<const ConfigFooter *>(flashEnd - sizeof(ConfigFooter));
+    const uint8_t *flashEnd = reinterpret_cast<const uint8_t *>(EEPROM.writeCache) + EEPROM_SIZE_BYTES;
+    const ConfigFooter &footer = *reinterpret_cast<const ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
 
     // Check for presence of magic value
     if (footer.magic != FOOTER_MAGIC)

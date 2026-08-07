@@ -1,7 +1,6 @@
 # Things to work on
 
 ## Tool features
-- [ ] Add a dialog that warns a user that the guitar needs a reboot to reload changes
 - [ ] Add an assignment for when the controller times out / goes to sleep, then people can choose what leds stay on
 
 ## Firmware features

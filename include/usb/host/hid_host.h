@@ -50,7 +50,7 @@ private:
     uint8_t m_ep_out = 0;
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
-    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[sizeof(XInputGamepad_Data_t)];
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
 };
 
 class Ps4Host : public HidHost

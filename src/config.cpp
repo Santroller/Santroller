@@ -899,6 +899,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
             break;
         }
     }
+    working_profile = nullptr;
     return true;
 }
 struct __attribute__((packed)) ConfigFooter

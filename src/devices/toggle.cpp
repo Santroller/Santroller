@@ -4,13 +4,15 @@
 #include "usb/device/hid_device.h"
 #include "config.hpp"
 #include "utils.h"
-ToggleDevice::ToggleDevice(proto_ToggleDevice device, uint16_t id, bool current) : Device(id), m_device(device),m_current_value(current)
+ToggleDevice::ToggleDevice(std::shared_ptr<ToggleDevice> old, proto_ToggleDevice device, uint16_t id, bool current) : Device(id), m_device(device),m_current_value(current)
 {
+    if (old) {
+        m_last = old->m_last;
+    }
 }
 
 void ToggleDevice::begin()
 {
-    m_last = millis();
 }
 void ToggleDevice::end(bool full)
 {

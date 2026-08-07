@@ -3,10 +3,11 @@
 #include "device.pb.h"
 #include <stdio.h>
 #include <vector>
+#include <memory>
 class ToggleDevice : public Device
 {
 public:
-    ToggleDevice(proto_ToggleDevice device, uint16_t id, bool current);
+    ToggleDevice(std::shared_ptr<ToggleDevice> old, proto_ToggleDevice device, uint16_t id, bool current);
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);

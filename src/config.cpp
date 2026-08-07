@@ -210,11 +210,11 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new MatrixDevice(device.device.matrix, dev_id));
         break;
     case proto_Device_cycle_tag:
-        active_devices.emplace_back(new CycleDevice(device.device.cycle, dev_id, cycle_input_states[dev_id], last_cycle_states));
+        active_devices.emplace_back(new CycleDevice(std::static_pointer_cast<CycleDevice>(prevDevice), device.device.cycle, dev_id, cycle_input_states[dev_id], last_cycle_states));
         last_cycle_states.clear();
         break;
     case proto_Device_toggle_tag:
-        active_devices.emplace_back(new ToggleDevice(device.device.toggle, dev_id, toggle_input_states[dev_id]));
+        active_devices.emplace_back(new ToggleDevice(std::static_pointer_cast<ToggleDevice>(prevDevice), device.device.toggle, dev_id, toggle_input_states[dev_id]));
         break;
     case proto_Device_dmx_tag:
         active_devices.emplace_back(new DMXDevice(device.device.dmx, dev_id));

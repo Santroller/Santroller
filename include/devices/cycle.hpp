@@ -3,10 +3,11 @@
 #include "device.pb.h"
 #include <stdio.h>
 #include <vector>
+#include <memory>
 class CycleDevice : public Device
 {
 public:
-    CycleDevice(proto_CycleDevice device, uint16_t id, uint32_t current, std::vector<uint32_t> states);
+    CycleDevice(std::shared_ptr<CycleDevice> old, proto_CycleDevice device, uint16_t id, uint32_t current, std::vector<uint32_t> states);
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);

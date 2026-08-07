@@ -563,6 +563,9 @@ void HIDConfigDevice::reset_keepalive() {
   auto dev = HIDConfigDevice::instance;
   dev->lastKeepAlive = 0;
   dev->tool_seen = false;
+  dev->selected_profile = 0;
+  dev->profile_selected = false;
+  dev->profile_changed = false;
 }
 
 std::shared_ptr<HIDConfigDevice> HIDConfigDevice::instance = std::make_shared<HIDConfigDevice>();

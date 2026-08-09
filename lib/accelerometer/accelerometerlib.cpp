@@ -243,6 +243,22 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                     interface.dmaWriteRead(addr, bufferTx, 1, nullptr, 0);
                     break;
                 }
+                case MPU6050_ADDRESS_2:
+                    // printf("found MPU sensor id: %02x\r\n", bufferRx[0]);
+                    if (bufferRxMpu2[0] != MPU6050_ID && bufferRxMpu2[0] != MPU6050_ID2 && bufferRxMpu2[0] != MPU6050_ID3)
+                    {
+                        // printf("unrecognised sensor id: %02x\r\n", bufferRx[0]);
+                        type = AccelerometerType::None;
+                        restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                        return;
+                    }
+                    address = addr;
+                    type = AccelerometerType::MPU6050;
+                    status = MPU_6050_PWR_MGMT_1_READ;
+                    bufferTx[0] = MPU6050_REG_PWR_MGMT_1;
+                    interface.dmaWriteRead(addr, bufferTx, 1, nullptr, 0);
+                    break;
+                }
                 break;
             case ADXL_POWERCTL:
                 status = ADXL_DATAFORMAT;

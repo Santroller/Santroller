@@ -34,7 +34,7 @@ extern "C" {
 #define MPU6050_REG_PWR_MGMT_1 0x6B
 #define MPU6050_ID 0x68
 #define MPU6050_ID2 0x98  // Common register-compatible clone
-#define MPU6050_ID3 0x70  // Register-compatible MPU-6500/clone ID accepted by other mature drivers
+#define MPU6050_ID3 0x70  // Register-compatible MPU-6500/clone ID
 #define MPU6050_PWR1_SLEEP (1U << 6)
 #define MPU6050_PWR1_CLKSEL_MASK 0x07
 #define MPU6050_PWR1_CLKSEL_XGYRO 0x01

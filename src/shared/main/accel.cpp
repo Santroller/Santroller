@@ -143,11 +143,6 @@ void tick_accel()
         uint8_t raw_bytes[6];
         accel_found = twi_readFromPointerRepeatedStart(ACCEL_TWI_PORT, mpu6050_address, MPU6050_REG_ACCEL_OUT,
                                                        sizeof(raw_bytes), raw_bytes);
-        if (!accel_found)
-        {
-            return;
-        }
-
         for (int i = 0; i < 3; i++)
         {
             raw[i] = (int16_t) (((uint16_t) raw_bytes[i * 2] << 8) | raw_bytes[i * 2 + 1]);

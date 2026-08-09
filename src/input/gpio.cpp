@@ -9,11 +9,20 @@ GPIOInput::GPIOInput(proto_GPIOInput input) : m_analog(input.analog), m_invert(i
 }
 bool GPIOInput::tickDigital()
 {
+    if (!m_valid)
+    {
+        return 0;
+    }
     return gpio_get(m_pin) != m_invert;
 }
 uint16_t GPIOInput::tickAnalog()
 {
-    if (!m_analog) {
+    if (!m_valid)
+    {
+        return 0;
+    }
+    if (!m_analog)
+    {
         return (gpio_get(m_pin) != m_invert) ? 65535 : 0;
     }
     adc_select_input(m_pin - ADC_BASE_PIN);
@@ -22,9 +31,13 @@ uint16_t GPIOInput::tickAnalog()
 void GPIOInput::setup()
 {
     m_pin = m_input.pin;
-    if (m_input.pin < 0) {
+    if (m_input.pin < 0)
+    {
+        m_valid = false;
         return;
     }
+    m_valid = true;
+    ;
     if (m_analog && m_pin >= ADC_BASE_PIN)
     {
         adc_gpio_init(m_pin);

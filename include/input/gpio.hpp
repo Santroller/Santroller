@@ -10,6 +10,7 @@ class GPIOInput: public Input {
    private:
     bool m_analog;
     bool m_invert;
+    bool m_valid;
     uint8_t m_pin;
     proto_GPIOInput m_input;
 };

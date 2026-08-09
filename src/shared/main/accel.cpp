@@ -109,6 +109,10 @@ void tick_accel()
 {
     if (!accel_found)
     {
+        for (int i = 0; i < 3; i++)
+        {
+            filtered[i] = raw[i] = 0;
+        }
         init_accel();
         return;
     }

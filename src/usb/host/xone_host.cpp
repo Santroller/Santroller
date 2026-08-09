@@ -26,8 +26,8 @@ static const preferred_type_mapping_t PREFERRED_TYPES[] = {
     {LiveGuitar, "Activision.Xbox.Input.GH7"},
     {RockBandDrums, "MadCatz.Xbox.Drums.Glam"},
     {RockBandDrums, "PDP.Xbox.Drums.Tablah"},
-    {WirelessLegacyAdapter, "MadCatz.Xbox.Module.Brangus"},
-    {WiredLegacyAdapter, "PDP.Xbox.RBAdapter.LegacyUSB"},
+    // {WirelessLegacyAdapter, "MadCatz.Xbox.Module.Brangus"},
+    // {WiredLegacyAdapter, "PDP.Xbox.RBAdapter.LegacyUSB"},
     {Skylanders, "Activision.Xbox.Skylanders.Portal"},
     {LegoDimensions, "TTGames.Xbox.Dimensions.Gateway"},
     {DisneyInfinity, "Disney.Xbox.Infinity.Base"}};

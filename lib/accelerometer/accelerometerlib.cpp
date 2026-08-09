@@ -17,6 +17,7 @@ void Accelerometer::begin()
 {
     printf("accel begin\r\n");
     interface.dmaInit(ADXL345_ADDRESS, this);
+    interface.dmaInit(ADXL345_ADDRESS_2, this);
     interface.dmaInit(MPU6050_ADDRESS, this);
     interface.dmaInit(MPU6050_ADDRESS_2, this);
     interface.dmaInit(LIS3DH_ADDRESS, this);
@@ -24,7 +25,9 @@ void Accelerometer::begin()
     seen_response_lis3dh_1 = true;
     seen_response_lis3dh_2 = true;
     seen_response_adxl345_1 = true;
+    seen_response_adxl345_2 = true;
     seen_response_mpu6050_1 = true;
+    seen_response_mpu6050_2 = true;
     status = ACCEL_INIT;
     processData(0, false, false, false, false);
 }
@@ -33,6 +36,7 @@ void Accelerometer::end()
     printf("accel end\r\n");
     cancel_alarm(restart_alarm_id);
     interface.dmaDeinit(ADXL345_ADDRESS);
+    interface.dmaDeinit(ADXL345_ADDRESS_2);
     interface.dmaDeinit(MPU6050_ADDRESS);
     interface.dmaDeinit(MPU6050_ADDRESS_2);
     interface.dmaDeinit(LIS3DH_ADDRESS);

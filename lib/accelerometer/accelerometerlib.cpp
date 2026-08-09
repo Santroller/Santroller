@@ -335,7 +335,7 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
         interface.dmaWriteRead(address, bufferTx, 1, bufferRx, 6);
         break;
     case ACCEL_INIT:
-        if (seen_response_lis3dh_1 && seen_response_lis3dh_2 && seen_response_adxl345 && seen_response_mpu6050)
+        if (seen_response_lis3dh_1 && seen_response_lis3dh_2 && seen_response_adxl345 && seen_response_mpu6050 && seen_response_mpu6050_2)
         {
             seen_response_lis3dh_1 = false;
             seen_response_lis3dh_2 = false;

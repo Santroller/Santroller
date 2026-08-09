@@ -5,6 +5,7 @@
 #include "mappings/mapping.hpp"
 #include "devices/base.hpp"
 #include "input/gpio.hpp"
+#include "input/input.hpp"
 #include "leds/leds.hpp"
 
 #include "config.pb.h"
@@ -32,6 +33,7 @@ public:
     bool invert_y_axis_hid;
     bool supports_ps4;
     bool supports_slider;
+    bool cymbal_glitch_fix;
     ConsoleMode mode;
     uint32_t profile_id;
     std::vector<std::unique_ptr<Mapping>> mappings;
@@ -39,6 +41,7 @@ public:
     std::vector<std::unique_ptr<LedMapping>> leds;
     std::map<uint16_t, std::shared_ptr<Device>> devices;
     std::map<uint16_t, std::shared_ptr<Device>> midiDevices;
+    DrumState drum_state;
 };
 class Instance
 {

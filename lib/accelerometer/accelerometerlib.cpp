@@ -308,7 +308,7 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
         }
         // add 200us delay between commands otherwise the extension is overwhelmed
         // If we dont see any sensors, wait a bit before looking again
-        if (!abort_detected && status == ACCEL_INIT && seen_response_lis3dh_1 && seen_response_lis3dh_2 && seen_response_adxl345 && seen_response_mpu6050)
+        if (!abort_detected && status == ACCEL_INIT && seen_response_lis3dh_1 && seen_response_lis3dh_2 && seen_response_adxl345 && seen_response_mpu6050 && seen_response_mpu6050_2)
         {
             restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
         }

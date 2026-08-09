@@ -577,7 +577,7 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         profile->mappings.emplace_back(new RockBandDrumsButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
     case proto_Mapping_rbDrumAxis_tag:
-        profile->mappings.emplace_back(new RockBandDrumsAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id, profile->cymbal_glitch_fix, &profile->drum_state));
+        profile->mappings.emplace_back(new RockBandDrumsAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id, &profile->drum_state));
         break;
     case proto_Mapping_ghlButton_tag:
         profile->mappings.emplace_back(new LiveGuitarButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
@@ -825,6 +825,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->supports_ps4 = proto_profile.has_ps4OrPs5Mode && proto_profile.ps4OrPs5Mode;
     profile->supports_slider = proto_profile.has_supportsSlider && proto_profile.supportsSlider;
     profile->cymbal_glitch_fix = proto_profile.has_cymbalGlitchFix && proto_profile.cymbalGlitchFix;
+    profile->drum_state.cymbalGlitchFix = proto_profile.has_cymbalGlitchFix && proto_profile.cymbalGlitchFix;
     // printf("profile loaded: %d %d %d\r\n", profile->profile_id, profile->xinput_on_windows, profile->invert_y_axis_hid);
     std::shared_ptr<UsbDevice> usbInstance;
     std::shared_ptr<BTGamepadDevice> btGamepadInstance;

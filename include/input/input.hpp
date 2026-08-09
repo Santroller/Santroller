@@ -14,7 +14,8 @@ public:
 
 class DrumState {
 public:
-    RockBandDrumsAxisType lastDrum;
+    bool cymbalGlitchFix = false;
+    RockBandDrumsAxisType lastDrum = RockBandDrumsRedPad;
     uint32_t redPad;
     uint32_t yellowCymbal;
     uint32_t yellowPad;
@@ -22,4 +23,5 @@ public:
     uint32_t bluePad;
     uint32_t greenCymbal;
     uint32_t greenPad;
+    uint64_t lastGlobalPoll;
 };

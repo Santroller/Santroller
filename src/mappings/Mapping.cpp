@@ -174,9 +174,10 @@ void AxisMapping::update(bool full_poll, bool send_events)
     }
     m_centered = m_calibratedValue == (uint32_t)m_mapping.center;
 
-    if (send_events && (uncalibrated != m_last_sent_value || full_poll))
+    if (send_events && (uncalibrated != m_last_sent_value || m_calibratedValue != m_last_sent_calibrated_value || full_poll))
     {
         m_last_sent_value = uncalibrated;
+        m_last_sent_calibrated_value = m_calibratedValue;
         proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, uncalibrated, m_calibratedValue}}};
         HIDConfigDevice::send_event(event, false);
     }

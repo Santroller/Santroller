@@ -44,6 +44,7 @@ protected:
     uint32_t m_profile;
     uint32_t m_lastValueRaw = 0;
     uint32_t m_last_sent_value = 0;
+    uint32_t m_last_sent_calibrated_value = 0;
     uint32_t m_last_send = 0;
     std::unique_ptr<Input> m_input;
 };
@@ -367,7 +368,7 @@ class RockBandDrumsAxisMapping : public AxisMapping
 {
 public:
     ~RockBandDrumsAxisMapping() {}
-    RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile, bool cymbal_glitch_fix, DrumState* state);
+    RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile, DrumState* state);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t *report);
     void update_switch(uint8_t *report);
@@ -379,7 +380,6 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
 private:
-    bool cymbal_glitch_fix;
     DrumState* state;
 };
 class TaikoButtonMapping : public ButtonMapping

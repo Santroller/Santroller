@@ -27,12 +27,18 @@ extern "C" {
 #define SC7A20_ID 0x11
 #define LIS3DH_REG_TEMPCFG 0x1F
 #define MPU6050_ADDRESS 0x68
+#define MPU6050_ADDRESS_ALT 0x69
 #define MPU6050_REG_ACCEL_OUT 0x3B
 #define MPU6050_REG_WHO_AM_I 0x75
 #define MPU6050_REG_ACCEL_CONFIG 0x1C
 #define MPU6050_REG_PWR_MGMT_1 0x6B
 #define MPU6050_ID 0x68
-#define MPU6050_ID2 0x98
+#define MPU6050_ID2 0x98  // Common register-compatible clone
+#define MPU6050_ID3 0x70  // Register-compatible MPU-6500/clone ID accepted by other mature drivers
+#define MPU6050_PWR1_SLEEP (1U << 6)
+#define MPU6050_PWR1_CLKSEL_MASK 0x07
+#define MPU6050_PWR1_CLKSEL_XGYRO 0x01
+#define MPU6050_ACCEL_CONFIG_2G 0x00
 void tick_accel();
 #ifdef __cplusplus
 }

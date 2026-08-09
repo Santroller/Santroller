@@ -8,6 +8,7 @@ uint16_t accel_adc[3] = {0};
 double currentLowPassAlpha = LOW_PASS_ALPHA;
 bool accel_found = false;
 uint8_t lis3dh_address = LIS3DH_ADDRESS;
+uint8_t mpu6050_address = MPU6050_ADDRESS;
 uint8_t type = NONE;
 #ifdef ACCEL_TWI_PORT
 void init_lis3dh()
@@ -57,20 +58,46 @@ void init_adxl()
     twi_writeSingleToPointer(ACCEL_TWI_PORT, ADXL345_ADDRESS, ADXL345_POWER_CTL, 0x08);
     twi_writeSingleToPointer(ACCEL_TWI_PORT, ADXL345_ADDRESS, ADXL345_DATA_FORMAT, 0x0B);
 }
-void init_mpu6050()
+static bool probe_mpu6050(uint8_t address)
 {
     uint8_t id = 0;
-    twi_readFromPointer(ACCEL_TWI_PORT, MPU6050_ADDRESS, MPU6050_REG_WHO_AM_I, 1, &id);
-    if (id != MPU6050_ID && id != MPU6050_ID2)
+    return twi_readFromPointerRepeatedStart(ACCEL_TWI_PORT, address, MPU6050_REG_WHO_AM_I, 1, &id) &&
+           (id == MPU6050_ID || id == MPU6050_ID2 || id == MPU6050_ID3);
+}
+
+void init_mpu6050()
+{
+    uint8_t address = MPU6050_ADDRESS;
+    if (!probe_mpu6050(address))
+    {
+        address = MPU6050_ADDRESS_ALT;
+        if (!probe_mpu6050(address))
+        {
+            return;
+        }
+    }
+
+    uint8_t power_management = 0;
+    if (!twi_readFromPointerRepeatedStart(ACCEL_TWI_PORT, address, MPU6050_REG_PWR_MGMT_1, 1, &power_management))
     {
         return;
     }
+
+    power_management &= (uint8_t) ~(MPU6050_PWR1_SLEEP | MPU6050_PWR1_CLKSEL_MASK);
+    power_management |= MPU6050_PWR1_CLKSEL_XGYRO;
+    if (!twi_writeSingleToPointer(ACCEL_TWI_PORT, address, MPU6050_REG_PWR_MGMT_1, power_management))
+    {
+        return;
+    }
+
+    if (!twi_writeSingleToPointer(ACCEL_TWI_PORT, address, MPU6050_REG_ACCEL_CONFIG, MPU6050_ACCEL_CONFIG_2G))
+    {
+        return;
+    }
+
+    mpu6050_address = address;
     type = MPU6050;
     accel_found = true;
-    twi_writeSingleToPointer(ACCEL_TWI_PORT, MPU6050_ADDRESS, MPU6050_REG_ACCEL_CONFIG, 0b11100111);
-    twi_readFromPointer(ACCEL_TWI_PORT, MPU6050_ADDRESS, MPU6050_REG_PWR_MGMT_1, 1, &id);
-    id &= ~(1 << 6);
-    twi_writeSingleToPointer(ACCEL_TWI_PORT, MPU6050_ADDRESS, MPU6050_REG_PWR_MGMT_1, id);
 }
 void init_accel()
 {
@@ -113,10 +140,18 @@ void tick_accel()
     }
     if (type == MPU6050)
     {
-        accel_found = twi_readFromPointer(ACCEL_TWI_PORT, MPU6050_ADDRESS, MPU6050_REG_ACCEL_OUT, 6, (uint8_t *)raw);
+        uint8_t raw_bytes[6];
+        accel_found = twi_readFromPointerRepeatedStart(ACCEL_TWI_PORT, mpu6050_address, MPU6050_REG_ACCEL_OUT,
+                                                       sizeof(raw_bytes), raw_bytes);
+        if (!accel_found)
+        {
+            return;
+        }
+
         for (int i = 0; i < 3; i++)
         {
-            filtered[i] = (raw[i]) * currentLowPassAlpha + (filtered[i] * (1.0 - currentLowPassAlpha));
+            raw[i] = (int16_t) (((uint16_t) raw_bytes[i * 2] << 8) | raw_bytes[i * 2 + 1]);
+            filtered[i] = raw[i] * currentLowPassAlpha + (filtered[i] * (1.0 - currentLowPassAlpha));
         }
     }
 }

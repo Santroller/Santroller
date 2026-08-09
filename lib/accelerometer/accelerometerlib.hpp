@@ -2,6 +2,7 @@
 #pragma once
 #include "i2c.hpp"
 #define ADXL345_ADDRESS 0x53
+#define ADXL345_ADDRESS_2 0x1D
 #define ADXL345_POWER_CTL 0x2D
 #define ADXL345_DATA_FORMAT 0x31
 #define ADXL345_DATAX0 0x32
@@ -59,7 +60,6 @@ typedef enum {
     LIS3DSH_CTRL1_INIT,
     ADXL_POWERCTL,
     ADXL_DATAFORMAT,
-    MPU_6050_ACCEL_CONFIG_READ,
     MPU_6050_ACCEL_CONFIG,
     MPU_6050_PWR_MGMT_1_READ,
     MPU_6050_PWR_MGMT_1_WRITE,
@@ -98,6 +98,8 @@ class Accelerometer: public I2CDMAInterface {
     uint8_t bufferRxLis2[1];
     uint8_t bufferTxAdxl[1];
     uint8_t bufferRxAdxl[1];
+    uint8_t bufferTxAdxl2[1];
+    uint8_t bufferRxAdxl2[1];
     uint8_t bufferTxMpu[1];
     uint8_t bufferTxMpu2[1];
     uint8_t bufferRxMpu[1];
@@ -106,7 +108,8 @@ class Accelerometer: public I2CDMAInterface {
     uint8_t bufferRx[32];
     bool seen_response_lis3dh_1 = true;
     bool seen_response_lis3dh_2 = true;
-    bool seen_response_adxl345 = true;
-    bool seen_response_mpu6050 = true;
+    bool seen_response_adxl345_1 = true;
+    bool seen_response_adxl345_2 = true;
+    bool seen_response_mpu6050_1 = true;
     bool seen_response_mpu6050_2 = true;
 };

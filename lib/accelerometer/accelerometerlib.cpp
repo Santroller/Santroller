@@ -23,8 +23,8 @@ void Accelerometer::begin()
     interface.dmaInit(LIS3DH_ADDRESS_2, this);
     seen_response_lis3dh_1 = true;
     seen_response_lis3dh_2 = true;
-    seen_response_adxl345 = true;
-    seen_response_mpu6050 = true;
+    seen_response_adxl345_1 = true;
+    seen_response_mpu6050_1 = true;
     status = ACCEL_INIT;
     processData(0, false, false, false, false);
 }
@@ -66,9 +66,10 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
     {
         seen_response_lis3dh_1 = addr == LIS3DH_ADDRESS;
         seen_response_lis3dh_2 = addr == LIS3DH_ADDRESS_2;
-        seen_response_mpu6050 = addr == MPU6050_ADDRESS;
+        seen_response_mpu6050_1 = addr == MPU6050_ADDRESS;
         seen_response_mpu6050_2 = addr == MPU6050_ADDRESS_2;
-        seen_response_adxl345 = addr == ADXL345_ADDRESS;
+        seen_response_adxl345_1 = addr == ADXL345_ADDRESS;
+        seen_response_adxl345_2 = addr == ADXL345_ADDRESS_2;
         if (!abort_detected)
         {
             failCount = 0;
@@ -227,6 +228,23 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                     bufferTx[1] = 0x08;
                     interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
                     break;
+                case ADXL345_ADDRESS_2:
+                    // printf("found ADXL sensor at addr: %02x\r\n", addr);
+                    // printf("found ADXL sensor id: %02x\r\n", bufferRx[0]);
+                    if (bufferRxAdxl2[0] != ADXL345_ID)
+                    {
+                        // printf("unrecognised sensor id: %02x\r\n", bufferRx[0]);
+                        type = AccelerometerType::None;
+                        restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                        return;
+                    }
+                    address = addr;
+                    type = AccelerometerType::ADXL345;
+                    status = ADXL_POWERCTL;
+                    bufferTx[0] = ADXL345_POWER_CTL;
+                    bufferTx[1] = 0x08;
+                    interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
+                    break;
                 case MPU6050_ADDRESS:
                     // printf("found MPU sensor id: %02x\r\n", bufferRx[0]);
                     if (bufferRxMpu[0] != MPU6050_ID && bufferRxMpu[0] != MPU6050_ID2 && bufferRxMpu[0] != MPU6050_ID3)
@@ -242,7 +260,6 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                     bufferTx[0] = MPU6050_REG_PWR_MGMT_1;
                     interface.dmaWriteRead(addr, bufferTx, 1, nullptr, 0);
                     break;
-                }
                 case MPU6050_ADDRESS_2:
                     // printf("found MPU sensor id: %02x\r\n", bufferRx[0]);
                     if (bufferRxMpu2[0] != MPU6050_ID && bufferRxMpu2[0] != MPU6050_ID2 && bufferRxMpu2[0] != MPU6050_ID3)
@@ -324,7 +341,7 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
         }
         // add 200us delay between commands otherwise the extension is overwhelmed
         // If we dont see any sensors, wait a bit before looking again
-        if (!abort_detected && status == ACCEL_INIT && seen_response_lis3dh_1 && seen_response_lis3dh_2 && seen_response_adxl345 && seen_response_mpu6050 && seen_response_mpu6050_2)
+        if (!abort_detected && status == ACCEL_INIT && seen_response_lis3dh_1 && seen_response_lis3dh_2 && seen_response_adxl345_1 && seen_response_adxl345_2 && seen_response_mpu6050_1 && seen_response_mpu6050_2)
         {
             restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
         }
@@ -351,12 +368,13 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
         interface.dmaWriteRead(address, bufferTx, 1, bufferRx, 6);
         break;
     case ACCEL_INIT:
-        if (seen_response_lis3dh_1 && seen_response_lis3dh_2 && seen_response_adxl345 && seen_response_mpu6050 && seen_response_mpu6050_2)
+        if (seen_response_lis3dh_1 && seen_response_lis3dh_2 && seen_response_adxl345_1 && seen_response_adxl345_2 && seen_response_mpu6050_1 && seen_response_mpu6050_2)
         {
             seen_response_lis3dh_1 = false;
             seen_response_lis3dh_2 = false;
-            seen_response_adxl345 = false;
-            seen_response_mpu6050 = false;
+            seen_response_adxl345_1 = false;
+            seen_response_adxl345_2 = false;
+            seen_response_mpu6050_1 = false;
             seen_response_mpu6050_2 = false;
             bufferTxLis1[0] = LIS3DH_REG_WHOAMI;
             interface.dmaWriteRead(LIS3DH_ADDRESS, bufferTxLis1, 1, bufferRxLis1, 1);
@@ -364,6 +382,8 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
             interface.dmaWriteRead(LIS3DH_ADDRESS_2, bufferTxLis2, 1, bufferRxLis2, 1);
             bufferTxAdxl[0] = ADXL345_REG_DEVID;
             interface.dmaWriteRead(ADXL345_ADDRESS, bufferTxAdxl, 1, bufferRxAdxl, 1);
+            bufferTxAdxl2[0] = ADXL345_REG_DEVID;
+            interface.dmaWriteRead(ADXL345_ADDRESS, bufferTxAdxl2, 1, bufferRxAdxl2, 1);
             bufferTxMpu[0] = MPU6050_REG_WHO_AM_I;
             interface.dmaWriteRead(MPU6050_ADDRESS, bufferTxMpu, 1, bufferRxMpu, 1);
             bufferTxMpu2[0] = MPU6050_REG_WHO_AM_I;

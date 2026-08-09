@@ -301,6 +301,11 @@ void HIDConfigDevice::handle_command(proto_Command command)
     reload();
     return;
   }
+  case proto_Command_disconnect_tag:
+  {
+    reset_keepalive();
+    return;
+  }
   case proto_Command_crkdDrum_tag:
   {
     std::static_pointer_cast<CrkdDrumDevice>(root_devices[command.command.crkdDrum.id])->drum.setParam(command.command.crkdDrum.type, command.command.crkdDrum.axisType, command.command.crkdDrum.val);

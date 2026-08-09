@@ -17,6 +17,9 @@ message DetectMidiCommand {
 message RebootCommand {
 
 }
+message DisconnectCommand {
+
+}
 message CrkdCalibrationUpdateCommand {
   required uint32 id = 1;
   required CrkdDrumCalibrationType type = 2;
@@ -29,5 +32,6 @@ message Command {
         DetectPinCommand detectPin = 2;
         RebootCommand reboot = 3;
         CrkdCalibrationUpdateCommand crkdDrum = 4;
+        DisconnectCommand disconnect = 5;
     }
 }

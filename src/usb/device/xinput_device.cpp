@@ -144,12 +144,23 @@ uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16
 }
 void XInputGamepadDevice::process()
 {
-    if (tud_suspended()) {
+    if (tud_suspended())
+    {
         for (const auto &profile : profiles)
         {
             for (const auto &led : profile->leds)
             {
                 led->off();
+            }
+            for (const auto &mapping : profile->mappings)
+            {
+                mapping->update(false, false);
+                mapping->update_xinput(epin_buf);
+            }
+            XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)epin_buf;
+            if (report->guide)
+            {
+                tud_remote_wakeup();
             }
         }
         return;
@@ -180,6 +191,10 @@ void XInputGamepadDevice::process()
         {
             led->update(false, false);
         }
+    }
+    if (report->guide)
+    {
+        tud_remote_wakeup();
     }
     if (subtype == GuitarHeroGuitar && m_has_slider)
     {
@@ -336,11 +351,12 @@ size_t XInputGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     return sizeof(desc);
 }
 
-size_t XInputGamepadDevice::device_name(uint8_t idx, char *desc) 
+size_t XInputGamepadDevice::device_name(uint8_t idx, char *desc)
 {
-    if (idx == m_strid) {
-      memcpy(desc, profiles[0]->name, sizeof(profiles[0]->name));
-      return sizeof(profiles[0]->name);
+    if (idx == m_strid)
+    {
+        memcpy(desc, profiles[0]->name, sizeof(profiles[0]->name));
+        return sizeof(profiles[0]->name);
     }
     return 0;
 }
@@ -360,10 +376,11 @@ void XInputSecurityDevice::process()
 {
 }
 
-size_t XInputSecurityDevice::device_name(uint8_t idx, char *desc) 
+size_t XInputSecurityDevice::device_name(uint8_t idx, char *desc)
 {
-    
-    if (m_strid != idx) {
+
+    if (m_strid != idx)
+    {
         return 0;
     }
     memcpy(desc, str_xb360_auth, sizeof(str_xb360_auth));

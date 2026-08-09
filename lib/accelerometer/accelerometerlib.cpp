@@ -18,6 +18,7 @@ void Accelerometer::begin()
     printf("accel begin\r\n");
     interface.dmaInit(ADXL345_ADDRESS, this);
     interface.dmaInit(MPU6050_ADDRESS, this);
+    interface.dmaInit(MPU6050_ADDRESS_2, this);
     interface.dmaInit(LIS3DH_ADDRESS, this);
     interface.dmaInit(LIS3DH_ADDRESS_2, this);
     seen_response_lis3dh_1 = true;
@@ -33,6 +34,7 @@ void Accelerometer::end()
     cancel_alarm(restart_alarm_id);
     interface.dmaDeinit(ADXL345_ADDRESS);
     interface.dmaDeinit(MPU6050_ADDRESS);
+    interface.dmaDeinit(MPU6050_ADDRESS_2);
     interface.dmaDeinit(LIS3DH_ADDRESS);
     interface.dmaDeinit(LIS3DH_ADDRESS_2);
 }
@@ -65,6 +67,7 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
         seen_response_lis3dh_1 = addr == LIS3DH_ADDRESS;
         seen_response_lis3dh_2 = addr == LIS3DH_ADDRESS_2;
         seen_response_mpu6050 = addr == MPU6050_ADDRESS;
+        seen_response_mpu6050_2 = addr == MPU6050_ADDRESS_2;
         seen_response_adxl345 = addr == ADXL345_ADDRESS;
         if (!abort_detected)
         {
@@ -72,6 +75,18 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
             switch (status)
             {
             case MPU_6050_POLL:
+                accel[0] = bufferRx[0] << 8 | bufferRx[1];
+                accel[1] = bufferRx[2] << 8 | bufferRx[3];
+                accel[2] = bufferRx[4] << 8 | bufferRx[5];
+                if (HIDConfigDevice::tool_closed())
+                {
+                    restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+                }
+                else
+                {
+                    restart_alarm_id = add_alarm_in_us(5000, restart_handler, this, true);
+                }
+                break;
             case LIS_FAMILY_POLL:
                 accel[0] = bufferRx[1] << 8 | bufferRx[0];
                 accel[1] = bufferRx[3] << 8 | bufferRx[2];
@@ -214,12 +229,8 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                     break;
                 case MPU6050_ADDRESS:
                     // printf("found MPU sensor id: %02x\r\n", bufferRx[0]);
-                    if (bufferRxMpu[0] != MPU6050_ID)
+                    if (bufferRxMpu[0] != MPU6050_ID && bufferRxMpu[0] != MPU6050_ID2 && bufferRxMpu[0] != MPU6050_ID3)
                     {
-                        if (bufferRxMpu[0] == MPU6050_FAKE_ID)
-                        {
-                            // printf("It appears you have a fake MPU_6050, we dont support it");
-                        }
                         // printf("unrecognised sensor id: %02x\r\n", bufferRx[0]);
                         type = AccelerometerType::None;
                         restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
@@ -227,10 +238,9 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                     }
                     address = addr;
                     type = AccelerometerType::MPU6050;
-                    status = MPU_6050_ACCEL_CONFIG;
-                    bufferTx[0] = MPU6050_REG_ACCEL_CONFIG;
-                    bufferTx[1] = 0b11100111;
-                    interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
+                    status = MPU_6050_PWR_MGMT_1_READ;
+                    bufferTx[0] = MPU6050_REG_PWR_MGMT_1;
+                    interface.dmaWriteRead(addr, bufferTx, 1, nullptr, 0);
                     break;
                 }
                 break;
@@ -244,18 +254,20 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                 status = ADXL_POLL;
                 restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
                 break;
-            case MPU_6050_ACCEL_CONFIG:
-                status = MPU_6050_PWR_MGMT_1_READ;
-                bufferTx[0] = MPU6050_REG_PWR_MGMT_1;
-                interface.dmaWriteRead(addr, bufferTx, 1, bufferRx, 1);
-                break;
             case MPU_6050_PWR_MGMT_1_READ:
                 status = MPU_6050_PWR_MGMT_1_WRITE;
                 bufferTx[0] = MPU6050_REG_PWR_MGMT_1;
-                bufferTx[1] = bufferRx[0] & ~(1 << 6);
+                bufferTx[1] = bufferRx[0] & ~(MPU6050_PWR1_SLEEP | MPU6050_PWR1_CLKSEL_MASK);
+                bufferTx[1] |= MPU6050_PWR1_CLKSEL_XGYRO;
                 interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
                 break;
             case MPU_6050_PWR_MGMT_1_WRITE:
+                status = MPU_6050_ACCEL_CONFIG;
+                bufferTx[0] = MPU6050_REG_ACCEL_CONFIG;
+                bufferTx[1] = MPU6050_ACCEL_CONFIG_2G;
+                interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
+                break;
+            case MPU_6050_ACCEL_CONFIG:
                 status = MPU_6050_POLL;
                 restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
                 break;
@@ -329,6 +341,7 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
             seen_response_lis3dh_2 = false;
             seen_response_adxl345 = false;
             seen_response_mpu6050 = false;
+            seen_response_mpu6050_2 = false;
             bufferTxLis1[0] = LIS3DH_REG_WHOAMI;
             interface.dmaWriteRead(LIS3DH_ADDRESS, bufferTxLis1, 1, bufferRxLis1, 1);
             bufferTxLis2[0] = LIS3DH_REG_WHOAMI;
@@ -337,6 +350,8 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
             interface.dmaWriteRead(ADXL345_ADDRESS, bufferTxAdxl, 1, bufferRxAdxl, 1);
             bufferTxMpu[0] = MPU6050_REG_WHO_AM_I;
             interface.dmaWriteRead(MPU6050_ADDRESS, bufferTxMpu, 1, bufferRxMpu, 1);
+            bufferTxMpu2[0] = MPU6050_REG_WHO_AM_I;
+            interface.dmaWriteRead(MPU6050_ADDRESS_2, bufferTxMpu2, 1, bufferRxMpu2, 1);
         }
         break;
     default:

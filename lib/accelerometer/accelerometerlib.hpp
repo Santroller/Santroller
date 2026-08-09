@@ -29,12 +29,18 @@
 #define SC7A20_ID 0x11
 #define LIS3DH_REG_TEMPCFG 0x1F
 #define MPU6050_ADDRESS 0x68
+#define MPU6050_ADDRESS_2 0x69
 #define MPU6050_REG_ACCEL_OUT 0x3B
 #define MPU6050_REG_WHO_AM_I 0x75
 #define MPU6050_REG_ACCEL_CONFIG 0x1C
 #define MPU6050_REG_PWR_MGMT_1 0x6B
 #define MPU6050_ID 0x68
-#define MPU6050_FAKE_ID 0x98
+#define MPU6050_ID2 0x98  // Common register-compatible clone
+#define MPU6050_ID3 0x70  // Register-compatible MPU-6500/clone ID
+#define MPU6050_PWR1_SLEEP (1U << 6)
+#define MPU6050_PWR1_CLKSEL_MASK 0x07
+#define MPU6050_PWR1_CLKSEL_XGYRO 0x01
+#define MPU6050_ACCEL_CONFIG_2G 0x00
 enum AccelerometerType {
     None,
     ADXL345,
@@ -53,6 +59,7 @@ typedef enum {
     LIS3DSH_CTRL1_INIT,
     ADXL_POWERCTL,
     ADXL_DATAFORMAT,
+    MPU_6050_ACCEL_CONFIG_READ,
     MPU_6050_ACCEL_CONFIG,
     MPU_6050_PWR_MGMT_1_READ,
     MPU_6050_PWR_MGMT_1_WRITE,
@@ -92,11 +99,14 @@ class Accelerometer: public I2CDMAInterface {
     uint8_t bufferTxAdxl[1];
     uint8_t bufferRxAdxl[1];
     uint8_t bufferTxMpu[1];
+    uint8_t bufferTxMpu2[1];
     uint8_t bufferRxMpu[1];
+    uint8_t bufferRxMpu2[1];
     uint8_t bufferTx[32];
     uint8_t bufferRx[32];
     bool seen_response_lis3dh_1 = true;
     bool seen_response_lis3dh_2 = true;
     bool seen_response_adxl345 = true;
     bool seen_response_mpu6050 = true;
+    bool seen_response_mpu6050_2 = true;
 };

@@ -359,30 +359,30 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
     bool right = dpad & RIGHT;
     switch (button)
     {
-    case ProGuitarA:
+    case ProGuitar_A:
         return midiButtons.a;
-    case ProGuitarB:
+    case ProGuitar_B:
         return midiButtons.b;
-    case ProGuitarX:
+    case ProGuitar_X:
         return midiButtons.x;
-    case ProGuitarY:
+    case ProGuitar_Y:
         return midiButtons.y;
-    case ProGuitarBack:
+    case ProGuitar_Back:
         return midiButtons.back;
-    case ProGuitarStart:
+    case ProGuitar_Start:
         return midiButtons.start;
-    case ProGuitarGuide:
+    case ProGuitar_Guide:
         return midiButtons.guide;
-    case ProGuitarDpadUp:
+    case ProGuitar_DpadUp:
         return up;
-    case ProGuitarDpadDown:
+    case ProGuitar_DpadDown:
         return down;
-    case ProGuitarDpadLeft:
+    case ProGuitar_DpadLeft:
         return left;
-    case ProGuitarDpadRight:
+    case ProGuitar_DpadRight:
         return right;
         // map 5 fret frets based on pressed frets
-    case ProGuitarGreen:
+    case ProGuitar_Green:
     {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
@@ -393,7 +393,7 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
         }
         return false;
     }
-    case ProGuitarRed:
+    case ProGuitar_Red:
     {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
@@ -404,7 +404,7 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
         }
         return false;
     }
-    case ProGuitarYellow:
+    case ProGuitar_Yellow:
     {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
@@ -415,7 +415,7 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
         }
         return false;
     }
-    case ProGuitarBlue:
+    case ProGuitar_Blue:
     {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
@@ -426,7 +426,7 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
         }
         return false;
     }
-    case ProGuitarOrange:
+    case ProGuitar_Orange:
     {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
@@ -437,7 +437,7 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
         }
         return false;
     }
-    case ProGuitarSoloGreen:
+    case ProGuitar_SoloGreen:
     {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
@@ -448,7 +448,7 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
         }
         return false;
     }
-    case ProGuitarSoloRed:
+    case ProGuitar_SoloRed:
     {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
@@ -459,7 +459,7 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
         }
         return false;
     }
-    case ProGuitarSoloYellow:
+    case ProGuitar_SoloYellow:
     {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
@@ -470,7 +470,7 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
         }
         return false;
     }
-    case ProGuitarSoloBlue:
+    case ProGuitar_SoloBlue:
     {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
@@ -481,7 +481,7 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
         }
         return false;
     }
-    case ProGuitarSoloOrange:
+    case ProGuitar_SoloOrange:
     {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
@@ -492,7 +492,7 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
         }
         return false;
     }
-    case ProGuitarPedal:
+    case ProGuitar_Pedal:
         // pro guitar just sends sustain pedal cc on chan 1
         return midiControlChanges[0][MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL] > 40;
     }
@@ -504,39 +504,39 @@ uint16_t MidiDevice::readProGuitarAxis(proto_ProGuitarAxisType axis)
     // but then everything else needs to be scaled up
     switch (axis)
     {
-    case ProGuitarLowEFret:
+    case ProGuitar_LowEFret:
         return midiFrets[0];
-    case ProGuitarAFret:
+    case ProGuitar_AFret:
         return midiFrets[1];
-    case ProGuitarDFret:
+    case ProGuitar_DFret:
         return midiFrets[2];
-    case ProGuitarGFret:
+    case ProGuitar_GFret:
         return midiFrets[3];
-    case ProGuitarBFret:
+    case ProGuitar_BFret:
         return midiFrets[4];
-    case ProGuitarHighEFret:
+    case ProGuitar_HighEFret:
         return midiFrets[5];
-    case ProGuitarLowEFretVelocity:
+    case ProGuitar_LowEFretVelocity:
         return midiStringVelocities[0] << 8;
-    case ProGuitarAFretVelocity:
+    case ProGuitar_AFretVelocity:
         return midiStringVelocities[1] << 8;
-    case ProGuitarDFretVelocity:
+    case ProGuitar_DFretVelocity:
         return midiStringVelocities[2] << 8;
-    case ProGuitarGFretVelocity:
+    case ProGuitar_GFretVelocity:
         return midiStringVelocities[3] << 8;
-    case ProGuitarBFretVelocity:
+    case ProGuitar_BFretVelocity:
         return midiStringVelocities[4] << 8;
-    case ProGuitarHighEFretVelocity:
+    case ProGuitar_HighEFretVelocity:
         return midiStringVelocities[5] << 8;
-    case ProGuitarLeftStickX:
+    case ProGuitar_LeftStickX:
         return 32767;
-    case ProGuitarLeftStickY:
+    case ProGuitar_LeftStickY:
         return 32767;
-    case ProGuitarTilt:
+    case ProGuitar_Tilt:
         return midiButtons.tilt ? 65535 : 32767;
-    case ProGuitarAutoCalibrationMicrophone:
+    case ProGuitar_AutoCalibrationMicrophone:
         return 0;
-    case ProGuitarAutoCalibrationLight:
+    case ProGuitar_AutoCalibrationLight:
         return 0;
     }
     return 0;

@@ -15,7 +15,7 @@ const uint8_t GuitarHeroGuitarAxisMapping::gh5_slider_mapping[] = {
     0xFA, 0xFC, 0xF8, 0xE6, 0xE2, 0xE4, 0xE0,
     0xE5, 0xE1, 0xE3, 0xDF};
 
-GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.ghAxis == GuitarHeroGuitarWhammy)
+GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.ghAxis == GuitarHeroGuitar_Whammy)
 {
 }
 
@@ -34,16 +34,16 @@ void GuitarHeroGuitarAxisMapping::update_wii(uint8_t *buf)
     WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
-    case GuitarHeroGuitarLeftStickX:
+    case GuitarHeroGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarLeftStickY:
+    case GuitarHeroGuitar_LeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarWhammy:
+    case GuitarHeroGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarTilt:
+    case GuitarHeroGuitar_Tilt:
         // report->tilt = m_calibratedValue >> 8;
         break;
     default:
@@ -59,16 +59,16 @@ void GuitarHeroGuitarAxisMapping::update_switch(uint8_t *buf)
     SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
-    case GuitarHeroGuitarLeftStickX:
+    case GuitarHeroGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarLeftStickY:
+    case GuitarHeroGuitar_LeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarWhammy:
+    case GuitarHeroGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarTilt:
+    case GuitarHeroGuitar_Tilt:
         report->tilt = m_calibratedValue >> 8;
         break;
     default:
@@ -85,16 +85,16 @@ void GuitarHeroGuitarAxisMapping::update_ps2(uint8_t *buf)
     PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
-    case GuitarHeroGuitarLeftStickX:
+    case GuitarHeroGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarLeftStickY:
+    case GuitarHeroGuitar_LeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarWhammy:
+    case GuitarHeroGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarTilt:
+    case GuitarHeroGuitar_Tilt:
         report->tilt = m_calibratedValue >> 8;
         break;
     default:
@@ -115,23 +115,23 @@ void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
     PS3GuitarHeroGuitar_Data_t *report = (PS3GuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
-    case GuitarHeroGuitarLeftStickX:
+    case GuitarHeroGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarLeftStickY:
+    case GuitarHeroGuitar_LeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarWhammy:
+    case GuitarHeroGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarTilt:
+    case GuitarHeroGuitar_Tilt:
         report->tilt = tilt;
         break;
-    case GuitarHeroGuitarLeftTrigger:
+    case GuitarHeroGuitar_LeftTrigger:
         report->leftTrigger = m_calibratedValue >> 8;
         report->l2 = m_calibratedValue > 65000;
         break;
-    case GuitarHeroGuitarRightTrigger:
+    case GuitarHeroGuitar_RightTrigger:
         report->rightTrigger = m_calibratedValue >> 8;
         report->r2 = m_calibratedValue > 65000;
         break;
@@ -147,23 +147,23 @@ void GuitarHeroGuitarAxisMapping::update_ps4(uint8_t *buf)
     PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
-    case GuitarHeroGuitarLeftStickX:
+    case GuitarHeroGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarLeftStickY:
+    case GuitarHeroGuitar_LeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarWhammy:
+    case GuitarHeroGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarTilt:
+    case GuitarHeroGuitar_Tilt:
         report->tilt = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarLeftTrigger:
+    case GuitarHeroGuitar_LeftTrigger:
         report->leftTrigger = m_calibratedValue >> 8;
         report->l2 = m_calibratedValue > 65000;
         break;
-    case GuitarHeroGuitarRightTrigger:
+    case GuitarHeroGuitar_RightTrigger:
         report->rightTrigger = m_calibratedValue >> 8;
         report->r2 = m_calibratedValue > 65000;
         break;
@@ -180,23 +180,23 @@ void GuitarHeroGuitarAxisMapping::update_ps5(uint8_t *buf)
     PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
-    case GuitarHeroGuitarLeftStickX:
+    case GuitarHeroGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarLeftStickY:
+    case GuitarHeroGuitar_LeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarWhammy:
+    case GuitarHeroGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarTilt:
+    case GuitarHeroGuitar_Tilt:
         report->tilt = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarLeftTrigger:
+    case GuitarHeroGuitar_LeftTrigger:
         report->leftTrigger = m_calibratedValue >> 8;
         report->l2 = m_calibratedValue > 65000;
         break;
-    case GuitarHeroGuitarRightTrigger:
+    case GuitarHeroGuitar_RightTrigger:
         report->rightTrigger = m_calibratedValue >> 8;
         report->r2 = m_calibratedValue > 65000;
         break;
@@ -219,7 +219,7 @@ void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
     XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
-    case GuitarHeroGuitarLeftStickX:
+    case GuitarHeroGuitar_LeftStickX:
         if (!m_supports_slider)
         {
             // shove stick on the slider, then it can be used in menus
@@ -237,7 +237,7 @@ void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
             }
         }
         break;
-    case GuitarHeroGuitarLeftStickY:
+    case GuitarHeroGuitar_LeftStickY:
         if (!m_supports_slider)
         {
             report->leftStickY = m_calibratedValue - 32768;
@@ -254,16 +254,16 @@ void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
             }
         }
         break;
-    case GuitarHeroGuitarWhammy:
+    case GuitarHeroGuitar_Whammy:
         report->whammy = m_calibratedValue - 32768;
         break;
-    case GuitarHeroGuitarTilt:
+    case GuitarHeroGuitar_Tilt:
         report->tilt = m_calibratedValue - 32768;
         break;
-    case GuitarHeroGuitarLeftTrigger:
+    case GuitarHeroGuitar_LeftTrigger:
         report->accelZ = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarRightTrigger:
+    case GuitarHeroGuitar_RightTrigger:
         report->accelX = m_calibratedValue >> 8;
         break;
     default:
@@ -279,20 +279,20 @@ void GuitarHeroGuitarAxisMapping::update_ogxbox(uint8_t *buf)
     OGXboxGuitarHeroGuitar_Data_t *report = (OGXboxGuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
-    case GuitarHeroGuitarLeftStickX:
+    case GuitarHeroGuitar_LeftStickX:
         // shove stick on the slider, then it can be used in menus
         if (!m_centered)
         {
             report->slider = m_calibratedValue - 32768;
         }
         break;
-    case GuitarHeroGuitarLeftStickY:
+    case GuitarHeroGuitar_LeftStickY:
         report->unused = m_calibratedValue - 32768;
         break;
-    case GuitarHeroGuitarWhammy:
+    case GuitarHeroGuitar_Whammy:
         report->whammy = m_calibratedValue - 32768;
         break;
-    case GuitarHeroGuitarTilt:
+    case GuitarHeroGuitar_Tilt:
         report->tilt = m_calibratedValue - 32768;
         break;
     default:
@@ -308,13 +308,13 @@ void GuitarHeroGuitarAxisMapping::update_xboxone(uint8_t *buf)
     XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
-    case GuitarHeroGuitarWhammy:
+    case GuitarHeroGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarTilt:
+    case GuitarHeroGuitar_Tilt:
         report->tilt = m_calibratedValue >> 8;
         break;
-    case GuitarHeroGuitarLeftStickX:
+    case GuitarHeroGuitar_LeftStickX:
         if (m_calibratedValue < 10000)
         {
             report->dpadRight = true;
@@ -324,7 +324,7 @@ void GuitarHeroGuitarAxisMapping::update_xboxone(uint8_t *buf)
             report->dpadLeft = true;
         }
         break;
-    case GuitarHeroGuitarLeftStickY:
+    case GuitarHeroGuitar_LeftStickY:
         if (m_calibratedValue < 10000)
         {
             report->dpadUp = true;

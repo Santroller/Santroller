@@ -1,380 +1,380 @@
 syntax = "proto2";
 package proto;
 enum GamepadButtonType {
-  GamepadA = 1;
-  GamepadB = 2;
-  GamepadX = 3;
-  GamepadY = 4;
+  Gamepad_A = 1;
+  Gamepad_B = 2;
+  Gamepad_X = 3;
+  Gamepad_Y = 4;
 
-  GamepadBack = 5;
-  GamepadStart = 6;
+  Gamepad_Back = 5;
+  Gamepad_Start = 6;
 
-  GamepadGuide = 7;
-  GamepadCapture = 8;
+  Gamepad_Guide = 7;
+  Gamepad_Capture = 8;
 
-  GamepadLeftShoulder = 9;
-  GamepadRightShoulder = 10;
+  Gamepad_LeftShoulder = 9;
+  Gamepad_RightShoulder = 10;
 
-  GamepadLeftThumbClick = 11;
-  GamepadRightThumbClick = 12;
+  Gamepad_LeftThumbClick = 11;
+  Gamepad_RightThumbClick = 12;
 
-  GamepadDpadUp = 13;
-  GamepadDpadDown = 14;
-  GamepadDpadLeft = 15;
-  GamepadDpadRight = 16;
+  Gamepad_DpadUp = 13;
+  Gamepad_DpadDown = 14;
+  Gamepad_DpadLeft = 15;
+  Gamepad_DpadRight = 16;
 }
 enum GamepadAxisType {
-  GamepadLeftStickX = 1;
-  GamepadLeftStickY = 2;
-  GamepadRightStickX = 3;
-  GamepadRightStickY = 4;
+  Gamepad_LeftStickX = 1;
+  Gamepad_LeftStickY = 2;
+  Gamepad_RightStickX = 3;
+  Gamepad_RightStickY = 4;
 
-  GamepadLeftTrigger = 5;
-  GamepadRightTrigger = 6;
+  Gamepad_LeftTrigger = 5;
+  Gamepad_RightTrigger = 6;
 
-  GamepadAccelX = 7;
-  GamepadAccelY = 8;
-  GamepadAccelZ = 9;
-  GamepadGyro = 10;
+  Gamepad_AccelX = 7;
+  Gamepad_AccelY = 8;
+  Gamepad_AccelZ = 9;
+  Gamepad_Gyro = 10;
 }
 enum ProjectDivaButtonType {
-  ProjectDivaA = 1;
-  ProjectDivaB = 2;
-  ProjectDivaX = 3;
-  ProjectDivaY = 4;
+  ProjectDiva_A = 1;
+  ProjectDiva_B = 2;
+  ProjectDiva_X = 3;
+  ProjectDiva_Y = 4;
 
-  ProjectDivaBack = 5;
-  ProjectDivaStart = 6;
+  ProjectDiva_Back = 5;
+  ProjectDiva_Start = 6;
 
-  ProjectDivaGuide = 7;
-  ProjectDivaCapture = 8;
+  ProjectDiva_Guide = 7;
+  ProjectDiva_Capture = 8;
 
-  ProjectDivaLeftShoulder = 9;
-  ProjectDivaRightShoulder = 10;
+  ProjectDiva_LeftShoulder = 9;
+  ProjectDiva_RightShoulder = 10;
 
-  ProjectDivaLeftThumbClick = 11;
-  ProjectDivaRightThumbClick = 12;
+  ProjectDiva_LeftThumbClick = 11;
+  ProjectDiva_RightThumbClick = 12;
 
-  ProjectDivaDpadUp = 13;
-  ProjectDivaDpadDown = 14;
-  ProjectDivaDpadLeft = 15;
-  ProjectDivaDpadRight = 16;
+  ProjectDiva_DpadUp = 13;
+  ProjectDiva_DpadDown = 14;
+  ProjectDiva_DpadLeft = 15;
+  ProjectDiva_DpadRight = 16;
 }
 enum ProjectDivaAxisType {
-  ProjectDivaLeftStickX = 1;
-  ProjectDivaLeftStickY = 2;
-  ProjectDivaRightStickX = 3;
-  ProjectDivaRightStickY = 4;
+  ProjectDiva_LeftStickX = 1;
+  ProjectDiva_LeftStickY = 2;
+  ProjectDiva_RightStickX = 3;
+  ProjectDiva_RightStickY = 4;
 
-  ProjectDivaLeftTrigger = 5;
-  ProjectDivaRightTrigger = 6;
+  ProjectDiva_LeftTrigger = 5;
+  ProjectDiva_RightTrigger = 6;
 
-  ProjectDivaSlider = 7;
+  ProjectDiva_Slider = 7;
 }
 enum GuitarFreaksButtonType {
-  GuitarFreaksRed = 1;
-  GuitarFreaksGreen = 2;
-  GuitarFreaksBlue = 3;
+  GuitarFreaks_Red = 1;
+  GuitarFreaks_Green = 2;
+  GuitarFreaks_Blue = 3;
 
-  GuitarFreaksBack = 4;
-  GuitarFreaksStart = 5;
-  GuitarFreaksGuide = 6;
+  GuitarFreaks_Back = 4;
+  GuitarFreaks_Start = 5;
+  GuitarFreaks_Guide = 6;
 
-  GuitarFreaksStrum = 7;
+  GuitarFreaks_Strum = 7;
 }
 enum GuitarFreaksAxisType {
-  GuitarFreaksLeftStickX = 1;
-  GuitarFreaksLeftStickY = 2;
+  GuitarFreaks_LeftStickX = 1;
+  GuitarFreaks_LeftStickY = 2;
 }
 enum GuitarHeroGuitarButtonType {
-  GuitarHeroGuitarGreen = 1;
-  GuitarHeroGuitarRed = 2;
-  GuitarHeroGuitarYellow = 3;
-  GuitarHeroGuitarBlue = 4;
-  GuitarHeroGuitarOrange = 5;
+  GuitarHeroGuitar_Green = 1;
+  GuitarHeroGuitar_Red = 2;
+  GuitarHeroGuitar_Yellow = 3;
+  GuitarHeroGuitar_Blue = 4;
+  GuitarHeroGuitar_Orange = 5;
 
-  GuitarHeroGuitarTapGreen = 6;
-  GuitarHeroGuitarTapRed = 7;
-  GuitarHeroGuitarTapYellow = 8;
-  GuitarHeroGuitarTapBlue = 9;
-  GuitarHeroGuitarTapOrange = 10;
+  GuitarHeroGuitar_TapGreen = 6;
+  GuitarHeroGuitar_TapRed = 7;
+  GuitarHeroGuitar_TapYellow = 8;
+  GuitarHeroGuitar_TapBlue = 9;
+  GuitarHeroGuitar_TapOrange = 10;
 
-  GuitarHeroGuitarBack = 11;
-  GuitarHeroGuitarStart = 12;
-  GuitarHeroGuitarGuide = 13;
+  GuitarHeroGuitar_Back = 11;
+  GuitarHeroGuitar_Start = 12;
+  GuitarHeroGuitar_Guide = 13;
 
-  GuitarHeroGuitarStrumUp = 14;
-  GuitarHeroGuitarStrumDown = 15;
-  GuitarHeroGuitarDpadLeft = 16;
-  GuitarHeroGuitarDpadRight = 17;
-  GuitarHeroGuitarPedal = 18;
-  GuitarHeroGuitarCapture = 19;
+  GuitarHeroGuitar_StrumUp = 14;
+  GuitarHeroGuitar_StrumDown = 15;
+  GuitarHeroGuitar_DpadLeft = 16;
+  GuitarHeroGuitar_DpadRight = 17;
+  GuitarHeroGuitar_Pedal = 18;
+  GuitarHeroGuitar_Capture = 19;
 }
 enum GuitarHeroGuitarAxisType {
-  GuitarHeroGuitarWhammy = 1;
-  GuitarHeroGuitarTilt = 2;
-  GuitarHeroGuitarLeftStickX = 3;
-  GuitarHeroGuitarLeftStickY = 4;
-  GuitarHeroGuitarLeftTrigger = 5;
-  GuitarHeroGuitarRightTrigger = 6;
+  GuitarHeroGuitar_Whammy = 1;
+  GuitarHeroGuitar_Tilt = 2;
+  GuitarHeroGuitar_LeftStickX = 3;
+  GuitarHeroGuitar_LeftStickY = 4;
+  GuitarHeroGuitar_LeftTrigger = 5;
+  GuitarHeroGuitar_RightTrigger = 6;
 }
 
 enum GuitarHeroArcadeButtonType {
-  GuitarHeroArcadeGreen = 1;
-  GuitarHeroArcadeRed = 2;
-  GuitarHeroArcadeYellow = 3;
-  GuitarHeroArcadeBlue = 4;
-  GuitarHeroArcadeOrange = 5;
-  GuitarHeroArcadeSide = 6;
+  GuitarHeroArcade_Green = 1;
+  GuitarHeroArcade_Red = 2;
+  GuitarHeroArcade_Yellow = 3;
+  GuitarHeroArcade_Blue = 4;
+  GuitarHeroArcade_Orange = 5;
+  GuitarHeroArcade_Side = 6;
 
-  GuitarHeroArcadeStrumUp = 7;
-  GuitarHeroArcadeStrumDown = 8;
-  GuitarHeroArcadeDpadLeft = 9;
-  GuitarHeroArcadeDpadRight = 10;
+  GuitarHeroArcade_StrumUp = 7;
+  GuitarHeroArcade_StrumDown = 8;
+  GuitarHeroArcade_DpadLeft = 9;
+  GuitarHeroArcade_DpadRight = 10;
 }
 enum GuitarHeroArcadeAxisType {
-  GuitarHeroArcadeTilt = 1;
+  GuitarHeroArcade_Tilt = 1;
 }
 enum GuitarHeroLiveGuitarButtonType {
-  GuitarHeroLiveGuitarWhite1 = 1;
-  GuitarHeroLiveGuitarWhite2 = 2;
-  GuitarHeroLiveGuitarWhite3 = 3;
-  GuitarHeroLiveGuitarBlack1 = 4;
-  GuitarHeroLiveGuitarBlack2 = 5;
-  GuitarHeroLiveGuitarBlack3 = 6;
+  GuitarHeroLiveGuitar_White1 = 1;
+  GuitarHeroLiveGuitar_White2 = 2;
+  GuitarHeroLiveGuitar_White3 = 3;
+  GuitarHeroLiveGuitar_Black1 = 4;
+  GuitarHeroLiveGuitar_Black2 = 5;
+  GuitarHeroLiveGuitar_Black3 = 6;
 
-  GuitarHeroLiveGuitarBack = 7;
-  GuitarHeroLiveGuitarStart = 8;
-  GuitarHeroLiveGuitarGuide = 9;
+  GuitarHeroLiveGuitar_Back = 7;
+  GuitarHeroLiveGuitar_Start = 8;
+  GuitarHeroLiveGuitar_Guide = 9;
 
-  GuitarHeroLiveGuitarStrumUp = 10;
-  GuitarHeroLiveGuitarStrumDown = 11;
-  GuitarHeroLiveGuitarDpadUp = 12;
-  GuitarHeroLiveGuitarDpadDown = 13;
-  GuitarHeroLiveGuitarDpadLeft = 14;
-  GuitarHeroLiveGuitarDpadRight = 15;
+  GuitarHeroLiveGuitar_StrumUp = 10;
+  GuitarHeroLiveGuitar_StrumDown = 11;
+  GuitarHeroLiveGuitar_DpadUp = 12;
+  GuitarHeroLiveGuitar_DpadDown = 13;
+  GuitarHeroLiveGuitar_DpadLeft = 14;
+  GuitarHeroLiveGuitar_DpadRight = 15;
 }
 enum GuitarHeroLiveGuitarAxisType {
-  GuitarHeroLiveGuitarWhammy = 1;
-  GuitarHeroLiveGuitarTilt = 2;
-  GuitarHeroLiveGuitarLeftStickX = 3;
-  GuitarHeroLiveGuitarLeftStickY = 4;
+  GuitarHeroLiveGuitar_Whammy = 1;
+  GuitarHeroLiveGuitar_Tilt = 2;
+  GuitarHeroLiveGuitar_LeftStickX = 3;
+  GuitarHeroLiveGuitar_LeftStickY = 4;
 }
 enum RockBandGuitarButtonType {
-  RockBandGuitarGreen = 1;
-  RockBandGuitarRed = 2;
-  RockBandGuitarYellow = 3;
-  RockBandGuitarBlue = 4;
-  RockBandGuitarOrange = 5;
+  RockBandGuitar_Green = 1;
+  RockBandGuitar_Red = 2;
+  RockBandGuitar_Yellow = 3;
+  RockBandGuitar_Blue = 4;
+  RockBandGuitar_Orange = 5;
 
-  RockBandGuitarSoloGreen = 6;
-  RockBandGuitarSoloRed = 7;
-  RockBandGuitarSoloYellow = 8;
-  RockBandGuitarSoloBlue = 9;
-  RockBandGuitarSoloOrange = 10;
+  RockBandGuitar_SoloGreen = 6;
+  RockBandGuitar_SoloRed = 7;
+  RockBandGuitar_SoloYellow = 8;
+  RockBandGuitar_SoloBlue = 9;
+  RockBandGuitar_SoloOrange = 10;
 
-  RockBandGuitarBack = 11;
-  RockBandGuitarStart = 12;
-  RockBandGuitarGuide = 13;
+  RockBandGuitar_Back = 11;
+  RockBandGuitar_Start = 12;
+  RockBandGuitar_Guide = 13;
 
-  RockBandGuitarStrumUp = 14;
-  RockBandGuitarStrumDown = 15;
-  RockBandGuitarDpadLeft = 16;
-  RockBandGuitarDpadRight = 17;
-  RockBandGuitarPedal = 18;
-  RockBandGuitarCapture = 19;
+  RockBandGuitar_StrumUp = 14;
+  RockBandGuitar_StrumDown = 15;
+  RockBandGuitar_DpadLeft = 16;
+  RockBandGuitar_DpadRight = 17;
+  RockBandGuitar_Pedal = 18;
+  RockBandGuitar_Capture = 19;
 }
 enum RockBandGuitarAxisType {
-  RockBandGuitarWhammy = 1;
-  RockBandGuitarTilt = 2;
-  RockBandGuitarPickup = 3;
-  RockBandGuitarLeftStickX = 4;
-  RockBandGuitarLeftStickY = 5;
-  RockBandGuitarLeftTrigger = 6;
-  RockBandGuitarRightTrigger = 7;
+  RockBandGuitar_Whammy = 1;
+  RockBandGuitar_Tilt = 2;
+  RockBandGuitar_Pickup = 3;
+  RockBandGuitar_LeftStickX = 4;
+  RockBandGuitar_LeftStickY = 5;
+  RockBandGuitar_LeftTrigger = 6;
+  RockBandGuitar_RightTrigger = 7;
 }
 enum RockBandDrumsButtonType {
-  RockBandDrumsA = 1;
-  RockBandDrumsB = 2;
-  RockBandDrumsX = 3;
-  RockBandDrumsY = 4;
+  RockBandDrums_A = 1;
+  RockBandDrums_B = 2;
+  RockBandDrums_X = 3;
+  RockBandDrums_Y = 4;
 
-  RockBandDrumsBack = 5;
-  RockBandDrumsStart = 6;
+  RockBandDrums_Back = 5;
+  RockBandDrums_Start = 6;
 
-  RockBandDrumsGuide = 7;
+  RockBandDrums_Guide = 7;
 
-  RockBandDrumsDpadUp = 8;
-  RockBandDrumsDpadDown = 9;
-  RockBandDrumsDpadLeft = 10;
-  RockBandDrumsDpadRight = 11;
-  RockBandDrumsKick1Pedal = 12;
-  RockBandDrumsKick2Pedal = 13;
-  RockBandDrumsLeftShoulder = 14;
-  RockBandDrumsRightShoulder = 15;
-  RockBandDrumsCapture = 16;
+  RockBandDrums_DpadUp = 8;
+  RockBandDrums_DpadDown = 9;
+  RockBandDrums_DpadLeft = 10;
+  RockBandDrums_DpadRight = 11;
+  RockBandDrums_Kick1Pedal = 12;
+  RockBandDrums_Kick2Pedal = 13;
+  RockBandDrums_LeftShoulder = 14;
+  RockBandDrums_RightShoulder = 15;
+  RockBandDrums_Capture = 16;
 }
 enum RockBandDrumsAxisType {
-  RockBandDrumsRedPad = 1;
-  RockBandDrumsYellowPad = 2;
-  RockBandDrumsBluePad = 3;
-  RockBandDrumsGreenPad = 4;
-  RockBandDrumsYellowCymbal = 5;
-  RockBandDrumsBlueCymbal = 6;
-  RockBandDrumsGreenCymbal = 7;
-  RockBandDrumsLeftStickX = 8;
-  RockBandDrumsLeftStickY = 9;
-  RockBandDrumsLeftTrigger = 10;
-  RockBandDrumsRightTrigger = 11;
+  RockBandDrums_RedPad = 1;
+  RockBandDrums_YellowPad = 2;
+  RockBandDrums_BluePad = 3;
+  RockBandDrums_GreenPad = 4;
+  RockBandDrums_YellowCymbal = 5;
+  RockBandDrums_BlueCymbal = 6;
+  RockBandDrums_GreenCymbal = 7;
+  RockBandDrums_LeftStickX = 8;
+  RockBandDrums_LeftStickY = 9;
+  RockBandDrums_LeftTrigger = 10;
+  RockBandDrums_RightTrigger = 11;
 }
 enum GuitarHeroDrumsButtonType {
-  GuitarHeroDrumsA = 1;
-  GuitarHeroDrumsB = 2;
-  GuitarHeroDrumsX = 3;
-  GuitarHeroDrumsY = 4;
+  GuitarHeroDrums_A = 1;
+  GuitarHeroDrums_B = 2;
+  GuitarHeroDrums_X = 3;
+  GuitarHeroDrums_Y = 4;
 
-  GuitarHeroDrumsBack = 5;
-  GuitarHeroDrumsStart = 6;
+  GuitarHeroDrums_Back = 5;
+  GuitarHeroDrums_Start = 6;
 
-  GuitarHeroDrumsGuide = 7;
+  GuitarHeroDrums_Guide = 7;
 
-  GuitarHeroDrumsDpadUp = 8;
-  GuitarHeroDrumsDpadDown = 9;
-  GuitarHeroDrumsDpadLeft = 10;
-  GuitarHeroDrumsDpadRight = 11;
-  GuitarHeroDrumsLeftShoulder = 12;
-  GuitarHeroDrumsRightShoulder = 13;
-  GuitarHeroDrumsCapture = 14;
+  GuitarHeroDrums_DpadUp = 8;
+  GuitarHeroDrums_DpadDown = 9;
+  GuitarHeroDrums_DpadLeft = 10;
+  GuitarHeroDrums_DpadRight = 11;
+  GuitarHeroDrums_LeftShoulder = 12;
+  GuitarHeroDrums_RightShoulder = 13;
+  GuitarHeroDrums_Capture = 14;
 }
 enum GuitarHeroDrumsAxisType {
-  GuitarHeroDrumsRedPad = 1;
-  GuitarHeroDrumsYellowPad = 2;
-  GuitarHeroDrumsBluePad = 3;
-  GuitarHeroDrumsOrangePad = 4;
-  GuitarHeroDrumsGreenPad = 5;
-  GuitarHeroDrumsKickPedal = 6;
-  GuitarHeroDrumsLeftStickX = 7;
-  GuitarHeroDrumsLeftStickY = 8;
-  GuitarHeroDrumsLeftTrigger = 9;
-  GuitarHeroDrumsRightTrigger = 10;
+  GuitarHeroDrums_RedPad = 1;
+  GuitarHeroDrums_YellowPad = 2;
+  GuitarHeroDrums_BluePad = 3;
+  GuitarHeroDrums_OrangePad = 4;
+  GuitarHeroDrums_GreenPad = 5;
+  GuitarHeroDrums_KickPedal = 6;
+  GuitarHeroDrums_LeftStickX = 7;
+  GuitarHeroDrums_LeftStickY = 8;
+  GuitarHeroDrums_LeftTrigger = 9;
+  GuitarHeroDrums_RightTrigger = 10;
 }
 enum DJHTurntableButtonType {
-  DJHTurntableLeftBlue = 1;
-  DJHTurntableLeftRed = 2;
-  DJHTurntableLeftGreen = 3;
-  DJHTurntableRightBlue = 4;
-  DJHTurntableRightRed = 5;
-  DJHTurntableRightGreen = 6;
-  DJHTurntableA = 7;
-  DJHTurntableB = 8;
-  DJHTurntableX = 9;
-  DJHTurntableY = 10;
+  DJHTurntable_LeftBlue = 1;
+  DJHTurntable_LeftRed = 2;
+  DJHTurntable_LeftGreen = 3;
+  DJHTurntable_RightBlue = 4;
+  DJHTurntable_RightRed = 5;
+  DJHTurntable_RightGreen = 6;
+  DJHTurntable_A = 7;
+  DJHTurntable_B = 8;
+  DJHTurntable_X = 9;
+  DJHTurntable_Y = 10;
 
-  DJHTurntableBack = 11;
-  DJHTurntableStart = 12;
+  DJHTurntable_Back = 11;
+  DJHTurntable_Start = 12;
 
-  DJHTurntableGuide = 13;
+  DJHTurntable_Guide = 13;
 
-  DJHTurntableDpadUp = 14;
-  DJHTurntableDpadDown = 15;
-  DJHTurntableDpadLeft = 16;
-  DJHTurntableDpadRight = 17;
+  DJHTurntable_DpadUp = 14;
+  DJHTurntable_DpadDown = 15;
+  DJHTurntable_DpadLeft = 16;
+  DJHTurntable_DpadRight = 17;
 }
 enum DJHTurntableAxisType {
-  DJHTurntableLeftVelocity = 1;
-  DJHTurntableRightVelocity = 2;
-  DJHTurntableEffectsKnob = 3;
-  DJHTurntableCrossfader = 4;
-  DJHTurntableLeftStickX = 5;
-  DJHTurntableLeftStickY = 6;
+  DJHTurntable_LeftVelocity = 1;
+  DJHTurntable_RightVelocity = 2;
+  DJHTurntable_EffectsKnob = 3;
+  DJHTurntable_Crossfader = 4;
+  DJHTurntable_LeftStickX = 5;
+  DJHTurntable_LeftStickY = 6;
 }
 enum DJMaxTurntableButtonType {
-  DJMaxTurntableB1 = 1;
-  DJMaxTurntableB2 = 2;
-  DJMaxTurntableB3 = 3;
-  DJMaxTurntableB4 = 4;
-  DJMaxTurntableB5 = 5;
-  DJMaxTurntableB6 = 6;
-  DJMaxTurntableB7 = 7;
-  DJMaxTurntableB8 = 8;
-  DJMaxTurntableB9 = 9;
-  DJMaxTurntableE1 = 10;
-  DJMaxTurntableE2 = 11;
-  DJMaxTurntableE3 = 12;
-  DJMaxTurntableE4 = 13;
+  DJMaxTurntable_B1 = 1;
+  DJMaxTurntable_B2 = 2;
+  DJMaxTurntable_B3 = 3;
+  DJMaxTurntable_B4 = 4;
+  DJMaxTurntable_B5 = 5;
+  DJMaxTurntable_B6 = 6;
+  DJMaxTurntable_B7 = 7;
+  DJMaxTurntable_B8 = 8;
+  DJMaxTurntable_B9 = 9;
+  DJMaxTurntable_E1 = 10;
+  DJMaxTurntable_E2 = 11;
+  DJMaxTurntable_E3 = 12;
+  DJMaxTurntable_E4 = 13;
 
-  DJMaxTurntableBack = 14;
-  DJMaxTurntableStart = 15;
+  DJMaxTurntable_Back = 14;
+  DJMaxTurntable_Start = 15;
 
-  DJMaxTurntableGuide = 16;
+  DJMaxTurntable_Guide = 16;
 }
 enum DJMaxTurntableAxisType {
-  DJMaxTurntableLeftVelocity = 1;
-  DJMaxTurntableRightVelocity = 2;
+  DJMaxTurntable_LeftVelocity = 1;
+  DJMaxTurntable_RightVelocity = 2;
 }
 
 enum PopNMusicButtonType {
-  PopNMusicButton1 = 1;
-  PopNMusicButton2 = 2;
-  PopNMusicButton3 = 3;
-  PopNMusicButton4 = 4;
-  PopNMusicButton5 = 5;
-  PopNMusicButton6 = 6;
-  PopNMusicButton7 = 7;
-  PopNMusicButton8 = 8;
-  PopNMusicButton9 = 9;
+  PopNMusic_Button1 = 1;
+  PopNMusic_Button2 = 2;
+  PopNMusic_Button3 = 3;
+  PopNMusic_Button4 = 4;
+  PopNMusic_Button5 = 5;
+  PopNMusic_Button6 = 6;
+  PopNMusic_Button7 = 7;
+  PopNMusic_Button8 = 8;
+  PopNMusic_Button9 = 9;
 }
 enum PopNMusicAxisType {
-  PopNMusicLeftStickX = 1;
-  PopNMusicLeftStickY = 2;
+  PopNMusic_LeftStickX = 1;
+  PopNMusic_LeftStickY = 2;
 }
 
 enum ProGuitarButtonType {
-  ProGuitarA = 1;
-  ProGuitarB = 2;
-  ProGuitarX = 3;
-  ProGuitarY = 4;
+  ProGuitar_A = 1;
+  ProGuitar_B = 2;
+  ProGuitar_X = 3;
+  ProGuitar_Y = 4;
 
-  ProGuitarBack = 5;
-  ProGuitarStart = 6;
+  ProGuitar_Back = 5;
+  ProGuitar_Start = 6;
 
-  ProGuitarGuide = 7;
+  ProGuitar_Guide = 7;
 
-  ProGuitarDpadUp = 8;
-  ProGuitarDpadDown = 9;
-  ProGuitarDpadLeft = 10;
-  ProGuitarDpadRight = 11;
-  ProGuitarGreen = 12;
-  ProGuitarRed = 13;
-  ProGuitarYellow = 14;
-  ProGuitarBlue = 15;
-  ProGuitarOrange = 16;
-  ProGuitarSoloGreen = 17;
-  ProGuitarSoloRed = 18;
-  ProGuitarSoloYellow = 19;
-  ProGuitarSoloBlue = 20;
-  ProGuitarSoloOrange = 21;
-  ProGuitarPedal = 22;
+  ProGuitar_DpadUp = 8;
+  ProGuitar_DpadDown = 9;
+  ProGuitar_DpadLeft = 10;
+  ProGuitar_DpadRight = 11;
+  ProGuitar_Green = 12;
+  ProGuitar_Red = 13;
+  ProGuitar_Yellow = 14;
+  ProGuitar_Blue = 15;
+  ProGuitar_Orange = 16;
+  ProGuitar_SoloGreen = 17;
+  ProGuitar_SoloRed = 18;
+  ProGuitar_SoloYellow = 19;
+  ProGuitar_SoloBlue = 20;
+  ProGuitar_SoloOrange = 21;
+  ProGuitar_Pedal = 22;
 }
 
 enum ProGuitarAxisType {
-  ProGuitarLowEFret = 1;
-  ProGuitarAFret = 2;
-  ProGuitarDFret = 3;
-  ProGuitarGFret = 4;
-  ProGuitarBFret = 5;
-  ProGuitarHighEFret = 6;
-  ProGuitarLowEFretVelocity = 7;
-  ProGuitarAFretVelocity = 8;
-  ProGuitarDFretVelocity = 9;
-  ProGuitarGFretVelocity = 10;
-  ProGuitarBFretVelocity = 11;
-  ProGuitarHighEFretVelocity = 12;
-  ProGuitarLeftStickX = 13;
-  ProGuitarLeftStickY = 14;
-  ProGuitarTilt = 15;
-  ProGuitarAutoCalibrationMicrophone = 16;
-  ProGuitarAutoCalibrationLight = 17;
+  ProGuitar_LowEFret = 1;
+  ProGuitar_AFret = 2;
+  ProGuitar_DFret = 3;
+  ProGuitar_GFret = 4;
+  ProGuitar_BFret = 5;
+  ProGuitar_HighEFret = 6;
+  ProGuitar_LowEFretVelocity = 7;
+  ProGuitar_AFretVelocity = 8;
+  ProGuitar_DFretVelocity = 9;
+  ProGuitar_GFretVelocity = 10;
+  ProGuitar_BFretVelocity = 11;
+  ProGuitar_HighEFretVelocity = 12;
+  ProGuitar_LeftStickX = 13;
+  ProGuitar_LeftStickY = 14;
+  ProGuitar_Tilt = 15;
+  ProGuitar_AutoCalibrationMicrophone = 16;
+  ProGuitar_AutoCalibrationLight = 17;
 }
 
 enum MidiTriggerType {
@@ -390,16 +390,16 @@ enum AnalogToDigitalTriggerType {
 }
 
 enum MouseAxisType {
-  MouseMoveX = 1;
-  MouseMoveY = 2;
-  MouseScrollX = 3;
-  MouseScrollY = 4;
+  Mouse_MoveX = 1;
+  Mouse_MoveY = 2;
+  Mouse_ScrollX = 3;
+  Mouse_ScrollY = 4;
 }
 
 enum MouseButtonType {
-  MouseLeft = 1;
-  MouseMiddle = 2;
-  MouseRight = 3;
+  Mouse_Left = 1;
+  Mouse_Middle = 2;
+  Mouse_Right = 3;
 }
 
 enum WiiAxisType {

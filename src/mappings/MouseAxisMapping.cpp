@@ -21,16 +21,16 @@ void MouseAxisMapping::update_hid(uint8_t *buf)
     hid_mouse_report_t *report = (hid_mouse_report_t *)buf;
     switch (m_mapping.mapping.mouseAxis)
     {
-    case MouseMoveX:
+    case Mouse_MoveX:
         report->x = (m_calibratedValue - 32768) >> 8;
         break;
-    case MouseMoveY:
+    case Mouse_MoveY:
         report->y = (m_calibratedValue - 32768) >> 8;
         break;
-    case MouseScrollX:
+    case Mouse_ScrollX:
         report->wheel = (m_calibratedValue - 32768) >> 8;
         break;
-    case MouseScrollY:
+    case Mouse_ScrollY:
         report->pan = (m_calibratedValue - 32768) >> 8;
         break;
     }

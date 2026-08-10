@@ -26,22 +26,22 @@ void DJHTurntableAxisMapping::update_wii(uint8_t *buf)
     WiiTurntableIntermediateFormat3_t *report = (WiiTurntableIntermediateFormat3_t *)buf;
     switch (m_mapping.mapping.djhAxis)
     {
-    case DJHTurntableLeftStickX:
+    case DJHTurntable_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case DJHTurntableLeftStickY:
+    case DJHTurntable_LeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
-    case DJHTurntableLeftVelocity:
+    case DJHTurntable_LeftVelocity:
         report->leftTableVelocity = m_calibratedValue >> 8;
         break;
-    case DJHTurntableRightVelocity:
+    case DJHTurntable_RightVelocity:
         report->rightTableVelocity = m_calibratedValue >> 8;
         break;
-    case DJHTurntableEffectsKnob:
+    case DJHTurntable_EffectsKnob:
         report->effectsKnob = m_calibratedValue - 32768;
         break;
-    case DJHTurntableCrossfader:
+    case DJHTurntable_Crossfader:
         report->crossfader = m_calibratedValue - 32768;
         break;
     default:
@@ -67,22 +67,22 @@ void DJHTurntableAxisMapping::update_ps3(uint8_t *buf)
     PS3DJHTurntable_Data_t *report = (PS3DJHTurntable_Data_t *)buf;
     switch (m_mapping.mapping.djhAxis)
     {
-    case DJHTurntableLeftStickX:
+    case DJHTurntable_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case DJHTurntableLeftStickY:
+    case DJHTurntable_LeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
-    case DJHTurntableLeftVelocity:
+    case DJHTurntable_LeftVelocity:
         report->leftTableVelocity = m_calibratedValue >> 8;
         break;
-    case DJHTurntableRightVelocity:
+    case DJHTurntable_RightVelocity:
         report->rightTableVelocity = m_calibratedValue >> 8;
         break;
-    case DJHTurntableEffectsKnob:
+    case DJHTurntable_EffectsKnob:
         report->effectsKnob = m_calibratedValue >> 6;
         break;
-    case DJHTurntableCrossfader:
+    case DJHTurntable_Crossfader:
         report->crossfader = m_calibratedValue >> 6;
         break;
     }
@@ -107,22 +107,22 @@ void DJHTurntableAxisMapping::update_xinput(uint8_t *buf)
     XInputDJHTurntable_Data_t *report = (XInputDJHTurntable_Data_t *)buf;
     switch (m_mapping.mapping.djhAxis)
     {
-    case DJHTurntableLeftStickX:
+    case DJHTurntable_LeftStickX:
         report->leftTableVelocity = m_calibratedValue - 32768;
         break;
-    case DJHTurntableLeftStickY:
+    case DJHTurntable_LeftStickY:
         report->rightTableVelocity = m_calibratedValue - 32768;
         break;
-    case DJHTurntableLeftVelocity:
+    case DJHTurntable_LeftVelocity:
         report->leftTableVelocity = m_calibratedValue - 32768;
         break;
-    case DJHTurntableRightVelocity:
+    case DJHTurntable_RightVelocity:
         report->rightTableVelocity = m_calibratedValue - 32768;
         break;
-    case DJHTurntableEffectsKnob:
+    case DJHTurntable_EffectsKnob:
         report->effectsKnob = m_calibratedValue - 32768;
         break;
-    case DJHTurntableCrossfader:
+    case DJHTurntable_Crossfader:
         report->crossfader = m_calibratedValue - 32768;
         break;
     default:
@@ -138,22 +138,22 @@ void DJHTurntableAxisMapping::update_ogxbox(uint8_t *buf)
     OGXboxDJHTurntable_Data_t *report = (OGXboxDJHTurntable_Data_t *)buf;
     switch (m_mapping.mapping.djhAxis)
     {
-    case DJHTurntableLeftStickX:
+    case DJHTurntable_LeftStickX:
         report->leftTableVelocity = m_calibratedValue - 32768;
         break;
-    case DJHTurntableLeftStickY:
+    case DJHTurntable_LeftStickY:
         report->rightTableVelocity = m_calibratedValue - 32768;
         break;
-    case DJHTurntableLeftVelocity:
+    case DJHTurntable_LeftVelocity:
         report->leftTableVelocity = m_calibratedValue - 32768;
         break;
-    case DJHTurntableRightVelocity:
+    case DJHTurntable_RightVelocity:
         report->rightTableVelocity = m_calibratedValue - 32768;
         break;
-    case DJHTurntableEffectsKnob:
+    case DJHTurntable_EffectsKnob:
         report->effectsKnob = m_calibratedValue - 32768;
         break;
-    case DJHTurntableCrossfader:
+    case DJHTurntable_Crossfader:
         report->crossfader = m_calibratedValue - 32768;
         break;
     default:

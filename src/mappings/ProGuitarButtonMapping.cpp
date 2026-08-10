@@ -32,75 +32,75 @@ void ProGuitarButtonMapping::update_ps3(uint8_t *buf)
     PS3RockBandProGuitar_Data_t *report = (PS3RockBandProGuitar_Data_t *)buf;
     switch (m_mapping.mapping.proButton)
     {
-    case ProGuitarA:
+    case ProGuitar_A:
         report->a |= m_lastValue;
         break;
-    case ProGuitarB:
+    case ProGuitar_B:
         report->b |= m_lastValue;
         break;
-    case ProGuitarY:
+    case ProGuitar_Y:
         report->y |= m_lastValue;
         break;
-    case ProGuitarX:
+    case ProGuitar_X:
         report->x |= m_lastValue;
         break;
-    case ProGuitarGreen:
+    case ProGuitar_Green:
         report->green |= m_lastValue;
         break;
-    case ProGuitarRed:
+    case ProGuitar_Red:
         report->red |= m_lastValue;
         break;
-    case ProGuitarYellow:
+    case ProGuitar_Yellow:
         report->yellow |= m_lastValue;
         break;
-    case ProGuitarBlue:
+    case ProGuitar_Blue:
         report->blue |= m_lastValue;
         break;
-    case ProGuitarOrange:
+    case ProGuitar_Orange:
         report->orange |= m_lastValue;
         break;
-    case ProGuitarSoloGreen:
+    case ProGuitar_SoloGreen:
         report->green |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarSoloRed:
+    case ProGuitar_SoloRed:
         report->red |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarSoloYellow:
+    case ProGuitar_SoloYellow:
         report->yellow |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarSoloBlue:
+    case ProGuitar_SoloBlue:
         report->blue |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarSoloOrange:
+    case ProGuitar_SoloOrange:
         report->orange |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarPedal:
+    case ProGuitar_Pedal:
         report->pedal |= m_lastValue;
         break;
-    case ProGuitarBack:
+    case ProGuitar_Back:
         report->back |= m_lastValue;
         break;
-    case ProGuitarStart:
+    case ProGuitar_Start:
         report->start |= m_lastValue;
         break;
-    case ProGuitarGuide:
+    case ProGuitar_Guide:
         report->guide |= m_lastValue;
         break;
-    case ProGuitarDpadUp:
+    case ProGuitar_DpadUp:
         report->dpadUp |= m_lastValue;
         break;
-    case ProGuitarDpadDown:
+    case ProGuitar_DpadDown:
         report->dpadDown |= m_lastValue;
         break;
-    case ProGuitarDpadLeft:
+    case ProGuitar_DpadLeft:
         report->dpadLeft |= m_lastValue;
         break;
-    case ProGuitarDpadRight:
+    case ProGuitar_DpadRight:
         report->dpadRight |= m_lastValue;
         break;
     default:
@@ -124,75 +124,75 @@ void ProGuitarButtonMapping::update_xinput(uint8_t *buf)
     
     switch (m_mapping.mapping.proButton)
     {
-    case ProGuitarA:
+    case ProGuitar_A:
         report->a |= m_lastValue;
         break;
-    case ProGuitarB:
+    case ProGuitar_B:
         report->b |= m_lastValue;
         break;
-    case ProGuitarY:
+    case ProGuitar_Y:
         report->y |= m_lastValue;
         break;
-    case ProGuitarX:
+    case ProGuitar_X:
         report->x |= m_lastValue;
         break;
-    case ProGuitarGreen:
+    case ProGuitar_Green:
         report->green |= m_lastValue;
         break;
-    case ProGuitarRed:
+    case ProGuitar_Red:
         report->red |= m_lastValue;
         break;
-    case ProGuitarYellow:
+    case ProGuitar_Yellow:
         report->yellow |= m_lastValue;
         break;
-    case ProGuitarBlue:
+    case ProGuitar_Blue:
         report->blue |= m_lastValue;
         break;
-    case ProGuitarOrange:
+    case ProGuitar_Orange:
         report->orange |= m_lastValue;
         break;
-    case ProGuitarSoloGreen:
+    case ProGuitar_SoloGreen:
         report->green |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarSoloRed:
+    case ProGuitar_SoloRed:
         report->red |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarSoloYellow:
+    case ProGuitar_SoloYellow:
         report->yellow |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarSoloBlue:
+    case ProGuitar_SoloBlue:
         report->blue |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarSoloOrange:
+    case ProGuitar_SoloOrange:
         report->orange |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarPedal:
+    case ProGuitar_Pedal:
         report->pedal |= m_lastValue;
         break;
-    case ProGuitarBack:
+    case ProGuitar_Back:
         report->back |= m_lastValue;
         break;
-    case ProGuitarStart:
+    case ProGuitar_Start:
         report->start |= m_lastValue;
         break;
-    case ProGuitarGuide:
+    case ProGuitar_Guide:
         report->guide |= m_lastValue;
         break;
-    case ProGuitarDpadUp:
+    case ProGuitar_DpadUp:
         report->dpadUp |= m_lastValue;
         break;
-    case ProGuitarDpadDown:
+    case ProGuitar_DpadDown:
         report->dpadDown |= m_lastValue;
         break;
-    case ProGuitarDpadLeft:
+    case ProGuitar_DpadLeft:
         report->dpadLeft |= m_lastValue;
         break;
-    case ProGuitarDpadRight:
+    case ProGuitar_DpadRight:
         report->dpadRight |= m_lastValue;
         break;
     default:
@@ -205,71 +205,71 @@ void ProGuitarButtonMapping::update_ogxbox(uint8_t *buf)
     
     switch (m_mapping.mapping.proButton)
     {
-    case ProGuitarA:
+    case ProGuitar_A:
         report->a |= m_lastValue;
         break;
-    case ProGuitarB:
+    case ProGuitar_B:
         report->b |= m_lastValue;
         break;
-    case ProGuitarY:
+    case ProGuitar_Y:
         report->y |= m_lastValue;
         break;
-    case ProGuitarX:
+    case ProGuitar_X:
         report->x |= m_lastValue;
         break;
-    case ProGuitarGreen:
+    case ProGuitar_Green:
         report->green |= m_lastValue;
         break;
-    case ProGuitarRed:
+    case ProGuitar_Red:
         report->red |= m_lastValue;
         break;
-    case ProGuitarYellow:
+    case ProGuitar_Yellow:
         report->yellow |= m_lastValue;
         break;
-    case ProGuitarBlue:
+    case ProGuitar_Blue:
         report->blue |= m_lastValue;
         break;
-    case ProGuitarOrange:
+    case ProGuitar_Orange:
         report->orange |= m_lastValue;
         break;
-    case ProGuitarSoloGreen:
+    case ProGuitar_SoloGreen:
         report->green |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarSoloRed:
+    case ProGuitar_SoloRed:
         report->red |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarSoloYellow:
+    case ProGuitar_SoloYellow:
         report->yellow |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarSoloBlue:
+    case ProGuitar_SoloBlue:
         report->blue |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarSoloOrange:
+    case ProGuitar_SoloOrange:
         report->orange |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case ProGuitarGuide:
+    case ProGuitar_Guide:
         break;
-    case ProGuitarBack:
+    case ProGuitar_Back:
         report->back |= m_lastValue;
         break;
-    case ProGuitarStart:
+    case ProGuitar_Start:
         report->start |= m_lastValue;
         break;
-    case ProGuitarDpadUp:
+    case ProGuitar_DpadUp:
         report->dpadUp |= m_lastValue;
         break;
-    case ProGuitarDpadDown:
+    case ProGuitar_DpadDown:
         report->dpadDown |= m_lastValue;
         break;
-    case ProGuitarDpadLeft:
+    case ProGuitar_DpadLeft:
         report->dpadLeft |= m_lastValue;
         break;
-    case ProGuitarDpadRight:
+    case ProGuitar_DpadRight:
         report->dpadRight |= m_lastValue;
         break;
     default:

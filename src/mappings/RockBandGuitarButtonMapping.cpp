@@ -23,61 +23,61 @@ void RockBandGuitarButtonMapping::update_switch(uint8_t *buf)
     SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)buf;
     switch (m_mapping.mapping.ghButton)
     {
-    case RockBandGuitarGreen:
+    case RockBandGuitar_Green:
         report->a |= m_lastValue;
         break;
-    case RockBandGuitarRed:
+    case RockBandGuitar_Red:
         report->b |= m_lastValue;
         break;
-    case RockBandGuitarYellow:
+    case RockBandGuitar_Yellow:
         report->y |= m_lastValue;
         break;
-    case RockBandGuitarBlue:
+    case RockBandGuitar_Blue:
         report->x |= m_lastValue;
         break;
-    case RockBandGuitarOrange:
+    case RockBandGuitar_Orange:
         report->leftShoulder |= m_lastValue;
         break;
-    case RockBandGuitarPedal:
+    case RockBandGuitar_Pedal:
         report->rightShoulder |= m_lastValue;
         break;
-    case RockBandGuitarSoloGreen:
+    case RockBandGuitar_SoloGreen:
         report->a |= m_lastValue;
         break;
-    case RockBandGuitarSoloRed:
+    case RockBandGuitar_SoloRed:
         report->b |= m_lastValue;
         break;
-    case RockBandGuitarSoloYellow:
+    case RockBandGuitar_SoloYellow:
         report->y |= m_lastValue;
         break;
-    case RockBandGuitarSoloBlue:
+    case RockBandGuitar_SoloBlue:
         report->x |= m_lastValue;
         break;
-    case RockBandGuitarSoloOrange:
+    case RockBandGuitar_SoloOrange:
         report->leftShoulder |= m_lastValue;
         break;
-    case RockBandGuitarBack:
+    case RockBandGuitar_Back:
         report->back |= m_lastValue;
         break;
-    case RockBandGuitarStart:
+    case RockBandGuitar_Start:
         report->start |= m_lastValue;
         break;
-    case RockBandGuitarGuide:
+    case RockBandGuitar_Guide:
         report->guide |= m_lastValue;
         break;
-    case RockBandGuitarCapture:
+    case RockBandGuitar_Capture:
         report->capture |= m_lastValue;
         break;
-    case RockBandGuitarStrumUp:
+    case RockBandGuitar_StrumUp:
         report->dpadUp |= m_lastValue;
         break;
-    case RockBandGuitarStrumDown:
+    case RockBandGuitar_StrumDown:
         report->dpadDown |= m_lastValue;
         break;
-    case RockBandGuitarDpadLeft:
+    case RockBandGuitar_DpadLeft:
         report->dpadLeft |= m_lastValue;
         break;
-    case RockBandGuitarDpadRight:
+    case RockBandGuitar_DpadRight:
         report->dpadRight |= m_lastValue;
         break;
     }
@@ -93,66 +93,66 @@ void RockBandGuitarButtonMapping::update_ps3(uint8_t *buf)
     PS3RockBandGuitar_Data_t *report = (PS3RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghButton)
     {
-    case RockBandGuitarGreen:
+    case RockBandGuitar_Green:
         report->a |= m_lastValue;
         break;
-    case RockBandGuitarRed:
+    case RockBandGuitar_Red:
         report->b |= m_lastValue;
         break;
-    case RockBandGuitarYellow:
+    case RockBandGuitar_Yellow:
         report->y |= m_lastValue;
         break;
-    case RockBandGuitarBlue:
+    case RockBandGuitar_Blue:
         report->x |= m_lastValue;
         break;
-    case RockBandGuitarOrange:
+    case RockBandGuitar_Orange:
         report->leftShoulder |= m_lastValue;
         break;
-    case RockBandGuitarPedal:
+    case RockBandGuitar_Pedal:
         report->tilt |= m_lastValue;
         break;
-    case RockBandGuitarSoloGreen:
+    case RockBandGuitar_SoloGreen:
         report->a |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloRed:
+    case RockBandGuitar_SoloRed:
         report->b |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloYellow:
+    case RockBandGuitar_SoloYellow:
         report->y |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloBlue:
+    case RockBandGuitar_SoloBlue:
         report->x |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloOrange:
+    case RockBandGuitar_SoloOrange:
         report->leftShoulder |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarBack:
+    case RockBandGuitar_Back:
         report->back |= m_lastValue;
         break;
-    case RockBandGuitarStart:
+    case RockBandGuitar_Start:
         report->start |= m_lastValue;
         break;
-    case RockBandGuitarGuide:
+    case RockBandGuitar_Guide:
         report->guide |= m_lastValue;
         break;
-    case RockBandGuitarCapture:
+    case RockBandGuitar_Capture:
         report->capture |= m_lastValue;
         break;
-    case RockBandGuitarStrumUp:
+    case RockBandGuitar_StrumUp:
         report->dpadUp |= m_lastValue;
         break;
-    case RockBandGuitarStrumDown:
+    case RockBandGuitar_StrumDown:
         report->dpadDown |= m_lastValue;
         break;
-    case RockBandGuitarDpadLeft:
+    case RockBandGuitar_DpadLeft:
         report->dpadLeft |= m_lastValue;
         break;
-    case RockBandGuitarDpadRight:
+    case RockBandGuitar_DpadRight:
         report->dpadRight |= m_lastValue;
         break;
     }
@@ -163,66 +163,66 @@ void RockBandGuitarButtonMapping::update_ps4(uint8_t *buf)
     PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghButton)
     {
-    case RockBandGuitarGreen:
+    case RockBandGuitar_Green:
         report->a |= m_lastValue;
         break;
-    case RockBandGuitarRed:
+    case RockBandGuitar_Red:
         report->b |= m_lastValue;
         break;
-    case RockBandGuitarYellow:
+    case RockBandGuitar_Yellow:
         report->y |= m_lastValue;
         break;
-    case RockBandGuitarBlue:
+    case RockBandGuitar_Blue:
         report->x |= m_lastValue;
         break;
-    case RockBandGuitarOrange:
+    case RockBandGuitar_Orange:
         report->leftShoulder |= m_lastValue;
         break;
-    case RockBandGuitarPedal:
+    case RockBandGuitar_Pedal:
         report->rightShoulder |= m_lastValue;
         break;
-    case RockBandGuitarSoloGreen:
+    case RockBandGuitar_SoloGreen:
         report->a |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloRed:
+    case RockBandGuitar_SoloRed:
         report->b |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloYellow:
+    case RockBandGuitar_SoloYellow:
         report->y |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloBlue:
+    case RockBandGuitar_SoloBlue:
         report->x |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloOrange:
+    case RockBandGuitar_SoloOrange:
         report->leftShoulder |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarBack:
+    case RockBandGuitar_Back:
         report->back |= m_lastValue;
         break;
-    case RockBandGuitarStart:
+    case RockBandGuitar_Start:
         report->start |= m_lastValue;
         break;
-    case RockBandGuitarGuide:
+    case RockBandGuitar_Guide:
         report->guide |= m_lastValue;
         break;
-    case RockBandGuitarCapture:
+    case RockBandGuitar_Capture:
         report->capture |= m_lastValue;
         break;
-    case RockBandGuitarStrumUp:
+    case RockBandGuitar_StrumUp:
         report->dpadUp |= m_lastValue;
         break;
-    case RockBandGuitarStrumDown:
+    case RockBandGuitar_StrumDown:
         report->dpadDown |= m_lastValue;
         break;
-    case RockBandGuitarDpadLeft:
+    case RockBandGuitar_DpadLeft:
         report->dpadLeft |= m_lastValue;
         break;
-    case RockBandGuitarDpadRight:
+    case RockBandGuitar_DpadRight:
         report->dpadRight |= m_lastValue;
         break;
     }
@@ -233,66 +233,66 @@ void RockBandGuitarButtonMapping::update_ps5(uint8_t *buf)
     PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghButton)
     {
-    case RockBandGuitarGreen:
+    case RockBandGuitar_Green:
         report->a |= m_lastValue;
         break;
-    case RockBandGuitarRed:
+    case RockBandGuitar_Red:
         report->b |= m_lastValue;
         break;
-    case RockBandGuitarYellow:
+    case RockBandGuitar_Yellow:
         report->y |= m_lastValue;
         break;
-    case RockBandGuitarBlue:
+    case RockBandGuitar_Blue:
         report->x |= m_lastValue;
         break;
-    case RockBandGuitarOrange:
+    case RockBandGuitar_Orange:
         report->leftShoulder |= m_lastValue;
         break;
-    case RockBandGuitarPedal:
+    case RockBandGuitar_Pedal:
         report->rightShoulder |= m_lastValue;
         break;
-    case RockBandGuitarSoloGreen:
+    case RockBandGuitar_SoloGreen:
         report->a |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloRed:
+    case RockBandGuitar_SoloRed:
         report->b |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloYellow:
+    case RockBandGuitar_SoloYellow:
         report->y |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloBlue:
+    case RockBandGuitar_SoloBlue:
         report->x |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloOrange:
+    case RockBandGuitar_SoloOrange:
         report->leftShoulder |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarBack:
+    case RockBandGuitar_Back:
         report->back |= m_lastValue;
         break;
-    case RockBandGuitarStart:
+    case RockBandGuitar_Start:
         report->start |= m_lastValue;
         break;
-    case RockBandGuitarGuide:
+    case RockBandGuitar_Guide:
         report->guide |= m_lastValue;
         break;
-    case RockBandGuitarCapture:
+    case RockBandGuitar_Capture:
         report->capture |= m_lastValue;
         break;
-    case RockBandGuitarStrumUp:
+    case RockBandGuitar_StrumUp:
         report->dpadUp |= m_lastValue;
         break;
-    case RockBandGuitarStrumDown:
+    case RockBandGuitar_StrumDown:
         report->dpadDown |= m_lastValue;
         break;
-    case RockBandGuitarDpadLeft:
+    case RockBandGuitar_DpadLeft:
         report->dpadLeft |= m_lastValue;
         break;
-    case RockBandGuitarDpadRight:
+    case RockBandGuitar_DpadRight:
         report->dpadRight |= m_lastValue;
         break;
     }
@@ -303,66 +303,66 @@ void RockBandGuitarButtonMapping::update_xinput(uint8_t *buf)
     XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghButton)
     {
-    case RockBandGuitarGreen:
+    case RockBandGuitar_Green:
         report->a |= m_lastValue;
         break;
-    case RockBandGuitarRed:
+    case RockBandGuitar_Red:
         report->b |= m_lastValue;
         break;
-    case RockBandGuitarYellow:
+    case RockBandGuitar_Yellow:
         report->y |= m_lastValue;
         break;
-    case RockBandGuitarBlue:
+    case RockBandGuitar_Blue:
         report->x |= m_lastValue;
         break;
-    case RockBandGuitarOrange:
+    case RockBandGuitar_Orange:
         report->leftShoulder |= m_lastValue;
         break;
-    case RockBandGuitarPedal:
+    case RockBandGuitar_Pedal:
         report->rightShoulder |= m_lastValue;
         break;
-    case RockBandGuitarSoloGreen:
+    case RockBandGuitar_SoloGreen:
         report->a |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloRed:
+    case RockBandGuitar_SoloRed:
         report->b |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloYellow:
+    case RockBandGuitar_SoloYellow:
         report->y |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloBlue:
+    case RockBandGuitar_SoloBlue:
         report->x |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloOrange:
+    case RockBandGuitar_SoloOrange:
         report->leftShoulder |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarBack:
+    case RockBandGuitar_Back:
         report->back |= m_lastValue;
         break;
-    case RockBandGuitarStart:
+    case RockBandGuitar_Start:
         report->start |= m_lastValue;
         break;
-    case RockBandGuitarGuide:
+    case RockBandGuitar_Guide:
         report->guide |= m_lastValue;
         break;
-    case RockBandGuitarCapture:
+    case RockBandGuitar_Capture:
         report->capture |= m_lastValue;
         break;
-    case RockBandGuitarStrumUp:
+    case RockBandGuitar_StrumUp:
         report->dpadUp |= m_lastValue;
         break;
-    case RockBandGuitarStrumDown:
+    case RockBandGuitar_StrumDown:
         report->dpadDown |= m_lastValue;
         break;
-    case RockBandGuitarDpadLeft:
+    case RockBandGuitar_DpadLeft:
         report->dpadLeft |= m_lastValue;
         break;
-    case RockBandGuitarDpadRight:
+    case RockBandGuitar_DpadRight:
         report->dpadRight |= m_lastValue;
         break;
     }
@@ -372,65 +372,65 @@ void RockBandGuitarButtonMapping::update_ogxbox(uint8_t *buf)
     OGXboxRockBandGuitar_Data_t *report = (OGXboxRockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghButton)
     {
-    case RockBandGuitarGreen:
+    case RockBandGuitar_Green:
         report->a |= m_lastValue;
         break;
-    case RockBandGuitarRed:
+    case RockBandGuitar_Red:
         report->b |= m_lastValue;
         break;
-    case RockBandGuitarYellow:
+    case RockBandGuitar_Yellow:
         report->y |= m_lastValue;
         break;
-    case RockBandGuitarBlue:
+    case RockBandGuitar_Blue:
         report->x |= m_lastValue;
         break;
-    case RockBandGuitarOrange:
+    case RockBandGuitar_Orange:
         report->leftShoulder |= m_lastValue;
         break;
-    case RockBandGuitarPedal:
+    case RockBandGuitar_Pedal:
         report->rightShoulder |= m_lastValue;
         break;
-    case RockBandGuitarSoloGreen:
+    case RockBandGuitar_SoloGreen:
         report->a |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloRed:
+    case RockBandGuitar_SoloRed:
         report->b |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloYellow:
+    case RockBandGuitar_SoloYellow:
         report->y |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloBlue:
+    case RockBandGuitar_SoloBlue:
         report->x |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloOrange:
+    case RockBandGuitar_SoloOrange:
         report->leftShoulder |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarBack:
+    case RockBandGuitar_Back:
         report->back |= m_lastValue;
         break;
-    case RockBandGuitarStart:
+    case RockBandGuitar_Start:
         report->start |= m_lastValue;
         break;
-    case RockBandGuitarGuide:
+    case RockBandGuitar_Guide:
         break;
-    case RockBandGuitarCapture:
+    case RockBandGuitar_Capture:
         // report->capture |= m_lastValue;
         break;
-    case RockBandGuitarStrumUp:
+    case RockBandGuitar_StrumUp:
         report->dpadUp |= m_lastValue;
         break;
-    case RockBandGuitarStrumDown:
+    case RockBandGuitar_StrumDown:
         report->dpadDown |= m_lastValue;
         break;
-    case RockBandGuitarDpadLeft:
+    case RockBandGuitar_DpadLeft:
         report->dpadLeft |= m_lastValue;
         break;
-    case RockBandGuitarDpadRight:
+    case RockBandGuitar_DpadRight:
         report->dpadRight |= m_lastValue;
         break;
     }
@@ -440,69 +440,69 @@ void RockBandGuitarButtonMapping::update_xboxone(uint8_t *buf)
     XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghButton)
     {
-    case RockBandGuitarGreen:
+    case RockBandGuitar_Green:
         report->a |= m_lastValue;
         break;
-    case RockBandGuitarRed:
+    case RockBandGuitar_Red:
         report->b |= m_lastValue;
         break;
-    case RockBandGuitarYellow:
+    case RockBandGuitar_Yellow:
         report->y |= m_lastValue;
         break;
-    case RockBandGuitarBlue:
+    case RockBandGuitar_Blue:
         report->x |= m_lastValue;
         break;
-    case RockBandGuitarOrange:
+    case RockBandGuitar_Orange:
         report->leftShoulder |= m_lastValue;
         break;
-    case RockBandGuitarPedal:
+    case RockBandGuitar_Pedal:
         report->rightShoulder |= m_lastValue;
         break;
-    case RockBandGuitarSoloGreen:
+    case RockBandGuitar_SoloGreen:
         report->a |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloRed:
+    case RockBandGuitar_SoloRed:
         report->b |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloYellow:
+    case RockBandGuitar_SoloYellow:
         report->y |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloBlue:
+    case RockBandGuitar_SoloBlue:
         report->x |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarSoloOrange:
+    case RockBandGuitar_SoloOrange:
         report->leftShoulder |= m_lastValue;
         report->solo |= m_lastValue;
         break;
-    case RockBandGuitarBack:
+    case RockBandGuitar_Back:
         report->back |= m_lastValue;
         break;
-    case RockBandGuitarStart:
+    case RockBandGuitar_Start:
         report->start |= m_lastValue;
         break;
-    case RockBandGuitarGuide:
+    case RockBandGuitar_Guide:
         report->guide |= m_lastValue;
         break;
-    case RockBandGuitarCapture:
+    case RockBandGuitar_Capture:
         if (m_lastValue)
         {
             report->consoleFunctions[0] = 0x01;
         }
         break;
-    case RockBandGuitarStrumUp:
+    case RockBandGuitar_StrumUp:
         report->dpadUp |= m_lastValue;
         break;
-    case RockBandGuitarStrumDown:
+    case RockBandGuitar_StrumDown:
         report->dpadDown |= m_lastValue;
         break;
-    case RockBandGuitarDpadLeft:
+    case RockBandGuitar_DpadLeft:
         report->dpadLeft |= m_lastValue;
         break;
-    case RockBandGuitarDpadRight:
+    case RockBandGuitar_DpadRight:
         report->dpadRight |= m_lastValue;
         break;
     }

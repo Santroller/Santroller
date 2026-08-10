@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-LiveGuitarAxisMapping::LiveGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.ghlAxis == GuitarHeroLiveGuitarWhammy)
+LiveGuitarAxisMapping::LiveGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.ghlAxis == GuitarHeroLiveGuitar_Whammy)
 {
 }
 
@@ -39,19 +39,19 @@ void LiveGuitarAxisMapping::update_ps3(uint8_t *buf)
     PS3GHLGuitar_Data_t *report = (PS3GHLGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghlAxis)
     {
-    case GuitarHeroLiveGuitarLeftStickX:
+    case GuitarHeroLiveGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case GuitarHeroLiveGuitarLeftStickY:
+    case GuitarHeroLiveGuitar_LeftStickY:
         if (!m_centered)
         {
             report->strumBar = m_calibratedValue >> 8;
         }
         break;
-    case GuitarHeroLiveGuitarWhammy:
+    case GuitarHeroLiveGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
-    case GuitarHeroLiveGuitarTilt:
+    case GuitarHeroLiveGuitar_Tilt:
         report->tilt = m_calibratedValue >> 8;
         break;
     }
@@ -66,19 +66,19 @@ void LiveGuitarAxisMapping::update_ps4(uint8_t *buf)
     PS4GHLGuitar_Data_t *report = (PS4GHLGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghlAxis)
     {
-    case GuitarHeroLiveGuitarLeftStickX:
+    case GuitarHeroLiveGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case GuitarHeroLiveGuitarLeftStickY:
+    case GuitarHeroLiveGuitar_LeftStickY:
         if (!m_centered)
         {
             report->strumBar = m_calibratedValue >> 8;
         }
         break;
-    case GuitarHeroLiveGuitarWhammy:
+    case GuitarHeroLiveGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
-    case GuitarHeroLiveGuitarTilt:
+    case GuitarHeroLiveGuitar_Tilt:
         report->tilt = m_calibratedValue >> 8;
         break;
     default:
@@ -95,19 +95,19 @@ void LiveGuitarAxisMapping::update_ps5(uint8_t *buf)
     PS5GHLGuitar_Data_t *report = (PS5GHLGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghlAxis)
     {
-    case GuitarHeroLiveGuitarLeftStickX:
+    case GuitarHeroLiveGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case GuitarHeroLiveGuitarLeftStickY:
+    case GuitarHeroLiveGuitar_LeftStickY:
         if (!m_centered)
         {
             report->strumBar = m_calibratedValue >> 8;
         }
         break;
-    case GuitarHeroLiveGuitarWhammy:
+    case GuitarHeroLiveGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
-    case GuitarHeroLiveGuitarTilt:
+    case GuitarHeroLiveGuitar_Tilt:
         report->tilt = m_calibratedValue >> 8;
         break;
     default:
@@ -124,19 +124,19 @@ void LiveGuitarAxisMapping::update_xinput(uint8_t *buf)
     XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghlAxis)
     {
-    case GuitarHeroLiveGuitarLeftStickX:
+    case GuitarHeroLiveGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue - 32768;
         break;
-    case GuitarHeroLiveGuitarLeftStickY:
+    case GuitarHeroLiveGuitar_LeftStickY:
         if (!m_centered)
         {
             report->strumBar = m_calibratedValue - 32768;
         }
         break;
-    case GuitarHeroLiveGuitarWhammy:
+    case GuitarHeroLiveGuitar_Whammy:
         report->whammy = m_calibratedValue - 32768;
         break;
-    case GuitarHeroLiveGuitarTilt:
+    case GuitarHeroLiveGuitar_Tilt:
         report->tilt = m_calibratedValue - 32768;
         break;
     }
@@ -150,19 +150,19 @@ void LiveGuitarAxisMapping::update_ogxbox(uint8_t *buf)
     OGXboxGHLGuitar_Data_t *report = (OGXboxGHLGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghlAxis)
     {
-    case GuitarHeroLiveGuitarLeftStickX:
+    case GuitarHeroLiveGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue - 32768;
         break;
-    case GuitarHeroLiveGuitarLeftStickY:
+    case GuitarHeroLiveGuitar_LeftStickY:
         if (!m_centered)
         {
             report->strumBar = m_calibratedValue - 32768;
         }
         break;
-    case GuitarHeroLiveGuitarWhammy:
+    case GuitarHeroLiveGuitar_Whammy:
         report->whammy = m_calibratedValue - 32768;
         break;
-    case GuitarHeroLiveGuitarTilt:
+    case GuitarHeroLiveGuitar_Tilt:
         report->tilt = m_calibratedValue - 32768;
         break;
     }

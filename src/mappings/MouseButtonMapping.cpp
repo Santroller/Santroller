@@ -15,13 +15,13 @@ void MouseButtonMapping::update_hid(uint8_t *buf)
     hid_mouse_report_t *report = (hid_mouse_report_t *)buf;
     switch (m_mapping.mapping.mouseButton)
     {
-    case MouseLeft:
+    case Mouse_Left:
         report->buttons |= MOUSE_BUTTON_LEFT;
         break;
-    case MouseMiddle:
+    case Mouse_Middle:
         report->buttons |= MOUSE_BUTTON_MIDDLE;
         break;
-    case MouseRight:
+    case Mouse_Right:
         report->buttons |= MOUSE_BUTTON_RIGHT;
         break;
     }

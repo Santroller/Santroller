@@ -14,34 +14,34 @@ void GuitarHeroArcadeButtonMapping::update_hid(uint8_t *buf)
     ArcadeGuitarHeroGuitar_Data_t *report = (ArcadeGuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.ghaButton)
     {
-    case GuitarHeroArcadeGreen:
+    case GuitarHeroArcade_Green:
         report->a |= m_lastValue;
         break;
-    case GuitarHeroArcadeRed:
+    case GuitarHeroArcade_Red:
         report->b |= m_lastValue;
         break;
-    case GuitarHeroArcadeYellow:
+    case GuitarHeroArcade_Yellow:
         report->y |= m_lastValue;
         break;
-    case GuitarHeroArcadeBlue:
+    case GuitarHeroArcade_Blue:
         report->x |= m_lastValue;
         break;
-    case GuitarHeroArcadeOrange:
+    case GuitarHeroArcade_Orange:
         report->leftShoulder |= m_lastValue;
         break;
-    case GuitarHeroArcadeStrumUp:
+    case GuitarHeroArcade_StrumUp:
         report->dpadUp |= m_lastValue;
         break;
-    case GuitarHeroArcadeStrumDown:
+    case GuitarHeroArcade_StrumDown:
         report->dpadDown |= m_lastValue;
         break;
-    case GuitarHeroArcadeDpadLeft:
+    case GuitarHeroArcade_DpadLeft:
         report->dpadLeft |= m_lastValue;
         break;
-    case GuitarHeroArcadeDpadRight:
+    case GuitarHeroArcade_DpadRight:
         report->dpadRight |= m_lastValue;
         break;
-    case GuitarHeroArcadeSide:
+    case GuitarHeroArcade_Side:
         report->side |= m_lastValue;
         break;
     }

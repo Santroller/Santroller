@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-ProGuitarAxisMapping::ProGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.proAxis != ProGuitarLeftStickX && mapping.mapping.proAxis != ProGuitarLeftStickY && mapping.mapping.proAxis != ProGuitarTilt)
+ProGuitarAxisMapping::ProGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.proAxis != ProGuitar_LeftStickX && mapping.mapping.proAxis != ProGuitar_LeftStickY && mapping.mapping.proAxis != ProGuitar_Tilt)
 {
 }
 
@@ -39,49 +39,49 @@ void ProGuitarAxisMapping::update_ps3(uint8_t *buf)
     PS3RockBandProGuitar_Data_t *report = (PS3RockBandProGuitar_Data_t *)buf;
     switch (m_mapping.mapping.proAxis)
     {
-    case ProGuitarLeftStickX:
+    case ProGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case ProGuitarLeftStickY:
+    case ProGuitar_LeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
-    case ProGuitarLowEFret:
+    case ProGuitar_LowEFret:
         report->lowEFret = m_calibratedValue;
         break;
-    case ProGuitarAFret:
+    case ProGuitar_AFret:
         report->aFret = m_calibratedValue;
         break;
-    case ProGuitarDFret:
+    case ProGuitar_DFret:
         report->dFret = m_calibratedValue;
         break;
-    case ProGuitarGFret:
+    case ProGuitar_GFret:
         report->gFret = m_calibratedValue;
         break;
-    case ProGuitarBFret:
+    case ProGuitar_BFret:
         report->bFret = m_calibratedValue;
         break;
-    case ProGuitarHighEFret:
+    case ProGuitar_HighEFret:
         report->highEFret = m_calibratedValue;
         break;
-    case ProGuitarLowEFretVelocity:
+    case ProGuitar_LowEFretVelocity:
         report->lowEFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarAFretVelocity:
+    case ProGuitar_AFretVelocity:
         report->aFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarDFretVelocity:
+    case ProGuitar_DFretVelocity:
         report->dFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarGFretVelocity:
+    case ProGuitar_GFretVelocity:
         report->gFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarBFretVelocity:
+    case ProGuitar_BFretVelocity:
         report->bFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarHighEFretVelocity:
+    case ProGuitar_HighEFretVelocity:
         report->highEFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarTilt:
+    case ProGuitar_Tilt:
         report->tilt = m_calibratedValue >> 8;
         break;
     default:
@@ -106,49 +106,49 @@ void ProGuitarAxisMapping::update_xinput(uint8_t *buf)
     XInputRockBandProGuitar_Data_t *report = (XInputRockBandProGuitar_Data_t *)buf;
     switch (m_mapping.mapping.proAxis)
     {
-    case ProGuitarLeftStickX:
+    case ProGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue - 32768;
         break;
-    case ProGuitarLeftStickY:
+    case ProGuitar_LeftStickY:
         report->leftStickY = m_calibratedValue - 32768;
         break;
-    case ProGuitarLowEFret:
+    case ProGuitar_LowEFret:
         report->lowEFret = m_calibratedValue;
         break;
-    case ProGuitarAFret:
+    case ProGuitar_AFret:
         report->aFret = m_calibratedValue;
         break;
-    case ProGuitarDFret:
+    case ProGuitar_DFret:
         report->dFret = m_calibratedValue;
         break;
-    case ProGuitarGFret:
+    case ProGuitar_GFret:
         report->gFret = m_calibratedValue;
         break;
-    case ProGuitarBFret:
+    case ProGuitar_BFret:
         report->bFret = m_calibratedValue;
         break;
-    case ProGuitarHighEFret:
+    case ProGuitar_HighEFret:
         report->highEFret = m_calibratedValue;
         break;
-    case ProGuitarLowEFretVelocity:
+    case ProGuitar_LowEFretVelocity:
         report->lowEFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarAFretVelocity:
+    case ProGuitar_AFretVelocity:
         report->aFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarDFretVelocity:
+    case ProGuitar_DFretVelocity:
         report->dFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarGFretVelocity:
+    case ProGuitar_GFretVelocity:
         report->gFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarBFretVelocity:
+    case ProGuitar_BFretVelocity:
         report->bFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarHighEFretVelocity:
+    case ProGuitar_HighEFretVelocity:
         report->highEFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarTilt:
+    case ProGuitar_Tilt:
         report->tilt = m_calibratedValue >> 8;
         break;
     default:
@@ -164,46 +164,46 @@ void ProGuitarAxisMapping::update_ogxbox(uint8_t *buf)
     OGXboxRockBandProGuitar_Data_t *report = (OGXboxRockBandProGuitar_Data_t *)buf;
     switch (m_mapping.mapping.proAxis)
     {
-    case ProGuitarLeftStickX:
+    case ProGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue - 32768;
         break;
-    case ProGuitarLeftStickY:
+    case ProGuitar_LeftStickY:
         report->leftStickY = m_calibratedValue - 32768;
         break;
-    case ProGuitarLowEFret:
+    case ProGuitar_LowEFret:
         report->lowEFret = m_calibratedValue >> 8;
         break;
-    case ProGuitarAFret:
+    case ProGuitar_AFret:
         report->aFret = m_calibratedValue >> 8;
         break;
-    case ProGuitarDFret:
+    case ProGuitar_DFret:
         report->dFret = m_calibratedValue >> 8;
         break;
-    case ProGuitarGFret:
+    case ProGuitar_GFret:
         report->gFret = m_calibratedValue >> 8;
         break;
-    case ProGuitarBFret:
+    case ProGuitar_BFret:
         report->bFret = m_calibratedValue >> 8;
         break;
-    case ProGuitarHighEFret:
+    case ProGuitar_HighEFret:
         report->highEFret = m_calibratedValue >> 8;
         break;
-    case ProGuitarLowEFretVelocity:
+    case ProGuitar_LowEFretVelocity:
         report->lowEFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarAFretVelocity:
+    case ProGuitar_AFretVelocity:
         report->aFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarDFretVelocity:
+    case ProGuitar_DFretVelocity:
         report->dFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarGFretVelocity:
+    case ProGuitar_GFretVelocity:
         report->gFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarBFretVelocity:
+    case ProGuitar_BFretVelocity:
         report->bFretVelocity = m_calibratedValue >> 8;
         break;
-    case ProGuitarHighEFretVelocity:
+    case ProGuitar_HighEFretVelocity:
         report->highEFretVelocity = m_calibratedValue >> 8;
         break;
     default:

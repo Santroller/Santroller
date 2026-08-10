@@ -39,26 +39,26 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
     PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)buf;
     switch (m_mapping.mapping.rbDrumAxis)
     {
-    case RockBandDrumsRedPad:
+    case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue >> 8;
         report->b = true;
         break;
-    case RockBandDrumsYellowPad:
+    case RockBandDrums_YellowPad:
         report->yellowVelocity = m_calibratedValue >> 8;
         report->y = true;
         break;
-    case RockBandDrumsBluePad:
+    case RockBandDrums_BluePad:
         report->blueVelocity = m_calibratedValue >> 8;
         report->x = true;
         break;
-    case RockBandDrumsGreenPad:
+    case RockBandDrums_GreenPad:
         report->greenVelocity = m_calibratedValue >> 8;
         report->a = true;
         break;
-    case RockBandDrumsLeftStickX:
+    case RockBandDrums_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case RockBandDrumsLeftStickY:
+    case RockBandDrums_LeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
     }
@@ -73,26 +73,26 @@ void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
     PS4RockBandDrums_Data_t *report = (PS4RockBandDrums_Data_t *)buf;
     switch (m_mapping.mapping.rbDrumAxis)
     {
-    case RockBandDrumsRedPad:
+    case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue >> 8;
         report->b = true;
         break;
-    case RockBandDrumsYellowPad:
+    case RockBandDrums_YellowPad:
         report->yellowVelocity = m_calibratedValue >> 8;
         report->y = true;
         break;
-    case RockBandDrumsBluePad:
+    case RockBandDrums_BluePad:
         report->blueVelocity = m_calibratedValue >> 8;
         report->x = true;
         break;
-    case RockBandDrumsGreenPad:
+    case RockBandDrums_GreenPad:
         report->greenVelocity = m_calibratedValue >> 8;
         report->a = true;
         break;
-    case RockBandDrumsLeftStickX:
+    case RockBandDrums_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case RockBandDrumsLeftStickY:
+    case RockBandDrums_LeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
     }
@@ -107,26 +107,26 @@ void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
     PS5RockBandDrums_Data_t *report = (PS5RockBandDrums_Data_t *)buf;
     switch (m_mapping.mapping.rbDrumAxis)
     {
-    case RockBandDrumsRedPad:
+    case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue >> 8;
         report->b = true;
         break;
-    case RockBandDrumsYellowPad:
+    case RockBandDrums_YellowPad:
         report->yellowVelocity = m_calibratedValue >> 8;
         report->y = true;
         break;
-    case RockBandDrumsBluePad:
+    case RockBandDrums_BluePad:
         report->blueVelocity = m_calibratedValue >> 8;
         report->x = true;
         break;
-    case RockBandDrumsGreenPad:
+    case RockBandDrums_GreenPad:
         report->greenVelocity = m_calibratedValue >> 8;
         report->a = true;
         break;
-    case RockBandDrumsLeftStickX:
+    case RockBandDrums_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
         break;
-    case RockBandDrumsLeftStickY:
+    case RockBandDrums_LeftStickY:
         report->leftStickY = m_calibratedValue >> 8;
         break;
     }
@@ -142,29 +142,29 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
 
     switch (m_mapping.mapping.rbDrumAxis)
     {
-    case RockBandDrumsRedPad:
+    case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue - 32768;
         report->b = true;
         break;
-    case RockBandDrumsYellowPad:
+    case RockBandDrums_YellowPad:
         report->yellowVelocity = m_calibratedValue - 32768;
         report->y = true;
         break;
-    case RockBandDrumsBluePad:
+    case RockBandDrums_BluePad:
         report->blueVelocity = m_calibratedValue - 32768;
         report->x = true;
         break;
-    case RockBandDrumsGreenPad:
+    case RockBandDrums_GreenPad:
         report->greenVelocity = m_calibratedValue - 32768;
         report->a = true;
         break;
-    case RockBandDrumsLeftStickX:
+    case RockBandDrums_LeftStickX:
         if (!m_centered)
         {
             report->redVelocity = m_calibratedValue - 32768;
         }
         break;
-    case RockBandDrumsLeftStickY:
+    case RockBandDrums_LeftStickY:
         if (!m_centered)
         {
             report->yellowVelocity = m_calibratedValue - 32768;
@@ -181,29 +181,29 @@ void RockBandDrumsAxisMapping::update_ogxbox(uint8_t *buf)
     OGXboxRockBandDrums_Data_t *report = (OGXboxRockBandDrums_Data_t *)buf;
     switch (m_mapping.mapping.rbDrumAxis)
     {
-    case RockBandDrumsRedPad:
+    case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue - 32768;
         report->b = true;
         break;
-    case RockBandDrumsYellowPad:
+    case RockBandDrums_YellowPad:
         report->yellowVelocity = m_calibratedValue - 32768;
         report->y = true;
         break;
-    case RockBandDrumsBluePad:
+    case RockBandDrums_BluePad:
         report->blueVelocity = m_calibratedValue - 32768;
         report->x = true;
         break;
-    case RockBandDrumsGreenPad:
+    case RockBandDrums_GreenPad:
         report->greenVelocity = m_calibratedValue - 32768;
         report->a = true;
         break;
-    case RockBandDrumsLeftStickX:
+    case RockBandDrums_LeftStickX:
         if (!m_centered)
         {
             report->redVelocity = m_calibratedValue - 32768;
         }
         break;
-    case RockBandDrumsLeftStickY:
+    case RockBandDrums_LeftStickY:
         if (!m_centered)
         {
             report->yellowVelocity = m_calibratedValue - 32768;

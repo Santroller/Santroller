@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include "excrypt.h"
 
-static uint8_t UsbdSecSboxData[256] __attribute__ ((aligned(4))) = {
+static const uint8_t UsbdSecSboxData[256] __attribute__ ((aligned(4))) = {
 	0xB0, 0x3D, 0x9B, 0x70, 0xF3, 0xC7, 0x80, 0x60,
 	0x73, 0x9F, 0x6C, 0xC0, 0xF1, 0x3D, 0xBB, 0x40,
 	0xB3, 0xC8, 0x37, 0x14, 0xDF, 0x49, 0xDA, 0xD4,
@@ -57,7 +57,7 @@ static uint8_t UsbdSecSboxData[256] __attribute__ ((aligned(4))) = {
 	0xE3, 0x0D, 0xAE, 0x7E, 0x33, 0x69, 0x80, 0x40
 };
 
-static uint8_t UsbdSecPlainTextData[128] __attribute__ ((aligned(4))) = {
+static const uint8_t UsbdSecPlainTextData[128] __attribute__ ((aligned(4))) = {
 	0xD1, 0xD2, 0xF2, 0x80, 0x6E, 0xBA, 0x0C, 0xC0,
 	0xB6, 0xC4, 0xC9, 0xD8, 0x61, 0x75, 0x1D, 0x1A,
 	0x3F, 0x95, 0x58, 0xBE, 0xD8, 0x0D, 0xE2, 0xC0,
@@ -107,12 +107,10 @@ void UsbdSecXSM3AuthenticationMac(const uint8_t *key, uint8_t *salt, uint8_t *in
 	ExCryptDesParity(key, 0x10, (uint8_t *)sk);
 	sk[2] = sk[0];
 	// set the key in our initial des state
-	ExCryptDesKey(&des, (uint8_t *)&sk[0]);
+	ExCryptDesKey(&des, &sk[0]);
 	// if we have a salt, encrypt it into the temp value
 	if (salt) {
-		memcpy(&input_temp, salt, sizeof(input_temp));
-		input_temp = SWAP64(SWAP64(input_temp) + 1);
-		memcpy(salt, &input_temp, sizeof(input_temp)); // no idea what this does
+		*(uint64_t*)salt = SWAP64(SWAP64(*(uint64_t*)salt) + 1);
 		ExCryptDesEcb(&des, salt, temp, 1);
 	}
 	// for every 8 byte input block, xor the temp value with it and encrypt over itself

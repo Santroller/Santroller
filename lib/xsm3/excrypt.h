@@ -10,6 +10,10 @@ extern "C" {
 #define SWAP16(i) i
 #define SWAP32(i) i
 #define SWAP64(i) i
+#elif defined(__clang__) || defined(__GNUC__)
+#define SWAP16(i) __builtin_bswap16(i)
+#define SWAP32(i) __builtin_bswap32(i)
+#define SWAP64(i) __builtin_bswap64(i)
 #else
 #define SWAP16(i) ((((i) & 0xFF) << 8 | ((i) >> 8) & 0xFF) & 0xFFFF)
 #define SWAP32(i) ((((i) & 0xff) << 24) | (((i) & 0xff00) << 8) | (((i) & 0xff0000) >> 8) | (((i) >> 24) & 0xff))

@@ -2,12 +2,12 @@
 #include "excrypt_des_data.h"
 #include <string.h>
 
-#define LODWORD(_qw)    ((uint32_t)(_qw))
-#define HIDWORD(_qw)    ((uint32_t)(((_qw) >> 32) & 0xffffffff))
+#define LODWORD(_qw) ((uint32_t)(_qw))
+#define HIDWORD(_qw) ((uint32_t)(((_qw) >> 32) & 0xffffffff))
 
 // DES code based on https://github.com/fffaraz/cppDES
 
-void ExCryptDesParity(const uint8_t* input, uint32_t input_size, uint8_t* output)
+void ExCryptDesParity(const uint8_t *input, uint32_t input_size, uint8_t *output)
 {
   for (uint32_t i = 0; i < input_size; i++)
   {
@@ -21,17 +21,22 @@ void ExCryptDesParity(const uint8_t* input, uint32_t input_size, uint8_t* output
   }
 }
 
-void ExCryptDesKey(EXCRYPT_DES_STATE* state, const uint8_t* key)
+uint64_t permutation(uint64_t block, uint8_t bits, uint8_t shift, const char *table)
 {
-  uint64_t qkey = SWAP64(*(const uint64_t*)key);
+  uint64_t result = 0;
+  for (int i = 0; i < bits; i++)
+  {
+    result <<= 1;
+    result |= (block >> (shift - table[i])) & LB64_MASK;
+  }
+  return result;
+}
+void ExCryptDesKey(EXCRYPT_DES_STATE *state, const uint64_t *key)
+{
+  uint64_t qkey = SWAP64(*key);
 
   // initial key schedule calculation
-  uint64_t permuted_choice_1 = 0; // 56 bits
-  for (int i = 0; i < 56; i++)
-  {
-    permuted_choice_1 <<= 1;
-    permuted_choice_1 |= (qkey >> (64 - PC1[i])) & LB64_MASK;
-  }
+  uint64_t permuted_choice_1 = permutation(qkey, 56, 64, PC1); // 56 bits
 
   // 28 bits
   uint32_t C = (uint32_t)((permuted_choice_1 >> 28) & 0x000000000fffffff);
@@ -49,25 +54,14 @@ void ExCryptDesKey(EXCRYPT_DES_STATE* state, const uint8_t* key)
 
     uint64_t permuted_choice_2 = (((uint64_t)C) << 28) | (uint64_t)D;
 
-    uint64_t sub_key = 0; // 48 bits (2*24)
-    for (int j = 0; j < 48; j++)
-    {
-      sub_key <<= 1;
-      sub_key |= (permuted_choice_2 >> (56 - PC2[j])) & LB64_MASK;
-    }
-    state->keytab[i] = sub_key;
+    state->keytab[i] = permutation(permuted_choice_2, 48, 56, PC2); // 48 bits (2*24)
   }
 }
 
 uint32_t f(uint32_t R, uint64_t k)
 {
   // applying expansion permutation and returning 48-bit data
-  uint64_t s_input = 0;
-  for (int i = 0; i < 48; i++)
-  {
-    s_input <<= 1;
-    s_input |= (uint64_t)((R >> (32 - EXPANSION[i])) & LB32_MASK);
-  }
+  uint64_t s_input = permutation(R, 48, 32, EXPANSION);
 
   // XORing expanded Ri with Ki, the round key
   s_input = s_input ^ k;
@@ -88,38 +82,17 @@ uint32_t f(uint32_t R, uint64_t k)
   }
 
   // applying the round permutation
-  uint32_t f_result = 0;
-  for (int i = 0; i < 32; i++)
-  {
-    f_result <<= 1;
-    f_result |= (s_output >> (32 - PBOX[i])) & LB32_MASK;
-  }
-
-  return f_result;
+  return permutation(s_output, 32, 32, PBOX);
 }
 
-void feistel(uint32_t* L, uint32_t* R, uint32_t F)
-{
-  uint32_t temp = *R;
-  *R = *L ^ F;
-  *L = temp;
-}
-
-void ExCryptDesEcb(const EXCRYPT_DES_STATE* state, const uint8_t* input, uint8_t* output, uint8_t encrypt)
+void ExCryptDesEcb(const EXCRYPT_DES_STATE *state, const uint8_t *input, uint8_t *output, uint8_t encrypt)
 {
   uint64_t block;
   memcpy(&block, input, sizeof(uint64_t));
   block = SWAP64(block);
-  //uint64_t block = SWAP64(*(uint64_t*)input)
-
 
   // initial permutation
-  uint64_t result = 0;
-  for (int i = 0; i < 64; i++)
-  {
-    result <<= 1;
-    result |= (block >> (64 - IP[i])) & LB64_MASK;
-  }
+  uint64_t result = permutation(block, 64, 64, IP);
 
   // dividing T' into two 32-bit parts
   uint32_t L = HIDWORD(result);
@@ -128,32 +101,29 @@ void ExCryptDesEcb(const EXCRYPT_DES_STATE* state, const uint8_t* input, uint8_t
   // 16 rounds
   for (int i = 0; i < 16; i++)
   {
-    uint32_t F = !encrypt ? f(R, state->keytab[15 - i]) : f(R, state->keytab[i]);
-    feistel(&L, &R, F);
+    // feistel
+    uint32_t F = L ^ f(R, state->keytab[!encrypt ? (15 - i) : i]);
+    L = R;
+    R = F;
   }
 
   // swapping the two parts
   block = (((uint64_t)R) << 32) | (uint64_t)L;
 
   // inverse initial permutation
-  result = 0;
-  for (int i = 0; i < 64; i++)
-  {
-    result <<= 1;
-    result |= (block >> (64 - FP[i])) & LB64_MASK;
-  }
+  result = permutation(block, 64, 64, FP);
   result = SWAP64(result);
   memcpy(output, &result, sizeof(result));
 }
 
-void ExCryptDes3Key(EXCRYPT_DES3_STATE* state, const uint64_t* keys)
+void ExCryptDes3Key(EXCRYPT_DES3_STATE *state, const uint64_t *keys)
 {
-  ExCryptDesKey(&state->des_state[0], (const uint8_t*)& keys[0]);
-  ExCryptDesKey(&state->des_state[1], (const uint8_t*)& keys[1]);
-  ExCryptDesKey(&state->des_state[2], (const uint8_t*)& keys[2]);
+  ExCryptDesKey(&state->des_state[0], &keys[0]);
+  ExCryptDesKey(&state->des_state[1], &keys[1]);
+  ExCryptDesKey(&state->des_state[2], &keys[2]);
 }
 
-void ExCryptDes3Ecb(const EXCRYPT_DES3_STATE* state, const uint8_t* input, uint8_t* output, uint8_t encrypt)
+void ExCryptDes3Ecb(const EXCRYPT_DES3_STATE *state, const uint8_t *input, uint8_t *output, uint8_t encrypt)
 {
   if (encrypt)
   {
@@ -169,30 +139,31 @@ void ExCryptDes3Ecb(const EXCRYPT_DES3_STATE* state, const uint8_t* input, uint8
   }
 }
 
-void ExCryptDes3Cbc(const EXCRYPT_DES3_STATE* state, const uint8_t* input, uint32_t input_size, uint8_t* output, uint8_t* feed, uint8_t encrypt)
+void ExCryptDes3Cbc(const EXCRYPT_DES3_STATE *state, const uint8_t *input, uint32_t input_size, uint8_t *output, uint8_t *feed, uint8_t encrypt)
 {
-  uint64_t last_block = *(uint64_t*)feed;
-  for (uint32_t i = 0; i < input_size / 8; i++)
+  uint64_t last_block = *(uint64_t *)feed;
+  uint64_t intemp;
+  uint64_t outtemp;
+  for (uint32_t i = 0; i < input_size; i += 8)
   {
-    if (encrypt) {
-      uint64_t temp;
-      memcpy(&temp, input, sizeof(temp));
-      temp = temp ^ last_block;
-      memcpy(output, &temp, sizeof(temp));
+    memcpy(&intemp, input, sizeof(intemp));
+    if (encrypt)
+    {
+      intemp = intemp ^ last_block;
+      memcpy(output, &intemp, sizeof(intemp));
       ExCryptDes3Ecb(state, output, output, encrypt);
       memcpy(&last_block, output, sizeof(last_block));
     }
     else
     {
       ExCryptDes3Ecb(state, input, output, encrypt);
-      uint64_t temp;
-      memcpy(&temp, output, sizeof(temp));
-      temp = temp ^ last_block;
-      memcpy(output, &temp, sizeof(temp));
-      memcpy(&last_block, input, sizeof(last_block));
+      memcpy(&outtemp, output, sizeof(outtemp));
+      outtemp = outtemp ^ last_block;
+      memcpy(output, &outtemp, sizeof(outtemp));
+      last_block = intemp;
     }
     input += 8;
     output += 8;
   }
-  *(uint64_t*)feed = last_block;
+  *(uint64_t *)feed = last_block;
 }

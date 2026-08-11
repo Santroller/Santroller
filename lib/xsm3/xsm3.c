@@ -28,7 +28,6 @@
 
 #include "excrypt.h"
 #include "usbdsec.h"
-#define XSM3_NO_DEBUGGING
 // disable debugging by specifying XSM3_NO_DEBUGGING at compile time
 #ifndef XSM3_NO_DEBUGGING
 #define XSM3_printf printf

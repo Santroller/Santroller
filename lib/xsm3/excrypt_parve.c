@@ -33,9 +33,9 @@ void ExCryptParveCbcMac(const uint8_t* key, const uint8_t* sbox, const uint8_t* 
 
   if (input_size >= 8)
   {
-    for (uint32_t i = 0; i < input_size / 8; i++)
+    for (uint32_t i = 0; i < input_size; i+=8)
     {
-      memcpy(&temp, input + (i * 8), sizeof(temp));
+      memcpy(&temp, input + i, sizeof(temp));
       block ^= temp;
       ExCryptParveEcb(key, sbox, (uint8_t*)&block, (uint8_t*)&block);
     }

@@ -29,12 +29,13 @@ uint16_t HIDDevice::open(tusb_desc_interface_t const *desc_itf, uint16_t max_len
 
   TU_VERIFY(usbd_open_edpt_pair(TUD_OPT_RHPORT, p_desc, desc_itf->bNumEndpoints, TUSB_XFER_INTERRUPT, &m_epout, &m_epin), 0);
 
+  protocol_mode = HID_PROTOCOL_REPORT;
   if (desc_itf->bInterfaceSubClass == HID_SUBCLASS_BOOT)
   {
     itf_protocol = desc_itf->bInterfaceProtocol;
+    protocol_mode = HID_PROTOCOL_BOOT;
   }
 
-  protocol_mode = HID_PROTOCOL_REPORT;
   if (m_epout)
   {
     TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE, false), drv_len);
@@ -80,6 +81,7 @@ bool HIDDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t x
 }
 bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
 {
+  // printf("control_transfer stage %d request %d type %d windex: %04x wValue: %04x\r\n ", stage, request->bRequest, request->bmRequestType_bit.type, request->wIndex, request->wValue);
   if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_ENDPOINT && request->bRequest == TUSB_REQ_CLEAR_FEATURE)
   {
     clearedIn |= tu_edpt_dir(request->wIndex) == TUSB_DIR_IN;
@@ -191,6 +193,7 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
       else if (stage == CONTROL_STAGE_ACK)
       {
         protocol_mode = (uint8_t)request->wValue;
+        printf("protocol mode %d\r\n", protocol_mode);
       }
       break;
 

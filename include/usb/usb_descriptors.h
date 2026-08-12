@@ -208,3 +208,4 @@ enum
 #define TUD_XINPUT_WIRELESS_CONTROLLER_DESC_LEN   (9 + 20 + 7 + 7)
 
 #define TUD_XINPUT_WIRELESS_AUDIO_DESC_LEN   (9 + 12 + 7 + 7)
+void build_device_descriptor();

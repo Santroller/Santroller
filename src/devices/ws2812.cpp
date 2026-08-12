@@ -16,6 +16,7 @@ void WS2812Device::end(bool full)
 {
     m_ws2812.end();
 }
+
 void WS2812Device::update(bool full_poll, bool send_events)
 {
     if (memcmp(prev_led_state, led_state, sizeof(led_state)) != 0)

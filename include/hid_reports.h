@@ -58,6 +58,7 @@
         HID_REPORT_SIZE(1),                                                                                        \
         HID_INPUT(HID_DATA | HID_ARRAY | HID_ABSOLUTE),                                                            \
         HID_COLLECTION_END
+
 #define TUD_HID_REPORT_DESC_GENERIC_aINFEATURE(report_size, ...)         \
     HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),                          \
         HID_USAGE(0x01),                                                 \

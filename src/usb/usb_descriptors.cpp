@@ -7,6 +7,7 @@
 #include "usb/device/hid_device.h"
 #include "usb/device/ps3_device.h"
 #include "usb/device/ps4_device.h"
+#include "device/dcd.h"
 #include "hid_reports.h"
 #include <pico/unique_id.h>
 #include "enums.pb.h"
@@ -68,7 +69,6 @@ uint8_t const *tud_descriptor_device_cb(void)
       continue;
     }
     instance->device_descriptor((tusb_desc_device_t *)descriptor_buffer);
-    
   }
   return descriptor_buffer;
 }
@@ -255,6 +255,7 @@ void tud_init(void)
 }
 void tud_reset(uint8_t rhport)
 {
+  printf("reset\r\n");
   UsbDevice::reset_ep();
 }
 

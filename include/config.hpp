@@ -31,6 +31,7 @@ void update_aux_toggle(uint32_t id, bool state);
 extern ConsoleMode mode;
 extern ConsoleMode newMode;
 extern bool working;
+extern bool modeChanged;
 
 extern std::vector<std::shared_ptr<Instance>> instances;
 extern std::shared_ptr<UsbDevice> usb_instances[32];

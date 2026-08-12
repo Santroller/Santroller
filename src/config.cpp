@@ -97,6 +97,7 @@ int seenMasks = 0;
 bool fullReload = false;
 bool working = false;
 bool loadedAny = false;
+bool modeChanged = false;
 bool load_cycle_state(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     uint32_t state;
@@ -835,7 +836,8 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         {
             int assignedDevices = list->assignedDevices();
             printf("profile assigned! %d\r\n", profile->profile_id);
-            if (previous_profiles.erase(profile->profile_id) == 0) {
+            if (previous_profiles.erase(profile->profile_id) == 0)
+            {
                 previous_profiles.insert(profile->profile_id);
             }
             if ((assignedDevices & ProfileAssignMask_AssignBluetoothGamepad) && !(seenMasks & ProfileAssignMask_AssignBluetoothGamepad) && isPicoW)
@@ -855,39 +857,47 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
             }
             if (!usbInstance && (assignedDevices & ProfileAssignMask_AssignUsb))
             {
-                switch (mode)
+                if (profile->subtype == SubType_KeyboardMouse)
                 {
-                case ModeHid:
-                    usbInstance = std::make_shared<HIDGamepadDevice>();
-                    break;
-                case ModeOgXbox:
-                    usbInstance = std::make_shared<OGXboxGamepadDevice>();
-                    break;
-                case ModeXbox360:
-                    usbInstance = std::make_shared<XInputGamepadDevice>();
-                    break;
-                case ModeXboxOne:
-                    usbInstance = std::make_shared<XboxOneGamepadDevice>();
-                    break;
-                case ModeWiiRb:
-                    // wii rb is the same as ps3 but different ids
-                    usbInstance = std::make_shared<PS3GamepadDevice>(true);
-                    break;
-                case ModePs3:
-                    usbInstance = std::make_shared<PS3GamepadDevice>(false);
-                    break;
-                case ModePs4:
-                    usbInstance = std::make_shared<PS4GamepadDevice>();
-                    break;
-                case ModePs5:
-                    usbInstance = std::make_shared<PS5GamepadDevice>();
-                    break;
-                case ModeSwitch:
-                    usbInstance = std::make_shared<SwitchGamepadDevice>();
-                    break;
-                case ModeGuitarHeroArcade:
-                    usbInstance = std::make_shared<GHArcadeGamepadDevice>();
-                    break;
+                    usbInstance = std::make_shared<HIDKeyboardDevice>();
+                    newMode = ModeHid;
+                }
+                else
+                {
+                    switch (mode)
+                    {
+                    case ModeHid:
+                        usbInstance = std::make_shared<HIDGamepadDevice>();
+                        break;
+                    case ModeOgXbox:
+                        usbInstance = std::make_shared<OGXboxGamepadDevice>();
+                        break;
+                    case ModeXbox360:
+                        usbInstance = std::make_shared<XInputGamepadDevice>();
+                        break;
+                    case ModeXboxOne:
+                        usbInstance = std::make_shared<XboxOneGamepadDevice>();
+                        break;
+                    case ModeWiiRb:
+                        // wii rb is the same as ps3 but different ids
+                        usbInstance = std::make_shared<PS3GamepadDevice>(true);
+                        break;
+                    case ModePs3:
+                        usbInstance = std::make_shared<PS3GamepadDevice>(false);
+                        break;
+                    case ModePs4:
+                        usbInstance = std::make_shared<PS4GamepadDevice>();
+                        break;
+                    case ModePs5:
+                        usbInstance = std::make_shared<PS5GamepadDevice>();
+                        break;
+                    case ModeSwitch:
+                        usbInstance = std::make_shared<SwitchGamepadDevice>();
+                        break;
+                    case ModeGuitarHeroArcade:
+                        usbInstance = std::make_shared<GHArcadeGamepadDevice>();
+                        break;
+                    }
                 }
                 instances.push_back(usbInstance);
                 usbInstance->profiles.push_back(profile);
@@ -1084,8 +1094,15 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
         }
     }
     // the profile assignments changed, so reload the entire device
-    if (previous_profiles.size() > 0)
+    if (previous_profiles.size() > 0 || modeChanged)
     {
+        if (!HIDConfigDevice::tool_closed())
+        {
+            proto_Event event = {which_event : proto_Event_reload_tag, event : {reload : {}}};
+            HIDConfigDevice::send_event(event, true);
+            tud_task();
+        }
+        HIDConfigDevice::reset_keepalive();
         tud_deinit(TUD_OPT_RHPORT);
         const tusb_rhport_init_t rh_init = {
             .role = TUSB_ROLE_DEVICE,

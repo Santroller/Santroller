@@ -1103,6 +1103,11 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
             tud_task();
         }
         HIDConfigDevice::reset_keepalive();
+        seenPs4 = false;
+        seenWindowsXb1 = false;
+        seenOsDescriptorRead = false;
+        seenReadAnyDeviceString = false;
+        seenHidDescriptorRead = false;
         tud_deinit(TUD_OPT_RHPORT);
         const tusb_rhport_init_t rh_init = {
             .role = TUSB_ROLE_DEVICE,

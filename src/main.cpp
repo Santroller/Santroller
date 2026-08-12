@@ -109,11 +109,6 @@ void hid_task(void)
         printf("new: %d old: %d init: %d\r\n", newMode, mode, reinit);
         mode = newMode;
         reinit = false;
-        seenPs4 = false;
-        seenWindowsXb1 = false;
-        seenOsDescriptorRead = false;
-        seenReadAnyDeviceString = false;
-        seenHidDescriptorRead = false;
         // tud_deinit(TUD_OPT_RHPORT);
         load();
         // const tusb_rhport_init_t rh_init = {

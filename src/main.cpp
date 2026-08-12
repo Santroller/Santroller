@@ -109,12 +109,7 @@ void hid_task(void)
         printf("new: %d old: %d init: %d\r\n", newMode, mode, reinit);
         mode = newMode;
         reinit = false;
-        // tud_deinit(TUD_OPT_RHPORT);
         load();
-        // const tusb_rhport_init_t rh_init = {
-        //     .role = TUSB_ROLE_DEVICE,
-        //     .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};
-        // tud_rhport_init(TUD_OPT_RHPORT, &rh_init);
         timeSinceMode = millis();
         reloading = false;
         return;

@@ -94,7 +94,6 @@ ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
 std::shared_ptr<Profile> working_profile;
 int seenMasks = 0;
-bool fullReload = false;
 bool working = false;
 bool loadedAny = false;
 bool modeChanged = false;
@@ -1029,10 +1028,6 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
     {
         device.second->still_connected = false;
     }
-    if (fullReload)
-    {
-        root_devices.clear();
-    }
     previous_profiles = active_profiles;
     active_profiles.clear();
     all_profiles.clear();
@@ -1137,7 +1132,6 @@ uint32_t copy_config_info(uint8_t *buffer)
 void reload()
 {
     printf("reload called\r\n");
-    fullReload = false;
     reinit = true;
 }
 

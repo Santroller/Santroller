@@ -197,6 +197,7 @@ add_executable(
   src/devices/usb.cpp
   src/devices/wii.cpp
   src/devices/ps2.cpp
+  src/devices/ps2_emulation.cpp
   src/devices/crkd.cpp
   src/devices/crkd_drum.cpp
   src/devices/ads1115.cpp
@@ -285,6 +286,7 @@ target_link_libraries(
   multiplexer
   picodmx
   psx_controller
+  psx_emulation
   secondary_pico
   wii_extensions
   world_tour_drum

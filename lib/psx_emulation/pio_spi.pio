@@ -1,0 +1,31 @@
+.define PUBLIC PIN_SCK 10
+
+.program spi_combined_loop
+.side_set 1 opt pindirs
+wait_falling:
+wait 0 gpio PIN_SCK   ; Wait for falling clock edge
+initial_loop:
+pull ifempty noblock    ; Pull if there is data
+out pins 1      ; Write CIPO
+wait 1 gpio PIN_SCK    ; Wait for rising clock edge
+in pins 1       ; Read COPI
+push iffull noblock ; Push if we've read 8 bits, but don't block if fifo is full
+.wrap
+.wrap_target
+jmp y-- wait_falling
+set y 8 
+jmp !x wait_falling 
+jmp x-- test side 0 [5]
+test:
+public initial_check:
+jmp y-- wait_falling side 1 
+IRQ set 0 ; Trigger data set irq
+jmp wait_falling
+
+.program spi_cs_loop
+.side_set 1 pindirs
+wait 0 pin 0 side 0 ; wait for falling edge of cs pin
+irq set 7 side 1
+irq set 1 side 1 ; trigger falling edge irq
+wait 1 pin 0 side 1 ; wait for rising edge of cs pin
+irq set 2 side 0; trigger rising edge irq

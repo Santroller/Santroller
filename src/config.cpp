@@ -38,6 +38,7 @@
 #include "devices/usb.hpp"
 #include "devices/matrix.hpp"
 #include "devices/ps2.hpp"
+#include "devices/ps2_emulation.hpp"
 #include "devices/max1704x.hpp"
 #include "devices/vtechexpander.hpp"
 #include "devices/mpr121.hpp"
@@ -152,6 +153,11 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         // we pass in the previous device here so we can make sure the state is kept between reloads
         // that way, a controller stays connected between reloads
         active_devices.emplace_back(new PS2Device(std::static_pointer_cast<PS2Device>(prevDevice), device.device.psx, dev_id));
+        break;
+    case proto_Device_psxEmulation_tag:
+        // we pass in the previous device here so we can make sure the state is kept between reloads
+        // that way, a controller stays connected between reloads
+        active_devices.emplace_back(new PSXEmulationDevice(std::static_pointer_cast<PSXEmulationDevice>(prevDevice), device.device.psxEmulation, dev_id));
         break;
     case proto_Device_protarNeck_tag:
         active_devices.emplace_back(new ProtarNeckDevice(device.device.protarNeck, dev_id));

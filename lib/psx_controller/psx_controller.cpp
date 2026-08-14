@@ -91,7 +91,7 @@ static const uint8_t commandSetPressuresMouse[] = {0x01, 0x4F, 0x00, 0b1111, 0x0
                                                    0b11, 0x00, 0x00, 0x00};
 
 static const uint8_t commandPollInput[] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
-PSXController *controller;
+static PSXController *controller;
 void attentionInterrupt(uint gpio, uint32_t events)
 {
     controller->processData(true, false);

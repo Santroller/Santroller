@@ -706,9 +706,6 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
     case proto_ProfileAssignmentInfo_usbDevice_tag:
         list->triggers.emplace_back(new SpecificUsbDeviceActivationTrigger(assignment.assignment.usbDevice, profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
         break;
-    case proto_ProfileAssignmentInfo_catchall_tag:
-        list->triggers.emplace_back(new CatchAllActivationTrigger(assignment.assignment.catchall, profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
-        break;
     case proto_ProfileAssignmentInfo_midiChannel_tag:
         list->triggers.emplace_back(new MidiChannelActivationTrigger(assignment.assignment.midiChannel, profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
         break;

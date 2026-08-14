@@ -873,17 +873,6 @@ public:
 protected:
     proto_SpecificUsbDevice m_device;
 };
-class CatchAllActivationTrigger : public ActivationTrigger
-{
-public:
-    CatchAllActivationTrigger(proto_CatchallAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id);
-    ~CatchAllActivationTrigger() {}
-    bool validate(bool claim_device, bool full_poll, bool send_events);
-    int assignedDevices() { return 0xFF; }
-
-private:
-    proto_CatchallAssignment m_config;
-};
 class MidiChannelActivationTrigger : public ActivationTrigger
 {
 public:

@@ -93,9 +93,6 @@ message UsbDeviceAssignment {
   optional ConsoleMode forcedType = 2;
 }
 
-message CatchallAssignment {
-
-}
 message WiimoteAssignment {
 
 }
@@ -110,7 +107,6 @@ message ProfileAssignmentInfo {
     PS2ControllerType ps2Cnt = 6;
     SubType usbType = 7;
     SpecificUsbDevice usbDevice = 8;
-    CatchallAssignment catchall = 9;
     InputActivationTrigger input = 10; // Input at startup
     InputActivationTrigger inputAnyTime = 11; // Input at any time
     uint32 copilotProfile = 12; // copilot another profile

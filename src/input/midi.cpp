@@ -10,11 +10,11 @@ MidiNoteInput::MidiNoteInput(proto_MidiNoteInput input, std::shared_ptr<MidiDevi
 }
 bool MidiNoteInput::tickDigital()
 {
-    return m_device->readMidiNote(m_input.channel, m_input.note) > 0;
+    return m_device->readMidiNote(m_input.channel - 1, m_input.note) > 0;
 }
 uint16_t MidiNoteInput::tickAnalog()
 {
-    return m_device->readMidiNote(m_input.channel, m_input.note);
+    return m_device->readMidiNote(m_input.channel - 1, m_input.note);
 }
 void MidiNoteInput::setup()
 {
@@ -24,11 +24,11 @@ MidiControlChangeInput::MidiControlChangeInput(proto_MidiControlChangeInput inpu
 }
 bool MidiControlChangeInput::tickDigital()
 {
-    return m_device->readMidiControlChange(m_input.channel, m_input.cc) > 0;
+    return m_device->readMidiControlChange(m_input.channel - 1, m_input.cc) > 0;
 }
 uint16_t MidiControlChangeInput::tickAnalog()
 {
-    return m_device->readMidiControlChange(m_input.channel, m_input.cc);
+    return m_device->readMidiControlChange(m_input.channel - 1, m_input.cc);
 }
 void MidiControlChangeInput::setup()
 {
@@ -38,11 +38,11 @@ MidiPitchBendInput::MidiPitchBendInput(proto_MidiPitchBendInput input, std::shar
 }
 bool MidiPitchBendInput::tickDigital()
 {
-    return m_device->readMidiPitchBend(m_input.channel) != 0;
+    return m_device->readMidiPitchBend(m_input.channel - 1) != 0;
 }
 uint16_t MidiPitchBendInput::tickAnalog()
 {
-    return m_device->readMidiPitchBend(m_input.channel);
+    return m_device->readMidiPitchBend(m_input.channel - 1);
 }
 void MidiPitchBendInput::setup()
 {

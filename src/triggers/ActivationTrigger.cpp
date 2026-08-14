@@ -372,6 +372,7 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
             if (claim_device)
             {
                 assignable_devices.erase(it);
+                all_profiles[m_profile_id]->devices[device->m_id] = device;
                 printf("Claimed device: %d %p %p\r\n", m_profile_id, all_profiles[m_profile_id], device);
             }
             m_last_val = true;
@@ -387,19 +388,6 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
     return false;
 }
 
-CatchAllActivationTrigger::CatchAllActivationTrigger(proto_CatchallAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_config(config)
-{
-}
-
-bool CatchAllActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
-{
-    if (send_events && full_poll)
-    {
-        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
-        HIDConfigDevice::send_event(event, true);
-    }
-    return true;
-}
 BluetoothModeActivationTrigger::BluetoothModeActivationTrigger(proto_BluetoothMode mode, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_mode(mode)
 {
 }

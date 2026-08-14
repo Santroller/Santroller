@@ -26,36 +26,22 @@ void MidiDevice::rescan(bool first)
 {
     if (first)
     {
-        for (int i = 0; i < 16; i++)
+        for (int i = 0; i < 18; i++)
         {
-            if (seenChannels.find({m_id, i}) != seenChannels.end())
+            if (seenChannels[i])
             {
                 if (usbBased)
                 {
                     // USB host has more than one interface, so we need to grab it from assignable
-                    assignable_devices.push_back(std::make_shared<MidiDeviceWithChannel>(m_id, i, std::static_pointer_cast<MidiDevice>(assignable_devices.back())));
+                    assignable_devices.push_back(std::static_pointer_cast<MidiDevice>(assignable_devices.back()));
                 }
                 else
                 {
                     // Every other device will do this scanning on creation, so we grab from active_devices
-                    assignable_devices.push_back(std::make_shared<MidiDeviceWithChannel>(m_id, i, std::static_pointer_cast<MidiDevice>(root_devices[m_id])));
+                    assignable_devices.push_back(std::static_pointer_cast<MidiDevice>(root_devices[m_id]));
                 }
                 printf("Assigning MIDI channel: %d on device %d\r\n", i, m_id);
             }
-        }
-        if (seenChannels.find({m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG}) != seenChannels.end() || seenChannels.find({m_id, MIDI_CHANNEL_PROGUITAR_SQUIER}) != seenChannels.end())
-        {
-            if (usbBased)
-            {
-                // USB host has more than one interface, so we need to grab it from assignable
-                assignable_devices.push_back(std::make_shared<ProGuitarMidiDevice>(m_id, std::static_pointer_cast<MidiDevice>(assignable_devices.back())));
-            }
-            else
-            {
-                // Every other device will do this scanning on creation, so we grab from active_devices
-                assignable_devices.push_back(std::make_shared<ProGuitarMidiDevice>(m_id, std::static_pointer_cast<MidiDevice>(root_devices[m_id])));
-            }
-            printf("Assigning MIDI channel: pro guitar on device %d\r\n", m_id);
         }
     }
 }
@@ -250,10 +236,10 @@ void MidiDevice::update(bool full_poll, bool send_events)
             }
             if (cable_state->data[0] < MIDI_STATUS_SYSEX_START)
             {
-                if (seenChannels.find({m_id, channel}) == seenChannels.end())
+                if (!seenChannels[channel])
                 {
                     printf("Seen new MIDI channel: %d on device %d\r\n", channel, m_id);
-                    seenChannels.insert_or_assign({m_id, channel}, true);
+                    seenChannels[channel] = true;
                     reload();
                 }
             }
@@ -262,18 +248,16 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 uint8_t buttons_header[] = {MIDI_STATUS_SYSEX_START, 0x08, 0x40};
                 if (memcmp(cable_state->data, buttons_header, sizeof(buttons_header)) == 0)
                 {
-                    if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_SQUIER && seenChannels.find({m_id, MIDI_CHANNEL_PROGUITAR_SQUIER}) == seenChannels.end())
+                    if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_SQUIER && !seenChannels[MIDI_CHANNEL_PROGUITAR_SQUIER])
                     {
                         printf("Seen new MIDI channel: proguitar squier on device %d\r\n", m_id);
-                        seenChannels[{m_id, MIDI_CHANNEL_PROGUITAR_SQUIER}] = true;
-                        seenChannels.erase({m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG});
+                        seenChannels[MIDI_CHANNEL_PROGUITAR_SQUIER] = true;
                         reload();
                     }
-                    if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_MUSTANG && seenChannels.find({m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG}) == seenChannels.end())
+                    if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_MUSTANG && !seenChannels[MIDI_CHANNEL_PROGUITAR_MUSTANG])
                     {
                         printf("Seen new MIDI channel: proguitar mustang on device %d\r\n", m_id);
-                        seenChannels[{m_id, MIDI_CHANNEL_PROGUITAR_MUSTANG}] = true;
-                        seenChannels.erase({m_id, MIDI_CHANNEL_PROGUITAR_SQUIER});
+                        seenChannels[MIDI_CHANNEL_PROGUITAR_MUSTANG] = true;
                         reload();
                     }
                     if (cable_state->data[4] == 0x08)
@@ -542,18 +526,6 @@ uint16_t MidiDevice::readProGuitarAxis(proto_ProGuitarAxisType axis)
     return 0;
 }
 
-uint16_t MidiDeviceWithChannel::readMidiNote(uint8_t note)
-{
-    return m_midi_device->readMidiNote(m_channel, note);
-}
-uint16_t MidiDeviceWithChannel::readMidiControlChange(uint8_t cc)
-{
-    return m_midi_device->readMidiControlChange(m_channel, cc);
-}
-int16_t MidiDeviceWithChannel::readMidiPitchBend()
-{
-    return m_midi_device->readMidiPitchBend(m_channel);
-}
 bool ProGuitarMidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
 {
     return m_midi_device->readProGuitarButton(button);

@@ -97,13 +97,6 @@ void HIDConfigDevice::process()
           device.second->update(true, true);
         }
       }
-      for (const auto &device : profile.second->midiDevices)
-      {
-        if (device.second)
-        {
-          device.second->update(true, true);
-        }
-      }
     }
     just_loaded = false;
   }

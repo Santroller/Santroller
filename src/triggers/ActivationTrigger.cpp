@@ -373,7 +373,6 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
             {
                 assignable_devices.erase(it);
                 printf("Claimed device: %d %p %p\r\n", m_profile_id, all_profiles[m_profile_id], device);
-                all_profiles[m_profile_id]->midiDevices[device->m_id] = device;
             }
             m_last_val = true;
             return true;

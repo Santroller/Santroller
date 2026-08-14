@@ -25,7 +25,6 @@ typedef struct
     uint8_t data[32];
     bool sysex_in_progress;
 } cable_state_t;
-class MidiDeviceWithChannel;
 class MidiDevice : public Device
 {
     friend class MidiHost;
@@ -41,6 +40,7 @@ public:
     int16_t readMidiPitchBend(uint8_t channel);
     bool readProGuitarButton(proto_ProGuitarButtonType button);
     uint16_t readProGuitarAxis(proto_ProGuitarAxisType axis);
+    bool has_midi_channel(uint8_t channel) { return seenChannels[channel]; }
 
 private:
     // Endpoint stream
@@ -59,38 +59,13 @@ private:
     uint8_t midiControlChanges[16][128];
     uint8_t midiFrets[6];
     uint8_t midiStringVelocities[6];
+    bool seenChannels[18];
     ProGuitar_Sysex_Buttons_t midiButtons;
     bool drumMode;
     bool usbBased;
     cable_state_t cable_status[16];
     uint8_t usb_pos = 0;
 };
-
-class MidiDeviceWithChannel : public Device
-{
-public:
-    MidiDeviceWithChannel(uint16_t id, uint8_t channel, std::shared_ptr<MidiDevice> midi_device) : Device(id), m_channel(channel), m_midi_device(midi_device) {}
-    ~MidiDeviceWithChannel() {}
-    void begin() {};
-    void end(bool full) {};
-    uint16_t readMidiNote(uint8_t note);
-    uint16_t readMidiControlChange(uint8_t cc);
-    int16_t readMidiPitchBend();
-    void update(bool full_poll, bool send_events) {};
-    bool is_wii_extension(WiiExtType type) { return false; }
-    bool is_usb_device(proto_SpecificUsbDevice type) { return false; }
-    bool is_usb_type(SubType type) { return false; }
-    bool is_bluetooth_device(proto_SpecificUsbDevice type) { return false; }
-    bool is_bluetooth_type(SubType type) { return false; }
-    bool is_ps2_device(PS2ControllerType type) { return false; }
-    bool has_midi_channel(uint8_t channel) { return m_channel == channel; }
-    bool using_pin(uint8_t pin) { return m_midi_device->using_pin(pin); }
-
-private:
-    uint8_t m_channel;
-    std::shared_ptr<MidiDevice> m_midi_device;
-};
-
 
 class ProGuitarMidiDevice : public Device
 {

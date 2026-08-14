@@ -19,6 +19,7 @@ MidiDevice::MidiDevice(uint16_t id, bool usbBased) : Device(id), drumMode(false)
     memset(midiFrets, 0, sizeof(midiFrets));
     memset(midiStringVelocities, 0, sizeof(midiStringVelocities));
     memset(&midiButtons, 0, sizeof(midiButtons));
+    memset(seenChannels, 0, sizeof(seenChannels));
     // default to neutral
     midiButtons.dpad = 8;
 }

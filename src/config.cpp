@@ -73,6 +73,7 @@
 #include <set>
 #include <memory>
 #include <algorithm>
+#include "utils.h"
 std::vector<std::shared_ptr<Instance>> instances;
 std::vector<std::shared_ptr<Instance>> active_instances;
 std::unordered_map<uint32_t, std::shared_ptr<Profile>> all_profiles;
@@ -1129,7 +1130,7 @@ uint32_t copy_config_info(uint8_t *buffer)
 void reload()
 {
     printf("reload called\r\n");
-    reinit = true;
+    reinit = millis() + 100;
 }
 
 void update_aux_cycle(uint32_t id, uint32_t state)

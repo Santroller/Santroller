@@ -51,7 +51,7 @@ bool seenWindowsXb1 = false;
 bool seenOsDescriptorRead = false;
 bool seenReadAnyDeviceString = false;
 bool seenHidDescriptorRead = false;
-bool reinit = false;
+uint32_t reinit = 0;
 bool reloading = false;
 proto_Event console_event = {which_event : proto_Event_console_tag, event : {console : {data : {}}}};
 ring_buffer_t console_buf;
@@ -102,7 +102,7 @@ void hid_task(void)
     {
         return;
     }
-    if (newMode != mode || reinit)
+    if (newMode != mode || (reinit && millis() > reinit))
     {
         if (!HIDConfigDevice::tool_closed())
         {

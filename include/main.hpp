@@ -5,7 +5,7 @@ void initDebug();
 void deinitDebug();
 
 bool mode_recently_changed();
-extern bool reinit;
+extern uint32_t reinit;
 extern bool seenPs4;
 extern bool seenWindowsXb1;
 extern bool seenOsDescriptorRead;

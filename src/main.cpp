@@ -104,6 +104,12 @@ void hid_task(void)
     }
     if (newMode != mode || reinit)
     {
+        if (!HIDConfigDevice::tool_closed())
+        {
+            proto_Event event = {which_event : proto_Event_reload_tag, event : {reload : {}}};
+            HIDConfigDevice::send_event(event, true);
+            tud_task();
+        }
         modeChanged = newMode != mode;
         reloading = true;
         printf("new: %d old: %d init: %d\r\n", newMode, mode, reinit);

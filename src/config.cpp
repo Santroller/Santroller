@@ -1094,12 +1094,6 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
     // the profile assignments changed, so reload the entire device
     if (previous_profiles.size() > 0 || modeChanged)
     {
-        if (!HIDConfigDevice::tool_closed())
-        {
-            proto_Event event = {which_event : proto_Event_reload_tag, event : {reload : {}}};
-            HIDConfigDevice::send_event(event, true);
-            tud_task();
-        }
         HIDConfigDevice::reset_keepalive();
         seenPs4 = false;
         seenWindowsXb1 = false;
@@ -1233,7 +1227,7 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, EEPROM.writeCache, footer.dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
     EEPROM.commit();
-    inner_load(footer.currentProfile, EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize, footer.dataSize, footer.mainSize, footer.auxSize);
+    reload();
     working = false;
     return true;
 }

@@ -106,7 +106,7 @@ __force_inline static void pio_spi_provide_read_buffer(pio_spi_t* spi, volatile 
 
 // Provide the write buffer for DMA. Must be called per transaction if write data is requested,
 // but at max once per transaction.
-__force_inline static void pio_spi_provide_write_buffer(pio_spi_t* spi, volatile uint8_t* buf, uint8_t buf_bytes) {
+__force_inline static void pio_spi_provide_write_buffer(pio_spi_t* spi, const volatile uint8_t* buf, uint8_t buf_bytes) {
     spi->write_buf_len = buf_bytes;
 
     dma_channel_transfer_from_buffer_now(spi->channel_write, buf, buf_bytes);

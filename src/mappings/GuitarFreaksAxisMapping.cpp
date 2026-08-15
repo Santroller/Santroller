@@ -23,7 +23,7 @@ void GuitarFreaksAxisMapping::update_hid(uint8_t *buf)
     //     break;
     // }
 }
-void GuitarFreaksAxisMapping::update_wii(uint8_t *buf)
+void GuitarFreaksAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 {
 }
 void GuitarFreaksAxisMapping::update_switch(uint8_t *buf)

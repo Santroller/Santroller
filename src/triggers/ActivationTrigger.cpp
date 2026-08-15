@@ -4,7 +4,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "config.hpp"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 
 bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool send_events)
 {

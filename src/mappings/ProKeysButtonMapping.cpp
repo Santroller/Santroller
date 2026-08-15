@@ -15,7 +15,7 @@ void ProKeysButtonMapping::update_hid(uint8_t *buf)
     return update_xinput(buf);
     
 }
-void ProKeysButtonMapping::update_wii(uint8_t *buf)
+void ProKeysButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     
 }

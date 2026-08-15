@@ -35,7 +35,7 @@ void MouseAxisMapping::update_hid(uint8_t *buf)
         break;
     }
 }
-void MouseAxisMapping::update_wii(uint8_t *buf)
+void MouseAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     // TODO: not a thing currently but we could map to the wii cursor maybe
 }

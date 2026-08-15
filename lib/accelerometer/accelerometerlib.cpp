@@ -2,7 +2,7 @@
 #include "stdio.h"
 #include "utils.h"
 #include "hardware/gpio.h"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
     Accelerometer *inst = (Accelerometer *)user_data;

@@ -1,7 +1,7 @@
 #include "devices/djh.hpp"
 #include "events.pb.h"
 #include "main.hpp"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "config.hpp"
 DjHeroTurntableDevice::DjHeroTurntableDevice(proto_DJHeroTurntableDevice device, uint16_t id) : Device(id), m_turntable(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock, device.left), m_device(device)
 {

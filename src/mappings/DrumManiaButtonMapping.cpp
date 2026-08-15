@@ -11,7 +11,7 @@ DrumManiaButtonMapping::DrumManiaButtonMapping(proto_Mapping mapping, std::uniqu
 void DrumManiaButtonMapping::update_hid(uint8_t *buf)
 {
 }
-void DrumManiaButtonMapping::update_wii(uint8_t *buf)
+void DrumManiaButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
 }
 void DrumManiaButtonMapping::update_switch(uint8_t *buf)

@@ -1,4 +1,4 @@
-#include "usb/device/ps3_device.h"
+#include "emulation/usb/ps3_device.h"
 #include "protocols/ps4.hpp"
 #include "hid_reports.h"
 #include "config.hpp"

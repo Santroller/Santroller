@@ -245,12 +245,12 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
     {
         // SEGGER_RTT_printf(0, "PIO IRQ CS Rising\n");
 
+        pio_spi_read_info_t read_info = prepare_for_next(spi);
+
         if (spi->config.transaction_ended)
         {
             spi->config.transaction_ended(spi->config.callback_ctx);
         }
-        pio_spi_read_info_t read_info = prepare_for_next(spi);
-
         spi->write_buf_len = 0;
         spi->read_buf_len = 0;
         pio_interrupt_clear(spi->pio, 1);

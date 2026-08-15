@@ -1,4 +1,4 @@
-#include "usb/device/ps4_device.h"
+#include "emulation/usb/ps4_device.h"
 #include "protocols/ps4.hpp"
 #include "enums.pb.h"
 #include "main.hpp"

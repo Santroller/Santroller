@@ -2,7 +2,7 @@
 #include "utils.h"
 #include "config.hpp"
 #include <pb_encode.h>
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "events.pb.h"
 
 ToggleInput::ToggleInput()

@@ -2,7 +2,7 @@
 #include "utils.h"
 #include "hardware/pwm.h"
 #include <stdio.h>
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 void InputLedMapping::update(bool full_poll, bool send_events)
 {
     uint16_t raw = m_input->tickAnalog();

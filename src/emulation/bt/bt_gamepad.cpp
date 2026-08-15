@@ -8,9 +8,9 @@
 #include "ble/gatt-service/device_information_service_server.h"
 #include "ble/gatt-service/hids_device.h"
 #include <pico/unique_id.h>
-#include "bt/device/bt_profile.h"
-#include "bt/device/bt_descriptors.h"
-#include "bt/device/bt_gamepad.h"
+#include "emulation/bt/bt_profile.h"
+#include "emulation/bt/bt_descriptors.h"
+#include "emulation/bt/bt_gamepad.h"
 #include "btstack.h"
 #include "utils.h"
 #define SIZE_OF_BD_ADDRESS 18

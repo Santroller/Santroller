@@ -1,6 +1,7 @@
-#ifndef WM_CRYPTO_H
-#define WM_CRYPTO_H
-
+#pragma once
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdint.h>
 
 struct ext_crypto_state
@@ -14,4 +15,6 @@ void ext_encrypt_bytes(const struct ext_crypto_state * state, uint8_t * buffer,
   int addr_offset, int length);
 void ext_decrypt_bytes(const struct ext_crypto_state * state, uint8_t * buffer,
   int addr_offset, int length);
+#ifdef __cplusplus
+}
 #endif

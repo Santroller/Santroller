@@ -1,4 +1,4 @@
-#include "usb/device/ps5_device.h"
+#include "emulation/usb/ps5_device.h"
 #include "protocols/ps5.hpp"
 #include "enums.pb.h"
 #include "main.hpp"

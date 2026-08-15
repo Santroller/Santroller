@@ -13,7 +13,7 @@ void WheelButtonMapping::update_hid(uint8_t *buf)
 {
     
 }
-void WheelButtonMapping::update_wii(uint8_t *buf)
+void WheelButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     
 }

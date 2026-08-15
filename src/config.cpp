@@ -39,6 +39,7 @@
 #include "devices/matrix.hpp"
 #include "devices/ps2.hpp"
 #include "devices/ps2_emulation.hpp"
+#include "devices/wii_emulation.hpp"
 #include "devices/max1704x.hpp"
 #include "devices/vtechexpander.hpp"
 #include "devices/mpr121.hpp"
@@ -51,17 +52,19 @@
 #include "mappings/mapping.hpp"
 #include "leds/leds.hpp"
 #include "tusb.h"
-#include "usb/device/xinput_device.h"
-#include "usb/device/ogxbox_device.h"
-#include "usb/device/xone_device.h"
-#include "usb/device/hid_device.h"
-#include "usb/device/ps3_device.h"
-#include "usb/device/ps4_device.h"
-#include "usb/device/ps5_device.h"
-#include "usb/device/gh_arcade_device.h"
-#include "usb/device/switch_device.h"
-#include "bt/device/bt_gamepad.h"
+#include "emulation/usb/xinput_device.h"
+#include "emulation/usb/ogxbox_device.h"
+#include "emulation/usb/xone_device.h"
+#include "emulation/usb/hid_device.h"
+#include "emulation/usb/ps3_device.h"
+#include "emulation/usb/ps4_device.h"
+#include "emulation/usb/ps5_device.h"
+#include "emulation/usb/gh_arcade_device.h"
+#include "emulation/usb/switch_device.h"
+#include "emulation/bt/bt_gamepad.h"
 #include "usb/host/host.hpp"
+#include "emulation/wii_emulation.hpp"
+#include "emulation/ps2_emulation.hpp"
 #include "usb/usb_descriptors.h"
 #include "hardware/watchdog.h"
 #include "main.hpp"
@@ -95,6 +98,8 @@ std::vector<uint32_t> last_cycle_states;
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
 std::shared_ptr<Profile> working_profile;
+proto_PSXEmulationDevice ps2_emulation_device;
+proto_WiiEmulationDevice wii_emulation_device;
 int seenMasks = 0;
 bool working = false;
 bool loadedAny = false;
@@ -156,9 +161,12 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new PS2Device(std::static_pointer_cast<PS2Device>(prevDevice), device.device.psx, dev_id));
         break;
     case proto_Device_psxEmulation_tag:
-        // we pass in the previous device here so we can make sure the state is kept between reloads
-        // that way, a controller stays connected between reloads
-        active_devices.emplace_back(new PSXEmulationDevice(std::static_pointer_cast<PSXEmulationDevice>(prevDevice), device.device.psxEmulation, dev_id));
+        active_devices.emplace_back(new PSXEmulationDevice(device.device.psxEmulation, dev_id));
+        ps2_emulation_device = device.device.psxEmulation;
+        break;
+    case proto_Device_wiiEmulation_tag:
+        active_devices.emplace_back(new WiiEmulationDevice(device.device.wiiEmulation, dev_id));
+        wii_emulation_device = device.device.wiiEmulation;
         break;
     case proto_Device_protarNeck_tag:
         active_devices.emplace_back(new ProtarNeckDevice(device.device.protarNeck, dev_id));
@@ -833,6 +841,8 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     // printf("profile loaded: %d %d %d\r\n", profile->profile_id, profile->xinput_on_windows, profile->invert_y_axis_hid);
     std::shared_ptr<UsbDevice> usbInstance;
     std::shared_ptr<BTGamepadDevice> btGamepadInstance;
+    std::shared_ptr<Ps2EmulationDeviceInstance> ps2EmulationInstance;
+    std::shared_ptr<WiiEmulationDeviceInstance> wiiEmulationInstance;
     for (auto &list : profile->triggers)
     {
         if (list->validate(true, false, false))
@@ -856,6 +866,36 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                 btGamepadInstance->initialize();
                 active_profiles.insert(profile->profile_id);
                 seenMasks |= ProfileAssignMask_AssignBluetoothGamepad;
+                // printf("assigned bluetooth!\r\n");
+            }
+            if ((assignedDevices & ProfileAssignMask_AssignPsx) && !(seenMasks & ProfileAssignMask_AssignPsx))
+            {
+                ps2EmulationInstance = std::make_shared<Ps2EmulationDeviceInstance>(ps2_emulation_device);
+                instances.push_back(ps2EmulationInstance);
+                ps2EmulationInstance->profiles.push_back(profile);
+                ps2EmulationInstance->subtype = profile->subtype;
+                ps2EmulationInstance->xinput_on_windows = profile->xinput_on_windows;
+                ps2EmulationInstance->invert_y_axis_hid = profile->invert_y_axis_hid;
+                ps2EmulationInstance->supports_ps4 = profile->supports_ps4;
+                active_instances.push_back(ps2EmulationInstance);
+                ps2EmulationInstance->initialize();
+                active_profiles.insert(profile->profile_id);
+                seenMasks |= ProfileAssignMask_AssignPsx;
+                // printf("assigned bluetooth!\r\n");
+            }
+            if ((assignedDevices & ProfileAssignMask_AssignWiimoteExtension) && !(seenMasks & ProfileAssignMask_AssignWiimoteExtension))
+            {
+                wiiEmulationInstance = std::make_shared<WiiEmulationDeviceInstance>(wii_emulation_device);
+                instances.push_back(wiiEmulationInstance);
+                wiiEmulationInstance->profiles.push_back(profile);
+                wiiEmulationInstance->subtype = profile->subtype;
+                wiiEmulationInstance->xinput_on_windows = profile->xinput_on_windows;
+                wiiEmulationInstance->invert_y_axis_hid = profile->invert_y_axis_hid;
+                wiiEmulationInstance->supports_ps4 = profile->supports_ps4;
+                active_instances.push_back(wiiEmulationInstance);
+                wiiEmulationInstance->initialize();
+                active_profiles.insert(profile->profile_id);
+                seenMasks |= ProfileAssignMask_AssignWiimoteExtension;
                 // printf("assigned bluetooth!\r\n");
             }
             if (!usbInstance && (assignedDevices & ProfileAssignMask_AssignUsb))

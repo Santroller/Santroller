@@ -18,7 +18,7 @@ void PopNMusicAxisMapping::update_hid(uint8_t *buf)
 
     // https://github.com/CrazyRedMachine/UltimatePopnController
 }
-void PopNMusicAxisMapping::update_wii(uint8_t *buf)
+void PopNMusicAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     // would need to emulate a remote here as it was motion based
 }

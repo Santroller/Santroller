@@ -11,7 +11,7 @@ KeyboardManiaButtonMapping::KeyboardManiaButtonMapping(proto_Mapping mapping, st
 void KeyboardManiaButtonMapping::update_hid(uint8_t *buf)
 {
 }
-void KeyboardManiaButtonMapping::update_wii(uint8_t *buf)
+void KeyboardManiaButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
 }
 void KeyboardManiaButtonMapping::update_switch(uint8_t *buf)

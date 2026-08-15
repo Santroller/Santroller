@@ -46,7 +46,7 @@ void GuitarHeroArcadeButtonMapping::update_hid(uint8_t *buf)
         break;
     }
 }
-void GuitarHeroArcadeButtonMapping::update_wii(uint8_t *buf)
+void GuitarHeroArcadeButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
 }
 void GuitarHeroArcadeButtonMapping::update_switch(uint8_t *buf)

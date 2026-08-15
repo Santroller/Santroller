@@ -15,7 +15,7 @@ void BeatManiaAxisMapping::update_hid(uint8_t *buf)
 {
     // not a thing
 }
-void BeatManiaAxisMapping::update_wii(uint8_t *buf)
+void BeatManiaAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     // not a thing
 }

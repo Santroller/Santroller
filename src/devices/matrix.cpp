@@ -1,7 +1,7 @@
 #include "devices/matrix.hpp"
 #include "events.pb.h"
 #include "main.hpp"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "config.hpp"
 MatrixDevice::MatrixDevice(proto_MatrixDevice device, uint16_t id) : Device(id), m_matrix(device.inPins, device.outPins), m_device(device)
 {

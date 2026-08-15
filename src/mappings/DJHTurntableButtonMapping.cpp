@@ -14,7 +14,7 @@ void DJHTurntableButtonMapping::update_hid(uint8_t *buf)
     // santroller hid uses an xinput style report descriptor for compatibility reasons
     return update_xinput(buf);
 }
-void DJHTurntableButtonMapping::update_wii(uint8_t *buf)
+void DJHTurntableButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     // TODO: we have to deal with data formats probably
     WiiTurntableIntermediateFormat3_t *report = (WiiTurntableIntermediateFormat3_t *)buf;

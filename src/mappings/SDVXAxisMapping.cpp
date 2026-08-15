@@ -14,7 +14,7 @@ SDVXAxisMapping::SDVXAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> i
 void SDVXAxisMapping::update_hid(uint8_t *buf)
 {
 }
-void SDVXAxisMapping::update_wii(uint8_t *buf)
+void SDVXAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 {
 }
 void SDVXAxisMapping::update_switch(uint8_t *buf)

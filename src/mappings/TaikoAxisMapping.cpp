@@ -14,7 +14,7 @@ TaikoAxisMapping::TaikoAxisMapping(proto_Mapping mapping, std::unique_ptr<Input>
 void TaikoAxisMapping::update_hid(uint8_t *buf)
 {
 }
-void TaikoAxisMapping::update_wii(uint8_t *buf)
+void TaikoAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 {
 }
 void TaikoAxisMapping::update_switch(uint8_t *buf)

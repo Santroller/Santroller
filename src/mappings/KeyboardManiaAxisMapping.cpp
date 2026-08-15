@@ -14,7 +14,7 @@ KeyboardManiaAxisMapping::KeyboardManiaAxisMapping(proto_Mapping mapping, std::u
 void KeyboardManiaAxisMapping::update_hid(uint8_t *buf)
 {
 }
-void KeyboardManiaAxisMapping::update_wii(uint8_t *buf)
+void KeyboardManiaAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 {
 }
 void KeyboardManiaAxisMapping::update_switch(uint8_t *buf)

@@ -14,7 +14,7 @@ DJMaxTurntableAxisMapping::DJMaxTurntableAxisMapping(proto_Mapping mapping, std:
 void DJMaxTurntableAxisMapping::update_hid(uint8_t *buf)
 {
 }
-void DJMaxTurntableAxisMapping::update_wii(uint8_t *buf)
+void DJMaxTurntableAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 {
 }
 void DJMaxTurntableAxisMapping::update_switch(uint8_t *buf)

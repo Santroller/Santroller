@@ -1,7 +1,7 @@
 #include "devices/midiserial.hpp"
 #include "events.pb.h"
 #include "main.hpp"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "config.hpp"
 MidiSerialDevice::MidiSerialDevice(proto_SerialMidiDevice device, uint16_t id) : MidiDevice(id, false), serial(this, device.uart.block, device.uart.tx, device.uart.rx, device.uart.baudrate), m_device(device)
 {

@@ -13,7 +13,7 @@ void PopNMusicButtonMapping::update_hid(uint8_t *buf)
 {
     // TODO: how does this work for hid
 }
-void PopNMusicButtonMapping::update_wii(uint8_t *buf)
+void PopNMusicButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     // TODO: how does this work on wii
 }

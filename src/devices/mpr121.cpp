@@ -1,7 +1,7 @@
 #include "devices/mpr121.hpp"
 #include "events.pb.h"
 #include "main.hpp"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "config.hpp"
 MPR121Device::MPR121Device(proto_Mpr121Device device, uint16_t id) : Device(id), m_mpr121(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
 {

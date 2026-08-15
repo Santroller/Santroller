@@ -1,6 +1,6 @@
 #include "devices/midi.hpp"
 #include "events.pb.h"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "usb/host/hid_host.h"
 #include "main.hpp"
 #include "config.hpp"

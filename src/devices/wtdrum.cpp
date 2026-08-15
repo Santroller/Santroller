@@ -2,7 +2,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "config.hpp"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 WorldTourDrumDevice::WorldTourDrumDevice(proto_WorldTourDrumDevice device, uint16_t id) : MidiDevice(id, false), m_world_tour_drum(this, device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.csPin), m_device(device)
 {
 }

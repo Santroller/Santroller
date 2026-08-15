@@ -93,18 +93,18 @@ add_executable(
   ${TARGET}
   src/main.cpp
   src/usb/usb_descriptors.cpp
-  src/usb/device/xinput_device.cpp
-  src/usb/device/xone_device.cpp
-  src/usb/device/ogxbox_device.cpp
-  src/usb/device/ps3_device.cpp
-  src/usb/device/ps4_device.cpp
-  src/usb/device/ps5_device.cpp
-  src/usb/device/hid_device.cpp
-  src/usb/device/hid_keyboard_device.cpp
-  src/usb/device/hid_gamepad_device.cpp
-  src/usb/device/hid_config_device.cpp
-  src/usb/device/switch_device.cpp
-  src/usb/device/gh_arcade_device.cpp
+  src/emulation/usb/xinput_device.cpp
+  src/emulation/usb/xone_device.cpp
+  src/emulation/usb/ogxbox_device.cpp
+  src/emulation/usb/ps3_device.cpp
+  src/emulation/usb/ps4_device.cpp
+  src/emulation/usb/ps5_device.cpp
+  src/emulation/usb/hid_device.cpp
+  src/emulation/usb/hid_keyboard_device.cpp
+  src/emulation/usb/hid_gamepad_device.cpp
+  src/emulation/usb/hid_config_device.cpp
+  src/emulation/usb/switch_device.cpp
+  src/emulation/usb/gh_arcade_device.cpp
   src/usb/host/xone_host.cpp
   src/usb/host/midi_host.cpp
   src/usb/host/ogxbox_host.cpp
@@ -128,6 +128,8 @@ add_executable(
   src/usb/host/xinput/xinput_big_button_host.cpp
   src/usb/host/xinput/xinput_plugin_module_host.cpp
   src/usb/host/xinput/xinput_security_host.cpp
+  src/emulation/ps2_emulation.cpp
+  src/emulation/wii_emulation.cpp
   src/input/accelerometer.cpp
   src/input/crkd.cpp
   src/input/crkd_drum.cpp
@@ -198,6 +200,7 @@ add_executable(
   src/devices/wii.cpp
   src/devices/ps2.cpp
   src/devices/ps2_emulation.cpp
+  src/devices/wii_emulation.cpp
   src/devices/crkd.cpp
   src/devices/crkd_drum.cpp
   src/devices/ads1115.cpp
@@ -226,8 +229,8 @@ add_executable(
   src/devices/bluetooth.cpp
   src/devices/stp16cpc.cpp
   src/config.cpp
-  src/bt/device/bt_gamepad.cpp
-  src/bt/device/bt_descriptors.cpp
+  src/emulation/bt/bt_gamepad.cpp
+  src/emulation/bt/bt_descriptors.cpp
   ${PROTO_OUTPUT_DIR}/input_enums.pb.c
   ${PROTO_OUTPUT_DIR}/enums.pb.c
   ${PROTO_OUTPUT_DIR}/device.pb.c

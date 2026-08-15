@@ -1,5 +1,5 @@
 #include "tusb_option.h"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "commands.pb.h"
 #include "enums.pb.h"
 #include "config.hpp"

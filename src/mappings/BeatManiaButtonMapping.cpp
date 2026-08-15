@@ -13,7 +13,7 @@ void BeatManiaButtonMapping::update_hid(uint8_t *buf)
     // not a thing
    
 }
-void BeatManiaButtonMapping::update_wii(uint8_t *buf)
+void BeatManiaButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     // not a thing
     

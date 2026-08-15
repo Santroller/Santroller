@@ -26,7 +26,7 @@ void MouseButtonMapping::update_hid(uint8_t *buf)
         break;
     }
 }
-void MouseButtonMapping::update_wii(uint8_t *buf)
+void MouseButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     // not a thing
 }

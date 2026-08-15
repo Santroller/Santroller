@@ -15,7 +15,7 @@
 #include "pico/stdlib.h"
 #include "FlashPROM.h"
 #include "CRC32.h"
-#include "usb/device/device.hpp"
+#include "emulation/usb/device.hpp"
 #include "usb/host/host.hpp"
 bool save_empty();
 bool load();

@@ -1,6 +1,6 @@
-#include "bt/device/bt_descriptors.h"
+#include "emulation/bt/bt_descriptors.h"
 #include <stdint.h>
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "hid_reports.h"
 
 // Dance pads really need simultaneous directions, so they emulate buttons instead of hats

@@ -6,7 +6,7 @@
 #include <pb_encode.h>
 #include <utils.h>
 #include <stdint.h>
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, float center, bool trigger)
 {
     if (trigger)

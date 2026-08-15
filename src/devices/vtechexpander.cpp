@@ -2,7 +2,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "config.hpp"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 VTechGuitarIOExpanderDevice::VTechGuitarIOExpanderDevice(proto_VTechGuitarIOExpanderDevice device, uint16_t id) : Device(id), m_vtech_expander(device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.attPin), m_device(device)
 {
 }

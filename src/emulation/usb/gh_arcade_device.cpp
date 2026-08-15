@@ -2,7 +2,7 @@
 #include "class/hid/hid.h"
 #include "common/tusb_common.h"
 #include "device/usbd_pvt.h"
-#include "usb/device/gh_arcade_device.h"
+#include "emulation/usb/gh_arcade_device.h"
 #include "hid_reports.h"
 #include "config.hpp"
 

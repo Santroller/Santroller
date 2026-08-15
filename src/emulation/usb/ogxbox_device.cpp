@@ -2,8 +2,8 @@
 #include "class/hid/hid.h"
 #include "common/tusb_common.h"
 #include "device/usbd_pvt.h"
-#include "usb/device/ogxbox_device.h"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/ogxbox_device.h"
+#include "emulation/usb/hid_device.h"
 #include "usb/usb_descriptors.h"
 #include "config.hpp"
 

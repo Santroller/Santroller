@@ -12,7 +12,7 @@ DJMaxTurntableButtonMapping::DJMaxTurntableButtonMapping(proto_Mapping mapping, 
 void DJMaxTurntableButtonMapping::update_hid(uint8_t *buf)
 {
 }
-void DJMaxTurntableButtonMapping::update_wii(uint8_t *buf)
+void DJMaxTurntableButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
 }
 void DJMaxTurntableButtonMapping::update_switch(uint8_t *buf)

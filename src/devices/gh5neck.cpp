@@ -1,7 +1,7 @@
 #include "devices/gh5neck.hpp"
 #include "events.pb.h"
 #include "main.hpp"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "config.hpp"
 GH5NeckDevice::GH5NeckDevice(proto_GuitarHero5NeckDevice device, uint16_t id) : Device(id), m_gh5_neck(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
 {

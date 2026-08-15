@@ -5,7 +5,7 @@
 #include "host/usbh_pvt.h"
 #include "usb/usb_devices.h"
 #include "devices/usb.hpp"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "config.hpp"
 #include "utils.h"
 #include <algorithm>

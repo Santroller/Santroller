@@ -14,7 +14,7 @@ DrumManiaAxisMapping::DrumManiaAxisMapping(proto_Mapping mapping, std::unique_pt
 void DrumManiaAxisMapping::update_hid(uint8_t *buf)
 {
 }
-void DrumManiaAxisMapping::update_wii(uint8_t *buf)
+void DrumManiaAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 {
 }
 void DrumManiaAxisMapping::update_switch(uint8_t *buf)

@@ -1,7 +1,7 @@
 #include "devices/wii.hpp"
 #include "events.pb.h"
 #include "main.hpp"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "config.hpp"
 WiiDevice::WiiDevice(std::shared_ptr<WiiDevice> old, proto_WiiDevice device, uint16_t id) : MidiDevice(id, false), m_extension(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
 {

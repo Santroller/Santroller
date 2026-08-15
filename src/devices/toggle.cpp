@@ -1,7 +1,7 @@
 #include "devices/toggle.hpp"
 #include "events.pb.h"
 #include "main.hpp"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "config.hpp"
 #include "utils.h"
 ToggleDevice::ToggleDevice(std::shared_ptr<ToggleDevice> old, proto_ToggleDevice device, uint16_t id, bool current) : Device(id), m_device(device),m_current_value(current)

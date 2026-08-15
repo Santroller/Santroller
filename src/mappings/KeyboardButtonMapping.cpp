@@ -13,7 +13,7 @@ void KeyboardButtonMapping::update_hid(uint8_t *buf)
 {
     
 }
-void KeyboardButtonMapping::update_wii(uint8_t *buf)
+void KeyboardButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     
 }

@@ -2,16 +2,15 @@
 #include "base.hpp"
 #include "device.pb.h"
 #include "input_enums.pb.h"
-#include "psx_emulation.hpp"
 #include <unordered_map>
 #include <memory>
 #include <set>
 
-class PSXEmulationDevice : public Device
+class WiiEmulationDevice : public Device
 {
 public:
-    ~PSXEmulationDevice() {}
-    PSXEmulationDevice(proto_PSXEmulationDevice device, uint16_t id);
+    ~WiiEmulationDevice() {}
+    WiiEmulationDevice(proto_WiiEmulationDevice device, uint16_t id);
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);
@@ -21,5 +20,5 @@ public:
     bool using_pin(uint8_t pin);
 
 private:
-    proto_PSXEmulationDevice m_device;
+    proto_WiiEmulationDevice m_device;
 };

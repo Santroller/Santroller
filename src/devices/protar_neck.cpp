@@ -1,7 +1,7 @@
 #include "devices/protar_neck.hpp"
 #include "events.pb.h"
 #include "main.hpp"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "config.hpp"
 #include "utils.h"
 #include "stdio.h"

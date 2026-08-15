@@ -38,7 +38,7 @@ void GuitarFreaksButtonMapping::update_hid(uint8_t *buf)
     //     break;
     // }
 }
-void GuitarFreaksButtonMapping::update_wii(uint8_t *buf)
+void GuitarFreaksButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     // no mapping for wii
 }

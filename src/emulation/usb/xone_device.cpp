@@ -10,7 +10,7 @@
 #include "class/hid/hid.h"
 #include "common/tusb_common.h"
 #include "device/usbd_pvt.h"
-#include "usb/device/xone_device.h"
+#include "emulation/usb/xone_device.h"
 #include "xgip_protocol.h"
 #include <queue>
 #include "config.hpp"

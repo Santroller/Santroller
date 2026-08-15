@@ -21,7 +21,7 @@ void GamepadAxisMapping::update_hid(uint8_t *buf)
     data->leftStickY = -data->leftStickY;
     data->rightStickY = -data->rightStickY;
 }
-void GamepadAxisMapping::update_wii(uint8_t *buf)
+void GamepadAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     if (m_centered)
     {

@@ -13,7 +13,7 @@ void GuitarHeroDrumsButtonMapping::update_hid(uint8_t *buf)
     // santroller hid uses an xinput style report descriptor for compatibility reasons
     return update_xinput(buf);
 }
-void GuitarHeroDrumsButtonMapping::update_wii(uint8_t *buf)
+void GuitarHeroDrumsButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     // TODO: we have to deal with data formats probably
     WiiDrumDataFormat3_t *report = (WiiDrumDataFormat3_t *)buf;

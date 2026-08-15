@@ -1,7 +1,7 @@
 #include "devices/bluetooth.hpp"
 #include <pico/cyw43_arch.h>
 #include "events.pb.h"
-#include "usb/device/hid_device.h"
+#include "emulation/usb/hid_device.h"
 #include "config.hpp"
 static bool bluetooth_initted = false;
 static bool init_done = true;

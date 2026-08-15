@@ -9,7 +9,7 @@
 #include "usb/host/xone_host.h"
 #include "hardware/pio.h"
 #include "config.hpp"
-#include "usb/device//hid_device.h"
+#include "emulation/usb//hid_device.h"
 #include "hardware/dma.h"
 #include <algorithm>
 #include <vector>

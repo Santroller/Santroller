@@ -92,7 +92,7 @@ FILE(WRITE ${CMAKE_BINARY_DIR}/commit.hash.in
 add_executable(
   ${TARGET}
   src/main.cpp
-  src/usb/usb_descriptors.cpp
+  src/devices/usb/usb_descriptors.cpp
   src/emulation/usb/xinput_device.cpp
   src/emulation/usb/xone_device.cpp
   src/emulation/usb/ogxbox_device.cpp
@@ -105,29 +105,29 @@ add_executable(
   src/emulation/usb/hid_config_device.cpp
   src/emulation/usb/switch_device.cpp
   src/emulation/usb/gh_arcade_device.cpp
-  src/usb/host/xone_host.cpp
-  src/usb/host/midi_host.cpp
-  src/usb/host/ogxbox_host.cpp
-  src/usb/host/hid/hid_host.cpp
-  src/usb/host/hid/ps3_host.cpp
-  src/usb/host/hid/ps4_host.cpp
-  src/usb/host/hid/ps5_host.cpp
-  src/usb/host/hid/mouse_host.cpp
-  src/usb/host/hid/keyboard_host.cpp
-  src/usb/host/hid/generic_host.cpp
-  src/usb/host/hid/ltek_host.cpp
-  src/usb/host/hid/raphnet_host.cpp
-  src/usb/host/hid/stadia_host.cpp
-  src/usb/host/hid/stepmania_host.cpp
-  src/usb/host/hid/streamdeck_host.cpp
-  src/usb/host/hid/switch_host.cpp
-  src/usb/host/xinput/xinput_audio_host.cpp
-  src/usb/host/xinput/xinput_gamepad_host.cpp
-  src/usb/host/xinput/xinput_wireless_gamepad_host.cpp
-  src/usb/host/xinput/xinput_wireless_audio_host.cpp
-  src/usb/host/xinput/xinput_big_button_host.cpp
-  src/usb/host/xinput/xinput_plugin_module_host.cpp
-  src/usb/host/xinput/xinput_security_host.cpp
+  src/devices/usb/host/xone_host.cpp
+  src/devices/usb/host/midi_host.cpp
+  src/devices/usb/host/ogxbox_host.cpp
+  src/devices/usb/host/hid/hid_host.cpp
+  src/devices/usb/host/hid/ps3_host.cpp
+  src/devices/usb/host/hid/ps4_host.cpp
+  src/devices/usb/host/hid/ps5_host.cpp
+  src/devices/usb/host/hid/mouse_host.cpp
+  src/devices/usb/host/hid/keyboard_host.cpp
+  src/devices/usb/host/hid/generic_host.cpp
+  src/devices/usb/host/hid/ltek_host.cpp
+  src/devices/usb/host/hid/raphnet_host.cpp
+  src/devices/usb/host/hid/stadia_host.cpp
+  src/devices/usb/host/hid/stepmania_host.cpp
+  src/devices/usb/host/hid/streamdeck_host.cpp
+  src/devices/usb/host/hid/switch_host.cpp
+  src/devices/usb/host/xinput/xinput_audio_host.cpp
+  src/devices/usb/host/xinput/xinput_gamepad_host.cpp
+  src/devices/usb/host/xinput/xinput_wireless_gamepad_host.cpp
+  src/devices/usb/host/xinput/xinput_wireless_audio_host.cpp
+  src/devices/usb/host/xinput/xinput_big_button_host.cpp
+  src/devices/usb/host/xinput/xinput_plugin_module_host.cpp
+  src/devices/usb/host/xinput/xinput_security_host.cpp
   src/emulation/ps2_emulation.cpp
   src/emulation/wii_emulation.cpp
   src/input/accelerometer.cpp

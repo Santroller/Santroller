@@ -43,12 +43,6 @@ static void __time_critical_func(handle_transaction_ended)(void *ctx)
 
 void PSXEmulation::transaction_started()
 {
-    if (config)
-    {
-        spi->header = 0xF3;
-    } else {
-        spi->header = 0x40 | (report_len / 2);
-    }
 }
 void PSXEmulation::transaction_ended()
 {
@@ -65,7 +59,8 @@ void PSXEmulation::transaction_ended()
         analog = dma_buf[3];
         locked = dma_buf[4];
         memset(resp_41, 0, sizeof(resp_41));
-        if (analog) {
+        if (analog)
+        {
             // Analog mode, default is 2 digial bytes + 4 analog bytes
             resp_41[0] = 0b111111;
         }
@@ -76,6 +71,14 @@ void PSXEmulation::transaction_ended()
     case 0x46:
         spi->c46_state = dma_buf[3] == 0x00 ? 0x01 : 0x00;
         break;
+    }
+    if (config)
+    {
+        spi->header = 0xF3;
+    }
+    else
+    {
+        spi->header = 0x40 | (report_len / 2);
     }
     sent = true;
 }
@@ -170,7 +173,9 @@ PSXEmulation::PSXEmulation(int8_t sck, int8_t cmd, int8_t dat, uint8_t attPin, u
 
 void PSXEmulation::sendData(uint8_t len, uint8_t *data)
 {
-    memcpy(data, resp_42, len);
+    memcpy(resp_42, data, len);
+    report_len = len;
+    sent = false;
 }
 PsxReportFormat_t PSXEmulation::getReportFormat()
 {

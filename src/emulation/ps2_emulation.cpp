@@ -58,6 +58,8 @@ void Ps2EmulationDeviceInstance::process()
             led->update(false, false);
         }
     }
+    m_buffer[0] = ~m_buffer[0];
+    m_buffer[1] = ~m_buffer[1];
     if (subtype == Gamepad)
     {
         PsxReportFormat_t format = m_controller.getReportFormat();
@@ -78,5 +80,6 @@ void Ps2EmulationDeviceInstance::process()
         m_controller.sendData(current, m_buffer_formatted);
         return;
     }
+    // TODO: handle vibration and player leds
     m_controller.sendData(m_size, m_buffer);
 }

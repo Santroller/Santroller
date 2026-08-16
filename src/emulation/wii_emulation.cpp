@@ -36,6 +36,6 @@ void WiiEmulationDeviceInstance::process()
             led->update(false, false);
         }
     }
-    
+    // TODO: handle vibration and euphoria led
     m_controller.setInputs(m_buffer, m_size);
 }

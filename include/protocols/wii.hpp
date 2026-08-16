@@ -231,7 +231,6 @@ typedef struct
             uint8_t : 1;
             uint8_t dpadDown : 1;
             uint8_t dpadRight : 1;
-            uint8_t buttonsLow;
         };
         uint8_t buttonsLow;
     };

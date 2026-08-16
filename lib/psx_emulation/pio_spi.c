@@ -6,8 +6,24 @@
 #include <string.h>
 #include <stdio.h>
 
+const uint8_t resp_43[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+const uint8_t resp_40[] = {0x00, 0x00, 0x02, 0x00, 0x00, 0x5A};
+const uint8_t resp_44[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+const uint8_t resp_45_ds2[] = {0x03, 0x02, 0x00, 0x02, 0x01, 0x00};
+const uint8_t resp_45_gh[] = {0x01, 0x02, 0x00, 0x02, 0x01, 0x00};
+const uint8_t resp_46_00[] = {0x00, 0x00, 0x01, 0x02, 0x00, 0x0A};
+const uint8_t resp_46_01[] = {0x00, 0x00, 0x01, 0x01, 0x01, 0x14};
+
+const uint8_t resp_47[] = {0x00, 0x00, 0x02, 0x00, 0x01, 0x00};
+const uint8_t resp_4c_00[] = {0x00, 0x00, 0x00, 0x04, 0x00, 0x00};
+const uint8_t resp_4c_01[] = {0x00, 0x00, 0x00, 0x07, 0x00, 0x00};
+const uint8_t resp_4d[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+const uint8_t resp_4f[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x5a};
 uint fixPio(PIO pio, pio_program_t program, int sck_pin)
 {
+    // Santroller 1 let us put clock on any pin
+    // because of this, we need to encode the pin into the pio instructions
+    // which is easiest done by just replacing the instructions
     uint16_t data[32];
     memcpy(data, program.instructions, program.length * sizeof(uint16_t));
     uint16_t prevClk0 = pio_encode_wait_gpio(false, PIN_SCK);
@@ -58,7 +74,7 @@ static void setup_read_initial_sm(PIO pio, uint sm, int copi_pin, int ack_pin, u
     pio_sm_init(pio, sm, offset, &c);
 }
 
-static void setup_combined_sm(PIO pio, uint sm, int cipo_pin, int copi_pin, int sck_pin, int ack_pin, uint8_t default_write_value, uint *offset)
+static void setup_combined_sm(PIO pio, uint sm, int cipo_pin, int copi_pin, int sck_pin, int ack_pin, uint *offset)
 {
     *offset = fixPio(pio, spi_combined_loop_program, sck_pin);
     pio_sm_config c = spi_combined_loop_program_get_default_config(*offset);
@@ -70,7 +86,7 @@ static void setup_combined_sm(PIO pio, uint sm, int cipo_pin, int copi_pin, int 
     sm_config_set_clkdiv_int_frac(&c, 70, 0x00);
     pio_sm_set_consecutive_pindirs(pio, sm, ack_pin, 1, false);
 
-    pio_sm_put(pio, sm, default_write_value);
+    pio_sm_put(pio, sm, 0xFF);
     pio_sm_exec_wait_blocking(pio, sm, pio_encode_pull(false, true));
     pio_sm_exec_wait_blocking(pio, sm, pio_encode_mov(pio_x, pio_osr));
 
@@ -213,24 +229,41 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
     io_rw_32 irqs = spi->pio->irq;
     if (irqs & (1u << 1))
     {
-        // SEGGER_RTT_printf(0, "PIO IRQ CS Falling\n");
-        if (spi->config.transaction_started)
+        pio_spi_provide_read_buffer(spi, spi->dma_buf, dma_encode_transfer_count(32));
+        // When not in config mode, the response is always the same so we don't need to wait to know the command
+        if (!spi->configMode)
         {
-            spi->config.transaction_started(spi->config.callback_ctx, spi);
+            pio_spi_provide_write_buffer(spi, spi->resp_42, dma_encode_transfer_count(spi->report_len));
         }
         pio_interrupt_clear(spi->pio, 1);
     }
     if (irqs & (1u << 2))
     {
-        // SEGGER_RTT_printf(0, "PIO IRQ CS Rising\n");
-
-        if (spi->config.transaction_ended)
+        switch (spi->dma_buf[1])
         {
-            spi->config.transaction_ended(spi->config.callback_ctx, spi);
+        case 0x43:
+            spi->c46_state = 0;
+            spi->c4c_state = 0;
+            spi->configMode = spi->dma_buf[3];
+            break;
+        case 0x44:
+            spi->analog = spi->dma_buf[3];
+            spi->locked = spi->dma_buf[4];
+            memset(spi->resp_41, 0, sizeof(spi->resp_41));
+            if (spi->analog)
+            {
+                // Analog mode, default is 2 digial bytes + 4 analog bytes
+                spi->resp_41[0] = 0b111111;
+            }
+            break;
+        case 0x4c:
+            spi->c4c_state = spi->dma_buf[3] == 0x00 ? 0x01 : 0x00;
+            break;
+        case 0x46:
+            spi->c46_state = spi->dma_buf[3] == 0x00 ? 0x01 : 0x00;
+            break;
         }
         prepare_for_next(spi);
-        spi->write_buf_len = 0;
-        spi->read_buf_len = 0;
         pio_interrupt_clear(spi->pio, 1);
     }
 }
@@ -245,12 +278,52 @@ static void __time_critical_func(pio_irq_1)(void)
     pio_irq(&pio_spi[1]);
 }
 
+static void __time_critical_func(handle_data_request)(uint8_t cmd, pio_spi_t *spi)
+{
+    switch (cmd)
+    {
+    case 0x43:
+        pio_spi_provide_write_buffer(spi, resp_43, dma_encode_transfer_count(sizeof(resp_43)));
+        break;
+    case 0x42:
+        pio_spi_provide_write_buffer(spi, spi->resp_42, dma_encode_transfer_count(sizeof(spi->resp_42)));
+        break;
+    case 0x40:
+        pio_spi_provide_write_buffer(spi, resp_40, dma_encode_transfer_count(sizeof(resp_40)));
+        break;
+    case 0x41:
+        pio_spi_provide_write_buffer(spi, spi->resp_41, dma_encode_transfer_count(sizeof(spi->resp_41)));
+        break;
+    case 0x44:
+        pio_spi_provide_write_buffer(spi, resp_44, dma_encode_transfer_count(sizeof(resp_44)));
+        break;
+    case 0x45:
+        pio_spi_provide_write_buffer(spi, resp_45_ds2, dma_encode_transfer_count(sizeof(resp_45_ds2)));
+        break;
+    case 0x46:
+        pio_spi_provide_write_buffer(spi, spi->c46_state ? resp_46_01 : resp_46_00, dma_encode_transfer_count(sizeof(resp_46_00)));
+        break;
+    case 0x47:
+        pio_spi_provide_write_buffer(spi, resp_47, dma_encode_transfer_count(sizeof(resp_47)));
+        break;
+    case 0x4c:
+        pio_spi_provide_write_buffer(spi, spi->c4c_state ? resp_4c_01 : resp_4c_00, dma_encode_transfer_count(sizeof(resp_4c_00)));
+        break;
+    case 0x4d:
+        pio_spi_provide_write_buffer(spi, resp_4d, dma_encode_transfer_count(sizeof(resp_4d)));
+        break;
+    case 0x4f:
+        pio_spi_provide_write_buffer(spi, resp_4f, dma_encode_transfer_count(sizeof(resp_4f)));
+        break;
+    }
+}
+
 static void __time_critical_func(pio_data_irq_0)(void)
 {
     pio_spi_config_t *cfg = &pio_spi[0].config;
     pio0->rxf[cfg->initial_sm];
     uint8_t reg = pio0->rxf[cfg->initial_sm] >> 24;
-    cfg->data_request(cfg->callback_ctx, reg, &pio_spi[0]);
+    handle_data_request(reg, &pio_spi[0]);
     hw_set_bits(&pio0->irq, (1u << 0));
 }
 
@@ -259,7 +332,7 @@ static void __time_critical_func(pio_data_irq_1)(void)
     pio_spi_config_t *cfg = &pio_spi[1].config;
     pio1->rxf[cfg->initial_sm];
     uint8_t reg = pio1->rxf[cfg->initial_sm] >> 24;
-    cfg->data_request(cfg->callback_ctx, reg, &pio_spi[1]);
+    handle_data_request(reg, &pio_spi[1]);
     hw_set_bits(&pio1->irq, (1u << 0));
 }
 
@@ -303,7 +376,7 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
     spi->config.initial_sm = pio_claim_unused_sm(spi->pio, true);
     spi->config.cs_sm = pio_claim_unused_sm(spi->pio, true);
 
-    setup_combined_sm(spi->pio, spi->config.combined_sm, spi->config.cipo_pin, spi->config.copi_pin, spi->config.sck_pin, spi->config.ack_pin, spi->config.default_write_value, &spi->offset_combined);
+    setup_combined_sm(spi->pio, spi->config.combined_sm, spi->config.cipo_pin, spi->config.copi_pin, spi->config.sck_pin, spi->config.ack_pin, &spi->offset_combined);
     configure_write_dma(spi->pio, spi->config.combined_sm, &spi->channel_write);
 
     configure_read_dma(spi->pio, spi->config.combined_sm, &spi->channel_read);
@@ -312,20 +385,7 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
 
     setup_cs_sm(spi->pio, spi->config.cs_sm, spi->config.cipo_pin, spi->config.cs_pin, &spi->offset_cs);
 
-    if (spi->config.cs_active_high)
-    {
-        gpio_set_inover(spi->config.cs_pin, GPIO_OVERRIDE_INVERT);
-    }
-
-    if (spi->config.trigger_on_falling)
-    {
-        gpio_set_inover(spi->config.sck_pin, GPIO_OVERRIDE_INVERT);
-    }
-
-    if (config->data_request)
-    {
-        pio_set_irq1_source_enabled(spi->pio, pis_interrupt0, true);
-    }
+    pio_set_irq1_source_enabled(spi->pio, pis_interrupt0, true);
 
     pio_set_irq0_source_enabled(spi->pio, pis_interrupt1, true);
     pio_set_irq0_source_enabled(spi->pio, pis_interrupt2, true);
@@ -348,7 +408,6 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
     spi->startstop_mask = (1u << spi->config.combined_sm) | (1u << spi->config.initial_sm);
 
     prepare_for_next(spi);
-    spi->write_dma = pio_spi_get_dma_write_channel(spi);
     pio_spi_provide_read_buffer(spi, spi->dma_buf, 32);
 
     return spi;

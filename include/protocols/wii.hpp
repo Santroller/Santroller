@@ -30,37 +30,37 @@ typedef struct
     {
         struct
         {
-            uint8_t leftStickX10 : 2;
-            uint8_t leftStickX92 : 8;
+            uint16_t leftStickX10 : 2;
+            uint16_t leftStickX92 : 8;
         };
-        uint8_t leftStickX : 10;
+        uint16_t leftStickX : 10;
     };
     union
     {
         struct
         {
-            uint8_t leftStickY10 : 2;
-            uint8_t leftStickY92 : 8;
+            uint16_t leftStickY10 : 2;
+            uint16_t leftStickY92 : 8;
         };
-        uint8_t leftStickY : 10;
+        uint16_t leftStickY : 10;
     };
     union
     {
         struct
         {
-            uint8_t rightStickX10 : 2;
-            uint8_t rightStickX92 : 8;
+            uint16_t rightStickX10 : 2;
+            uint16_t rightStickX92 : 8;
         };
-        uint8_t rightStickX : 10;
+        uint16_t rightStickX : 10;
     };
     union
     {
         struct
         {
-            uint8_t rightStickY10 : 2;
-            uint8_t rightStickY92 : 8;
+            uint16_t rightStickY10 : 2;
+            uint16_t rightStickY92 : 8;
         };
-        uint8_t rightStickY : 10;
+        uint16_t rightStickY : 10;
     };
 } __attribute__((packed)) WiiIntermediateClassicDataFormat2_t;
 typedef struct

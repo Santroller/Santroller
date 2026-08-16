@@ -25,22 +25,11 @@ public:
     void load_state(PSXEmulation *state);
     void tick();
     void sendData(uint8_t len, uint8_t *data);
-    void data_request(uint8_t cmd);
-    void transaction_ended();
-    void transaction_started();
     PsxReportFormat_t getReportFormat();
 
 private:
-    bool analog = false;
-    bool config = false;
-    bool locked = false;
     volatile bool sent = true;
-    uint8_t report_len = 2;
-    uint8_t resp_42[32] = {0xff, 0xff};
-    uint8_t resp_41[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    dma_channel_hw_t *write_dma;
     pio_spi_t *spi;
-    volatile uint8_t dma_buf[32];
     int8_t sck;
     int8_t cmd;
     int8_t dat;

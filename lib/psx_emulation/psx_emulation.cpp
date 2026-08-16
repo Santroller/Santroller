@@ -10,117 +10,53 @@ const uint8_t resp_40[] = {0x00, 0x00, 0x02, 0x00, 0x00, 0x5A};
 const uint8_t resp_44[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 const uint8_t resp_45_ds2[] = {0x03, 0x02, 0x00, 0x02, 0x01, 0x00};
 const uint8_t resp_45_gh[] = {0x01, 0x02, 0x00, 0x02, 0x01, 0x00};
-const uint8_t resp_46_01_ds2[] = {0x00, 0x00, 0x00, 0x02, 0x00, 0x0A};
-const uint8_t resp_46_02_ds2[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x14};
-const uint8_t resp_46_01_gh[] = {0x00, 0x00, 0x01, 0x02, 0x00, 0x0A};
-const uint8_t resp_46_02_gh[] = {0x00, 0x00, 0x01, 0x01, 0x01, 0x14};
+const uint8_t resp_46_00[] = {0x00, 0x00, 0x01, 0x02, 0x00, 0x0A};
+const uint8_t resp_46_01[] = {0x00, 0x00, 0x01, 0x01, 0x01, 0x14};
 
-const uint8_t resp_47_ds2[] = {0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
-const uint8_t resp_47_gh[] = {0x00, 0x00, 0x02, 0x00, 0x01, 0x00};
-const uint8_t resp_4c_01_ds2[] = {0x00, 0x00, 0x04, 0x00, 0x00, 0x00};
-const uint8_t resp_4c_02_ds2[] = {0x00, 0x00, 0x06, 0x00, 0x00, 0x00};
-const uint8_t resp_4c_01_gh[] = {0x00, 0x00, 0x04, 0x00, 0x00, 0x00};
-const uint8_t resp_4c_02_gh[] = {0x00, 0x00, 0x06, 0x00, 0x00, 0x00};
+const uint8_t resp_47[] = {0x00, 0x00, 0x02, 0x00, 0x01, 0x00};
+const uint8_t resp_4c_00[] = {0x00, 0x00, 0x00, 0x04, 0x00, 0x00};
+const uint8_t resp_4c_01[] = {0x00, 0x00, 0x00, 0x07, 0x00, 0x00};
 const uint8_t resp_4d[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 const uint8_t resp_4f[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x5a};
-static void __time_critical_func(handle_transaction_started)(void *ctx)
+static void __time_critical_func(handle_transaction_started)(void *ctx, pio_spi_t* spi)
 {
-    PSXEmulation *controller = (PSXEmulation *)ctx;
-    controller->transaction_started();
-}
-
-static void __time_critical_func(handle_data_request)(void *ctx, uint8_t reg)
-{
-    PSXEmulation *controller = (PSXEmulation *)ctx;
-    controller->data_request(reg);
-}
-
-static void __time_critical_func(handle_transaction_ended)(void *ctx)
-{
-    PSXEmulation *controller = (PSXEmulation *)ctx;
-    controller->transaction_ended();
-}
-
-void PSXEmulation::transaction_started()
-{
+    pio_spi_provide_read_buffer(spi, spi->dma_buf, dma_encode_transfer_count(32));
     // When not in config mode, the response is always the same so we don't need to wait to know the command
-    if (!config) {
-        pio_spi_provide_write_buffer(spi, resp_42, dma_encode_transfer_count(sizeof(resp_42)));
+    if (!spi->configMode) {
+        pio_spi_provide_write_buffer(spi, spi->resp_42, dma_encode_transfer_count(spi->report_len));
     }
-}
-void PSXEmulation::transaction_ended()
-{
-    pio_spi_provide_read_buffer(spi, dma_buf, 255);
-    pio_spi_provide_write_buffer_length(spi, 32);
-    switch (dma_buf[1])
-    {
-    case 0x43:
-        spi->c46_state = 0;
-        spi->c4c_state = 0;
-        config = dma_buf[3];
-        break;
-    case 0x44:
-        analog = dma_buf[3];
-        locked = dma_buf[4];
-        memset(resp_41, 0, sizeof(resp_41));
-        if (analog)
-        {
-            // Analog mode, default is 2 digial bytes + 4 analog bytes
-            resp_41[0] = 0b111111;
-        }
-        break;
-    case 0x4c:
-        spi->c4c_state = dma_buf[3] == 0x00 ? 0x01 : 0x00;
-        break;
-    case 0x46:
-        spi->c46_state = dma_buf[3] == 0x00 ? 0x01 : 0x00;
-        break;
-    }
-    if (config)
-    {
-        spi->header = 0xF3;
-    }
-    else
-    {
-        spi->header = 0x40 | (report_len / 2);
-    }
-    sent = true;
 }
 
-void PSXEmulation::data_request(uint8_t cmd)
+static void __time_critical_func(handle_data_request)(void *ctx, uint8_t cmd, pio_spi_t* spi)
 {
-    // when not in config mode we always respond with the same data!
-    if (!config) {
-        return;
-    }
     switch (cmd)
     {
     case 0x43:
         pio_spi_provide_write_buffer(spi, resp_43, dma_encode_transfer_count(sizeof(resp_43)));
         break;
     case 0x42:
-        pio_spi_provide_write_buffer(spi, resp_42, dma_encode_transfer_count(sizeof(resp_42)));
+        pio_spi_provide_write_buffer(spi, spi->resp_42, dma_encode_transfer_count(sizeof(spi->resp_42)));
         break;
     case 0x40:
         pio_spi_provide_write_buffer(spi, resp_40, dma_encode_transfer_count(sizeof(resp_40)));
         break;
     case 0x41:
-        pio_spi_provide_write_buffer(spi, resp_41, dma_encode_transfer_count(sizeof(resp_41)));
+        pio_spi_provide_write_buffer(spi, spi->resp_41, dma_encode_transfer_count(sizeof(spi->resp_41)));
         break;
     case 0x44:
         pio_spi_provide_write_buffer(spi, resp_44, dma_encode_transfer_count(sizeof(resp_44)));
         break;
     case 0x45:
-        pio_spi_provide_write_buffer(spi, resp_45_gh, dma_encode_transfer_count(sizeof(resp_45_gh)));
+        pio_spi_provide_write_buffer(spi, resp_45_ds2, dma_encode_transfer_count(sizeof(resp_45_ds2)));
         break;
     case 0x46:
-        pio_spi_provide_write_buffer(spi, spi->c46_state ? resp_46_02_gh : resp_46_01_gh, dma_encode_transfer_count(sizeof(resp_46_01_gh)));
+        pio_spi_provide_write_buffer(spi, spi->c46_state ? resp_46_01 : resp_46_00, dma_encode_transfer_count(sizeof(resp_46_00)));
         break;
     case 0x47:
-        pio_spi_provide_write_buffer(spi, resp_47_gh, dma_encode_transfer_count(sizeof(resp_47_gh)));
+        pio_spi_provide_write_buffer(spi, resp_47, dma_encode_transfer_count(sizeof(resp_47)));
         break;
     case 0x4c:
-        pio_spi_provide_write_buffer(spi, spi->c4c_state ? resp_4c_02_gh : resp_4c_01_gh, dma_encode_transfer_count(sizeof(resp_4c_01_gh)));
+        pio_spi_provide_write_buffer(spi, spi->c4c_state ? resp_4c_01 : resp_4c_00, dma_encode_transfer_count(sizeof(resp_4c_00)));
         break;
     case 0x4d:
         pio_spi_provide_write_buffer(spi, resp_4d, dma_encode_transfer_count(sizeof(resp_4d)));
@@ -130,6 +66,35 @@ void PSXEmulation::data_request(uint8_t cmd)
         break;
     }
 }
+
+static void __time_critical_func(handle_transaction_ended)(void *ctx, pio_spi_t* spi)
+{
+    switch (spi->dma_buf[1])
+    {
+    case 0x43:
+        spi->c46_state = 0;
+        spi->c4c_state = 0;
+        spi->configMode = spi->dma_buf[3];
+        break;
+    case 0x44:
+        spi->analog = spi->dma_buf[3];
+        spi->locked = spi->dma_buf[4];
+        memset(spi->resp_41, 0, sizeof(spi->resp_41));
+        if (spi->analog)
+        {
+            // Analog mode, default is 2 digial bytes + 4 analog bytes
+            spi->resp_41[0] = 0b111111;
+        }
+        break;
+    case 0x4c:
+        spi->c4c_state = spi->dma_buf[3] == 0x00 ? 0x01 : 0x00;
+        break;
+    case 0x46:
+        spi->c46_state = spi->dma_buf[3] == 0x00 ? 0x01 : 0x00;
+        break;
+    }
+}
+
 
 PSXEmulation::~PSXEmulation()
 {
@@ -146,7 +111,6 @@ void PSXEmulation::begin(SubType type)
         .copi_pin = cmd,
         .cipo_pin = dat,
         .ack_pin = ackPin,
-        .dbg_pin = -1,
         .cs_active_high = false,
         .trigger_on_falling = false,
         .default_write_value = 0xFF,
@@ -156,8 +120,6 @@ void PSXEmulation::begin(SubType type)
         .callback_ctx = this};
 
     spi = pio_spi_init(&config);
-    write_dma = pio_spi_get_dma_write_channel(spi);
-    pio_spi_provide_read_buffer(spi, dma_buf, 32);
     pio_spi_start(spi);
 }
 
@@ -182,13 +144,13 @@ PSXEmulation::PSXEmulation(int8_t sck, int8_t cmd, int8_t dat, uint8_t attPin, u
 
 void PSXEmulation::sendData(uint8_t len, uint8_t *data)
 {
-    memcpy(resp_42, data, len);
-    report_len = len;
+    memcpy(spi->resp_42, data, len);
+    spi->report_len = len;
     sent = false;
 }
 PsxReportFormat_t PSXEmulation::getReportFormat()
 {
-    return {analog, {resp_41[0], resp_41[1], resp_41[2]}};
+    return {spi->analog, {spi->resp_41[0], spi->resp_41[1], spi->resp_41[2]}};
 }
 bool PSXEmulation::ready()
 {

@@ -161,24 +161,11 @@ typedef struct pio_spi_read_info_t
     uint num_bits_transacted;
 } pio_spi_read_info_t;
 
-inline static uint read_register(PIO pio, uint sm, enum pio_src_dest reg)
-{
-    uint move_isr = pio_encode_mov(pio_isr, reg);
-    pio_sm_exec_wait_blocking(pio, sm, move_isr);
-    uint push = pio_encode_push(false, false);
-    pio_sm_exec_wait_blocking(pio, sm, push);
-    return pio_sm_get(pio, sm);
-}
-
-static pio_spi_read_info_t __time_critical_func(stop_loops)(pio_spi_t *spi)
+static void __time_critical_func(stop_loops)(pio_spi_t *spi)
 {
     pio_set_sm_mask_enabled(spi->pio, spi->startstop_mask, false); // Stop state machines
-    // Read FIFO count of write buffer
-    uint test = read_register(spi->pio, spi->config.combined_sm, pio_x);
-    
-    uint left_in_write_queue = pio_sm_get_tx_fifo_level(spi->pio, spi->config.combined_sm);
+
     pio_sm_clear_fifos(spi->pio, spi->config.initial_sm);
-    uint bits_transacted = read_register(spi->pio, spi->config.initial_sm, pio_y);
     pio_restart_sm_mask(spi->pio, spi->startstop_mask); // Restart state machines to known states
     hw_set_bits(&spi->pio->irq, 0xFF);                  // Clear IRQs
     safe_fifo_rx_wait_for_finish(spi->pio, spi->config.combined_sm, spi->channel_read);
@@ -186,7 +173,16 @@ static pio_spi_read_info_t __time_critical_func(stop_loops)(pio_spi_t *spi)
     pio_sm_clear_fifos(spi->pio, spi->config.initial_sm);
     // push the initial 0xFF and header
     pio_sm_put(spi->pio, spi->config.combined_sm, 0xFF);
-    pio_sm_put(spi->pio, spi->config.combined_sm, spi->header);
+    // we always send the same data when not in config mode, so theres no need to read the command!
+    irq_set_enabled(PIO_IRQ_NUM(spi->pio, 1), spi->configMode);
+    if (spi->configMode)
+    {
+        pio_sm_put(spi->pio, spi->config.combined_sm, 0xF3);
+    }
+    else
+    {
+        pio_sm_put(spi->pio, spi->config.combined_sm, 0x40 | (spi->report_len / 2));
+    }
     pio_sm_put(spi->pio, spi->config.combined_sm, 0x5A);
     pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_set(pio_y, 7));
     pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_jmp(spi->offset_combined));
@@ -194,50 +190,33 @@ static pio_spi_read_info_t __time_critical_func(stop_loops)(pio_spi_t *spi)
     pio_sm_exec_wait_blocking(spi->pio, spi->config.initial_sm, pio_encode_set(pio_y, (8 * 3) - 1));
     pio_sm_exec_wait_blocking(spi->pio, spi->config.initial_sm, pio_encode_jmp(spi->offset_combined));
     // 3 bytes for the header, -1, and then we don't ack the last byte, leaving only the packet size + 1
-    pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_set(pio_x, ((spi->header & 0xf) * 2) + 1));
+    pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_set(pio_x, (spi->report_len) + 1));
 
     uint irq_wait = pio_encode_wait_irq(1, false, 7);
     pio_sm_exec(spi->pio, spi->config.combined_sm, irq_wait);
     pio_sm_exec(spi->pio, spi->config.initial_sm, irq_wait);
-
-    pio_spi_read_info_t ret = {
-        .num_bytes_written = test,
-        .num_bytes_read = 0,
-        .num_bits_transacted = test,
-    };
-
-    return ret;
 }
 
-static pio_spi_read_info_t __time_critical_func(prepare_for_next)(pio_spi_t *spi)
+static void __time_critical_func(prepare_for_next)(pio_spi_t *spi)
 {
     // Read FIFO count of write buffer
-    pio_spi_read_info_t byte_info = stop_loops(spi);
-
-    uint8_t reads_remaining = dma_channel_hw_addr(spi->channel_read)->transfer_count;
-    uint8_t writes_remaining = dma_channel_hw_addr(spi->channel_write)->transfer_count;
+    stop_loops(spi);
 
     dma_channel_abort(spi->channel_read);
     dma_channel_abort(spi->channel_write);
 
     pio_enable_sm_mask_in_sync(spi->pio, spi->startstop_mask);
-
-    byte_info.num_bytes_written = spi->write_buf_len ? spi->write_buf_len - writes_remaining - byte_info.num_bytes_written : 0;
-    byte_info.num_bytes_read = spi->read_buf_len ? spi->read_buf_len - reads_remaining : 0;
-
-    return byte_info;
 }
 
 static void __time_critical_func(pio_irq)(pio_spi_t *spi)
 {
     io_rw_32 irqs = spi->pio->irq;
-    gpio_put(spi->config.dbg_pin, true);
     if (irqs & (1u << 1))
     {
         // SEGGER_RTT_printf(0, "PIO IRQ CS Falling\n");
         if (spi->config.transaction_started)
         {
-            spi->config.transaction_started(spi->config.callback_ctx);
+            spi->config.transaction_started(spi->config.callback_ctx, spi);
         }
         pio_interrupt_clear(spi->pio, 1);
     }
@@ -245,17 +224,15 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
     {
         // SEGGER_RTT_printf(0, "PIO IRQ CS Rising\n");
 
-
         if (spi->config.transaction_ended)
         {
-            spi->config.transaction_ended(spi->config.callback_ctx);
+            spi->config.transaction_ended(spi->config.callback_ctx, spi);
         }
         prepare_for_next(spi);
         spi->write_buf_len = 0;
         spi->read_buf_len = 0;
         pio_interrupt_clear(spi->pio, 1);
     }
-    gpio_put(spi->config.dbg_pin, false);
 }
 
 static void __time_critical_func(pio_irq_0)(void)
@@ -270,34 +247,24 @@ static void __time_critical_func(pio_irq_1)(void)
 
 static void __time_critical_func(pio_data_irq_0)(void)
 {
-#ifdef RUN_DBG_LEDS_DURING_DATA_REQUEST
-    gpio_put(pio_spi[0].config.dbg_pin, true);
-#endif
     pio_spi_config_t *cfg = &pio_spi[0].config;
     pio0->rxf[cfg->initial_sm];
     uint8_t reg = pio0->rxf[cfg->initial_sm] >> 24;
-    cfg->data_request(cfg->callback_ctx, reg);
+    cfg->data_request(cfg->callback_ctx, reg, &pio_spi[0]);
     hw_set_bits(&pio0->irq, (1u << 0));
-#ifdef RUN_DBG_LEDS_DURING_DATA_REQUEST
-    gpio_put(pio_spi[0].config.dbg_pin, false);
-#endif
 }
 
 static void __time_critical_func(pio_data_irq_1)(void)
 {
-#ifdef RUN_DBG_LEDS_DURING_DATA_REQUEST
-    gpio_put(pio_spi[1].config.dbg_pin, true);
-#endif
     pio_spi_config_t *cfg = &pio_spi[1].config;
     pio1->rxf[cfg->initial_sm];
     uint8_t reg = pio1->rxf[cfg->initial_sm] >> 24;
-    cfg->data_request(cfg->callback_ctx, reg);
+    cfg->data_request(cfg->callback_ctx, reg, &pio_spi[1]);
     hw_set_bits(&pio1->irq, (1u << 0));
-#ifdef RUN_DBG_LEDS_DURING_DATA_REQUEST
-    gpio_put(pio_spi[1].config.dbg_pin, true);
-#endif
 }
 
+const uint8_t init_resp_42[32] = {0xff, 0xff};
+const uint8_t init_resp_41[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
 {
     assert(config);
@@ -309,11 +276,12 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
 
     spi->config = *config;
     spi->pio = config->pio_idx == 0 ? pio0 : pio1;
-    spi->header = 0x41;
-
-    gpio_init(config->dbg_pin);
-    gpio_set_dir(config->dbg_pin, GPIO_OUT);
-    gpio_set_pulls(config->dbg_pin, false, false);
+    spi->report_len = 2;
+    spi->analog = false;
+    spi->configMode = false;
+    spi->locked = false;
+    memcpy(spi->resp_42, init_resp_42, sizeof(init_resp_42));
+    memcpy(spi->resp_41, init_resp_41, sizeof(init_resp_41));
 
     gpio_init(config->cs_pin);
     gpio_init(config->sck_pin);
@@ -378,9 +346,10 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
     }
 
     spi->startstop_mask = (1u << spi->config.combined_sm) | (1u << spi->config.initial_sm);
-    spi->dgb_mask = (1u << config->dbg_pin);
 
     prepare_for_next(spi);
+    spi->write_dma = pio_spi_get_dma_write_channel(spi);
+    pio_spi_provide_read_buffer(spi, spi->dma_buf, 32);
 
     return spi;
 }

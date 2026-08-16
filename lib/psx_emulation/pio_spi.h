@@ -3,7 +3,7 @@
 #include "hardware/pio.h"
 #include "hardware/dma.h"
 #include <stdint.h>
-
+struct _pio_spi_t;
 // Only supports sendings speeds up to ~7 MHz. Receives have been tested to about 15 MHz,
 // and theoretically would support about 17 MHz.
 
@@ -21,12 +21,12 @@
 // the read buffer, and then do any further computations necessary (Like
 // grab all data to be written after first byte.
 // If write data does not depend on data received, write buffer can be provided as well.
-typedef void(*pio_spi_transaction_started_func)(void* ctx);
+typedef void(*pio_spi_transaction_started_func)(void* ctx, struct _pio_spi_t* spi);
 
 // Called when first byte of data is received, containing value of first byte.
 // Recommended place to provide the write buffer if first byte is necessary.
 // This register can be received even if no read buffer is provided.
-typedef void(*pio_spi_data_request_function)(void* ctx, uint8_t reg);
+typedef void(*pio_spi_data_request_function)(void* ctx, uint8_t reg, struct _pio_spi_t* spi);
 
 // Called when CS goes high. Provides the number of bytes read, the
 // number of bytes written, and the number of bits that were transacted
@@ -38,7 +38,7 @@ typedef void(*pio_spi_data_request_function)(void* ctx, uint8_t reg);
 // transaction. If this is done, for the first transaction to be successful,
 // the buffers for the first transaction would need to be provided before
 // starting, as this callback will not occur before the first transaction occurs.
-typedef void(*pio_spi_transaction_ended_func)(void* ctx);
+typedef void(*pio_spi_transaction_ended_func)(void* ctx, struct _pio_spi_t* spi);
 
 // Configuration options for pio spi
 // All items necessary except for callbacks and callback context
@@ -49,9 +49,6 @@ typedef struct pio_spi_config_t {
     int copi_pin; // COPI Pin (Can be any pin)
     int cipo_pin; // CIPO Pin (Can be any pin)
     int ack_pin; // ACK Pin (Can be any pin)
-    int dbg_pin;    // Debug pin is written high at the beginning of each ISR
-                    // and written low at the end. Useful for debugging timing
-                    // issues between ISRs and data bytes
     int cs_sm;
     int initial_sm;
     int combined_sm;
@@ -70,7 +67,7 @@ typedef struct pio_spi_config_t {
 } pio_spi_config_t;
 
 // Internal representation of PIO SPI
-typedef struct pio_spi_t {
+typedef struct _pio_spi_t {
     bool allocated;
     PIO pio;
     uint offset_combined;
@@ -81,10 +78,16 @@ typedef struct pio_spi_t {
     pio_spi_config_t config;
     uint8_t write_buf_len;
     uint8_t read_buf_len;
-    uint32_t dgb_mask;
-    uint8_t header;
-    uint8_t c4c_state;
-    uint8_t c46_state;
+    volatile uint8_t c4c_state;
+    volatile uint8_t c46_state;
+    uint8_t report_len;
+    uint8_t resp_42[32];
+    uint8_t resp_41[6];
+    bool analog;
+    volatile bool configMode;
+    bool locked;
+    dma_channel_hw_t *write_dma;
+    volatile uint8_t dma_buf[32];
 } pio_spi_t;
 
 #ifdef __cplusplus

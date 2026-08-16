@@ -43,6 +43,10 @@ static void __time_critical_func(handle_transaction_ended)(void *ctx)
 
 void PSXEmulation::transaction_started()
 {
+    // When not in config mode, the response is always the same so we don't need to wait to know the command
+    if (!config) {
+        pio_spi_provide_write_buffer(spi, resp_42, dma_encode_transfer_count(sizeof(resp_42)));
+    }
 }
 void PSXEmulation::transaction_ended()
 {
@@ -85,10 +89,14 @@ void PSXEmulation::transaction_ended()
 
 void PSXEmulation::data_request(uint8_t cmd)
 {
+    // when not in config mode we always respond with the same data!
+    if (!config) {
+        return;
+    }
     switch (cmd)
     {
     case 0x43:
-        pio_spi_provide_write_buffer(spi, spi->header == 0xF3 ? resp_43 : resp_42, dma_encode_transfer_count(sizeof(spi->header == 0xF3 ? resp_43 : resp_42)));
+        pio_spi_provide_write_buffer(spi, resp_43, dma_encode_transfer_count(sizeof(resp_43)));
         break;
     case 0x42:
         pio_spi_provide_write_buffer(spi, resp_42, dma_encode_transfer_count(sizeof(resp_42)));
@@ -125,6 +133,7 @@ void PSXEmulation::data_request(uint8_t cmd)
 
 PSXEmulation::~PSXEmulation()
 {
+    end();
     printf("~PSXEmulation\r\n");
 }
 void PSXEmulation::begin(SubType type)
@@ -148,7 +157,7 @@ void PSXEmulation::begin(SubType type)
 
     spi = pio_spi_init(&config);
     write_dma = pio_spi_get_dma_write_channel(spi);
-    pio_spi_provide_read_buffer(spi, dma_buf, 255);
+    pio_spi_provide_read_buffer(spi, dma_buf, 32);
     pio_spi_start(spi);
 }
 

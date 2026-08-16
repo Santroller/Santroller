@@ -40,7 +40,7 @@ private:
     uint8_t resp_41[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     dma_channel_hw_t *write_dma;
     pio_spi_t *spi;
-    volatile uint8_t dma_buf[256];
+    volatile uint8_t dma_buf[32];
     int8_t sck;
     int8_t cmd;
     int8_t dat;

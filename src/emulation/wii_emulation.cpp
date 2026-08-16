@@ -31,8 +31,8 @@ void WiiEmulationDeviceInstance::initialize()
             data->rightStickX0 = test.rightStickX0;
             data->rightStickX21 = test.rightStickX21;
             data->rightStickX43 = test.rightStickX43;
-            buttonsLow = offsetof(WiiClassicDataFormat1_t, buttonsLow);
-            buttonsHigh = offsetof(WiiClassicDataFormat1_t, buttonsHigh);
+            buttonsLowIdx = offsetof(WiiClassicDataFormat1_t, buttonsLow);
+            buttonsHighIdx = offsetof(WiiClassicDataFormat1_t, buttonsHigh);
             m_size = sizeof(WiiClassicDataFormat1_t);
         }
         if (m_controller.wii_data_format() == 2)
@@ -51,8 +51,8 @@ void WiiEmulationDeviceInstance::initialize()
             data->rightStickX92 = test.rightStickX92;
             data->rightStickY10 = test.rightStickY10;
             data->rightStickY92 = test.rightStickY92;
-            buttonsLow = offsetof(WiiClassicDataFormat2_t, buttonsLow);
-            buttonsHigh = offsetof(WiiClassicDataFormat2_t, buttonsHigh);
+            buttonsLowIdx = offsetof(WiiClassicDataFormat2_t, buttonsLow);
+            buttonsHighIdx = offsetof(WiiClassicDataFormat2_t, buttonsHigh);
             m_size = sizeof(WiiClassicDataFormat2_t);
         }
         if (m_controller.wii_data_format() == 3)
@@ -62,8 +62,8 @@ void WiiEmulationDeviceInstance::initialize()
             data->leftStickY = 128;
             data->rightStickX = 128;
             data->rightStickY = 128;
-            buttonsLow = offsetof(WiiClassicDataFormat3_t, buttonsLow);
-            buttonsHigh = offsetof(WiiClassicDataFormat3_t, buttonsHigh);
+            buttonsLowIdx = offsetof(WiiClassicDataFormat3_t, buttonsLow);
+            buttonsHighIdx = offsetof(WiiClassicDataFormat3_t, buttonsHigh);
             m_size = sizeof(WiiClassicDataFormat3_t);
         }
     }
@@ -72,8 +72,8 @@ void WiiEmulationDeviceInstance::initialize()
         WiiGuitarDataFormat3_t *data = (WiiGuitarDataFormat3_t *)m_buffer;
         data->leftStickX = 32;
         data->leftStickY = 32;
-        buttonsLow = offsetof(WiiGuitarDataFormat3_t, buttonsLow);
-        buttonsHigh = offsetof(WiiGuitarDataFormat3_t, buttonsHigh);
+        buttonsLowIdx = offsetof(WiiGuitarDataFormat3_t, buttonsLow);
+        buttonsHighIdx = offsetof(WiiGuitarDataFormat3_t, buttonsHigh);
         m_size = sizeof(WiiGuitarDataFormat3_t);
     }
     if (subtype == GuitarHeroDrums)
@@ -81,8 +81,8 @@ void WiiEmulationDeviceInstance::initialize()
         WiiDrumDataFormat3_t *data = (WiiDrumDataFormat3_t *)m_buffer;
         data->leftStickX = 32;
         data->leftStickY = 32;
-        buttonsLow = offsetof(WiiDrumDataFormat3_t, buttonsLow);
-        buttonsHigh = offsetof(WiiDrumDataFormat3_t, buttonsHigh);
+        buttonsLowIdx = offsetof(WiiDrumDataFormat3_t, buttonsLow);
+        buttonsHighIdx = offsetof(WiiDrumDataFormat3_t, buttonsHigh);
         m_size = sizeof(WiiDrumDataFormat3_t);
     }
     if (subtype == DjHeroTurntable)
@@ -90,8 +90,8 @@ void WiiEmulationDeviceInstance::initialize()
         WiiTurntableDataFormat3_t *data = (WiiTurntableDataFormat3_t *)m_buffer;
         data->leftStickX = 32;
         data->leftStickY = 32;
-        buttonsLow = offsetof(WiiTurntableDataFormat3_t, buttonsLow);
-        buttonsHigh = offsetof(WiiTurntableDataFormat3_t, buttonsHigh);
+        buttonsLowIdx = offsetof(WiiTurntableDataFormat3_t, buttonsLow);
+        buttonsHighIdx = offsetof(WiiTurntableDataFormat3_t, buttonsHigh);
         m_size = sizeof(WiiTurntableDataFormat3_t);
     }
 }
@@ -117,8 +117,8 @@ void WiiEmulationDeviceInstance::process()
             led->update(false, false);
         }
     }
-    m_buffer[buttonsLow] = ~m_buffer[buttonsLow];
-    m_buffer[buttonsHigh] = ~m_buffer[buttonsHigh];
+    m_buffer[buttonsLowIdx] = ~m_buffer[buttonsLowIdx];
+    m_buffer[buttonsHighIdx] = ~m_buffer[buttonsHighIdx];
     // TODO: euphoria led
     m_controller.setInputs(m_buffer, m_size);
 }

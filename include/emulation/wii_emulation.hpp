@@ -24,6 +24,9 @@ private:
     proto_WiiEmulationDevice m_device;
     WiiExtensionEmulation m_controller;
     uint8_t m_size;
+    uint8_t lastFormat = 1;
+    uint8_t buttonsLow;
+    uint8_t buttonsHigh;
     uint8_t initialReport[32];
     uint8_t m_buffer[32];
 };

@@ -22,27 +22,35 @@ void DJHTurntableAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     {
         return;
     }
-    // TODO: we have to deal with data formats probably
-    WiiTurntableIntermediateFormat3_t *report = (WiiTurntableIntermediateFormat3_t *)buf;
+    WiiTurntableIntermediateFormat3_t intermediate;
+    WiiTurntableDataFormat3_t *report = (WiiTurntableDataFormat3_t *)buf;
     switch (m_mapping.mapping.djhAxis)
     {
     case DJHTurntable_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
+        report->leftStickX = m_calibratedValue >> 10;
         break;
     case DJHTurntable_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
+        report->leftStickY = m_calibratedValue >> 10;
         break;
     case DJHTurntable_LeftVelocity:
-        report->leftTableVelocity = m_calibratedValue >> 8;
+        intermediate.leftTableVelocity = m_calibratedValue >> 10;
+        report->leftTableVelocity40 = intermediate.leftTableVelocity40;
+        report->leftTableVelocity5 = intermediate.leftTableVelocity5;
         break;
     case DJHTurntable_RightVelocity:
-        report->rightTableVelocity = m_calibratedValue >> 8;
+        intermediate.rightTableVelocity = m_calibratedValue >> 10;
+        report->rightTableVelocity0 = intermediate.rightTableVelocity0;
+        report->rightTableVelocity21 = intermediate.rightTableVelocity21;
+        report->rightTableVelocity43 = intermediate.rightTableVelocity43;
+        report->rightTableVelocity5 = intermediate.rightTableVelocity5;
         break;
     case DJHTurntable_EffectsKnob:
-        report->effectsKnob = m_calibratedValue - 32768;
+        intermediate.effectsKnob = m_calibratedValue >> 11;
+        report->effectsKnob20 = intermediate.effectsKnob20;
+        report->effectsKnob43 = intermediate.effectsKnob43;
         break;
     case DJHTurntable_Crossfader:
-        report->crossfader = m_calibratedValue - 32768;
+        report->crossfader = m_calibratedValue >> 12;
         break;
     default:
         break;

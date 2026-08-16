@@ -22,7 +22,6 @@ void GuitarHeroDrumsAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     {
         return;
     }
-    // TODO: we have to deal with data formats probably
     // TODO: this one is a bit fun because we can only send one velocity at a time.
     WiiDrumDataFormat3_t *report = (WiiDrumDataFormat3_t *)buf;
     switch (m_mapping.mapping.ghDrumAxis)

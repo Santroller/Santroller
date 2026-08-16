@@ -17,54 +17,158 @@ void GamepadButtonMapping::update_hid(uint8_t *buf)
 }
 void GamepadButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
-    // TODO: we have to deal with data formats.
-    WiiClassicDataFormat3_t *report = (WiiClassicDataFormat3_t *)buf;
-    switch (m_mapping.mapping.gamepadButton)
+    if (format == 1)
     {
-    case Gamepad_A:
-        report->a |= m_lastValue;
-        break;
-    case Gamepad_B:
-        report->b |= m_lastValue;
-        break;
-    case Gamepad_X:
-        report->x |= m_lastValue;
-        break;
-    case Gamepad_Y:
-        report->y |= m_lastValue;
-        break;
-    case Gamepad_Start:
-        report->start |= m_lastValue;
-        break;
-    case Gamepad_Back:
-        report->back |= m_lastValue;
-        break;
-    case Gamepad_Capture:
-        // report->capture |= m_lastValue;
-        break;
-    case Gamepad_Guide:
-        report->guide |= m_lastValue;
-        break;
-    case Gamepad_LeftShoulder:
-        report->leftShoulder |= m_lastValue;
-        break;
-    case Gamepad_RightShoulder:
-        report->rightShoulder |= m_lastValue;
-        break;
-    case Gamepad_DpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case Gamepad_DpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case Gamepad_DpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case Gamepad_DpadRight:
-        report->dpadRight |= m_lastValue;
-        break;
-    default:
-        break;
+        WiiClassicDataFormat1_t *report = (WiiClassicDataFormat1_t *)buf;
+        switch (m_mapping.mapping.gamepadButton)
+        {
+        case Gamepad_A:
+            report->a |= m_lastValue;
+            break;
+        case Gamepad_B:
+            report->b |= m_lastValue;
+            break;
+        case Gamepad_X:
+            report->x |= m_lastValue;
+            break;
+        case Gamepad_Y:
+            report->y |= m_lastValue;
+            break;
+        case Gamepad_Start:
+            report->start |= m_lastValue;
+            break;
+        case Gamepad_Back:
+            report->back |= m_lastValue;
+            break;
+        case Gamepad_Capture:
+            // report->capture |= m_lastValue;
+            break;
+        case Gamepad_Guide:
+            report->guide |= m_lastValue;
+            break;
+        case Gamepad_LeftShoulder:
+            report->leftShoulder |= m_lastValue;
+            break;
+        case Gamepad_RightShoulder:
+            report->rightShoulder |= m_lastValue;
+            break;
+        case Gamepad_DpadUp:
+            report->dpadUp |= m_lastValue;
+            break;
+        case Gamepad_DpadDown:
+            report->dpadDown |= m_lastValue;
+            break;
+        case Gamepad_DpadLeft:
+            report->dpadLeft |= m_lastValue;
+            break;
+        case Gamepad_DpadRight:
+            report->dpadRight |= m_lastValue;
+            break;
+        default:
+            break;
+        }
+    }
+    if (format == 2)
+    {
+        WiiClassicDataFormat2_t *report = (WiiClassicDataFormat2_t *)buf;
+        switch (m_mapping.mapping.gamepadButton)
+        {
+        case Gamepad_A:
+            report->a |= m_lastValue;
+            break;
+        case Gamepad_B:
+            report->b |= m_lastValue;
+            break;
+        case Gamepad_X:
+            report->x |= m_lastValue;
+            break;
+        case Gamepad_Y:
+            report->y |= m_lastValue;
+            break;
+        case Gamepad_Start:
+            report->start |= m_lastValue;
+            break;
+        case Gamepad_Back:
+            report->back |= m_lastValue;
+            break;
+        case Gamepad_Capture:
+            // report->capture |= m_lastValue;
+            break;
+        case Gamepad_Guide:
+            report->guide |= m_lastValue;
+            break;
+        case Gamepad_LeftShoulder:
+            report->leftShoulder |= m_lastValue;
+            break;
+        case Gamepad_RightShoulder:
+            report->rightShoulder |= m_lastValue;
+            break;
+        case Gamepad_DpadUp:
+            report->dpadUp |= m_lastValue;
+            break;
+        case Gamepad_DpadDown:
+            report->dpadDown |= m_lastValue;
+            break;
+        case Gamepad_DpadLeft:
+            report->dpadLeft |= m_lastValue;
+            break;
+        case Gamepad_DpadRight:
+            report->dpadRight |= m_lastValue;
+            break;
+        default:
+            break;
+        }
+    }
+    if (format == 3)
+    {
+        WiiClassicDataFormat3_t *report = (WiiClassicDataFormat3_t *)buf;
+        switch (m_mapping.mapping.gamepadButton)
+        {
+        case Gamepad_A:
+            report->a |= m_lastValue;
+            break;
+        case Gamepad_B:
+            report->b |= m_lastValue;
+            break;
+        case Gamepad_X:
+            report->x |= m_lastValue;
+            break;
+        case Gamepad_Y:
+            report->y |= m_lastValue;
+            break;
+        case Gamepad_Start:
+            report->start |= m_lastValue;
+            break;
+        case Gamepad_Back:
+            report->back |= m_lastValue;
+            break;
+        case Gamepad_Capture:
+            // report->capture |= m_lastValue;
+            break;
+        case Gamepad_Guide:
+            report->guide |= m_lastValue;
+            break;
+        case Gamepad_LeftShoulder:
+            report->leftShoulder |= m_lastValue;
+            break;
+        case Gamepad_RightShoulder:
+            report->rightShoulder |= m_lastValue;
+            break;
+        case Gamepad_DpadUp:
+            report->dpadUp |= m_lastValue;
+            break;
+        case Gamepad_DpadDown:
+            report->dpadDown |= m_lastValue;
+            break;
+        case Gamepad_DpadLeft:
+            report->dpadLeft |= m_lastValue;
+            break;
+        case Gamepad_DpadRight:
+            report->dpadRight |= m_lastValue;
+            break;
+        default:
+            break;
+        }
     }
 }
 

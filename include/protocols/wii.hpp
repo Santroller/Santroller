@@ -26,6 +26,45 @@ typedef struct
 } __attribute__((packed)) WiiIntermediateClassicDataFormat_t;
 typedef struct
 {
+    union
+    {
+        struct
+        {
+            uint8_t leftStickX10 : 2;
+            uint8_t leftStickX92 : 8;
+        };
+        uint8_t leftStickX : 10;
+    };
+    union
+    {
+        struct
+        {
+            uint8_t leftStickY10 : 2;
+            uint8_t leftStickY92 : 8;
+        };
+        uint8_t leftStickY : 10;
+    };
+    union
+    {
+        struct
+        {
+            uint8_t rightStickX10 : 2;
+            uint8_t rightStickX92 : 8;
+        };
+        uint8_t rightStickX : 10;
+    };
+    union
+    {
+        struct
+        {
+            uint8_t rightStickY10 : 2;
+            uint8_t rightStickY92 : 8;
+        };
+        uint8_t rightStickY : 10;
+    };
+} __attribute__((packed)) WiiIntermediateClassicDataFormat2_t;
+typedef struct
+{
     uint8_t leftStickX : 6;
     uint8_t rightStickX43 : 2;
     uint8_t leftStickY : 6;
@@ -180,23 +219,38 @@ typedef struct
     uint8_t whammy : 5;
     uint8_t : 3;
 
-    uint8_t : 1;
-    uint8_t : 1;
-    uint8_t start : 1;
-    uint8_t guide : 1;
-    uint8_t back : 1;
-    uint8_t : 1;
-    uint8_t dpadDown : 1;
-    uint8_t dpadRight : 1;
+    union
+    {
+        struct
+        {
+            uint8_t : 1;
+            uint8_t : 1;
+            uint8_t start : 1;
+            uint8_t guide : 1;
+            uint8_t back : 1;
+            uint8_t : 1;
+            uint8_t dpadDown : 1;
+            uint8_t dpadRight : 1;
+            uint8_t buttonsLow;
+        };
+        uint8_t buttonsLow;
+    };
+    union
+    {
+        struct
+        {
 
-    uint8_t dpadUp : 1;
-    uint8_t dpadLeft : 1;
-    uint8_t rightShoulder : 1;
-    uint8_t y : 1;
-    uint8_t a : 1;
-    uint8_t x : 1;
-    uint8_t b : 1;
-    uint8_t leftShoulder : 1;
+            uint8_t dpadUp : 1;
+            uint8_t dpadLeft : 1;
+            uint8_t rightShoulder : 1;
+            uint8_t y : 1;
+            uint8_t a : 1;
+            uint8_t x : 1;
+            uint8_t b : 1;
+            uint8_t leftShoulder : 1;
+        };
+        uint8_t buttonsHigh;
+    };
 } __attribute__((packed)) WiiGuitarDataFormat3_t;
 
 typedef struct
@@ -216,23 +270,37 @@ typedef struct
         uint8_t channel : 4;
         uint8_t velocity_6_4 : 3;
     };
+    union
+    {
+        struct
+        {
+            uint8_t velocity_0 : 1;
+            uint8_t : 1;
+            uint8_t start : 1;
+            uint8_t guide : 1;
+            uint8_t back : 1;
+            uint8_t : 1;
+            uint8_t : 1;
+            uint8_t velocity_1 : 1;
+        };
+        uint8_t buttonsLow;
+    };
+    union
+    {
+        struct
+        {
 
-    uint8_t velocity_0 : 1;
-    uint8_t : 1;
-    uint8_t start : 1;
-    uint8_t guide : 1;
-    uint8_t back : 1;
-    uint8_t : 1;
-    uint8_t : 1;
-    uint8_t velocity_1 : 1;
-    uint8_t : 1;
-    uint8_t : 1;
-    uint8_t rightShoulder : 1;
-    uint8_t x : 1;
-    uint8_t a : 1;
-    uint8_t y : 1;
-    uint8_t b : 1;
-    uint8_t leftShoulder : 1;
+            uint8_t : 1;
+            uint8_t : 1;
+            uint8_t rightShoulder : 1;
+            uint8_t x : 1;
+            uint8_t a : 1;
+            uint8_t y : 1;
+            uint8_t b : 1;
+            uint8_t leftShoulder : 1;
+        };
+        uint8_t buttonsHigh;
+    };
 } __attribute__((packed)) WiiDrumDataFormat3_t;
 
 typedef struct

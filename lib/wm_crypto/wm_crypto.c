@@ -181,6 +181,7 @@ static inline uint8_t ror8(uint8_t a, uint8_t b)
 {
   return (a>>b) | ((a<<(8-b))&0xff);
 }
+#include <stdio.h>
 
 void ext_generate_tables(struct ext_crypto_state * state, const uint8_t key[16])
 {

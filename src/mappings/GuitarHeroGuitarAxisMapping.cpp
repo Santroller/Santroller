@@ -30,18 +30,17 @@ void GuitarHeroGuitarAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     {
         return;
     }
-    // TODO: we have to deal with data formats probably
     WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)buf;
     switch (m_mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
+        report->leftStickX = m_calibratedValue >> 10;
         break;
     case GuitarHeroGuitar_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
+        report->leftStickY = m_calibratedValue >> 10;
         break;
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibratedValue >> 8;
+        report->whammy = m_calibratedValue >> 11;
         break;
     case GuitarHeroGuitar_Tilt:
         // report->tilt = m_calibratedValue >> 8;

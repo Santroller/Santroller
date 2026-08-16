@@ -3,116 +3,25 @@
 #include <pico/time.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 #include <pico/i2c_slave.h>
 // calibration data
 const unsigned char cal_data[32] = {
-    0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00};
+    0xE1, 0x19, 0x7C, 0xEF, 0x22, 0x7C, 0xE6, 0x1E, 0x85, 0xDE, 0x15, 0x8B, 0x0E, 0x22, 0x8F, 0xE4};
 const uint8_t id_guitar[6] = {0x00, 0x00, 0xA4, 0x20, 0x01, 0x03};
 const uint8_t id_drum[6] = {0x01, 0x00, 0xA4, 0x20, 0x01, 0x03};
 const uint8_t id_turntable[6] = {0x03, 0x00, 0xA4, 0x20, 0x01, 0x03};
-const uint8_t id_classic[6] = {0x01, 0x00, 0xA4, 0x20, 0x01, 0x01};
+const uint8_t id_classic[6] = {0x00, 0x00, 0xA4, 0x20, 0x01, 0x01};
 static wii_extension_context_t context0;
 static wii_extension_context_t context1;
-static void i2c_slave_handler(i2c_inst_t *i2c, wii_extension_context_t *context, i2c_slave_event_t event)
+static void init(wii_extension_context_t *context)
 {
-    switch (event)
-    {
-    case I2C_SLAVE_RECEIVE:
-    {
-        // master has written some data
-        if (!context->mem_address_written)
-        {
-            // writes always start with the memory address
-            uint8_t by = i2c_read_byte_raw(i2c);
-            context->mem_address = by;
-            context->mem_address_written = true;
-            context->transfer_len = 0;
-        }
-        else
-        {
-            // save into memory
-            uint8_t by = i2c_read_byte_raw(i2c);
-            if (context->twi_reg[0xF0] == 0xAA && context->mem_address != 0xF0) // if encryption is on
-            {
-                // decrypt
-                ext_decrypt_bytes(&context->state, &by, 0, 1);
-            }
-            context->twi_reg[context->mem_address] = by;
-            // Euphoria LED
-            if (context->mem_address == 0xFB)
-            {
-                context->djhEuphoriaLedState = context->twi_reg[context->mem_address];
-            }
-
-            context->transfer_len++;
-            context->mem_address++;
-        }
-        break;
-    }
-    case I2C_SLAVE_REQUEST:
-    {
-        // master is requesting data
-        // load from memory
-        uint8_t d = context->twi_reg[context->mem_address];
-        if (context->twi_reg[0xF0] == 0xAA) // encryption is on
-        {
-            // encrypt
-            ext_encrypt_bytes(&context->state, &d, 0, 1);
-        }
-        i2c_write_byte_raw(i2c, d);
-        context->mem_address++;
-        context->transfer_len++;
-        break;
-    }
-    case I2C_SLAVE_FINISH:
-    {
-        // master has signalled Stop / Restart
-        if (context->mem_address >= 0x4C && context->mem_address < 0x50)
-        {
-            if (context->mem_address + context->transfer_len == 0x50)
-            {
-                // generate tables once all data is loaded
-                ext_generate_tables(&context->state, &context->twi_reg[0x40]);
-            }
-        }
-        context->mem_address_written = false;
-        break;
-    }
-    default:
-        break;
-    }
-}
-static void i2c_slave_handler0(i2c_inst_t *i2c, i2c_slave_event_t event)
-{
-    i2c_slave_handler(i2c, &context0, event);
-}
-static void i2c_slave_handler1(i2c_inst_t *i2c, i2c_slave_event_t event)
-{
-    i2c_slave_handler(i2c, &context1, event);
-}
-void WiiExtensionEmulation::begin(SubType type)
-{
-    if (mBlock == 0)
-    {
-        context = &context0;
-    }
-    else
-    {
-        context = &context1;
-    }
     memset(context->twi_reg, 0, sizeof(context->twi_reg));
     context->twi_reg[0xF0] = 0; // disable encryption
     // set id
     for (unsigned int i = 0, j = 0xFA; i < 6; i++, j++)
     {
-        switch (type)
+        switch (context->type)
         {
         case GuitarHeroGuitar:
             context->twi_reg[j] = id_guitar[i];
@@ -134,6 +43,103 @@ void WiiExtensionEmulation::begin(SubType type)
     {
         context->twi_reg[j] = cal_data[i];
     }
+}
+static void i2c_slave_handler(i2c_inst_t *i2c, wii_extension_context_t *context, i2c_slave_event_t event)
+{
+    switch (event)
+    {
+    case I2C_SLAVE_RECEIVE:
+    {
+        // master has written some data
+        if (!context->mem_address_written)
+        {
+            // writes always start with the memory address
+            uint8_t data = i2c_read_byte_raw(i2c);
+            context->mem_address = data;
+            context->mem_address_written = true;
+            context->transfer_len = 0;
+        }
+        else
+        {
+            // save into memory
+            uint8_t data = i2c_read_byte_raw(i2c);
+            if (context->mem_address == 0xF0 && data == 0x55)
+            {
+                context->encrypted = false;
+                memset(context->twi_reg, 0x40, 0x10);
+            }
+            if (context->encrypted && context->mem_address != 0xF0) // if encryption is on
+            {
+                // decrypt
+                data = (data ^ context->state.sb[context->mem_address % 8]) + context->state.ft[context->mem_address % 8];
+            }
+            context->twi_reg[context->mem_address] = data;
+            // Euphoria LED
+            if (context->mem_address == 0xFB)
+            {
+                context->djhEuphoriaLedState = data;
+            }
+
+            context->transfer_len++;
+            context->mem_address++;
+        }
+        break;
+    }
+    case I2C_SLAVE_REQUEST:
+    {
+        // master is requesting data
+        // load from memory
+        uint8_t data = context->twi_reg[context->mem_address];
+        if (context->encrypted) // encryption is on
+        {
+            // encrypt
+            data = (context->twi_reg[context->mem_address] - context->state.ft[context->mem_address % 8]) ^ context->state.sb[context->mem_address % 8];
+        }
+        i2c_write_byte_raw(i2c, data);
+        context->mem_address++;
+        context->transfer_len++;
+        break;
+    }
+    case I2C_SLAVE_FINISH:
+    {
+        // master has signalled Stop / Restart
+        if (context->transfer_len)
+        {
+            if (context->mem_address == 0x50)
+            {
+                // generate tables once all data is loaded
+                ext_generate_tables(&context->state, &context->twi_reg[0x40]);
+                context->encrypted = true;
+            }
+            context->mem_address_written = false;
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
+static void i2c_slave_handler0(i2c_inst_t *i2c, i2c_slave_event_t event)
+{
+    i2c_slave_handler(i2c, &context0, event);
+}
+static void i2c_slave_handler1(i2c_inst_t *i2c, i2c_slave_event_t event)
+{
+    i2c_slave_handler(i2c, &context1, event);
+}
+void WiiExtensionEmulation::begin(SubType type)
+{
+    printf("WiiExtensionEmulation begin %d %d %d\r\n", sda, scl, mBlock);
+    if (mBlock == 0)
+    {
+        context = &context0;
+    }
+    else
+    {
+        context = &context1;
+    }
+    context->type = type;
+    init(context);
     gpio_init(sda);
     gpio_set_function(sda, GPIO_FUNC_I2C);
     gpio_pull_up(sda);

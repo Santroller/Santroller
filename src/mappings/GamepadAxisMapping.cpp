@@ -17,7 +17,7 @@ void GamepadAxisMapping::update_hid(uint8_t *buf)
     // santroller hid uses an xinput style report descriptor for compatibility reasons
     update_xinput(buf);
     // and while its almost correct, the y axis is inverted on 360, so we do need to flip that back
-    PCGamepadDpad_Data_t* data = (PCGamepadDpad_Data_t*)buf;
+    PCGamepadDpad_Data_t *data = (PCGamepadDpad_Data_t *)buf;
     data->leftStickY = -data->leftStickY;
     data->rightStickY = -data->rightStickY;
 }
@@ -27,30 +27,101 @@ void GamepadAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     {
         return;
     }
-    // TODO: we have to deal with data formats.
-    WiiClassicDataFormat3_t *report = (WiiClassicDataFormat3_t *)buf;
-    switch (m_mapping.mapping.gamepadAxis)
+    if (format == 1)
     {
-    case Gamepad_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case Gamepad_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
-        break;
-    case Gamepad_RightStickX:
-        report->rightStickX = m_calibratedValue >> 8;
-        break;
-    case Gamepad_RightStickY:
-        report->rightStickY = m_calibratedValue >> 8;
-        break;
-    case Gamepad_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        break;
-    case Gamepad_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
-        break;
-    default:
-        break;
+        WiiIntermediateClassicDataFormat_t test;
+        WiiClassicDataFormat1_t *report = (WiiClassicDataFormat1_t *)buf;
+        switch (m_mapping.mapping.gamepadAxis)
+        {
+        case Gamepad_LeftStickX:
+            report->leftStickX = m_calibratedValue >> 10;
+            break;
+        case Gamepad_LeftStickY:
+            report->leftStickY = m_calibratedValue >> 10;
+            break;
+        case Gamepad_RightStickX:
+            test.rightStickX = m_calibratedValue >> 11;
+            report->rightStickX0 = test.rightStickX0;
+            report->rightStickX21 = test.rightStickX21;
+            report->rightStickX43 = test.rightStickX43;
+            break;
+        case Gamepad_RightStickY:
+            report->rightStickY = m_calibratedValue >> 11;
+            break;
+        case Gamepad_LeftTrigger:
+            test.leftTrigger = m_calibratedValue >> 11;
+            report->leftTrigger20 = test.leftTrigger20;
+            report->leftTrigger43 = test.leftTrigger43;
+            break;
+        case Gamepad_RightTrigger:
+            report->rightTrigger = m_calibratedValue >> 11;
+            break;
+        default:
+            break;
+        }
+    }
+    if (format == 2)
+    {
+        WiiIntermediateClassicDataFormat2_t test;
+        WiiClassicDataFormat2_t *report = (WiiClassicDataFormat2_t *)buf;
+        switch (m_mapping.mapping.gamepadAxis)
+        {
+        case Gamepad_LeftStickX:
+            test.leftStickX = m_calibratedValue >> 6;
+            report->leftStickX10 = test.leftStickX10;
+            report->leftStickX92 = test.leftStickX92;
+            break;
+        case Gamepad_LeftStickY:
+            test.leftStickY = m_calibratedValue >> 6;
+            report->leftStickY10 = test.leftStickY10;
+            report->leftStickY92 = test.leftStickY92;
+            break;
+        case Gamepad_RightStickX:
+            test.rightStickX = m_calibratedValue >> 6;
+            report->rightStickX10 = test.rightStickX10;
+            report->rightStickX92 = test.rightStickX92;
+            break;
+        case Gamepad_RightStickY:
+            test.rightStickY = m_calibratedValue >> 6;
+            report->rightStickY10 = test.rightStickY10;
+            report->rightStickY92 = test.rightStickY92;
+            break;
+        case Gamepad_LeftTrigger:
+            report->leftTrigger = m_calibratedValue >> 8;
+            break;
+        case Gamepad_RightTrigger:
+            report->rightTrigger = m_calibratedValue >> 8;
+            break;
+        default:
+            break;
+        }
+    }
+    if (format == 3)
+    {
+        WiiClassicDataFormat3_t *report = (WiiClassicDataFormat3_t *)buf;
+        switch (m_mapping.mapping.gamepadAxis)
+        {
+        case Gamepad_LeftStickX:
+            report->leftStickX = m_calibratedValue >> 8;
+            break;
+        case Gamepad_LeftStickY:
+            report->leftStickY = m_calibratedValue >> 8;
+            break;
+        case Gamepad_RightStickX:
+            report->rightStickX = m_calibratedValue >> 8;
+            break;
+        case Gamepad_RightStickY:
+            report->rightStickY = m_calibratedValue >> 8;
+            break;
+        case Gamepad_LeftTrigger:
+            report->leftTrigger = m_calibratedValue >> 8;
+            break;
+        case Gamepad_RightTrigger:
+            report->rightTrigger = m_calibratedValue >> 8;
+            break;
+        default:
+            break;
+        }
     }
 }
 void GamepadAxisMapping::update_switch(uint8_t *buf)

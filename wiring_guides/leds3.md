@@ -40,8 +40,22 @@ If you just wish to use a lot of standard LEDs, you can also opt to use 1 or man
    | Pi Pico (Advanced, Channel 0) | GP3, GP7, GP19   |
    | Pi Pico (Advanced, Channel 1) | GP11, GP15, GP27 |
 
-5. Connect your LEDs to the OUTn pins. The cathode of each LED connects to an OUTn pin, while the anodes are all connected together and connect to the voltage supply for your LEDs. Depending on how many LEDs you are using, it may make sense to use an external supply here, which would need to have its V<sub>CC</sub> connected to the anodes of the LEDs, and its GND connected to GND on the drivers.
-6. Connect a resistor between R-EXT and GND, depending on how much current you want to drive each LED with.
+4. Connect the MOSI (SDI) on the first driver to the MOSI pin on your microcontroller. Then chain the MOSI (SDO) outputs to the MOSI (SDI) on the next driver, until all drivers are connected.
+   If you are using a Pi Pico and these pins don't work for you, you can use one of the advanced pinouts below. Note that the Pi Pico has multiple channels, and SCK and MOSI need to be from the same channel.
+
+   | Microcontroller               | MOSI (SDI)       |
+   | ----------------------------- | ---------------- |
+   | Pi Pico (Recommended)         | GP3              |
+   | Pro Micro, Leonardo, Micro    | 16               |
+   | Uno                           | 11               |
+   | Mega                          | 51               |
+   | Pi Pico (Advanced, Channel 0) | GP3, GP7, GP19   |
+   | Pi Pico (Advanced, Channel 1) | GP11, GP15, GP27 |
+
+4. Connect OE to a pin on your microcontroller
+4. Connect LE to a pin on your microcontroller
+6. Connect your LEDs to the OUTn pins. The cathode of each LED connects to an OUTn pin, while the anodes are all connected together and connect to the voltage supply for your LEDs. Depending on how many LEDs you are using, it may make sense to use an external supply here, which would need to have its V<sub>CC</sub> connected to the anodes of the LEDs, and its GND connected to GND on the drivers.
+7. Connect a resistor between R-EXT and GND, depending on how much current you want to drive each LED with.
 
    | Resistor (ohms) | Output Current (mA) |
    | --------------- | ------------------- |
@@ -56,7 +70,7 @@ If you just wish to use a lot of standard LEDs, you can also opt to use 1 or man
 
 1. Click on LED Settings
 2. Set the LED Type to `STP16CPC26`
-3. Set the CLK and SDI pins as you wired them
+3. Set the CLK, SDI, OE and LE pins as you wired them
 5. Set the LED count to the amount of LEDs you have connected together.
 6. Hit `Save Settings`
 8. If you want a button to control an LED, click on the button in question. 

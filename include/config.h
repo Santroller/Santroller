@@ -316,8 +316,8 @@ extern const uint8_t config[CONFIGURATION_LEN];
     BTN_USAGE(BTN_THUMBR)
 #elif DEVICE_TYPE == ROCK_BAND_PRO_GUITAR_SQUIRE
 #define SUB_TYPE XINPUT_PRO_GUITAR
-#define PS3_TYPE PS3_SQUIRE_MPA_PID
-#define WII_TYPE WII_SQUIRE_MPA_PID
+#define PS3_TYPE PS3_SQUIRE_PID
+#define WII_TYPE WII_SQUIRE_PID
 #define OG_XBOX_REPORT OGXboxGamepad_Data_t
 #define XINPUT_REPORT XInputRockBandProGuitar_Data_t
 #define XBOX_ONE_REPORT XboxOneRockBandProGuitar_Data_t

@@ -65,6 +65,9 @@ static uint8_t hid_descriptor_storage[500];
 static uint8_t send_report_buf[64];
 static uint8_t send_report_len = 0;
 
+// Set up simulated GATTSERVICE_SUBEVENT_HID_SERVICE_REPORTS_NOTIFICATION 
+static bool reports_notif_pending = false;
+
 // used to implement connection timeout and reconnect timer
 static btstack_timer_source_t connection_timer;
 static btstack_timer_source_t reconnect_timer;
@@ -113,9 +116,10 @@ int get_bt_address(uint8_t *addr)
 
 void bt_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id)
 {
-    hids_host_send_write_report(hids_cid, 1, HID_REPORT_TYPE_OUTPUT, send_report_buf, send_report_len);
     memcpy(send_report_buf, data, len);
     send_report_len = len;
+    // Reorder to after memcopy so that reports get properly flushed, needed for 360.
+    hids_host_send_write_report(hids_cid, 1, HID_REPORT_TYPE_OUTPUT, send_report_buf, send_report_len);
 }
 
 bool check_bluetooth_ready()
@@ -337,10 +341,16 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
                 type.console_type = PS3;
             }
         }
+        reports_notif_pending = true;
         break;
     }
     case GATTSERVICE_SUBEVENT_HID_REPORT:
     {
+        // On first report after connection, send Player IDs
+        if (reports_notif_pending && current_player != 0xFF) {
+            reports_notif_pending = false;
+            send_player_leds_bt();
+        }
         if (type.console_type == GENERIC)
         {
             fill_generic_report(info, gattservice_subevent_hid_report_get_report(packet), &bt_data);

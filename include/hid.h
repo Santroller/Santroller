@@ -84,6 +84,7 @@ extern const uint8_t fnf_descriptor[53];
 extern long last_strobe;
 extern uint8_t stage_kit_millis[5];
 extern uint8_t strobe_delay;
+extern uint8_t current_player;
 #if DEVICE_TYPE_IS_INSTRUMENT
 #if HID_BUTTON_PADDING
 extern const uint8_t pc_descriptor[90 + 2*HID_BUTTON_COUNT + 2*HID_AXIS_COUNT];
@@ -95,6 +96,7 @@ extern const uint8_t pc_descriptor[158];
 #endif
 void handle_auth_led(void);
 void handle_player_leds(uint8_t player);
+void reset_player_leds(void);
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right);
 void handle_keyboard_leds(uint8_t leds);
 void tick_leds(void);
@@ -103,4 +105,5 @@ uint8_t hid_get_report(uint8_t *data, uint8_t reqLen, uint8_t reportType, uint8_
 uint16_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t* response_buffer, bool* success);
 #if BLUETOOTH_RX
 void bt_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_t report_id);
+void send_player_leds_bt(void);
 #endif

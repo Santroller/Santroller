@@ -349,6 +349,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
         // On first report after connection, send Player IDs
         if (reports_notif_pending && current_player != 0xFF) {
             reports_notif_pending = false;
+            send_player_leds_bt();
         }
         if (type.console_type == GENERIC)
         {

@@ -184,6 +184,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
     switch (hci_event_packet_get_type(packet)) {
         case HCI_EVENT_DISCONNECTION_COMPLETE:
             con_handle = HCI_CON_HANDLE_INVALID;
+            reset_player_leds();
             printf("Disconnected\r\n");
             break;
         case SM_EVENT_JUST_WORKS_REQUEST:

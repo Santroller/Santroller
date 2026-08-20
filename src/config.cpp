@@ -643,7 +643,7 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         profile->mappings.emplace_back(new MouseButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
     case proto_Mapping_keycode_tag:
-        profile->mappings.emplace_back(new KeyboardButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new KeyboardButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id, &profile->keyboard_state));
         break;
     }
     return true;

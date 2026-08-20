@@ -25,3 +25,9 @@ public:
     uint32_t greenPad;
     uint64_t lastGlobalPoll;
 };
+
+class KeyboardState {
+    public:
+        uint32_t pressedKeys = 0;
+        uint8_t lastSeenKeys[10];
+};

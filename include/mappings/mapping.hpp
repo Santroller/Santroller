@@ -450,7 +450,7 @@ class KeyboardButtonMapping : public ButtonMapping
 {
 public:
     ~KeyboardButtonMapping() {}
-    KeyboardButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    KeyboardButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile, KeyboardState* state);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -461,6 +461,8 @@ public:
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
+private:
+    KeyboardState* state;
 };
 class MouseAxisMapping : public AxisMapping
 {

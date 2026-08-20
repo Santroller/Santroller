@@ -54,6 +54,41 @@ void HIDKeyboardDevice::process()
   }
   hid_keyboard_report_t *report = (hid_keyboard_report_t *)epin_buf;
   memcpy(epin_buf, initialReport, sizeof(epin_buf));
+  for (const auto &profile : profiles)
+  {
+    auto &state = profile->keyboard_state;
+    state.pressedKeys = 0;
+    for (const auto &mapping : profile->mappings)
+    {
+      mapping->update(false, false);
+      mapping->update_hid(epin_buf);
+    }
+    for (const auto &led : profile->leds)
+    {
+      led->update(false, false);
+    }
+    size_t current = 0;
+    for (size_t i = 0; i < sizeof(state.lastSeenKeys); i++)
+    {
+      if (state.lastSeenKeys[i] && state.pressedKeys & (1 << state.lastSeenKeys[i]))
+      {
+        report->keycode[current++] = state.lastSeenKeys[i];
+        state.pressedKeys &= ~(1 << state.lastSeenKeys[i]);
+      }
+    }
+    for (size_t i = 0; i < 255; i++)
+    {
+      if (current >= sizeof(report->keycode))
+      {
+        break;
+      }
+      if (state.pressedKeys & (1 << i))
+      {
+        report->keycode[current++] = i;
+      }
+    }
+    memcpy(state.lastSeenKeys, report->keycode, sizeof(report->keycode));
+  }
   if (!ready())
   {
     return;
@@ -100,7 +135,6 @@ uint16_t HIDKeyboardDevice::report_desc_len()
 
 void HIDKeyboardDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
-  
 }
 
 uint16_t HIDKeyboardDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)

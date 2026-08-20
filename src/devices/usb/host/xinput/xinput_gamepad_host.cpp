@@ -10,13 +10,15 @@ std::shared_ptr<UsbHostInterface> XInputGamepadHost::open(std::shared_ptr<UsbHos
 {
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass && desc_itf->bInterfaceSubClass == 0x5D && desc_itf->bInterfaceProtocol == 0x01, nullptr);
     uint8_t dev_addr = list->dev_addr();
-
+    uint16_t len = 0;
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
 
     auto intf = std::make_shared<XInputGamepadHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);
+    len += desc_itf->bLength;
     p_desc = tu_desc_next(p_desc);
     XBOX_ID_DESCRIPTOR *x_desc =
         (XBOX_ID_DESCRIPTOR *)p_desc;
+    len += x_desc->bLength;
     TU_VERIFY(XINPUT_DESC_TYPE_RESERVED == x_desc->bDescriptorType, nullptr);
     intf->m_subtype = get_subtype_from_xinput(x_desc->subtype);
     uint8_t endpoints = desc_itf->bNumEndpoints;
@@ -39,6 +41,7 @@ std::shared_ptr<UsbHostInterface> XInputGamepadHost::open(std::shared_ptr<UsbHos
             intf->m_ep_out_size = desc_ep->wMaxPacketSize;
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
         }
+        len += desc_ep->bLength;
     }
     if (intf->m_ep_out)
     {
@@ -49,7 +52,7 @@ std::shared_ptr<UsbHostInterface> XInputGamepadHost::open(std::shared_ptr<UsbHos
         list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
     }
     assignable_usb_devices.push_back(intf);
-    *out_len = TUD_XINPUT_GAMEPAD_DESC_LEN;
+    *out_len = len;
     return intf;
 }
 

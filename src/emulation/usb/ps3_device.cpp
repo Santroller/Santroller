@@ -161,7 +161,6 @@ uint8_t const desc_hid_report_ps3_thirdparty[] =
 uint8_t const desc_hid_report_ps3_gamepad[] =
     {
         TUD_HID_REPORT_DESC_PS3_FIRSTPARTY_GAMEPAD(HID_REPORT_ID(ReportIdGamepad))};
-
 PS3GamepadDevice::PS3GamepadDevice(bool wiirb) : m_wiirb(wiirb)
 {
 }
@@ -403,6 +402,7 @@ void PS3GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
     case RockBandDrums:
         desc->idVendor = REDOCTANE_VID;
         desc->idProduct = PS3_RB_DRUM_PID;
+        desc->bcdDevice = 0x0200;
         return;
     case LiveGuitar:
         desc->idVendor = REDOCTANE_VID;
@@ -514,10 +514,10 @@ uint16_t PS3GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         case RockBandGuitar:
         case LiveGuitar:
         case DjHeroTurntable:
-            buffer[4] = 0x06;
+            buffer[3] = 0x06;
             break;
         case RockBandDrums:
-            buffer[4] = 0x05;
+            buffer[3] = 0x05;
             break;
         case ProGuitarMustang:
         case ProGuitarSquire:

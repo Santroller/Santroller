@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-ProGuitarAxisMapping::ProGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.proAxis != ProGuitar_LeftStickX && mapping.mapping.proAxis != ProGuitar_LeftStickY && mapping.mapping.proAxis != ProGuitar_Tilt)
+ProGuitarAxisMapping::ProGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.proAxis != ProGuitar_LeftStickX && mapping.mapping.mapping.proAxis != ProGuitar_LeftStickY && mapping.mapping.mapping.proAxis != ProGuitar_Tilt)
 {
 }
 
@@ -37,7 +37,7 @@ void ProGuitarAxisMapping::update_ps3(uint8_t *buf)
         return;
     }
     PS3RockBandProGuitar_Data_t *report = (PS3RockBandProGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.proAxis)
+    switch (m_mapping.mapping.mapping.proAxis)
     {
     case ProGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -104,7 +104,7 @@ void ProGuitarAxisMapping::update_xinput(uint8_t *buf)
         return;
     }
     XInputRockBandProGuitar_Data_t *report = (XInputRockBandProGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.proAxis)
+    switch (m_mapping.mapping.mapping.proAxis)
     {
     case ProGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue - 32768;
@@ -162,7 +162,7 @@ void ProGuitarAxisMapping::update_ogxbox(uint8_t *buf)
         return;
     }
     OGXboxRockBandProGuitar_Data_t *report = (OGXboxRockBandProGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.proAxis)
+    switch (m_mapping.mapping.mapping.proAxis)
     {
     case ProGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue - 32768;

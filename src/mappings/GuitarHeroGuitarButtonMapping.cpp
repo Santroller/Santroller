@@ -16,7 +16,7 @@ void GuitarHeroGuitarButtonMapping::update_hid(uint8_t *buf)
 void GuitarHeroGuitarButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)buf;
-    switch (m_mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
         report->a |= m_lastValue;
@@ -80,7 +80,7 @@ void GuitarHeroGuitarButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 void GuitarHeroGuitarButtonMapping::update_switch(uint8_t *buf)
 {
     SwitchInputReport *report = (SwitchInputReport *)buf;
-    switch (m_mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
         report->a |= m_lastValue;
@@ -130,7 +130,7 @@ void GuitarHeroGuitarButtonMapping::update_switch(uint8_t *buf)
 void GuitarHeroGuitarButtonMapping::update_ps2(uint8_t *buf)
 {
     PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
         report->a |= m_lastValue;
@@ -189,7 +189,7 @@ void GuitarHeroGuitarButtonMapping::update_ps2(uint8_t *buf)
 void GuitarHeroGuitarButtonMapping::update_ps3(uint8_t *buf)
 {
     PS3GuitarHeroGuitar_Data_t *report = (PS3GuitarHeroGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
         report->a |= m_lastValue;
@@ -256,7 +256,7 @@ void GuitarHeroGuitarButtonMapping::update_ps3(uint8_t *buf)
 void GuitarHeroGuitarButtonMapping::update_ps4(uint8_t *buf)
 {
     PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
         report->a |= m_lastValue;
@@ -323,7 +323,7 @@ void GuitarHeroGuitarButtonMapping::update_ps4(uint8_t *buf)
 void GuitarHeroGuitarButtonMapping::update_ps5(uint8_t *buf)
 {
     PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
         report->a |= m_lastValue;
@@ -390,7 +390,7 @@ void GuitarHeroGuitarButtonMapping::update_ps5(uint8_t *buf)
 void GuitarHeroGuitarButtonMapping::update_xinput(uint8_t *buf)
 {
     XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
         report->a |= m_lastValue;
@@ -456,7 +456,7 @@ void GuitarHeroGuitarButtonMapping::update_xinput(uint8_t *buf)
 void GuitarHeroGuitarButtonMapping::update_ogxbox(uint8_t *buf)
 {
     OGXboxGuitarHeroGuitar_Data_t *report = (OGXboxGuitarHeroGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
         report->a |= m_lastValue;
@@ -522,7 +522,7 @@ void GuitarHeroGuitarButtonMapping::update_ogxbox(uint8_t *buf)
 void GuitarHeroGuitarButtonMapping::update_xboxone(uint8_t *buf)
 {
     XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
         report->a |= m_lastValue;

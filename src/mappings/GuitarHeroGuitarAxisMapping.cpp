@@ -15,7 +15,7 @@ const uint8_t GuitarHeroGuitarAxisMapping::gh5_slider_mapping[] = {
     0xFA, 0xFC, 0xF8, 0xE6, 0xE2, 0xE4, 0xE0,
     0xE5, 0xE1, 0xE3, 0xDF};
 
-GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.ghAxis == GuitarHeroGuitar_Whammy)
+GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghAxis == GuitarHeroGuitar_Whammy)
 {
 }
 
@@ -31,7 +31,7 @@ void GuitarHeroGuitarAxisMapping::update_wii(uint8_t format, uint8_t *buf)
         return;
     }
     WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 10;
@@ -56,7 +56,7 @@ void GuitarHeroGuitarAxisMapping::update_switch(uint8_t *buf)
         return;
     }
     SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -82,7 +82,7 @@ void GuitarHeroGuitarAxisMapping::update_ps2(uint8_t *buf)
         return;
     }
     PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -112,7 +112,7 @@ void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
     // tilt centers at 512 but isnt actually full range
     tilt = 512 - (tilt >> 8);
     PS3GuitarHeroGuitar_Data_t *report = (PS3GuitarHeroGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -144,7 +144,7 @@ void GuitarHeroGuitarAxisMapping::update_ps4(uint8_t *buf)
         return;
     }
     PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -177,7 +177,7 @@ void GuitarHeroGuitarAxisMapping::update_ps5(uint8_t *buf)
         return;
     }
     PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -216,7 +216,7 @@ void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
         return;
     }
     XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_LeftStickX:
         if (!m_supports_slider)
@@ -276,7 +276,7 @@ void GuitarHeroGuitarAxisMapping::update_ogxbox(uint8_t *buf)
         return;
     }
     OGXboxGuitarHeroGuitar_Data_t *report = (OGXboxGuitarHeroGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_LeftStickX:
         // shove stick on the slider, then it can be used in menus
@@ -305,7 +305,7 @@ void GuitarHeroGuitarAxisMapping::update_xboxone(uint8_t *buf)
         return;
     }
     XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghAxis)
+    switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;

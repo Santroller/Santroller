@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.rbDrumAxis != RockBandDrumsLeftStickX && mapping.mapping.rbDrumAxis != RockBandDrumsLeftStickY)
+RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.rbDrumAxis != RockBandDrumsLeftStickX && mapping.mapping.mapping.rbDrumAxis != RockBandDrumsLeftStickY)
 {
 }
 
@@ -37,7 +37,7 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
         return;
     }
     PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumAxis)
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue >> 8;
@@ -71,7 +71,7 @@ void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
         return;
     }
     PS4RockBandDrums_Data_t *report = (PS4RockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumAxis)
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue >> 8;
@@ -105,7 +105,7 @@ void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
         return;
     }
     PS5RockBandDrums_Data_t *report = (PS5RockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumAxis)
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue >> 8;
@@ -140,7 +140,7 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
     }
     XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)buf;
 
-    switch (m_mapping.mapping.rbDrumAxis)
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue - 32768;
@@ -179,7 +179,7 @@ void RockBandDrumsAxisMapping::update_ogxbox(uint8_t *buf)
         return;
     }
     OGXboxRockBandDrums_Data_t *report = (OGXboxRockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumAxis)
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue - 32768;

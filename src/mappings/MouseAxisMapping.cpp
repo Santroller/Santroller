@@ -19,7 +19,7 @@ void MouseAxisMapping::update_hid(uint8_t *buf)
         return;
     }
     hid_mouse_report_t *report = (hid_mouse_report_t *)buf;
-    switch (m_mapping.mapping.mouseAxis)
+    switch (m_mapping.mapping.mapping.mouseAxis)
     {
     case Mouse_MoveX:
         report->x = (m_calibratedValue - 32768) >> 8;

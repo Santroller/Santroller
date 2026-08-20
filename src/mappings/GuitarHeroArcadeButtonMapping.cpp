@@ -12,7 +12,7 @@ GuitarHeroArcadeButtonMapping::GuitarHeroArcadeButtonMapping(proto_Mapping mappi
 void GuitarHeroArcadeButtonMapping::update_hid(uint8_t *buf)
 {
     ArcadeGuitarHeroGuitar_Data_t *report = (ArcadeGuitarHeroGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghaButton)
+    switch (m_mapping.mapping.mapping.ghaButton)
     {
     case GuitarHeroArcade_Green:
         report->a |= m_lastValue;

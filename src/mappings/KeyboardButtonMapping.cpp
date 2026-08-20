@@ -11,7 +11,7 @@ KeyboardButtonMapping::KeyboardButtonMapping(proto_Mapping mapping, std::unique_
 void KeyboardButtonMapping::update_hid(uint8_t *buf)
 {
     if (m_lastValue) {
-        state->pressedKeys |= 1 << m_mapping.mapping.keycode;
+        state->pressedKeys |= 1 << m_mapping.mapping.mapping.keycode;
     }
 }
 void KeyboardButtonMapping::update_wii(uint8_t format, uint8_t *buf)

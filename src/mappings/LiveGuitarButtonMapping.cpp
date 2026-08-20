@@ -30,7 +30,7 @@ void LiveGuitarButtonMapping::update_ps2(uint8_t *buf)
 void LiveGuitarButtonMapping::update_ps3(uint8_t *buf)
 {
     PS3GHLGuitar_Data_t *report = (PS3GHLGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghlButton)
+    switch (m_mapping.mapping.mapping.ghlButton)
     {
     case GuitarHeroLiveGuitar_White1:
         report->x |= m_lastValue;
@@ -87,7 +87,7 @@ void LiveGuitarButtonMapping::update_ps3(uint8_t *buf)
 void LiveGuitarButtonMapping::update_ps4(uint8_t *buf)
 {
     PS4GHLGuitar_Data_t *report = (PS4GHLGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghlButton)
+    switch (m_mapping.mapping.mapping.ghlButton)
     {
     case GuitarHeroLiveGuitar_White1:
         report->x |= m_lastValue;
@@ -144,7 +144,7 @@ void LiveGuitarButtonMapping::update_ps4(uint8_t *buf)
 void LiveGuitarButtonMapping::update_ps5(uint8_t *buf)
 {
     PS5GHLGuitar_Data_t *report = (PS5GHLGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghlButton)
+    switch (m_mapping.mapping.mapping.ghlButton)
     {
     case GuitarHeroLiveGuitar_White1:
         report->x |= m_lastValue;
@@ -201,7 +201,7 @@ void LiveGuitarButtonMapping::update_ps5(uint8_t *buf)
 void LiveGuitarButtonMapping::update_xinput(uint8_t *buf)
 {
     XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghlButton)
+    switch (m_mapping.mapping.mapping.ghlButton)
     {
     case GuitarHeroLiveGuitar_White1:
         report->x |= m_lastValue;
@@ -257,7 +257,7 @@ void LiveGuitarButtonMapping::update_xinput(uint8_t *buf)
 void LiveGuitarButtonMapping::update_ogxbox(uint8_t *buf)
 {
     OGXboxGHLGuitar_Data_t *report = (OGXboxGHLGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghlButton)
+    switch (m_mapping.mapping.mapping.ghlButton)
     {
     case GuitarHeroLiveGuitar_White1:
         report->x |= m_lastValue;

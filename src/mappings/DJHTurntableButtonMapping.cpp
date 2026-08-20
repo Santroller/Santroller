@@ -18,7 +18,7 @@ void DJHTurntableButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     // TODO: we have to deal with data formats probably
     WiiTurntableIntermediateFormat3_t *report = (WiiTurntableIntermediateFormat3_t *)buf;
-    switch (m_mapping.mapping.djhButton)
+    switch (m_mapping.mapping.mapping.djhButton)
     {
     case DJHTurntable_LeftGreen:
         report->leftGreen |= m_lastValue;
@@ -89,7 +89,7 @@ void DJHTurntableButtonMapping::update_ps2(uint8_t *buf)
 void DJHTurntableButtonMapping::update_ps3(uint8_t *buf)
 {
     PS3DJHTurntable_Data_t *report = (PS3DJHTurntable_Data_t *)buf;
-    switch (m_mapping.mapping.djhButton)
+    switch (m_mapping.mapping.mapping.djhButton)
     {
     case DJHTurntable_LeftGreen:
         report->a |= m_lastValue;
@@ -166,7 +166,7 @@ void DJHTurntableButtonMapping::update_ps5(uint8_t *buf)
 void DJHTurntableButtonMapping::update_xinput(uint8_t *buf)
 {
     XInputDJHTurntable_Data_t *report = (XInputDJHTurntable_Data_t *)buf;
-    switch (m_mapping.mapping.djhButton)
+    switch (m_mapping.mapping.mapping.djhButton)
     {
     case DJHTurntable_LeftGreen:
         report->a |= m_lastValue;
@@ -232,7 +232,7 @@ void DJHTurntableButtonMapping::update_xinput(uint8_t *buf)
 void DJHTurntableButtonMapping::update_ogxbox(uint8_t *buf)
 {
     OGXboxDJHTurntable_Data_t *report = (OGXboxDJHTurntable_Data_t *)buf;
-    switch (m_mapping.mapping.djhButton)
+    switch (m_mapping.mapping.mapping.djhButton)
     {
     case DJHTurntable_LeftGreen:
         report->a |= m_lastValue;

@@ -750,3 +750,11 @@ enum ProGuitarNeckAxisType {
   ProGuitarNeckBFret = 5;
   ProGuitarNeckHighEFret = 6;
 }
+
+enum ProKeyboardAxisType {
+  ProKeyboardPedal = 1;
+  ProKeyboardTouchPad = 2;
+}
+enum ProKeyboardButtonType {
+  ProKeyboardOverdrive = 1;
+}

@@ -17,7 +17,7 @@ void GuitarHeroDrumsButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     // TODO: we have to deal with data formats probably
     WiiDrumDataFormat3_t *report = (WiiDrumDataFormat3_t *)buf;
-    switch (m_mapping.mapping.ghDrumButton)
+    switch (m_mapping.mapping.mapping.ghDrumButton)
     {
     case GuitarHeroDrums_A:
         report->a |= m_lastValue;
@@ -62,7 +62,7 @@ void GuitarHeroDrumsButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 void GuitarHeroDrumsButtonMapping::update_switch(uint8_t *buf)
 {
     SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)buf;
-    switch (m_mapping.mapping.ghDrumButton)
+    switch (m_mapping.mapping.mapping.ghDrumButton)
     {
     case GuitarHeroDrums_A:
         report->a |= m_lastValue;
@@ -117,7 +117,7 @@ void GuitarHeroDrumsButtonMapping::update_ps2(uint8_t *buf)
 void GuitarHeroDrumsButtonMapping::update_ps3(uint8_t *buf)
 {
     PS3GuitarHeroDrums_Data_t *report = (PS3GuitarHeroDrums_Data_t *)buf;
-    switch (m_mapping.mapping.ghDrumButton)
+    switch (m_mapping.mapping.mapping.ghDrumButton)
     {
     case GuitarHeroDrums_A:
         report->a |= m_lastValue;
@@ -175,7 +175,7 @@ void GuitarHeroDrumsButtonMapping::update_ps5(uint8_t *buf)
 void GuitarHeroDrumsButtonMapping::update_xinput(uint8_t *buf)
 {
     XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)buf;
-    switch (m_mapping.mapping.ghDrumButton)
+    switch (m_mapping.mapping.mapping.ghDrumButton)
     {
     case GuitarHeroDrums_A:
         report->a |= m_lastValue;
@@ -224,7 +224,7 @@ void GuitarHeroDrumsButtonMapping::update_xinput(uint8_t *buf)
 void GuitarHeroDrumsButtonMapping::update_ogxbox(uint8_t *buf)
 {
     OGXboxGuitarHeroDrums_Data_t *report = (OGXboxGuitarHeroDrums_Data_t *)buf;
-    switch (m_mapping.mapping.ghDrumButton)
+    switch (m_mapping.mapping.mapping.ghDrumButton)
     {
     case GuitarHeroDrums_A:
         report->a |= m_lastValue;

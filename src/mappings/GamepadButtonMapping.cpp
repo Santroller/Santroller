@@ -20,7 +20,7 @@ void GamepadButtonMapping::update_wii(uint8_t format, uint8_t *buf)
     if (format == 1)
     {
         WiiClassicDataFormat1_t *report = (WiiClassicDataFormat1_t *)buf;
-        switch (m_mapping.mapping.gamepadButton)
+        switch (m_mapping.mapping.mapping.gamepadButton)
         {
         case Gamepad_A:
             report->a |= m_lastValue;
@@ -71,7 +71,7 @@ void GamepadButtonMapping::update_wii(uint8_t format, uint8_t *buf)
     if (format == 2)
     {
         WiiClassicDataFormat2_t *report = (WiiClassicDataFormat2_t *)buf;
-        switch (m_mapping.mapping.gamepadButton)
+        switch (m_mapping.mapping.mapping.gamepadButton)
         {
         case Gamepad_A:
             report->a |= m_lastValue;
@@ -122,7 +122,7 @@ void GamepadButtonMapping::update_wii(uint8_t format, uint8_t *buf)
     if (format == 3)
     {
         WiiClassicDataFormat3_t *report = (WiiClassicDataFormat3_t *)buf;
-        switch (m_mapping.mapping.gamepadButton)
+        switch (m_mapping.mapping.mapping.gamepadButton)
         {
         case Gamepad_A:
             report->a |= m_lastValue;
@@ -175,7 +175,7 @@ void GamepadButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 void GamepadButtonMapping::update_switch(uint8_t *buf)
 {
     SwitchInputReport *report = (SwitchInputReport *)buf;
-    switch (m_mapping.mapping.gamepadButton)
+    switch (m_mapping.mapping.mapping.gamepadButton)
     {
     case Gamepad_A:
         report->a |= m_lastValue;
@@ -231,7 +231,7 @@ void GamepadButtonMapping::update_ps2(uint8_t *buf)
 {
     // TODO: pressures
     PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadButton)
+    switch (m_mapping.mapping.mapping.gamepadButton)
     {
     case Gamepad_A:
         report->a |= m_lastValue;
@@ -288,7 +288,7 @@ void GamepadButtonMapping::update_ps3(uint8_t *buf)
     {
         // TODO: pressures
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;
-        switch (m_mapping.mapping.gamepadButton)
+        switch (m_mapping.mapping.mapping.gamepadButton)
         {
         case Gamepad_A:
             report->a |= m_lastValue;
@@ -344,7 +344,7 @@ void GamepadButtonMapping::update_ps3(uint8_t *buf)
         return;
     }
     PS3ThirdPartyGamepad_Data_t *report = (PS3ThirdPartyGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadButton)
+    switch (m_mapping.mapping.mapping.gamepadButton)
     {
     case Gamepad_A:
         report->a |= m_lastValue;
@@ -401,7 +401,7 @@ void GamepadButtonMapping::update_ps3(uint8_t *buf)
 void GamepadButtonMapping::update_ps4(uint8_t *buf)
 {
     PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadButton)
+    switch (m_mapping.mapping.mapping.gamepadButton)
     {
     case Gamepad_A:
         report->a |= m_lastValue;
@@ -458,7 +458,7 @@ void GamepadButtonMapping::update_ps4(uint8_t *buf)
 void GamepadButtonMapping::update_ps5(uint8_t *buf)
 {
     PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadButton)
+    switch (m_mapping.mapping.mapping.gamepadButton)
     {
     case Gamepad_A:
         report->a |= m_lastValue;
@@ -515,7 +515,7 @@ void GamepadButtonMapping::update_ps5(uint8_t *buf)
 void GamepadButtonMapping::update_xinput(uint8_t *buf)
 {
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadButton)
+    switch (m_mapping.mapping.mapping.gamepadButton)
     {
     case Gamepad_A:
         report->a |= m_lastValue;
@@ -573,7 +573,7 @@ void GamepadButtonMapping::update_ogxbox(uint8_t *buf)
 {
     // TODO: pressures
     OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadButton)
+    switch (m_mapping.mapping.mapping.gamepadButton)
     {
     case Gamepad_A:
         report->a |= m_lastValue;
@@ -624,7 +624,7 @@ void GamepadButtonMapping::update_ogxbox(uint8_t *buf)
 void GamepadButtonMapping::update_xboxone(uint8_t *buf)
 {
     XboxOneGamepad_Data_t *report = (XboxOneGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadButton)
+    switch (m_mapping.mapping.mapping.gamepadButton)
     {
     case Gamepad_A:
         report->a |= m_lastValue;

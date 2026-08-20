@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile, DrumState *state) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.rbDrumAxis != RockBandDrums_LeftStickX && mapping.mapping.rbDrumAxis != RockBandDrums_LeftStickY), state(state)
+RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile, DrumState *state) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.rbDrumAxis != RockBandDrums_LeftStickX && mapping.mapping.mapping.rbDrumAxis != RockBandDrums_LeftStickY), state(state)
 {
 }
 
@@ -38,21 +38,21 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
     }
     if (state->cymbalGlitchFix && m_mapping.has_debounce)
     {
-        if (m_mapping.mapping.rbDrumAxis >= RockBandDrums_GreenPad && m_mapping.mapping.rbDrumAxis <= RockBandDrums_GreenCymbal)
+        if (m_mapping.mapping.mapping.rbDrumAxis >= RockBandDrums_GreenPad && m_mapping.mapping.mapping.rbDrumAxis <= RockBandDrums_GreenCymbal)
         {
             if (millis() - state->lastGlobalPoll > m_mapping.debounce) {
                 state->lastDrum = RockBandDrums_RedPad;
             }
-            if (state->lastDrum != RockBandDrums_RedPad && state->lastDrum != m_mapping.mapping.rbDrumAxis)
+            if (state->lastDrum != RockBandDrums_RedPad && state->lastDrum != m_mapping.mapping.mapping.rbDrumAxis)
             {
                 m_lastPoll = millis();
                 return;
             }
             state->lastGlobalPoll = millis();
-            state->lastDrum = m_mapping.mapping.rbDrumAxis;
+            state->lastDrum = m_mapping.mapping.mapping.rbDrumAxis;
         }
     }
-    switch (m_mapping.mapping.rbDrumAxis)
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
         state->redPad = m_calibratedValue;
@@ -149,7 +149,7 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
         report->b = true;
         report->padFlag = true;
     }
-    switch (m_mapping.mapping.rbDrumAxis)
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -177,7 +177,7 @@ void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
         return;
     }
     PS4RockBandDrums_Data_t *report = (PS4RockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumAxis)
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue >> 8;
@@ -233,7 +233,7 @@ void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
         return;
     }
     PS5RockBandDrums_Data_t *report = (PS5RockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumAxis)
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue >> 8;
@@ -290,21 +290,21 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
     }
     if (state->cymbalGlitchFix && m_mapping.has_debounce)
     {
-        if (m_mapping.mapping.rbDrumAxis >= RockBandDrums_GreenPad && m_mapping.mapping.rbDrumAxis <= RockBandDrums_GreenCymbal)
+        if (m_mapping.mapping.mapping.rbDrumAxis >= RockBandDrums_GreenPad && m_mapping.mapping.mapping.rbDrumAxis <= RockBandDrums_GreenCymbal)
         {
             if (millis() - state->lastGlobalPoll > m_mapping.debounce) {
                 state->lastDrum = RockBandDrums_RedPad;
             }
-            if (state->lastDrum != RockBandDrums_RedPad && state->lastDrum != m_mapping.mapping.rbDrumAxis)
+            if (state->lastDrum != RockBandDrums_RedPad && state->lastDrum != m_mapping.mapping.mapping.rbDrumAxis)
             {
                 m_lastPoll = millis();
                 return;
             }
             state->lastGlobalPoll = millis();
-            state->lastDrum = m_mapping.mapping.rbDrumAxis;
+            state->lastDrum = m_mapping.mapping.mapping.rbDrumAxis;
         }
     }
-    switch (m_mapping.mapping.rbDrumAxis)
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
         state->redPad = m_calibratedValue;
@@ -401,7 +401,7 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
         report->b = true;
         report->padFlag = true;
     }
-    switch (m_mapping.mapping.rbDrumAxis)
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_LeftStickX:
         if (!m_centered)
@@ -432,7 +432,7 @@ void RockBandDrumsAxisMapping::update_ogxbox(uint8_t *buf)
         return;
     }
     OGXboxRockBandDrums_Data_t *report = (OGXboxRockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumAxis)
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue - 32768;
@@ -496,7 +496,7 @@ void RockBandDrumsAxisMapping::update_xboxone(uint8_t *buf)
     }
     XboxOneRockBandDrums_Data_t *report = (XboxOneRockBandDrums_Data_t *)buf;
 
-    switch (m_mapping.mapping.rbDrumAxis)
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
         report->redVelocity = m_calibratedValue >> 12;

@@ -30,7 +30,7 @@ void RockBandDrumsButtonMapping::update_ps2(uint8_t *buf)
 void RockBandDrumsButtonMapping::update_ps3(uint8_t *buf)
 {
     PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumButton)
+    switch (m_mapping.mapping.mapping.rbDrumButton)
     {
     case RockBandDrums_A:
         report->a |= m_lastValue;
@@ -84,7 +84,7 @@ void RockBandDrumsButtonMapping::update_ps3(uint8_t *buf)
 void RockBandDrumsButtonMapping::update_ps4(uint8_t *buf)
 {
     PS4RockBandDrums_Data_t *report = (PS4RockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumButton)
+    switch (m_mapping.mapping.mapping.rbDrumButton)
     {
     case RockBandDrums_A:
         report->a |= m_lastValue;
@@ -138,7 +138,7 @@ void RockBandDrumsButtonMapping::update_ps4(uint8_t *buf)
 void RockBandDrumsButtonMapping::update_ps5(uint8_t *buf)
 {
     PS5RockBandDrums_Data_t *report = (PS5RockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumButton)
+    switch (m_mapping.mapping.mapping.rbDrumButton)
     {
     case RockBandDrums_A:
         report->a |= m_lastValue;
@@ -192,7 +192,7 @@ void RockBandDrumsButtonMapping::update_ps5(uint8_t *buf)
 void RockBandDrumsButtonMapping::update_xinput(uint8_t *buf)
 {
     XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumButton)
+    switch (m_mapping.mapping.mapping.rbDrumButton)
     {
     case RockBandDrums_A:
         report->a |= m_lastValue;
@@ -245,7 +245,7 @@ void RockBandDrumsButtonMapping::update_xinput(uint8_t *buf)
 void RockBandDrumsButtonMapping::update_ogxbox(uint8_t *buf)
 {
     OGXboxRockBandDrums_Data_t *report = (OGXboxRockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumButton)
+    switch (m_mapping.mapping.mapping.rbDrumButton)
     {
     case RockBandDrums_A:
         report->a |= m_lastValue;
@@ -294,7 +294,7 @@ void RockBandDrumsButtonMapping::update_xboxone(uint8_t *buf)
 {
     
     XboxOneRockBandDrums_Data_t *report = (XboxOneRockBandDrums_Data_t *)buf;
-    switch (m_mapping.mapping.rbDrumButton)
+    switch (m_mapping.mapping.mapping.rbDrumButton)
     {
     case RockBandDrums_A:
         report->a |= m_lastValue;

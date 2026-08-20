@@ -13,7 +13,7 @@ GuitarFreaksButtonMapping::GuitarFreaksButtonMapping(proto_Mapping mapping, std:
 void GuitarFreaksButtonMapping::update_hid(uint8_t *buf)
 {
     // PCGuitarFreaks_Data_t *report = (PCGuitarFreaks_Data_t *)buf;
-    // switch (m_mapping.mapping.gfButton)
+    // switch (m_mapping.mapping.mapping.gfButton)
     // {
     // case GuitarFreaksGreen:
     //     report->a |= m_lastValue;

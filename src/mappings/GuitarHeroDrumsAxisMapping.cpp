@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-GuitarHeroDrumsAxisMapping::GuitarHeroDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.ghDrumAxis != GuitarHeroDrums_LeftStickX && mapping.mapping.ghDrumAxis != GuitarHeroDrums_LeftStickY)
+GuitarHeroDrumsAxisMapping::GuitarHeroDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghDrumAxis != GuitarHeroDrums_LeftStickX && mapping.mapping.mapping.ghDrumAxis != GuitarHeroDrums_LeftStickY)
 {
 }
 
@@ -24,7 +24,7 @@ void GuitarHeroDrumsAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     }
     // TODO: this one is a bit fun because we can only send one velocity at a time.
     WiiDrumDataFormat3_t *report = (WiiDrumDataFormat3_t *)buf;
-    switch (m_mapping.mapping.ghDrumAxis)
+    switch (m_mapping.mapping.mapping.ghDrumAxis)
     {
     case GuitarHeroDrums_RedPad:
         report->b = true;
@@ -71,7 +71,7 @@ void GuitarHeroDrumsAxisMapping::update_ps3(uint8_t *buf)
         return;
     }
     PS3GuitarHeroDrums_Data_t *report = (PS3GuitarHeroDrums_Data_t *)buf;
-    switch (m_mapping.mapping.ghDrumAxis)
+    switch (m_mapping.mapping.mapping.ghDrumAxis)
     {
     case GuitarHeroDrums_RedPad:
         report->redVelocity = m_calibratedValue >> 8;
@@ -132,7 +132,7 @@ void GuitarHeroDrumsAxisMapping::update_xinput(uint8_t *buf)
     }
     XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)buf;
 
-    switch (m_mapping.mapping.ghDrumAxis)
+    switch (m_mapping.mapping.mapping.ghDrumAxis)
     {
     case GuitarHeroDrums_RedPad:
         report->redVelocity = m_calibratedValue - 32768;
@@ -182,7 +182,7 @@ void GuitarHeroDrumsAxisMapping::update_ogxbox(uint8_t *buf)
         return;
     }
     OGXboxGuitarHeroDrums_Data_t *report = (OGXboxGuitarHeroDrums_Data_t *)buf;
-    switch (m_mapping.mapping.ghDrumAxis)
+    switch (m_mapping.mapping.mapping.ghDrumAxis)
     {
     case GuitarHeroDrums_RedPad:
         report->redVelocity = m_calibratedValue - 32768;

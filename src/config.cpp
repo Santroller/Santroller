@@ -564,87 +564,87 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         return true;
     }
     size_t mapping_id = profile->mappings.size();
-    switch (mapping.which_mapping)
+    switch (mapping.mapping.which_mapping)
     {
-    case proto_Mapping_gamepadAxis_tag:
+    case proto_Output_gamepadAxis_tag:
         profile->mappings.emplace_back(new GamepadAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_ghAxis_tag:
+    case proto_Output_ghAxis_tag:
         profile->mappings.emplace_back(new GuitarHeroGuitarAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_ghButton_tag:
+    case proto_Output_ghButton_tag:
         profile->mappings.emplace_back(new GuitarHeroGuitarButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_rbAxis_tag:
+    case proto_Output_rbAxis_tag:
         profile->mappings.emplace_back(new RockBandGuitarAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_rbButton_tag:
+    case proto_Output_rbButton_tag:
         profile->mappings.emplace_back(new RockBandGuitarButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_gamepadButton_tag:
+    case proto_Output_gamepadButton_tag:
         profile->mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_ghDrumButton_tag:
+    case proto_Output_ghDrumButton_tag:
         profile->mappings.emplace_back(new GuitarHeroDrumsButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_ghDrumAxis_tag:
+    case proto_Output_ghDrumAxis_tag:
         profile->mappings.emplace_back(new GuitarHeroDrumsAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_rbDrumButton_tag:
+    case proto_Output_rbDrumButton_tag:
         profile->mappings.emplace_back(new RockBandDrumsButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_rbDrumAxis_tag:
+    case proto_Output_rbDrumAxis_tag:
         profile->mappings.emplace_back(new RockBandDrumsAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id, &profile->drum_state));
         break;
-    case proto_Mapping_ghlButton_tag:
+    case proto_Output_ghlButton_tag:
         profile->mappings.emplace_back(new LiveGuitarButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_ghlAxis_tag:
+    case proto_Output_ghlAxis_tag:
         profile->mappings.emplace_back(new LiveGuitarAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_proButton_tag:
+    case proto_Output_proButton_tag:
         profile->mappings.emplace_back(new ProGuitarButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_proAxis_tag:
+    case proto_Output_proAxis_tag:
         profile->mappings.emplace_back(new ProGuitarAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_djhButton_tag:
+    case proto_Output_djhButton_tag:
         profile->mappings.emplace_back(new DJHTurntableButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_djhAxis_tag:
+    case proto_Output_djhAxis_tag:
         profile->mappings.emplace_back(new DJHTurntableAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_djMaxButton_tag:
+    case proto_Output_djMaxButton_tag:
         profile->mappings.emplace_back(new DJMaxTurntableButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_djMaxAxis_tag:
+    case proto_Output_djMaxAxis_tag:
         profile->mappings.emplace_back(new DJMaxTurntableAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_divaButton_tag:
+    case proto_Output_divaButton_tag:
         profile->mappings.emplace_back(new ProjectDivaButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_divaAxis_tag:
+    case proto_Output_divaAxis_tag:
         profile->mappings.emplace_back(new ProjectDivaAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_gfAxis_tag:
+    case proto_Output_gfAxis_tag:
         profile->mappings.emplace_back(new GuitarFreaksAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_gfButton_tag:
+    case proto_Output_gfButton_tag:
         profile->mappings.emplace_back(new GuitarFreaksButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_ghaAxis_tag:
+    case proto_Output_ghaAxis_tag:
         profile->mappings.emplace_back(new GuitarHeroArcadeAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_ghaButton_tag:
+    case proto_Output_ghaButton_tag:
         profile->mappings.emplace_back(new GuitarHeroArcadeButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_mouseAxis_tag:
+    case proto_Output_mouseAxis_tag:
         profile->mappings.emplace_back(new MouseAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_mouseButton_tag:
+    case proto_Output_mouseButton_tag:
         profile->mappings.emplace_back(new MouseButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Mapping_keycode_tag:
+    case proto_Output_keycode_tag:
         profile->mappings.emplace_back(new KeyboardButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id, &profile->keyboard_state));
         break;
     }

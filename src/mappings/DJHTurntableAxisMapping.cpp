@@ -24,7 +24,7 @@ void DJHTurntableAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     }
     WiiTurntableIntermediateFormat3_t intermediate;
     WiiTurntableDataFormat3_t *report = (WiiTurntableDataFormat3_t *)buf;
-    switch (m_mapping.mapping.djhAxis)
+    switch (m_mapping.mapping.mapping.djhAxis)
     {
     case DJHTurntable_LeftStickX:
         report->leftStickX = m_calibratedValue >> 10;
@@ -73,7 +73,7 @@ void DJHTurntableAxisMapping::update_ps3(uint8_t *buf)
         return;
     }
     PS3DJHTurntable_Data_t *report = (PS3DJHTurntable_Data_t *)buf;
-    switch (m_mapping.mapping.djhAxis)
+    switch (m_mapping.mapping.mapping.djhAxis)
     {
     case DJHTurntable_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -113,7 +113,7 @@ void DJHTurntableAxisMapping::update_xinput(uint8_t *buf)
         return;
     }
     XInputDJHTurntable_Data_t *report = (XInputDJHTurntable_Data_t *)buf;
-    switch (m_mapping.mapping.djhAxis)
+    switch (m_mapping.mapping.mapping.djhAxis)
     {
     case DJHTurntable_LeftStickX:
         report->leftTableVelocity = m_calibratedValue - 32768;
@@ -144,7 +144,7 @@ void DJHTurntableAxisMapping::update_ogxbox(uint8_t *buf)
         return;
     }
     OGXboxDJHTurntable_Data_t *report = (OGXboxDJHTurntable_Data_t *)buf;
-    switch (m_mapping.mapping.djhAxis)
+    switch (m_mapping.mapping.mapping.djhAxis)
     {
     case DJHTurntable_LeftStickX:
         report->leftTableVelocity = m_calibratedValue - 32768;

@@ -196,7 +196,7 @@ message InputActivationTrigger {
   optional int32 maxTriggerValue = 5;
 }
 
-message Mapping {
+message Output {
   oneof mapping {
     GamepadButtonType gamepadButton = 1;
     GamepadAxisType gamepadAxis = 2;
@@ -225,8 +225,15 @@ message Mapping {
     MouseAxisType mouseAxis = 25;
     MouseButtonType mouseButton = 26;
     int32 keycode = 27;
+    int32 proKeySingle = 28;
+    int32 proKeyMultiple = 29;
+    ProKeyboardAxisType proKeyboardAxis = 30;
+    ProKeyboardButtonType proKeyboardButton = 31;
   }
+}
 
+message Mapping {
+  required Output mapping = 1;
   required Input input = 50;
   optional bool inverted = 51;
   optional Input pressureInput = 52; // if there is no pressureInput, then set the pressures to max when the button is pressed

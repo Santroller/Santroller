@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <config.hpp>
 
-ProjectDivaAxisMapping::ProjectDivaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.divaAxis == ProjectDiva_LeftTrigger || mapping.mapping.divaAxis == ProjectDiva_RightTrigger)
+ProjectDivaAxisMapping::ProjectDivaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.divaAxis == ProjectDiva_LeftTrigger || mapping.mapping.mapping.divaAxis == ProjectDiva_RightTrigger)
 {
 }
 
@@ -29,7 +29,7 @@ void ProjectDivaAxisMapping::update_switch(uint8_t *buf)
     }
     // https://github.com/ravinrabbid/DivaCon2040
     SwitchGamepad_Data_t *report = (SwitchGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.divaAxis)
+    switch (m_mapping.mapping.mapping.divaAxis)
     {
     case ProjectDiva_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -61,7 +61,7 @@ void ProjectDivaAxisMapping::update_ps2(uint8_t *buf)
         return;
     }
     PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)buf;
-    switch (m_mapping.mapping.divaAxis)
+    switch (m_mapping.mapping.mapping.divaAxis)
     {
     case ProjectDiva_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -95,7 +95,7 @@ void ProjectDivaAxisMapping::update_ps3(uint8_t *buf)
     if (mode == ModePs3)
     {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;
-        switch (m_mapping.mapping.divaAxis)
+        switch (m_mapping.mapping.mapping.divaAxis)
         {
         case ProjectDiva_LeftStickX:
             report->leftStickX = m_calibratedValue >> 8;
@@ -121,7 +121,7 @@ void ProjectDivaAxisMapping::update_ps3(uint8_t *buf)
         return;
     }
     PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)buf;
-    switch (m_mapping.mapping.divaAxis)
+    switch (m_mapping.mapping.mapping.divaAxis)
     {
     case ProjectDiva_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -154,7 +154,7 @@ void ProjectDivaAxisMapping::update_ps4(uint8_t *buf)
         return;
     }
     PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)buf;
-    switch (m_mapping.mapping.divaAxis)
+    switch (m_mapping.mapping.mapping.divaAxis)
     {
     case ProjectDiva_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -186,7 +186,7 @@ void ProjectDivaAxisMapping::update_ps5(uint8_t *buf)
         return;
     }
     PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)buf;
-    switch (m_mapping.mapping.divaAxis)
+    switch (m_mapping.mapping.mapping.divaAxis)
     {
     case ProjectDiva_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -218,7 +218,7 @@ void ProjectDivaAxisMapping::update_xinput(uint8_t *buf)
         return;
     }
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.divaAxis)
+    switch (m_mapping.mapping.mapping.divaAxis)
     {
     case ProjectDiva_LeftStickX:
         report->leftStickX = m_calibratedValue - INT16_MAX;
@@ -249,7 +249,7 @@ void ProjectDivaAxisMapping::update_ogxbox(uint8_t *buf)
         return;
     }
     OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.divaAxis)
+    switch (m_mapping.mapping.mapping.divaAxis)
     {
     case ProjectDiva_LeftStickX:
         report->leftStickX = m_calibratedValue - INT16_MAX;

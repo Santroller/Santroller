@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-LiveGuitarAxisMapping::LiveGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.ghlAxis == GuitarHeroLiveGuitar_Whammy)
+LiveGuitarAxisMapping::LiveGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghlAxis == GuitarHeroLiveGuitar_Whammy)
 {
 }
 
@@ -37,7 +37,7 @@ void LiveGuitarAxisMapping::update_ps3(uint8_t *buf)
         return;
     }
     PS3GHLGuitar_Data_t *report = (PS3GHLGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghlAxis)
+    switch (m_mapping.mapping.mapping.ghlAxis)
     {
     case GuitarHeroLiveGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -64,7 +64,7 @@ void LiveGuitarAxisMapping::update_ps4(uint8_t *buf)
         return;
     }
     PS4GHLGuitar_Data_t *report = (PS4GHLGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghlAxis)
+    switch (m_mapping.mapping.mapping.ghlAxis)
     {
     case GuitarHeroLiveGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -93,7 +93,7 @@ void LiveGuitarAxisMapping::update_ps5(uint8_t *buf)
         return;
     }
     PS5GHLGuitar_Data_t *report = (PS5GHLGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghlAxis)
+    switch (m_mapping.mapping.mapping.ghlAxis)
     {
     case GuitarHeroLiveGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -122,7 +122,7 @@ void LiveGuitarAxisMapping::update_xinput(uint8_t *buf)
         return;
     }
     XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghlAxis)
+    switch (m_mapping.mapping.mapping.ghlAxis)
     {
     case GuitarHeroLiveGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue - 32768;
@@ -148,7 +148,7 @@ void LiveGuitarAxisMapping::update_ogxbox(uint8_t *buf)
         return;
     }
     OGXboxGHLGuitar_Data_t *report = (OGXboxGHLGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.ghlAxis)
+    switch (m_mapping.mapping.mapping.ghlAxis)
     {
     case GuitarHeroLiveGuitar_LeftStickX:
         report->leftStickX = m_calibratedValue - 32768;

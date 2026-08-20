@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <config.hpp>
 
-GamepadAxisMapping::GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.gamepadAxis == Gamepad_LeftTrigger || mapping.mapping.gamepadAxis == Gamepad_RightTrigger)
+GamepadAxisMapping::GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.gamepadAxis == Gamepad_LeftTrigger || mapping.mapping.mapping.gamepadAxis == Gamepad_RightTrigger)
 {
 }
 
@@ -31,7 +31,7 @@ void GamepadAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     {
         WiiIntermediateClassicDataFormat_t test;
         WiiClassicDataFormat1_t *report = (WiiClassicDataFormat1_t *)buf;
-        switch (m_mapping.mapping.gamepadAxis)
+        switch (m_mapping.mapping.mapping.gamepadAxis)
         {
         case Gamepad_LeftStickX:
             report->leftStickX = m_calibratedValue >> 10;
@@ -64,7 +64,7 @@ void GamepadAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     {
         WiiIntermediateClassicDataFormat2_t test;
         WiiClassicDataFormat2_t *report = (WiiClassicDataFormat2_t *)buf;
-        switch (m_mapping.mapping.gamepadAxis)
+        switch (m_mapping.mapping.mapping.gamepadAxis)
         {
         case Gamepad_LeftStickX:
             test.leftStickX = m_calibratedValue >> 6;
@@ -99,7 +99,7 @@ void GamepadAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     if (format == 3)
     {
         WiiClassicDataFormat3_t *report = (WiiClassicDataFormat3_t *)buf;
-        switch (m_mapping.mapping.gamepadAxis)
+        switch (m_mapping.mapping.mapping.gamepadAxis)
         {
         case Gamepad_LeftStickX:
             report->leftStickX = m_calibratedValue >> 8;
@@ -131,7 +131,7 @@ void GamepadAxisMapping::update_switch(uint8_t *buf)
         return;
     }
     SwitchInputReport *report = (SwitchInputReport *)buf;
-    switch (m_mapping.mapping.gamepadAxis)
+    switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:
         report->leftStickX = m_calibratedValue >> 4;
@@ -163,7 +163,7 @@ void GamepadAxisMapping::update_ps2(uint8_t *buf)
         return;
     }
     PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadAxis)
+    switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -197,7 +197,7 @@ void GamepadAxisMapping::update_ps3(uint8_t *buf)
     if (mode == ModePs3)
     {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;
-        switch (m_mapping.mapping.gamepadAxis)
+        switch (m_mapping.mapping.mapping.gamepadAxis)
         {
         case Gamepad_LeftStickX:
             report->leftStickX = m_calibratedValue >> 8;
@@ -233,7 +233,7 @@ void GamepadAxisMapping::update_ps3(uint8_t *buf)
         return;
     }
     PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadAxis)
+    switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -275,7 +275,7 @@ void GamepadAxisMapping::update_ps4(uint8_t *buf)
         return;
     }
     PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadAxis)
+    switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -307,7 +307,7 @@ void GamepadAxisMapping::update_ps5(uint8_t *buf)
         return;
     }
     PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadAxis)
+    switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:
         report->leftStickX = m_calibratedValue >> 8;
@@ -339,7 +339,7 @@ void GamepadAxisMapping::update_xinput(uint8_t *buf)
         return;
     }
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadAxis)
+    switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:
         report->leftStickX = m_calibratedValue - 32768;
@@ -370,7 +370,7 @@ void GamepadAxisMapping::update_ogxbox(uint8_t *buf)
         return;
     }
     OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadAxis)
+    switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:
         report->leftStickX = m_calibratedValue - INT16_MAX;
@@ -401,7 +401,7 @@ void GamepadAxisMapping::update_xboxone(uint8_t *buf)
         return;
     }
     XboxOneGamepad_Data_t *report = (XboxOneGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.gamepadAxis)
+    switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:
         report->leftStickX = m_calibratedValue - 32768;

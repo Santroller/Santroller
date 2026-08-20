@@ -14,7 +14,7 @@ GuitarFreaksAxisMapping::GuitarFreaksAxisMapping(proto_Mapping mapping, std::uni
 void GuitarFreaksAxisMapping::update_hid(uint8_t *buf)
 {
     // PCGuitarFreaks_Data_t *report = (PCGuitarFreaks_Data_t *)buf;
-    // switch (m_mapping.mapping.gfAxis)
+    // switch (m_mapping.mapping.mapping.gfAxis)
     // {
     // case GuitarFreaksLeftStickX:
     //     report->leftStickX = m_calibratedValue - 32768;

@@ -82,6 +82,8 @@ std::vector<std::shared_ptr<Instance>> active_instances;
 std::unordered_map<uint32_t, std::shared_ptr<Profile>> all_profiles;
 std::set<uint32_t> active_profiles;
 std::set<uint32_t> previous_profiles;
+std::unordered_map<uint32_t, SubType> prev_types;
+std::unordered_map<uint32_t, SubType> current_types;
 std::vector<std::shared_ptr<Device>> active_devices;
 std::unordered_map<uint32_t, std::shared_ptr<Device>> root_devices;
 // devices that have not yet been assigned to a profile
@@ -853,6 +855,21 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
             {
                 previous_profiles.insert(profile->profile_id);
             }
+            auto match = prev_types.find(profile->profile_id);
+
+            if (match != prev_types.end())
+            {
+                auto type = match->second;
+                prev_types.erase(match);
+                if (type != profile->subtype)
+                {
+                    prev_types.emplace(profile->profile_id, profile->subtype);
+                }
+            }
+            else
+            {
+                prev_types.emplace(profile->profile_id, profile->subtype);
+            }
             if ((assignedDevices & ProfileAssignMask_AssignBluetoothGamepad) && !(seenMasks & ProfileAssignMask_AssignBluetoothGamepad) && isPicoW)
             {
                 btGamepadInstance = std::make_shared<BTGamepadDevice>();
@@ -865,6 +882,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                 active_instances.push_back(btGamepadInstance);
                 btGamepadInstance->initialize();
                 active_profiles.insert(profile->profile_id);
+                current_types.emplace(profile->profile_id, profile->subtype);
                 seenMasks |= ProfileAssignMask_AssignBluetoothGamepad;
                 // printf("assigned bluetooth!\r\n");
             }
@@ -880,6 +898,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                 active_instances.push_back(ps2EmulationInstance);
                 ps2EmulationInstance->initialize();
                 active_profiles.insert(profile->profile_id);
+                current_types.emplace(profile->profile_id, profile->subtype);
                 seenMasks |= ProfileAssignMask_AssignPsx;
                 // printf("assigned bluetooth!\r\n");
             }
@@ -895,6 +914,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                 active_instances.push_back(wiiEmulationInstance);
                 wiiEmulationInstance->initialize();
                 active_profiles.insert(profile->profile_id);
+                current_types.emplace(profile->profile_id, profile->subtype);
                 seenMasks |= ProfileAssignMask_AssignWiimoteExtension;
                 // printf("assigned bluetooth!\r\n");
             }
@@ -953,6 +973,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                 usb_instances[usbInstance->interface_id] = usbInstance;
                 usbInstance->initialize();
                 active_profiles.insert(profile->profile_id);
+                current_types.emplace(profile->profile_id, profile->subtype);
                 // printf("instance: %d\r\n", usbInstance->interface_id);
             }
             break;
@@ -1073,6 +1094,8 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
         device.second->still_connected = false;
     }
     previous_profiles = active_profiles;
+    prev_types.clear();
+    prev_types = current_types;
     active_profiles.clear();
     all_profiles.clear();
     UsbDevice::reset_ep();
@@ -1133,7 +1156,7 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
         }
     }
     // the profile assignments changed, so reload the entire device
-    if (previous_profiles.size() > 0 || modeChanged)
+    if (previous_profiles.size() > 0 || modeChanged || prev_types.size() > 0)
     {
         HIDConfigDevice::reset_keepalive();
         seenPs4 = false;

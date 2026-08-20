@@ -64,62 +64,70 @@ bool OGXboxHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred
     return true;
 }
 
-bool OGXboxHost::tick_digital(UsbButtonType type)
+bool OGXboxHost::tick_digital(proto_Output& type)
 {
-    switch (type)
+    if (type.which_mapping == proto_Output_gamepadButton_tag)
     {
-    case UsbButtonA:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->a;
-    case UsbButtonB:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->b;
-    case UsbButtonX:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->x;
-    case UsbButtonY:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->y;
-    case UsbButtonLeftShoulder:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->leftShoulder;
-    case UsbButtonRightShoulder:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->rightShoulder;
-    case UsbButtonBack:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->back;
-    case UsbButtonStart:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->start;
-    case UsbButtonLeftThumbClick:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->leftThumbClick;
-    case UsbButtonRightThumbClick:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->rightThumbClick;
-    case UsbButtonDpadUp:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->dpadUp;
-    case UsbButtonDpadDown:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->dpadDown;
-    case UsbButtonDpadLeft:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->dpadLeft;
-    case UsbButtonDpadRight:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->dpadRight;
-    default:
-        return false;
+        auto data = (OGXboxGamepad_Data_t *)m_ep_in_buf;
+        switch (type.mapping.gamepadButton)
+        {
+        case Gamepad_A:
+            return data->a;
+        case Gamepad_B:
+            return data->b;
+        case Gamepad_X:
+            return data->x;
+        case Gamepad_Y:
+            return data->y;
+        case Gamepad_LeftShoulder:
+            return data->leftShoulder;
+        case Gamepad_RightShoulder:
+            return data->rightShoulder;
+        case Gamepad_Back:
+            return data->back;
+        case Gamepad_Start:
+            return data->start;
+        case Gamepad_LeftThumbClick:
+            return data->leftThumbClick;
+        case Gamepad_RightThumbClick:
+            return data->rightThumbClick;
+        case Gamepad_DpadUp:
+            return data->dpadUp;
+        case Gamepad_DpadDown:
+            return data->dpadDown;
+        case Gamepad_DpadLeft:
+            return data->dpadLeft;
+        case Gamepad_DpadRight:
+            return data->dpadRight;
+        default:
+            return false;
+        }
     }
 
     return false;
 }
-uint16_t OGXboxHost::tick_analog(UsbAxisType type)
+uint16_t OGXboxHost::tick_analog(proto_Output& type)
 {
-    switch (type)
+    if (type.which_mapping == proto_Output_gamepadAxis_tag)
     {
-    case UsbAxisLeftTrigger:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->leftTrigger << 8;
-    case UsbAxisRightTrigger:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->rightTrigger << 8;
-    case UsbAxisLeftStickX:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->leftStickX + INT16_MAX;
-    case UsbAxisLeftStickY:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->leftStickY + INT16_MAX;
-    case UsbAxisRightStickX:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->rightStickX + INT16_MAX;
-    case UsbAxisRightStickY:
-        return ((OGXboxGamepad_Data_t *)m_ep_in_buf)->rightStickY + INT16_MAX;
-    default:
-        return 0;
+        auto data = (OGXboxGamepad_Data_t *)m_ep_in_buf;
+        switch (type.mapping.gamepadAxis)
+        {
+        case Gamepad_LeftTrigger:
+            return data->leftTrigger << 8;
+        case Gamepad_RightTrigger:
+            return data->rightTrigger << 8;
+        case Gamepad_LeftStickX:
+            return data->leftStickX + INT16_MAX;
+        case Gamepad_LeftStickY:
+            return data->leftStickY + INT16_MAX;
+        case Gamepad_RightStickX:
+            return data->rightStickX + INT16_MAX;
+        case Gamepad_RightStickY:
+            return data->rightStickY + INT16_MAX;
+        default:
+            return 0;
+        }
     }
 
     return 0;

@@ -139,11 +139,11 @@ bool XInputWirelessAudioHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uin
     return true;
 }
 
-bool XInputWirelessAudioHost::tick_digital(UsbButtonType type)
+bool XInputWirelessAudioHost::tick_digital(proto_Output& type)
 {
     return false;
 }
-uint16_t XInputWirelessAudioHost::tick_analog(UsbAxisType type)
+uint16_t XInputWirelessAudioHost::tick_analog(proto_Output& type)
 {
     return 0;
 }

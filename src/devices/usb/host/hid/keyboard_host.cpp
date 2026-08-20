@@ -65,11 +65,11 @@ bool KeyboardHost::set_config()
     UsbHostInterface::set_config();
     return true;
 }
-bool KeyboardHost::tick_digital(UsbButtonType type)
+bool KeyboardHost::tick_digital(proto_Output& type)
 {
     return false;
 }
-uint16_t KeyboardHost::tick_analog(UsbAxisType type)
+uint16_t KeyboardHost::tick_analog(proto_Output& type)
 {
     return 0;
 }

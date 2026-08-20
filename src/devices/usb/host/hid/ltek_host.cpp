@@ -73,7 +73,7 @@ bool LTekHost::set_config()
     UsbHostInterface::set_config();
     return true;
 }
-bool LTekHost::tick_digital(UsbButtonType type)
+bool LTekHost::tick_digital(proto_Output& type)
 {
     // TODO: do we deal with center?
     LTEK_Report_Data_t *report = (LTEK_Report_Data_t *)m_ep_in_buf;
@@ -82,25 +82,28 @@ bool LTekHost::tick_digital(UsbButtonType type)
         // skip report id
         report = (LTEK_Report_Data_t *)(m_ep_in_buf + 1);
     }
-    switch (type)
+    // TODO: this
+    if (type.which_mapping == proto_Output_gamepadButton_tag)
+    switch (type.mapping.gamepadButton)
     {
-    case UsbButtonDpadUp:
+    case Gamepad_DpadUp:
         return report->dpadUp;
-    case UsbButtonDpadDown:
+    case Gamepad_DpadDown:
         return report->dpadDown;
-    case UsbButtonDpadLeft:
+    case Gamepad_DpadLeft:
         return report->dpadLeft;
-    case UsbButtonDpadRight:
+    case Gamepad_DpadRight:
         return report->dpadRight;
-    case UsbButtonBack:
+    case Gamepad_Back:
         return report->back;
-    case UsbButtonStart:
+    case Gamepad_Start:
         return report->start;
     default:
         return false;
     }
+    return false;
 }
-uint16_t LTekHost::tick_analog(UsbAxisType type)
+uint16_t LTekHost::tick_analog(proto_Output& type)
 {
     return 0;
 }

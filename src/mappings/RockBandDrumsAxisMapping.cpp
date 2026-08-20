@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile, DrumState *state) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.rbDrumAxis != RockBandDrums_LeftStickX && mapping.mapping.mapping.rbDrumAxis != RockBandDrums_LeftStickY), state(state)
+RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile, DrumState *state) : AxisMapping(mapping, std::move(input), id, profile, true), state(state)
 {
 }
 
@@ -149,25 +149,6 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
         report->b = true;
         report->padFlag = true;
     }
-    switch (m_mapping.mapping.mapping.rbDrumAxis)
-    {
-    case RockBandDrums_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case RockBandDrums_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
-        break;
-    case RockBandDrums_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        report->l2 = true;
-        break;
-    case RockBandDrums_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
-        report->r2 = true;
-        break;
-    default:
-        break;
-    }
 }
 
 void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
@@ -206,20 +187,6 @@ void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
     case RockBandDrums_GreenCymbal:
         report->greenCymbalVelocity = m_calibratedValue >> 8;
         report->a = true;
-        break;
-    case RockBandDrums_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case RockBandDrums_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
-        break;
-    case RockBandDrums_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        report->l2 = true;
-        break;
-    case RockBandDrums_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
-        report->r2 = true;
         break;
     default:
         break;
@@ -262,20 +229,6 @@ void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
     case RockBandDrums_GreenCymbal:
         report->greenCymbalVelocity = m_calibratedValue >> 8;
         report->a = true;
-        break;
-    case RockBandDrums_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case RockBandDrums_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
-        break;
-    case RockBandDrums_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        report->l2 = true;
-        break;
-    case RockBandDrums_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
-        report->r2 = true;
         break;
     default:
         break;
@@ -401,29 +354,6 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
         report->b = true;
         report->padFlag = true;
     }
-    switch (m_mapping.mapping.mapping.rbDrumAxis)
-    {
-    case RockBandDrums_LeftStickX:
-        if (!m_centered)
-        {
-            report->redVelocity = m_calibratedValue - 32768;
-        }
-        break;
-    case RockBandDrums_LeftStickY:
-        if (!m_centered)
-        {
-            report->yellowVelocity = m_calibratedValue - 32768;
-        }
-        break;
-    case RockBandDrums_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        break;
-    case RockBandDrums_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
-        break;
-    default:
-        break;
-    }
 }
 void RockBandDrumsAxisMapping::update_ogxbox(uint8_t *buf)
 {
@@ -470,18 +400,6 @@ void RockBandDrumsAxisMapping::update_ogxbox(uint8_t *buf)
         report->greenVelocity = m_calibratedValue - 32768;
         report->a = true;
         report->cymbalFlag = true;
-        break;
-    case RockBandDrums_LeftStickX:
-        if (!m_centered)
-        {
-            report->redVelocity = m_calibratedValue - 32768;
-        }
-        break;
-    case RockBandDrums_LeftStickY:
-        if (!m_centered)
-        {
-            report->yellowVelocity = m_calibratedValue - 32768;
-        }
         break;
     default:
         break;

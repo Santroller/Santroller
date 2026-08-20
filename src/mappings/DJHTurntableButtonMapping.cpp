@@ -38,42 +38,6 @@ void DJHTurntableButtonMapping::update_wii(uint8_t format, uint8_t *buf)
     case DJHTurntable_RightBlue:
         report->rightBlue |= m_lastValue;
         break;
-    case DJHTurntable_A:
-        // TODO: if we end up doing fill wiimote emulation, then its worth mapping this to the remote
-        report->leftGreen |= m_lastValue;
-        break;
-    case DJHTurntable_B:
-        report->leftRed |= m_lastValue;
-        break;
-    case DJHTurntable_X:
-        report->leftBlue |= m_lastValue;
-        break;
-    case DJHTurntable_Y:
-        report->y |= m_lastValue;
-        break;
-    case DJHTurntable_Back:
-        report->back |= m_lastValue;
-        break;
-    case DJHTurntable_Start:
-        report->start |= m_lastValue;
-        break;
-    case DJHTurntable_Guide:
-        report->guide |= m_lastValue;
-        break;
-    case DJHTurntable_DpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case DJHTurntable_DpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case DJHTurntable_DpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case DJHTurntable_DpadRight:
-        report->dpadRight |= m_lastValue;
-        break;
-    default:
-        break;
     }
 }
 void DJHTurntableButtonMapping::update_switch(uint8_t *buf)
@@ -114,39 +78,6 @@ void DJHTurntableButtonMapping::update_ps3(uint8_t *buf)
     case DJHTurntable_RightBlue:
         report->x |= m_lastValue;
         report->rightBlue |= m_lastValue;
-        break;
-    case DJHTurntable_A:
-        report->a |= m_lastValue;
-        break;
-    case DJHTurntable_B:
-        report->b |= m_lastValue;
-        break;
-    case DJHTurntable_X:
-        report->x |= m_lastValue;
-        break;
-    case DJHTurntable_Y:
-        report->y |= m_lastValue;
-        break;
-    case DJHTurntable_Back:
-        report->back |= m_lastValue;
-        break;
-    case DJHTurntable_Start:
-        report->start |= m_lastValue;
-        break;
-    case DJHTurntable_Guide:
-        report->guide |= m_lastValue;
-        break;
-    case DJHTurntable_DpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case DJHTurntable_DpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case DJHTurntable_DpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case DJHTurntable_DpadRight:
-        report->dpadRight |= m_lastValue;
         break;
     default:
         break;
@@ -192,39 +123,6 @@ void DJHTurntableButtonMapping::update_xinput(uint8_t *buf)
         report->x |= m_lastValue;
         report->rightBlue |= m_lastValue;
         break;
-    case DJHTurntable_A:
-        report->a |= m_lastValue;
-        break;
-    case DJHTurntable_B:
-        report->b |= m_lastValue;
-        break;
-    case DJHTurntable_X:
-        report->x |= m_lastValue;
-        break;
-    case DJHTurntable_Y:
-        report->y |= m_lastValue;
-        break;
-    case DJHTurntable_Back:
-        report->back |= m_lastValue;
-        break;
-    case DJHTurntable_Start:
-        report->start |= m_lastValue;
-        break;
-    case DJHTurntable_Guide:
-        report->guide |= m_lastValue;
-        break;
-    case DJHTurntable_DpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case DJHTurntable_DpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case DJHTurntable_DpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case DJHTurntable_DpadRight:
-        report->dpadRight |= m_lastValue;
-        break;
     default:
         break;
     }
@@ -257,36 +155,6 @@ void DJHTurntableButtonMapping::update_ogxbox(uint8_t *buf)
     case DJHTurntable_RightBlue:
         report->x |= m_lastValue;
         report->rightBlue |= m_lastValue;
-        break;
-    case DJHTurntable_A:
-        report->a |= m_lastValue;
-        break;
-    case DJHTurntable_B:
-        report->b |= m_lastValue;
-        break;
-    case DJHTurntable_X:
-        report->x |= m_lastValue;
-        break;
-    case DJHTurntable_Y:
-        report->y |= m_lastValue;
-        break;
-    case DJHTurntable_Back:
-        report->back |= m_lastValue;
-        break;
-    case DJHTurntable_Start:
-        report->start |= m_lastValue;
-        break;
-    case DJHTurntable_DpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case DJHTurntable_DpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case DJHTurntable_DpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case DJHTurntable_DpadRight:
-        report->dpadRight |= m_lastValue;
         break;
     default:
         break;

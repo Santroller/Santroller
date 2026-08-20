@@ -48,12 +48,12 @@ std::shared_ptr<UsbHostInterface> XInputBigButtonHost::open(std::shared_ptr<UsbH
     return intf;
 }
 
-bool XInputBigButtonHost::tick_digital(UsbButtonType type)
+bool XInputBigButtonHost::tick_digital(proto_Output& type)
 {
 
     return true;
 }
-uint16_t XInputBigButtonHost::tick_analog(UsbAxisType type)
+uint16_t XInputBigButtonHost::tick_analog(proto_Output& type)
 {
     return 0;
 }

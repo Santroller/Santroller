@@ -27,12 +27,6 @@ void RockBandGuitarAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)buf;
     switch (m_mapping.mapping.mapping.rbAxis)
     {
-    case RockBandGuitar_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case RockBandGuitar_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
-        break;
     case RockBandGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
@@ -52,12 +46,6 @@ void RockBandGuitarAxisMapping::update_switch(uint8_t *buf)
     SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)buf;
     switch (m_mapping.mapping.mapping.rbAxis)
     {
-    case RockBandGuitar_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case RockBandGuitar_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
-        break;
     case RockBandGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
@@ -78,12 +66,6 @@ void RockBandGuitarAxisMapping::update_ps2(uint8_t *buf)
     PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.mapping.rbAxis)
     {
-    case RockBandGuitar_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case RockBandGuitar_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
-        break;
     case RockBandGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
@@ -104,12 +86,6 @@ void RockBandGuitarAxisMapping::update_ps3(uint8_t *buf)
     PS3RockBandGuitar_Data_t *report = (PS3RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.mapping.rbAxis)
     {
-    case RockBandGuitar_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case RockBandGuitar_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
-        break;
     case RockBandGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
@@ -118,14 +94,6 @@ void RockBandGuitarAxisMapping::update_ps3(uint8_t *buf)
         break;
     case RockBandGuitar_Pickup:
         report->pickup = pickupUniversal[m_calibratedValue];
-        break;
-    case RockBandGuitar_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        report->solo = m_calibratedValue > 65000;
-        break;
-    case RockBandGuitar_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
-        report->r2 = m_calibratedValue > 65000;
         break;
     }
 }
@@ -139,12 +107,6 @@ void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
     PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.mapping.rbAxis)
     {
-    case RockBandGuitar_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case RockBandGuitar_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
-        break;
     case RockBandGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
@@ -153,14 +115,6 @@ void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
         break;
     case RockBandGuitar_Pickup:
         report->pickup = m_calibratedValue;
-        break;
-    case RockBandGuitar_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        report->l2 = m_calibratedValue > 65000;
-        break;
-    case RockBandGuitar_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
-        report->r2 = m_calibratedValue > 65000;
         break;
     default:
         break;
@@ -176,12 +130,6 @@ void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
     PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.mapping.rbAxis)
     {
-    case RockBandGuitar_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case RockBandGuitar_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
-        break;
     case RockBandGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
@@ -190,14 +138,6 @@ void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
         break;
     case RockBandGuitar_Pickup:
         report->pickup = m_calibratedValue;
-        break;
-    case RockBandGuitar_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        report->l2 = m_calibratedValue > 65000;
-        break;
-    case RockBandGuitar_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
-        report->r2 = m_calibratedValue > 65000;
         break;
     default:
         break;
@@ -213,12 +153,6 @@ void RockBandGuitarAxisMapping::update_xinput(uint8_t *buf)
     XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.mapping.rbAxis)
     {
-    case RockBandGuitar_LeftStickX:
-        report->calibrationSensor = m_calibratedValue - 32768;
-        break;
-    case RockBandGuitar_LeftStickY:
-        report->leftStickY = m_calibratedValue - 32768;
-        break;
     case RockBandGuitar_Whammy:
         report->whammy = m_calibratedValue - 32768;
         break;
@@ -227,12 +161,6 @@ void RockBandGuitarAxisMapping::update_xinput(uint8_t *buf)
         break;
     case RockBandGuitar_Pickup:
         report->pickup = pickupUniversal[m_calibratedValue];
-        break;
-    case RockBandGuitar_LeftTrigger:
-        report->pickup = m_calibratedValue >> 8;
-        break;
-    case RockBandGuitar_RightTrigger:
-        report->unused1 = m_calibratedValue >> 8;
         break;
     default:
         break;
@@ -247,12 +175,6 @@ void RockBandGuitarAxisMapping::update_ogxbox(uint8_t *buf)
     OGXboxRockBandGuitar_Data_t *report = (OGXboxRockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.mapping.rbAxis)
     {
-    case RockBandGuitar_LeftStickX:
-        report->calibrationSensor = m_calibratedValue >> 8;
-        break;
-    case RockBandGuitar_LeftStickY:
-        report->unused2 = m_calibratedValue >> 8;
-        break;
     case RockBandGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;
@@ -275,12 +197,6 @@ void RockBandGuitarAxisMapping::update_xboxone(uint8_t *buf)
     XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)buf;
     switch (m_mapping.mapping.mapping.rbAxis)
     {
-    case RockBandGuitar_LeftStickX:
-        report->joystickX = m_calibratedValue - 32768;
-        break;
-    case RockBandGuitar_LeftStickY:
-        report->joystickY = m_calibratedValue - 32768;
-        break;
     case RockBandGuitar_Whammy:
         report->whammy = m_calibratedValue >> 8;
         break;

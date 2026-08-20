@@ -66,11 +66,11 @@ bool MouseHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_
     return true;
 }
 
-bool MouseHost::tick_digital(UsbButtonType type)
+bool MouseHost::tick_digital(proto_Output& type)
 {
     return false;
 }
-uint16_t MouseHost::tick_analog(UsbAxisType type)
+uint16_t MouseHost::tick_analog(proto_Output& type)
 {
     return 0;
 }

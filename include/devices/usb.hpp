@@ -16,8 +16,8 @@ public:
     void update(bool full_poll, bool send_events);
     void rescan(bool first);
     bool using_pin(uint8_t pin);
-    bool tick_digital(UsbButtonType type) { return false; }
-    uint16_t tick_analog(UsbAxisType type) { return 0; }
+    bool tick_digital(proto_Output& type) { return false; }
+    uint16_t tick_analog(proto_Output& type) { return 0; }
     bool set_config() { return false; }
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) { return false; }
 

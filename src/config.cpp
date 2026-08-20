@@ -584,9 +584,6 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Output_gamepadButton_tag:
         profile->mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Output_ghDrumButton_tag:
-        profile->mappings.emplace_back(new GuitarHeroDrumsButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
-        break;
     case proto_Output_ghDrumAxis_tag:
         profile->mappings.emplace_back(new GuitarHeroDrumsAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
@@ -620,14 +617,8 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     case proto_Output_djMaxAxis_tag:
         profile->mappings.emplace_back(new DJMaxTurntableAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
-    case proto_Output_divaButton_tag:
-        profile->mappings.emplace_back(new ProjectDivaButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
-        break;
     case proto_Output_divaAxis_tag:
         profile->mappings.emplace_back(new ProjectDivaAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
-        break;
-    case proto_Output_gfAxis_tag:
-        profile->mappings.emplace_back(new GuitarFreaksAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
         break;
     case proto_Output_gfButton_tag:
         profile->mappings.emplace_back(new GuitarFreaksButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));

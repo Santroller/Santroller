@@ -151,7 +151,7 @@ bool Ps4Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
     return true;
 }
 
-bool Ps4Host::tick_digital(UsbButtonType type)
+bool Ps4Host::tick_digital(proto_Output &type)
 {
     PS4Dpad_Data_t *report = (PS4Dpad_Data_t *)m_ep_in_buf;
     uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
@@ -159,164 +159,169 @@ bool Ps4Host::tick_digital(UsbButtonType type)
     bool left = dpad & LEFT;
     bool down = dpad & DOWN;
     bool right = dpad & RIGHT;
+    if (type.which_mapping == proto_Output_gamepadButton_tag)
+    {
+        auto data = (PS4Gamepad_Data_t *)m_ep_in_buf;
+        switch (type.mapping.gamepadButton)
+        {
+        case Gamepad_A:
+            return data->a;
+        case Gamepad_B:
+            return data->b;
+        case Gamepad_X:
+            return data->x;
+        case Gamepad_Y:
+            return data->y;
+        case Gamepad_LeftShoulder:
+            return data->leftShoulder;
+        case Gamepad_RightShoulder:
+            return data->rightShoulder;
+        case Gamepad_Back:
+            return data->back;
+        case Gamepad_Start:
+            return data->start;
+        case Gamepad_LeftThumbClick:
+            return data->leftThumbClick;
+        case Gamepad_RightThumbClick:
+            return data->rightThumbClick;
+        case Gamepad_Guide:
+            return data->guide;
+        case Gamepad_DpadUp:
+            return up;
+        case Gamepad_DpadDown:
+            return down;
+        case Gamepad_DpadLeft:
+            return left;
+        case Gamepad_DpadRight:
+            return right;
+        default:
+            return false;
+        }
+    }
     switch (m_subtype)
     {
     case RockBandGuitar:
-        switch (type)
+        if (type.which_mapping == proto_Output_rbButton_tag)
         {
-        case UsbButtonGreen:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->a;
-        case UsbButtonRed:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->b;
-        case UsbButtonYellow:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->y;
-        case UsbButtonBlue:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->x;
-        case UsbButtonOrange:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->leftShoulder;
-        case UsbButtonBack:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->back;
-        case UsbButtonStart:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->start;
-        case UsbButtonGuide:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->guide;
-        case UsbButtonDpadUp:
-        case UsbButtonStrumUp:
-            return up;
-        case UsbButtonDpadDown:
-        case UsbButtonStrumDown:
-            return down;
-        case UsbButtonDpadLeft:
-            return left;
-        case UsbButtonDpadRight:
-            return right;
-        default:
-            return false;
+            auto data = (PS4RockBandGuitar_Data_t *)m_ep_in_buf;
+            switch (type.mapping.rbButton)
+            {
+            case RockBandGuitar_Green:
+                return data->a && !data->solo;
+            case RockBandGuitar_Red:
+                return data->b && !data->solo;
+            case RockBandGuitar_Yellow:
+                return data->y && !data->solo;
+            case RockBandGuitar_Blue:
+                return data->x && !data->solo;
+            case RockBandGuitar_Orange:
+                return data->leftShoulder && !data->solo;
+            case RockBandGuitar_SoloGreen:
+                return data->a && data->solo;
+            case RockBandGuitar_SoloRed:
+                return data->b && data->solo;
+            case RockBandGuitar_SoloYellow:
+                return data->y && data->solo;
+            case RockBandGuitar_SoloBlue:
+                return data->x && data->solo;
+            case RockBandGuitar_SoloOrange:
+                return data->leftShoulder && data->solo;
+            default:
+                return false;
+            }
         }
         return false;
     case LiveGuitar:
-        switch (type)
+        if (type.which_mapping == proto_Output_ghlButton_tag)
         {
-        case UsbButtonBlack1:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->a;
-        case UsbButtonBlack2:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->b;
-        case UsbButtonBlack3:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->y;
-        case UsbButtonWhite1:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->x;
-        case UsbButtonWhite2:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->leftShoulder;
-        case UsbButtonWhite3:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->rightShoulder;
-        case UsbButtonBack:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->back;
-        case UsbButtonStart:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->start;
-        case UsbButtonGuide:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->guide;
-        case UsbButtonStrumUp:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->strumBar == 0x00;
-        case UsbButtonStrumDown:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->strumBar == 0xFF;
-        case UsbButtonDpadUp:
-            return up;
-        case UsbButtonDpadDown:
-            return down;
-        case UsbButtonDpadLeft:
-            return left;
-        case UsbButtonDpadRight:
-            return right;
-        default:
-            return false;
+            auto data = (PS4GHLGuitar_Data_t *)m_ep_in_buf;
+            switch (type.mapping.ghlButton)
+            {
+            case GuitarHeroLiveGuitar_Black1:
+                return data->a;
+            case GuitarHeroLiveGuitar_Black2:
+                return data->b;
+            case GuitarHeroLiveGuitar_Black3:
+                return data->y;
+            case GuitarHeroLiveGuitar_White1:
+                return data->x;
+            case GuitarHeroLiveGuitar_White2:
+                return data->leftShoulder;
+            case GuitarHeroLiveGuitar_White3:
+                return data->rightShoulder;
+            case GuitarHeroLiveGuitar_StrumUp:
+                return data->strumBar == 0x00;
+            case GuitarHeroLiveGuitar_StrumDown:
+                return data->strumBar == 0xFF;
+            default:
+                return false;
+            }
         }
         return false;
     default:
-        switch (type)
-        {
-        case UsbButtonA:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->a;
-        case UsbButtonB:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->b;
-        case UsbButtonX:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->x;
-        case UsbButtonY:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->y;
-        case UsbButtonLeftShoulder:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->leftShoulder;
-        case UsbButtonRightShoulder:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->rightShoulder;
-        case UsbButtonBack:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->back;
-        case UsbButtonStart:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->start;
-        case UsbButtonLeftThumbClick:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->leftThumbClick;
-        case UsbButtonRightThumbClick:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->rightThumbClick;
-        case UsbButtonGuide:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->guide;
-        case UsbButtonDpadUp:
-            return up;
-        case UsbButtonDpadDown:
-            return down;
-        case UsbButtonDpadLeft:
-            return left;
-        case UsbButtonDpadRight:
-            return right;
-        default:
-            return false;
-        }
         return false;
     }
 
     return false;
 }
-uint16_t Ps4Host::tick_analog(UsbAxisType type)
+uint16_t Ps4Host::tick_analog(proto_Output &type)
 {
+    if (type.which_mapping == proto_Output_gamepadAxis_tag)
+    {
+        auto data = (PS4Gamepad_Data_t *)m_ep_in_buf;
+        switch (type.mapping.gamepadAxis)
+        {
+        case Gamepad_LeftTrigger:
+            return data->leftTrigger << 8;
+        case Gamepad_RightTrigger:
+            return data->rightTrigger << 8;
+        case Gamepad_LeftStickX:
+            return data->leftStickX << 8;
+        case Gamepad_LeftStickY:
+            return data->leftStickY << 8;
+        case Gamepad_RightStickX:
+            return data->rightStickX << 8;
+        case Gamepad_RightStickY:
+            return data->rightStickY << 8;
+        default:
+            return 0;
+        }
+    }
     switch (m_subtype)
     {
     case LiveGuitar:
-        switch (type)
+        if (type.which_mapping == proto_Output_ghlAxis_tag)
         {
-        case UsbAxisWhammy:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->whammy << 8;
-        case UsbAxisTilt:
-            return ((PS4GHLGuitar_Data_t *)m_ep_in_buf)->tilt << 2;
-        default:
-            return 0;
+            auto data = (PS4GHLGuitar_Data_t *)m_ep_in_buf;
+            switch (type.mapping.ghlAxis)
+            {
+            case GuitarHeroLiveGuitar_Whammy:
+                return data->whammy << 8;
+            case GuitarHeroLiveGuitar_Tilt:
+                return data->tilt << 2;
+            default:
+                return 0;
+            }
         }
         break;
     case RockBandGuitar:
-        switch (type)
+        if (type.which_mapping == proto_Output_rbAxis_tag)
         {
-        case UsbAxisWhammy:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->whammy << 8;
-        case UsbAxisTilt:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->tilt << 8;
-        case UsbAxisPickup:
-            return ((PS4RockBandGuitar_Data_t *)m_ep_in_buf)->pickup << 8;
-        default:
-            return 0;
+            auto data = (PS4RockBandGuitar_Data_t *)m_ep_in_buf;
+            switch (type.mapping.rbAxis)
+            {
+            case RockBandGuitar_Whammy:
+                return data->whammy << 8;
+            case RockBandGuitar_Tilt:
+                return data->tilt << 8;
+            case RockBandGuitar_Pickup:
+                return data->tilt << 8;
+            default:
+                return 0;
+            }
         }
     default:
-        switch (type)
-        {
-        case UsbAxisLeftTrigger:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->leftTrigger << 8;
-        case UsbAxisRightTrigger:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->rightTrigger << 8;
-        case UsbAxisLeftStickX:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->leftStickX << 8;
-        case UsbAxisLeftStickY:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->leftStickY << 8;
-        case UsbAxisRightStickX:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->rightStickX << 8;
-        case UsbAxisRightStickY:
-            return ((PS4Gamepad_Data_t *)m_ep_in_buf)->rightStickY << 8;
-        default:
-            return 0;
-        }
+        break;
     }
 
     return 0;

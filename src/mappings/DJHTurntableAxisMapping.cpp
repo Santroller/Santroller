@@ -26,12 +26,6 @@ void DJHTurntableAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     WiiTurntableDataFormat3_t *report = (WiiTurntableDataFormat3_t *)buf;
     switch (m_mapping.mapping.mapping.djhAxis)
     {
-    case DJHTurntable_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 10;
-        break;
-    case DJHTurntable_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 10;
-        break;
     case DJHTurntable_LeftVelocity:
         intermediate.leftTableVelocity = m_calibratedValue >> 10;
         report->leftTableVelocity40 = intermediate.leftTableVelocity40;
@@ -75,12 +69,6 @@ void DJHTurntableAxisMapping::update_ps3(uint8_t *buf)
     PS3DJHTurntable_Data_t *report = (PS3DJHTurntable_Data_t *)buf;
     switch (m_mapping.mapping.mapping.djhAxis)
     {
-    case DJHTurntable_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case DJHTurntable_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
-        break;
     case DJHTurntable_LeftVelocity:
         report->leftTableVelocity = m_calibratedValue >> 8;
         break;
@@ -115,12 +103,6 @@ void DJHTurntableAxisMapping::update_xinput(uint8_t *buf)
     XInputDJHTurntable_Data_t *report = (XInputDJHTurntable_Data_t *)buf;
     switch (m_mapping.mapping.mapping.djhAxis)
     {
-    case DJHTurntable_LeftStickX:
-        report->leftTableVelocity = m_calibratedValue - 32768;
-        break;
-    case DJHTurntable_LeftStickY:
-        report->rightTableVelocity = m_calibratedValue - 32768;
-        break;
     case DJHTurntable_LeftVelocity:
         report->leftTableVelocity = m_calibratedValue - 32768;
         break;
@@ -146,12 +128,6 @@ void DJHTurntableAxisMapping::update_ogxbox(uint8_t *buf)
     OGXboxDJHTurntable_Data_t *report = (OGXboxDJHTurntable_Data_t *)buf;
     switch (m_mapping.mapping.mapping.djhAxis)
     {
-    case DJHTurntable_LeftStickX:
-        report->leftTableVelocity = m_calibratedValue - 32768;
-        break;
-    case DJHTurntable_LeftStickY:
-        report->rightTableVelocity = m_calibratedValue - 32768;
-        break;
     case DJHTurntable_LeftVelocity:
         report->leftTableVelocity = m_calibratedValue - 32768;
         break;

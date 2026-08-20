@@ -7,7 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-GuitarHeroDrumsAxisMapping::GuitarHeroDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghDrumAxis != GuitarHeroDrums_LeftStickX && mapping.mapping.mapping.ghDrumAxis != GuitarHeroDrums_LeftStickY)
+GuitarHeroDrumsAxisMapping::GuitarHeroDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, true)
 {
 }
 
@@ -23,6 +23,7 @@ void GuitarHeroDrumsAxisMapping::update_wii(uint8_t format, uint8_t *buf)
         return;
     }
     // TODO: this one is a bit fun because we can only send one velocity at a time.
+    // TODO: deal with stick now that gamepad isnt here
     WiiDrumDataFormat3_t *report = (WiiDrumDataFormat3_t *)buf;
     switch (m_mapping.mapping.mapping.ghDrumAxis)
     {
@@ -44,12 +45,12 @@ void GuitarHeroDrumsAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     case GuitarHeroDrums_KickPedal:
         report->leftShoulder = true;
         break;
-    case GuitarHeroDrums_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 10;
-        break;
-    case GuitarHeroDrums_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 10;
-        break;
+    // case GuitarHeroDrums_LeftStickX:
+    //     report->leftStickX = m_calibratedValue >> 10;
+    //     break;
+    // case GuitarHeroDrums_LeftStickY:
+    //     report->leftStickY = m_calibratedValue >> 10;
+    //     break;
     default:
         break;
     }
@@ -96,20 +97,6 @@ void GuitarHeroDrumsAxisMapping::update_ps3(uint8_t *buf)
     case GuitarHeroDrums_KickPedal:
         report->kickVelocity = m_calibratedValue >> 8;
         report->leftShoulder = true;
-        break;
-    case GuitarHeroDrums_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case GuitarHeroDrums_LeftStickY:
-        report->leftStickY = m_calibratedValue >> 8;
-        break;
-    case GuitarHeroDrums_LeftTrigger:
-        report->redVelocity = m_calibratedValue >> 8;
-        report->l2 = m_calibratedValue > 65000;
-        break;
-    case GuitarHeroDrums_RightTrigger:
-        report->yellowVelocity = m_calibratedValue >> 8;
-        report->r2 = m_calibratedValue > 65000;
         break;
     }
 }
@@ -158,21 +145,6 @@ void GuitarHeroDrumsAxisMapping::update_xinput(uint8_t *buf)
         report->kickVelocity = m_calibratedValue - 32768;
         report->leftShoulder = true;
         break;
-    case GuitarHeroDrums_LeftStickX:
-        report->leftStickX = m_calibratedValue - 32768;
-        break;
-    case GuitarHeroDrums_LeftStickY:
-        if (!m_centered)
-        {
-            report->leftStickY = m_calibratedValue - 32768;
-        }
-        break;
-    case GuitarHeroDrums_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        break;
-    case GuitarHeroDrums_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
-        break;
     }
 }
 void GuitarHeroDrumsAxisMapping::update_ogxbox(uint8_t *buf)
@@ -207,15 +179,6 @@ void GuitarHeroDrumsAxisMapping::update_ogxbox(uint8_t *buf)
     case GuitarHeroDrums_KickPedal:
         report->kickVelocity = m_calibratedValue - 32768;
         report->leftShoulder = true;
-        break;
-    case GuitarHeroDrums_LeftStickX:
-        report->leftStickX = m_calibratedValue - 32768;
-        break;
-    case GuitarHeroDrums_LeftStickY:
-        if (!m_centered)
-        {
-            report->leftStickY = m_calibratedValue - 32768;
-        }
         break;
     }
 }

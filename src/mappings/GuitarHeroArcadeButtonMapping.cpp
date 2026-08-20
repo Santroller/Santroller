@@ -29,18 +29,6 @@ void GuitarHeroArcadeButtonMapping::update_hid(uint8_t *buf)
     case GuitarHeroArcade_Orange:
         report->leftShoulder |= m_lastValue;
         break;
-    case GuitarHeroArcade_StrumUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case GuitarHeroArcade_StrumDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case GuitarHeroArcade_DpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case GuitarHeroArcade_DpadRight:
-        report->dpadRight |= m_lastValue;
-        break;
     case GuitarHeroArcade_Side:
         report->side |= m_lastValue;
         break;

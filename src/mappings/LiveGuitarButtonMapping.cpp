@@ -50,15 +50,6 @@ void LiveGuitarButtonMapping::update_ps3(uint8_t *buf)
     case GuitarHeroLiveGuitar_Black3:
         report->y |= m_lastValue;
         break;
-    case GuitarHeroLiveGuitar_Back:
-        report->back |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_Start:
-        report->start |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_Guide:
-        report->guide |= m_lastValue;
-        break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_lastValue;
         report->strumBar = 0;
@@ -66,18 +57,6 @@ void LiveGuitarButtonMapping::update_ps3(uint8_t *buf)
     case GuitarHeroLiveGuitar_StrumDown:
         report->dpadDown |= m_lastValue;
         report->strumBar = 0xFF;
-        break;
-    case GuitarHeroLiveGuitar_DpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadRight:
-        report->dpadRight |= m_lastValue;
         break;
     default:
         break;
@@ -107,15 +86,6 @@ void LiveGuitarButtonMapping::update_ps4(uint8_t *buf)
     case GuitarHeroLiveGuitar_Black3:
         report->y |= m_lastValue;
         break;
-    case GuitarHeroLiveGuitar_Back:
-        report->back |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_Start:
-        report->start |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_Guide:
-        report->guide |= m_lastValue;
-        break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_lastValue;
         report->strumBar = 0;
@@ -123,18 +93,6 @@ void LiveGuitarButtonMapping::update_ps4(uint8_t *buf)
     case GuitarHeroLiveGuitar_StrumDown:
         report->dpadDown |= m_lastValue;
         report->strumBar = 0xFF;
-        break;
-    case GuitarHeroLiveGuitar_DpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadRight:
-        report->dpadRight |= m_lastValue;
         break;
     default:
         break;
@@ -164,15 +122,6 @@ void LiveGuitarButtonMapping::update_ps5(uint8_t *buf)
     case GuitarHeroLiveGuitar_Black3:
         report->y |= m_lastValue;
         break;
-    case GuitarHeroLiveGuitar_Back:
-        report->back |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_Start:
-        report->start |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_Guide:
-        report->guide |= m_lastValue;
-        break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_lastValue;
         report->strumBar = 0;
@@ -180,18 +129,6 @@ void LiveGuitarButtonMapping::update_ps5(uint8_t *buf)
     case GuitarHeroLiveGuitar_StrumDown:
         report->dpadDown |= m_lastValue;
         report->strumBar = 0xFF;
-        break;
-    case GuitarHeroLiveGuitar_DpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadRight:
-        report->dpadRight |= m_lastValue;
         break;
     default:
         break;
@@ -221,15 +158,6 @@ void LiveGuitarButtonMapping::update_xinput(uint8_t *buf)
     case GuitarHeroLiveGuitar_Black3:
         report->y |= m_lastValue;
         break;
-    case GuitarHeroLiveGuitar_Back:
-        report->back |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_Start:
-        report->start |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_Guide:
-        report->guide |= m_lastValue;
-        break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_lastValue;
         report->strumBar = INT16_MAX;
@@ -237,18 +165,6 @@ void LiveGuitarButtonMapping::update_xinput(uint8_t *buf)
     case GuitarHeroLiveGuitar_StrumDown:
         report->dpadDown |= m_lastValue;
         report->strumBar = INT16_MIN;
-        break;
-    case GuitarHeroLiveGuitar_DpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadRight:
-        report->dpadRight |= m_lastValue;
         break;
     default:
         break;
@@ -277,12 +193,6 @@ void LiveGuitarButtonMapping::update_ogxbox(uint8_t *buf)
     case GuitarHeroLiveGuitar_Black3:
         report->y |= m_lastValue;
         break;
-    case GuitarHeroLiveGuitar_Back:
-        report->back |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_Start:
-        report->start |= m_lastValue;
-        break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_lastValue;
         report->strumBar = INT16_MAX;
@@ -290,18 +200,6 @@ void LiveGuitarButtonMapping::update_ogxbox(uint8_t *buf)
     case GuitarHeroLiveGuitar_StrumDown:
         report->dpadDown |= m_lastValue;
         report->strumBar = INT16_MIN;
-        break;
-    case GuitarHeroLiveGuitar_DpadUp:
-        report->dpadUp |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadDown:
-        report->dpadDown |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadLeft:
-        report->dpadLeft |= m_lastValue;
-        break;
-    case GuitarHeroLiveGuitar_DpadRight:
-        report->dpadRight |= m_lastValue;
         break;
     default:
         break;

@@ -73,7 +73,7 @@ bool StadiaHost::set_config()
     UsbHostInterface::set_config();
     return true;
 }
-bool StadiaHost::tick_digital(UsbButtonType type)
+bool StadiaHost::tick_digital(proto_Output &type)
 {
     uint8_t dpad = m_last_input_report.dpad >= 0x08 ? 0 : dpad_bindings_reverse[m_last_input_report.dpad];
     asm volatile("" ::
@@ -82,60 +82,69 @@ bool StadiaHost::tick_digital(UsbButtonType type)
     bool left = dpad & LEFT;
     bool down = dpad & DOWN;
     bool right = dpad & RIGHT;
-    switch (type)
+    if (type.which_mapping == proto_Output_gamepadButton_tag)
     {
-    case UsbButtonA:
-        return m_last_input_report.a;
-    case UsbButtonB:
-        return m_last_input_report.b;
-    case UsbButtonX:
-        return m_last_input_report.x;
-    case UsbButtonY:
-        return m_last_input_report.y;
-    case UsbButtonLeftShoulder:
-        return m_last_input_report.leftShoulder;
-    case UsbButtonRightShoulder:
-        return m_last_input_report.rightShoulder;
-    case UsbButtonBack:
-        return m_last_input_report.back;
-    case UsbButtonStart:
-        return m_last_input_report.start;
-    case UsbButtonLeftThumbClick:
-        return m_last_input_report.leftThumbClick;
-    case UsbButtonRightThumbClick:
-        return m_last_input_report.rightThumbClick;
-    case UsbButtonGuide:
-        return m_last_input_report.guide;
-    case UsbButtonDpadUp:
-        return up;
-    case UsbButtonDpadDown:
-        return down;
-    case UsbButtonDpadLeft:
-        return left;
-    case UsbButtonDpadRight:
-        return right;
-    default:
-        return false;
+        auto data = &m_last_input_report;
+        switch (type.mapping.gamepadButton)
+        {
+        case Gamepad_A:
+            return data->a;
+        case Gamepad_B:
+            return data->b;
+        case Gamepad_X:
+            return data->x;
+        case Gamepad_Y:
+            return data->y;
+        case Gamepad_LeftShoulder:
+            return data->leftShoulder;
+        case Gamepad_RightShoulder:
+            return data->rightShoulder;
+        case Gamepad_Back:
+            return data->back;
+        case Gamepad_Start:
+            return data->start;
+        case Gamepad_LeftThumbClick:
+            return data->leftThumbClick;
+        case Gamepad_RightThumbClick:
+            return data->rightThumbClick;
+        case Gamepad_Guide:
+            return data->guide;
+        case Gamepad_DpadUp:
+            return up;
+        case Gamepad_DpadDown:
+            return down;
+        case Gamepad_DpadLeft:
+            return left;
+        case Gamepad_DpadRight:
+            return right;
+        default:
+            return false;
+        }
     }
+    return false;
 }
-uint16_t StadiaHost::tick_analog(UsbAxisType type)
+uint16_t StadiaHost::tick_analog(proto_Output &type)
 {
-    switch (type)
+    if (type.which_mapping == proto_Output_gamepadAxis_tag)
     {
-    case UsbAxisLeftTrigger:
-        return m_last_input_report.leftTrigger << 8;
-    case UsbAxisRightTrigger:
-        return m_last_input_report.rightTrigger << 8;
-    case UsbAxisLeftStickX:
-        return m_last_input_report.leftStickX << 8;
-    case UsbAxisLeftStickY:
-        return m_last_input_report.leftStickY << 8;
-    case UsbAxisRightStickX:
-        return m_last_input_report.rightStickX << 8;
-    case UsbAxisRightStickY:
-        return m_last_input_report.rightStickY << 8;
-    default:
-        return 0;
+        auto data = &m_last_input_report;
+        switch (type.mapping.gamepadAxis)
+        {
+        case Gamepad_LeftTrigger:
+            return data->leftTrigger << 8;
+        case Gamepad_RightTrigger:
+            return data->rightTrigger << 8;
+        case Gamepad_LeftStickX:
+            return data->leftStickX << 8;
+        case Gamepad_LeftStickY:
+            return data->leftStickY << 8;
+        case Gamepad_RightStickX:
+            return data->rightStickX << 8;
+        case Gamepad_RightStickY:
+            return data->rightStickY << 8;
+        default:
+            return 0;
+        }
     }
     return 0;
 }

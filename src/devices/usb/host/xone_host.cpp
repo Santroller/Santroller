@@ -205,121 +205,181 @@ void XboxOneHost::update(bool full_poll, bool send_events)
     }
 }
 
-bool XboxOneHost::tick_digital(UsbButtonType type)
+bool XboxOneHost::tick_digital(proto_Output &type)
 {
+    if (type.which_mapping == proto_Output_gamepadButton_tag)
+    {
+        auto data = (XboxOneGamepad_Data_t *)m_ep_in_buf;
+        switch (type.mapping.gamepadButton)
+        {
+        case Gamepad_A:
+            return data->a;
+        case Gamepad_B:
+            return data->b;
+        case Gamepad_X:
+            return data->x;
+        case Gamepad_Y:
+            return data->y;
+        case Gamepad_LeftShoulder:
+            return data->leftShoulder;
+        case Gamepad_RightShoulder:
+            return data->rightShoulder;
+        case Gamepad_Back:
+            return data->back;
+        case Gamepad_Start:
+            return data->start;
+        case Gamepad_LeftThumbClick:
+            return data->leftThumbClick;
+        case Gamepad_RightThumbClick:
+            return data->rightThumbClick;
+        case Gamepad_Guide:
+            return data->guide;
+        case Gamepad_DpadUp:
+            return data->dpadUp;
+        case Gamepad_DpadDown:
+            return data->dpadDown;
+        case Gamepad_DpadLeft:
+            return data->dpadLeft;
+        case Gamepad_DpadRight:
+            return data->dpadRight;
+        default:
+            return false;
+        }
+    }
     switch (m_subtype)
     {
-    case Gamepad:
-        switch (type)
-        {
-        case UsbButtonA:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->a;
-        case UsbButtonB:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->b;
-        case UsbButtonX:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->x;
-        case UsbButtonY:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->y;
-        case UsbButtonLeftShoulder:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftShoulder;
-        case UsbButtonRightShoulder:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightShoulder;
-        case UsbButtonBack:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->back;
-        case UsbButtonStart:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->start;
-        case UsbButtonGuide:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->guide;
-        case UsbButtonLeftThumbClick:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftThumbClick;
-        case UsbButtonRightThumbClick:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightThumbClick;
-        case UsbButtonDpadUp:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->dpadUp;
-        case UsbButtonDpadDown:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->dpadDown;
-        case UsbButtonDpadLeft:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->dpadLeft;
-        case UsbButtonDpadRight:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->dpadRight;
-        default:
-            return false;
-        }
-        break;
     case RockBandGuitar:
-        switch (type)
+        if (type.which_mapping == proto_Output_rbButton_tag)
         {
-        case UsbButtonGreen:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->a;
-        case UsbButtonRed:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->b;
-        case UsbButtonYellow:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->y;
-        case UsbButtonBlue:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->x;
-        case UsbButtonOrange:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->leftShoulder;
-        case UsbButtonBack:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->back;
-        case UsbButtonStart:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->start;
-        case UsbButtonGuide:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->guide;
-        case UsbButtonStrumUp:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->dpadUp;
-        case UsbButtonStrumDown:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->dpadDown;
-        case UsbButtonDpadLeft:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->dpadLeft;
-        case UsbButtonDpadRight:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->dpadRight;
-        default:
-            return false;
+            auto data = (XboxOneRockBandGuitar_Data_t *)m_ep_in_buf;
+            switch (type.mapping.rbButton)
+            {
+            case RockBandGuitar_Green:
+                return data->green;
+            case RockBandGuitar_Red:
+                return data->red;
+            case RockBandGuitar_Yellow:
+                return data->yellow;
+            case RockBandGuitar_Blue:
+                return data->blue;
+            case RockBandGuitar_Orange:
+                return data->orange;
+            case RockBandGuitar_SoloGreen:
+                return data->soloGreen;
+            case RockBandGuitar_SoloRed:
+                return data->soloRed;
+            case RockBandGuitar_SoloYellow:
+                return data->soloYellow;
+            case RockBandGuitar_SoloBlue:
+                return data->soloBlue;
+            case RockBandGuitar_SoloOrange:
+                return data->soloOrange;
+            default:
+                return false;
+            }
         }
-        break;
+        return false;
+    case RockBandDrums:
+
+        if (type.which_mapping == proto_Output_rbDrumButton_tag)
+        {
+            auto data = (XboxOneRockBandDrums_Data_t *)m_ep_in_buf;
+            switch (type.mapping.rbDrumButton)
+            {
+            default:
+                return false;
+            }
+        }
+        return false;
+    case LiveGuitar:
+        if (type.which_mapping == proto_Output_ghlButton_tag)
+        {
+            auto data = (XboxOneGHLGuitar_Data_t *)m_ep_in_buf;
+            switch (type.mapping.ghlButton)
+            {
+            case GuitarHeroLiveGuitar_Black1:
+                return data->report.a;
+            case GuitarHeroLiveGuitar_Black2:
+                return data->report.b;
+            case GuitarHeroLiveGuitar_Black3:
+                return data->report.y;
+            case GuitarHeroLiveGuitar_White1:
+                return data->report.x;
+            case GuitarHeroLiveGuitar_White2:
+                return data->report.leftShoulder;
+            case GuitarHeroLiveGuitar_White3:
+                return data->report.rightShoulder;
+            case GuitarHeroLiveGuitar_StrumUp:
+                return data->report.strumBar == 0x00;
+            case GuitarHeroLiveGuitar_StrumDown:
+                return data->report.strumBar == 0xFF;
+            default:
+                return false;
+            }
+        }
+        return false;
     default:
-        break;
+        return false;
     }
 
     return false;
 }
-uint16_t XboxOneHost::tick_analog(UsbAxisType type)
+uint16_t XboxOneHost::tick_analog(proto_Output &type)
 {
-    switch (m_subtype)
+    if (type.which_mapping == proto_Output_gamepadAxis_tag)
     {
-    case Gamepad:
-        switch (type)
+        auto data = (XboxOneGamepad_Data_t *)m_ep_in_buf;
+        switch (type.mapping.gamepadAxis)
         {
-        case UsbAxisLeftTrigger:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftTrigger << 8;
-        case UsbAxisRightTrigger:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightTrigger << 8;
-        case UsbAxisLeftStickX:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftStickX + INT16_MAX;
-        case UsbAxisLeftStickY:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->leftStickY + INT16_MAX;
-        case UsbAxisRightStickX:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightStickX + INT16_MAX;
-        case UsbAxisRightStickY:
-            return ((XboxOneGamepad_Data_t *)m_last_inputs)->rightStickY + INT16_MAX;
+        case Gamepad_LeftTrigger:
+            return data->leftTrigger << 8;
+        case Gamepad_RightTrigger:
+            return data->rightTrigger << 8;
+        case Gamepad_LeftStickX:
+            return data->leftStickX + INT16_MAX;
+        case Gamepad_LeftStickY:
+            return data->leftStickY + INT16_MAX;
+        case Gamepad_RightStickX:
+            return data->rightStickX + INT16_MAX;
+        case Gamepad_RightStickY:
+            return data->rightStickY + INT16_MAX;
         default:
             return 0;
+        }
+    }
+    switch (m_subtype)
+    {
+    case LiveGuitar:
+        if (type.which_mapping == proto_Output_ghlAxis_tag)
+        {
+            auto data = (XboxOneGHLGuitar_Data_t *)m_ep_in_buf;
+            switch (type.mapping.ghlAxis)
+            {
+            case GuitarHeroLiveGuitar_Whammy:
+                return data->report.whammy << 8;
+            case GuitarHeroLiveGuitar_Tilt:
+                return data->report.tilt << 2;
+            default:
+                return 0;
+            }
         }
         break;
     case RockBandGuitar:
-        switch (type)
+        if (type.which_mapping == proto_Output_rbAxis_tag)
         {
-        case UsbAxisWhammy:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->whammy << 8;
-        case UsbAxisTilt:
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->tilt << 8;
-        case UsbAxisPickup:
-            // TODO: map this right
-            return ((XboxOneRockBandGuitar_Data_t *)m_last_inputs)->pickup + INT16_MAX;
-        default:
-            return 0;
+            auto data = (XboxOneRockBandGuitar_Data_t *)m_ep_in_buf;
+            switch (type.mapping.rbAxis)
+            {
+            case RockBandGuitar_Whammy:
+                return data->whammy + INT16_MAX;
+            case RockBandGuitar_Tilt:
+                return data->tilt + INT16_MAX;
+            case RockBandGuitar_Pickup:
+                return data->tilt + INT16_MAX;
+            default:
+                return 0;
+            }
         }
-        break;
     default:
         break;
     }

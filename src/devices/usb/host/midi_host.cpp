@@ -214,11 +214,11 @@ bool MidiHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_b
   return true;
 }
 
-bool MidiHost::tick_digital(UsbButtonType type)
+bool MidiHost::tick_digital(proto_Output& type)
 {
   return false;
 }
-uint16_t MidiHost::tick_analog(UsbAxisType type)
+uint16_t MidiHost::tick_analog(proto_Output& type)
 {
   return 0;
 }

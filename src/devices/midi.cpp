@@ -335,7 +335,7 @@ int16_t MidiDevice::readMidiPitchBend(uint8_t channel)
     return midiPitchWheel[channel];
 }
 
-bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
+bool MidiDevice::readProGuitarButton(proto_ProGuitarMidiButtonType button)
 {
     uint8_t dpad = midiButtons.dpad >= 0x08 ? 0 : HidHost::dpad_bindings_reverse[midiButtons.dpad];
     bool up = dpad & UP;
@@ -344,27 +344,27 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
     bool right = dpad & RIGHT;
     switch (button)
     {
-    case ProGuitar_A:
+    case ProGuitarMidi_A:
         return midiButtons.a;
-    case ProGuitar_B:
+    case ProGuitarMidi_B:
         return midiButtons.b;
-    case ProGuitar_X:
+    case ProGuitarMidi_X:
         return midiButtons.x;
-    case ProGuitar_Y:
+    case ProGuitarMidi_Y:
         return midiButtons.y;
-    case ProGuitar_Back:
+    case ProGuitarMidi_Back:
         return midiButtons.back;
-    case ProGuitar_Start:
+    case ProGuitarMidi_Start:
         return midiButtons.start;
-    case ProGuitar_Guide:
+    case ProGuitarMidi_Guide:
         return midiButtons.guide;
-    case ProGuitar_DpadUp:
+    case ProGuitarMidi_DpadUp:
         return up;
-    case ProGuitar_DpadDown:
+    case ProGuitarMidi_DpadDown:
         return down;
-    case ProGuitar_DpadLeft:
+    case ProGuitarMidi_DpadLeft:
         return left;
-    case ProGuitar_DpadRight:
+    case ProGuitarMidi_DpadRight:
         return right;
         // map 5 fret frets based on pressed frets
     case ProGuitar_Green:
@@ -513,10 +513,6 @@ uint16_t MidiDevice::readProGuitarAxis(proto_ProGuitarAxisType axis)
         return midiStringVelocities[4] << 8;
     case ProGuitar_HighEFretVelocity:
         return midiStringVelocities[5] << 8;
-    case ProGuitar_LeftStickX:
-        return 32767;
-    case ProGuitar_LeftStickY:
-        return 32767;
     case ProGuitar_Tilt:
         return midiButtons.tilt ? 65535 : 32767;
     case ProGuitar_AutoCalibrationMicrophone:
@@ -527,7 +523,8 @@ uint16_t MidiDevice::readProGuitarAxis(proto_ProGuitarAxisType axis)
     return 0;
 }
 
-bool ProGuitarMidiDevice::readProGuitarButton(proto_ProGuitarButtonType button)
+
+bool ProGuitarMidiDevice::readProGuitarButton(proto_ProGuitarMidiButtonType button)
 {
     return m_midi_device->readProGuitarButton(button);
 }

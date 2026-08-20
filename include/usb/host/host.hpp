@@ -26,8 +26,8 @@ public:
     void begin() {};
     void end(bool full) {};
     void disconnect();
-    virtual bool tick_digital(UsbButtonType type) = 0;
-    virtual uint16_t tick_analog(UsbAxisType type) = 0;
+    virtual bool tick_digital(proto_Output& type) = 0;
+    virtual uint16_t tick_analog(proto_Output& type) = 0;
     virtual void update(bool full_poll, bool send_events);
     bool is_wii_extension(WiiExtType type)
     {

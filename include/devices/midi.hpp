@@ -38,7 +38,7 @@ public:
     uint16_t readMidiNote(uint8_t channel, uint8_t note);
     uint16_t readMidiControlChange(uint8_t channel, uint8_t cc);
     int16_t readMidiPitchBend(uint8_t channel);
-    bool readProGuitarButton(proto_ProGuitarButtonType button);
+    bool readProGuitarButton(proto_ProGuitarMidiButtonType button);
     uint16_t readProGuitarAxis(proto_ProGuitarAxisType axis);
     bool has_midi_channel(uint8_t channel) { return seenChannels[channel]; }
 
@@ -72,7 +72,7 @@ class ProGuitarMidiDevice : public Device
 public:
     ProGuitarMidiDevice(uint16_t id, std::shared_ptr<MidiDevice> midi_device) : Device(id), m_midi_device(midi_device) {}
     ~ProGuitarMidiDevice() {}
-    bool readProGuitarButton(proto_ProGuitarButtonType button);
+    bool readProGuitarButton(proto_ProGuitarMidiButtonType button);
     uint16_t readProGuitarAxis(proto_ProGuitarAxisType axis);
     void update(bool full_poll, bool send_events) {};
     void begin() {};

@@ -70,11 +70,11 @@ bool StreamDeckHost::set_config()
     UsbHostInterface::set_config();
     return true;
 }
-bool StreamDeckHost::tick_digital(UsbButtonType type)
+bool StreamDeckHost::tick_digital(proto_Output& type)
 {
     return false;
 }
-uint16_t StreamDeckHost::tick_analog(UsbAxisType type)
+uint16_t StreamDeckHost::tick_analog(proto_Output& type)
 {
     return 0;
 }

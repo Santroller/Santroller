@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <config.hpp>
 
-ProjectDivaAxisMapping::ProjectDivaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.divaAxis == ProjectDiva_LeftTrigger || mapping.mapping.mapping.divaAxis == ProjectDiva_RightTrigger)
+ProjectDivaAxisMapping::ProjectDivaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, false)
 {
 }
 
@@ -31,23 +31,8 @@ void ProjectDivaAxisMapping::update_switch(uint8_t *buf)
     SwitchGamepad_Data_t *report = (SwitchGamepad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.divaAxis)
     {
-    case ProjectDiva_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_LeftStickY:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightStickX:
-        report->rightStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightStickY:
-        report->rightStickY = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_LeftTrigger:
-        report->l2 = m_calibratedValue > 60000;
-        break;
-    case ProjectDiva_RightTrigger:
-        report->r2 = m_calibratedValue > 60000;
+    case ProjectDiva_Slider:
+        // todo: this
         break;
     default:
         break;
@@ -63,23 +48,8 @@ void ProjectDivaAxisMapping::update_ps2(uint8_t *buf)
     PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.divaAxis)
     {
-    case ProjectDiva_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_LeftStickY:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightStickX:
-        report->rightStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightStickY:
-        report->rightStickY = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
+    case ProjectDiva_Slider:
+        // todo: this
         break;
     default:
         break;
@@ -92,57 +62,13 @@ void ProjectDivaAxisMapping::update_ps3(uint8_t *buf)
     {
         return;
     }
-    if (mode == ModePs3)
-    {
-        PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;
-        switch (m_mapping.mapping.mapping.divaAxis)
-        {
-        case ProjectDiva_LeftStickX:
-            report->leftStickX = m_calibratedValue >> 8;
-            break;
-        case ProjectDiva_LeftStickY:
-            report->leftStickX = m_calibratedValue >> 8;
-            break;
-        case ProjectDiva_RightStickX:
-            report->rightStickX = m_calibratedValue >> 8;
-            break;
-        case ProjectDiva_RightStickY:
-            report->rightStickY = m_calibratedValue >> 8;
-            break;
-        case ProjectDiva_LeftTrigger:
-            report->leftTrigger = m_calibratedValue >> 8;
-            break;
-        case ProjectDiva_RightTrigger:
-            report->rightTrigger = m_calibratedValue >> 8;
-            break;
-        case ProjectDiva_Slider:
-            break;
-        }
-        return;
-    }
     PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.divaAxis)
     {
-    case ProjectDiva_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_LeftStickY:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightStickX:
-        report->rightStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightStickY:
-        report->rightStickY = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
-        break;
     case ProjectDiva_Slider:
         // todo: this
+        break;
+    default:
         break;
     }
 }
@@ -156,23 +82,8 @@ void ProjectDivaAxisMapping::update_ps4(uint8_t *buf)
     PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.divaAxis)
     {
-    case ProjectDiva_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_LeftStickY:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightStickX:
-        report->rightStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightStickY:
-        report->rightStickY = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
+    case ProjectDiva_Slider:
+        // todo: this
         break;
     default:
         break;
@@ -188,23 +99,8 @@ void ProjectDivaAxisMapping::update_ps5(uint8_t *buf)
     PS5Gamepad_Data_t *report = (PS5Gamepad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.divaAxis)
     {
-    case ProjectDiva_LeftStickX:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_LeftStickY:
-        report->leftStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightStickX:
-        report->rightStickX = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightStickY:
-        report->rightStickY = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
+    case ProjectDiva_Slider:
+        // todo: this
         break;
     default:
         break;
@@ -220,23 +116,8 @@ void ProjectDivaAxisMapping::update_xinput(uint8_t *buf)
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.divaAxis)
     {
-    case ProjectDiva_LeftStickX:
-        report->leftStickX = m_calibratedValue - INT16_MAX;
-        break;
-    case ProjectDiva_LeftStickY:
-        report->leftStickY = m_calibratedValue - INT16_MAX;
-        break;
-    case ProjectDiva_RightStickX:
-        report->rightStickX = m_calibratedValue - INT16_MAX;
-        break;
-    case ProjectDiva_RightStickY:
-        report->rightStickY = m_calibratedValue - INT16_MAX;
-        break;
-    case ProjectDiva_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
+    case ProjectDiva_Slider:
+        // todo: this
         break;
     default:
         break;
@@ -251,23 +132,8 @@ void ProjectDivaAxisMapping::update_ogxbox(uint8_t *buf)
     OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.divaAxis)
     {
-    case ProjectDiva_LeftStickX:
-        report->leftStickX = m_calibratedValue - INT16_MAX;
-        break;
-    case ProjectDiva_LeftStickY:
-        report->leftStickY = m_calibratedValue - INT16_MAX;
-        break;
-    case ProjectDiva_RightStickX:
-        report->rightStickX = m_calibratedValue - INT16_MAX;
-        break;
-    case ProjectDiva_RightStickY:
-        report->rightStickY = m_calibratedValue - INT16_MAX;
-        break;
-    case ProjectDiva_LeftTrigger:
-        report->leftTrigger = m_calibratedValue >> 8;
-        break;
-    case ProjectDiva_RightTrigger:
-        report->rightTrigger = m_calibratedValue >> 8;
+    case ProjectDiva_Slider:
+        // todo: this
         break;
     default:
         break;

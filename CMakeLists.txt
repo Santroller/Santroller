@@ -163,7 +163,6 @@ add_executable(
   src/mappings/DJMaxTurntableButtonMapping.cpp
   src/mappings/DJMaxTurntableAxisMapping.cpp
   src/mappings/GuitarFreaksButtonMapping.cpp
-  src/mappings/GuitarFreaksAxisMapping.cpp
   src/mappings/LiveGuitarAxisMapping.cpp
   src/mappings/LiveGuitarButtonMapping.cpp
   src/mappings/GuitarHeroGuitarAxisMapping.cpp
@@ -171,7 +170,6 @@ add_executable(
   src/mappings/GuitarHeroArcadeAxisMapping.cpp
   src/mappings/GuitarHeroArcadeButtonMapping.cpp
   src/mappings/GuitarHeroDrumsAxisMapping.cpp
-  src/mappings/GuitarHeroDrumsButtonMapping.cpp
   src/mappings/RockBandGuitarAxisMapping.cpp
   src/mappings/RockBandGuitarButtonMapping.cpp
   src/mappings/RockBandDrumsAxisMapping.cpp
@@ -187,7 +185,6 @@ add_executable(
   src/mappings/PopNMusicAxisMapping.cpp
   src/mappings/PopNMusicButtonMapping.cpp
   src/mappings/ProjectDivaAxisMapping.cpp
-  src/mappings/ProjectDivaButtonMapping.cpp
   src/mappings/BeatManiaAxisMapping.cpp
   src/mappings/BeatManiaButtonMapping.cpp
   src/mappings/KeyboardManiaAxisMapping.cpp

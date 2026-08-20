@@ -60,7 +60,8 @@ bool StepmaniaHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xfer
 {
     if (ep_addr & 0x80)
     {
-        if (m_ep_in_buf[0] == STEPMANIA_X_REPORT_ID) {
+        if (m_ep_in_buf[0] == STEPMANIA_X_REPORT_ID)
+        {
             memcpy(&m_last_input_report, m_ep_in_buf, m_ep_in_size);
         }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
@@ -73,23 +74,26 @@ bool StepmaniaHost::set_config()
     UsbHostInterface::set_config();
     return true;
 }
-bool StepmaniaHost::tick_digital(UsbButtonType type)
+bool StepmaniaHost::tick_digital(proto_Output &type)
 {
-    switch (type)
-    {
-    case UsbButtonDpadUp:
-        return m_last_input_report.dpadUp;
-    case UsbButtonDpadDown:
-        return m_last_input_report.dpadDown;
-    case UsbButtonDpadLeft:
-        return m_last_input_report.dpadLeft;
-    case UsbButtonDpadRight:
-        return m_last_input_report.dpadRight;
-    default:
-        return false;
-    }
+    // TODO: this
+    if (type.which_mapping == proto_Output_gamepadButton_tag)
+        switch (type.mapping.gamepadButton)
+        {
+        case Gamepad_DpadUp:
+            return m_last_input_report.dpadUp;
+        case Gamepad_DpadDown:
+            return m_last_input_report.dpadDown;
+        case Gamepad_DpadLeft:
+            return m_last_input_report.dpadLeft;
+        case Gamepad_DpadRight:
+            return m_last_input_report.dpadRight;
+        default:
+            return false;
+        }
+    return false;
 }
-uint16_t StepmaniaHost::tick_analog(UsbAxisType type)
+uint16_t StepmaniaHost::tick_analog(proto_Output &type)
 {
     return 0;
 }

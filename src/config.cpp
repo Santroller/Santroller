@@ -334,36 +334,25 @@ std::unique_ptr<Input> make_input(proto_Input input, std::shared_ptr<Profile> pr
             return nullptr;
         }
         return std::unique_ptr<Input>(new MPR121Input(input.input.mpr121, std::static_pointer_cast<MPR121Device>(profile->devices[input.input.mpr121.deviceid])));
-    case proto_Input_midiNote_tag:
-        if (profile->devices.find(input.input.midiNote.deviceid) == profile->devices.end())
+    case proto_Input_midi_tag:
+        if (profile->devices.find(input.input.midi.deviceid) == profile->devices.end())
         {
             return nullptr;
         }
-        return std::unique_ptr<Input>(new MidiNoteInput(input.input.midiNote, std::static_pointer_cast<MidiDevice>(profile->devices[input.input.midiNote.deviceid])));
-    case proto_Input_midiControlChange_tag:
-        if (profile->devices.find(input.input.midiControlChange.deviceid) == profile->devices.end())
+        switch (input.input.midi.which_input)
         {
-            return nullptr;
+        case proto_MidiInput_midiNote_tag:
+            return std::unique_ptr<Input>(new MidiNoteInput(input.input.midi.input.midiNote, std::static_pointer_cast<MidiDevice>(profile->devices[input.input.midi.deviceid])));
+        case proto_MidiInput_midiControlChange_tag:
+            return std::unique_ptr<Input>(new MidiControlChangeInput(input.input.midi.input.midiControlChange, std::static_pointer_cast<MidiDevice>(profile->devices[input.input.midi.deviceid])));
+        case proto_MidiInput_midiPitchBend_tag:
+            return std::unique_ptr<Input>(new MidiPitchBendInput(input.input.midi.input.midiPitchBend, std::static_pointer_cast<MidiDevice>(profile->devices[input.input.midi.deviceid])));
+        case proto_MidiInput_midiProGuitarButton_tag:
+            return std::unique_ptr<Input>(new MidiProGuitarButtonInput(input.input.midi.input.midiProGuitarButton, std::static_pointer_cast<ProGuitarMidiDevice>(profile->devices[input.input.midi.deviceid])));
+        case proto_MidiInput_midiProGuitarAxis_tag:
+            return std::unique_ptr<Input>(new MidiProGuitarAxisInput(input.input.midi.input.midiProGuitarAxis, std::static_pointer_cast<ProGuitarMidiDevice>(profile->devices[input.input.midi.deviceid])));
         }
-        return std::unique_ptr<Input>(new MidiControlChangeInput(input.input.midiControlChange, std::static_pointer_cast<MidiDevice>(profile->devices[input.input.midiControlChange.deviceid])));
-    case proto_Input_midiPitchBend_tag:
-        if (profile->devices.find(input.input.midiPitchBend.deviceid) == profile->devices.end())
-        {
-            return nullptr;
-        }
-        return std::unique_ptr<Input>(new MidiPitchBendInput(input.input.midiPitchBend, std::static_pointer_cast<MidiDevice>(profile->devices[input.input.midiPitchBend.deviceid])));
-    case proto_Input_midiProGuitarButton_tag:
-        if (profile->devices.find(input.input.midiProGuitarButton.deviceid) == profile->devices.end())
-        {
-            return nullptr;
-        }
-        return std::unique_ptr<Input>(new MidiProGuitarButtonInput(input.input.midiProGuitarButton, std::static_pointer_cast<ProGuitarMidiDevice>(profile->devices[input.input.midiProGuitarButton.deviceid])));
-    case proto_Input_midiProGuitarAxis_tag:
-        if (profile->devices.find(input.input.midiProGuitarAxis.deviceid) == profile->devices.end())
-        {
-            return nullptr;
-        }
-        return std::unique_ptr<Input>(new MidiProGuitarAxisInput(input.input.midiProGuitarAxis, std::static_pointer_cast<ProGuitarMidiDevice>(profile->devices[input.input.midiProGuitarAxis.deviceid])));
+        return nullptr;
     case proto_Input_protarNeckButton_tag:
         if (profile->devices.find(input.input.protarNeckButton.deviceid) == profile->devices.end())
         {

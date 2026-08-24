@@ -136,12 +136,10 @@ message USBAxisInput {
 }
 
 message MidiProGuitarButtonInput { 
-  required int32 deviceid = 1;
   required ProGuitarMidiButtonType button = 2; 
 }
 
 message MidiProGuitarAxisInput { 
-  required int32 deviceid = 1;
   required ProGuitarAxisType axis = 2; 
 }
 message ProtarNeckAxisInput {
@@ -153,14 +151,23 @@ message ProtarNeckButtonInput {
   required ProGuitarNeckButtonType button = 2;
 }
 
+message MidiInput {
+  required int32 deviceid = 1;
+  oneof input {
+    MidiNoteInput midiNote = 4;
+    MidiControlChangeInput midiControlChange = 5;
+    MidiPitchBendInput midiPitchBend = 6;
+    MidiProGuitarButtonInput midiProGuitarButton = 22;
+    MidiProGuitarAxisInput midiProGuitarAxis = 23;
+  }
+}
+
 message Input {
   oneof input {
     GPIOInput gpio = 1;
     FixedInput fixed = 2;
     MPR121Input mpr121 = 3;
-    MidiNoteInput midiNote = 4;
-    MidiControlChangeInput midiControlChange = 5;
-    MidiPitchBendInput midiPitchBend = 6;
+    MidiInput midi = 4;
     MouseAxisInput mouseAxis = 7;
     MouseButtonInput mouseButton = 8;
     WiiAxisInput wiiAxis = 9;
@@ -176,8 +183,6 @@ message Input {
     USBButtonInput usbButton = 19;
     USBAxisInput usbAxis = 20;
     MultiplexerInput multiplexer = 21;
-    MidiProGuitarButtonInput midiProGuitarButton = 22;
-    MidiProGuitarAxisInput midiProGuitarAxis = 23;
     ProtarNeckAxisInput protarNeckAxis = 24;
     ProtarNeckButtonInput protarNeckButton = 25;
     VTechGuitarIOExpanderInput vtechExpander = 28;

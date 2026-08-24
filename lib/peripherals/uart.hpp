@@ -25,6 +25,6 @@ class UARTInterface {
     }
 
    private:
-    uart_inst_t *uart;
+    uart_inst_t *uart = nullptr;
     uart_inst_t* _hardwareBlocks[NUM_UARTS] = {uart0,uart1};
 };

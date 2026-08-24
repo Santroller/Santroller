@@ -1,11 +1,12 @@
 #include "mappings/mapping.hpp"
+#include "instance.hpp"
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
 #include "events.pb.h"
 #include "main.hpp"
 #include "class/hid/hid.h"
 
-MouseButtonMapping::MouseButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : ButtonMapping(mapping, std::move(input), id, profile)
+MouseButtonMapping::MouseButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
     
 }

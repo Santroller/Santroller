@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include "input/input.hpp"
+#include "profile.hpp"
 #include "input.pb.h"
 #include "config.pb.h"
 #include "protocols/controller_reports.hpp"
@@ -18,7 +19,7 @@
 class Mapping
 {
 public:
-    Mapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : m_mapping(mapping), m_id(id), m_profile(profile), m_input(std::move(input)) {}
+    Mapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : m_mapping(mapping), m_id(id), m_profile(profile), m_input(std::move(input)) {}
     virtual ~Mapping() {}
     inline void reload()
     {
@@ -41,7 +42,7 @@ public:
 protected:
     proto_Mapping m_mapping;
     uint16_t m_id;
-    uint32_t m_profile;
+    std::shared_ptr<Profile> m_profile;
     uint32_t m_lastValueRaw = 0;
     uint32_t m_last_sent_value = 0;
     uint32_t m_last_sent_calibrated_value = 0;
@@ -53,7 +54,7 @@ class ButtonMapping : public Mapping
 {
 public:
     ~ButtonMapping() {}
-    ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : Mapping(mapping, std::move(input), id, profile) {}
+    ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : Mapping(mapping, std::move(input), id, profile) {}
     void update(bool full_poll, bool send_events);
 
 protected:
@@ -66,7 +67,7 @@ class AxisMapping : public Mapping
 {
 public:
     ~AxisMapping() {}
-    AxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile, bool trigger) : Mapping(mapping, std::move(input), id, profile), m_trigger(trigger) {}
+    AxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile, bool trigger) : Mapping(mapping, std::move(input), id, profile), m_trigger(trigger) {}
     void update(bool full_poll, bool send_events);
 
 protected:
@@ -80,7 +81,7 @@ class GamepadAxisMapping : public AxisMapping
 {
 public:
     ~GamepadAxisMapping() {}
-    GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -96,7 +97,7 @@ class DJMaxTurntableButtonMapping : public ButtonMapping
 {
 public:
     ~DJMaxTurntableButtonMapping() {}
-    DJMaxTurntableButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    DJMaxTurntableButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -112,7 +113,7 @@ class DJMaxTurntableAxisMapping : public AxisMapping
 {
 public:
     ~DJMaxTurntableAxisMapping() {}
-    DJMaxTurntableAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    DJMaxTurntableAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -128,7 +129,7 @@ class GuitarFreaksButtonMapping : public ButtonMapping
 {
 public:
     ~GuitarFreaksButtonMapping() {}
-    GuitarFreaksButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    GuitarFreaksButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -144,7 +145,7 @@ class GuitarFreaksAxisMapping : public AxisMapping
 {
 public:
     ~GuitarFreaksAxisMapping() {}
-    GuitarFreaksAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    GuitarFreaksAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -160,7 +161,7 @@ class GuitarHeroArcadeButtonMapping : public ButtonMapping
 {
 public:
     ~GuitarHeroArcadeButtonMapping() {}
-    GuitarHeroArcadeButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    GuitarHeroArcadeButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -176,7 +177,7 @@ class GuitarHeroArcadeAxisMapping : public AxisMapping
 {
 public:
     ~GuitarHeroArcadeAxisMapping() {}
-    GuitarHeroArcadeAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    GuitarHeroArcadeAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -192,7 +193,7 @@ class LiveGuitarButtonMapping : public ButtonMapping
 {
 public:
     ~LiveGuitarButtonMapping() {}
-    LiveGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    LiveGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -208,7 +209,7 @@ class LiveGuitarAxisMapping : public AxisMapping
 {
 public:
     ~LiveGuitarAxisMapping() {}
-    LiveGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    LiveGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -224,7 +225,7 @@ class PopNMusicButtonMapping : public ButtonMapping
 {
 public:
     ~PopNMusicButtonMapping() {}
-    PopNMusicButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    PopNMusicButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -240,7 +241,7 @@ class PopNMusicAxisMapping : public AxisMapping
 {
 public:
     ~PopNMusicAxisMapping() {}
-    PopNMusicAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    PopNMusicAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -256,7 +257,7 @@ class ProGuitarButtonMapping : public ButtonMapping
 {
 public:
     ~ProGuitarButtonMapping() {}
-    ProGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    ProGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -272,7 +273,7 @@ class ProGuitarAxisMapping : public AxisMapping
 {
 public:
     ~ProGuitarAxisMapping() {}
-    ProGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    ProGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -288,7 +289,7 @@ class ProjectDivaButtonMapping : public ButtonMapping
 {
 public:
     ~ProjectDivaButtonMapping() {}
-    ProjectDivaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    ProjectDivaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -304,7 +305,7 @@ class ProjectDivaAxisMapping : public AxisMapping
 {
 public:
     ~ProjectDivaAxisMapping() {}
-    ProjectDivaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    ProjectDivaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -320,7 +321,7 @@ class ProKeysButtonMapping : public ButtonMapping
 {
 public:
     ~ProKeysButtonMapping() {}
-    ProKeysButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    ProKeysButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -336,7 +337,7 @@ class ProKeysAxisMapping : public AxisMapping
 {
 public:
     ~ProKeysAxisMapping() {}
-    ProKeysAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    ProKeysAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -352,7 +353,7 @@ class RockBandDrumsButtonMapping : public ButtonMapping
 {
 public:
     ~RockBandDrumsButtonMapping() {}
-    RockBandDrumsButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    RockBandDrumsButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -368,7 +369,7 @@ class RockBandDrumsAxisMapping : public AxisMapping
 {
 public:
     ~RockBandDrumsAxisMapping() {}
-    RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile, DrumState* state);
+    RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -379,14 +380,12 @@ public:
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
-private:
-    DrumState* state;
 };
 class TaikoButtonMapping : public ButtonMapping
 {
 public:
     ~TaikoButtonMapping() {}
-    TaikoButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    TaikoButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -402,7 +401,7 @@ class TaikoAxisMapping : public AxisMapping
 {
 public:
     ~TaikoAxisMapping() {}
-    TaikoAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    TaikoAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -418,7 +417,7 @@ class WheelButtonMapping : public ButtonMapping
 {
 public:
     ~WheelButtonMapping() {}
-    WheelButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    WheelButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -434,7 +433,7 @@ class WheelAxisMapping : public AxisMapping
 {
 public:
     ~WheelAxisMapping() {}
-    WheelAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    WheelAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -450,7 +449,7 @@ class KeyboardButtonMapping : public ButtonMapping
 {
 public:
     ~KeyboardButtonMapping() {}
-    KeyboardButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile, KeyboardState* state);
+    KeyboardButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -461,14 +460,12 @@ public:
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
-private:
-    KeyboardState* state;
 };
 class MouseAxisMapping : public AxisMapping
 {
 public:
     ~MouseAxisMapping() {}
-    MouseAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    MouseAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -484,7 +481,7 @@ class MouseButtonMapping : public ButtonMapping
 {
 public:
     ~MouseButtonMapping() {}
-    MouseButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    MouseButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -501,7 +498,7 @@ class GuitarHeroDrumsButtonMapping : public ButtonMapping
 {
 public:
     ~GuitarHeroDrumsButtonMapping() {}
-    GuitarHeroDrumsButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    GuitarHeroDrumsButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -517,7 +514,7 @@ class GuitarHeroDrumsAxisMapping : public AxisMapping
 {
 public:
     ~GuitarHeroDrumsAxisMapping() {}
-    GuitarHeroDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    GuitarHeroDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -534,7 +531,7 @@ class GuitarHeroGuitarButtonMapping : public ButtonMapping
 {
 public:
     ~GuitarHeroGuitarButtonMapping() {}
-    GuitarHeroGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    GuitarHeroGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -550,7 +547,7 @@ class GuitarHeroGuitarAxisMapping : public AxisMapping
 {
 public:
     ~GuitarHeroGuitarAxisMapping() {}
-    GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -565,14 +562,13 @@ public:
 
 private:
     bool m_supports_slider = false;
-    bool m_checked_slider = false;
 };
 
 class DJHTurntableButtonMapping : public ButtonMapping
 {
 public:
     ~DJHTurntableButtonMapping() {}
-    DJHTurntableButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    DJHTurntableButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -588,7 +584,7 @@ class DJHTurntableAxisMapping : public AxisMapping
 {
 public:
     ~DJHTurntableAxisMapping() {}
-    DJHTurntableAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    DJHTurntableAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -605,7 +601,7 @@ class RockBandGuitarButtonMapping : public ButtonMapping
 {
 public:
     ~RockBandGuitarButtonMapping() {}
-    RockBandGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    RockBandGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -621,7 +617,7 @@ class RockBandGuitarAxisMapping : public AxisMapping
 {
 public:
     ~RockBandGuitarAxisMapping() {}
-    RockBandGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    RockBandGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -638,7 +634,7 @@ class GamepadButtonMapping : public ButtonMapping
 {
 public:
     ~GamepadButtonMapping() {}
-    GamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    GamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -655,7 +651,7 @@ class KeyboardManiaButtonMapping : public ButtonMapping
 {
 public:
     ~KeyboardManiaButtonMapping() {}
-    KeyboardManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    KeyboardManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -671,7 +667,7 @@ class KeyboardManiaAxisMapping : public AxisMapping
 {
 public:
     ~KeyboardManiaAxisMapping() {}
-    KeyboardManiaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    KeyboardManiaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -687,7 +683,7 @@ class BeatManiaButtonMapping : public ButtonMapping
 {
 public:
     ~BeatManiaButtonMapping() {}
-    BeatManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    BeatManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -703,7 +699,7 @@ class BeatManiaAxisMapping : public AxisMapping
 {
 public:
     ~BeatManiaAxisMapping() {}
-    BeatManiaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    BeatManiaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -719,7 +715,7 @@ class DrumManiaButtonMapping : public ButtonMapping
 {
 public:
     ~DrumManiaButtonMapping() {}
-    DrumManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    DrumManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -735,7 +731,7 @@ class DrumManiaAxisMapping : public AxisMapping
 {
 public:
     ~DrumManiaAxisMapping() {}
-    DrumManiaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    DrumManiaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -751,7 +747,7 @@ class SDVXButtonMapping : public ButtonMapping
 {
 public:
     ~SDVXButtonMapping() {}
-    SDVXButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    SDVXButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -767,7 +763,7 @@ class SDVXAxisMapping : public AxisMapping
 {
 public:
     ~SDVXAxisMapping() {}
-    SDVXAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile);
+    SDVXAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -783,13 +779,13 @@ public:
 class ActivationTrigger
 {
 public:
-    ActivationTrigger(uint32_t profile_id, uint32_t id, uint32_t list_id) : m_profile_id(profile_id), m_id(id), m_list_id(list_id) {}
+    ActivationTrigger(std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : m_profile(profile), m_id(id), m_list_id(list_id) {}
     ~ActivationTrigger() {}
     virtual bool validate(bool claim_device, bool full_poll, bool send_events) = 0;
     virtual int assignedDevices() = 0;
 
 protected:
-    uint32_t m_profile_id;
+    std::shared_ptr<Profile> m_profile;
     bool m_initialised = false;
     bool m_last_val = false;
     uint16_t m_last_analog_val = 0;
@@ -799,7 +795,7 @@ protected:
 class InputActivationTrigger : public ActivationTrigger
 {
 public:
-    InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id, uint32_t list_id);
+    InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~InputActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -812,7 +808,7 @@ protected:
 class WiiExtTypeActivationTrigger : public ActivationTrigger
 {
 public:
-    WiiExtTypeActivationTrigger(proto_WiiExtType type, uint32_t profile_id, uint32_t id, uint32_t list_id);
+    WiiExtTypeActivationTrigger(proto_WiiExtType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~WiiExtTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -823,7 +819,7 @@ protected:
 class PS2ControllerTypeActivationTrigger : public ActivationTrigger
 {
 public:
-    PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, uint32_t profile_id, uint32_t id, uint32_t list_id);
+    PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~PS2ControllerTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -834,7 +830,7 @@ protected:
 class UsbTypeActivationTrigger : public ActivationTrigger
 {
 public:
-    UsbTypeActivationTrigger(proto_SubType type, uint32_t profile_id, uint32_t id, uint32_t list_id);
+    UsbTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~UsbTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -845,7 +841,7 @@ protected:
 class SpecificUsbDeviceActivationTrigger : public ActivationTrigger
 {
 public:
-    SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id, uint32_t id, uint32_t list_id);
+    SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~SpecificUsbDeviceActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -856,7 +852,7 @@ protected:
 class BluetoothTypeActivationTrigger : public ActivationTrigger
 {
 public:
-    BluetoothTypeActivationTrigger(proto_SubType type, uint32_t profile_id, uint32_t id, uint32_t list_id);
+    BluetoothTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~BluetoothTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -867,7 +863,7 @@ protected:
 class SpecificBluetoothDeviceActivationTrigger : public ActivationTrigger
 {
 public:
-    SpecificBluetoothDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id, uint32_t id, uint32_t list_id);
+    SpecificBluetoothDeviceActivationTrigger(proto_SpecificUsbDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~SpecificBluetoothDeviceActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -878,7 +874,7 @@ protected:
 class MidiChannelActivationTrigger : public ActivationTrigger
 {
 public:
-    MidiChannelActivationTrigger(uint32_t channel, uint32_t profile_id, uint32_t id, uint32_t list_id);
+    MidiChannelActivationTrigger(uint32_t channel, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~MidiChannelActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -889,7 +885,7 @@ protected:
 class UsbModeActivationTrigger : public ActivationTrigger
 {
 public:
-    UsbModeActivationTrigger(proto_UsbDeviceAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id);
+    UsbModeActivationTrigger(proto_UsbDeviceAssignment config, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~UsbModeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignUsb; }
@@ -900,7 +896,7 @@ protected:
 class BluetoothModeActivationTrigger : public ActivationTrigger
 {
 public:
-    BluetoothModeActivationTrigger(proto_BluetoothMode mode, uint32_t profile_id, uint32_t id, uint32_t list_id);
+    BluetoothModeActivationTrigger(proto_BluetoothMode mode, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~BluetoothModeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignBluetoothGamepad; }
@@ -911,7 +907,7 @@ private:
 class WiiExtensionEmulationActivationTrigger : public ActivationTrigger
 {
 public:
-    WiiExtensionEmulationActivationTrigger(proto_WiimoteAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id);
+    WiiExtensionEmulationActivationTrigger(proto_WiimoteAssignment config, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~WiiExtensionEmulationActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignWiimoteExtension; }
@@ -922,7 +918,7 @@ private:
 class PS2ControllerEmulationActivationTrigger : public ActivationTrigger
 {
 public:
-    PS2ControllerEmulationActivationTrigger(proto_PSXAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id);
+    PS2ControllerEmulationActivationTrigger(proto_PSXAssignment config, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~PS2ControllerEmulationActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignPsx; }

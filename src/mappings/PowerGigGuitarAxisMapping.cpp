@@ -1,4 +1,5 @@
 #include "mappings/mapping.hpp"
+#include "instance.hpp"
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
 #include "events.pb.h"
@@ -8,7 +9,7 @@
 #include <stdint.h>
 static uint8_t pickupUniversal[] = {0x19, 0x4c, 0x96, 0xb2, 0xe5};
 static uint8_t pickupXb1[] = {0x00, 0x10, 0x20, 0x30, 0x40};
-PowerGigGuitarAxisMapping::PowerGigGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.rbAxis == PowerGigGuitarWhammy)
+PowerGigGuitarAxisMapping::PowerGigGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.rbAxis == PowerGigGuitarWhammy)
 {
 }
 

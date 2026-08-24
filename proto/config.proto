@@ -5,19 +5,23 @@ import "input.proto";
 import "enums.proto";
 import "device.proto";
 
-message Profile {
+message ProfileOpts {
   required uint32 uid = 1; 
   required FaceButtonMappingMode faceButtonMappingMode = 2;
-  repeated ProfileAssignment assignments = 3;
-  repeated Mapping mappings = 4;
   required string name = 5;
   required SubType deviceToEmulate = 6;
-  repeated Led leds = 9;
   optional bool xinputOnWindows = 10;
   optional bool invertYAxisHid = 11;
   optional bool ps4OrPs5Mode = 12;
   optional bool supportsSlider = 13;
   optional bool cymbalGlitchFix = 14;
+}
+
+message Profile {
+  required ProfileOpts opts = 1;
+  repeated ProfileAssignment assignments = 3;
+  repeated Mapping mappings = 4;
+  repeated Led leds = 9;
 }
 message InputLedMapping {
   required Input input = 1;

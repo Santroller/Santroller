@@ -1,4 +1,5 @@
 #include "mappings/mapping.hpp"
+#include "instance.hpp"
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
 #include "events.pb.h"
@@ -7,7 +8,8 @@
 #include <utils.h>
 #include <stdint.h>
 
-RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile, DrumState *state) : AxisMapping(mapping, std::move(input), id, profile, true), state(state)
+
+RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
 {
 }
 
@@ -36,116 +38,116 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
     {
         return;
     }
-    if (state->cymbalGlitchFix && m_mapping.has_debounce)
+    if (m_profile->drum_state.cymbalGlitchFix && m_mapping.has_debounce)
     {
         if (m_mapping.mapping.mapping.rbDrumAxis >= RockBandDrums_GreenPad && m_mapping.mapping.mapping.rbDrumAxis <= RockBandDrums_GreenCymbal)
         {
-            if (millis() - state->lastGlobalPoll > m_mapping.debounce) {
-                state->lastDrum = RockBandDrums_RedPad;
+            if (millis() - m_profile->drum_state.lastGlobalPoll > m_mapping.debounce) {
+                m_profile->drum_state.lastDrum = RockBandDrums_RedPad;
             }
-            if (state->lastDrum != RockBandDrums_RedPad && state->lastDrum != m_mapping.mapping.mapping.rbDrumAxis)
+            if (m_profile->drum_state.lastDrum != RockBandDrums_RedPad && m_profile->drum_state.lastDrum != m_mapping.mapping.mapping.rbDrumAxis)
             {
                 m_lastPoll = millis();
                 return;
             }
-            state->lastGlobalPoll = millis();
-            state->lastDrum = m_mapping.mapping.mapping.rbDrumAxis;
+            m_profile->drum_state.lastGlobalPoll = millis();
+            m_profile->drum_state.lastDrum = m_mapping.mapping.mapping.rbDrumAxis;
         }
     }
     switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
-        state->redPad = m_calibratedValue;
+        m_profile->drum_state.redPad = m_calibratedValue;
         break;
     case RockBandDrums_YellowPad:
-        state->yellowPad = m_calibratedValue;
+        m_profile->drum_state.yellowPad = m_calibratedValue;
         break;
     case RockBandDrums_BluePad:
-        state->bluePad = m_calibratedValue;
+        m_profile->drum_state.bluePad = m_calibratedValue;
         break;
     case RockBandDrums_GreenPad:
-        state->greenPad = m_calibratedValue;
+        m_profile->drum_state.greenPad = m_calibratedValue;
         break;
     case RockBandDrums_YellowCymbal:
-        state->yellowCymbal = m_calibratedValue;
+        m_profile->drum_state.yellowCymbal = m_calibratedValue;
         break;
     case RockBandDrums_BlueCymbal:
-        state->blueCymbal = m_calibratedValue;
+        m_profile->drum_state.blueCymbal = m_calibratedValue;
         break;
     case RockBandDrums_GreenCymbal:
-        state->greenCymbal = m_calibratedValue;
+        m_profile->drum_state.greenCymbal = m_calibratedValue;
         break;
     default:
         break;
     }
     PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)buf;
-    if (state->yellowCymbal && !state->yellowPad)
+    if (m_profile->drum_state.yellowCymbal && !m_profile->drum_state.yellowPad)
     {
-        report->yellowVelocity = 0xFF - (state->yellowCymbal >> 8);
+        report->yellowVelocity = 0xFF - (m_profile->drum_state.yellowCymbal >> 8);
         report->y = true;
         report->cymbalFlag = true;
         report->dpadUp = true;
     }
-    if (state->yellowPad && !state->yellowCymbal)
+    if (m_profile->drum_state.yellowPad && !m_profile->drum_state.yellowCymbal)
     {
-        report->yellowVelocity = 0xFF - (state->yellowPad >> 8);
+        report->yellowVelocity = 0xFF - (m_profile->drum_state.yellowPad >> 8);
         report->y = true;
         report->padFlag = true;
     }
-    if (state->yellowPad && state->yellowCymbal && !state->redPad)
+    if (m_profile->drum_state.yellowPad && m_profile->drum_state.yellowCymbal && !m_profile->drum_state.redPad)
     {
-        report->redVelocity = 0xFF - (state->yellowCymbal >> 8);
-        report->yellowVelocity = 0xFF - (state->yellowCymbal >> 8);
+        report->redVelocity = 0xFF - (m_profile->drum_state.yellowCymbal >> 8);
+        report->yellowVelocity = 0xFF - (m_profile->drum_state.yellowCymbal >> 8);
         report->y = true;
         report->padFlag = true;
         report->cymbalFlag = true;
         report->dpadUp = true;
     }
-    if (state->blueCymbal && !state->bluePad)
+    if (m_profile->drum_state.blueCymbal && !m_profile->drum_state.bluePad)
     {
-        report->blueVelocity = 0xFF - (state->blueCymbal >> 8);
+        report->blueVelocity = 0xFF - (m_profile->drum_state.blueCymbal >> 8);
         report->x = true;
         report->cymbalFlag = true;
         report->dpadDown = true;
     }
-    if (state->bluePad && !state->blueCymbal)
+    if (m_profile->drum_state.bluePad && !m_profile->drum_state.blueCymbal)
     {
-        report->blueVelocity = 0xFF - (state->bluePad >> 8);
+        report->blueVelocity = 0xFF - (m_profile->drum_state.bluePad >> 8);
         report->x = true;
         report->padFlag = true;
     }
-    if (state->bluePad && state->blueCymbal && !state->redPad)
+    if (m_profile->drum_state.bluePad && m_profile->drum_state.blueCymbal && !m_profile->drum_state.redPad)
     {
-        report->redVelocity = 0xFF - (state->blueCymbal >> 8);
-        report->blueVelocity = 0xFF - (state->bluePad >> 8);
+        report->redVelocity = 0xFF - (m_profile->drum_state.blueCymbal >> 8);
+        report->blueVelocity = 0xFF - (m_profile->drum_state.bluePad >> 8);
         report->x = true;
         report->padFlag = true;
         report->cymbalFlag = true;
         report->dpadDown = true;
     }
-    if (state->greenCymbal && !state->greenPad)
+    if (m_profile->drum_state.greenCymbal && !m_profile->drum_state.greenPad)
     {
-        report->greenVelocity = 0xFF - (state->greenCymbal >> 8);
+        report->greenVelocity = 0xFF - (m_profile->drum_state.greenCymbal >> 8);
         report->a = true;
         report->cymbalFlag = true;
     }
-    if (state->greenPad && !state->greenCymbal)
+    if (m_profile->drum_state.greenPad && !m_profile->drum_state.greenCymbal)
     {
-        report->greenVelocity = 0xFF - (state->greenPad >> 8);
+        report->greenVelocity = 0xFF - (m_profile->drum_state.greenPad >> 8);
         report->a = true;
         report->padFlag = true;
     }
-    if (state->greenPad && state->greenCymbal && !state->redPad)
+    if (m_profile->drum_state.greenPad && m_profile->drum_state.greenCymbal && !m_profile->drum_state.redPad)
     {
-        report->redVelocity = 0xFF - (state->greenCymbal >> 8);
-        report->greenVelocity = 0xFF - (state->greenPad >> 8);
+        report->redVelocity = 0xFF - (m_profile->drum_state.greenCymbal >> 8);
+        report->greenVelocity = 0xFF - (m_profile->drum_state.greenPad >> 8);
         report->a = true;
         report->padFlag = true;
         report->cymbalFlag = true;
     }
-    if (state->redPad)
+    if (m_profile->drum_state.redPad)
     {
-        report->redVelocity = 0xFF - (state->redPad >> 8);
+        report->redVelocity = 0xFF - (m_profile->drum_state.redPad >> 8);
         report->b = true;
         report->padFlag = true;
     }
@@ -241,116 +243,116 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
     {
         return;
     }
-    if (state->cymbalGlitchFix && m_mapping.has_debounce)
+    if (m_profile->drum_state.cymbalGlitchFix && m_mapping.has_debounce)
     {
         if (m_mapping.mapping.mapping.rbDrumAxis >= RockBandDrums_GreenPad && m_mapping.mapping.mapping.rbDrumAxis <= RockBandDrums_GreenCymbal)
         {
-            if (millis() - state->lastGlobalPoll > m_mapping.debounce) {
-                state->lastDrum = RockBandDrums_RedPad;
+            if (millis() - m_profile->drum_state.lastGlobalPoll > m_mapping.debounce) {
+                m_profile->drum_state.lastDrum = RockBandDrums_RedPad;
             }
-            if (state->lastDrum != RockBandDrums_RedPad && state->lastDrum != m_mapping.mapping.mapping.rbDrumAxis)
+            if (m_profile->drum_state.lastDrum != RockBandDrums_RedPad && m_profile->drum_state.lastDrum != m_mapping.mapping.mapping.rbDrumAxis)
             {
                 m_lastPoll = millis();
                 return;
             }
-            state->lastGlobalPoll = millis();
-            state->lastDrum = m_mapping.mapping.mapping.rbDrumAxis;
+            m_profile->drum_state.lastGlobalPoll = millis();
+            m_profile->drum_state.lastDrum = m_mapping.mapping.mapping.rbDrumAxis;
         }
     }
     switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
-        state->redPad = m_calibratedValue;
+        m_profile->drum_state.redPad = m_calibratedValue;
         break;
     case RockBandDrums_YellowPad:
-        state->yellowPad = m_calibratedValue;
+        m_profile->drum_state.yellowPad = m_calibratedValue;
         break;
     case RockBandDrums_BluePad:
-        state->bluePad = m_calibratedValue;
+        m_profile->drum_state.bluePad = m_calibratedValue;
         break;
     case RockBandDrums_GreenPad:
-        state->greenPad = m_calibratedValue;
+        m_profile->drum_state.greenPad = m_calibratedValue;
         break;
     case RockBandDrums_YellowCymbal:
-        state->yellowCymbal = m_calibratedValue;
+        m_profile->drum_state.yellowCymbal = m_calibratedValue;
         break;
     case RockBandDrums_BlueCymbal:
-        state->blueCymbal = m_calibratedValue;
+        m_profile->drum_state.blueCymbal = m_calibratedValue;
         break;
     case RockBandDrums_GreenCymbal:
-        state->greenCymbal = m_calibratedValue;
+        m_profile->drum_state.greenCymbal = m_calibratedValue;
         break;
     default:
         break;
     }
     XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)buf;
-    if (state->yellowCymbal && !state->yellowPad)
+    if (m_profile->drum_state.yellowCymbal && !m_profile->drum_state.yellowPad)
     {
-        report->yellowVelocity = -((state->yellowCymbal >> 1) - 32768);
+        report->yellowVelocity = -((m_profile->drum_state.yellowCymbal >> 1) - 32768);
         report->y = true;
         report->cymbalFlag = true;
         report->dpadUp = true;
     }
-    if (state->yellowPad && !state->yellowCymbal)
+    if (m_profile->drum_state.yellowPad && !m_profile->drum_state.yellowCymbal)
     {
-        report->yellowVelocity = -((state->yellowPad >> 1) - 32768);
+        report->yellowVelocity = -((m_profile->drum_state.yellowPad >> 1) - 32768);
         report->y = true;
         report->padFlag = true;
     }
-    if (state->yellowPad && state->yellowCymbal && !state->redPad)
+    if (m_profile->drum_state.yellowPad && m_profile->drum_state.yellowCymbal && !m_profile->drum_state.redPad)
     {
-        report->redVelocity = (state->yellowCymbal >> 1) - 32768;
-        report->yellowVelocity = -((state->yellowCymbal >> 1) - 32768);
+        report->redVelocity = (m_profile->drum_state.yellowCymbal >> 1) - 32768;
+        report->yellowVelocity = -((m_profile->drum_state.yellowCymbal >> 1) - 32768);
         report->y = true;
         report->padFlag = true;
         report->cymbalFlag = true;
         report->dpadUp = true;
     }
-    if (state->blueCymbal && !state->bluePad)
+    if (m_profile->drum_state.blueCymbal && !m_profile->drum_state.bluePad)
     {
-        report->blueVelocity = (state->blueCymbal >> 1) - 32768;
+        report->blueVelocity = (m_profile->drum_state.blueCymbal >> 1) - 32768;
         report->x = true;
         report->cymbalFlag = true;
         report->dpadDown = true;
     }
-    if (state->bluePad && !state->blueCymbal)
+    if (m_profile->drum_state.bluePad && !m_profile->drum_state.blueCymbal)
     {
-        report->blueVelocity = (state->bluePad >> 1) - 32768;
+        report->blueVelocity = (m_profile->drum_state.bluePad >> 1) - 32768;
         report->x = true;
         report->padFlag = true;
     }
-    if (state->bluePad && state->blueCymbal && !state->redPad)
+    if (m_profile->drum_state.bluePad && m_profile->drum_state.blueCymbal && !m_profile->drum_state.redPad)
     {
-        report->redVelocity = (state->blueCymbal >> 1) - 32768;
-        report->blueVelocity = (state->bluePad >> 1) - 32768;
+        report->redVelocity = (m_profile->drum_state.blueCymbal >> 1) - 32768;
+        report->blueVelocity = (m_profile->drum_state.bluePad >> 1) - 32768;
         report->x = true;
         report->padFlag = true;
         report->cymbalFlag = true;
         report->dpadDown = true;
     }
-    if (state->greenCymbal && !state->greenPad)
+    if (m_profile->drum_state.greenCymbal && !m_profile->drum_state.greenPad)
     {
-        report->greenVelocity = -((state->greenCymbal >> 1) - 32768);
+        report->greenVelocity = -((m_profile->drum_state.greenCymbal >> 1) - 32768);
         report->a = true;
         report->cymbalFlag = true;
     }
-    if (state->greenPad && !state->greenCymbal)
+    if (m_profile->drum_state.greenPad && !m_profile->drum_state.greenCymbal)
     {
-        report->greenVelocity = -((state->greenPad >> 1) - 32768);
+        report->greenVelocity = -((m_profile->drum_state.greenPad >> 1) - 32768);
         report->a = true;
         report->padFlag = true;
     }
-    if (state->greenPad && state->greenCymbal && !state->redPad)
+    if (m_profile->drum_state.greenPad && m_profile->drum_state.greenCymbal && !m_profile->drum_state.redPad)
     {
-        report->redVelocity = (state->greenCymbal >> 1) - 32768;
-        report->greenVelocity = -((state->greenPad >> 1) - 32768);
+        report->redVelocity = (m_profile->drum_state.greenCymbal >> 1) - 32768;
+        report->greenVelocity = -((m_profile->drum_state.greenPad >> 1) - 32768);
         report->a = true;
         report->padFlag = true;
         report->cymbalFlag = true;
     }
-    if (state->redPad)
+    if (m_profile->drum_state.redPad)
     {
-        report->redVelocity = (state->redPad >> 1) - 32768;
+        report->redVelocity = (m_profile->drum_state.redPad >> 1) - 32768;
         report->b = true;
         report->padFlag = true;
     }

@@ -1,4 +1,5 @@
 #include "mappings/mapping.hpp"
+#include "instance.hpp"
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
 #include "events.pb.h"
@@ -7,7 +8,7 @@
 #include <utils.h>
 #include <stdint.h>
 
-DJHTurntableAxisMapping::DJHTurntableAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, false)
+DJHTurntableAxisMapping::DJHTurntableAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
 {
 }
 

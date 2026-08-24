@@ -567,76 +567,76 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     switch (mapping.mapping.which_mapping)
     {
     case proto_Output_gamepadAxis_tag:
-        profile->mappings.emplace_back(new GamepadAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new GamepadAxisMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_ghAxis_tag:
-        profile->mappings.emplace_back(new GuitarHeroGuitarAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new GuitarHeroGuitarAxisMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_ghButton_tag:
-        profile->mappings.emplace_back(new GuitarHeroGuitarButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new GuitarHeroGuitarButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_rbAxis_tag:
-        profile->mappings.emplace_back(new RockBandGuitarAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new RockBandGuitarAxisMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_rbButton_tag:
-        profile->mappings.emplace_back(new RockBandGuitarButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new RockBandGuitarButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_gamepadButton_tag:
-        profile->mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_ghDrumAxis_tag:
-        profile->mappings.emplace_back(new GuitarHeroDrumsAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new GuitarHeroDrumsAxisMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_rbDrumButton_tag:
-        profile->mappings.emplace_back(new RockBandDrumsButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new RockBandDrumsButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_rbDrumAxis_tag:
-        profile->mappings.emplace_back(new RockBandDrumsAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id, &profile->drum_state));
+        profile->mappings.emplace_back(new RockBandDrumsAxisMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_ghlButton_tag:
-        profile->mappings.emplace_back(new LiveGuitarButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new LiveGuitarButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_ghlAxis_tag:
-        profile->mappings.emplace_back(new LiveGuitarAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new LiveGuitarAxisMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_proButton_tag:
-        profile->mappings.emplace_back(new ProGuitarButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new ProGuitarButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_proAxis_tag:
-        profile->mappings.emplace_back(new ProGuitarAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new ProGuitarAxisMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_djhButton_tag:
-        profile->mappings.emplace_back(new DJHTurntableButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new DJHTurntableButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_djhAxis_tag:
-        profile->mappings.emplace_back(new DJHTurntableAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new DJHTurntableAxisMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_djMaxButton_tag:
-        profile->mappings.emplace_back(new DJMaxTurntableButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new DJMaxTurntableButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_djMaxAxis_tag:
-        profile->mappings.emplace_back(new DJMaxTurntableAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new DJMaxTurntableAxisMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_divaAxis_tag:
-        profile->mappings.emplace_back(new ProjectDivaAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new ProjectDivaAxisMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_gfButton_tag:
-        profile->mappings.emplace_back(new GuitarFreaksButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new GuitarFreaksButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_ghaAxis_tag:
-        profile->mappings.emplace_back(new GuitarHeroArcadeAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new GuitarHeroArcadeAxisMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_ghaButton_tag:
-        profile->mappings.emplace_back(new GuitarHeroArcadeButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new GuitarHeroArcadeButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_mouseAxis_tag:
-        profile->mappings.emplace_back(new MouseAxisMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new MouseAxisMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_mouseButton_tag:
-        profile->mappings.emplace_back(new MouseButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id));
+        profile->mappings.emplace_back(new MouseButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_keycode_tag:
-        profile->mappings.emplace_back(new KeyboardButtonMapping(mapping, std::move(input), mapping_id, profile->profile_id, &profile->keyboard_state));
+        profile->mappings.emplace_back(new KeyboardButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     }
     return true;
@@ -678,7 +678,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
         {
             return true;
         }
-        list->triggers.emplace_back(new InputActivationTrigger(false, assignment.assignment.input, std::move(input), profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
+        list->triggers.emplace_back(new InputActivationTrigger(false, assignment.assignment.input, std::move(input), profile, list->triggers.size(), profile->triggers.size() - 1));
         break;
     }
     case proto_ProfileAssignmentInfo_inputAnyTime_tag:
@@ -690,35 +690,35 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
             return true;
         }
         // printf("input any time! %p\r\n", input.get());
-        list->triggers.emplace_back(new InputActivationTrigger(true, assignment.assignment.inputAnyTime, std::move(input), profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
+        list->triggers.emplace_back(new InputActivationTrigger(true, assignment.assignment.inputAnyTime, std::move(input), profile, list->triggers.size(), profile->triggers.size() - 1));
         break;
     }
     case proto_ProfileAssignmentInfo_consoleType_tag:
-        list->triggers.emplace_back(new UsbModeActivationTrigger(assignment.assignment.consoleType, profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
+        list->triggers.emplace_back(new UsbModeActivationTrigger(assignment.assignment.consoleType, profile, list->triggers.size(), profile->triggers.size() - 1));
         break;
     case proto_ProfileAssignmentInfo_wiiExt_tag:
-        list->triggers.emplace_back(new WiiExtTypeActivationTrigger(assignment.assignment.wiiExt, profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
+        list->triggers.emplace_back(new WiiExtTypeActivationTrigger(assignment.assignment.wiiExt, profile, list->triggers.size(), profile->triggers.size() - 1));
         break;
     case proto_ProfileAssignmentInfo_ps2Cnt_tag:
-        list->triggers.emplace_back(new PS2ControllerTypeActivationTrigger(assignment.assignment.ps2Cnt, profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
+        list->triggers.emplace_back(new PS2ControllerTypeActivationTrigger(assignment.assignment.ps2Cnt, profile, list->triggers.size(), profile->triggers.size() - 1));
         break;
     case proto_ProfileAssignmentInfo_usbType_tag:
-        list->triggers.emplace_back(new UsbTypeActivationTrigger(assignment.assignment.usbType, profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
+        list->triggers.emplace_back(new UsbTypeActivationTrigger(assignment.assignment.usbType, profile, list->triggers.size(), profile->triggers.size() - 1));
         break;
     case proto_ProfileAssignmentInfo_usbDevice_tag:
-        list->triggers.emplace_back(new SpecificUsbDeviceActivationTrigger(assignment.assignment.usbDevice, profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
+        list->triggers.emplace_back(new SpecificUsbDeviceActivationTrigger(assignment.assignment.usbDevice, profile, list->triggers.size(), profile->triggers.size() - 1));
         break;
     case proto_ProfileAssignmentInfo_midiChannel_tag:
-        list->triggers.emplace_back(new MidiChannelActivationTrigger(assignment.assignment.midiChannel, profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
+        list->triggers.emplace_back(new MidiChannelActivationTrigger(assignment.assignment.midiChannel, profile, list->triggers.size(), profile->triggers.size() - 1));
         break;
     case proto_ProfileAssignmentInfo_ps2Emulation_tag:
-        list->triggers.emplace_back(new PS2ControllerEmulationActivationTrigger(assignment.assignment.ps2Emulation, profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
+        list->triggers.emplace_back(new PS2ControllerEmulationActivationTrigger(assignment.assignment.ps2Emulation, profile, list->triggers.size(), profile->triggers.size() - 1));
         break;
     case proto_ProfileAssignmentInfo_wiiEmulation_tag:
-        list->triggers.emplace_back(new WiiExtensionEmulationActivationTrigger(assignment.assignment.wiiEmulation, profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
+        list->triggers.emplace_back(new WiiExtensionEmulationActivationTrigger(assignment.assignment.wiiEmulation, profile, list->triggers.size(), profile->triggers.size() - 1));
         break;
     case proto_ProfileAssignmentInfo_bluetooth_tag:
-        list->triggers.emplace_back(new BluetoothModeActivationTrigger(assignment.assignment.bluetooth, profile->profile_id, list->triggers.size(), profile->triggers.size() - 1));
+        list->triggers.emplace_back(new BluetoothModeActivationTrigger(assignment.assignment.bluetooth, profile, list->triggers.size(), profile->triggers.size() - 1));
         break;
     case proto_ProfileAssignmentInfo_copilotProfile_tag:
         // TODO: how do we handle this
@@ -739,17 +739,6 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     pb_decode(stream, proto_ProfileAssignment_fields, &proto_assignment);
     // printf("load_assignments done?\r\n");
     list->validate(true, false, false);
-    return true;
-}
-bool load_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
-{
-    auto profile = working_profile;
-    // printf("load_uid: %p\r\n", profile.get());
-    uint64_t value;
-    if (!pb_decode_varint(stream, &value))
-        return false;
-    profile->profile_id = value;
-    all_profiles[profile->profile_id] = profile;
     return true;
 }
 bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -792,18 +781,36 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     switch (proto_led.mapping.which_led)
     {
     case proto_LedMapping_inputMapping_tag:
-        profile->leds.emplace_back(new InputLedMapping(std::move(device), proto_led.mapping.led.inputMapping, make_input(proto_led.mapping.led.inputMapping.input, profile, stream), profile->profile_id, profile->leds.size()));
+        profile->leds.emplace_back(new InputLedMapping(std::move(device), proto_led.mapping.led.inputMapping, make_input(proto_led.mapping.led.inputMapping.input, profile, stream), profile, profile->leds.size()));
         // printf("loaded led input%d\r\n", profile->leds.size());
         return true;
     case proto_LedMapping_staticMapping_tag:
-        profile->leds.emplace_back(new StaticLedMapping(std::move(device), proto_led.mapping.led.staticMapping, profile->profile_id, profile->leds.size()));
+        profile->leds.emplace_back(new StaticLedMapping(std::move(device), proto_led.mapping.led.staticMapping, profile, profile->leds.size()));
         // printf("loaded led static%d\r\n", profile->leds.size());
         return true;
     case proto_LedMapping_patternMapping_tag:
-        profile->leds.emplace_back(new PatternLedMapping(std::move(device), proto_led.mapping.led.patternMapping, profile->profile_id, profile->leds.size()));
+        profile->leds.emplace_back(new PatternLedMapping(std::move(device), proto_led.mapping.led.patternMapping, profile, profile->leds.size()));
         // printf("loaded led pattern%d\r\n", profile->leds.size());
         return true;
     }
+    return true;
+}
+bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto profile = working_profile;
+    // printf("load_uid: %p\r\n", profile.get());
+    proto_ProfileOpts opts;
+    if (!pb_decode(stream, proto_ProfileOpts_fields, &opts))
+        return false;
+    profile->profile_id = opts.uid;
+    memcpy(profile->name, opts.name, sizeof(profile->name));
+    profile->xinput_on_windows = opts.has_xinputOnWindows && opts.xinputOnWindows;
+    profile->invert_y_axis_hid = opts.has_invertYAxisHid && opts.invertYAxisHid;
+    profile->supports_ps4 = opts.has_ps4OrPs5Mode && opts.ps4OrPs5Mode;
+    profile->supports_slider = opts.has_supportsSlider && opts.supportsSlider;
+    profile->cymbal_glitch_fix = opts.has_cymbalGlitchFix && opts.cymbalGlitchFix;
+    profile->drum_state.cymbalGlitchFix = opts.has_cymbalGlitchFix && opts.cymbalGlitchFix;
+    all_profiles[profile->profile_id] = profile;
     return true;
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -820,17 +827,9 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     memset(&proto_profile, 0, sizeof(proto_profile));
     proto_profile.assignments.funcs.decode = &load_assignments;
     proto_profile.mappings.funcs.decode = &load_mapping;
-    proto_profile.uid.funcs.decode = &load_uid;
+    proto_profile.opts.funcs.decode = &load_opts;
     proto_profile.leds.funcs.decode = &load_leds;
     pb_decode(stream, proto_Profile_fields, &proto_profile);
-    memcpy(profile->name, proto_profile.name, sizeof(profile->name));
-    profile->subtype = proto_profile.deviceToEmulate;
-    profile->xinput_on_windows = proto_profile.has_xinputOnWindows && proto_profile.xinputOnWindows;
-    profile->invert_y_axis_hid = proto_profile.has_invertYAxisHid && proto_profile.invertYAxisHid;
-    profile->supports_ps4 = proto_profile.has_ps4OrPs5Mode && proto_profile.ps4OrPs5Mode;
-    profile->supports_slider = proto_profile.has_supportsSlider && proto_profile.supportsSlider;
-    profile->cymbal_glitch_fix = proto_profile.has_cymbalGlitchFix && proto_profile.cymbalGlitchFix;
-    profile->drum_state.cymbalGlitchFix = proto_profile.has_cymbalGlitchFix && proto_profile.cymbalGlitchFix;
     // printf("profile loaded: %d %d %d\r\n", profile->profile_id, profile->xinput_on_windows, profile->invert_y_axis_hid);
     std::shared_ptr<UsbDevice> usbInstance;
     std::shared_ptr<BTGamepadDevice> btGamepadInstance;
@@ -841,7 +840,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         if (list->validate(true, false, false))
         {
             int assignedDevices = list->assignedDevices();
-            printf("profile assigned! %d\r\n", profile->profile_id);
+            printf("profile assigned! %d\r\n", profile);
             if (previous_profiles.erase(profile->profile_id) == 0)
             {
                 previous_profiles.insert(profile->profile_id);

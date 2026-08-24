@@ -50,7 +50,7 @@ int ActivationTriggerList::assignedDevices()
     }
     return assigned;
 }
-InputActivationTrigger::InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_activation_trigger(activation_trigger), m_input(std::move(input)), m_any_time(any_time)
+InputActivationTrigger::InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_activation_trigger(activation_trigger), m_input(std::move(input)), m_any_time(any_time)
 {
 }
 
@@ -112,13 +112,12 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
     return val;
 }
 
-UsbModeActivationTrigger::UsbModeActivationTrigger(proto_UsbDeviceAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_config(config)
+UsbModeActivationTrigger::UsbModeActivationTrigger(proto_UsbDeviceAssignment config, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_config(config)
 {
 }
 
 bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    auto profile = all_profiles[m_profile_id];
     if (m_config.has_forcedType && claim_device)
     {
         printf("setting new mode: %d, old: %d\r\n", m_config.forcedType, newMode);
@@ -134,7 +133,7 @@ bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
         return true;
     }
     bool matched = false;
-    switch (profile->mode)
+    switch (m_profile->mode)
     {
     case ModeGuitarHeroArcade:
     case ModeHid:
@@ -176,7 +175,7 @@ bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
     return matched;
 }
 
-WiiExtTypeActivationTrigger::WiiExtTypeActivationTrigger(proto_WiiExtType type, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_type(type)
+WiiExtTypeActivationTrigger::WiiExtTypeActivationTrigger(proto_WiiExtType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_type(type)
 {
 }
 
@@ -191,7 +190,7 @@ bool WiiExtTypeActivationTrigger::validate(bool claim_device, bool full_poll, bo
             if (claim_device)
             {
                 assignable_devices.erase(it);
-                all_profiles[m_profile_id]->devices[device->m_id] = device;
+                m_profile->devices[device->m_id] = device;
             }
             m_last_val = true;
             return true;
@@ -206,7 +205,7 @@ bool WiiExtTypeActivationTrigger::validate(bool claim_device, bool full_poll, bo
     return false;
 }
 
-PS2ControllerTypeActivationTrigger::PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_type(type)
+PS2ControllerTypeActivationTrigger::PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_type(type)
 {
 }
 
@@ -221,7 +220,7 @@ bool PS2ControllerTypeActivationTrigger::validate(bool claim_device, bool full_p
             if (claim_device)
             {
                 assignable_devices.erase(it);
-                all_profiles[m_profile_id]->devices[device->m_id] = device;
+                m_profile->devices[device->m_id] = device;
             }
             m_last_val = true;
             return true;
@@ -236,7 +235,7 @@ bool PS2ControllerTypeActivationTrigger::validate(bool claim_device, bool full_p
     return false;
 }
 
-UsbTypeActivationTrigger::UsbTypeActivationTrigger(proto_SubType type, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_type(type)
+UsbTypeActivationTrigger::UsbTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_type(type)
 {
 }
 
@@ -250,8 +249,7 @@ bool UsbTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
         {
             if (claim_device)
             {
-                auto &profile = all_profiles[m_profile_id];
-                profile->devices.insert_or_assign(device->m_id, device);
+                m_profile->devices.insert_or_assign(device->m_id, device);
                 assignable_devices.erase(it);
             }
             m_last_val = true;
@@ -267,7 +265,7 @@ bool UsbTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
     return false;
 }
 
-SpecificUsbDeviceActivationTrigger::SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_device(device)
+SpecificUsbDeviceActivationTrigger::SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_device(device)
 {
 }
 
@@ -282,7 +280,7 @@ bool SpecificUsbDeviceActivationTrigger::validate(bool claim_device, bool full_p
             if (claim_device)
             {
                 assignable_devices.erase(it);
-                all_profiles[m_profile_id]->devices[device->m_id] = device;
+                m_profile->devices[device->m_id] = device;
             }
             m_last_val = true;
             return true;
@@ -297,7 +295,7 @@ bool SpecificUsbDeviceActivationTrigger::validate(bool claim_device, bool full_p
     return false;
 }
 
-BluetoothTypeActivationTrigger::BluetoothTypeActivationTrigger(proto_SubType type, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_type(type)
+BluetoothTypeActivationTrigger::BluetoothTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_type(type)
 {
 }
 
@@ -312,7 +310,7 @@ bool BluetoothTypeActivationTrigger::validate(bool claim_device, bool full_poll,
             if (claim_device)
             {
                 assignable_devices.erase(it);
-                all_profiles[m_profile_id]->devices[device->m_id] = device;
+                m_profile->devices[device->m_id] = device;
             }
             m_last_val = true;
             return true;
@@ -327,7 +325,7 @@ bool BluetoothTypeActivationTrigger::validate(bool claim_device, bool full_poll,
     return false;
 }
 
-SpecificBluetoothDeviceActivationTrigger::SpecificBluetoothDeviceActivationTrigger(proto_SpecificUsbDevice device, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_device(device)
+SpecificBluetoothDeviceActivationTrigger::SpecificBluetoothDeviceActivationTrigger(proto_SpecificUsbDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_device(device)
 {
 }
 
@@ -342,7 +340,7 @@ bool SpecificBluetoothDeviceActivationTrigger::validate(bool claim_device, bool 
             if (claim_device)
             {
                 assignable_devices.erase(it);
-                all_profiles[m_profile_id]->devices[device->m_id] = device;
+                m_profile->devices[device->m_id] = device;
             }
             m_last_val = true;
             return true;
@@ -357,7 +355,7 @@ bool SpecificBluetoothDeviceActivationTrigger::validate(bool claim_device, bool 
     return false;
 }
 
-MidiChannelActivationTrigger::MidiChannelActivationTrigger(uint32_t channel, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_channel(channel)
+MidiChannelActivationTrigger::MidiChannelActivationTrigger(uint32_t channel, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_channel(channel)
 {
 }
 
@@ -372,8 +370,8 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
             if (claim_device)
             {
                 assignable_devices.erase(it);
-                all_profiles[m_profile_id]->devices[device->m_id] = device;
-                printf("Claimed device: %d %p %p\r\n", m_profile_id, all_profiles[m_profile_id], device);
+                m_profile->devices[device->m_id] = device;
+                printf("Claimed device: %d %p %p\r\n", m_profile, m_profile, device);
             }
             m_last_val = true;
             return true;
@@ -388,7 +386,7 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
     return false;
 }
 
-BluetoothModeActivationTrigger::BluetoothModeActivationTrigger(proto_BluetoothMode mode, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_mode(mode)
+BluetoothModeActivationTrigger::BluetoothModeActivationTrigger(proto_BluetoothMode mode, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_mode(mode)
 {
 }
 
@@ -401,7 +399,7 @@ bool BluetoothModeActivationTrigger::validate(bool claim_device, bool full_poll,
     }
     return true;
 }
-WiiExtensionEmulationActivationTrigger::WiiExtensionEmulationActivationTrigger(proto_WiimoteAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_config(config)
+WiiExtensionEmulationActivationTrigger::WiiExtensionEmulationActivationTrigger(proto_WiimoteAssignment config, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_config(config)
 {
 }
 
@@ -414,7 +412,7 @@ bool WiiExtensionEmulationActivationTrigger::validate(bool claim_device, bool fu
     }
     return true;
 }
-PS2ControllerEmulationActivationTrigger::PS2ControllerEmulationActivationTrigger(proto_PSXAssignment config, uint32_t profile_id, uint32_t id, uint32_t list_id) : ActivationTrigger(profile_id, id, list_id), m_config(config)
+PS2ControllerEmulationActivationTrigger::PS2ControllerEmulationActivationTrigger(proto_PSXAssignment config, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_config(config)
 {
 }
 

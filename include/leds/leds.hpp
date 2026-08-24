@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "profile.hpp"
 #include "input/input.hpp"
 #include "input.pb.h"
 #include "config.pb.h"
@@ -9,7 +10,6 @@
 #include "devices/vtechexpander.hpp"
 #include <memory>
 #include <stdio.h>
-
 class LedMappingDevice
 {
 public:
@@ -126,7 +126,7 @@ protected:
 class LedMapping
 {
 public:
-    LedMapping(std::unique_ptr<LedMappingDevice> device, uint32_t profile_id, uint32_t id) : m_device(std::move(device)), m_id(id), m_profile_id(profile_id) {}
+    LedMapping(std::unique_ptr<LedMappingDevice> device, std::shared_ptr<Profile> profile, uint32_t id) : m_device(std::move(device)), m_id(id), m_profile(profile) {}
     virtual ~LedMapping() {}
     void off();
     virtual void update(bool full_poll, bool send_events) = 0;
@@ -135,13 +135,13 @@ public:
 protected:
     std::unique_ptr<LedMappingDevice> m_device;
     uint32_t m_id;
-    uint32_t m_profile_id;
+    std::shared_ptr<Profile> m_profile;
 };
 
 class InputLedMapping : public LedMapping
 {
 public:
-    InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id);
+    InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, std::shared_ptr<Profile> profile, uint32_t id);
     void update(bool full_poll, bool send_events);
     void reload();
 
@@ -161,7 +161,7 @@ private:
 class PatternLedMapping : public LedMapping
 {
 public:
-    PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, uint32_t profile_id, uint32_t id);
+    PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id);
     void update(bool full_poll, bool send_events);
     void reload();
 
@@ -177,7 +177,7 @@ protected:
 class StaticLedMapping : public LedMapping
 {
 public:
-    StaticLedMapping(std::unique_ptr<LedMappingDevice> device, proto_StaticLedMapping mapping, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_mapping(mapping) {}
+    StaticLedMapping(std::unique_ptr<LedMappingDevice> device, proto_StaticLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
     void update(bool full_poll, bool send_events);
     void reload();
 

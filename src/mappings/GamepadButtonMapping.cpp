@@ -1,4 +1,5 @@
 #include "mappings/mapping.hpp"
+#include "instance.hpp"
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
 #include "events.pb.h"
@@ -6,7 +7,7 @@
 #include "config.hpp"
 
 const uint8_t GamepadButtonMapping::dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
-GamepadButtonMapping::GamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : ButtonMapping(mapping, std::move(input), id, profile)
+GamepadButtonMapping::GamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -17,6 +18,7 @@ void GamepadButtonMapping::update_hid(uint8_t *buf)
 }
 void GamepadButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
+    // TODO: wii + ps2 + xone need to be handled a bit differently, since the formats aren't the same as gamepad
     if (format == 1)
     {
         WiiClassicDataFormat1_t *report = (WiiClassicDataFormat1_t *)buf;

@@ -1,17 +1,18 @@
 #include "mappings/mapping.hpp"
+#include "instance.hpp"
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
 #include "events.pb.h"
 #include "main.hpp"
 
-KeyboardButtonMapping::KeyboardButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile, KeyboardState* state) : ButtonMapping(mapping, std::move(input), id, profile), state(state)
+KeyboardButtonMapping::KeyboardButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
 void KeyboardButtonMapping::update_hid(uint8_t *buf)
 {
     if (m_lastValue) {
-        state->pressedKeys |= 1 << m_mapping.mapping.mapping.keycode;
+        m_profile->keyboard_state.pressedKeys |= 1 << m_mapping.mapping.mapping.keycode;
     }
 }
 void KeyboardButtonMapping::update_wii(uint8_t format, uint8_t *buf)

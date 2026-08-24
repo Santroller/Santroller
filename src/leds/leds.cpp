@@ -1,4 +1,5 @@
 #include "leds/leds.hpp"
+#include "instance.hpp"
 #include "utils.h"
 #include "hardware/pwm.h"
 #include <stdio.h>
@@ -47,11 +48,11 @@ void InputLedMapping::update(bool full_poll, bool send_events)
         m_device->set_val(curr);
     }
 }
-InputLedMapping::InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_input(std::move(input)), m_mapping(mapping)
+InputLedMapping::InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_input(std::move(input)), m_mapping(mapping)
 {
     m_multiplier = (UINT16_MAX) / (m_mapping.max - m_mapping.min);
 }
-PatternLedMapping::PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, uint32_t profile_id, uint32_t id) : LedMapping(std::move(device), profile_id, id), m_mapping(mapping), m_speed(mapping.speed ? mapping.speed : 1), m_brightness(mapping.brightness ? mapping.brightness : 1)
+PatternLedMapping::PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping), m_speed(mapping.speed ? mapping.speed : 1), m_brightness(mapping.brightness ? mapping.brightness : 1)
 {
     m_speed = 21 - m_speed;
 }

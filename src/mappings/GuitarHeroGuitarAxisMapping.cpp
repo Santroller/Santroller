@@ -1,4 +1,5 @@
 #include "mappings/mapping.hpp"
+#include "instance.hpp"
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
 #include "events.pb.h"
@@ -15,7 +16,7 @@ const uint8_t GuitarHeroGuitarAxisMapping::gh5_slider_mapping[] = {
     0xFA, 0xFC, 0xF8, 0xE6, 0xE2, 0xE4, 0xE0,
     0xE5, 0xE1, 0xE3, 0xDF};
 
-GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghAxis == GuitarHeroGuitar_Whammy)
+GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghAxis == GuitarHeroGuitar_Whammy), m_supports_slider(profile->supports_slider)
 {
 }
 
@@ -146,11 +147,6 @@ void GuitarHeroGuitarAxisMapping::update_ps5(uint8_t *buf)
 
 void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
 {
-    if (!m_checked_slider)
-    {
-        m_checked_slider = true;
-        m_supports_slider = all_profiles[m_profile]->supports_slider;
-    }
     if (m_centered)
     {
         return;

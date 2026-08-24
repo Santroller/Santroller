@@ -1,4 +1,5 @@
 #include "mappings/mapping.hpp"
+#include "instance.hpp"
 #include "tusb.h"
 #include "usb/usb_descriptors.h"
 #include "events.pb.h"
@@ -8,7 +9,7 @@
 #include <stdint.h>
 #include <config.hpp>
 
-GamepadAxisMapping::GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, uint32_t profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.gamepadAxis == Gamepad_LeftTrigger || mapping.mapping.mapping.gamepadAxis == Gamepad_RightTrigger)
+GamepadAxisMapping::GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.gamepadAxis == Gamepad_LeftTrigger || mapping.mapping.mapping.gamepadAxis == Gamepad_RightTrigger)
 {
 }
 

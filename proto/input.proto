@@ -42,22 +42,6 @@ message MPR121Input {
   required PinMode pinMode = 4;
 }
 
-message MidiNoteInput { 
-  required int32 deviceid = 1;
-  required int32 note = 2; 
-  required int32 channel = 3; 
-}
-
-message MidiControlChangeInput { 
-  required int32 deviceid = 1;
-  required int32 cc = 2; 
-  required int32 channel = 3;
-}
-
-message MidiPitchBendInput { 
-  required int32 deviceid = 1; 
-  required int32 channel = 2;
-}
 
 message FixedInput { required int32 value = 1; }
 
@@ -135,6 +119,19 @@ message USBAxisInput {
   required Output axis = 2;
 }
 
+message MidiNoteInput { 
+  required int32 note = 2; 
+  required int32 channel = 3; 
+}
+
+message MidiControlChangeInput { 
+  required int32 cc = 2; 
+  required int32 channel = 3;
+}
+
+message MidiPitchBendInput { 
+  required int32 channel = 2;
+}
 message MidiProGuitarButtonInput { 
   required ProGuitarMidiButtonType button = 2; 
 }

@@ -27,7 +27,7 @@ Be careful that you don't ever provide 5v power to any pins on the PS2 Controlle
    For beginners we provide a recommended pinout below for each microcontroller. These pinouts are the same pinouts that are used on the old Ardwiino firmware, so if you have an old device, this is the pinout it will be using.
    If these pins don't work for you, you can use one of the advanced pinouts below. Note that the Pi Pico has multiple channels, and SCK, MOSI and MISO need to be from the same channel.
 
-   [![pinout](/assets/images/ps2.png)](/assets/images/ps2.png) [![Adapter pinout](/assets/images/ps2-pinout.png)](/assets/images/ps2-pinout.png)
+   [![pinout](/assets/images/ps2.png)](/assets/images/ps2.png) [![Adapter pinout](/assets/images/ps2-pinout.png)](/assets/images/ps2-pinout.png) [![Female Adapter pinout](/assets/images/ps2-pinout-female.png)](/assets/images/ps2-pinout-female.png)
   
   ```danger
   Note that this image is of the plug on the controller, and not looking at the socket. Make sure you have your wiring in the right order.

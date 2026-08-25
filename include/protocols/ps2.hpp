@@ -54,26 +54,41 @@ typedef struct
 
 typedef struct
 {
-    uint8_t back : 1; // select
-    uint8_t : 1;
-    uint8_t : 1;
+    uint8_t back : 1;            // select
+    uint8_t leftThumbClick : 1;  // l3
+    uint8_t rightThumbClick : 1; // r3
     uint8_t start : 1;
     uint8_t dpadUp : 1;
     uint8_t : 1;
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
 
-    uint8_t tilt : 1;
-    uint8_t a : 1; // cross, green
-    uint8_t : 1;
-    uint8_t : 1;
-    uint8_t y : 1;            // triangle, yellow
-    uint8_t b : 1;            // circle, red
-    uint8_t x : 1;            // square, blue
-    uint8_t leftShoulder : 1; // orange, l1
+    uint8_t tilt : 1;          // l2
+    uint8_t green : 1;         // r2
+    uint8_t leftShoulder : 1;  // l1
+    uint8_t rightShoulder : 1; // r1
+    uint8_t yellow : 1;        // triangle
+    uint8_t red : 1;           // circle
+    uint8_t blue : 1;          // cross
+    uint8_t orange : 1;        // square
 
-    uint8_t leftStickX;
-    uint8_t leftStickY;
+    union
+    {
+        struct
+        {
+            uint8_t psDpadUp : 1;
+            uint8_t psDpadDown : 1;
+            uint8_t psDpadLeft : 1;
+            uint8_t psDpadRight : 1;
+            uint8_t : 4;
+        };
+        struct
+        {
+            uint8_t dpad : 4; // rightStickX
+            uint8_t : 4;
+        };
+    };
+    uint8_t : 8; // rightStickY
 
     union
     {
@@ -86,7 +101,7 @@ typedef struct
             uint8_t tapOrange : 1;
             uint8_t : 3;
         };
-        uint8_t slider;
+        uint8_t slider; // leftStickX
     };
-    uint8_t whammy;
+    uint8_t whammy; // leftStickY
 } __attribute__((packed)) PS2GuitarHeroGuitar_Data_t;

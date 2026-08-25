@@ -556,6 +556,17 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     switch (mapping.mapping.which_mapping)
     {
     case proto_Output_gamepadAxis_tag:
+        // XB1 guitars and drums don't use the same report format as gamepads, so they need special handling
+        if (profile->subtype == GuitarHeroGuitar || profile->subtype == RockBandGuitar)
+        {
+            profile->mappings.emplace_back(new RockBandGuitarGamepadAxisMapping(mapping, std::move(input), mapping_id, profile));
+            break;
+        }
+        if (profile->subtype == RockBandDrums)
+        {
+            profile->mappings.emplace_back(new RockBandDrumsGamepadAxisMapping(mapping, std::move(input), mapping_id, profile));
+            break;
+        }
         profile->mappings.emplace_back(new GamepadAxisMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_ghAxis_tag:
@@ -571,6 +582,12 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         profile->mappings.emplace_back(new RockBandGuitarButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_gamepadButton_tag:
+        // PS2 GH guitars don't use the same report format as gamepads
+        if (profile->subtype == GuitarHeroGuitar)
+        {
+            profile->mappings.emplace_back(new GuitarHeroGuitarGamepadButtonMapping(mapping, std::move(input), mapping_id, profile));
+            break;
+        }
         profile->mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), mapping_id, profile));
         break;
     case proto_Output_ghDrumAxis_tag:

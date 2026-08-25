@@ -7,7 +7,7 @@
 #include <pico/unique_id.h>
 #include "emulation/ps2_emulation.hpp"
 #include "utils.h"
-
+const uint8_t guitar_dpad_bindings[] = {0x80, 0x23, 0xaa, 0x20, 0x58, 0x1c, 0x4b, 0x1a, 0xec, 0x23, 0xa1, 0x20, 0x55, 0x1b, 0x49, 0x1a};
 Ps2EmulationDeviceInstance::Ps2EmulationDeviceInstance(proto_PSXEmulationDevice device) : m_device(device), m_controller(device.clockPin, device.commandPin, device.dataPin, device.attentionPin, device.acknowledgePin)
 {
 }
@@ -57,6 +57,11 @@ void Ps2EmulationDeviceInstance::process()
         {
             led->update(false, false);
         }
+    }
+    // guitar hero guitars smashed the dpad into the right stick so we need to convert the bitmasks
+    if (subtype == GuitarHeroGuitar) {
+        PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)m_buffer;
+        report->dpad = guitar_dpad_bindings[report->dpad];
     }
     m_buffer[0] = ~m_buffer[0];
     m_buffer[1] = ~m_buffer[1];

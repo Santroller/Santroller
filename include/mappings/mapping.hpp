@@ -381,6 +381,13 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
 };
+class RockBandDrumsGamepadAxisMapping : public GamepadAxisMapping
+{
+public:
+    ~RockBandDrumsGamepadAxisMapping() {}
+    RockBandDrumsGamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    void update_xboxone(uint8_t *report);
+};
 class TaikoButtonMapping : public ButtonMapping
 {
 public:
@@ -629,6 +636,13 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
 };
+class RockBandGuitarGamepadAxisMapping : public GamepadAxisMapping
+{
+public:
+    ~RockBandGuitarGamepadAxisMapping() {}
+    RockBandGuitarGamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    void update_xboxone(uint8_t *report);
+};
 
 class GamepadButtonMapping : public ButtonMapping
 {
@@ -646,6 +660,13 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
     static const uint8_t dpad_bindings[15];
+};
+class GuitarHeroGuitarGamepadButtonMapping : public GamepadButtonMapping
+{
+public:
+    ~GuitarHeroGuitarGamepadButtonMapping() {}
+    GuitarHeroGuitarGamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    void update_ps2(uint8_t *report);
 };
 class KeyboardManiaButtonMapping : public ButtonMapping
 {

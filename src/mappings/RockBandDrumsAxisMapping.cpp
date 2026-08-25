@@ -462,3 +462,37 @@ void RockBandDrumsAxisMapping::update_xboxone(uint8_t *buf)
         break;
     }
 }
+RockBandDrumsGamepadAxisMapping::RockBandDrumsGamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile)
+{
+}
+void RockBandDrumsGamepadAxisMapping::update_xboxone(uint8_t *buf)
+{
+    if (m_centered)
+    {
+        return;
+    }
+    XboxOneRockBandDrums_Data_t *report = (XboxOneRockBandDrums_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadAxis)
+    {
+    case Gamepad_LeftStickX:
+        // report->joystickX = m_calibratedValue - 32768;
+        break;
+    case Gamepad_LeftStickY:
+        // report->joystickY = m_calibratedValue - 32768;
+        break;
+    case Gamepad_RightStickX:
+        // report->rightStickX = m_calibratedValue - 32768;
+        break;
+    case Gamepad_RightStickY:
+        // report->rightStickY = m_calibratedValue - 32768;
+        break;
+    case Gamepad_LeftTrigger:
+        // report->leftTrigger = m_calibratedValue >> 6;
+        break;
+    case Gamepad_RightTrigger:
+        // report->rightTrigger = m_calibratedValue >> 6;
+        break;
+    default:
+        break;
+    }
+}

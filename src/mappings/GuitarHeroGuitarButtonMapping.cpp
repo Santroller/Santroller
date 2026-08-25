@@ -86,19 +86,19 @@ void GuitarHeroGuitarButtonMapping::update_ps2(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
-        report->a |= m_lastValue;
+        report->green |= m_lastValue;
         break;
     case GuitarHeroGuitar_Red:
-        report->b |= m_lastValue;
+        report->red |= m_lastValue;
         break;
     case GuitarHeroGuitar_Yellow:
-        report->y |= m_lastValue;
+        report->yellow |= m_lastValue;
         break;
     case GuitarHeroGuitar_Blue:
-        report->x |= m_lastValue;
+        report->blue |= m_lastValue;
         break;
     case GuitarHeroGuitar_Orange:
-        report->leftShoulder |= m_lastValue;
+        report->orange |= m_lastValue;
         break;
     case GuitarHeroGuitar_Pedal:
         // TODO: get a ps2 wt guitar pcb and see if we can figure this one out
@@ -374,6 +374,65 @@ void GuitarHeroGuitarButtonMapping::update_xboxone(uint8_t *buf)
         break;
     case GuitarHeroGuitar_TapOrange:
         report->soloOrange |= m_lastValue;
+        break;
+    default:
+        break;
+    }
+}
+
+GuitarHeroGuitarGamepadButtonMapping::GuitarHeroGuitarGamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadButtonMapping(mapping, std::move(input), id, profile)
+{
+}
+void GuitarHeroGuitarGamepadButtonMapping::update_ps2(uint8_t *buf)
+{
+    PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadButton)
+    {
+    case Gamepad_A:
+        report->green |= m_lastValue;
+        break;
+    case Gamepad_B:
+        report->red |= m_lastValue;
+        break;
+    case Gamepad_X:
+        report->blue |= m_lastValue;
+        break;
+    case Gamepad_Y:
+        report->yellow |= m_lastValue;
+        break;
+    case Gamepad_Start:
+        report->start |= m_lastValue;
+        break;
+    case Gamepad_Back:
+        report->back |= m_lastValue;
+        break;
+    case Gamepad_Capture:
+        break;
+    case Gamepad_LeftShoulder:
+        report->leftShoulder |= m_lastValue;
+        break;
+    case Gamepad_RightShoulder:
+        report->rightShoulder |= m_lastValue;
+        break;
+    case Gamepad_LeftThumbClick:
+        report->leftThumbClick |= m_lastValue;
+        break;
+    case Gamepad_RightThumbClick:
+        report->rightThumbClick |= m_lastValue;
+        break;
+    case Gamepad_DpadUp:
+        report->psDpadUp |= m_lastValue;
+        report->dpadUp |= m_lastValue;
+        break;
+    case Gamepad_DpadDown:
+        report->psDpadDown |= m_lastValue;
+        report->dpadDown |= m_lastValue;
+        break;
+    case Gamepad_DpadLeft:
+        report->psDpadLeft |= m_lastValue;
+        break;
+    case Gamepad_DpadRight:
+        report->psDpadRight |= m_lastValue;
         break;
     default:
         break;

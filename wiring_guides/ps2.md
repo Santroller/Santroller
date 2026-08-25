@@ -30,7 +30,7 @@ Be careful that you don't ever provide 5v power to any pins on the PS2 Controlle
    [![pinout](/assets/images/ps2.png)](/assets/images/ps2.png) [![Adapter pinout](/assets/images/ps2-pinout.png)](/assets/images/ps2-pinout.png) [![Female Adapter pinout](/assets/images/ps2-pinout-female.png)](/assets/images/ps2-pinout-female.png)
   
   ```danger
-  Note that this image is of the plug on the controller, and not looking at the socket. Make sure you have your wiring in the right order.
+  Note that ones of these images is of the plug on the controller and the other is the socket. Make sure you have your wiring in the right order.
   ```
 
 

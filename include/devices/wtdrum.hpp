@@ -6,7 +6,7 @@ class WorldTourDrumDevice : public MidiDevice
 {
 public:
     ~WorldTourDrumDevice() {}
-    WorldTourDrumDevice(proto_WorldTourDrumDevice device, uint16_t id);
+    WorldTourDrumDevice(std::shared_ptr<WorldTourDrumDevice> prev, proto_WorldTourDrumDevice device, uint16_t id);
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);

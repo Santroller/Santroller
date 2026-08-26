@@ -57,6 +57,7 @@ private:
     UARTInterface interface;
     bool m_connected = false;
     bool m_updating = false;
+    bool m_raw = false;
     crkd_drum_t m_CrkdDrum;
     uint32_t m_lastPoll;
     uint32_t m_nextParam;

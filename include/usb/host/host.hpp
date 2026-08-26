@@ -13,7 +13,7 @@ class UsbHostInterface : public MidiDevice
 public:
     virtual ~UsbHostInterface() { printf("~UsbHostInterface()\r\n"); };
 
-    UsbHostInterface(uint8_t d_addr, uint8_t interface, uint16_t id) : MidiDevice(id, true), m_dev_addr(d_addr), m_interface(interface)
+    UsbHostInterface(uint8_t d_addr, uint8_t interface, uint16_t id) : MidiDevice(nullptr, id, true), m_dev_addr(d_addr), m_interface(interface)
     {
         memset(m_name, 0, sizeof(m_name));
     }

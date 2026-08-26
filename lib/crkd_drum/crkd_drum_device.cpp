@@ -182,23 +182,8 @@ void CrkdDrum::tick()
         m_CrkdDrum.cmd = 0;
         if (m_param_cmd == 0)
         {
-            if (HIDConfigDevice::tool_closed())
-            {
-                interface.send(ack, sizeof(ack));
-            }
-            else
-            {
-                uint8_t data[] = {0xA5, 0x55, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00};
-                update_crc(data, sizeof(data));
-                interface.send(data, sizeof(data));
-            }
+            interface.send(ack, sizeof(ack));
         }
-    }
-    if (m_connected && m_CrkdDrum.cmd == 0x55)
-    {
-        m_rawValues = m_CrkdDrum;
-        m_CrkdDrum.cmd = 0;
-        interface.send(ack, sizeof(ack));
     }
     if (m_connected && m_CrkdDrum.cmd >= 0x51 && m_CrkdDrum.cmd <= 0x54)
     {
@@ -216,6 +201,12 @@ void CrkdDrum::tick()
         update_crc(data, sizeof(data));
         interface.send(data, sizeof(data));
         m_param_reading = true;
+    }
+    if (m_raw != !HIDConfigDevice::tool_closed()) {
+        m_raw = !HIDConfigDevice::tool_closed();
+        uint8_t data[] = {0xA5, 0x55, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00};
+        update_crc(data, sizeof(data));
+        interface.send(data, sizeof(data));
     }
     if (m_connected && m_CrkdDrum.cmd == m_param_cmd && m_param_reading)
     {
@@ -241,8 +232,8 @@ void CrkdDrum::tick()
                 m_maxParams = m_CrkdDrum;
                 m_maxParams.cmd = 0x53;
                 m_CrkdDrum.cmd = 0;
-                m_param_cmd = 0;
-                return;
+                m_param_cmd = 0x64;
+                break;
             case 0x64:
                 m_holdTickParams = m_CrkdDrum;
                 m_holdTickParams.cmd = 0x54;

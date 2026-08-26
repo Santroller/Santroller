@@ -174,10 +174,10 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new ProtarNeckDevice(device.device.protarNeck, dev_id));
         break;
     case proto_Device_bhDrum_tag:
-        active_devices.emplace_back(new BandHeroDrumDevice(device.device.bhDrum, dev_id));
+        active_devices.emplace_back(new BandHeroDrumDevice(std::static_pointer_cast<BandHeroDrumDevice>(prevDevice), device.device.bhDrum, dev_id));
         break;
     case proto_Device_worldTourDrum_tag:
-        active_devices.emplace_back(new WorldTourDrumDevice(device.device.worldTourDrum, dev_id));
+        active_devices.emplace_back(new WorldTourDrumDevice(std::static_pointer_cast<WorldTourDrumDevice>(prevDevice), device.device.worldTourDrum, dev_id));
         break;
     case proto_Device_crazyGuitarNeck_tag:
         active_devices.emplace_back(new CrazyGuitarNeckDevice(device.device.crazyGuitarNeck, dev_id));
@@ -204,7 +204,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         active_devices.emplace_back(new DebugDevice(device.device.debug, dev_id));
         break;
     case proto_Device_midiSerial_tag:
-        active_devices.emplace_back(new MidiSerialDevice(device.device.midiSerial, dev_id));
+        active_devices.emplace_back(new MidiSerialDevice(std::static_pointer_cast<MidiSerialDevice>(prevDevice), device.device.midiSerial, dev_id));
         break;
     case proto_Device_ws2812_tag:
         active_devices.emplace_back(new WS2812Device(device.device.ws2812, dev_id));

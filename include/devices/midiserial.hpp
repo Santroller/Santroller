@@ -7,7 +7,7 @@ class MidiSerialDevice : public MidiDevice
 {
 public:
     ~MidiSerialDevice() {}
-    MidiSerialDevice(proto_SerialMidiDevice device, uint16_t id);
+    MidiSerialDevice(std::shared_ptr<MidiSerialDevice> prev, proto_SerialMidiDevice device, uint16_t id);
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);

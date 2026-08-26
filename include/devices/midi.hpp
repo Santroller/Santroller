@@ -30,7 +30,7 @@ class MidiDevice : public Device
     friend class MidiHost;
 
 public:
-    MidiDevice(uint16_t id, bool usbBased);
+    MidiDevice(std::shared_ptr<MidiDevice> prev, uint16_t id, bool usbBased);
     virtual ~MidiDevice();
     void processMidiData(uint8_t *data, uint16_t len);
     virtual void update(bool full_poll, bool send_events);

@@ -4,8 +4,7 @@
 #include "usb/host/hid_host.h"
 #include "main.hpp"
 #include "config.hpp"
-static std::map<std::tuple<uint16_t, uint16_t>, bool> seenChannels;
-MidiDevice::MidiDevice(uint16_t id, bool usbBased) : Device(id), drumMode(false), usbBased(usbBased)
+MidiDevice::MidiDevice(std::shared_ptr<MidiDevice> prev, uint16_t id, bool usbBased) : Device(id), drumMode(false), usbBased(usbBased)
 {
     tu_memclr(&ep_stream, sizeof(ep_stream));
     tu_edpt_stream_init(&ep_stream.rx, true, false, false,
@@ -20,6 +19,9 @@ MidiDevice::MidiDevice(uint16_t id, bool usbBased) : Device(id), drumMode(false)
     memset(midiStringVelocities, 0, sizeof(midiStringVelocities));
     memset(&midiButtons, 0, sizeof(midiButtons));
     memset(seenChannels, 0, sizeof(seenChannels));
+    if (prev) {
+        memcpy(seenChannels, prev->seenChannels, sizeof(prev->seenChannels));
+    }
     // default to neutral
     midiButtons.dpad = 8;
 }

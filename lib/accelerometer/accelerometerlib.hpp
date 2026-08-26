@@ -18,7 +18,7 @@
 #define LIS3DH_REG_WHOAMI 0x0F
 #define LIS3DH_REG_STATUS 0x27
 #define LIS3DH_REG_STATUS_AUX 0x07
-#define LIS3DH_REG_OUT 0x28 | 0x80  // Set auto increment
+#define LIS3DH_REG_OUT 0x28 | 0x80 // Set auto increment
 #define LIS3DH_REG_OUTADC1_L 0x08 | 0x80
 #define LIS3DH_REG_OUTADC1_H 0x09 | 0x80
 #define LIS3DH_REG_OUTADC2_L 0x0A | 0x80
@@ -36,13 +36,14 @@
 #define MPU6050_REG_ACCEL_CONFIG 0x1C
 #define MPU6050_REG_PWR_MGMT_1 0x6B
 #define MPU6050_ID 0x68
-#define MPU6050_ID2 0x98  // Common register-compatible clone
-#define MPU6050_ID3 0x70  // Register-compatible MPU-6500/clone ID
+#define MPU6050_ID2 0x98 // Common register-compatible clone
+#define MPU6050_ID3 0x70 // Register-compatible MPU-6500/clone ID
 #define MPU6050_PWR1_SLEEP (1U << 6)
 #define MPU6050_PWR1_CLKSEL_MASK 0x07
 #define MPU6050_PWR1_CLKSEL_XGYRO 0x01
 #define MPU6050_ACCEL_CONFIG_2G 0x00
-enum AccelerometerType {
+enum AccelerometerType
+{
     None,
     ADXL345,
     LIS3DH,
@@ -50,7 +51,8 @@ enum AccelerometerType {
     SC7A20,
     LIS3DSH
 };
-typedef enum {
+typedef enum
+{
     ACCEL_INIT,
     SC7A20_CTRL1_INIT,
     SC7A20_CTRL4_INIT,
@@ -69,43 +71,40 @@ typedef enum {
     ADXL_POLL,
     MPU_6050_POLL
 } accel_status_e;
-class Accelerometer: public I2CDMAInterface {
-   public:
+class Accelerometer : public I2CDMAInterface
+{
+public:
     Accelerometer(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock)
         : interface(block, sda, scl, clock) {};
     void tick();
     void begin();
     void end();
-    inline bool is_connected() {
+    inline bool is_connected()
+    {
         return status != ACCEL_INIT;
     }
     uint16_t lis3dhAdc[3];
     int32_t accel[3];
     void processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
 
-   private:
+private:
     I2CMasterInterface interface;
     AccelerometerType type;
     uint8_t address;
     uint8_t reg;
-    int currentPoll=0;
+    int currentPoll = 0;
     int failCount = 0;
     alarm_id_t restart_alarm_id;
     accel_status_e status = ACCEL_INIT;
-    uint8_t bufferTxLis1[1];
-    uint8_t bufferRxLis1[1];
-    uint8_t bufferTxLis2[1];
-    uint8_t bufferRxLis2[1];
-    uint8_t bufferTxAdxl[1];
-    uint8_t bufferRxAdxl[1];
-    uint8_t bufferTxAdxl2[1];
-    uint8_t bufferRxAdxl2[1];
-    uint8_t bufferTxMpu[1];
-    uint8_t bufferTxMpu2[1];
-    uint8_t bufferRxMpu[1];
-    uint8_t bufferRxMpu2[1];
     uint8_t bufferTx[32];
     uint8_t bufferRx[32];
+    uint8_t idResponseLis1;
+    uint8_t idResponseLis2;
+    uint8_t idResponseAdxl1;
+    uint8_t idResponseAdxl2;
+    uint8_t idResponseMpu1;
+    uint8_t idResponseMpu2;
+    uint8_t pollReg = 0;
     bool seen_response_lis3dh_1 = true;
     bool seen_response_lis3dh_2 = true;
     bool seen_response_adxl345_1 = true;

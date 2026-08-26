@@ -3,6 +3,10 @@
 #include "utils.h"
 #include "hardware/gpio.h"
 #include "emulation/usb/hid_device.h"
+static const uint8_t lis3dh_init = LIS3DH_REG_WHOAMI;
+static const uint8_t adxl345_init = ADXL345_REG_DEVID;
+static const uint8_t mpu6050_init = MPU6050_REG_WHO_AM_I;
+
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
     Accelerometer *inst = (Accelerometer *)user_data;
@@ -124,6 +128,7 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                 accel[1] = bufferRx[3] << 8 | bufferRx[2];
                 accel[2] = bufferRx[5] << 8 | bufferRx[4];
                 status = LIS3DH_POLL_AUX;
+                pollReg = LIS3DH_REG_OUTADC1_L;
                 restart_alarm_id = add_alarm_in_us(100, restart_handler, this, true);
                 break;
             case LIS3DH_POLL_AUX:
@@ -139,49 +144,16 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                     restart_alarm_id = add_alarm_in_us(5000, restart_handler, this, true);
                 }
                 status = LIS3DH_POLL;
+                pollReg = LIS3DH_REG_OUT;
                 break;
             case ACCEL_INIT:
                 switch (addr)
                 {
                 case LIS3DH_ADDRESS:
-                    // printf("found lis3dh 1\r\n");
-                    if (bufferRxLis1[0] == LIS3DH_ID)
-                    {
-                        address = addr;
-                        type = AccelerometerType::LIS3DH;
-                        status = LIS3DH_CTRL1_INIT;
-                        bufferTx[0] = LIS3DH_REG_CTRL1;
-                        bufferTx[1] = 0b01110111;
-                        interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
-                    }
-                    else if (bufferRxLis1[0] == SC7A20_ID)
-                    {
-                        address = addr;
-                        type = AccelerometerType::SC7A20;
-                        status = SC7A20_CTRL1_INIT;
-                        bufferTx[0] = LIS3DH_REG_CTRL1;
-                        bufferTx[1] = 0b01110111;
-                        interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
-                    }
-                    else if (bufferRxLis1[0] == LIS3DSH_ID)
-                    {
-                        address = addr;
-                        type = AccelerometerType::LIS3DSH;
-                        status = LIS3DSH_CTRL1_INIT;
-                        bufferTx[0] = LIS3DH_REG_CTRL1;
-                        bufferTx[1] = 0b01111111;
-                        interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
-                    }
-                    else
-                    {
-                        // printf("unrecognised sensor id: %02x\r\n", bufferRx[0]);
-                        type = AccelerometerType::None;
-                        restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
-                        return;
-                    }
-                    break;
                 case LIS3DH_ADDRESS_2:
-                    if (bufferRxLis2[0] == LIS3DH_ID)
+                {
+                    uint8_t idResponse = addr == LIS3DH_ADDRESS ? idResponseLis1 : idResponseLis2;
+                    if (idResponse == LIS3DH_ID)
                     {
                         address = addr;
                         type = AccelerometerType::LIS3DH;
@@ -190,7 +162,7 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                         bufferTx[1] = 0b01110111;
                         interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
                     }
-                    else if (bufferRxLis2[0] == SC7A20_ID)
+                    else if (idResponse == SC7A20_ID)
                     {
                         address = addr;
                         type = AccelerometerType::SC7A20;
@@ -199,7 +171,7 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                         bufferTx[1] = 0b01110111;
                         interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
                     }
-                    else if (bufferRxLis2[0] == LIS3DSH_ID)
+                    else if (idResponse == LIS3DSH_ID)
                     {
                         address = addr;
                         type = AccelerometerType::LIS3DSH;
@@ -210,34 +182,22 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                     }
                     else
                     {
-                        // printf("unrecognised sensor id: %02x\r\n", bufferRx[0]);
-                        restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
-                        return;
-                    }
-                    break;
-                case ADXL345_ADDRESS:
-                    // printf("found ADXL sensor at addr: %02x\r\n", addr);
-                    // printf("found ADXL sensor id: %02x\r\n", bufferRx[0]);
-                    if (bufferRxAdxl[0] != ADXL345_ID)
-                    {
-                        // printf("unrecognised sensor id: %02x\r\n", bufferRx[0]);
                         type = AccelerometerType::None;
                         restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
                         return;
                     }
-                    address = addr;
-                    type = AccelerometerType::ADXL345;
-                    status = ADXL_POWERCTL;
-                    bufferTx[0] = ADXL345_POWER_CTL;
-                    bufferTx[1] = 0x08;
-                    interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
                     break;
+                }
+                case ADXL345_ADDRESS:
                 case ADXL345_ADDRESS_2:
-                    // printf("found ADXL sensor at addr: %02x\r\n", addr);
-                    // printf("found ADXL sensor id: %02x\r\n", bufferRx[0]);
-                    if (bufferRxAdxl2[0] != ADXL345_ID)
+                    if (addr == ADXL345_ADDRESS && idResponseAdxl1 != ADXL345_ID)
                     {
-                        // printf("unrecognised sensor id: %02x\r\n", bufferRx[0]);
+                        type = AccelerometerType::None;
+                        restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                        return;
+                    }
+                    if (addr == ADXL345_ADDRESS_2 && idResponseAdxl2 != ADXL345_ID)
+                    {
                         type = AccelerometerType::None;
                         restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
                         return;
@@ -250,25 +210,15 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                     interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
                     break;
                 case MPU6050_ADDRESS:
-                    // printf("found MPU sensor id: %02x\r\n", bufferRx[0]);
-                    if (bufferRxMpu[0] != MPU6050_ID && bufferRxMpu[0] != MPU6050_ID2 && bufferRxMpu[0] != MPU6050_ID3)
+                case MPU6050_ADDRESS_2:
+                    if (addr == MPU6050_ADDRESS && (idResponseMpu1 != MPU6050_ID && idResponseMpu1 != MPU6050_ID2 && idResponseMpu1 != MPU6050_ID3))
                     {
-                        // printf("unrecognised sensor id: %02x\r\n", bufferRx[0]);
                         type = AccelerometerType::None;
                         restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
                         return;
                     }
-                    address = addr;
-                    type = AccelerometerType::MPU6050;
-                    status = MPU_6050_PWR_MGMT_1_READ;
-                    bufferTx[0] = MPU6050_REG_PWR_MGMT_1;
-                    interface.dmaWriteRead(addr, bufferTx, 1, nullptr, 0);
-                    break;
-                case MPU6050_ADDRESS_2:
-                    // printf("found MPU sensor id: %02x\r\n", bufferRx[0]);
-                    if (bufferRxMpu2[0] != MPU6050_ID && bufferRxMpu2[0] != MPU6050_ID2 && bufferRxMpu2[0] != MPU6050_ID3)
+                    if (addr == MPU6050_ADDRESS_2 && (idResponseMpu2 != MPU6050_ID && idResponseMpu2 != MPU6050_ID2 && idResponseMpu2 != MPU6050_ID3))
                     {
-                        // printf("unrecognised sensor id: %02x\r\n", bufferRx[0]);
                         type = AccelerometerType::None;
                         restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
                         return;
@@ -287,10 +237,6 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                 bufferTx[1] = 0x0B;
                 interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
                 break;
-            case ADXL_DATAFORMAT:
-                status = ADXL_POLL;
-                restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
-                break;
             case MPU_6050_PWR_MGMT_1_READ:
                 status = MPU_6050_PWR_MGMT_1_WRITE;
                 bufferTx[0] = MPU6050_REG_PWR_MGMT_1;
@@ -304,10 +250,6 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                 bufferTx[1] = MPU6050_ACCEL_CONFIG_2G;
                 interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
                 break;
-            case MPU_6050_ACCEL_CONFIG:
-                status = MPU_6050_POLL;
-                restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
-                break;
             case LIS3DH_CTRL1_INIT:
                 status = LIS3DH_CTRL4_INIT;
                 bufferTx[0] = LIS3DH_REG_CTRL4;
@@ -320,30 +262,39 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                 bufferTx[1] = 0x80;
                 interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
                 break;
-            case LIS3DH_TEMPCFG_INIT:
-                // printf("lis3dh ready!\r\n");
-                status = LIS3DH_POLL;
-                restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
-                break;
-            case LIS3DSH_CTRL1_INIT:
-                status = LIS_FAMILY_POLL;
-                // printf("lis3dsh ready!\r\n");
-                restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
-                break;
             case SC7A20_CTRL1_INIT:
                 status = SC7A20_CTRL4_INIT;
                 bufferTx[0] = LIS3DH_REG_CTRL4;
                 bufferTx[1] = 0x88;
                 interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
                 break;
+            case MPU_6050_ACCEL_CONFIG:
+                status = MPU_6050_POLL;
+                pollReg = MPU6050_REG_ACCEL_OUT;
+                restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                break;
+            case ADXL_DATAFORMAT:
+                status = ADXL_POLL;
+                pollReg = ADXL345_DATAX0;
+                restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                break;
+            case LIS3DH_TEMPCFG_INIT:
+                status = LIS3DH_POLL;
+                pollReg = LIS3DH_REG_OUT;
+                restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                break;
+            case LIS3DSH_CTRL1_INIT:
+                status = LIS_FAMILY_POLL;
+                pollReg = LIS3DH_REG_OUT;
+                restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                break;
             case SC7A20_CTRL4_INIT:
                 status = LIS_FAMILY_POLL;
-                // printf("sc7a20 ready!\r\n");
+                pollReg = LIS3DH_REG_OUT;
                 restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
                 break;
             }
         }
-        // add 200us delay between commands otherwise the extension is overwhelmed
         // If we dont see any sensors, wait a bit before looking again
         if (!abort_detected && status == ACCEL_INIT && seen_response_lis3dh_1 && seen_response_lis3dh_2 && seen_response_adxl345_1 && seen_response_adxl345_2 && seen_response_mpu6050_1 && seen_response_mpu6050_2)
         {
@@ -356,20 +307,10 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
     {
     case LIS3DH_POLL:
     case LIS_FAMILY_POLL:
-        bufferTx[0] = LIS3DH_REG_OUT;
-        interface.dmaWriteRead(address, bufferTx, 1, bufferRx, 6);
-        break;
     case LIS3DH_POLL_AUX:
-        bufferTx[0] = LIS3DH_REG_OUTADC1_L;
-        interface.dmaWriteRead(address, bufferTx, 1, bufferTx, 6);
-        break;
     case MPU_6050_POLL:
-        bufferTx[0] = MPU6050_REG_ACCEL_OUT;
-        interface.dmaWriteRead(address, bufferTx, 1, bufferRx, 6);
-        break;
     case ADXL_POLL:
-        bufferTx[0] = ADXL345_DATAX0;
-        interface.dmaWriteRead(address, bufferTx, 1, bufferRx, 6);
+        interface.dmaWriteRead(address, &pollReg, 1, bufferRx, 6);
         break;
     case ACCEL_INIT:
         if (seen_response_lis3dh_1 && seen_response_lis3dh_2 && seen_response_adxl345_1 && seen_response_adxl345_2 && seen_response_mpu6050_1 && seen_response_mpu6050_2)
@@ -380,22 +321,15 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
             seen_response_adxl345_2 = false;
             seen_response_mpu6050_1 = false;
             seen_response_mpu6050_2 = false;
-            bufferTxLis1[0] = LIS3DH_REG_WHOAMI;
-            interface.dmaWriteRead(LIS3DH_ADDRESS, bufferTxLis1, 1, bufferRxLis1, 1);
-            bufferTxLis2[0] = LIS3DH_REG_WHOAMI;
-            interface.dmaWriteRead(LIS3DH_ADDRESS_2, bufferTxLis2, 1, bufferRxLis2, 1);
-            bufferTxAdxl[0] = ADXL345_REG_DEVID;
-            interface.dmaWriteRead(ADXL345_ADDRESS, bufferTxAdxl, 1, bufferRxAdxl, 1);
-            bufferTxAdxl2[0] = ADXL345_REG_DEVID;
-            interface.dmaWriteRead(ADXL345_ADDRESS, bufferTxAdxl2, 1, bufferRxAdxl2, 1);
-            bufferTxMpu[0] = MPU6050_REG_WHO_AM_I;
-            interface.dmaWriteRead(MPU6050_ADDRESS, bufferTxMpu, 1, bufferRxMpu, 1);
-            bufferTxMpu2[0] = MPU6050_REG_WHO_AM_I;
-            interface.dmaWriteRead(MPU6050_ADDRESS_2, bufferTxMpu2, 1, bufferRxMpu2, 1);
+            interface.dmaWriteRead(LIS3DH_ADDRESS, &lis3dh_init, 1, &idResponseLis1, 1);
+            interface.dmaWriteRead(LIS3DH_ADDRESS_2, &lis3dh_init, 1, &idResponseLis2, 1);
+            interface.dmaWriteRead(ADXL345_ADDRESS, &adxl345_init, 1, &idResponseAdxl1, 1);
+            interface.dmaWriteRead(ADXL345_ADDRESS_2, &adxl345_init, 1, &idResponseAdxl2, 1);
+            interface.dmaWriteRead(MPU6050_ADDRESS, &mpu6050_init, 1, &idResponseMpu1, 1);
+            interface.dmaWriteRead(MPU6050_ADDRESS_2, &mpu6050_init, 1, &idResponseMpu2, 1);
         }
         break;
     default:
-        printf("unknown status: %d\r\n", status);
         break;
     }
 }

@@ -86,6 +86,72 @@ void CrkdDrumDevice::update(bool full_poll, bool send_events)
             }
         };
         HIDConfigDevice::send_event(event, true);
+        event = {
+            which_event : proto_Event_crkdDrum_tag,
+            event : {
+                crkdDrum : {
+                    m_id,
+                    type : CrkdDrumCalibrationType_HoldTick,
+                    data : {
+                        drum.m_holdTickParams.red_pad,
+                        drum.m_holdTickParams.yellow_pad,
+                        drum.m_holdTickParams.blue_pad,
+                        drum.m_holdTickParams.green_pad,
+                        drum.m_holdTickParams.orange_pad,
+                        drum.m_holdTickParams.yellow_cymbal,
+                        drum.m_holdTickParams.blue_cymbal,
+                        drum.m_holdTickParams.green_cymbal,
+                        drum.m_holdTickParams.kick1,
+                        drum.m_holdTickParams.kick2},
+                }
+            }
+        };
+        HIDConfigDevice::send_event(event, true);
+        event = {
+            which_event : proto_Event_crkdDrum_tag,
+            event : {
+                crkdDrum : {
+                    m_id,
+                    type : CrkdDrumCalibrationType_RawValue,
+                    data : {
+                        drum.m_rawValues.red_pad,
+                        drum.m_rawValues.yellow_pad,
+                        drum.m_rawValues.blue_pad,
+                        drum.m_rawValues.green_pad,
+                        drum.m_rawValues.orange_pad,
+                        drum.m_rawValues.yellow_cymbal,
+                        drum.m_rawValues.blue_cymbal,
+                        drum.m_rawValues.green_cymbal,
+                        drum.m_rawValues.kick1,
+                        drum.m_rawValues.kick2},
+                }
+            }
+        };
+        HIDConfigDevice::send_event(event, true);
+    }
+    if (memcmp(&drum.m_rawValuesPrev, &drum.m_rawValues, sizeof(drum.m_rawValues)) != 0) {
+        memcpy(&drum.m_rawValuesPrev, &drum.m_rawValues, sizeof(drum.m_rawValues));
+        proto_Event event = {
+            which_event : proto_Event_crkdDrum_tag,
+            event : {
+                crkdDrum : {
+                    m_id,
+                    type : CrkdDrumCalibrationType_RawValue,
+                    data : {
+                        drum.m_rawValues.red_pad,
+                        drum.m_rawValues.yellow_pad,
+                        drum.m_rawValues.blue_pad,
+                        drum.m_rawValues.green_pad,
+                        drum.m_rawValues.orange_pad,
+                        drum.m_rawValues.yellow_cymbal,
+                        drum.m_rawValues.blue_cymbal,
+                        drum.m_rawValues.green_cymbal,
+                        drum.m_rawValues.kick1,
+                        drum.m_rawValues.kick2},
+                }
+            }
+        };
+        HIDConfigDevice::send_event(event, true);
     }
 }
 

@@ -48,6 +48,9 @@ public:
     crkd_drum_t m_debounceParams;
     crkd_drum_t m_minParams;
     crkd_drum_t m_maxParams;
+    crkd_drum_t m_holdTickParams;
+    crkd_drum_t m_rawValues;
+    crkd_drum_t m_rawValuesPrev;
 
 private:
 
@@ -63,6 +66,7 @@ private:
     uint8_t m_param_cmd = 0;
     bool m_param_reading = false;
     bool m_debounce_updated = false;
+    bool m_hold_tick_updated = false;
     bool m_max_updated = false;
     bool m_min_updated = false;
 };

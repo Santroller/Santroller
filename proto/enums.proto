@@ -251,4 +251,6 @@ enum CrkdDrumCalibrationType {
   Debounce=1;
   Min=2;
   Max=3;
+  HoldTick=4;
+  RawValue=5;
 }

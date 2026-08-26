@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "emulation/usb/hid_device.h"
 #include "crkd_drum_device.hpp"
 #include "main.hpp"
 #include "utils.h"
@@ -62,6 +63,11 @@ void CrkdDrum::setParam(CrkdDrumCalibrationType type, CrkdDrumAxisType axisType,
     case CrkdDrumCalibrationType::Debounce:
         data = &m_debounceParams;
         break;
+    case CrkdDrumCalibrationType::HoldTick:
+        data = &m_holdTickParams;
+        break;
+    case CrkdDrumCalibrationType::RawValue:
+        return;
     default:
         return;
     }
@@ -106,6 +112,11 @@ void CrkdDrum::setParam(CrkdDrumCalibrationType type, CrkdDrumAxisType axisType,
     case CrkdDrumCalibrationType::Debounce:
         m_debounce_updated = true;
         break;
+    case CrkdDrumCalibrationType::HoldTick:
+        m_hold_tick_updated = true;
+        break;
+    case CrkdDrumCalibrationType::RawValue:
+        break;
     }
 }
 void CrkdDrum::tick()
@@ -149,6 +160,13 @@ void CrkdDrum::tick()
         m_debounce_updated = false;
         m_CrkdDrum.cmd = 0;
     }
+    if (m_connected && m_hold_tick_updated)
+    {
+        update_crc((uint8_t *)&m_holdTickParams, sizeof(crkd_drum_t));
+        interface.send((uint8_t *)&m_holdTickParams, sizeof(crkd_drum_t));
+        m_hold_tick_updated = false;
+        m_CrkdDrum.cmd = 0;
+    }
     if (m_connected && m_CrkdDrum.cmd == 0x50)
     {
         red_pad = m_CrkdDrum.red_pad;
@@ -164,15 +182,30 @@ void CrkdDrum::tick()
         m_CrkdDrum.cmd = 0;
         if (m_param_cmd == 0)
         {
-            interface.send(ack, sizeof(ack));
+            if (HIDConfigDevice::tool_closed())
+            {
+                interface.send(ack, sizeof(ack));
+            }
+            else
+            {
+                uint8_t data[] = {0xA5, 0x55, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00};
+                update_crc(data, sizeof(data));
+                interface.send(data, sizeof(data));
+            }
         }
     }
-    if (m_connected && m_CrkdDrum.cmd >= 0x51 && m_CrkdDrum.cmd <= 0x53)
+    if (m_connected && m_CrkdDrum.cmd == 0x55)
+    {
+        m_rawValues = m_CrkdDrum;
+        m_CrkdDrum.cmd = 0;
+        interface.send(ack, sizeof(ack));
+    }
+    if (m_connected && m_CrkdDrum.cmd >= 0x51 && m_CrkdDrum.cmd <= 0x54)
     {
         m_CrkdDrum.cmd = 0;
         interface.send(ack, sizeof(ack));
     }
-    if (m_connected && m_parameters_read && m_CrkdDrum.cmd >= 0x61 && m_CrkdDrum.cmd <= 0x63)
+    if (m_connected && m_parameters_read && m_CrkdDrum.cmd >= 0x61 && m_CrkdDrum.cmd <= 0x64)
     {
         m_CrkdDrum.cmd = 0;
         interface.send(ack, sizeof(ack));
@@ -207,6 +240,12 @@ void CrkdDrum::tick()
             case 0x63:
                 m_maxParams = m_CrkdDrum;
                 m_maxParams.cmd = 0x53;
+                m_CrkdDrum.cmd = 0;
+                m_param_cmd = 0;
+                return;
+            case 0x64:
+                m_holdTickParams = m_CrkdDrum;
+                m_holdTickParams.cmd = 0x54;
                 m_CrkdDrum.cmd = 0;
                 m_param_cmd = 0;
                 m_parameters_read = true;

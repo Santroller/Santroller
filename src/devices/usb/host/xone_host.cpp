@@ -115,7 +115,7 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
         }
         incomingXGIP->parse(m_ep_in_buf, xferred_bytes);
 
-       if (incomingXGIP->ackRequired())
+        if (incomingXGIP->ackRequired())
         {
             queue_xbone_report(incomingXGIP->generateAckPacket(), incomingXGIP->getPacketLength());
         }
@@ -323,27 +323,6 @@ bool XboxOneHost::tick_digital(proto_Output &type)
 }
 uint16_t XboxOneHost::tick_analog(proto_Output &type)
 {
-    if (type.which_mapping == proto_Output_gamepadAxis_tag)
-    {
-        auto data = (XboxOneGamepad_Data_t *)m_ep_in_buf;
-        switch (type.mapping.gamepadAxis)
-        {
-        case Gamepad_LeftTrigger:
-            return data->leftTrigger << 8;
-        case Gamepad_RightTrigger:
-            return data->rightTrigger << 8;
-        case Gamepad_LeftStickX:
-            return data->leftStickX + INT16_MAX;
-        case Gamepad_LeftStickY:
-            return data->leftStickY + INT16_MAX;
-        case Gamepad_RightStickX:
-            return data->rightStickX + INT16_MAX;
-        case Gamepad_RightStickY:
-            return data->rightStickY + INT16_MAX;
-        default:
-            return 0;
-        }
-    }
     switch (m_subtype)
     {
     case LiveGuitar:
@@ -378,6 +357,28 @@ uint16_t XboxOneHost::tick_analog(proto_Output &type)
             }
         }
     default:
+
+        if (type.which_mapping == proto_Output_gamepadAxis_tag)
+        {
+            auto data = (XboxOneGamepad_Data_t *)m_ep_in_buf;
+            switch (type.mapping.gamepadAxis)
+            {
+            case Gamepad_LeftTrigger:
+                return data->leftTrigger << 8;
+            case Gamepad_RightTrigger:
+                return data->rightTrigger << 8;
+            case Gamepad_LeftStickX:
+                return data->leftStickX + INT16_MAX;
+            case Gamepad_LeftStickY:
+                return data->leftStickY + INT16_MAX;
+            case Gamepad_RightStickX:
+                return data->rightStickX + INT16_MAX;
+            case Gamepad_RightStickY:
+                return data->rightStickY + INT16_MAX;
+            default:
+                return 0;
+            }
+        }
         break;
     }
     return 0;

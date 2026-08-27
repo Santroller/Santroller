@@ -36,6 +36,7 @@ enum endpoints_t {
 #define SWITCH_2_JOY_R_PID 0x2066
 #define SWITCH_2_JOY_L_PID 0x2067
 #define REDOCTANE_VID 0x12ba
+#define REDOCTANE_GAMES_VID 0x3651
 #define SONY_VID 0x054c
 #define SONY_DS3_PID 0x0268
 #define PS4_DS_PID_1 0x05c4

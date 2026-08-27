@@ -4426,7 +4426,8 @@ void receive_report_from_controller(uint8_t const *report, uint16_t len)
     {
         return;
     }
-    while (!ready_for_next_packet()) {
+    while (!ready_for_next_packet())
+    {
         tud_task();
     }
     send_report_to_pc(report, len);
@@ -4754,9 +4755,26 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
         }
 
         break;
+    case REDOCTANE_GAMES_VID:
+        switch (pid)
+        {
+        case CRKD_XB_MODE9:
+            type->console_type = XBOXONE;
+            type->sub_type = ROCK_BAND_GUITAR;
+            break;
+        case 0xD300:
+            type->console_type = XBOXONE;
+            type->sub_type = ROCK_BAND_DRUMS;
+            type->drum_type = DRUM_RB2;
+            break;
+        }
+        break;
     case CRKD_VID:
         switch (pid)
         {
+        case 0x2200:
+        case 0x8200:
+        case 0x8210:
         case CRKD_XB_MODE9:
             type->console_type = XBOXONE;
             type->sub_type = ROCK_BAND_GUITAR;

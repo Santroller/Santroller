@@ -20,6 +20,9 @@ static int8_t m_last_first_pin = -1;
 static bool m_last_dp_first = false;
 static volatile uint32_t m_devices_changed = 0;
 std::array<std::shared_ptr<UsbHostDevice>, 127> host_devices;
+void process_delayed_init() {
+    m_devices_changed = millis() + 500;
+}
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : UsbHostInterface(0, 0, id), m_device(device)
 {
     printf("UsbHostHardwareDevice: %p\r\n", this);
@@ -165,7 +168,10 @@ bool UsbHostInterface::set_config()
         tuh_descriptor_get_product_string(m_dev_addr, 0x0409, m_name, sizeof(m_name), process_product_string, (uintptr_t)this);
     }
     usbh_driver_set_config_complete(m_dev_addr, m_interface);
-    m_devices_changed = millis() + 500;
+    if (!m_delayed_init)
+    {
+        m_devices_changed = millis() + 500;
+    }
     return true;
 }
 

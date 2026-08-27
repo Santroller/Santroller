@@ -6,6 +6,7 @@
 #include "libmpr121.hpp"
 #include "usb/host/host.hpp"
 extern std::array<std::shared_ptr<UsbHostDevice>,127> host_devices;
+void process_delayed_init();
 class USBHostHardwareDevice : public UsbHostInterface
 {
 public:

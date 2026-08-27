@@ -33,6 +33,7 @@ static const preferred_type_mapping_t PREFERRED_TYPES[] = {
     {DisneyInfinity, "Disney.Xbox.Infinity.Base"}};
 XboxOneHost::XboxOneHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id)
 {
+    m_delayed_init = true;
     incomingXGIP = new XGIPProtocol();
     outgoingXGIP = new XGIPProtocol();
 }
@@ -152,7 +153,6 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
                                                                      { return intf.get() == this; }),
                                                       enumerating_usb_devices.end());
                         assignable_usb_devices.push_back(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
-                        reload();
                         found = true;
                         break;
                     }
@@ -174,6 +174,7 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
             outgoingXGIP->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, 1, 1, 0, 0);
             outgoingXGIP->setData(XBOXONE_RUMBLE_ON, sizeof(XBOXONE_RUMBLE_ON));
             queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
+            process_delayed_init();
         }
         if (incomingXGIP->getCommand() == GIP_INPUT_REPORT)
         {

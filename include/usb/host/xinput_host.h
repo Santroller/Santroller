@@ -9,9 +9,9 @@ public:
     XInputGamepadHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
     bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
-    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t* out_len);
-    bool tick_digital(proto_Output& type);
-    uint16_t tick_analog(proto_Output& type);
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
+    bool tick_digital(proto_Output &type);
+    uint16_t tick_analog(proto_Output &type);
 
 private:
     uint8_t m_ep_in;
@@ -27,9 +27,9 @@ public:
     XInputAudioHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
     bool set_config() { return true; }
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) { return true; }
-    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t* out_len);
-    bool tick_digital(proto_Output& type) { return false; }
-    uint16_t tick_analog(proto_Output& type) { return 0; }
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
+    bool tick_digital(proto_Output &type) { return false; }
+    uint16_t tick_analog(proto_Output &type) { return 0; }
 };
 class XInputModuleHost : public UsbHostInterface
 {
@@ -38,9 +38,9 @@ public:
     XInputModuleHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
     bool set_config() { return true; }
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) { return true; }
-    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t* out_len);
-    bool tick_digital(proto_Output& type) { return false; }
-    uint16_t tick_analog(proto_Output& type) { return 0; }
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
+    bool tick_digital(proto_Output &type) { return false; }
+    uint16_t tick_analog(proto_Output &type) { return 0; }
 };
 class XInputSecurityHost : public UsbHostInterface
 {
@@ -49,9 +49,9 @@ public:
     XInputSecurityHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
     bool set_config() { return true; }
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) { return true; }
-    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t* out_len);
-    bool tick_digital(proto_Output& type) { return false; }
-    uint16_t tick_analog(proto_Output& type) { return 0; }
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
+    bool tick_digital(proto_Output &type) { return false; }
+    uint16_t tick_analog(proto_Output &type) { return 0; }
 };
 
 class XInputBigButtonHost : public UsbHostInterface
@@ -61,9 +61,9 @@ public:
     XInputBigButtonHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
     bool set_config() { return true; }
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) { return true; }
-    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t* out_len);
-    bool tick_digital(proto_Output& type);
-    uint16_t tick_analog(proto_Output& type);
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
+    bool tick_digital(proto_Output &type);
+    uint16_t tick_analog(proto_Output &type);
 
 private:
     uint8_t m_ep_in;
@@ -76,12 +76,12 @@ class XInputWirelessGamepadHost : public UsbHostInterface
 {
 public:
     ~XInputWirelessGamepadHost() {}
-    XInputWirelessGamepadHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
+    XInputWirelessGamepadHost(uint8_t dev_addr, uint8_t interface, uint16_t id);
     bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
-    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t* out_len);
-    bool tick_digital(proto_Output& type);
-    uint16_t tick_analog(proto_Output& type);
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
+    bool tick_digital(proto_Output &type);
+    uint16_t tick_analog(proto_Output &type);
 
 private:
     uint8_t m_ep_in;
@@ -101,9 +101,9 @@ public:
     XInputWirelessAudioHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
     bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
-    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t* out_len);
-    bool tick_digital(proto_Output& type);
-    uint16_t tick_analog(proto_Output& type);
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
+    bool tick_digital(proto_Output &type);
+    uint16_t tick_analog(proto_Output &type);
 
 private:
     uint8_t m_ep_in;

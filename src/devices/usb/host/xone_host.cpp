@@ -106,7 +106,6 @@ void XboxOneHost::queue_xbone_report(void *report, uint16_t report_size)
 
 bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
-    printf("ep_addr: %02x, result: %d, xferred_bytes: %d\r\n", ep_addr, result, xferred_bytes);
     if (ep_addr & 0x80 && result != XFER_RESULT_FAILED)
     {
         if (xferred_bytes == 0)
@@ -116,10 +115,8 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
         }
         incomingXGIP->parse(m_ep_in_buf, xferred_bytes);
 
-        printf("cmd: %02x %02x %02x %02x\r\n", incomingXGIP->getCommand(), incomingXGIP->ackRequired(), incomingXGIP->endOfChunk(), xferred_bytes);
-        if (incomingXGIP->ackRequired())
+       if (incomingXGIP->ackRequired())
         {
-            printf("send ack!\r\n");
             queue_xbone_report(incomingXGIP->generateAckPacket(), incomingXGIP->getPacketLength());
         }
         if (incomingXGIP->getCommand() == GIP_DEVICE_DESCRIPTOR && incomingXGIP->endOfChunk())

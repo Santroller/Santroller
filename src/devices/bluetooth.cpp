@@ -3,6 +3,9 @@
 #include "events.pb.h"
 #include "emulation/usb/hid_device.h"
 #include "config.hpp"
+#include "devices/bt/bt_classic_rx.hpp"
+#include "devices/bt/ble_rx.hpp"
+#include "main.hpp"
 static bool bluetooth_initted = false;
 static bool init_done = true;
 BluetoothDevice::BluetoothDevice(proto_BluetoothDevice device, uint16_t id) : Device(id), m_device(device)
@@ -20,6 +23,8 @@ void BluetoothDevice::begin()
     {
         isPicoW = true;
         printf("bt device init success\r\n");
+        ble_main();
+        btstack_classic_main();
     }
     else
     {
@@ -50,4 +55,12 @@ void BluetoothDevice::update(bool full_poll, bool send_events)
 bool BluetoothDevice::using_pin(uint8_t pin)
 {
     return pin == 23 || pin == 24 || pin == 25 || pin == 29;
+}
+
+void BluetoothDevice::handle_command(proto_Command command)
+{
+    if (command.which_command == proto_Command_scan_tag) {
+        btc_start_scan();
+        ble_start_scan();
+    }
 }

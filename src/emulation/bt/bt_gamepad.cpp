@@ -12,6 +12,7 @@
 #include "emulation/bt/bt_descriptors.h"
 #include "emulation/bt/bt_gamepad.h"
 #include "btstack.h"
+#include "main.hpp"
 #include "utils.h"
 #define SIZE_OF_BD_ADDRESS 18
 // static btstack_timer_source_t heartbeat;
@@ -21,7 +22,6 @@ static uint8_t battery = 100;
 static hci_con_handle_t con_handle = HCI_CON_HANDLE_INVALID;
 static uint8_t protocol_mode = 1;
 static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
-bool isPicoW = false;
 // Appearance HID - Keyboard (Category 15, Sub-Category 1)
 #define APPEARANCE_KEYBOARD 0xC1
 // Appearance HID - Gamepad (Category 15, Sub-Category 4)
@@ -199,9 +199,6 @@ void BTGamepadDevice::initialize()
 
     // register for HIDS
     hids_device_register_packet_handler(packet_handler);
-
-    hci_power_control(HCI_POWER_ON);
-    printf("bt init done\r\n");
 
     memset(&initialReport, 0, sizeof(initialReport));
     switch (subtype)

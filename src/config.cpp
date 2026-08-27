@@ -77,6 +77,7 @@
 #include <memory>
 #include <algorithm>
 #include "utils.h"
+#include "hci.h"
 std::vector<std::shared_ptr<Instance>> instances;
 std::vector<std::shared_ptr<Instance>> active_instances;
 std::unordered_map<uint32_t, std::shared_ptr<Profile>> all_profiles;
@@ -556,6 +557,10 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     switch (mapping.mapping.which_mapping)
     {
     case proto_Output_gamepadAxis_tag:
+        if (profile->subtype == Gamepad && mode == ModePs3) {
+            profile->mappings.emplace_back(new PS3GamepadAxisMapping(mapping, std::move(input), mapping_id, profile));
+            break;
+        }
         // XB1 guitars and drums don't use the same report format as gamepads, so they need special handling
         if (profile->subtype == GuitarHeroGuitar || profile->subtype == RockBandGuitar)
         {
@@ -586,6 +591,11 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         if (profile->subtype == GuitarHeroGuitar)
         {
             profile->mappings.emplace_back(new GuitarHeroGuitarGamepadButtonMapping(mapping, std::move(input), mapping_id, profile));
+            break;
+        }
+        // PS3 gamepads use a totally different report format
+        if (profile->subtype == Gamepad && mode == ModePs3) {
+            profile->mappings.emplace_back(new PS3GamepadButtonMapping(mapping, std::move(input), mapping_id, profile));
             break;
         }
         profile->mappings.emplace_back(new GamepadButtonMapping(mapping, std::move(input), mapping_id, profile));
@@ -1037,6 +1047,13 @@ bool decode_toggle_input_states(pb_istream_t *stream, const pb_field_t *field, v
     toggle_input_states[proto_toggle.id] = proto_toggle.state;
     return ret;
 }
+bool decode_bluetooth_states(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    proto_BluetoothPairingState proto_bluetooth;
+    auto ret = pb_decode(stream, proto_BluetoothPairingState_fields, &proto_bluetooth);
+    
+    return ret;
+}
 bool encode_toggle_input_states(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
     proto_ToggleInputState proto_toggle;
@@ -1059,6 +1076,7 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
     proto_AuxConfigBlock block proto_AuxConfigBlock_init_zero;
     block.states.funcs.decode = decode_cycle_input_states;
     block.toggleStates.funcs.decode = decode_toggle_input_states;
+    block.bluetoothStates.funcs.decode = decode_bluetooth_states;
     pb_decode(&auxInputStream, proto_AuxConfigBlock_fields, &block);
     // We are now sufficiently confident that the data is valid so we run the deserialization
     // load just the current profile to begin with
@@ -1154,6 +1172,12 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
     // the profile assignments changed, so reload the entire device
     if (previous_profiles.size() > 0 || modeChanged || prev_types.size() > 0)
     {
+
+        if (isPicoW)
+        {
+            hci_power_control(HCI_POWER_OFF);
+            printf("bt init done\r\n");
+        }
         HIDConfigDevice::reset_keepalive();
         seenPs4 = false;
         seenWindowsXb1 = false;
@@ -1165,6 +1189,11 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
             .role = TUSB_ROLE_DEVICE,
             .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};
         tud_rhport_init(TUD_OPT_RHPORT, &rh_init);
+        if (isPicoW)
+        {
+            hci_power_control(HCI_POWER_ON);
+            printf("bt init done\r\n");
+        }
     }
     return ret;
 }

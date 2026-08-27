@@ -1,7 +1,6 @@
 #pragma once
 #include "base.hpp"
 #include "device.pb.h"
-extern bool isPicoW;
 class BluetoothDevice : public Device
 {
 public:
@@ -11,6 +10,7 @@ public:
     void end(bool full);
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
+    void handle_command(proto_Command command);
 
 private:
     proto_BluetoothDevice m_device;

@@ -286,65 +286,6 @@ void GamepadButtonMapping::update_ps2(uint8_t *buf)
 }
 void GamepadButtonMapping::update_ps3(uint8_t *buf)
 {
-    if (mode == ModePs3)
-    {
-        // TODO: pressures
-        PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;
-        switch (m_mapping.mapping.mapping.gamepadButton)
-        {
-        case Gamepad_A:
-            report->a |= m_lastValue;
-            break;
-        case Gamepad_B:
-            report->b |= m_lastValue;
-            break;
-        case Gamepad_X:
-            report->x |= m_lastValue;
-            break;
-        case Gamepad_Y:
-            report->y |= m_lastValue;
-            break;
-        case Gamepad_Start:
-            report->start |= m_lastValue;
-            break;
-        case Gamepad_Back:
-            report->back |= m_lastValue;
-            break;
-        case Gamepad_Guide:
-            report->guide |= m_lastValue;
-            break;
-        case Gamepad_Capture:
-            report->capture |= m_lastValue;
-            break;
-        case Gamepad_LeftShoulder:
-            report->leftShoulder |= m_lastValue;
-            break;
-        case Gamepad_RightShoulder:
-            report->rightShoulder |= m_lastValue;
-            break;
-        case Gamepad_LeftThumbClick:
-            report->leftThumbClick |= m_lastValue;
-            break;
-        case Gamepad_RightThumbClick:
-            report->rightThumbClick |= m_lastValue;
-            break;
-        case Gamepad_DpadUp:
-            report->dpadUp |= m_lastValue;
-            break;
-        case Gamepad_DpadDown:
-            report->dpadDown |= m_lastValue;
-            break;
-        case Gamepad_DpadLeft:
-            report->dpadLeft |= m_lastValue;
-            break;
-        case Gamepad_DpadRight:
-            report->dpadRight |= m_lastValue;
-            break;
-        default:
-            break;
-        }
-        return;
-    }
     PS3ThirdPartyGamepad_Data_t *report = (PS3ThirdPartyGamepad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.gamepadButton)
     {
@@ -400,6 +341,7 @@ void GamepadButtonMapping::update_ps3(uint8_t *buf)
         break;
     }
 }
+
 void GamepadButtonMapping::update_ps4(uint8_t *buf)
 {
     PS4Gamepad_Data_t *report = (PS4Gamepad_Data_t *)buf;
@@ -682,4 +624,66 @@ void GamepadButtonMapping::update_xboxone(uint8_t *buf)
     default:
         break;
     }
+}
+PS3GamepadButtonMapping::PS3GamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadButtonMapping(mapping, std::move(input), id, profile)
+{
+}
+void PS3GamepadButtonMapping::update_ps3(uint8_t *buf)
+{
+    // TODO: pressures
+    PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadButton)
+    {
+    case Gamepad_A:
+        report->a |= m_lastValue;
+        break;
+    case Gamepad_B:
+        report->b |= m_lastValue;
+        break;
+    case Gamepad_X:
+        report->x |= m_lastValue;
+        break;
+    case Gamepad_Y:
+        report->y |= m_lastValue;
+        break;
+    case Gamepad_Start:
+        report->start |= m_lastValue;
+        break;
+    case Gamepad_Back:
+        report->back |= m_lastValue;
+        break;
+    case Gamepad_Guide:
+        report->guide |= m_lastValue;
+        break;
+    case Gamepad_Capture:
+        report->capture |= m_lastValue;
+        break;
+    case Gamepad_LeftShoulder:
+        report->leftShoulder |= m_lastValue;
+        break;
+    case Gamepad_RightShoulder:
+        report->rightShoulder |= m_lastValue;
+        break;
+    case Gamepad_LeftThumbClick:
+        report->leftThumbClick |= m_lastValue;
+        break;
+    case Gamepad_RightThumbClick:
+        report->rightThumbClick |= m_lastValue;
+        break;
+    case Gamepad_DpadUp:
+        report->dpadUp |= m_lastValue;
+        break;
+    case Gamepad_DpadDown:
+        report->dpadDown |= m_lastValue;
+        break;
+    case Gamepad_DpadLeft:
+        report->dpadLeft |= m_lastValue;
+        break;
+    case Gamepad_DpadRight:
+        report->dpadRight |= m_lastValue;
+        break;
+    default:
+        break;
+    }
+    return;
 }

@@ -193,6 +193,8 @@ add_executable(
   src/mappings/DrumManiaButtonMapping.cpp
   src/mappings/SDVXAxisMapping.cpp
   src/mappings/SDVXButtonMapping.cpp
+  src/devices/bt/ble_rx.cpp
+  src/devices/bt/bt_classic_rx.cpp
   src/devices/usb.cpp
   src/devices/wii.cpp
   src/devices/ps2.cpp

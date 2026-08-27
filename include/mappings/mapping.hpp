@@ -93,6 +93,13 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
 };
+class PS3GamepadAxisMapping : public GamepadAxisMapping
+{
+public:
+    ~PS3GamepadAxisMapping() {}
+    PS3GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    void update_ps3(uint8_t *report);
+};
 class DJMaxTurntableButtonMapping : public ButtonMapping
 {
 public:
@@ -660,6 +667,13 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
     static const uint8_t dpad_bindings[15];
+};
+class PS3GamepadButtonMapping : public GamepadButtonMapping
+{
+public:
+    ~PS3GamepadButtonMapping() {}
+    PS3GamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    void update_ps3(uint8_t *report);
 };
 class GuitarHeroGuitarGamepadButtonMapping : public GamepadButtonMapping
 {

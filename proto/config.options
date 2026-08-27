@@ -3,3 +3,5 @@ proto.Profile.opts type:FT_CALLBACK
 proto.RGBLedDevice.activeLed max_count:255 int_size:IS_8
 proto.STP16CPCLedDevice.activeLed max_count:255 int_size:IS_8
 proto.ProfileAssignmentInfo.* submsg_callback:true
+proto.BluetoothPairingState.name max_size:32
+proto.BluetoothPairingState.macAddress max_size:6 fixed_length:1

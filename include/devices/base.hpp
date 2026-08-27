@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include "config.pb.h"
+#include "commands.pb.h"
 #include <stdio.h>
 class Device
 {
@@ -19,6 +20,7 @@ public:
     virtual bool has_midi_channel(uint8_t channel);
     virtual bool using_pin(uint8_t pin) = 0;
     virtual void rescan(bool first);
+    virtual void handle_command(proto_Command command) {};
     uint16_t m_id;
     bool still_connected = false;
 

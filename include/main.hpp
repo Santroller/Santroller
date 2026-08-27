@@ -11,3 +11,4 @@ extern bool seenWindowsXb1;
 extern bool seenOsDescriptorRead;
 extern bool seenReadAnyDeviceString;
 extern bool seenHidDescriptorRead;
+extern bool isPicoW;

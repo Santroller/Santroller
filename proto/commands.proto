@@ -20,6 +20,9 @@ message RebootCommand {
 message DisconnectCommand {
 
 }
+message ScanCommand {
+
+}
 message CrkdCalibrationUpdateCommand {
   required uint32 id = 1;
   required CrkdDrumCalibrationType type = 2;
@@ -33,5 +36,6 @@ message Command {
         RebootCommand reboot = 3;
         CrkdCalibrationUpdateCommand crkdDrum = 4;
         DisconnectCommand disconnect = 5;
+        ScanCommand scan = 6;
     }
 }

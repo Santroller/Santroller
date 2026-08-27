@@ -205,7 +205,15 @@ message ToggleInputState {
   required bool state = 2;
 }
 
+message BluetoothPairingState {
+  required int32 id = 1;
+  required bytes macAddress = 2;
+  required string name = 3;
+  required bool ble = 4;
+}
+
 message AuxConfigBlock {
   repeated CyclingInputState states = 1;
   repeated ToggleInputState toggleStates = 2;
+  repeated BluetoothPairingState bluetoothStates = 3;
 }

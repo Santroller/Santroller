@@ -44,6 +44,7 @@
 #include "usb/usb_descriptors.h"
 #include <pico_fota_bootloader/core.h>
 #include "ring_buffer.h"
+#include "hci.h"
 void hid_task(void);
 uint32_t timeSinceMode = millis();
 bool seenPs4 = false;
@@ -52,6 +53,7 @@ bool seenOsDescriptorRead = false;
 bool seenReadAnyDeviceString = false;
 bool seenHidDescriptorRead = false;
 uint32_t reinit = 0;
+bool isPicoW = false;
 bool reloading = false;
 proto_Event console_event = {which_event : proto_Event_console_tag, event : {console : {data : {}}}};
 ring_buffer_t console_buf;
@@ -212,7 +214,13 @@ int main()
         .role = TUSB_ROLE_DEVICE,
         .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};
     tud_rhport_init(TUD_OPT_RHPORT, &rh_init);
+    if (isPicoW)
+    {
+        hci_power_control(HCI_POWER_ON);
+        printf("bt init done\r\n");
+    }
     timeSinceMode = millis();
+    
     while (1)
     {
         tud_task(); // tinyusb device task

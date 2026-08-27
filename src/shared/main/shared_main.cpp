@@ -659,13 +659,6 @@ uint8_t tick_xbox_one()
         return sizeof(xb1_descriptor_end);
     }
     case Auth:
-        if (data_from_controller_size)
-        {
-            uint8_t size = data_from_controller_size;
-            data_from_controller_size = 0;
-            memcpy(&combined_report, data_from_controller, size);
-            return size;
-        }
         return 0;
     case Ready:
         return 0;
@@ -3735,7 +3728,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 
 #if DEVICE_TYPE_IS_GUITAR
-        
+
         if (output_console_type == SWITCH)
         {
             SwitchFestivalGuitar_Data_t *report = (SwitchFestivalGuitar_Data_t *)report_data;
@@ -3747,13 +3740,16 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             report->dpadLeft = false;
             report->back = false;
             report->whammy = 255 - report->whammy;
-            if (dpadLeft) {
+            if (dpadLeft)
+            {
                 report->back = true;
             }
-            if (back) {
+            if (back)
+            {
                 report->dpadLeft = true;
             }
-            if (report->tilt < 0x190) {
+            if (report->tilt < 0x190)
+            {
                 report->dpadLeft = true;
             }
             asm volatile("" ::
@@ -4062,23 +4058,10 @@ bool tick_usb(void)
 #endif
     if (!ready)
         return 0;
-#if USB_HOST_STACK
-    if (data_from_console_size)
-    {
-        USB_Device_Type_t type = get_device_address_for(XBOXONE);
-        send_report_to_controller(type.dev_addr, type.instance, data_from_console, data_from_console_size);
-        data_from_console_size = 0;
-    }
-#endif
     // If we have something pending to send to the xbox one controller, send it
     if (consoleType == XBOXONE && xbox_one_state != Ready)
     {
         size = tick_xbox_one();
-        if (!size)
-        {
-            // We don't want the controller ticked due to usb being stated as "not ready"
-            return true;
-        }
     }
     // #if DEVICE_TYPE == SKYLANDERS
     //     if (consoleType == XBOX360) {
@@ -4422,13 +4405,12 @@ void device_reset(void)
     }
 #endif
     xbox_one_state = Announce;
-    data_from_controller_size = 0;
-    data_from_console_size = 0;
     hid_sequence_number = 1;
     report_sequence_number = 1;
 }
 
 uint8_t last_len = 0;
+#include <tusb.h>
 void receive_report_from_controller(uint8_t const *report, uint16_t len)
 {
     if (report[0] == GIP_INPUT_REPORT)
@@ -4444,8 +4426,10 @@ void receive_report_from_controller(uint8_t const *report, uint16_t len)
     {
         return;
     }
-    data_from_controller_size = len;
-    memcpy(data_from_controller, report, len);
+    while (!ready_for_next_packet()) {
+        tud_task();
+    }
+    send_report_to_pc(report, len);
 }
 
 void xinput_controller_connected(uint16_t vid, uint16_t pid)
@@ -4703,7 +4687,8 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
         case PS3_MUSTANG_MPA_PID:
             type->console_type = PS3;
             type->sub_type = ROCK_BAND_PRO_GUITAR_MUSTANG;
-            if (DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != type->sub_type) {
+            if (DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != type->sub_type)
+            {
                 proGuitarType = type->sub_type;
                 reset_usb();
             }
@@ -4711,7 +4696,8 @@ void get_usb_device_type_for(uint16_t vid, uint16_t pid, uint16_t version, USB_D
         case PS3_SQUIRE_MPA_PID:
             type->console_type = PS3;
             type->sub_type = ROCK_BAND_PRO_GUITAR_SQUIRE;
-            if (DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != type->sub_type) {
+            if (DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != type->sub_type)
+            {
                 proGuitarType = type->sub_type;
                 reset_usb();
             }

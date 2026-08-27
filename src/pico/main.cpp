@@ -359,12 +359,13 @@ USB_Device_Type_t get_device_address_for(uint8_t deviceType)
     return {0};
 }
 #endif
-void send_report_to_controller(uint8_t dev_addr, uint8_t instance, const uint8_t *report, uint8_t len)
+bool send_report_to_controller(uint8_t dev_addr, uint8_t instance, const uint8_t *report, uint8_t len)
 {
     if (dev_addr && tuh_xinput_mounted(dev_addr, instance))
     {
-        tuh_xinput_send_report(dev_addr, instance, report, len);
+        return tuh_xinput_send_report(dev_addr, instance, report, len);
     }
+    return false;
 }
 extern "C" void tud_mount_cb(void)
 {

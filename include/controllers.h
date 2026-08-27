@@ -8,11 +8,6 @@ extern Xbox_One_State_t xbox_one_state;
 extern Xbox_360_State_t xbox_360_state;
 extern long reset_after_360;
 
-// Used for passing authentication data between the console and authentication controller
-extern uint8_t data_from_console_size;
-extern uint8_t data_from_controller_size;
-extern uint8_t data_from_console[64];
-extern uint8_t data_from_controller[64];
 
 // Sequence numbers used for sending reports to the xbox one
 extern uint8_t report_sequence_number;

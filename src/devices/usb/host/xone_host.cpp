@@ -39,6 +39,7 @@ XboxOneHost::XboxOneHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : Usb
 
 std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
+    printf("XboxOneHost::open\r\n");
     uint32_t size = desc_itf->bLength;
     TU_VERIFY(desc_itf->bInterfaceSubClass == 0x47 &&
                   desc_itf->bInterfaceProtocol == 0xD0 && desc_itf->bAlternateSetting == 0,
@@ -206,7 +207,7 @@ bool XboxOneHost::tick_digital(proto_Output &type)
 {
     if (type.which_mapping == proto_Output_gamepadButton_tag)
     {
-        auto data = (XboxOneGamepad_Data_t *)m_ep_in_buf;
+        auto data = (XboxOneGamepad_Data_t *)m_last_inputs;
         switch (type.mapping.gamepadButton)
         {
         case Gamepad_A:
@@ -248,7 +249,7 @@ bool XboxOneHost::tick_digital(proto_Output &type)
     case RockBandGuitar:
         if (type.which_mapping == proto_Output_rbButton_tag)
         {
-            auto data = (XboxOneRockBandGuitar_Data_t *)m_ep_in_buf;
+            auto data = (XboxOneRockBandGuitar_Data_t *)m_last_inputs;
             switch (type.mapping.rbButton)
             {
             case RockBandGuitar_Green:
@@ -280,7 +281,7 @@ bool XboxOneHost::tick_digital(proto_Output &type)
 
         if (type.which_mapping == proto_Output_rbDrumButton_tag)
         {
-            auto data = (XboxOneRockBandDrums_Data_t *)m_ep_in_buf;
+            auto data = (XboxOneRockBandDrums_Data_t *)m_last_inputs;
             switch (type.mapping.rbDrumButton)
             {
             default:
@@ -291,7 +292,7 @@ bool XboxOneHost::tick_digital(proto_Output &type)
     case LiveGuitar:
         if (type.which_mapping == proto_Output_ghlButton_tag)
         {
-            auto data = (XboxOneGHLGuitar_Data_t *)m_ep_in_buf;
+            auto data = (XboxOneGHLGuitar_Data_t *)m_last_inputs;
             switch (type.mapping.ghlButton)
             {
             case GuitarHeroLiveGuitar_Black1:
@@ -328,7 +329,7 @@ uint16_t XboxOneHost::tick_analog(proto_Output &type)
     case LiveGuitar:
         if (type.which_mapping == proto_Output_ghlAxis_tag)
         {
-            auto data = (XboxOneGHLGuitar_Data_t *)m_ep_in_buf;
+            auto data = (XboxOneGHLGuitar_Data_t *)m_last_inputs;
             switch (type.mapping.ghlAxis)
             {
             case GuitarHeroLiveGuitar_Whammy:
@@ -343,7 +344,7 @@ uint16_t XboxOneHost::tick_analog(proto_Output &type)
     case RockBandGuitar:
         if (type.which_mapping == proto_Output_rbAxis_tag)
         {
-            auto data = (XboxOneRockBandGuitar_Data_t *)m_ep_in_buf;
+            auto data = (XboxOneRockBandGuitar_Data_t *)m_last_inputs;
             switch (type.mapping.rbAxis)
             {
             case RockBandGuitar_Whammy:
@@ -357,10 +358,9 @@ uint16_t XboxOneHost::tick_analog(proto_Output &type)
             }
         }
     default:
-
         if (type.which_mapping == proto_Output_gamepadAxis_tag)
         {
-            auto data = (XboxOneGamepad_Data_t *)m_ep_in_buf;
+            auto data = (XboxOneGamepad_Data_t *)m_last_inputs;
             switch (type.mapping.gamepadAxis)
             {
             case Gamepad_LeftTrigger:

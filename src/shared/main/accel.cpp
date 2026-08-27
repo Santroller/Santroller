@@ -107,6 +107,7 @@ void init_accel()
 }
 void tick_accel()
 {
+    int16_t raw[3];
     if (!accel_found)
     {
         for (int i = 0; i < 3; i++)
@@ -116,7 +117,6 @@ void tick_accel()
         init_accel();
         return;
     }
-    int16_t raw[3];
     if (type == LIS3DH)
     {
         accel_found = twi_readFromPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_OUT, 6, (uint8_t *)raw);

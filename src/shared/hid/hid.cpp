@@ -309,6 +309,11 @@ void handle_player_leds(uint8_t player)
     }
 #endif
 }
+void reset_player_leds(void) {
+    uint8_t player = 0;
+    current_player = 0xFF;
+    HANDLE_PLAYER_LED;
+}
 // PS3 controllers and other controllers use different LED bitmasks
 #if DEVICE_TYPE == GAMEPAD
 void handle_player_leds_ps3(uint8_t player_mask)
@@ -387,6 +392,16 @@ void handle_lightbar_leds(uint8_t red, uint8_t green, uint8_t blue)
         }
     }
 }
+#if BLUETOOTH_RX
+void send_player_leds_bt(void)
+{
+    if (current_player != 0xFF)
+    {
+        uint8_t player_leds_report[8] = {PS3_REPORT_ID, PS3_RUMBLE_ID, 0, (uint8_t)(1 << (current_player - 1)), 0, 0, 0, 0};
+        bt_set_report(player_leds_report, sizeof(player_leds_report), 1, 1);
+    }
+}
+#endif
 
 void handle_rumble(uint8_t rumble_left, uint8_t rumble_right)
 {
@@ -713,9 +728,7 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             if (player)
             {
                 handle_player_leds(player);
-                data_hid[1] = PS3_RUMBLE_ID;
-                data_hid[3] = 1 << player;
-                bt_set_report(data_hid, 8, reportType, report_id);
+                send_player_leds_bt();
             }
         }
         else if (id == XBOX_RUMBLE_ID)
@@ -746,6 +759,10 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
             // Pass combined reports directly over bt
         }
         else if (id == SANTROLLER_LED_EXPANDED_ID || (id == PS3_REPORT_ID && data[1] == SANTROLLER_LED_EXPANDED_ID))
+        {
+            bt_set_report(data, len, reportType, report_id);
+        }
+        else if (id == PS3_REPORT_ID && data[1] == 0x08) // PS3s apparently send an 8 byte Player ID report, and that length is in data[1]
         {
             bt_set_report(data, len, reportType, report_id);
         }

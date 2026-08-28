@@ -627,11 +627,6 @@ void XboxOneGamepadDevice::process()
             if (last_report_counter == 0)
                 last_report_counter = 1;
         }
-        printf("Sent Input Report\r\n");
-        for (int i = 0; i < xboneReportSize; i++) {
-            printf("0x%02x ", test[i]);
-        }
-        printf("\r\n");
     }
 }
 

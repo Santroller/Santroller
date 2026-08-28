@@ -6,6 +6,7 @@
 #include "usb/usb_devices.h"
 #include "devices/usb.hpp"
 #include "emulation/usb/hid_device.h"
+#include "emulation/usb/xone_device.h"
 #include "config.hpp"
 #include "utils.h"
 #include <algorithm>
@@ -36,6 +37,11 @@ XboxOneHost::XboxOneHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : Usb
     m_delayed_init = true;
     incomingXGIP = new XGIPProtocol();
     outgoingXGIP = new XGIPProtocol();
+}
+
+void XboxOneHost::send_report_from_host(XGIPProtocol *report)
+{
+    outgoingXGIP->copyAttributes(report);
 }
 
 std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
@@ -85,6 +91,10 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
     if (desc_itf->bInterfaceNumber == 0)
     {
         enumerating_usb_devices.push_back(intf);
+        if (auth_devices.find(ModeXboxOne) == auth_devices.end())
+        {
+            auth_devices.emplace(ModeXboxOne, intf);
+        }
     }
     printf("size: %d\r\n", size);
     *out_len = size;
@@ -115,13 +125,24 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
             usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
             return true;
         }
-        incomingXGIP->parse(m_ep_in_buf, xferred_bytes);
+        bool complete = incomingXGIP->parse(m_ep_in_buf, xferred_bytes);
 
         if (incomingXGIP->ackRequired())
         {
             queue_xbone_report(incomingXGIP->generateAckPacket(), incomingXGIP->getPacketLength());
         }
-        if (incomingXGIP->getCommand() == GIP_DEVICE_DESCRIPTOR && incomingXGIP->endOfChunk())
+        // printf("got command (host): %02x %02x\r\n", incomingXGIP->getCommand(), complete);
+        if (!complete)
+        {
+            usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+            return true;
+        }
+        uint8_t command = incomingXGIP->getCommand();
+        if (command == GIP_ACK_RESPONSE)
+        {
+            waiting_ack = false;
+        }
+        else if (command == GIP_DEVICE_DESCRIPTOR)
         {
             uint8_t *data = incomingXGIP->getData();
             data = incomingXGIP->getData();
@@ -176,11 +197,21 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
             queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
             process_delayed_init();
         }
-        if (incomingXGIP->getCommand() == GIP_INPUT_REPORT)
+        if (command == GIP_AUTH)
+        {
+            std::shared_ptr<XboxOneGamepadDevice> host_device;
+            auto emu_device = emulated_devices.find(ModeXboxOne);
+            if (emu_device != emulated_devices.end())
+            {
+                host_device = std::static_pointer_cast<XboxOneGamepadDevice>(emu_device->second);
+            }
+            host_device->send_report_from_controller(incomingXGIP);
+        }
+        if (command == GIP_INPUT_REPORT)
         {
             memcpy(m_last_inputs, incomingXGIP->getData(), incomingXGIP->getDataLength());
         }
-        if (incomingXGIP->getCommand() == GIP_ARRIVAL)
+        if (command == GIP_ARRIVAL)
         {
             outgoingXGIP->reset();
             outgoingXGIP->setAttributes(GIP_DEVICE_DESCRIPTOR, 1, 1, false, 0);
@@ -191,16 +222,42 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
     return true;
 }
 
+void XboxOneHost::set_ack_wait()
+{
+    waiting_ack = true;
+    waiting_ack_timeout = to_ms_since_boot(get_absolute_time()); // 2 second time-out
+}
 void XboxOneHost::update(bool full_poll, bool send_events)
 {
     UsbHostInterface::update(full_poll, send_events);
+    uint32_t now = to_ms_since_boot(get_absolute_time());
     if (!report_queue.empty())
     {
         if (send_intr_xfer(m_ep_out, &report_queue.front().report, report_queue.front().len))
         {
-            printf("sent\r\n");
             report_queue.pop();
         }
+    }
+    // Do not add logic until our ACK returns
+    if (waiting_ack == true)
+    {
+        if ((now - waiting_ack_timeout) < XGIP_ACK_WAIT_TIMEOUT)
+        {
+            return;
+        }
+        else
+        { // ACK wait time out
+            waiting_ack = false;
+        }
+    }
+    if (outgoingXGIP->waitingToSend())
+    {
+        queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
+        if (outgoingXGIP->getPacketAck() == 1)
+        {
+            set_ack_wait();
+        }
+        return;
     }
 }
 

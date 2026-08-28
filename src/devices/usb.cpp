@@ -309,6 +309,14 @@ void usbh_close(uint8_t dev_addr)
         m_devices_changed = millis() + 500;
         host_devices[dev_addr] = nullptr;
     }
+    auto dev = auth_devices.begin();
+    while (dev != auth_devices.end()) {
+        if (dev->second->dev_addr() == dev_addr) {
+            dev = auth_devices.erase(dev);
+        } else {
+            ++dev;
+        }
+    }
 }
 
 void UsbHostDevice::disconnect()

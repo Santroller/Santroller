@@ -118,6 +118,20 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
       else if (request->bRequest == TUSB_REQ_GET_DESCRIPTOR && desc_type == HID_DESC_TYPE_REPORT)
       {
         TU_VERIFY(tud_control_xfer(TUD_OPT_RHPORT, request, (void *)(uintptr_t)report_descriptor(), report_desc_len()));
+        if (mode == ModeHid && seenWindowsXb1)
+        {
+          if (seenWindowsString)
+          {
+            if (xinput_on_windows)
+            {
+              newMode = ModeXbox360;
+            }
+          }
+          else
+          {
+            newMode = ModeXboxOne;
+          }
+        }
       }
       else
       {

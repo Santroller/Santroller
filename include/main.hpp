@@ -10,5 +10,6 @@ extern bool seenPs4;
 extern bool seenWindowsXb1;
 extern bool seenOsDescriptorRead;
 extern bool seenReadAnyDeviceString;
+extern bool seenWindowsString;
 extern bool seenHidDescriptorRead;
 extern bool isPicoW;

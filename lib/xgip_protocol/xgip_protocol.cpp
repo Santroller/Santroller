@@ -38,14 +38,18 @@ XGIPProtocol::~XGIPProtocol()
 {
 }
 
+void XGIPProtocol::copyAttributes(XGIPProtocol* packet)
+{
+    reset();
+    header = packet->header;
+    setData(packet->getData(), packet->getDataLength());
+}
+
 // Reset packet information
 void XGIPProtocol::reset()
 {
     memset((void *)&header, 0, sizeof(GipHeader_t));
-    totalChunkLength = 0;   // How big is the chunk?
     actualDataReceived = 0; // How much actual data have we received?
-    totalChunkReceived = 0; // How much have we received in chunk mode length? (length | 0x80)
-    totalChunkSent = 0;     // How much chunk-data (not real total) have we sent?
     totalDataSent = 0;      // How much actual data have we sent?
     numberOfChunksSent = 0; // How many actual chunks have we sent?
     chunkEnded = false;     // Are we at the end of the chunk?
@@ -54,6 +58,7 @@ void XGIPProtocol::reset()
     dataLength = 0;                    // Set data length to 0
     memset(packet, 0, sizeof(packet)); // Set our packet to 0
     packetLength = 0;                  // Set packet length to 0
+    isWaitingToSend = true;
 }
 
 // Parse incoming packet
@@ -90,11 +95,15 @@ bool XGIPProtocol::parse(const uint8_t *buffer, uint16_t len)
         if (newPacket->chunked == true)
         {
             memcpy((void *)&header, buffer, sizeof(GipHeader_t)); // Always copy to header buffer
-            if (header.length == 0)
+            uint16_t packet_len;
+            uint16_t total_len_or_offset;
+            const uint8_t *packet = buffer + offsetof(GipHeader_t, length);
+            packet += readLeb128(packet, &packet_len);
+            packet += readLeb128(packet, &total_len_or_offset);
+            if (packet_len == 0)
             { // END OF CHUNK
-                uint16_t endChunkSize = (buffer[4] | buffer[5] << 8);
                 // Verify chunk is good
-                if (totalChunkLength != endChunkSize)
+                if (dataLength != total_len_or_offset)
                 {
                     isValidPacket = false;
                     return false;
@@ -107,40 +116,10 @@ bool XGIPProtocol::parse(const uint8_t *buffer, uint16_t len)
             { // START OF CHUNK
                 reset();
                 memcpy((void *)&header, buffer, sizeof(GipHeader_t));
-
-                // Get total chunk length in uint16
-                if (header.length > GIP_MAX_CHUNK_SIZE && buffer[4] == 0x00)
-                {                                           // if we see 0xBA and buf[4] == 0, single-byte mode
-                    totalChunkLength = (uint16_t)buffer[5]; // byte is correct
-                }
-                else
-                {
-                    // we need to calculate the actual buffer length as this number is not right
-                    totalChunkLength = ((uint16_t)buffer[4] | ((uint16_t)buffer[5] << 8)); // not the actual length but the chunked length (length | 0x80)
-                }
-
-                // Real data length = chunk length > 0x100? (chunk length - 0x100) - ((chunk length / 0x100)*0x80)
-                dataLength = totalChunkLength;
-                if (totalChunkLength > 0x100)
-                {
-                    dataLength = dataLength - 0x100;
-                    dataLength = dataLength - ((dataLength / 0x100) * 0x80);
-                }
-
-                // Set our chunk received to the header length
-                totalChunkReceived = header.length;
+                dataLength = total_len_or_offset;
             }
-            else
-            {
-                totalChunkReceived += header.length; // not actual data length, but chunk value
-            }
-            uint16_t copyLength = header.length;
-            if (header.length > GIP_MAX_CHUNK_SIZE)
-            {                       // if length is greater than 0x3A (bigger than 64 bytes), we know it is | 0x80 so we can ^ 0x80 and get the real length
-                copyLength ^= 0x80; // packet length is set to length | 0x80 (0xBA instead of 0x3A)
-            }
-            memcpy(&data[actualDataReceived], &buffer[6], copyLength); //
-            actualDataReceived += copyLength;
+            memcpy(&data[actualDataReceived], packet, packet_len); //
+            actualDataReceived += packet_len;
             numberOfChunksSent++; // count our chunks for the ACK
             isValidPacket = true;
         }
@@ -155,6 +134,7 @@ bool XGIPProtocol::parse(const uint8_t *buffer, uint16_t len)
             actualDataReceived = header.length;
             dataLength = actualDataReceived;
             isValidPacket = true;
+            return true;
         }
     }
 
@@ -198,14 +178,34 @@ bool XGIPProtocol::setData(const uint8_t *buffer, uint16_t len)
     return true;
 }
 
-uint16_t XGIPProtocol::writeLeb128(uint8_t *dest, uint16_t len)
+uint8_t XGIPProtocol::readLeb128(const uint8_t *data, uint16_t *out)
 {
-    // if < 127, length is put in the second byte
-    if (len < 0x7f)
+    uint8_t read = 0;
+    uint16_t result = 0;
+    uint16_t shift = 0;
+    unsigned char byte;
+    do
     {
-        dest[0] = 0;
-        dest[1] = len;
-        return 2;
+        byte = *data++;
+        result |= (byte & 0x7f) << shift; /* low-order 7 bits of byte */
+        shift += 7;
+        read++;
+    } while ((byte & 0x80) != 0);
+    *out = result;
+    return read;
+}
+
+uint16_t XGIPProtocol::writeLeb128(uint8_t *dest, uint16_t len, bool pad)
+{
+    if (pad)
+    {
+        // if < 127, length is put in the second byte
+        if (len < 0x7f)
+        {
+            dest[0] = 0x80 | len;
+            dest[1] = 0;
+            return 2;
+        }
     }
     uint16_t temp = 0;
     do
@@ -228,6 +228,7 @@ uint8_t *XGIPProtocol::generatePacket()
         memcpy(packet, &header, sizeof(GipHeader_t));
         memcpy((void *)&packet[4], data, dataLength);
         packetLength = sizeof(GipHeader_t) + dataLength;
+        isWaitingToSend = false;
     }
     else
     { // Are we a chunk?
@@ -236,9 +237,9 @@ uint8_t *XGIPProtocol::generatePacket()
             header.needsAck = 0;
             header.length = 0;
             memcpy(packet, &header, sizeof(GipHeader_t));
-            writeLeb128(packet + 4, dataLength);
-            packetLength = sizeof(GipHeader_t) + 2;
+            packetLength = sizeof(GipHeader_t) + writeLeb128(packet + sizeof(GipHeader_t), dataLength, true);
             chunkEnded = true;
+            isWaitingToSend = false;
         }
         else
         {
@@ -285,38 +286,21 @@ uint8_t *XGIPProtocol::generatePacket()
                 end = true;
             }
 
-            if (numberOfChunksSent > 0 && !end && totalDataSent < 0x80)
-            {
-                // extend if there are more packets to write
-                header.length = dataToSend | 0x80;
-            }
-            else if (numberOfChunksSent == 0 && dataLength > GIP_MAX_CHUNK_SIZE && dataLength < 0x80)
-            {
-                // extend if first chunk length is < 0x80
-                header.length = dataToSend | 0x80;
-            }
-            else
-            {
-                // length is actual data to send
-                header.length = dataToSend;
-            }
-
+            uint8_t *lebPacket = packet + offsetof(GipHeader_t, length);
             // Copy our header and data to the packet
             memcpy(packet, &header, sizeof(GipHeader_t));
-
-            // Set our packet length
-            packetLength = sizeof(GipHeader_t) + 2 + dataToSend;
-            uint16_t lebLen = 2;
             if (numberOfChunksSent == 0)
             {
-                lebLen = writeLeb128(packet + 4, dataLength);
+                lebPacket += writeLeb128(lebPacket, dataToSend, dataLength < 0x80);
+                lebPacket += writeLeb128(lebPacket, dataLength, false);
             }
             else
             {
-                lebLen = writeLeb128(packet + 4, totalDataSent);
+                lebPacket += writeLeb128(lebPacket, dataToSend, totalDataSent < 0x80 && !end);
+                lebPacket += writeLeb128(lebPacket, totalDataSent, false);
             }
-
-            memcpy(packet + 4 + lebLen, &data[totalDataSent], dataToSend);
+            memcpy(lebPacket, &data[totalDataSent], dataToSend);
+            packetLength = lebPacket - packet + dataToSend;
             totalDataSent += dataToSend; // Total Data Sent in bytes
             numberOfChunksSent++;        // Number of Chunks sent so far
         }
@@ -407,4 +391,9 @@ bool XGIPProtocol::getChunkData(XGIPProtocol &packet)
 bool XGIPProtocol::ackRequired()
 {
     return header.needsAck;
+}
+
+bool XGIPProtocol::waitingToSend()
+{
+    return isWaitingToSend;
 }

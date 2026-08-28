@@ -1,9 +1,5 @@
 #include "tusb_option.h"
 
-#define XBONE_KEEPALIVE_TIMER 15000
-#define XGIP_ACK_WAIT_TIMEOUT 2000
-
-#define REPORT_QUEUE_INTERVAL 35
 //--------------------------------------------------------------------+
 // INCLUDE
 //--------------------------------------------------------------------+
@@ -141,6 +137,7 @@ const uint8_t xb1_descriptor_ld[] = {
 const uint8_t announce_gamepad[] = {
     0x7e, 0xed, 0x8d, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x5e, 0x04, 0xea, 0x02,
     0x01, 0x00, 0x00, 0x00, 0x82, 0x0c, 0x00, 0x00, 0x04, 0x05, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
+
 const uint8_t xb1_descriptor_gamepad[] = {
     0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xDA, 0x00,
     0x9B, 0x00, 0x16, 0x00, 0x1F, 0x00, 0x20, 0x00, 0x27, 0x00, 0x2D, 0x00, 0x4A, 0x00, 0x00, 0x00,
@@ -183,7 +180,6 @@ uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint1
     uint8_t const *p_desc = (uint8_t const *)itf_desc;
     p_desc = tu_desc_next(p_desc);
     TU_VERIFY(usbd_open_edpt_pair(TUD_OPT_RHPORT, p_desc, itf_desc->bNumEndpoints, TUSB_XFER_INTERRUPT, &m_epout, &m_epin), 0);
-
     // Prepare for output endpoint
     if (m_epout)
     {
@@ -193,7 +189,7 @@ uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint1
             TU_BREAKPOINT();
         }
     }
-    xboneDriverState = XboxOneDriverState::READY_ANNOUNCE;
+    xboneDriverState = XboxOneDriverState::EMU_READY_ANNOUNCE;
     incomingXGIP->reset();
     outgoingXGIP->reset();
     timer_wait_for_announce = to_ms_since_boot(get_absolute_time());
@@ -209,14 +205,20 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
     if (XFER_RESULT_SUCCESS == result)
     {
         // Parse incoming packet and verify its valid
-        incomingXGIP->parse(epout_buf, xferred_bytes);
+        bool complete = incomingXGIP->parse(epout_buf, xferred_bytes);
 
         uint8_t command = incomingXGIP->getCommand();
+        // printf("got command (device): %02x %02x %02x\r\n", incomingXGIP->getCommand(), incomingXGIP->getSequence(), incomingXGIP->getChunked());
 
         // Setup an ack before we change anything about the incoming packet
         if (incomingXGIP->ackRequired() == true)
         {
             queue_xbone_report((uint8_t *)incomingXGIP->generateAckPacket(), incomingXGIP->getPacketLength());
+        }
+        if (!complete)
+        {
+            TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE, false));
+            return true;
         }
         // printf("got cmd: %02x\r\n", command);
         if (command == GIP_ACK_RESPONSE)
@@ -225,9 +227,6 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         }
         else if (command == GIP_DEVICE_DESCRIPTOR)
         {
-            // setup descriptor packet
-            outgoingXGIP->reset(); // reset if anything was in there
-            outgoingXGIP->setAttributes(GIP_DEVICE_DESCRIPTOR, incomingXGIP->getSequence(), 1, 1, 0);
 
             const uint8_t *xboxOneDescriptor = nullptr;
             uint16_t len = 0;
@@ -286,8 +285,12 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 len = sizeof(xb1_descriptor_gamepad);
                 break;
             }
+            // setup descriptor packet
+            outgoingXGIP->reset(); // reset if anything was in there
+            outgoingXGIP->setAttributes(GIP_DEVICE_DESCRIPTOR, incomingXGIP->getSequence(), 1, 1, 0);
             outgoingXGIP->setData(xboxOneDescriptor, len);
-            xboneDriverState = XboxOneDriverState::SEND_DESCRIPTOR;
+            xboneDriverState = XboxOneDriverState::EMU_SEND_DESCRIPTOR;
+            queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
         }
         else if (command == GIP_SET_STATE)
         {
@@ -295,14 +298,22 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             switch (incomingXGIP->getData()[0])
             {
             case GIP_STATE_START:
-                // TODO: at this point, if auth is available do it other wise dont
-                // xboneDriverState = XboxOneDriverState::SETUP_AUTH;
-                xboneDriverState = XboxOneDriverState::AUTH_DONE;
-                auth_completed = true;
+            {
+                auto auth_device = auth_devices.find(ModeXboxOne);
+                if (auth_device != auth_devices.end())
+                {
+                    xboneDriverState = XboxOneDriverState::EMU_SETUP_AUTH;
+                }
+                else
+                {
+                    xboneDriverState = XboxOneDriverState::EMU_AUTH_DONE;
+                    auth_completed = true;
+                }
                 xbox_one_powered_on = true;
-                break;
+            }
+            break;
             case GIP_STATE_RESET:
-                xboneDriverState = XboxOneDriverState::READY_ANNOUNCE;
+                xboneDriverState = XboxOneDriverState::EMU_READY_ANNOUNCE;
                 incomingXGIP->reset();
                 outgoingXGIP->reset();
                 report_queue = {}; // clear the report queue
@@ -323,22 +334,27 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         {
             // TODO: rumble
         }
-        else if (command == GIP_AUTH || command == GIP_FINAL_AUTH)
+        else if ((command == GIP_AUTH || command == GIP_FINAL_AUTH))
         {
             // TODO: auth
             if (incomingXGIP->getDataLength() == 2 && memcmp(incomingXGIP->getData(), authReady, sizeof(authReady)) == 0)
             {
-                xboneDriverState = AUTH_DONE;
+                printf("auth done\r\n");
+                xboneDriverState = EMU_AUTH_DONE;
                 auth_completed = true;
             }
-            if ((incomingXGIP->getChunked() == true && incomingXGIP->endOfChunk() == true) ||
-                (incomingXGIP->getChunked() == false))
+            // xboxOneAuthData->consoleBuffer.setBuffer(incomingXGIP->getData(), incomingXGIP->getDataLength(),
+            //                                          incomingXGIP->getSequence(), incomingXGIP->getCommand());
+            // xboxOneAuthData->xboneState = GPAuthState::send_auth_console_to_dongle;
+
+            std::shared_ptr<XboxOneHost> host_device;
+            auto auth_device = auth_devices.find(ModeXboxOne);
+            if (auth_device != auth_devices.end())
             {
-                // xboxOneAuthData->consoleBuffer.setBuffer(incomingXGIP->getData(), incomingXGIP->getDataLength(),
-                //                                          incomingXGIP->getSequence(), incomingXGIP->getCommand());
-                // xboxOneAuthData->xboneState = GPAuthState::send_auth_console_to_dongle;
-                incomingXGIP->reset();
+                host_device = std::static_pointer_cast<XboxOneHost>(auth_device->second);
+                host_device->send_report_from_host(incomingXGIP);
             }
+            incomingXGIP->reset();
         }
     }
 
@@ -346,6 +362,11 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
     TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE, false));
 
     return true;
+}
+
+void XboxOneGamepadDevice::send_report_from_controller(XGIPProtocol *report)
+{
+    outgoingXGIP->copyAttributes(report);
 }
 bool XboxOneGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
 {
@@ -435,7 +456,7 @@ void XboxOneGamepadDevice::process()
     process_report_queue(now);
 
     // Do not add logic until our ACK returns
-    if (waiting_ack == true)
+    if (waiting_ack)
     {
         if ((now - waiting_ack_timeout) < XGIP_ACK_WAIT_TIMEOUT)
         {
@@ -446,10 +467,18 @@ void XboxOneGamepadDevice::process()
             waiting_ack = false;
         }
     }
-    // printf("%02x\r\n", xboneDriverState);
+    if (outgoingXGIP->waitingToSend())
+    {
+        queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
+        if (outgoingXGIP->getPacketAck() == 1)
+        {
+            set_ack_wait();
+        }
+        return;
+    }
     switch (xboneDriverState)
     {
-    case READY_ANNOUNCE:
+    case EMU_READY_ANNOUNCE:
         // Xbox One announce must wait around 0.5s before sending
         if (now - timer_wait_for_announce > 500)
         {
@@ -507,57 +536,20 @@ void XboxOneGamepadDevice::process()
                 input_report_length = sizeof(XboxOneGamepad_Data_t);
                 break;
             }
+            outgoingXGIP->reset();
             outgoingXGIP->setAttributes(GIP_ANNOUNCE, 1, 1, 0, 0);
             outgoingXGIP->setData(announcePacket, sizeof(announce_gamepad));
             memcpy(outgoingXGIP->getData(), &now, 3);
             queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
-            xboneDriverState = WAIT;
+            xboneDriverState = EMU_WAIT;
         }
         break;
-    case SEND_DESCRIPTOR:
-        queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
-        if (outgoingXGIP->endOfChunk() == true)
-        {
-            xboneDriverState = WAIT;
-        }
-        if (outgoingXGIP->getPacketAck() == 1)
-        {
-            set_ack_wait();
-        }
+    case EMU_SEND_DESCRIPTOR:
         break;
-    case SETUP_AUTH:
-        // TODO: auth
-        // Received packet from dongle to console / PC
-        // if (xboxOneAuthData->xboneState == GPAuthState::send_auth_dongle_to_console)
-        // {
-        //     uint16_t len = xboxOneAuthData->dongleBuffer.length;
-        //     uint8_t type = xboxOneAuthData->dongleBuffer.type;
-        //     uint8_t sequence = xboxOneAuthData->dongleBuffer.sequence;
-        //     uint8_t *buffer = xboxOneAuthData->dongleBuffer.data;
-        //     bool isChunked = (len > GIP_MAX_CHUNK_SIZE);
-        //     outgoingXGIP->reset();
-        //     outgoingXGIP->setAttributes(type, sequence, 1, isChunked, 1);
-        //     outgoingXGIP->setData(buffer, len);
-        //     xboxOneAuthData->xboneState = wait_auth_dongle_to_console;
-        //     xboxOneAuthData->dongleBuffer.reset();
-        // }
-
-        // // Process auth dongle to console
-        // if (xboxOneAuthData->xboneState == GPAuthState::wait_auth_dongle_to_console)
-        // {
-        //     queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
-        //     if (outgoingXGIP->getChunked() == false || outgoingXGIP->endOfChunk() == true)
-        //     {
-        //         xboxOneAuthData->xboneState = GPAuthState::auth_idle_state;
-        //     }
-        //     if (outgoingXGIP->getPacketAck() == 1)
-        //     { // ACK can happen at different chunks
-        //         set_ack_wait();
-        //     }
-        // }
+    case EMU_SETUP_AUTH:
         break;
-    case AUTH_DONE:
-    case NOT_READY:
+    case EMU_AUTH_DONE:
+    case EMU_NOT_READY:
     default:
         break;
     };
@@ -621,19 +613,25 @@ void XboxOneGamepadDevice::process()
     // this was set temporarily to make things easier for mapping, so don't actually send it
     xboneReport->guide = false;
     // We changed inputs since generating our last report, increment last report counter (but don't update until success)
-    if (memcmp(last_report, epin_buf, xboneReportSize) != 0 && xboneDriverState > SEND_DESCRIPTOR)
+    if (memcmp(last_report, epin_buf, xboneReportSize) != 0 )
     {
         memcpy(last_report, epin_buf, xboneReportSize);
         outgoingXGIP->reset();
         outgoingXGIP->setAttributes(GIP_INPUT_REPORT, last_report_counter, 0, 0, 0);
         outgoingXGIP->setData(epin_buf, xboneReportSize);
+        uint8_t* test = outgoingXGIP->generatePacket();
         // don't put things in the queue here otherwise we will fill it pretty quick!
-        if (send_xbone_usb(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength()))
+        if (send_xbone_usb(test, outgoingXGIP->getPacketLength()))
         {
             last_report_counter++; // will rollover
             if (last_report_counter == 0)
                 last_report_counter = 1;
         }
+        printf("Sent Input Report\r\n");
+        for (int i = 0; i < xboneReportSize; i++) {
+            printf("0x%02x ", test[i]);
+        }
+        printf("\r\n");
     }
 }
 
@@ -666,8 +664,14 @@ size_t XboxOneGamepadDevice::device_name(uint8_t idx, char *desc)
 
 void XboxOneGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
-    if (subtype == Gamepad) {
+    if (subtype == Gamepad)
+    {
         desc->idVendor = XBOX_ONE_CONTROLLER_VID;
+        desc->idProduct = XBOX_ONE_CONTROLLER_PID;
+    }
+    else
+    {
+        desc->idVendor = MAD_CATZ_VID;
         desc->idProduct = XBOX_ONE_CONTROLLER_PID;
     }
     desc->bDeviceClass = 0xff;

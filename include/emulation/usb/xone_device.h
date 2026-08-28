@@ -2,6 +2,7 @@
 
 #include "common/tusb_common.h"
 #include "device/usbd.h"
+#include "usb/host/xone_host.h"
 #include "device.hpp"
 #include <queue>
 
@@ -11,19 +12,13 @@
 
 typedef enum
 {
-    READY_ANNOUNCE,
-    WAIT,
-    SEND_DESCRIPTOR,
-    SETUP_AUTH,
-    AUTH_DONE,
-    NOT_READY
+    EMU_READY_ANNOUNCE,
+    EMU_WAIT,
+    EMU_SEND_DESCRIPTOR,
+    EMU_SETUP_AUTH,
+    EMU_AUTH_DONE,
+    EMU_NOT_READY
 } XboxOneDriverState;
-
-typedef struct
-{
-    uint8_t report[CFG_TUD_XONE_TX_BUFSIZE];
-    uint16_t len;
-} report_queue_t;
 
 class XboxOneGamepadDevice : public UsbDevice
 {
@@ -40,6 +35,7 @@ public:
     void process_report_queue(uint32_t now);
     bool send_xbone_usb(uint8_t const *report, uint16_t report_size);
     void queue_xbone_report(void *report, uint16_t report_size);
+    void send_report_from_controller(XGIPProtocol* report);
     uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
     void set_ack_wait();
     uint8_t m_epin;
@@ -74,5 +70,5 @@ private:
 
     std::queue<report_queue_t> report_queue;
 
-    XboxOneDriverState xboneDriverState = NOT_READY;
+    XboxOneDriverState xboneDriverState = EMU_NOT_READY;
 };

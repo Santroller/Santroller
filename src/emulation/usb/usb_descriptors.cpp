@@ -123,7 +123,10 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
   (void)langid;
   // printf("desc %02x %02x\r\n", index, langid);
-
+  if (seenWindowsXb1)
+  {
+    seenWindowsString = true;
+  }
   size_t chr_count;
   const char *str = nullptr;
   // We only care about actual reads for this heuristic
@@ -261,7 +264,6 @@ void tud_reset(uint8_t rhport)
 
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
-  // printf("control req (%d) %02x %02x %02x %02x %04x %04x %04x\r\n", stage, request->bmRequestType_bit.direction, request->bmRequestType_bit.type, request->bmRequestType_bit.recipient, request->bRequest, request->wIndex & 0xFF, request->wValue, request->wLength);
   if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
   {
 
@@ -300,10 +302,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
               {
                 count++;
               }
-              if (mode == ModeHid && instance->xinput_on_windows)
-              {
-                newMode = ModeXbox360;
-              }
+              seenWindowsXb1 = true;
             }
             compatible_descriptor->TotalSections = count;
             compatible_descriptor->TotalLength = current;

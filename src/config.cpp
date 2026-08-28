@@ -92,6 +92,7 @@ std::vector<std::shared_ptr<Device>> assignable_devices;
 std::vector<std::shared_ptr<UsbHostInterface>> assignable_usb_devices;
 std::vector<std::shared_ptr<UsbHostInterface>> enumerating_usb_devices;
 std::map<ConsoleMode, std::shared_ptr<UsbHostInterface>> auth_devices;
+std::map<ConsoleMode, std::shared_ptr<UsbDevice>> emulated_devices;
 std::shared_ptr<UsbDevice> usb_instances[32];
 std::shared_ptr<UsbDevice> usb_instances_by_epin[16];
 std::shared_ptr<UsbDevice> usb_instances_by_epout[16];
@@ -826,6 +827,7 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->supports_slider = opts.has_supportsSlider && opts.supportsSlider;
     profile->cymbal_glitch_fix = opts.has_cymbalGlitchFix && opts.cymbalGlitchFix;
     profile->drum_state.cymbalGlitchFix = opts.has_cymbalGlitchFix && opts.cymbalGlitchFix;
+    profile->subtype = opts.deviceToEmulate;
     all_profiles[profile->profile_id] = profile;
     return true;
 }
@@ -946,6 +948,9 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                         break;
                     case ModeXboxOne:
                         usbInstance = std::make_shared<XboxOneGamepadDevice>();
+                        if (emulated_devices.find(mode) == emulated_devices.end()) {
+                            emulated_devices[mode] = usbInstance;
+                        }
                         break;
                     case ModeWiiRb:
                         // wii rb is the same as ps3 but different ids
@@ -972,9 +977,11 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                 usbInstance->profiles.push_back(profile);
                 usbInstance->interface_id = active_instances.size();
                 usbInstance->subtype = profile->subtype;
+                printf("subtype: %d\r\n", usbInstance->subtype);
                 usbInstance->xinput_on_windows = profile->xinput_on_windows;
                 usbInstance->invert_y_axis_hid = profile->invert_y_axis_hid;
                 usbInstance->supports_ps4 = profile->supports_ps4;
+                usbInstance->mode = mode;
                 active_instances.push_back(usbInstance);
                 usb_instances[usbInstance->interface_id] = usbInstance;
                 usbInstance->initialize();
@@ -1112,6 +1119,7 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
     prev_types = current_types;
     active_profiles.clear();
     all_profiles.clear();
+    emulated_devices.clear();
     UsbDevice::reset_ep();
     switch (mode)
     {
@@ -1184,6 +1192,7 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
         seenOsDescriptorRead = false;
         seenReadAnyDeviceString = false;
         seenHidDescriptorRead = false;
+        seenWindowsString = false;
         tud_deinit(TUD_OPT_RHPORT);
         const tusb_rhport_init_t rh_init = {
             .role = TUSB_ROLE_DEVICE,
@@ -1400,6 +1409,7 @@ void first_load()
     }
     all_profiles.clear();
     auth_devices.clear();
+    emulated_devices.clear();
     auto confDevice = std::make_shared<HIDConfigDevice>();
     confDevice->interface_id = instances.size();
     confDevice->initialize();

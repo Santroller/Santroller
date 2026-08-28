@@ -14,6 +14,7 @@ typedef struct
     uint8_t report[CFG_TUD_XONE_TX_BUFSIZE];
     uint16_t len;
 } report_queue_t;
+
 class XboxOneHost : public UsbHostInterface
 {
 public:
@@ -25,7 +26,8 @@ public:
     bool tick_digital(proto_Output& type);
     uint16_t tick_analog(proto_Output& type);
     void update(bool full_poll, bool send_events);
-
+    void send_report_from_host(XGIPProtocol* report);
+    void set_ack_wait();
 private:
     void queue_xbone_report(void *report, uint16_t report_size);
     uint8_t m_ep_in;
@@ -36,6 +38,8 @@ private:
     CFG_TUSB_MEM_ALIGN uint8_t m_last_inputs[64];
     XGIPProtocol *outgoingXGIP = nullptr;
     XGIPProtocol *incomingXGIP = nullptr;
+    bool waiting_ack = false;
+    uint32_t waiting_ack_timeout = 0;
 
     std::queue<report_queue_t> report_queue;
 };

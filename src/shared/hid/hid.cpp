@@ -309,7 +309,8 @@ void handle_player_leds(uint8_t player)
     }
 #endif
 }
-void reset_player_leds(void) {
+void reset_player_leds(void)
+{
     uint8_t player = 0;
     current_player = 0xFF;
     HANDLE_PLAYER_LED;
@@ -793,19 +794,24 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
                 handle_auth_led();
                 printf("Ready!\r\n");
                 xbox_one_state = Ready;
+
+#if USB_HOST_STACK
                 USB_Device_Type_t type = get_device_address_for(XBOXONE);
                 while (!send_report_to_controller(type.dev_addr, type.instance, data, len))
                 {
                     tuh_task();
                 }
+#endif
             }
             else if (data[0] != GIP_POWER_MODE_DEVICE_CONFIG && data[0] != 2 && data[0] != 4)
             {
+#if USB_HOST_STACK
                 USB_Device_Type_t type = get_device_address_for(XBOXONE);
                 while (!send_report_to_controller(type.dev_addr, type.instance, data, len))
                 {
                     tuh_task();
                 }
+#endif
             }
         }
         else if (xbox_one_state == Ready)

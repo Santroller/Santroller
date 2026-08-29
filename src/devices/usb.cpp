@@ -20,7 +20,8 @@ static int8_t m_last_first_pin = -1;
 static bool m_last_dp_first = false;
 static volatile uint32_t m_devices_changed = 0;
 std::array<std::shared_ptr<UsbHostDevice>, 127> host_devices;
-void process_delayed_init() {
+void process_delayed_init()
+{
     m_devices_changed = millis() + 500;
 }
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : UsbHostInterface(0, 0, id), m_device(device)
@@ -242,7 +243,8 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
     {
         host_devices[dev_addr] = std::make_shared<UsbHostDevice>(dev_addr, usb_host_id);
     }
-    if (TUSB_CLASS_HUB == desc_itf->bInterfaceClass) {
+    if (TUSB_CLASS_HUB == desc_itf->bInterfaceClass)
+    {
         return 0;
     }
     for (auto &host_device : host_device_types)
@@ -270,6 +272,7 @@ bool usbh_set_config(uint8_t dev_addr, uint8_t itf_num)
 
 bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
+    TU_VERIFY(result == XFER_RESULT_SUCCESS);
     if (!host_devices[dev_addr])
     {
         return false;
@@ -312,10 +315,14 @@ void usbh_close(uint8_t dev_addr)
         host_devices[dev_addr] = nullptr;
     }
     auto dev = auth_devices.begin();
-    while (dev != auth_devices.end()) {
-        if (dev->second->dev_addr() == dev_addr) {
+    while (dev != auth_devices.end())
+    {
+        if (dev->second->dev_addr() == dev_addr)
+        {
             dev = auth_devices.erase(dev);
-        } else {
+        }
+        else
+        {
             ++dev;
         }
     }

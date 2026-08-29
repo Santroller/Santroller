@@ -48,7 +48,7 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
 {
     uint32_t size = desc_itf->bLength;
     TU_VERIFY(desc_itf->bInterfaceSubClass == 0x47 &&
-                  desc_itf->bInterfaceProtocol == 0xD0 && desc_itf->bAlternateSetting == 0,
+                  desc_itf->bInterfaceProtocol == 0xD0 && desc_itf->bAlternateSetting == 0 && desc_itf->bInterfaceNumber == 0,
               nullptr);
     uint8_t dev_addr = list->dev_addr();
 

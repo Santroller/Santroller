@@ -3,12 +3,6 @@
 #include "protocols/xbox_one.hpp"
 #include <queue>
 
-typedef enum
-{
-    WAIT,
-    WAKEUP,
-    LED_ON
-} XboxOneHostState;
 typedef struct
 {
     uint8_t report[CFG_TUD_XONE_TX_BUFSIZE];

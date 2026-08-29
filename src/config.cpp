@@ -1013,7 +1013,7 @@ struct __attribute__((packed)) ConfigFooter
 };
 
 static const uint32_t FOOTER_MAGIC = 0xd2f1e365;
-bool save_empty()
+bool load_empty()
 {
 
     ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
@@ -1025,6 +1025,13 @@ bool save_empty()
     footer->magic = FOOTER_MAGIC;
     footer->currentProfile = 0;
     EEPROM.commit();
+
+    auto confDevice2 = HIDConfigDevice::instance;
+    confDevice2->interface_id = instances.size();
+    instances.push_back(confDevice2);
+    active_instances.push_back(confDevice2);
+    usb_instances[confDevice2->interface_id] = confDevice2;
+    confDevice2->initialize();
     return true;
 }
 
@@ -1079,12 +1086,6 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
     proto_Config config proto_Config_init_zero;
     // printf("inner_load\r\n");
     cycle_input_states.clear();
-    pb_istream_t auxInputStream = pb_istream_from_buffer(dataPtr + mainSize, auxSize);
-    proto_AuxConfigBlock block proto_AuxConfigBlock_init_zero;
-    block.states.funcs.decode = decode_cycle_input_states;
-    block.toggleStates.funcs.decode = decode_toggle_input_states;
-    block.bluetoothStates.funcs.decode = decode_bluetooth_states;
-    pb_decode(&auxInputStream, proto_AuxConfigBlock_fields, &block);
     // We are now sufficiently confident that the data is valid so we run the deserialization
     // load just the current profile to begin with
     pb_istream_t inputStream = pb_istream_from_buffer(dataPtr, mainSize);
@@ -1153,6 +1154,13 @@ bool inner_load(const uint32_t currentProfile, const uint8_t *dataPtr, uint32_t 
         break;
     }
     }
+
+    pb_istream_t auxInputStream = pb_istream_from_buffer(dataPtr + mainSize, auxSize);
+    proto_AuxConfigBlock block proto_AuxConfigBlock_init_zero;
+    block.states.funcs.decode = decode_cycle_input_states;
+    block.toggleStates.funcs.decode = decode_toggle_input_states;
+    block.bluetoothStates.funcs.decode = decode_bluetooth_states;
+    pb_decode(&auxInputStream, proto_AuxConfigBlock_fields, &block);
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
 
     if (active_instances.empty() || mode == ModeHid || mode == ModeXbox360)
@@ -1386,34 +1394,4 @@ bool load()
     }
 
     return inner_load(footer.currentProfile, dataPtr, footer.dataSize, footer.mainSize, footer.auxSize);
-}
-
-void first_load()
-{
-    UsbDevice::reset_ep();
-    active_devices.clear();
-    root_devices.clear();
-    instances.clear();
-    active_instances.clear();
-    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances); i++)
-    {
-        usb_instances[i] = std::shared_ptr<UsbDevice>();
-    }
-    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epin); i++)
-    {
-        usb_instances_by_epin[i] = std::shared_ptr<UsbDevice>();
-    }
-    for (size_t i = 0; i < TU_ARRAY_SIZE(usb_instances_by_epout); i++)
-    {
-        usb_instances_by_epout[i] = std::shared_ptr<UsbDevice>();
-    }
-    all_profiles.clear();
-    auth_devices.clear();
-    emulated_devices.clear();
-    auto confDevice = std::make_shared<HIDConfigDevice>();
-    confDevice->interface_id = instances.size();
-    confDevice->initialize();
-    instances.push_back(confDevice);
-    active_instances.push_back(confDevice);
-    usb_instances[confDevice->interface_id] = confDevice;
 }

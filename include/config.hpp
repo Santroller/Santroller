@@ -17,14 +17,13 @@
 #include "CRC32.h"
 #include "emulation/usb/device.hpp"
 #include "usb/host/host.hpp"
-bool save_empty();
+bool load_empty();
 bool load();
 uint32_t copy_config(uint8_t *buffer, uint32_t start);
 uint32_t copy_config_info(uint8_t *buffer);
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize);
 bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start);
 void update();
-void first_load();
 void reload();
 void update_aux_cycle(uint32_t id, uint32_t state);
 void update_aux_toggle(uint32_t id, bool state);

@@ -207,8 +207,8 @@ int main()
     if (!load())
     {
         // config was not valid, save a empty config
-        save_empty();
-        load();
+        load_empty();
+        // load();
     }
     printf("init %d\r\n", mode);
     // init device stack on configured roothub port

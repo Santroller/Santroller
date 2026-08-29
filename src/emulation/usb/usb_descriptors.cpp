@@ -258,7 +258,7 @@ void tud_init(void)
 }
 void tud_reset(uint8_t rhport)
 {
-  printf("reset\r\n");
+  // printf("reset\r\n");
   UsbDevice::reset_ep();
 }
 

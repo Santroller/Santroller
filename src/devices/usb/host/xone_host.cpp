@@ -46,7 +46,6 @@ void XboxOneHost::send_report_from_host(XGIPProtocol *report)
 
 std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
-    printf("XboxOneHost::open\r\n");
     uint32_t size = desc_itf->bLength;
     TU_VERIFY(desc_itf->bInterfaceSubClass == 0x47 &&
                   desc_itf->bInterfaceProtocol == 0xD0 && desc_itf->bAlternateSetting == 0,

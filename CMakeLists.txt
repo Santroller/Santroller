@@ -285,6 +285,8 @@ add_executable(
   src/devices/bluetooth.cpp
   src/devices/stp16cpc.cpp
   src/config/config.cpp
+  src/config/config_loader.cpp
+  src/config/config_storage.cpp
   src/emulation/bt/bt_gamepad.cpp
   src/emulation/bt/bt_descriptors.cpp
   ${PROTO_OUTPUT_DIR}/input_enums.pb.c

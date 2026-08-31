@@ -2,7 +2,7 @@
 #include "input.hpp"
 #include "input.pb.h"
 #include "devices/usb.hpp"
-#include "usb/host/host.hpp"
+#include "devices/usb/host/host.hpp"
 #include <memory>
 class USBAxisInput : public Input
 {

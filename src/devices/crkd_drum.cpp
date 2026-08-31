@@ -2,7 +2,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
-#include "config.hpp"
+#include "config/config.hpp"
 CrkdDrumDevice::CrkdDrumDevice(proto_CrkdDrumDevice device, uint16_t id) : Device(id), drum(device.uart.block, device.uart.tx, device.uart.rx, device.uart.baudrate), m_device(device)
 {
 }

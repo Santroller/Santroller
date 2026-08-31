@@ -1,6 +1,6 @@
 #include "input/cycle.hpp"
 #include "utils.h"
-#include "config.hpp"
+#include "config/config.hpp"
 #include <pb_encode.h>
 #include "emulation/usb/hid_device.h"
 #include "events.pb.h"

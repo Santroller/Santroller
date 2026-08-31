@@ -2,7 +2,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
-#include "config.hpp"
+#include "config/config.hpp"
 #include "utils.h"
 CycleDevice::CycleDevice(std::shared_ptr<CycleDevice> old, proto_CycleDevice device, uint16_t id, uint32_t current_index, std::vector<uint32_t> states) : Device(id), m_device(device), m_states(states), m_current_value(states[current_index]), m_current_index(current_index)
 {

@@ -1,7 +1,7 @@
 #include "devices/ws2812.hpp"
 #include "events.pb.h"
 #include "main.hpp"
-#include "config.hpp"
+#include "config/config.hpp"
 WS2812Device::WS2812Device(proto_WS2812Device device, uint16_t id) : LedDevice(id, true, false), m_ws2812(device.pin, device.count, device.type), m_device(device)
 {
 }

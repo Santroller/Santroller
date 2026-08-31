@@ -1,8 +1,10 @@
 #include "devices/wii.hpp"
+#include "managers/device_manager.hpp"
+
 #include "events.pb.h"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
-#include "config.hpp"
+#include "config/config.hpp"
 WiiDevice::WiiDevice(std::shared_ptr<WiiDevice> old, proto_WiiDevice device, uint16_t id) : MidiDevice(old, id, false), m_extension(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
 {
     if (old)
@@ -28,7 +30,7 @@ void WiiDevice::rescan(bool first)
     MidiDevice::rescan(first);
     if (first)
     {
-        assignable_devices.push_back(root_devices[m_id]);
+        DeviceManager::instance().add_assignable_device(DeviceManager::instance().get_root_device(m_id));
     }
 }
 

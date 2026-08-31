@@ -2,7 +2,8 @@
 #include "emulation/usb/hid_device.h"
 #include "commands.pb.h"
 #include "enums.pb.h"
-#include "config.hpp"
+#include "config/config.hpp"
+#include "managers/config_manager.hpp"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
 #include "emulation/usb/ps3_device.h"
@@ -88,7 +89,7 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
     clearedOut |= tu_edpt_dir(request->wIndex) == TUSB_DIR_OUT;
     if (clearedIn && clearedOut)
     {
-      newMode = ModeSwitch;
+      ConfigManager::instance().set_new_mode(ModeSwitch);
       return false;
     }
   }
@@ -99,7 +100,7 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
     {
       if (request->bRequest == 6 && request->wValue == 0x4200)
       {
-        newMode = ModeOgXbox;
+        ConfigManager::instance().set_new_mode(ModeOgXbox);
         return false;
       }
     }
@@ -118,18 +119,19 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
       else if (request->bRequest == TUSB_REQ_GET_DESCRIPTOR && desc_type == HID_DESC_TYPE_REPORT)
       {
         TU_VERIFY(tud_control_xfer(TUD_OPT_RHPORT, request, (void *)(uintptr_t)report_descriptor(), report_desc_len()));
-        if (mode == ModeHid && seenWindowsXb1)
+        auto& detection = UsbDetectionState::instance();
+        if (mode == ModeHid && detection.seen_windows_xb1())
         {
-          if (seenWindowsString)
+          if (detection.seen_windows_string())
           {
             if (xinput_on_windows)
             {
-              newMode = ModeXbox360;
+              ConfigManager::instance().set_new_mode(ModeXbox360);
             }
           }
           else
           {
-            newMode = ModeXboxOne;
+            ConfigManager::instance().set_new_mode(ModeXboxOne);
           }
         }
       }

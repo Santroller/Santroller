@@ -16,6 +16,43 @@ cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(SANTROLLER_BOARD_VARIANTS pico_w pico2_w CACHE STRING "Board variants to build")
+option(SANTROLLER_VARIANT_DRIVER "Configure this build tree as a board variant driver" OFF)
+option(SANTROLLER_VARIANT_BUILD "Internal flag for single-board variant builds" OFF)
+option(ENABLE_WIFI "Enable WiFi support (CYW43 driver)" ON)
+set(ENABLE_XBOX_WIRELESS ON CACHE BOOL "Enable Xbox Wireless Adapter support")
+
+if(SANTROLLER_VARIANT_DRIVER AND NOT SANTROLLER_VARIANT_BUILD)
+  project(santroller_variants NONE)
+
+  add_custom_target(prepare_board_variants
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/santroller.uf2" "${CMAKE_BINARY_DIR}/santroller_fota.uf2"
+  )
+
+  foreach(SANTROLLER_VARIANT IN LISTS SANTROLLER_BOARD_VARIANTS)
+    set(SANTROLLER_VARIANT_BINARY_DIR "${CMAKE_BINARY_DIR}/${SANTROLLER_VARIANT}")
+    add_custom_target(build_${SANTROLLER_VARIANT} ALL
+      COMMAND ${CMAKE_COMMAND}
+        -Wno-dev
+        -S "${CMAKE_SOURCE_DIR}"
+        -B "${SANTROLLER_VARIANT_BINARY_DIR}"
+        -G "${CMAKE_GENERATOR}"
+        -DPICO_BOARD=${SANTROLLER_VARIANT}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=${CMAKE_EXPORT_COMPILE_COMMANDS}
+        -DENABLE_WIFI=${ENABLE_WIFI}
+        -DENABLE_XBOX_WIRELESS=${ENABLE_XBOX_WIRELESS}
+        -DSANTROLLER_VARIANT_BUILD=ON
+      COMMAND ${CMAKE_COMMAND} --build "${SANTROLLER_VARIANT_BINARY_DIR}" --parallel
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SANTROLLER_VARIANT_BINARY_DIR}/santroller.uf2" "${CMAKE_BINARY_DIR}/santroller_${SANTROLLER_VARIANT}.uf2"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SANTROLLER_VARIANT_BINARY_DIR}/santroller_fota.uf2" "${CMAKE_BINARY_DIR}/santroller_${SANTROLLER_VARIANT}_fota.uf2"
+    )
+    add_dependencies(build_${SANTROLLER_VARIANT} prepare_board_variants)
+  endforeach()
+
+  return()
+endif()
+
 set(PICO_EXTRAS_FETCH_FROM_GIT TRUE)
 set(PICO_SDK_FETCH_FROM_GIT TRUE)
 set(PICO_PIO_USB_PATH ${CMAKE_SOURCE_DIR}/lib/pico_pio_usb)
@@ -47,16 +84,50 @@ compile_proto()
 
 pico_sdk_init()
 
+# Compress CYW43 WiFi firmware to save flash (only if WiFi is enabled)
+if(ENABLE_WIFI)
+    include(cmake/CompressCyw43Firmware.cmake)
+else()
+    message(STATUS "WiFi disabled - CYW43 driver will not be included")
+    set(CYW43_FIRMWARE_COMPRESSED FALSE)
+endif()
+
 add_compile_options(-fdata-sections -ffunction-sections)
 add_link_options(-Wl,--gc-sections)
 
+include(cmake/Uzlib.cmake)
 add_subdirectory(lib)
 add_subdirectory(lib/pico_fota_bootloader)
+
+# Add compressed CYW43 firmware if available
+if(ENABLE_WIFI)
+    if(CYW43_FIRMWARE_COMPRESSED)
+        message(STATUS "Using compressed CYW43 firmware")
+        add_compile_definitions(USE_COMPRESSED_CYW43_FIRMWARE=1)
+        # Override the firmware include file to use our compressed version
+        add_compile_definitions(CYW43_CHIPSET_FIRMWARE_INCLUDE_FILE="firmware/cyw43_firmware_override.h")
+        set(CYW43_FIRMWARE_SOURCES
+            ${CMAKE_BINARY_DIR}/generated/cyw43_firmware_compressed.c
+          src/firmware/cyw43_firmware_override.c
+        )
+    endif()
+else()
+    # Disable CYW43 driver entirely
+    add_compile_definitions(CYW43_LWIP=0)
+    add_compile_definitions(PICO_CYW43_ARCH_POLL=0)
+    add_compile_definitions(PICO_CYW43_ARCH_THREADSAFE_BACKGROUND=0)
+    set(CYW43_FIRMWARE_SOURCES "")
+endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   # Activate some compiler / linker options to aid us with diagnosing stack space issues in Debug builds
   add_compile_options(-fstack-usage -Wstack-usage=500)
   add_compile_definitions(PICO_USE_STACK_GUARDS=1)
+  set_source_files_properties(
+    ${PICO_SDK_PATH}/lib/mbedtls/library/aes.c
+    ${PICO_SDK_PATH}/lib/mbedtls/library/ctr_drbg.c
+    PROPERTIES COMPILE_OPTIONS -Wno-stack-usage
+  )
   # add_compile_definitions(PICO_DEBUG_MALLOC=1)
 endif()
 
@@ -150,52 +221,37 @@ add_executable(
   src/input/fixed.cpp
   src/input/ads1115.cpp
   src/input/multiplexer.cpp
-  src/leds/leds.cpp
-  src/triggers/ActivationTrigger.cpp
-  src/mappings/Mapping.cpp
-  src/mappings/GamepadAxisMapping.cpp
-  src/mappings/GamepadButtonMapping.cpp
-  src/mappings/KeyboardButtonMapping.cpp
-  src/mappings/MouseAxisMapping.cpp
-  src/mappings/MouseButtonMapping.cpp
-  src/mappings/DJHTurntableAxisMapping.cpp
-  src/mappings/DJHTurntableButtonMapping.cpp
-  src/mappings/DJMaxTurntableButtonMapping.cpp
-  src/mappings/DJMaxTurntableAxisMapping.cpp
-  src/mappings/GuitarFreaksButtonMapping.cpp
-  src/mappings/LiveGuitarAxisMapping.cpp
-  src/mappings/LiveGuitarButtonMapping.cpp
-  src/mappings/GuitarHeroGuitarAxisMapping.cpp
-  src/mappings/GuitarHeroGuitarButtonMapping.cpp
-  src/mappings/GuitarHeroArcadeAxisMapping.cpp
-  src/mappings/GuitarHeroArcadeButtonMapping.cpp
-  src/mappings/GuitarHeroDrumsAxisMapping.cpp
-  src/mappings/RockBandGuitarAxisMapping.cpp
-  src/mappings/RockBandGuitarButtonMapping.cpp
-  src/mappings/RockBandDrumsAxisMapping.cpp
-  src/mappings/RockBandDrumsButtonMapping.cpp
-  src/mappings/ProGuitarAxisMapping.cpp
-  src/mappings/ProGuitarButtonMapping.cpp
-  src/mappings/ProKeysAxisMapping.cpp
-  src/mappings/ProKeysButtonMapping.cpp
-  src/mappings/WheelAxisMapping.cpp
-  src/mappings/WheelButtonMapping.cpp
-  src/mappings/TaikoAxisMapping.cpp
-  src/mappings/TaikoButtonMapping.cpp
-  src/mappings/PopNMusicAxisMapping.cpp
-  src/mappings/PopNMusicButtonMapping.cpp
-  src/mappings/ProjectDivaAxisMapping.cpp
-  src/mappings/BeatManiaAxisMapping.cpp
-  src/mappings/BeatManiaButtonMapping.cpp
-  src/mappings/KeyboardManiaAxisMapping.cpp
-  src/mappings/KeyboardButtonMapping.cpp
-  src/mappings/DrumManiaAxisMapping.cpp
-  src/mappings/DrumManiaButtonMapping.cpp
-  src/mappings/SDVXAxisMapping.cpp
-  src/mappings/SDVXButtonMapping.cpp
+  src/leds/led_devices.cpp
+  src/leds/led_mappings.cpp
+  src/triggers/activation_trigger_list.cpp
+  src/triggers/input_trigger.cpp
+  src/triggers/device_type_triggers.cpp
+  src/triggers/mode_triggers.cpp
+  src/managers/profile_manager.cpp
+  src/managers/device_manager.cpp
+  src/managers/config_manager.cpp
+  src/profiles/profile.cpp
+  src/config/device_factory.cpp
+  src/config/input_factory.cpp
+  src/config/mapping_factory.cpp
+  src/config/trigger_factory.cpp
+  src/config/led_factory.cpp
+  src/config/instance_factory.cpp
+  src/mappings/base_mapping.cpp
+  src/mappings/gamepad_mapping.cpp
+  src/mappings/red_octane_mappings.cpp
+  src/mappings/rock_band_mappings.cpp
+  src/mappings/konami_mappings.cpp
+  src/mappings/djmax_mappings.cpp
+  src/mappings/project_diva_mappings.cpp
+  src/mappings/taiko_mappings.cpp
+  src/mappings/peripheral_mappings.cpp
+  src/mappings/powergig_mappings.cpp
+  src/mappings/rock_revolution_mappings.cpp
   src/devices/bt/ble_rx.cpp
   src/devices/bt/bt_classic_rx.cpp
   src/devices/usb.cpp
+  src/usb/auth_broker.cpp
   src/devices/wii.cpp
   src/devices/ps2.cpp
   src/devices/ps2_emulation.cpp
@@ -214,6 +270,7 @@ add_executable(
   src/devices/cycle.cpp
   src/devices/toggle.cpp
   src/devices/crazyneck.cpp
+  ${CYW43_FIRMWARE_SOURCES}
   src/devices/multiplexer.cpp
   src/devices/midiserial.cpp
   src/devices/djh.cpp
@@ -227,7 +284,7 @@ add_executable(
   src/devices/led.cpp
   src/devices/bluetooth.cpp
   src/devices/stp16cpc.cpp
-  src/config.cpp
+  src/config/config.cpp
   src/emulation/bt/bt_gamepad.cpp
   src/emulation/bt/bt_descriptors.cpp
   ${PROTO_OUTPUT_DIR}/input_enums.pb.c
@@ -238,6 +295,52 @@ add_executable(
   ${PROTO_OUTPUT_DIR}/events.pb.c
   ${PROTO_OUTPUT_DIR}/commands.pb.c
 )
+
+# Xbox Wireless Adapter (MT76) Support
+if(ENABLE_XBOX_WIRELESS)
+    message(STATUS "Xbox Wireless Adapter support enabled")
+    
+    # Use Pico SDK's mbedTLS with custom config for Xbox Wireless crypto
+    set(HAVE_MBEDTLS TRUE)
+    message(STATUS "Using Pico SDK's mbedTLS with Xbox Wireless crypto features")
+
+    # Download and convert firmware
+    include(cmake/DownloadFirmware.cmake)
+    include(cmake/ConvertFirmware.cmake)
+
+    # Add MT76 sources to main executable
+    target_sources(${TARGET} PRIVATE
+        src/devices/usb/host/xbox/mt76.c
+        src/devices/usb/host/xbox/mt76_init.c
+        src/devices/usb/host/xbox/wireless.c
+        src/devices/usb/host/xbox/gip_crypto.c
+        src/devices/usb/host/xbox/firmware_decompress.c
+        src/devices/usb/host/xbox_wireless_host.cpp
+        src/devices/usb/host/xbox_wireless_controller.cpp
+        ${CMAKE_BINARY_DIR}/generated/firmware_data.c
+    )
+
+    # Add include directories
+    target_include_directories(${TARGET} PRIVATE
+        include/devices/usb/host/xbox
+        ${CMAKE_BINARY_DIR}/generated
+    )
+
+    # Link uzlib for firmware decompression
+    target_link_libraries(${TARGET} uzlib)
+    
+    # Link Pico SDK's mbedTLS libraries
+    if(HAVE_MBEDTLS)
+        target_compile_definitions(${TARGET} PRIVATE HAVE_MBEDTLS=1)
+        target_link_libraries(${TARGET}
+            pico_mbedtls
+        )
+        message(STATUS "mbedTLS libraries linked to ${TARGET}")
+    endif()
+    
+    message(STATUS "Xbox Wireless Adapter integration complete")
+endif()
+
 target_include_directories(${TARGET} PUBLIC
   ${SRC}
   include
@@ -277,6 +380,7 @@ target_link_libraries(
   crazy_guitar_neck
   dj_hero_turntable
   guitar_hero_5_neck
+  gip_common
   xgip_protocol
   vtech_guitar_ioexpander
   pico_audio_i2s
@@ -334,3 +438,22 @@ add_custom_command(
         POST_BUILD
         COMMAND python ${CMAKE_SOURCE_DIR}/build.py "${GIT_COMMIT}" "${CMAKE_CURRENT_BINARY_DIR}" "${PICO_BOARD}"
 )
+
+if(NOT SANTROLLER_VARIANT_BUILD)
+  add_custom_target(build_board_variants
+    COMMAND ${CMAKE_COMMAND}
+      -S "${CMAKE_SOURCE_DIR}"
+      -B "${CMAKE_BINARY_DIR}/variants"
+      -G "${CMAKE_GENERATOR}"
+      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+      -DCMAKE_EXPORT_COMPILE_COMMANDS=${CMAKE_EXPORT_COMPILE_COMMANDS}
+      -DENABLE_WIFI=${ENABLE_WIFI}
+      -DENABLE_XBOX_WIRELESS=${ENABLE_XBOX_WIRELESS}
+      -DSANTROLLER_VARIANT_DRIVER=ON
+    COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}/variants" --parallel
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico_w.uf2" "${CMAKE_BINARY_DIR}/santroller_pico_w.uf2"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico_w_fota.uf2" "${CMAKE_BINARY_DIR}/santroller_pico_w_fota.uf2"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico2_w.uf2" "${CMAKE_BINARY_DIR}/santroller_pico2_w.uf2"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico2_w_fota.uf2" "${CMAKE_BINARY_DIR}/santroller_pico2_w_fota.uf2"
+  )
+endif()

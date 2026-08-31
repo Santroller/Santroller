@@ -17,6 +17,11 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     return 0;
 }
 
+static alarm_id_t schedule_poll(Accelerometer *inst)
+{
+    return add_alarm_in_us(500, restart_handler, inst, true);
+}
+
 void Accelerometer::begin()
 {
     printf("accel begin\r\n");
@@ -87,41 +92,20 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                 accel[0] = bufferRx[0] << 8 | bufferRx[1];
                 accel[1] = bufferRx[2] << 8 | bufferRx[3];
                 accel[2] = bufferRx[4] << 8 | bufferRx[5];
-                if (HIDConfigDevice::tool_closed())
-                {
-                    restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
-                }
-                else
-                {
-                    restart_alarm_id = add_alarm_in_us(5000, restart_handler, this, true);
-                }
+                restart_alarm_id = schedule_poll(this);
                 break;
             case LIS_FAMILY_POLL:
                 accel[0] = bufferRx[1] << 8 | bufferRx[0];
                 accel[1] = bufferRx[3] << 8 | bufferRx[2];
                 accel[2] = bufferRx[5] << 8 | bufferRx[4];
-                if (HIDConfigDevice::tool_closed())
-                {
-                    restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
-                }
-                else
-                {
-                    restart_alarm_id = add_alarm_in_us(5000, restart_handler, this, true);
-                }
+                restart_alarm_id = schedule_poll(this);
                 break;
             case ADXL_POLL:
                 // ADXL345 needs to be scaled
                 accel[0] = (bufferRx[1] << 8 | bufferRx[0]) * 64;
                 accel[1] = (bufferRx[3] << 8 | bufferRx[2]) * 64;
                 accel[2] = (bufferRx[5] << 8 | bufferRx[4]) * 64;
-                if (HIDConfigDevice::tool_closed())
-                {
-                    restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
-                }
-                else
-                {
-                    restart_alarm_id = add_alarm_in_us(5000, restart_handler, this, true);
-                }
+                restart_alarm_id = schedule_poll(this);
                 break;
             case LIS3DH_POLL:
                 accel[0] = bufferRx[1] << 8 | bufferRx[0];
@@ -135,14 +119,7 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                 lis3dhAdc[0] = bufferRx[1] << 8 | bufferRx[0];
                 lis3dhAdc[1] = bufferRx[3] << 8 | bufferRx[2];
                 lis3dhAdc[2] = bufferRx[5] << 8 | bufferRx[4];
-                if (HIDConfigDevice::tool_closed())
-                {
-                    restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
-                }
-                else
-                {
-                    restart_alarm_id = add_alarm_in_us(5000, restart_handler, this, true);
-                }
+                restart_alarm_id = schedule_poll(this);
                 status = LIS3DH_POLL;
                 pollReg = LIS3DH_REG_OUT;
                 break;
@@ -183,7 +160,7 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                     else
                     {
                         type = AccelerometerType::None;
-                        restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                        restart_alarm_id = schedule_poll(this);
                         return;
                     }
                     break;
@@ -193,13 +170,13 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                     if (addr == ADXL345_ADDRESS && idResponseAdxl1 != ADXL345_ID)
                     {
                         type = AccelerometerType::None;
-                        restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                        restart_alarm_id = schedule_poll(this);
                         return;
                     }
                     if (addr == ADXL345_ADDRESS_2 && idResponseAdxl2 != ADXL345_ID)
                     {
                         type = AccelerometerType::None;
-                        restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                        restart_alarm_id = schedule_poll(this);
                         return;
                     }
                     address = addr;
@@ -214,13 +191,13 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
                     if (addr == MPU6050_ADDRESS && (idResponseMpu1 != MPU6050_ID && idResponseMpu1 != MPU6050_ID2 && idResponseMpu1 != MPU6050_ID3))
                     {
                         type = AccelerometerType::None;
-                        restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                        restart_alarm_id = schedule_poll(this);
                         return;
                     }
                     if (addr == MPU6050_ADDRESS_2 && (idResponseMpu2 != MPU6050_ID && idResponseMpu2 != MPU6050_ID2 && idResponseMpu2 != MPU6050_ID3))
                     {
                         type = AccelerometerType::None;
-                        restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                        restart_alarm_id = schedule_poll(this);
                         return;
                     }
                     address = addr;
@@ -271,34 +248,34 @@ void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool a
             case MPU_6050_ACCEL_CONFIG:
                 status = MPU_6050_POLL;
                 pollReg = MPU6050_REG_ACCEL_OUT;
-                restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                restart_alarm_id = schedule_poll(this);
                 break;
             case ADXL_DATAFORMAT:
                 status = ADXL_POLL;
                 pollReg = ADXL345_DATAX0;
-                restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                restart_alarm_id = schedule_poll(this);
                 break;
             case LIS3DH_TEMPCFG_INIT:
                 status = LIS3DH_POLL;
                 pollReg = LIS3DH_REG_OUT;
-                restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                restart_alarm_id = schedule_poll(this);
                 break;
             case LIS3DSH_CTRL1_INIT:
                 status = LIS_FAMILY_POLL;
                 pollReg = LIS3DH_REG_OUT;
-                restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                restart_alarm_id = schedule_poll(this);
                 break;
             case SC7A20_CTRL4_INIT:
                 status = LIS_FAMILY_POLL;
                 pollReg = LIS3DH_REG_OUT;
-                restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+                restart_alarm_id = schedule_poll(this);
                 break;
             }
         }
         // If we dont see any sensors, wait a bit before looking again
         if (!abort_detected && status == ACCEL_INIT && seen_response_lis3dh_1 && seen_response_lis3dh_2 && seen_response_adxl345_1 && seen_response_adxl345_2 && seen_response_mpu6050_1 && seen_response_mpu6050_2)
         {
-            restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+            restart_alarm_id = schedule_poll(this);
         }
 
         return;

@@ -11,8 +11,8 @@
 #include "emulation/bt/bt_profile.h"
 #include "emulation/bt/bt_descriptors.h"
 #include "emulation/bt/bt_gamepad.h"
+#include "managers/config_manager.hpp"
 #include "btstack.h"
-#include "main.hpp"
 #include "utils.h"
 #define SIZE_OF_BD_ADDRESS 18
 // static btstack_timer_source_t heartbeat;
@@ -119,7 +119,7 @@ BTGamepadDevice::BTGamepadDevice()
 }
 BTGamepadDevice::~BTGamepadDevice()
 {
-    if (!isPicoW)
+    if (!ConfigManager::instance().has_bluetooth())
     {
         return;
     }
@@ -134,7 +134,7 @@ BTGamepadDevice::~BTGamepadDevice()
 }
 void BTGamepadDevice::initialize()
 {
-    if (!isPicoW)
+    if (!ConfigManager::instance().has_bluetooth())
     {
         return;
     }
@@ -377,10 +377,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
         case HIDS_SUBEVENT_SET_REPORT:
         {
-            uint16_t len = hids_subevent_set_report_get_report_length(packet);
-            uint8_t type = hids_subevent_set_report_get_report_type(packet);
-            uint8_t id = hids_subevent_set_report_get_report_id(packet);
-            const uint8_t *output = hids_subevent_set_report_get_report_data(packet);
             printf("set report!\r\n");
             break;
         }

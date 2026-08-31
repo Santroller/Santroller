@@ -1,8 +1,10 @@
 #include "devices/ps2.hpp"
+#include "managers/device_manager.hpp"
+
 #include "events.pb.h"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
-#include "config.hpp"
+#include "config/config.hpp"
 #include "utils.h"
 #include "stdio.h"
 #include <algorithm>
@@ -27,7 +29,7 @@ void PS2Device::rescan(bool first)
 {
     if (first)
     {
-        assignable_devices.push_back(root_devices[m_id]);
+        DeviceManager::instance().add_assignable_device(DeviceManager::instance().get_root_device(m_id));
     }
 }
 void PS2Device::update(bool full_poll, bool send_events)

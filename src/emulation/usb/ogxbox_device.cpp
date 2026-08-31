@@ -1,11 +1,13 @@
 #include "tusb_option.h"
+#include <memory>
+#include "managers/profile_manager.hpp"
 #include "class/hid/hid.h"
 #include "common/tusb_common.h"
 #include "device/usbd_pvt.h"
 #include "emulation/usb/ogxbox_device.h"
 #include "emulation/usb/hid_device.h"
-#include "usb/usb_descriptors.h"
-#include "config.hpp"
+#include "emulation/usb/usb_descriptors.h"
+#include "config/config.hpp"
 
 const XID_DESCRIPTOR DukeXIDDescriptor = {
     bLength : sizeof(XID_DESCRIPTOR),
@@ -138,8 +140,8 @@ void OGXboxGamepadDevice::initialize()
 {
     m_epin = next_epin();
     m_epout = next_epout();
-    usb_instances_by_epin[m_epin & (~0x80)] = usb_instances[interface_id];
-    usb_instances_by_epout[m_epout] = usb_instances[interface_id];
+    ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
+    ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
 
     memset(&initialReport, 0, sizeof(initialReport));
     switch (subtype)

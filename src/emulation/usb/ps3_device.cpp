@@ -1,9 +1,11 @@
 #include "emulation/usb/ps3_device.h"
+#include <memory>
+#include "managers/profile_manager.hpp"
 #include "protocols/ps4.hpp"
 #include "hid_reports.h"
-#include "config.hpp"
+#include "config/config.hpp"
 #include "enums.pb.h"
-#include "usb/usb_devices.h"
+#include "emulation/usb/usb_devices.h"
 
 static const char str_powergig_guitar[] = "Seven45 Guitar Controller";
 static const char str_powergig_drums[] = "Seven45 Drum Controller";
@@ -169,8 +171,8 @@ void PS3GamepadDevice::initialize()
     m_epin = next_epin();
     m_epout = next_epout();
     m_strid = next_strid();
-    usb_instances_by_epin[m_epin & (~0x80)] = usb_instances[interface_id];
-    usb_instances_by_epout[m_epout] = usb_instances[interface_id];
+    ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
+    ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
     if (subtype == Gamepad)
     {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)initialReport;

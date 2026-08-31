@@ -1,10 +1,12 @@
 #include "tusb_option.h"
-#include "usb/host/xinput_host.h"
+#include "devices/usb/host/xinput_host.h"
 #include "class/hid/hid.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
-#include "usb/usb_devices.h"
-#include "config.hpp"
+#include "emulation/usb/usb_devices.h"
+#include "config/config.hpp"
+#include "managers/device_manager.hpp"
+
 
 std::shared_ptr<UsbHostInterface> XInputWirelessAudioHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
@@ -50,7 +52,6 @@ std::shared_ptr<UsbHostInterface> XInputWirelessAudioHost::open(std::shared_ptr<
     }
     *out_len = TUD_XINPUT_WIRELESS_AUDIO_DESC_LEN;
     // TODO: audio
-    // assignable_usb_devices.push_back(intf);
     return intf;
 }
 

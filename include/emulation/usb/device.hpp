@@ -3,7 +3,7 @@
 #include "tusb.h"
 #include "class/hid/hid.h"
 #include "device/usbd_pvt.h"
-#include "usb/usb_descriptors.h"
+#include "emulation/usb/usb_descriptors.h"
 #include "instance.hpp"
 
 class UsbDevice : public Instance

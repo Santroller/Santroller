@@ -39,6 +39,8 @@ void Ps2EmulationDeviceInstance::initialize()
         m_size = sizeof(PS2GuitarHeroGuitar_Data_t);
         break;
     }
+    default:
+        break;
     }
 }
 void Ps2EmulationDeviceInstance::process()

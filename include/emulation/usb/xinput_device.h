@@ -5,8 +5,8 @@
 #include "protocols/xinput.hpp"
 #include "device.hpp"
 #include "enums.pb.h"
-#include "config.hpp"
-#include "usb/usb_descriptors.h"
+#include "config/config.hpp"
+#include "emulation/usb/usb_descriptors.h"
 
 #ifndef CFG_TUD_XINPUT_EPSIZE
 #define CFG_TUD_XINPUT_EPSIZE 64

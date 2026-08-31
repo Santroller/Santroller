@@ -68,6 +68,8 @@ void Max1704X::processData(uint8_t addr, bool running, bool timeout, bool abort_
         case MAX710X_POLL:
             batteryLevel = bufferRx[0];
             break;
+        default:
+            break;
         }
 
         restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);

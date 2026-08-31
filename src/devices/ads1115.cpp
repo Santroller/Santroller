@@ -1,6 +1,6 @@
 #include "devices/ads1115.hpp"
 #include "events.pb.h"
-#include "config.hpp"
+#include "config/config.hpp"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
 ADS1115Device::ADS1115Device(proto_ADS1115Device device, uint16_t id) : Device(id), ads1115(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock, device.interrupt), m_device(device)

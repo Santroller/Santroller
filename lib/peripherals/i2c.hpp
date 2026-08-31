@@ -49,12 +49,14 @@ typedef struct i2c_dma_s
     volatile bool timeout;
     volatile bool running;
     volatile bool processing;
+    volatile bool event_pending;
     alarm_id_t timeout_alarm_id;
 
     uint16_t data_cmds[I2C_MAX_TRANSFER_SIZE];
     I2CDMAInterface *dmaInterface[I2C_MAX_ADDR];
     i2c_dma_transfer_t waitingTransfers[I2C_MAX_ADDR];
     bool hasWaitingTransfer[I2C_MAX_ADDR];
+    uint8_t next_transfer_addr;
 } i2c_dma_t;
 
 class I2CMasterInterface

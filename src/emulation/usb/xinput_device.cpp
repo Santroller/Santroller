@@ -1,4 +1,6 @@
 #include "tusb_option.h"
+#include <memory>
+#include "managers/profile_manager.hpp"
 
 //--------------------------------------------------------------------+
 // INCLUDE
@@ -7,12 +9,13 @@
 #include "common/tusb_common.h"
 #include "device/usbd_pvt.h"
 #include "emulation/usb/xinput_device.h"
+#include "managers/config_manager.hpp"
 #include "emulation/usb/hid_device.h"
-#include "usb/usb_descriptors.h"
+#include "emulation/usb/usb_descriptors.h"
 #include <xsm3.h>
 #include <pico/unique_id.h>
-#include "usb/usb_devices.h"
-#include "config.hpp"
+#include "emulation/usb/usb_devices.h"
+#include "config/config.hpp"
 static const char str_xb360_auth[] = "Xbox Security Method 3, Version 1.00, \xa9 2005 Microsoft Corporation. All rights reserved.";
 static const uint8_t xbox_players[] = {
     0, // 0x00	 All off
@@ -44,8 +47,8 @@ void XInputGamepadDevice::initialize()
     m_epin = next_epin();
     m_epout = next_epout();
     m_strid = next_strid();
-    usb_instances_by_epin[m_epin & (~0x80)] = usb_instances[interface_id];
-    usb_instances_by_epout[m_epout] = usb_instances[interface_id];
+    ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
+    ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
 
     memset(&initialReport, 0, sizeof(initialReport));
     initialReport.leftStickX = 0;
@@ -464,7 +467,7 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
             {
                 uint8_t const report_id = tu_u16_low(request->wValue);
                 if (report_id == 0xF2)
-                    newMode = ModePs3;
+                    ConfigManager::instance().set_new_mode(ModePs3);
             }
             break;
         }
@@ -484,7 +487,7 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
                 xsm3_set_identification_data(xsm3_id_data_ms_controller);
                 tud_control_xfer(TUD_OPT_RHPORT, request, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
             }
-            newMode = ModeXbox360;
+            ConfigManager::instance().set_new_mode(ModeXbox360);
             return true;
         case 0x82:
             if (stage == CONTROL_STAGE_SETUP)

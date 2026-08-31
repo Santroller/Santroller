@@ -1,15 +1,18 @@
 #include "tusb_option.h"
-#include "usb/host/xinput_host.h"
+#include "devices/usb/host/xinput_host.h"
+#include "devices/usb/host/xinput_tick_helpers.h"
 #include "protocols/xinput.hpp"
 #include "class/hid/hid.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
-#include "usb/usb_devices.h"
+#include "emulation/usb/usb_devices.h"
 #include "devices/usb.hpp"
 #include "emulation/usb/hid_device.h"
-#include "config.hpp"
+#include "config/config.hpp"
+#include "managers/device_manager.hpp"
 #include "utils.h"
 #include <algorithm>
+
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t xbox360w_prescence[] = {0x08, 0x00, 0x0f, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const char xinput_wireless_gamepad_name[] = "X360 Wireless 0";
@@ -58,7 +61,7 @@ std::shared_ptr<UsbHostInterface> XInputWirelessGamepadHost::open(std::shared_pt
     {
         list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
     }
-    enumerating_usb_devices.push_back(intf);
+    DeviceManager::instance().add_enumerating_usb_device(intf);
 
     *out_len = TUD_XINPUT_WIRELESS_CONTROLLER_DESC_LEN;
     printf("found device: %d\r\n", intf->m_subtype);
@@ -93,13 +96,8 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                 if (m_found)
                 {
                     printf("Disconnected %02x %02x\r\n", m_dev_addr, m_interface);
-                    if (assignable_usb_devices.size() > 0)
-                    {
-                        assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [this](std::shared_ptr<UsbHostInterface> intf)
-                                                                    { return intf.get() == this; }),
-                                                     assignable_usb_devices.end());
-                    }
-                    enumerating_usb_devices.push_back(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
+                    DeviceManager::instance().remove_assignable_usb_device(this);
+                    DeviceManager::instance().add_enumerating_usb_device(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
                     for (size_t i = 0; i < sizeof(xinput_wireless_gamepad_disconnected_name); i++)
                     {
                         // skip header
@@ -135,13 +133,8 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                     send_intr_xfer(m_ep_out, capabilitiesRequest, sizeof(capabilitiesRequest));
                     m_check_caps = millis() + 1000;
                     m_found = true;
-                    if (enumerating_usb_devices.size() > 0)
-                    {
-                        enumerating_usb_devices.erase(std::remove_if(enumerating_usb_devices.begin(), enumerating_usb_devices.end(), [this](std::shared_ptr<UsbHostInterface> intf)
-                                                                     { return intf.get() == this; }),
-                                                      enumerating_usb_devices.end());
-                    }
-                    assignable_usb_devices.push_back(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
+                    DeviceManager::instance().remove_enumerating_usb_device(this);
+                    DeviceManager::instance().add_assignable_usb_device(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
                     process_delayed_init();
                 }
             }
@@ -178,222 +171,9 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
 
 bool XInputWirelessGamepadHost::tick_digital(proto_Output &type)
 {
-    if (type.which_mapping == proto_Output_gamepadButton_tag)
-    {
-        auto data = (XInputGamepad_Data_t *)m_ep_in_buf;
-        switch (type.mapping.gamepadButton)
-        {
-        case Gamepad_A:
-            return data->a;
-        case Gamepad_B:
-            return data->b;
-        case Gamepad_X:
-            return data->x;
-        case Gamepad_Y:
-            return data->y;
-        case Gamepad_LeftShoulder:
-            return data->leftShoulder;
-        case Gamepad_RightShoulder:
-            return data->rightShoulder;
-        case Gamepad_Back:
-            return data->back;
-        case Gamepad_Start:
-            return data->start;
-        case Gamepad_LeftThumbClick:
-            return data->leftThumbClick;
-        case Gamepad_RightThumbClick:
-            return data->rightThumbClick;
-        case Gamepad_Guide:
-            return data->guide;
-        case Gamepad_DpadUp:
-            return data->dpadUp;
-        case Gamepad_DpadDown:
-            return data->dpadDown;
-        case Gamepad_DpadLeft:
-            return data->dpadLeft;
-        case Gamepad_DpadRight:
-            return data->dpadRight;
-        default:
-            return false;
-        }
-    }
-    switch (m_subtype)
-    {
-    case GuitarHeroGuitar:
-        if (type.which_mapping == proto_Output_ghButton_tag)
-        {
-            auto data = (XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf;
-            switch (type.mapping.ghButton)
-            {
-            case GuitarHeroGuitar_Green:
-                return data->a;
-            case GuitarHeroGuitar_Red:
-                return data->b;
-            case GuitarHeroGuitar_Yellow:
-                return data->y;
-            case GuitarHeroGuitar_Blue:
-                return data->x;
-            case GuitarHeroGuitar_Orange:
-                return data->leftShoulder;
-            case GuitarHeroGuitar_TapGreen:
-                // TODO: this
-                return false;
-            case GuitarHeroGuitar_TapRed:
-                // TODO: this
-                return false;
-            case GuitarHeroGuitar_TapYellow:
-                // TODO: this
-                return false;
-            case GuitarHeroGuitar_TapBlue:
-                // TODO: this
-                return false;
-            case GuitarHeroGuitar_TapOrange:
-                // TODO: this
-                return false;
-            default:
-                return false;
-            }
-        }
-        return false;
-    case RockBandGuitar:
-        if (type.which_mapping == proto_Output_rbButton_tag)
-        {
-            auto data = (XInputRockBandGuitar_Data_t *)m_ep_in_buf;
-            switch (type.mapping.rbButton)
-            {
-            case RockBandGuitar_Green:
-                return data->a && !data->solo;
-            case RockBandGuitar_Red:
-                return data->b && !data->solo;
-            case RockBandGuitar_Yellow:
-                return data->y && !data->solo;
-            case RockBandGuitar_Blue:
-                return data->x && !data->solo;
-            case RockBandGuitar_Orange:
-                return data->leftShoulder && !data->solo;
-            case RockBandGuitar_SoloGreen:
-                return data->a && data->solo;
-            case RockBandGuitar_SoloRed:
-                return data->b && data->solo;
-            case RockBandGuitar_SoloYellow:
-                return data->y && data->solo;
-            case RockBandGuitar_SoloBlue:
-                return data->x && data->solo;
-            case RockBandGuitar_SoloOrange:
-                return data->leftShoulder && data->solo;
-            default:
-                return false;
-            }
-        }
-        return false;
-    case LiveGuitar:
-        if (type.which_mapping == proto_Output_ghlButton_tag)
-        {
-            auto data = (XInputGHLGuitar_Data_t *)m_ep_in_buf;
-            switch (type.mapping.ghlButton)
-            {
-            case GuitarHeroLiveGuitar_Black1:
-                return data->a;
-            case GuitarHeroLiveGuitar_Black2:
-                return data->b;
-            case GuitarHeroLiveGuitar_Black3:
-                return data->y;
-            case GuitarHeroLiveGuitar_White1:
-                return data->x;
-            case GuitarHeroLiveGuitar_White2:
-                return data->leftShoulder;
-            case GuitarHeroLiveGuitar_White3:
-                return data->rightShoulder;
-            case GuitarHeroLiveGuitar_StrumUp:
-                return data->strumBar == 0x00;
-            case GuitarHeroLiveGuitar_StrumDown:
-                return data->strumBar == 0xFF;
-            default:
-                return false;
-            }
-        }
-        return false;
-    default:
-        return false;
-        return false;
-    }
-
-    return false;
+    return xinput_tick_digital_impl(m_report_buf, m_subtype, type);
 }
 uint16_t XInputWirelessGamepadHost::tick_analog(proto_Output &type)
 {
-    if (type.which_mapping == proto_Output_gamepadAxis_tag)
-    {
-        auto data = (XInputGamepad_Data_t *)m_ep_in_buf;
-        switch (type.mapping.gamepadAxis)
-        {
-        case Gamepad_LeftTrigger:
-            return data->leftTrigger << 8;
-        case Gamepad_RightTrigger:
-            return data->rightTrigger << 8;
-        case Gamepad_LeftStickX:
-            return data->leftStickX + INT16_MAX;
-        case Gamepad_LeftStickY:
-            return data->leftStickY + INT16_MAX;
-        case Gamepad_RightStickX:
-            return data->rightStickX + INT16_MAX;
-        case Gamepad_RightStickY:
-            return data->rightStickY + INT16_MAX;
-        default:
-            return 0;
-        }
-    }
-    switch (m_subtype)
-    {
-    case GuitarHeroGuitar:
-        if (type.which_mapping == proto_Output_ghAxis_tag)
-        {
-            auto data = (XInputGuitarHeroGuitar_Data_t *)m_ep_in_buf;
-            switch (type.mapping.ghAxis)
-            {
-            case GuitarHeroGuitar_Whammy:
-                return data->whammy + INT16_MAX;
-            case GuitarHeroGuitar_Tilt:
-                return data->tilt + INT16_MAX;
-            default:
-                return 0;
-            }
-        }
-        break;
-    case LiveGuitar:
-        if (type.which_mapping == proto_Output_ghlAxis_tag)
-        {
-            auto data = (XInputGHLGuitar_Data_t *)m_ep_in_buf;
-            switch (type.mapping.ghlAxis)
-            {
-            case GuitarHeroLiveGuitar_Whammy:
-                return data->whammy + INT16_MAX;
-            case GuitarHeroLiveGuitar_Tilt:
-                return data->tilt + INT16_MAX;
-            default:
-                return 0;
-            }
-        }
-        break;
-    case RockBandGuitar:
-        if (type.which_mapping == proto_Output_rbAxis_tag)
-        {
-            auto data = (XInputRockBandGuitar_Data_t *)m_ep_in_buf;
-            switch (type.mapping.rbAxis)
-            {
-            case RockBandGuitar_Whammy:
-                return data->whammy + INT16_MAX;
-            case RockBandGuitar_Tilt:
-                return data->tilt + INT16_MAX;
-            case RockBandGuitar_Pickup:
-                return data->tilt + INT16_MAX;
-            default:
-                return 0;
-            }
-        }
-    default:
-        break;
-    }
-
-    return 0;
+    return xinput_tick_analog_impl(m_report_buf, m_subtype, type);
 }

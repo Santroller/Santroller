@@ -1,6 +1,6 @@
 
 #pragma once
-#include "usb/usb_descriptors.h"
+#include "emulation/usb/usb_descriptors.h"
 #include "hid_device.h"
 
 #include "tusb.h"

@@ -1,9 +1,11 @@
 #include "devices/midi.hpp"
+#include "managers/device_manager.hpp"
+
 #include "events.pb.h"
 #include "emulation/usb/hid_device.h"
-#include "usb/host/hid_host.h"
+#include "devices/usb/host/hid/hid_host.h"
 #include "main.hpp"
-#include "config.hpp"
+#include "config/config.hpp"
 MidiDevice::MidiDevice(std::shared_ptr<MidiDevice> prev, uint16_t id, bool usbBased) : Device(id), drumMode(false), usbBased(usbBased)
 {
     tu_memclr(&ep_stream, sizeof(ep_stream));
@@ -36,12 +38,12 @@ void MidiDevice::rescan(bool first)
                 if (usbBased)
                 {
                     // USB host has more than one interface, so we need to grab it from assignable
-                    assignable_devices.push_back(std::static_pointer_cast<MidiDevice>(assignable_devices.back()));
+                    DeviceManager::instance().add_assignable_device(std::static_pointer_cast<MidiDevice>(DeviceManager::instance().last_assignable_device()));
                 }
                 else
                 {
                     // Every other device will do this scanning on creation, so we grab from active_devices
-                    assignable_devices.push_back(std::static_pointer_cast<MidiDevice>(root_devices[m_id]));
+                    DeviceManager::instance().add_assignable_device(std::static_pointer_cast<MidiDevice>(DeviceManager::instance().get_root_device(m_id)));
                 }
                 printf("Assigning MIDI channel: %d on device %d\r\n", i, m_id);
             }

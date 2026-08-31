@@ -16,3 +16,6 @@
 [submodule "lib/dmx"]
 	path = lib/dmx
 	url = https://github.com/jostlowe/Pico-DMX
+[submodule "lib/uzlib"]
+	path = lib/uzlib
+	url = https://github.com/pfalcon/uzlib.git

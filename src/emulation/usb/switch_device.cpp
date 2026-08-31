@@ -1,9 +1,11 @@
 #include "emulation/usb/switch_device.h"
+#include <memory>
+#include "managers/profile_manager.hpp"
 #include "protocols/ps4.hpp"
 #include "enums.pb.h"
 #include "hid_reports.h"
-#include "config.hpp"
-#include "usb/usb_devices.h"
+#include "config/config.hpp"
+#include "emulation/usb/usb_devices.h"
 #include "pico/rand.h"
 
 uint8_t const desc_hid_report_switch_pro[] =
@@ -85,8 +87,8 @@ void SwitchGamepadDevice::initialize()
 {
     m_epin = next_epin();
     m_epout = next_epout();
-    usb_instances_by_epin[m_epin & (~0x80)] = usb_instances[interface_id];
-    usb_instances_by_epout[m_epout] = usb_instances[interface_id];
+    ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
+    ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
 }
 bool SwitchGamepadDevice::sendReport(uint8_t reportID, void const *reportData, uint16_t reportLength)
 {

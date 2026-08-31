@@ -2,12 +2,11 @@
 #include <pico/cyw43_arch.h>
 #include "events.pb.h"
 #include "emulation/usb/hid_device.h"
-#include "config.hpp"
+#include "config/config.hpp"
+#include "managers/config_manager.hpp"
 #include "devices/bt/bt_classic_rx.hpp"
 #include "devices/bt/ble_rx.hpp"
-#include "main.hpp"
 static bool bluetooth_initted = false;
-static bool init_done = true;
 BluetoothDevice::BluetoothDevice(proto_BluetoothDevice device, uint16_t id) : Device(id), m_device(device)
 {
 }
@@ -21,7 +20,7 @@ void BluetoothDevice::begin()
     printf("bt device init %d\r\n", bluetooth_initted);
     if (cyw43_arch_init() == 0)
     {
-        isPicoW = true;
+        ConfigManager::instance().set_bluetooth_available(true);
         printf("bt device init success\r\n");
         ble_main();
         btstack_classic_main();
@@ -29,7 +28,7 @@ void BluetoothDevice::begin()
     else
     {
         printf("bt device init failed\r\n");
-        isPicoW = false;
+        ConfigManager::instance().set_bluetooth_available(false);
     }
     bluetooth_initted = true;
 }
@@ -47,7 +46,7 @@ void BluetoothDevice::update(bool full_poll, bool send_events)
 {
     if (full_poll)
     {
-        proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, isPicoW}}};
+        proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, ConfigManager::instance().has_bluetooth()}}};
         HIDConfigDevice::send_event(event, true);
     }
 }

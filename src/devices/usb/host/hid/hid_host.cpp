@@ -1,12 +1,14 @@
 #include "tusb_option.h"
-#include "usb/host/hid_host.h"
+#include "devices/usb/host/hid/hid_host.h"
+#include "devices/usb/host/hid/ps3_host.h"
+#include "devices/usb/host/hid/ps4_host.h"
+#include "devices/usb/host/hid/ps5_host.h"
 #include "class/hid/hid.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
-#include "usb/usb_devices.h"
-#include "config.hpp"
+#include "emulation/usb/usb_devices.h"
+#include "config/config.hpp"
 #include "hidparser.h"
-#include "usb/host/hid_host.h"
 
 const uint8_t HidHost::dpad_bindings_reverse[] = {UP, UP | RIGHT, RIGHT, DOWN | RIGHT, DOWN, DOWN | LEFT, LEFT, UP | LEFT};
 static std::shared_ptr<UsbHostInterface> (*hid_device_types[])(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info) = {

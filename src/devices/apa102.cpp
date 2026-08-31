@@ -1,7 +1,7 @@
 #include "devices/apa102.hpp"
 #include "events.pb.h"
 #include "main.hpp"
-#include "config.hpp"
+#include "config/config.hpp"
 APA102Device::APA102Device(proto_APA102Device device, uint16_t id) : LedDevice(id, true, true), m_apa102(device.spi.block, device.spi.mosi, device.spi.sck, device.count, device.type), m_device(device)
 {
 }

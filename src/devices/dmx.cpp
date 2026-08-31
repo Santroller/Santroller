@@ -1,7 +1,7 @@
 #include "devices/dmx.hpp"
 #include "events.pb.h"
 #include "main.hpp"
-#include "config.hpp"
+#include "config/config.hpp"
 DMXDevice::DMXDevice(proto_DMXDevice device, uint16_t id) : LedDevice(id, false, true), m_device(device)
 {
 }

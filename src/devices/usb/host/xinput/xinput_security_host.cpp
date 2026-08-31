@@ -1,9 +1,9 @@
 #include "tusb_option.h"
-#include "usb/host/xinput_host.h"
+#include "devices/usb/host/xinput_host.h"
 #include "class/hid/hid.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
-#include "usb/usb_descriptors.h"
+#include "emulation/usb/usb_descriptors.h"
 
 std::shared_ptr<UsbHostInterface> XInputSecurityHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {

@@ -1,12 +1,14 @@
 #include "tusb_option.h"
-#include "usb/host/hid_host.h"
+#include "devices/usb/host/hid/rhythm_game_host.h"
 #include "class/hid/hid.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
-#include "usb/usb_devices.h"
-#include "config.hpp"
+#include "emulation/usb/usb_devices.h"
+#include "config/config.hpp"
+#include "managers/device_manager.hpp"
 #include "hidparser.h"
 #include "protocols/dance_pad.hpp"
+
 
 std::shared_ptr<UsbHostInterface> LTekHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
@@ -54,7 +56,7 @@ std::shared_ptr<UsbHostInterface> LTekHost::open(std::shared_ptr<UsbHostDevice> 
         list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
     }
     intf->m_has_report_id = lufa;
-    assignable_usb_devices.push_back(intf);
+    DeviceManager::instance().add_assignable_usb_device(intf);
     USB_FreeReportInfo(info);
     return intf;
 }

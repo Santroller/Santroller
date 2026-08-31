@@ -118,6 +118,11 @@ bool XGIPProtocol::parse(const uint8_t *buffer, uint16_t len)
                 memcpy((void *)&header, buffer, sizeof(GipHeader_t));
                 dataLength = total_len_or_offset;
             }
+            if (packet_len > sizeof(data) - actualDataReceived || packet + packet_len > buffer + len)
+            {
+                isValidPacket = false;
+                return false;
+            }
             memcpy(&data[actualDataReceived], packet, packet_len); //
             actualDataReceived += packet_len;
             numberOfChunksSent++; // count our chunks for the ACK
@@ -129,6 +134,12 @@ bool XGIPProtocol::parse(const uint8_t *buffer, uint16_t len)
             memcpy((void *)&header, buffer, sizeof(GipHeader_t));
             if (header.length > 0)
             {
+                if (sizeof(GipHeader_t) + header.length > len)
+                {
+                    reset();
+                    isValidPacket = false;
+                    return false;
+                }
                 memcpy(data, &buffer[4], header.length); // copy incoming data
             }
             actualDataReceived = header.length;

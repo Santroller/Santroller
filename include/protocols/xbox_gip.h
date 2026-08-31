@@ -1,0 +1,25 @@
+#pragma once
+
+#include <stdint.h>
+
+#ifdef GIP_CMD_RUMBLE
+#undef GIP_CMD_RUMBLE
+#endif
+
+typedef enum
+{
+    GIP_ACK_RESPONSE = 0x01,
+    GIP_ANNOUNCE = 0x02,
+    GIP_ARRIVAL = GIP_ANNOUNCE,
+    GIP_KEEPALIVE = 0x03,
+    GIP_DEVICE_DESCRIPTOR = 0x04,
+    GIP_SET_STATE = 0x05,
+    GIP_POWER_MODE_DEVICE_CONFIG = GIP_SET_STATE,
+    GIP_AUTH = 0x06,
+    GIP_VIRTUAL_KEYCODE = 0x07,
+    GIP_CMD_RUMBLE = 0x09,
+    GIP_CMD_LED_ON = 0x0A,
+    GIP_FINAL_AUTH = 0x1E,
+    GIP_INPUT_REPORT = 0x20,
+    GIP_HID_REPORT = 0x21,
+} XboxOneReport;

@@ -1,5 +1,9 @@
+#include "tusb_option.h"
+#include "emulation/usb/usb_descriptors.h"
+#include <memory>
+#include "managers/profile_manager.hpp"
+
 #include "tusb.h"
-#include "usb/usb_descriptors.h"
 #include "emulation/usb/gh_arcade_device.h"
 #include "emulation/usb/xinput_device.h"
 #include "emulation/usb/xone_device.h"
@@ -11,7 +15,7 @@
 #include "hid_reports.h"
 #include <pico/unique_id.h>
 #include "enums.pb.h"
-#include "config.hpp"
+#include "config/config.hpp"
 #include "main.hpp"
 
 bool usb_device_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
@@ -62,20 +66,16 @@ uint8_t descriptor_buffer[0x7ff];
 uint8_t const *tud_descriptor_device_cb(void)
 {
   memcpy(descriptor_buffer, &desc_device_init, sizeof(desc_device_init));
-  for (auto &instance : usb_instances)
+  ProfileManager::instance().for_each_usb_instance([](const auto &instance)
   {
-    if (!instance)
-    {
-      continue;
-    }
     instance->device_descriptor((tusb_desc_device_t *)descriptor_buffer);
-  }
+  });
   return descriptor_buffer;
 }
 
 uint8_t const *tud_hid_descriptor_report_cb(uint8_t interface)
 {
-  return std::static_pointer_cast<HIDDevice>(usb_instances[interface])->report_descriptor();
+  return std::static_pointer_cast<HIDDevice>(ProfileManager::instance().get_usb_instance(interface))->report_descriptor();
 }
 
 uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
@@ -84,15 +84,11 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
   tusb_desc_configuration_t *config = (tusb_desc_configuration_t *)descriptor_buffer;
   size_t current = sizeof(tusb_desc_configuration_t);
   size_t interfaces = 0;
-  for (auto &instance : usb_instances)
+  ProfileManager::instance().for_each_usb_instance([&current, &interfaces](const auto &instance)
   {
-    if (!instance)
-    {
-      continue;
-    }
     current += instance->config_descriptor(descriptor_buffer + current, sizeof(descriptor_buffer) - current);
     interfaces++;
-  }
+  });
   config->bDescriptorType = TUSB_DESC_CONFIGURATION;
   config->bLength = sizeof(tusb_desc_configuration_t);
   config->wTotalLength = current;
@@ -123,16 +119,17 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
   (void)langid;
   // printf("desc %02x %02x\r\n", index, langid);
-  if (seenWindowsXb1)
+  auto& detection = UsbDetectionState::instance();
+  if (detection.seen_windows_xb1())
   {
-    seenWindowsString = true;
+    detection.mark_windows_string_seen();
   }
   size_t chr_count;
   const char *str = nullptr;
   // We only care about actual reads for this heuristic
   if (index != STRID_LANGID)
   {
-    seenReadAnyDeviceString = true;
+    detection.mark_device_string_read();
   }
   switch (index)
   {
@@ -147,7 +144,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
   default:
     if (index == 0xEE)
     {
-      seenOsDescriptorRead = true;
+      detection.mark_os_descriptor_read();
       index = STRID_MSFT;
     }
 
@@ -157,18 +154,13 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     }
     else
     {
-      for (auto &instance : usb_instances)
+      ProfileManager::instance().for_each_usb_instance([index, &str](const auto &instance)
       {
-        if (!instance)
-        {
-          continue;
-        }
-        if (instance->device_name(index, _desc_str_tmp))
+        if (!str && instance->device_name(index, _desc_str_tmp))
         {
           str = _desc_str_tmp;
-          break;
         }
-      }
+      });
     }
     if (!str)
     {
@@ -233,11 +225,11 @@ bool usb_device_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
   std::shared_ptr<UsbDevice> dev;
   if (tu_edpt_dir(ep_addr) == TUSB_DIR_OUT)
   {
-    dev = usb_instances_by_epout[ep_addr];
+    dev = ProfileManager::instance().get_usb_instance_by_epout(ep_addr);
   }
   else
   {
-    dev = usb_instances_by_epout[ep_addr & (~0x80)];
+    dev = ProfileManager::instance().get_usb_instance_by_epout(ep_addr & (~0x80));
   }
   if (!dev)
   {
@@ -249,7 +241,7 @@ bool usb_device_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
 uint16_t tud_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
                   uint16_t max_len)
 {
-  return usb_instances[itf_desc->bInterfaceNumber]->open(itf_desc, max_len);
+  return ProfileManager::instance().get_usb_instance(itf_desc->bInterfaceNumber)->open(itf_desc, max_len);
 }
 
 void tud_init(void)
@@ -290,20 +282,16 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             memcpy(descriptor_buffer, &DevCompatIDHeader, sizeof(DevCompatIDHeader));
             size_t current = sizeof(DevCompatIDHeader);
             size_t count = 0;
-            for (auto &instance : usb_instances)
+            ProfileManager::instance().for_each_usb_instance([&current, &count](const auto &instance)
             {
-              if (!instance)
-              {
-                continue;
-              }
               size_t size = instance->compatible_section_descriptor(descriptor_buffer + current, sizeof(descriptor_buffer) - current);
               current += size;
               if (size)
               {
                 count++;
               }
-              seenWindowsXb1 = true;
-            }
+              UsbDetectionState::instance().mark_windows_xb1_seen();
+            });
             compatible_descriptor->TotalSections = count;
             compatible_descriptor->TotalLength = current;
             tud_control_xfer(rhport, request, descriptor_buffer, current);
@@ -345,7 +333,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     {
       wIndex = XInputGamepadDevice::xinputInterfaces[0];
     }
-    auto dev = usb_instances[wIndex];
+    auto dev = ProfileManager::instance().get_usb_instance(wIndex);
     if (!dev)
     {
       return false;
@@ -359,11 +347,11 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     std::shared_ptr<UsbDevice> dev;
     if (tu_edpt_dir(ep_addr) == TUSB_DIR_OUT)
     {
-      dev = usb_instances_by_epout[ep_addr];
+      dev = ProfileManager::instance().get_usb_instance_by_epout(ep_addr);
     }
     else
     {
-      dev = usb_instances_by_epout[ep_addr & (~0x80)];
+      dev = ProfileManager::instance().get_usb_instance_by_epout(ep_addr & (~0x80));
     }
     if (!dev)
     {

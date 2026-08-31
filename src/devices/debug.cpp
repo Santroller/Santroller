@@ -4,7 +4,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "stdio.h"
-#include "config.hpp"
+#include "config/config.hpp"
 DebugDevice::DebugDevice(proto_DebugDevice device, uint16_t id) : Device(id), m_device(device)
 {
     bi_decl(bi_2pins_with_func(device.uart.tx, device.uart.rx, GPIO_FUNC_UART));

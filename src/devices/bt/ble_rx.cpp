@@ -40,10 +40,8 @@ static const char *bt_addr = (const char *)&BT_ADDR;
 static const char bt_addr[] = BT_ADDR;
 #endif
 #endif
-static bd_addr_t bt_addr_recv;
 static le_device_addr_t remote_device;
 static hci_con_handle_t connection_handle;
-static bool has_address = false;
 static uint16_t hids_cid;
 static hid_protocol_mode_t protocol_mode = HID_PROTOCOL_MODE_REPORT;
 
@@ -64,8 +62,6 @@ static btstack_timer_source_t scan_timer;
 // register for events from HCI/GAP and SM
 static btstack_packet_callback_registration_t hci_event_callback_registration;
 static btstack_packet_callback_registration_t sm_event_callback_registration;
-
-static HID_ReportInfo_t *info;
 
 static void hog_connect(void);
 /**
@@ -88,7 +84,6 @@ typedef struct
 } scan_data_t;
 
 static scan_data_t devices[MAX_DEVICES_TO_SCAN];
-static uint16_t buffer_size;
 static uint8_t devices_found;
 
 static int get_bt_address(uint8_t *addr)
@@ -284,7 +279,6 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
         break;
     case GATTSERVICE_SUBEVENT_HID_INFORMATION:
     {
-        uint16_t cid = gattservice_subevent_hid_information_get_hids_cid(packet);
         // if (type.console_type == GENERIC)
         // {
         //     foundPS3 = false;
@@ -347,7 +341,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         {
             // store remote device address and type
             bd_addr_t address;
-            bool has_name = false;
             gap_event_advertising_report_get_address(packet, address);
             const uint8_t *adv_data = gap_event_advertising_report_get_data(packet);
             uint8_t adv_size = gap_event_advertising_report_get_data_length(packet);
@@ -447,7 +440,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                         memcpy(devices[current_device].name_buffer + data_len + 2, address_string, SIZE_OF_BD_ADDRESS);
                         devices[current_device].name_buffer[data_len + SIZE_OF_BD_ADDRESS + 1] = ')';
                         devices[current_device].name_buffer[data_len + SIZE_OF_BD_ADDRESS + 2] = 0;
-                        has_name = true;
                         printf("has name '%s'\r\n", devices[current_device].name_buffer);
                     }
                     continue;

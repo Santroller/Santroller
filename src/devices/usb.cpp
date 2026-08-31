@@ -1,15 +1,19 @@
 #include "devices/usb.hpp"
+#include "managers/device_manager.hpp"
+
+#include "usb/auth_broker.h"
 #include "tusb.h"
 #include "pio_usb.h"
 #include "host/usbh_pvt.h"
-#include "usb/host/xinput_host.h"
-#include "usb/host/hid_host.h"
-#include "usb/host/midi_host.h"
-#include "usb/host/ogxbox_host.h"
-#include "usb/host/xone_host.h"
+#include "devices/usb/host/xinput_host.h"
+#include "devices/usb/host/hid/hid_host.h"
+#include "devices/usb/host/midi_host.h"
+#include "devices/usb/host/ogxbox_host.h"
+#include "devices/usb/host/xone_host.h"
+#include "devices/usb/host/xbox_wireless_host.h"
 #include "hardware/pio.h"
-#include "config.hpp"
-#include "emulation/usb//hid_device.h"
+#include "config/config.hpp"
+#include "emulation/usb/hid_device.h"
 #include "hardware/dma.h"
 #include <algorithm>
 #include <vector>
@@ -102,7 +106,7 @@ void USBHostHardwareDevice::update(bool full_poll, bool send_events)
 {
     if (m_devices_changed && millis() > m_devices_changed)
     {
-        printf("devices changed! count: %d\r\n", assignable_usb_devices.size());
+        printf("devices changed! count: %d\r\n", DeviceManager::instance().assignable_usb_device_count());
         m_devices_changed = 0;
         reload();
     }
@@ -111,24 +115,20 @@ void USBHostHardwareDevice::update(bool full_poll, bool send_events)
 
         printf("usbhosthardware update %d %d\r\n", full_poll, send_events);
     }
-    for (auto dev : assignable_usb_devices)
+    DeviceManager::instance().for_each_assignable_usb_device([full_poll, send_events](const auto &dev)
     {
         dev->update(full_poll, send_events);
-    }
+    });
 }
 void USBHostHardwareDevice::rescan(bool first)
 {
     printf("usbhosthardware rescan\r\n");
     if (first)
     {
-        printf("assignable_devices before: %d\r\n", assignable_usb_devices.size());
+        printf("assignable_devices before: %d\r\n", DeviceManager::instance().assignable_usb_device_count());
 
-        for (auto dev : assignable_usb_devices)
-        {
-            assignable_devices.push_back(dev);
-            dev->rescan(true);
-        }
-        printf("assignable_devices after: %d\r\n", assignable_usb_devices.size());
+        DeviceManager::instance().add_assignable_devices_from_usb_hosts(true);
+        printf("assignable_devices after: %d\r\n", DeviceManager::instance().assignable_usb_device_count());
     }
 }
 
@@ -234,6 +234,7 @@ static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<
     XInputWirelessAudioHost::open,
     OGXboxHost::open,
     XboxOneHost::open,
+    XboxWirelessHost::open,
     HidHost::open,
     MidiHost::open};
 
@@ -299,33 +300,12 @@ void usbh_close(uint8_t dev_addr)
     if (host_devices[dev_addr])
     {
         host_devices[dev_addr]->disconnect();
-        if (assignable_usb_devices.size() > 0)
-        {
-            assignable_usb_devices.erase(std::remove_if(assignable_usb_devices.begin(), assignable_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
-                                                        { return dev->dev_addr() == dev_addr; }),
-                                         assignable_usb_devices.end());
-        }
-        if (enumerating_usb_devices.size() > 0)
-        {
-            enumerating_usb_devices.erase(std::remove_if(enumerating_usb_devices.begin(), enumerating_usb_devices.end(), [dev_addr](std::shared_ptr<UsbHostInterface> dev)
-                                                         { return dev->dev_addr() == dev_addr; }),
-                                          enumerating_usb_devices.end());
-        }
+        DeviceManager::instance().remove_assignable_usb_devices_by_address(dev_addr);
+        DeviceManager::instance().remove_enumerating_usb_devices_by_address(dev_addr);
         m_devices_changed = millis() + 500;
         host_devices[dev_addr] = nullptr;
     }
-    auto dev = auth_devices.begin();
-    while (dev != auth_devices.end())
-    {
-        if (dev->second->dev_addr() == dev_addr)
-        {
-            dev = auth_devices.erase(dev);
-        }
-        else
-        {
-            ++dev;
-        }
-    }
+    // Auth handlers are automatically unregistered by auth_broker when needed
 }
 
 void UsbHostDevice::disconnect()

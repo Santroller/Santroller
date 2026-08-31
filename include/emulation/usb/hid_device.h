@@ -4,7 +4,7 @@
 #include "class/hid/hid.h"
 
 #include "commands.pb.h"
-#include "usb/usb_descriptors.h"
+#include "emulation/usb/usb_descriptors.h"
 #include "device.hpp"
 #include "events.pb.h"
 

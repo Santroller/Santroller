@@ -1,8 +1,12 @@
 #include "tusb_option.h"
+#include <memory>
+#include "managers/profile_manager.hpp"
 #include "emulation/usb/hid_device.h"
+#include "managers/config_manager.hpp"
+#include "usb/auth_broker.h"
 #include "commands.pb.h"
 #include "enums.pb.h"
-#include "config.hpp"
+#include "config/config.hpp"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
 #include "emulation/usb/ps3_device.h"
@@ -29,8 +33,8 @@ void HIDGamepadDevice::initialize()
   m_epin = next_epin();
   m_epout = next_epout();
   m_strid = next_strid();
-  usb_instances_by_epin[m_epin & (~0x80)] = usb_instances[interface_id];
-  usb_instances_by_epout[m_epout] = usb_instances[interface_id];
+  ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
+  ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
   memset(&initialReport, 0, sizeof(initialReport));
   switch (subtype)
   {
@@ -91,23 +95,24 @@ void HIDGamepadDevice::process()
         return;
     }
   // Deal with devices that don't have easy detection methods
-  if (!mode_recently_changed() && !seenWindowsXb1 && !seenOsDescriptorRead && !seenReadAnyDeviceString && tud_connected())
+  auto& detection = UsbDetectionState::instance();
+  if (!mode_recently_changed() && detection.should_infer_console() && tud_connected())
   {
     // Switch 2 does read the hid descriptor
-    if (seenHidDescriptorRead)
+    if (detection.seen_hid_descriptor_read())
     {
-      newMode = ModeSwitch;
+      ConfigManager::instance().set_new_mode(ModeSwitch);
     }
     else if (tud_ready() && (subtype == RockBandGuitar || subtype == RockBandDrums))
     {
       // PS2 / Wii / WiiU does not read hid descriptor
       // The wii however will configure the usb device before it stops communicating
-      newMode = ModeWiiRb;
+      ConfigManager::instance().set_new_mode(ModeWiiRb);
     }
     else
     {
       // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
-      newMode = ModePs3;
+      ConfigManager::instance().set_new_mode(ModePs3);
     }
   }
   // if usb stack isnt ready, then we want to update inputs
@@ -204,7 +209,7 @@ void HIDGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 }
 const uint8_t *HIDGamepadDevice::report_descriptor()
 {
-  seenHidDescriptorRead = true;
+  UsbDetectionState::instance().mark_hid_descriptor_read();
   if (subtype == Dancepad)
   {
     return desc_hid_report_buttons;
@@ -251,7 +256,7 @@ void HIDGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
     switch (report_id)
     {
     case ReportId::ReportIdPs3F4:
-      newMode = ModePs3;
+      ConfigManager::instance().set_new_mode(ModePs3);
       break;
     }
   }
@@ -270,24 +275,23 @@ uint16_t HIDGamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
   switch (report_id)
   {
   case ReportId::ReportIdPs3F2:
-    newMode = ModePs3;
+    ConfigManager::instance().set_new_mode(ModePs3);
     return 0;
   case ReportId::ReportIdPs4Feature:
     if (supports_ps4 && reqlen == 0x30)
     {
-      auto auth_device = auth_devices.find(ModePs5);
-      if (auth_device != auth_devices.end())
+      if (auth_broker.has_handler(ModePs5))
       {
-        newMode = ModePs5;
+        ConfigManager::instance().set_new_mode(ModePs5);
       }
       else
       {
-        newMode = ModePs4;
+        ConfigManager::instance().set_new_mode(ModePs4);
       }
     }
     else
     {
-      newMode = ModePs3;
+      ConfigManager::instance().set_new_mode(ModePs3);
     }
     return 0;
   }

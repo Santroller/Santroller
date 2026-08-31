@@ -228,6 +228,8 @@ void MPR121::processData(uint8_t addr, bool running, bool timeout, bool abort_de
         case MPR121_POLL:
             inputs = bufferRx[0] << 8 | bufferRx[1];
             break;
+        default:
+            break;
         }
 
         restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);

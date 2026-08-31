@@ -1,8 +1,11 @@
 #include "tusb_option.h"
-#include "emulation/usb/hid_device.h"
+#include "managers/config_manager.hpp"
+#include "managers/device_manager.hpp"
+#include "config/config.hpp"
+#include "managers/profile_manager.hpp"
+
 #include "commands.pb.h"
 #include "enums.pb.h"
-#include "config.hpp"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
 #include "emulation/usb/ps3_device.h"
@@ -50,7 +53,7 @@ void HIDConfigDevice::process()
 {
   if (clearedIn && clearedOut)
   {
-    newMode = ModeSwitch;
+    ConfigManager::instance().set_new_mode(ModeSwitch);
   }
   if (tool_closed())
   {
@@ -62,51 +65,29 @@ void HIDConfigDevice::process()
   if (profile_changed)
   {
     profile_changed = false;
-    for (const auto &profile : all_profiles)
+    ProfileManager::instance().for_each_profile([](uint32_t profile_id, const auto &profile)
     {
-      for (const auto &led : profile.second->leds)
+      (void)profile_id;
+      for (const auto &led : profile->leds)
       {
         led->off();
       }
-    }
+    });
   }
   if (just_loaded)
   {
-    for (const auto &device : active_devices)
-    {
-      device->update(true, true);
-    }
-    for (const auto &device : assignable_devices)
-    {
-      device->update(true, true);
-    }
-    for (const auto &device : assignable_usb_devices)
-    {
-      device->update(true, true);
-    }
-    for (const auto &device : enumerating_usb_devices)
-    {
-      device->update(true, true);
-    }
-    for (const auto &profile : all_profiles)
-    {
-      for (const auto &device : profile.second->devices)
-      {
-        if (device.second)
-        {
-          device.second->update(true, true);
-        }
-      }
-    }
+    DeviceManager::instance().update_all_devices(true, true);
+    ProfileManager::instance().update_all_profile_devices(true, true);
     just_loaded = false;
   }
   if (profile_selected)
   {
-    auto selected = all_profiles.find(selected_profile);
-    if (selected == all_profiles.end())
+    auto selected_ptr = ProfileManager::instance().get_profile(selected_profile);
+    if (!selected_ptr)
     {
       return;
     }
+    auto selected = std::make_pair(selected_profile, selected_ptr);
     if (detect_done)
     {
 
@@ -179,11 +160,11 @@ void HIDConfigDevice::process()
           }
           break;
         }
-        for (auto &mapping : selected->second->mappings)
+        for (auto &mapping : selected.second->mappings)
         {
           mapping->reload();
         }
-        for (auto &led : selected->second->leds)
+        for (auto &led : selected.second->leds)
         {
           led->reload();
         }
@@ -193,35 +174,9 @@ void HIDConfigDevice::process()
     {
       if (profile_just_changed)
       {
-        for (const auto &device : active_devices)
-        {
-          device->update(profile_changed, true);
-        }
-        for (const auto &device : assignable_devices)
-        {
-          device->update(profile_changed, true);
-        }
-        for (const auto &device : enumerating_usb_devices)
-        {
-          device->update(profile_changed, true);
-        }
-        for (const auto &device : assignable_usb_devices)
-        {
-          device->update(profile_changed, true);
-        }
+        DeviceManager::instance().update_all_devices(profile_changed, true);
       }
-      for (const auto &mapping : selected->second->mappings)
-      {
-        mapping->update(profile_changed, true);
-      }
-      for (const auto &mapping : selected->second->triggers)
-      {
-        mapping->validate(false, profile_changed, true);
-      }
-      for (const auto &led : selected->second->leds)
-      {
-        led->update(profile_changed, true);
-      }
+      ProfileManager::instance().update_profile_components(selected_profile, profile_changed, true);
     }
   }
   process_events();
@@ -301,7 +256,7 @@ void HIDConfigDevice::handle_command(proto_Command command)
   }
   case proto_Command_crkdDrum_tag:
   {
-    std::static_pointer_cast<CrkdDrumDevice>(root_devices[command.command.crkdDrum.id])->drum.setParam(command.command.crkdDrum.type, command.command.crkdDrum.axisType, command.command.crkdDrum.val);
+    std::static_pointer_cast<CrkdDrumDevice>(DeviceManager::instance().get_root_device(command.command.crkdDrum.id))->drum.setParam(command.command.crkdDrum.type, command.command.crkdDrum.axisType, command.command.crkdDrum.val);
     break;
   }
   case proto_Command_detectPin_tag:
@@ -322,14 +277,13 @@ void HIDConfigDevice::handle_command(proto_Command command)
           continue;
         }
         bool found = false;
-        for (auto &device : active_devices)
+        DeviceManager::instance().for_each_active_device([&found, i](const auto &device)
         {
           if (device->using_pin(i))
           {
             found = true;
-            break;
           }
-        }
+        });
         if (!found)
         {
           m_valid_pins |= 1 << i;
@@ -345,14 +299,13 @@ void HIDConfigDevice::handle_command(proto_Command command)
       for (uint8_t i = 0; i < NUM_ADC_CHANNELS; i++)
       {
         bool found = false;
-        for (auto &device : active_devices)
+        DeviceManager::instance().for_each_active_device([&found, i](const auto &device)
         {
           if (device->using_pin(i + ADC_BASE_PIN))
           {
             found = true;
-            break;
           }
-        }
+        });
         if (!found)
         {
           m_valid_pins |= 1 << i;
@@ -443,7 +396,7 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       initDebug();
       break;
     case ReportId::ReportIdKeepalive:
-      if (!working)
+      if (!ConfigManager::instance().is_working())
       {
         // ignore keepalives until we are ready
         lastKeepAlive = millis();
@@ -472,15 +425,24 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
 
 bool encode_active_profiles(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
-  for (auto &profile : active_profiles)
+  bool ok = true;
+  ProfileManager::instance().for_each_profile([stream, field, &ok](uint32_t profile_id, const auto &profile)
   {
+    (void)profile;
+    if (!ok || !ProfileManager::instance().is_profile_active(profile_id))
+      return;
     if (!pb_encode_tag_for_field(stream, field))
-      return false;
+    {
+      ok = false;
+      return;
+    }
 
-    if (!pb_encode_varint(stream, profile))
-      return false;
-  }
-  return true;
+    if (!pb_encode_varint(stream, profile_id))
+    {
+      ok = false;
+    }
+  });
+  return ok;
 }
 
 uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
@@ -539,7 +501,7 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
 bool HIDConfigDevice::tool_closed()
 {
   auto dev = HIDConfigDevice::instance;
-  if (!dev || !dev->tool_seen || working)
+  if (!dev || !dev->tool_seen || ConfigManager::instance().is_working())
   {
     return true;
   }

@@ -147,7 +147,7 @@ void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host
                     case HID_USAGE_PAGE_BUTTON: {
                         uint8_t usage = item->Attributes.Usage.Usage;
                         if (usage <= 16 && item->Value) {
-                            out->genericButtons |= 1 << usage - 1;
+							out->genericButtons |= 1 << (usage - 1);
                         }
                         break;
                     }

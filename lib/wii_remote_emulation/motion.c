@@ -94,17 +94,19 @@ void set_motionplus(struct wiimote_state * state, const mat4 * wiimote_mat)
 
 void set_motion_state(struct wiimote_state * state, float pointer_x, float pointer_y)
 {
-  mat4 wiimote_mat;
+  static mat4 wiimote_mat;
+  static mat4 view_mat;
+  static mat4 model_mat;
+  static mat4 proj_mat;
+
   look_at_pointer(&wiimote_mat, pointer_x, pointer_y);
 
-  mat4 view_mat = wiimote_mat;
+  view_mat = wiimote_mat;
   mat4_invert(&view_mat);
 
-  mat4 model_mat;
   vec3 model_pos = (vec3){ 0.0, sensor_bar_y, -screen_distance };
   mat4_make_translation(&model_mat, &model_pos);
 
-  mat4 proj_mat;
   make_cam_projection_mat(&proj_mat);
 
   mat4_mult(&view_mat, &model_mat);

@@ -2,7 +2,7 @@
 
 #include "common/tusb_common.h"
 #include "device/usbd.h"
-#include "usb/host/xone_host.h"
+#include "devices/usb/host/xone_host.h"
 #include "device.hpp"
 #include <queue>
 
@@ -19,6 +19,11 @@ typedef enum
     EMU_AUTH_DONE,
     EMU_NOT_READY
 } XboxOneDriverState;
+
+typedef struct {
+    uint8_t report[CFG_TUD_XONE_RX_BUFSIZE];
+    uint16_t len;
+} report_queue_t;
 
 class XboxOneGamepadDevice : public UsbDevice
 {

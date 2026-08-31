@@ -44,14 +44,9 @@ struct device {
 struct device devices[MAX_DEVICES];
 static int deviceCount = 0;
 
-enum STATE { INIT,
-             ACTIVE };
-static enum STATE state = INIT;
-
 static uint16_t hid_host_cid = 0;
 static bool hid_host_descriptor_available = false;
 static hid_protocol_mode_t hid_host_report_mode = HID_PROTOCOL_MODE_REPORT;
-static HID_ReportInfo_t *info;
 
 static int get_bt_address(uint8_t *addr) {
     bd_addr_t local_addr;
@@ -312,7 +307,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                             devices[deviceCount].name_buffer[name_len + SIZE_OF_BD_ADDRESS + 1] = ')';
                             devices[deviceCount].name_buffer[name_len + SIZE_OF_BD_ADDRESS + 2] = 0;
                             printf("Found device '%s'\r\n", devices[deviceCount].name_buffer);
-                            printf("Peripheral: %d\r\n", devices[deviceCount].cod & (1 << 8 | 1 << 10) == (1 << 8 | 1 << 10));
+                            printf("Peripheral: %d\r\n", (devices[deviceCount].cod & PERIPHERAL_COD) == PERIPHERAL_COD);
                             devices[index].state = REMOTE_NAME_FETCHED;
                         } else {
                             printf("Failed to get name: page timeout\r\n");

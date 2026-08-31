@@ -1,7 +1,7 @@
 #include "devices/bhdrum.hpp"
 #include "events.pb.h"
 #include "main.hpp"
-#include "config.hpp"
+#include "config/config.hpp"
 #include "emulation/usb/hid_device.h"
 BandHeroDrumDevice::BandHeroDrumDevice(std::shared_ptr<BandHeroDrumDevice> prev, proto_BandHeroDrumDevice device, uint16_t id) : MidiDevice(prev, id, false), m_band_hero_drum(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
 {

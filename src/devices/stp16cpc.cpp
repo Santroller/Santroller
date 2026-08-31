@@ -1,7 +1,7 @@
 #include "devices/stp16cpc.hpp"
 #include "events.pb.h"
 #include "main.hpp"
-#include "config.hpp"
+#include "config/config.hpp"
 STP16CPCDevice::STP16CPCDevice(proto_STP16CPCDevice device, uint16_t id) : LedDevice(id, false, false), m_stp15cpc(device.spi.block, device.spi.mosi, device.spi.sck, device.oe, device.le, device.count), m_device(device)
 {
 }

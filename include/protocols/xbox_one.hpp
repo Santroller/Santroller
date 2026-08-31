@@ -8,22 +8,6 @@
 #include "ps3.hpp"
 #include "xgip_protocol.h"
 
-#define GIP_CMD_ACKNOWLEDGE 0x01
-#define GIP_ARRIVAL 0x02
-#define GIP_DEVICE_STATUS 0x03
-#define GIP_DEVICE_DESCRIPTOR 0x04
-#define GIP_POWER_MODE_DEVICE_CONFIG 0x05
-#define GIP_AUTHENTICATION 0x06
-#define GIP_VIRTUAL_KEYCODE 0x07
-#define GIP_CMD_RUMBLE 0x09
-#define GIP_CMD_LED 0x0a
-#define GIP_INPUT_REPORT 0x20
-#define GHL_HID_REPORT 0x21
-#define GHL_HID_OUTPUT 0x22
-#define GIP_VKEY_LEFT_WIN 0x5b
-#define GIP_POWER_ON 0x00
-#define GIP_LED_ON 0x01
-
 enum XboxResult
 {
     /// <summary>The packet was processed successfully.</summary>

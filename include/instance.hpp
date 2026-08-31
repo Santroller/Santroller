@@ -7,7 +7,7 @@
 #include "input/gpio.hpp"
 #include "input/input.hpp"
 #include "leds/leds.hpp"
-#include "profile.hpp"
+#include "profiles/profile.hpp"
 
 #include "config.pb.h"
 #include <stdio.h>

@@ -3,8 +3,11 @@
 #include "common/tusb_common.h"
 #include "device/usbd_pvt.h"
 #include "emulation/usb/gh_arcade_device.h"
+
+#include <memory>
+#include "managers/profile_manager.hpp"
 #include "hid_reports.h"
-#include "config.hpp"
+#include "config/config.hpp"
 
 static uint8_t const desc_hid_report_arcade[] = {TUD_HID_REPORT_DESC_GUITAR_HERO_ARCADE()};
 static char const str_gha_input[] = "RT-GH INPUT ";
@@ -46,9 +49,9 @@ void GHArcadeVendorDevice::initialize()
     m_epin2 = next_epin();
     m_epout = next_epin();
     m_strid = next_strid();
-    usb_instances_by_epin[m_epin1 & (~0x80)] = usb_instances[interface_id];
-    usb_instances_by_epout[m_epin2] = usb_instances[interface_id];
-    usb_instances_by_epout[m_epout] = usb_instances[interface_id];
+    ProfileManager::instance().map_usb_instance_epin(m_epin1, interface_id);
+    ProfileManager::instance().map_usb_instance_epout(m_epin2, interface_id);
+    ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
 }
 void GHArcadeVendorDevice::process()
 {

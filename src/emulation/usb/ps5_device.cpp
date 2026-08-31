@@ -1,11 +1,16 @@
 #include "emulation/usb/ps5_device.h"
+#include "usb/auth_broker.h"
+
+class UsbHostInterface;
+#include <memory>
+#include "managers/profile_manager.hpp"
 #include "protocols/ps5.hpp"
 #include "enums.pb.h"
 #include "main.hpp"
-#include "config.hpp"
+#include "config/config.hpp"
 #include "hid_reports.h"
-#include "usb/usb_devices.h"
-#include "usb/host/hid_host.h"
+#include "emulation/usb/usb_devices.h"
+#include "devices/usb/host/hid/hid_host.h"
 
 static const int ps5_colors[4][3] = {
     {0x00, 0x00, 0x40}, /* Blue */
@@ -33,8 +38,8 @@ void PS5GamepadDevice::initialize()
 {
     m_epin = next_epin();
     m_epout = next_epout();
-    usb_instances_by_epin[m_epin & (~0x80)] = usb_instances[interface_id];
-    usb_instances_by_epout[m_epout] = usb_instances[interface_id];
+    ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
+    ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
     PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)initialReport;
     memset(initialReport, 0, sizeof(initialReport));
     gamepad->report_id = 1;
@@ -86,10 +91,11 @@ void PS5GamepadDevice::process()
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
     std::shared_ptr<HidHost> host_device;
-    auto auth_device = auth_devices.find(ModePs5);
-    if (auth_device != auth_devices.end())
+    // PS5 auth uses HID feature reports directly
+    auto auth_device = auth_broker.get_auth_device(ModePs5);
+    if (auth_device)
     {
-        host_device = std::static_pointer_cast<HidHost>(auth_device->second);
+        host_device = std::static_pointer_cast<HidHost>(auth_device);
         if (m_report_ready)
         {
             m_report_ready = false;
@@ -148,10 +154,11 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
     }
 
     std::shared_ptr<HidHost> host_device;
-    auto auth_device = auth_devices.find(ModePs5);
-    if (auth_device != auth_devices.end())
+    // PS5 auth uses HID feature reports directly
+    auto auth_device = auth_broker.get_auth_device(ModePs5);
+    if (auth_device)
     {
-        host_device = std::static_pointer_cast<HidHost>(auth_device->second);
+        host_device = std::static_pointer_cast<HidHost>(auth_device);
     }
 
     switch (report_id)
@@ -235,10 +242,11 @@ uint8_t handle_player_leds_ps5(uint8_t player_mask)
 void PS5GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
     std::shared_ptr<HidHost> host_device;
-    auto auth_device = auth_devices.find(ModePs5);
-    if (auth_device != auth_devices.end())
+    // PS5 auth uses HID feature reports directly
+    auto auth_device = auth_broker.get_auth_device(ModePs5);
+    if (auth_device)
     {
-        host_device = std::static_pointer_cast<HidHost>(auth_device->second);
+        host_device = std::static_pointer_cast<HidHost>(auth_device);
     }
     switch (report_type)
     {

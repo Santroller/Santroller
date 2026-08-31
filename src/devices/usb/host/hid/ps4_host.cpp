@@ -1,11 +1,13 @@
 #include "tusb_option.h"
-#include "usb/host/hid_host.h"
+#include "devices/usb/host/hid/ps4_host.h"
+#include "usb/auth_broker.h"
 #include "class/hid/hid.h"
-#include "host/usbh.h"
-#include "host/usbh_pvt.h"
-#include "usb/usb_devices.h"
-#include "config.hpp"
+#include "devices/usb.hpp"
+#include "emulation/usb/usb_devices.h"
+#include "config/config.hpp"
+#include "managers/device_manager.hpp"
 #include "hidparser.h"
+
 
 std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
@@ -125,11 +127,17 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
             list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
         }
         printf("ps4 auth found\r\n");
-        if (auth_devices.find(ModePs4) == auth_devices.end())
+        
+        // Register as auth provider
+        if (!auth_broker.has_handler(ModePs4))
         {
-            auth_devices.emplace(ModePs4, intf);
+            auth_broker.register_handler(ModePs4, [intf](XGIPProtocol* packet) {
+                // PS4 doesn't use XGIP, this is just for interface compatibility
+            });
+            // Also register the device itself for HID feature report auth
+            auth_broker.register_auth_device(ModePs4, intf);
         }
-        assignable_usb_devices.push_back(intf);
+        DeviceManager::instance().add_assignable_usb_device(intf);
         USB_FreeReportInfo(info);
         return intf;
     }

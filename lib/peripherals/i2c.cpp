@@ -17,6 +17,7 @@ static void i2c_dma_write_read_internal(
     size_t rbuf_len);
 inline void process_dma(i2c_dma_t *i2c_dma)
 {
+    i2c_dma->processing = true;
     if (i2c_dma->running)
     {
         i2c_dma->running = false;
@@ -40,6 +41,11 @@ inline void process_dma(i2c_dma_t *i2c_dma)
     i2c_dma->processing = false;
 }
 
+static inline void queue_dma_event(i2c_dma_t *i2c_dma)
+{
+    i2c_dma->event_pending = true;
+}
+
 static i2c_dma_t i2c_dma_list[2] = {0};
 static void i2c_dma_irq_handler(i2c_dma_t *i2c_dma)
 {
@@ -61,7 +67,7 @@ static void i2c_dma_irq_handler(i2c_dma_t *i2c_dma)
         // Transfer complete.
         i2c_get_hw(i2c_dma->i2c)->clr_stop_det;
         i2c_dma->stop_detected = true;
-        process_dma(i2c_dma);
+        queue_dma_event(i2c_dma);
     }
 }
 
@@ -206,7 +212,7 @@ int64_t timeout_handler(__unused alarm_id_t id, void *user_data)
 {
     i2c_dma_t *i2c_dma = (i2c_dma_t *)user_data;
     i2c_dma->timeout = true;
-    process_dma(i2c_dma);
+    queue_dma_event(i2c_dma);
     return 0;
 }
 static void i2c_dma_write_read_internal(
@@ -276,16 +282,29 @@ static void i2c_dma_write_read_internal(
 
 void I2CMasterInterface::tick()
 {
-    if (!i2c_dma || i2c_dma->running || i2c_dma->processing)
+    if (!i2c_dma)
     {
         return;
     }
-    for (size_t i = 0; i < I2C_MAX_ADDR; i++)
+
+    if (i2c_dma->event_pending)
     {
+        i2c_dma->event_pending = false;
+        process_dma(i2c_dma);
+    }
+
+    if (i2c_dma->running || i2c_dma->processing)
+    {
+        return;
+    }
+    for (size_t offset = 0; offset < I2C_MAX_ADDR; offset++)
+    {
+        size_t i = (i2c_dma->next_transfer_addr + offset) % I2C_MAX_ADDR;
         if (i2c_dma->hasWaitingTransfer[i])
         {
             i2c_dma->hasWaitingTransfer[i] = false;
             auto &transfer = i2c_dma->waitingTransfers[i];
+            i2c_dma->next_transfer_addr = (i + 1) % I2C_MAX_ADDR;
             i2c_dma_write_read_internal(i2c_dma, transfer.addr, transfer.wbuf, transfer.wbuf_len, transfer.rbuf, transfer.rbuf_len);
             return;
         }
@@ -321,6 +340,8 @@ void I2CMasterInterface::dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface)
     i2c_dma->timeout = false;
     i2c_dma->abort_detected = false;
     i2c_dma->stop_detected = false;
+    i2c_dma->event_pending = false;
+    i2c_dma->next_transfer_addr = 0;
     i2c_dma_init_intern(i2c_dma);
 }
 I2CMasterInterface::I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, uint32_t clock) : m_sda(sda), m_scl(scl), m_clock(clock)
@@ -378,6 +399,7 @@ void I2CMasterInterface::dmaDeinit(uint8_t addr)
         }
         i2c_dma->stop_detected = false;
         i2c_dma->abort_detected = false;
+        i2c_dma->event_pending = false;
     }
 }
 void I2CMasterInterface::dmaWriteRead(uint8_t addr,

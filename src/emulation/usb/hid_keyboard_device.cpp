@@ -1,8 +1,10 @@
 #include "tusb_option.h"
+#include <memory>
+#include "managers/profile_manager.hpp"
 #include "emulation/usb/hid_device.h"
 #include "commands.pb.h"
 #include "enums.pb.h"
-#include "config.hpp"
+#include "config/config.hpp"
 #include "main.hpp"
 #include "device/usbd.h"
 #include "hid_reports.h"
@@ -24,8 +26,8 @@ void HIDKeyboardDevice::initialize()
   m_epin = next_epin();
   m_epout = next_epout();
   m_strid = next_strid();
-  usb_instances_by_epin[m_epin & (~0x80)] = usb_instances[interface_id];
-  usb_instances_by_epout[m_epout] = usb_instances[interface_id];
+  ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
+  ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
   memset(&initialReport, 0, sizeof(initialReport));
 }
 void HIDKeyboardDevice::process()
@@ -124,7 +126,7 @@ void HIDKeyboardDevice::device_descriptor(tusb_desc_device_t *desc)
 }
 const uint8_t *HIDKeyboardDevice::report_descriptor()
 {
-  seenHidDescriptorRead = true;
+  UsbDetectionState::instance().mark_hid_descriptor_read();
   return desc_hid_keyboard_report;
 }
 

@@ -1,47 +1,55 @@
 #include "tusb_option.h"
-#include "usb/host/xone_host.h"
+#include "devices/usb/host/xone_host.h"
+#include "usb/auth_broker.h"
 #include "class/hid/hid.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
-#include "usb/usb_devices.h"
+#include "emulation/usb/usb_devices.h"
 #include "devices/usb.hpp"
-#include "emulation/usb/hid_device.h"
-#include "emulation/usb/xone_device.h"
-#include "config.hpp"
+#include "config/config.hpp"
+#include "managers/device_manager.hpp"
 #include "utils.h"
+
+extern "C" {
+#include "gip_packet_handler.h"
+#include "gip_device.h"
+#include "gip_button_mapping.h"
+#include "gip_device_mappings.h"
+}
+
 #include <algorithm>
-static const uint8_t XBOXONE_POWER_ON[] = {0x06, 0x62, 0x45, 0xb8, 0x77, 0x26, 0x2c, 0x55,
-                                           0x53, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f};
-static const uint8_t XBOXONE_POWER_ON_SINGLE[] = {0x00};
-static const uint8_t XBOXONE_RUMBLE_ON[] = {0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0xeb};
-static const uint8_t XBOXONE_LED_ON[] = {0x00, 0x01, 0x14}; // 0x01 - LED on, 0x14 - Brightness
-typedef struct
-{
-    SubType type;
-    char name[36];
-} preferred_type_mapping_t;
-static const preferred_type_mapping_t PREFERRED_TYPES[] = {
-    {Gamepad, "Windows.Xbox.Input.Gamepad"},
-    {RockBandGuitar, "MadCatz.Xbox.Guitar.Stratocaster"},
-    {RockBandGuitar, "PDP.Xbox.Guitar.Jaguar"},
-    {LiveGuitar, "Activision.Xbox.Input.GH7"},
-    {RockBandDrums, "MadCatz.Xbox.Drums.Glam"},
-    {RockBandDrums, "PDP.Xbox.Drums.Tablah"},
-    // {WirelessLegacyAdapter, "MadCatz.Xbox.Module.Brangus"},
-    // {WiredLegacyAdapter, "PDP.Xbox.RBAdapter.LegacyUSB"},
-    {Skylanders, "Activision.Xbox.Skylanders.Portal"},
-    {LegoDimensions, "TTGames.Xbox.Dimensions.Gateway"},
-    {DisneyInfinity, "Disney.Xbox.Infinity.Base"}};
+
+static void xone_on_device_descriptor_wrapper(void *context, SubType subtype);
+static void xone_on_arrival_wrapper(void *context);
+static void xone_queue_packet_wrapper(void *context, const uint8_t *data, uint16_t len);
+
+static const gip_device_interface_t xone_gip_interface = {
+    .on_device_descriptor = xone_on_device_descriptor_wrapper,
+    .on_arrival = xone_on_arrival_wrapper,
+    .queue_packet = xone_queue_packet_wrapper
+};
+
 XboxOneHost::XboxOneHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id)
 {
     m_delayed_init = true;
-    incomingXGIP = new XGIPProtocol();
-    outgoingXGIP = new XGIPProtocol();
+    gip_device_init(&m_gip_device);
+    m_gip_device.user_context = this;
+    m_gip_device.interface = &xone_gip_interface;
+    m_report_queue = gip_report_queue_create();
+}
+
+XboxOneHost::~XboxOneHost()
+{
+    gip_device_cleanup(&m_gip_device);
+    gip_report_queue_destroy(m_report_queue);
 }
 
 void XboxOneHost::send_report_from_host(XGIPProtocol *report)
 {
-    outgoingXGIP->copyAttributes(report);
+    m_gip_device.outgoing_xgip->copyAttributes(report);
+    gip_report_queue_push(m_report_queue, 
+                          m_gip_device.outgoing_xgip->generatePacket(), 
+                          m_gip_device.outgoing_xgip->getPacketLength());
 }
 
 std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
@@ -89,11 +97,17 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
     }
     if (desc_itf->bInterfaceNumber == 0)
     {
-        enumerating_usb_devices.push_back(intf);
-        if (auth_devices.find(ModeXboxOne) == auth_devices.end())
+        DeviceManager::instance().add_enumerating_usb_device(intf);
+        
+        // Register as auth provider if not already registered
+        if (!auth_broker.has_handler(ModeXboxOne))
         {
-            auth_devices.emplace(ModeXboxOne, intf);
+            auth_broker.register_handler(ModeXboxOne, [intf](XGIPProtocol* packet) {
+                intf->send_report_from_host(packet);
+            });
         }
+        
+        // Auth registration handled by auth_broker above
     }
     printf("size: %d\r\n", size);
     *out_len = size;
@@ -104,15 +118,47 @@ bool XboxOneHost::set_config()
 {
     printf("set config\r\n");
     memset(m_last_inputs, 0, sizeof(m_last_inputs));
+    
     UsbHostInterface::set_config();
     return true;
 }
-void XboxOneHost::queue_xbone_report(void *report, uint16_t report_size)
+
+// Device descriptor callback
+static void xone_on_device_descriptor_wrapper(void *context, SubType subtype)
 {
-    report_queue_t item;
-    memcpy(item.report, report, report_size);
-    item.len = report_size;
-    report_queue.push(item);
+    XboxOneHost *host = (XboxOneHost *)context;
+    
+    if (subtype != Unknown) {
+        host->set_subtype(subtype);
+        host->m_gip_device.subtype = subtype;
+        
+        // Move from enumerating to assignable
+        DeviceManager::instance().remove_enumerating_usb_device(host);
+        DeviceManager::instance().add_assignable_usb_device(host_devices[host->dev_addr()]->host_devices_by_itf[host->interface()]);
+        
+        // Send power-on sequence using device interface
+        gip_send_power_on_sequence(&host->m_gip_device);
+        process_delayed_init();
+    }
+}
+
+// Arrival callback
+static void xone_on_arrival_wrapper(void *context)
+{
+    XboxOneHost *host = (XboxOneHost *)context;
+    if (host) {
+        gip_default_arrival_callback(&host->m_gip_device, xone_queue_packet_wrapper);
+    }
+}
+
+// Queue packet callback
+static void xone_queue_packet_wrapper(void *context, const uint8_t *data, uint16_t len)
+{
+    XboxOneHost *host = (XboxOneHost *)context;
+    if (!host || !gip_report_queue_push(host->m_report_queue, data, len))
+    {
+        printf("XboxOneHost: Failed to queue GIP packet len=%d\r\n", len);
+    }
 }
 
 bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
@@ -124,319 +170,47 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
             usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
             return true;
         }
-        bool complete = incomingXGIP->parse(m_ep_in_buf, xferred_bytes);
+        
+        gip_device_process_incoming(&m_gip_device, m_ep_in_buf, xferred_bytes);
 
-        if (incomingXGIP->ackRequired())
+        uint8_t *ack_data;
+        uint16_t ack_len;
+        if (gip_device_generate_ack(&m_gip_device, &ack_data, &ack_len))
         {
-            queue_xbone_report(incomingXGIP->generateAckPacket(), incomingXGIP->getPacketLength());
+            gip_report_queue_push(m_report_queue, ack_data, ack_len);
         }
-        // printf("got command (host): %02x %02x\r\n", incomingXGIP->getCommand(), complete);
-        if (!complete)
-        {
-            usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
-            return true;
-        }
-        uint8_t command = incomingXGIP->getCommand();
-        if (command == GIP_ACK_RESPONSE)
-        {
-            waiting_ack = false;
-        }
-        else if (command == GIP_DEVICE_DESCRIPTOR)
-        {
-            uint8_t *data = incomingXGIP->getData();
-            data = incomingXGIP->getData();
-            data += sizeof(BinaryMetadataHeader);
-            printf("descriptor read done!\r\n");
-            BinaryDeviceMetadata *metadata = (BinaryDeviceMetadata *)data;
-            data += metadata->preferred_types_offset;
-            // First byte at the offset is a count of items
-            uint8_t preferredTypeStrCount = *data++;
-            bool found = false;
-            for (size_t j = 0; j < preferredTypeStrCount; j++)
-            {
-                if (found)
-                {
-                    break;
-                }
-                // first two bytes are the string length
-                uint16_t len = *(uint16_t *)data;
-                data += 2;
-                // check if we know what device this is
-                for (size_t i = 0; i < TU_ARRAY_SIZE(PREFERRED_TYPES); i++)
-                {
-                    if (strncmp((char *)data, PREFERRED_TYPES[i].name, len) == 0)
-                    {
-                        // we found it, flag the device as assignable and reload
-                        m_subtype = PREFERRED_TYPES[i].type;
-                        printf("found subtype: %d\r\n", m_subtype);
-                        enumerating_usb_devices.erase(std::remove_if(enumerating_usb_devices.begin(), enumerating_usb_devices.end(), [this](std::shared_ptr<UsbHostInterface> intf)
-                                                                     { return intf.get() == this; }),
-                                                      enumerating_usb_devices.end());
-                        assignable_usb_devices.push_back(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            outgoingXGIP->reset();
-            outgoingXGIP->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, 2, 1, 0, 0);
-            outgoingXGIP->setData(XBOXONE_POWER_ON, sizeof(XBOXONE_POWER_ON));
-            queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
-            outgoingXGIP->reset();
-            outgoingXGIP->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, 3, 1, 0, 0);
-            outgoingXGIP->setData(XBOXONE_POWER_ON_SINGLE, sizeof(XBOXONE_POWER_ON_SINGLE));
-            queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
-            outgoingXGIP->reset();
-            outgoingXGIP->setAttributes(GIP_CMD_LED_ON, 1, 1, 0, 0);
-            outgoingXGIP->setData(XBOXONE_LED_ON, sizeof(XBOXONE_LED_ON));
-            queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
-            outgoingXGIP->reset();
-            outgoingXGIP->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, 1, 1, 0, 0);
-            outgoingXGIP->setData(XBOXONE_RUMBLE_ON, sizeof(XBOXONE_RUMBLE_ON));
-            queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
-            process_delayed_init();
-        }
-        if (command == GIP_AUTH)
-        {
-            std::shared_ptr<XboxOneGamepadDevice> host_device;
-            auto emu_device = emulated_devices.find(ModeXboxOne);
-            if (emu_device != emulated_devices.end())
-            {
-                host_device = std::static_pointer_cast<XboxOneGamepadDevice>(emu_device->second);
-            }
-            host_device->send_report_from_controller(incomingXGIP);
-        }
-        if (command == GIP_INPUT_REPORT)
-        {
-            memcpy(m_last_inputs, incomingXGIP->getData(), incomingXGIP->getDataLength());
-        }
-        if (command == GIP_ARRIVAL)
-        {
-            outgoingXGIP->reset();
-            outgoingXGIP->setAttributes(GIP_DEVICE_DESCRIPTOR, 1, 1, false, 0);
-            queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
-        }
+
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;
 }
 
-void XboxOneHost::set_ack_wait()
-{
-    waiting_ack = true;
-    waiting_ack_timeout = to_ms_since_boot(get_absolute_time()); // 2 second time-out
-}
 void XboxOneHost::update(bool full_poll, bool send_events)
 {
     UsbHostInterface::update(full_poll, send_events);
     uint32_t now = to_ms_since_boot(get_absolute_time());
-    if (!report_queue.empty())
+    
+    // Send queued reports
+    if (!gip_report_queue_empty(m_report_queue))
     {
-        if (send_intr_xfer(m_ep_out, &report_queue.front().report, report_queue.front().len))
+        const gip_report_queue_item_t* item = gip_report_queue_front(m_report_queue);
+        if (item && send_intr_xfer(m_ep_out, item->report, item->len))
         {
-            report_queue.pop();
+            gip_report_queue_pop(m_report_queue);
         }
     }
-    // Do not add logic until our ACK returns
-    if (waiting_ack == true)
-    {
-        if ((now - waiting_ack_timeout) < XGIP_ACK_WAIT_TIMEOUT)
-        {
-            return;
-        }
-        else
-        { // ACK wait time out
-            waiting_ack = false;
-        }
-    }
-    if (outgoingXGIP->waitingToSend())
-    {
-        queue_xbone_report(outgoingXGIP->generatePacket(), outgoingXGIP->getPacketLength());
-        if (outgoingXGIP->getPacketAck() == 1)
-        {
-            set_ack_wait();
-        }
-        return;
-    }
+    
+    // Update GIP device - handles ACK timeout and outgoing packets
+    gip_device_update_with_queue(&m_gip_device, now, XGIP_ACK_WAIT_TIMEOUT, m_report_queue);
 }
 
 bool XboxOneHost::tick_digital(proto_Output &type)
 {
-    if (type.which_mapping == proto_Output_gamepadButton_tag)
-    {
-        auto data = (XboxOneGamepad_Data_t *)m_last_inputs;
-        switch (type.mapping.gamepadButton)
-        {
-        case Gamepad_A:
-            return data->a;
-        case Gamepad_B:
-            return data->b;
-        case Gamepad_X:
-            return data->x;
-        case Gamepad_Y:
-            return data->y;
-        case Gamepad_LeftShoulder:
-            return data->leftShoulder;
-        case Gamepad_RightShoulder:
-            return data->rightShoulder;
-        case Gamepad_Back:
-            return data->back;
-        case Gamepad_Start:
-            return data->start;
-        case Gamepad_LeftThumbClick:
-            return data->leftThumbClick;
-        case Gamepad_RightThumbClick:
-            return data->rightThumbClick;
-        case Gamepad_Guide:
-            return data->guide;
-        case Gamepad_DpadUp:
-            return data->dpadUp;
-        case Gamepad_DpadDown:
-            return data->dpadDown;
-        case Gamepad_DpadLeft:
-            return data->dpadLeft;
-        case Gamepad_DpadRight:
-            return data->dpadRight;
-        default:
-            return false;
-        }
-    }
-    switch (m_subtype)
-    {
-    case RockBandGuitar:
-        if (type.which_mapping == proto_Output_rbButton_tag)
-        {
-            auto data = (XboxOneRockBandGuitar_Data_t *)m_last_inputs;
-            switch (type.mapping.rbButton)
-            {
-            case RockBandGuitar_Green:
-                return data->green;
-            case RockBandGuitar_Red:
-                return data->red;
-            case RockBandGuitar_Yellow:
-                return data->yellow;
-            case RockBandGuitar_Blue:
-                return data->blue;
-            case RockBandGuitar_Orange:
-                return data->orange;
-            case RockBandGuitar_SoloGreen:
-                return data->soloGreen;
-            case RockBandGuitar_SoloRed:
-                return data->soloRed;
-            case RockBandGuitar_SoloYellow:
-                return data->soloYellow;
-            case RockBandGuitar_SoloBlue:
-                return data->soloBlue;
-            case RockBandGuitar_SoloOrange:
-                return data->soloOrange;
-            default:
-                return false;
-            }
-        }
-        return false;
-    case RockBandDrums:
-
-        if (type.which_mapping == proto_Output_rbDrumButton_tag)
-        {
-            auto data = (XboxOneRockBandDrums_Data_t *)m_last_inputs;
-            switch (type.mapping.rbDrumButton)
-            {
-            default:
-                return false;
-            }
-        }
-        return false;
-    case LiveGuitar:
-        if (type.which_mapping == proto_Output_ghlButton_tag)
-        {
-            auto data = (XboxOneGHLGuitar_Data_t *)m_last_inputs;
-            switch (type.mapping.ghlButton)
-            {
-            case GuitarHeroLiveGuitar_Black1:
-                return data->report.a;
-            case GuitarHeroLiveGuitar_Black2:
-                return data->report.b;
-            case GuitarHeroLiveGuitar_Black3:
-                return data->report.y;
-            case GuitarHeroLiveGuitar_White1:
-                return data->report.x;
-            case GuitarHeroLiveGuitar_White2:
-                return data->report.leftShoulder;
-            case GuitarHeroLiveGuitar_White3:
-                return data->report.rightShoulder;
-            case GuitarHeroLiveGuitar_StrumUp:
-                return data->report.strumBar == 0x00;
-            case GuitarHeroLiveGuitar_StrumDown:
-                return data->report.strumBar == 0xFF;
-            default:
-                return false;
-            }
-        }
-        return false;
-    default:
-        return false;
-    }
-
-    return false;
+    // Use shared GIP button mapping with shared device raw input
+    return gip_tick_digital(m_gip_device.raw_input, m_subtype, &type);
 }
 uint16_t XboxOneHost::tick_analog(proto_Output &type)
 {
-    switch (m_subtype)
-    {
-    case LiveGuitar:
-        if (type.which_mapping == proto_Output_ghlAxis_tag)
-        {
-            auto data = (XboxOneGHLGuitar_Data_t *)m_last_inputs;
-            switch (type.mapping.ghlAxis)
-            {
-            case GuitarHeroLiveGuitar_Whammy:
-                return data->report.whammy << 8;
-            case GuitarHeroLiveGuitar_Tilt:
-                return data->report.tilt << 2;
-            default:
-                return 0;
-            }
-        }
-        break;
-    case RockBandGuitar:
-        if (type.which_mapping == proto_Output_rbAxis_tag)
-        {
-            auto data = (XboxOneRockBandGuitar_Data_t *)m_last_inputs;
-            switch (type.mapping.rbAxis)
-            {
-            case RockBandGuitar_Whammy:
-                return data->whammy + INT16_MAX;
-            case RockBandGuitar_Tilt:
-                return data->tilt + INT16_MAX;
-            case RockBandGuitar_Pickup:
-                return data->tilt + INT16_MAX;
-            default:
-                return 0;
-            }
-        }
-    default:
-        if (type.which_mapping == proto_Output_gamepadAxis_tag)
-        {
-            auto data = (XboxOneGamepad_Data_t *)m_last_inputs;
-            switch (type.mapping.gamepadAxis)
-            {
-            case Gamepad_LeftTrigger:
-                return data->leftTrigger << 8;
-            case Gamepad_RightTrigger:
-                return data->rightTrigger << 8;
-            case Gamepad_LeftStickX:
-                return data->leftStickX + INT16_MAX;
-            case Gamepad_LeftStickY:
-                return data->leftStickY + INT16_MAX;
-            case Gamepad_RightStickX:
-                return data->rightStickX + INT16_MAX;
-            case Gamepad_RightStickY:
-                return data->rightStickY + INT16_MAX;
-            default:
-                return 0;
-            }
-        }
-        break;
-    }
-    return 0;
+    // Use shared GIP axis mapping with shared device raw input
+    return gip_tick_analog(m_gip_device.raw_input, m_subtype, &type);
 }

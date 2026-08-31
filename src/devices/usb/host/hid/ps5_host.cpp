@@ -1,11 +1,13 @@
 #include "tusb_option.h"
-#include "usb/host/hid_host.h"
+#include "devices/usb/host/hid/ps5_host.h"
+#include "usb/auth_broker.h"
 #include "class/hid/hid.h"
-#include "host/usbh.h"
-#include "host/usbh_pvt.h"
-#include "usb/usb_devices.h"
-#include "config.hpp"
+#include "devices/usb.hpp"
+#include "emulation/usb/usb_devices.h"
+#include "config/config.hpp"
+#include "managers/device_manager.hpp"
 #include "hidparser.h"
+
 
 std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
@@ -129,13 +131,19 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
             list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
         }
         printf("ps5 host found!\r\n");
-        if (auth_devices.find(ModePs5) == auth_devices.end() && vid == 0x2b81 && pid == 0x0101)
+        
+        // Register as auth provider for official PS5 controller
+        if (!auth_broker.has_handler(ModePs5) && vid == 0x2b81 && pid == 0x0101)
         {
-            auth_devices.emplace(ModePs5, intf);
+            auth_broker.register_handler(ModePs5, [intf](XGIPProtocol* packet) {
+                // PS5 doesn't use XGIP, this is just for interface compatibility
+            });
+            // Also register the device itself for HID feature report auth
+            auth_broker.register_auth_device(ModePs5, intf);
         }
         else
         {
-            assignable_usb_devices.push_back(intf);
+            DeviceManager::instance().add_assignable_usb_device(intf);
         }
         USB_FreeReportInfo(info);
         return intf;

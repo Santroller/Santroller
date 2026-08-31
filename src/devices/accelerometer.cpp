@@ -1,5 +1,5 @@
 #include "devices/accelerometer.hpp"
-#include "config.hpp"
+#include "config/config.hpp"
 #include "events.pb.h"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"

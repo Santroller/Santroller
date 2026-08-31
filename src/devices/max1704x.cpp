@@ -2,7 +2,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
-#include "config.hpp"
+#include "config/config.hpp"
 Max1704XDevice::Max1704XDevice(proto_Max1704xDevice device, uint16_t id) : Device(id), m_max1704x(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
 {
 }

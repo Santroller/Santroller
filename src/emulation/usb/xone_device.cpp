@@ -1,4 +1,6 @@
 #include "tusb_option.h"
+#include <memory>
+#include "managers/profile_manager.hpp"
 
 //--------------------------------------------------------------------+
 // INCLUDE
@@ -7,11 +9,13 @@
 #include "common/tusb_common.h"
 #include "device/usbd_pvt.h"
 #include "emulation/usb/xone_device.h"
+#include "usb/auth_broker.h"
+#include "devices/usb.hpp"
+#include "config/config.hpp"
+#include "utils.h"
+#include "emulation/usb/usb_devices.h"
 #include "xgip_protocol.h"
 #include <queue>
-#include "config.hpp"
-#include "main.hpp"
-#include "usb/usb_devices.h"
 
 static uint8_t xb1_guide_on[] = {0x01, 0x5b};
 static uint8_t xb1_guide_off[] = {0x00, 0x5b};
@@ -299,8 +303,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             {
             case GIP_STATE_START:
             {
-                auto auth_device = auth_devices.find(ModeXboxOne);
-                if (auth_device != auth_devices.end())
+                if (auth_broker.has_handler(ModeXboxOne))
                 {
                     xboneDriverState = XboxOneDriverState::EMU_SETUP_AUTH;
                 }
@@ -336,24 +339,15 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         }
         else if ((command == GIP_AUTH || command == GIP_FINAL_AUTH))
         {
-            // TODO: auth
             if (incomingXGIP->getDataLength() == 2 && memcmp(incomingXGIP->getData(), authReady, sizeof(authReady)) == 0)
             {
                 printf("auth done\r\n");
                 xboneDriverState = EMU_AUTH_DONE;
                 auth_completed = true;
             }
-            // xboxOneAuthData->consoleBuffer.setBuffer(incomingXGIP->getData(), incomingXGIP->getDataLength(),
-            //                                          incomingXGIP->getSequence(), incomingXGIP->getCommand());
-            // xboxOneAuthData->xboneState = GPAuthState::send_auth_console_to_dongle;
-
-            std::shared_ptr<XboxOneHost> host_device;
-            auto auth_device = auth_devices.find(ModeXboxOne);
-            if (auth_device != auth_devices.end())
-            {
-                host_device = std::static_pointer_cast<XboxOneHost>(auth_device->second);
-                host_device->send_report_from_host(incomingXGIP);
-            }
+            
+            // Forward auth packet to registered host device via broker
+            auth_broker.forward_auth(ModeXboxOne, incomingXGIP);
             incomingXGIP->reset();
         }
     }
@@ -415,8 +409,8 @@ void XboxOneGamepadDevice::initialize()
 {
     m_epin = next_epin();
     m_epout = next_epout();
-    usb_instances_by_epin[m_epin & (~0x80)] = usb_instances[interface_id];
-    usb_instances_by_epout[m_epout] = usb_instances[interface_id];
+    ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
+    ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
 }
 void XboxOneGamepadDevice::set_ack_wait()
 {

@@ -1,6 +1,6 @@
 #include "devices/multiplexer.hpp"
 #include "events.pb.h"
-#include "config.hpp"
+#include "config/config.hpp"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
 MultiplexerDevice::MultiplexerDevice(proto_MultiplexerDevice device, uint16_t id) : Device(id), m_device(device), m_multiplexer(device.s0Pin, device.s1Pin, device.s2Pin, device.s3Pin, device.inputPin, device.sixteenChannel)

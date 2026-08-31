@@ -92,8 +92,8 @@ void UsbdSecXSM3AuthenticationCrypt(const uint8_t *key, const uint8_t *input, si
 }
 
 void UsbdSecXSM3AuthenticationMac(const uint8_t *key, uint8_t *salt, uint8_t *input, size_t length, uint8_t *output) {
-	EXCRYPT_DES3_STATE des3;
-	EXCRYPT_DES_STATE des;
+	static EXCRYPT_DES3_STATE des3;
+	static EXCRYPT_DES_STATE des;
 	uint64_t sk[3];
 	uint8_t iv[8];
 	uint8_t temp[8];

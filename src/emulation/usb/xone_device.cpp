@@ -157,7 +157,10 @@ const uint8_t xb1_descriptor_gamepad[] = {
     0x00, 0x01, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x17, 0x00, 0x09, 0x3C, 0x00, 0x01, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
+XboxOneGamepadDevice::~XboxOneGamepadDevice() {
+    delete incomingXGIP;
+    delete outgoingXGIP;
+}
 XboxOneGamepadDevice::XboxOneGamepadDevice()
 {
     keep_alive_timer = to_ms_since_boot(get_absolute_time());
@@ -345,7 +348,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 xboneDriverState = EMU_AUTH_DONE;
                 auth_completed = true;
             }
-            
+
             // Forward auth packet to registered host device via broker
             auth_broker.forward_auth(ModeXboxOne, incomingXGIP);
             incomingXGIP->reset();
@@ -607,13 +610,13 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
     // this was set temporarily to make things easier for mapping, so don't actually send it
     xboneReport->guide = false;
     // We changed inputs since generating our last report, increment last report counter (but don't update until success)
-    if (memcmp(last_report, epin_buf, xboneReportSize) != 0 )
+    if (memcmp(last_report, epin_buf, xboneReportSize) != 0)
     {
         memcpy(last_report, epin_buf, xboneReportSize);
         outgoingXGIP->reset();
         outgoingXGIP->setAttributes(GIP_INPUT_REPORT, last_report_counter, 0, 0, 0);
         outgoingXGIP->setData(epin_buf, xboneReportSize);
-        uint8_t* test = outgoingXGIP->generatePacket();
+        uint8_t *test = outgoingXGIP->generatePacket();
         // don't put things in the queue here otherwise we will fill it pretty quick!
         if (send_xbone_usb(test, outgoingXGIP->getPacketLength()))
         {

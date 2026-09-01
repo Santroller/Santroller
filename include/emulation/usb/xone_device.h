@@ -28,6 +28,7 @@ typedef struct {
 class XboxOneGamepadDevice : public UsbDevice
 {
 public:
+    ~XboxOneGamepadDevice();
     XboxOneGamepadDevice();
     void initialize();
     void process(bool full_poll, bool send_events);

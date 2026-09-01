@@ -56,41 +56,18 @@ function(download_firmware PID URL CAB_FILENAME EXPECTED_SHA256)
     endif()
     
     # Extract firmware
-    find_program(BSDTAR_EXECUTABLE bsdtar)
     find_program(CABEXTRACT_EXECUTABLE cabextract)
-    find_program(7Z_EXECUTABLE 7z)
     
     set(EXTRACTION_SUCCESS FALSE)
     
-    if(BSDTAR_EXECUTABLE)
-        execute_process(
-                COMMAND ${BSDTAR_EXECUTABLE} -xf "${CAB_FILE}" -C "${FIRMWARE_DIR}"
-            RESULT_VARIABLE EXTRACT_RESULT
-            OUTPUT_QUIET ERROR_QUIET
-        )
-        if(EXTRACT_RESULT EQUAL 0)
-            set(EXTRACTION_SUCCESS TRUE)
-        endif()
-    elseif(CABEXTRACT_EXECUTABLE)
-        execute_process(
-            COMMAND ${CABEXTRACT_EXECUTABLE} -d "${FIRMWARE_DIR}" "${CAB_FILE}"
-            RESULT_VARIABLE EXTRACT_RESULT
-            OUTPUT_QUIET ERROR_QUIET
-        )
-        if(EXTRACT_RESULT EQUAL 0)
-            set(EXTRACTION_SUCCESS TRUE)
-        endif()
-    elseif(7Z_EXECUTABLE)
-        execute_process(
-            COMMAND ${7Z_EXECUTABLE} e "${CAB_FILE}" -o"${FIRMWARE_DIR}" "${CAB_FILENAME}" -y
-            RESULT_VARIABLE EXTRACT_RESULT
-            OUTPUT_QUIET ERROR_QUIET
-        )
-        if(EXTRACT_RESULT EQUAL 0)
-            set(EXTRACTION_SUCCESS TRUE)
-        endif()
+    execute_process(
+        COMMAND ${CABEXTRACT_EXECUTABLE} -d "${FIRMWARE_DIR}" "${CAB_FILE}"
+        RESULT_VARIABLE EXTRACT_RESULT
+        OUTPUT_QUIET ERROR_QUIET
+    )
+    if(EXTRACT_RESULT EQUAL 0)
+        set(EXTRACTION_SUCCESS TRUE)
     endif()
-    
     # Clean up CAB file
     file(REMOVE "${CAB_FILE}")
     
@@ -100,19 +77,19 @@ function(download_firmware PID URL CAB_FILENAME EXPECTED_SHA256)
     endif()
     
     # Rename extracted file to standard name
-        set(EXTRACTED_FILE "${FIRMWARE_DIR}/${CAB_FILENAME}")
-        if(NOT EXISTS "${EXTRACTED_FILE}")
-            file(GLOB_RECURSE EXTRACTED_FILES "${FIRMWARE_DIR}/*")
-            string(TOLOWER "${CAB_FILENAME}" CAB_FILENAME_LOWER)
-            foreach(CANDIDATE ${EXTRACTED_FILES})
-                get_filename_component(CANDIDATE_NAME "${CANDIDATE}" NAME)
-                string(TOLOWER "${CANDIDATE_NAME}" CANDIDATE_NAME_LOWER)
-                if(CANDIDATE_NAME_LOWER STREQUAL CAB_FILENAME_LOWER)
-                    set(EXTRACTED_FILE "${CANDIDATE}")
-                    break()
-                endif()
-            endforeach()
-        endif()
+    set(EXTRACTED_FILE "${FIRMWARE_DIR}/${CAB_FILENAME}")
+    if(NOT EXISTS "${EXTRACTED_FILE}")
+        file(GLOB_RECURSE EXTRACTED_FILES "${FIRMWARE_DIR}/*")
+        string(TOLOWER "${CAB_FILENAME}" CAB_FILENAME_LOWER)
+        foreach(CANDIDATE ${EXTRACTED_FILES})
+            get_filename_component(CANDIDATE_NAME "${CANDIDATE}" NAME)
+            string(TOLOWER "${CANDIDATE_NAME}" CANDIDATE_NAME_LOWER)
+            if(CANDIDATE_NAME_LOWER STREQUAL CAB_FILENAME_LOWER)
+                set(EXTRACTED_FILE "${CANDIDATE}")
+                break()
+            endif()
+        endforeach()
+    endif()
     if(EXISTS "${EXTRACTED_FILE}")
         file(RENAME "${EXTRACTED_FILE}" "${OUTPUT_FILE}")
     else()

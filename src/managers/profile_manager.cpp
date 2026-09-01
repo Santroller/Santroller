@@ -160,9 +160,9 @@ bool ProfileManager::assign_profile_to_devices(
 
 void ProfileManager::update(bool full_poll, bool send_events)
 {
-    for (const auto &instance : m_active_instances)
+    for (const auto &instance : m_instances)
     {
-        instance->process();
+        instance->process(full_poll, send_events);
     }
 
     update_device_assignments(full_poll, send_events);

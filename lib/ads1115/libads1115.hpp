@@ -81,6 +81,7 @@ typedef enum {
     ADS1115_INIT,
     ADS1115_RA_LO_THRESH_INIT,
     ADS1115_RA_CONFIG_INIT,
+    ADS1115_CONFIG_WAIT,
     ADS1115_POLL,
     ADS1115_POLL_WAIT
 } ads1115_status_e;
@@ -90,6 +91,7 @@ public:
     ADS1115(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock, uint8_t alert)
         : interface(block, sda, scl, clock), alert(alert) {};
     void tick();
+    void ready();
     inline bool is_connected()
     {
         return status != ADS1115_INIT;
@@ -113,5 +115,6 @@ private:
     uint8_t bufferTxInit[4];
     uint8_t bufferRxInit[4];
     bool seen[4];
+    volatile bool m_ready = false;
     // uint8_t config[2];
 };

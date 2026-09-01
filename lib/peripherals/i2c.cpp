@@ -277,7 +277,7 @@ static void i2c_dma_write_read_internal(
     }
     i2c_dma_tx_channel_configure(
         i2c_dma->i2c, i2c_dma->tx_chan, i2c_dma->data_cmds, wbuf_len + rbuf_len);
-    i2c_dma->timeout_alarm_id = add_alarm_in_us(I2C_TRANSFER_TIMEOUT_MS, timeout_handler, i2c_dma, true);
+    i2c_dma->timeout_alarm_id = add_alarm_in_ms(I2C_TRANSFER_TIMEOUT_MS, timeout_handler, i2c_dma, true);
 }
 
 void I2CMasterInterface::tick()

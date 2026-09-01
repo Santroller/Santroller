@@ -95,7 +95,7 @@ void WiiEmulationDeviceInstance::initialize()
         m_size = sizeof(WiiTurntableDataFormat3_t);
     }
 }
-void WiiEmulationDeviceInstance::process()
+void WiiEmulationDeviceInstance::process(bool full_poll, bool send_events)
 {
     // TODO: do we need to limit poll rate with this
     // m_device->ready();
@@ -109,12 +109,12 @@ void WiiEmulationDeviceInstance::process()
     {
         for (const auto &mapping : profile->mappings)
         {
-            mapping->update(false, false);
+            mapping->update(full_poll, send_events);
             mapping->update_wii(m_controller.wii_data_format(), m_buffer);
         }
         for (const auto &led : profile->leds)
         {
-            led->update(false, false);
+            led->update(full_poll, send_events);
         }
     }
     m_buffer[buttonsLowIdx] = ~m_buffer[buttonsLowIdx];

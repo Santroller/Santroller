@@ -183,7 +183,7 @@ void OGXboxGamepadDevice::initialize()
     }
     initialReport.rsize = sizeof(OGXboxGamepad_Data_t);
 }
-void OGXboxGamepadDevice::process()
+void OGXboxGamepadDevice::process(bool full_poll, bool send_events)
 {
     if (tud_suspended()) {
         for (const auto &profile : profiles)
@@ -201,7 +201,7 @@ void OGXboxGamepadDevice::process()
         {
             for (const auto &led : profile->leds)
             {
-                led->update(false, false);
+                led->update(full_poll, send_events);
             }
         }
         return;
@@ -216,12 +216,12 @@ void OGXboxGamepadDevice::process()
     {
         for (const auto &mapping : profile->mappings)
         {
-            mapping->update(false, false);
+            mapping->update(full_poll, send_events);
             mapping->update_ogxbox(epin_buf);
         }
         for (const auto &led : profile->leds)
         {
-            led->update(false, false);
+            led->update(full_poll, send_events);
         }
     }
     if (subtype == GuitarHeroGuitar)

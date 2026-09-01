@@ -11,7 +11,7 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     }
     return 0;
 }
-static volatile bool rdy[NUM_BANK0_GPIOS];
+static ADS1115 *ready_handlers[NUM_BANK0_GPIOS] = {};
 void ADS1115::processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     if (status != ADS1115_INIT && addr && addr != address)
@@ -35,10 +35,13 @@ void ADS1115::processData(uint8_t addr, bool running, bool timeout, bool abort_d
     }
     if (stop_detected)
     {
-        seen[0] = addr == ADS1115_ADDRESS_ADDR_GND;
-        seen[1] = addr == ADS1115_ADDRESS_ADDR_VDD;
-        seen[2] = addr == ADS1115_ADDRESS_ADDR_SDA;
-        seen[3] = addr == ADS1115_ADDRESS_ADDR_SCL;
+        if (status == ADS1115_INIT)
+        {
+            seen[0] = addr == ADS1115_ADDRESS_ADDR_GND;
+            seen[1] = addr == ADS1115_ADDRESS_ADDR_VDD;
+            seen[2] = addr == ADS1115_ADDRESS_ADDR_SDA;
+            seen[3] = addr == ADS1115_ADDRESS_ADDR_SCL;
+        }
         if (!abort_detected)
         {
             failCount = 0;
@@ -46,6 +49,9 @@ void ADS1115::processData(uint8_t addr, bool running, bool timeout, bool abort_d
             {
             case ADS1115_INIT:
                 config = ADS1115_REG_RESET_VAL;
+                config &= ~(0xF000);
+                config |= (0x4000 + (current * 0x1000));
+                config |= 1 << 15;
                 status = ADS1115_RA_LO_THRESH_INIT;
                 address = addr;
                 bufferTx[0] = ADS1115_RA_LO_THRESH;
@@ -61,11 +67,15 @@ void ADS1115::processData(uint8_t addr, bool running, bool timeout, bool abort_d
                 interface.dmaWriteRead(address, bufferTx, 3, nullptr, 0);
                 break;
             case ADS1115_RA_CONFIG_INIT:
-                status = ADS1115_POLL_WAIT;
+                status = ADS1115_CONFIG_WAIT;
+                m_ready = false;
                 bufferTx[0] = ADS1115_RA_CONFIG;
                 bufferTx[1] = ((config) >> 8);
                 bufferTx[2] = ((config) & 0xFF);
                 interface.dmaWriteRead(address, bufferTx, 3, nullptr, 0);
+                break;
+            case ADS1115_CONFIG_WAIT:
+                status = ADS1115_POLL_WAIT;
                 break;
             case ADS1115_POLL_WAIT:
                 // wait for RDY
@@ -121,7 +131,17 @@ void ADS1115::processData(uint8_t addr, bool running, bool timeout, bool abort_d
 }
 void cb(uint gpio, uint32_t event_mask)
 {
-    rdy[gpio] = true;
+    if (gpio < NUM_BANK0_GPIOS && ready_handlers[gpio])
+    {
+        ready_handlers[gpio]->ready();
+    }
+}
+void ADS1115::ready()
+{
+    if (status == ADS1115_CONFIG_WAIT || status == ADS1115_POLL_WAIT)
+    {
+        m_ready = true;
+    }
 }
 void ADS1115::begin()
 {
@@ -131,6 +151,8 @@ void ADS1115::begin()
     {
         return;
     }
+    m_ready = false;
+    ready_handlers[alert] = this;
     current = 0;
     gpio_init(alert);
     gpio_set_dir(alert, false);
@@ -150,6 +172,14 @@ void ADS1115::end()
 {
     printf("ads1115 end\r\n");
     cancel_alarm(restart_alarm_id);
+    if (alert != 0xFF)
+    {
+        m_ready = false;
+        if (ready_handlers[alert] == this)
+        {
+            ready_handlers[alert] = nullptr;
+        }
+    }
     interface.dmaDeinit(ADS1115_ADDRESS_ADDR_GND);
     interface.dmaDeinit(ADS1115_ADDRESS_ADDR_VDD);
     interface.dmaDeinit(ADS1115_ADDRESS_ADDR_SDA);
@@ -157,9 +187,13 @@ void ADS1115::end()
 }
 void ADS1115::tick()
 {
-    if (rdy[alert] && status == ADS1115_POLL_WAIT)
+    if (alert == 0xFF)
     {
-        rdy[alert] = false;
+        return;
+    }
+    if (m_ready && status == ADS1115_POLL_WAIT)
+    {
+        m_ready = false;
         status = ADS1115_POLL;
         processData(0, false, false, false, false);
     }

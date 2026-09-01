@@ -56,7 +56,7 @@ void PS4GamepadDevice::initialize()
     gamepad->rightStickY = PS3_STICK_CENTER;
     gamepad->reportCounter = 1;
 }
-void PS4GamepadDevice::process()
+void PS4GamepadDevice::process(bool full_poll, bool send_events)
 {
     if (tud_suspended()) {
         for (const auto &profile : profiles)
@@ -74,7 +74,7 @@ void PS4GamepadDevice::process()
         {
             for (const auto &led : profile->leds)
             {
-                led->update(false, false);
+                led->update(full_poll, send_events);
             }
         }
         return;
@@ -86,12 +86,12 @@ void PS4GamepadDevice::process()
     {
         for (const auto &mapping : profile->mappings)
         {
-            mapping->update(false, false);
+            mapping->update(full_poll, send_events);
             mapping->update_ps4(epin_buf);
         }
         for (const auto &led : profile->leds)
         {
-            led->update(false, false);
+            led->update(full_poll, send_events);
         }
     }
     PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)epin_buf;

@@ -49,7 +49,7 @@ void HIDConfigDevice::initialize()
 {
   m_epin = next_epin();
 }
-void HIDConfigDevice::process()
+void HIDConfigDevice::process(bool full_poll, bool send_events)
 {
   if (clearedIn && clearedOut)
   {
@@ -197,7 +197,6 @@ void HIDConfigDevice::process_events()
     usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, 64, false);
   }
   list.event_count = 0;
-  lastKeepAlive = millis();
   processing = false;
 }
 

@@ -247,7 +247,7 @@ void PS3GamepadDevice::initialize()
         break;
     }
 }
-void PS3GamepadDevice::process()
+void PS3GamepadDevice::process(bool full_poll, bool send_events)
 {
     if (tud_suspended()) {
         for (const auto &profile : profiles)
@@ -265,7 +265,7 @@ void PS3GamepadDevice::process()
         {
             for (const auto &led : profile->leds)
             {
-                led->update(false, false);
+                led->update(full_poll, send_events);
             }
         }
         return;
@@ -275,12 +275,12 @@ void PS3GamepadDevice::process()
     {
         for (const auto &mapping : profile->mappings)
         {
-            mapping->update(false, false);
+            mapping->update(full_poll, send_events);
             mapping->update_ps3(epin_buf);
         }
         for (const auto &led : profile->leds)
         {
-            led->update(false, false);
+            led->update(full_poll, send_events);
         }
     }
 

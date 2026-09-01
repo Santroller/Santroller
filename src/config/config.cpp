@@ -622,7 +622,7 @@ uint32_t copy_config_info(uint8_t *buffer)
 void reload()
 {
     printf("reload called\r\n");
-    config_mgr.schedule_reinit(millis() + 100);
+    config_mgr.schedule_reinit(millis());
 }
 
 void update_aux_cycle(uint32_t id, uint32_t state)

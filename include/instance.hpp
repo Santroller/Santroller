@@ -17,7 +17,7 @@ class Instance
 public:
     virtual ~Instance() {}
     virtual void initialize() = 0;
-    virtual void process() = 0;
+    virtual void process(bool full_poll, bool send_events) = 0;
     SubType subtype;
     ConsoleMode mode;
     bool xinput_on_windows = 0;

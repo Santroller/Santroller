@@ -145,7 +145,7 @@ uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16
     }
     return 0;
 }
-void XInputGamepadDevice::process()
+void XInputGamepadDevice::process(bool full_poll, bool send_events)
 {
     if (tud_suspended())
     {
@@ -157,7 +157,7 @@ void XInputGamepadDevice::process()
             }
             for (const auto &mapping : profile->mappings)
             {
-                mapping->update(false, false);
+                mapping->update(full_poll, send_events);
                 mapping->update_xinput(epin_buf);
             }
             XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)epin_buf;
@@ -174,7 +174,7 @@ void XInputGamepadDevice::process()
         {
             for (const auto &led : profile->leds)
             {
-                led->update(false, false);
+                led->update(full_poll, send_events);
             }
         }
         return;
@@ -194,12 +194,12 @@ void XInputGamepadDevice::process()
         profile->drum_state.redPad = 0;
         for (const auto &mapping : profile->mappings)
         {
-            mapping->update(false, false);
+            mapping->update(full_poll, send_events);
             mapping->update_xinput(epin_buf);
         }
         for (const auto &led : profile->leds)
         {
-            led->update(false, false);
+            led->update(full_poll, send_events);
         }
     }
     if (report->guide)
@@ -382,7 +382,7 @@ void XInputSecurityDevice::initialize()
 {
     m_strid = next_strid();
 }
-void XInputSecurityDevice::process()
+void XInputSecurityDevice::process(bool full_poll, bool send_events)
 {
 }
 

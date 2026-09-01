@@ -30,7 +30,7 @@ void HIDKeyboardDevice::initialize()
   ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
   memset(&initialReport, 0, sizeof(initialReport));
 }
-void HIDKeyboardDevice::process()
+void HIDKeyboardDevice::process(bool full_poll, bool send_events)
 {
   if (tud_suspended())
   {
@@ -49,7 +49,7 @@ void HIDKeyboardDevice::process()
     {
       for (const auto &led : profile->leds)
       {
-        led->update(false, false);
+        led->update(full_poll, send_events);
       }
     }
     return;
@@ -62,12 +62,12 @@ void HIDKeyboardDevice::process()
     state.pressedKeys = 0;
     for (const auto &mapping : profile->mappings)
     {
-      mapping->update(false, false);
+      mapping->update(full_poll, send_events);
       mapping->update_hid(epin_buf);
     }
     for (const auto &led : profile->leds)
     {
-      led->update(false, false);
+      led->update(full_poll, send_events);
     }
     size_t current = 0;
     for (size_t i = 0; i < sizeof(state.lastSeenKeys); i++)

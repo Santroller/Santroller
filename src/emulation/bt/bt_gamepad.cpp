@@ -236,7 +236,7 @@ void BTGamepadDevice::initialize()
     XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)initialReport;
     gamepad->rsize = sizeof(XInputGamepad_Data_t);
 }
-void BTGamepadDevice::process()
+void BTGamepadDevice::process(bool full_poll, bool send_events)
 {
     if (con_handle != HCI_CON_HANDLE_INVALID)
     {
@@ -249,12 +249,12 @@ void BTGamepadDevice::process()
         {
             for (const auto &mapping : profile->mappings)
             {
-                mapping->update(false, false);
+                mapping->update(full_poll, send_events);
                 mapping->update_hid(epin_buf);
             }
             for (const auto &led : profile->leds)
             {
-                led->update(false, false);
+                led->update(full_poll, send_events);
             }
         }
         if (invert_y_axis_hid && subtype == Gamepad)

@@ -19,7 +19,7 @@ public:
     ~Ps2EmulationDeviceInstance();
     Ps2EmulationDeviceInstance(proto_PSXEmulationDevice device);
     void initialize();
-    void process();
+    void process(bool full_poll, bool send_events);
 private:
     proto_PSXEmulationDevice m_device;
     PSXEmulation m_controller;

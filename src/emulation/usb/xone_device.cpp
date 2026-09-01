@@ -417,7 +417,7 @@ void XboxOneGamepadDevice::set_ack_wait()
     waiting_ack = true;
     waiting_ack_timeout = to_ms_since_boot(get_absolute_time()); // 2 second time-out
 }
-void XboxOneGamepadDevice::process()
+void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
 {
     if (tud_suspended())
     {
@@ -436,7 +436,7 @@ void XboxOneGamepadDevice::process()
         {
             for (const auto &led : profile->leds)
             {
-                led->update(false, false);
+                led->update(full_poll, send_events);
             }
         }
         return;
@@ -576,12 +576,12 @@ void XboxOneGamepadDevice::process()
     {
         for (const auto &mapping : profile->mappings)
         {
-            mapping->update(false, false);
+            mapping->update(full_poll, send_events);
             mapping->update_xboxone(epin_buf);
         }
         for (const auto &led : profile->leds)
         {
-            led->update(false, false);
+            led->update(full_poll, send_events);
         }
     }
     // Virtual Keycode Triggered (Pressed or Released)

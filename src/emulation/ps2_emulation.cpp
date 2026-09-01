@@ -43,7 +43,7 @@ void Ps2EmulationDeviceInstance::initialize()
         break;
     }
 }
-void Ps2EmulationDeviceInstance::process()
+void Ps2EmulationDeviceInstance::process(bool full_poll, bool send_events)
 {
     // TODO: do we need to limit poll rate with this
     // m_device->ready();
@@ -52,12 +52,12 @@ void Ps2EmulationDeviceInstance::process()
     {
         for (const auto &mapping : profile->mappings)
         {
-            mapping->update(false, false);
+            mapping->update(full_poll, send_events);
             mapping->update_ps2(m_buffer);
         }
         for (const auto &led : profile->leds)
         {
-            led->update(false, false);
+            led->update(full_poll, send_events);
         }
     }
     // guitar hero guitars smashed the dpad into the right stick so we need to convert the bitmasks

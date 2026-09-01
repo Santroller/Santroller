@@ -19,7 +19,7 @@ public:
     ~WiiEmulationDeviceInstance();
     WiiEmulationDeviceInstance(proto_WiiEmulationDevice device);
     void initialize();
-    void process();
+    void process(bool full_poll, bool send_events);
 private:
     proto_WiiEmulationDevice m_device;
     WiiExtensionEmulation m_controller;

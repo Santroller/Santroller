@@ -49,7 +49,7 @@ void PS5GamepadDevice::initialize()
     gamepad->rightStickY = PS3_STICK_CENTER;
     gamepad->data_30_31_0x001a = 0x001a;
 }
-void PS5GamepadDevice::process()
+void PS5GamepadDevice::process(bool full_poll, bool send_events)
 {
     if (tud_suspended()) {
         for (const auto &profile : profiles)
@@ -67,7 +67,7 @@ void PS5GamepadDevice::process()
         {
             for (const auto &led : profile->leds)
             {
-                led->update(false, false);
+                led->update(full_poll, send_events);
             }
         }
         return;
@@ -79,12 +79,12 @@ void PS5GamepadDevice::process()
     {
         for (const auto &mapping : profile->mappings)
         {
-            mapping->update(false, false);
+            mapping->update(full_poll, send_events);
             mapping->update_ps5(epin_buf);
         }
         for (const auto &led : profile->leds)
         {
-            led->update(false, false);
+            led->update(full_poll, send_events);
         }
     }
     PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)epin_buf;

@@ -103,7 +103,7 @@ bool SwitchGamepadDevice::sendReport(uint8_t reportID, void const *reportData, u
     }
     return response;
 }
-void SwitchGamepadDevice::process()
+void SwitchGamepadDevice::process(bool full_poll, bool send_events)
 {
     if (tud_suspended()) {
         for (const auto &profile : profiles)
@@ -121,7 +121,7 @@ void SwitchGamepadDevice::process()
         {
             for (const auto &led : profile->leds)
             {
-                led->update(false, false);
+                led->update(full_poll, send_events);
             }
         }
         return;
@@ -148,12 +148,12 @@ void SwitchGamepadDevice::process()
         {
             for (const auto &mapping : profile->mappings)
             {
-                mapping->update(false, false);
+                mapping->update(full_poll, send_events);
                 mapping->update_switch((uint8_t *)&switchReport.inputs);
             }
             for (const auto &led : profile->leds)
             {
-                led->update(false, false);
+                led->update(full_poll, send_events);
             }
         }
         if ((now - last_report_timer) > SWITCH_PRO_KEEPALIVE_TIMER)

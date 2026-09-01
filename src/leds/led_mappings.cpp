@@ -64,7 +64,6 @@ void PatternLedMapping::update(bool full_poll, bool send_events)
     }
     uint32_t speed = m_speed;
     uint8_t leds = m_device->led_count();
-    // If the led doesn't support brightness, then we just stop each channel at a lower brightness
     uint8_t pos_per_chan = m_device->supports_brightness() ? 255 : m_brightness;
     if (m_mapping.pattern == PatternRainbow)
     {

@@ -18,7 +18,7 @@ public:
     virtual ~BTGamepadDevice();
     BTGamepadDevice();
     void initialize();
-    void process();
+    void process(bool full_poll, bool send_events);
 
 private:
     uint8_t initialReport[CFG_TUD_XINPUT_TX_BUFSIZE];

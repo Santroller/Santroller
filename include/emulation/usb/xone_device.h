@@ -69,8 +69,8 @@ private:
     uint8_t report_led_brightness;
     uint16_t input_report_length = 0;
 
-    XGIPProtocol *outgoingXGIP = nullptr;
-    XGIPProtocol *incomingXGIP = nullptr;
+    XGIPProtocol outgoingXGIP;
+    XGIPProtocol incomingXGIP;
     // Check report queue every 35 milliseconds
     uint32_t lastReportQueue = 0;
 

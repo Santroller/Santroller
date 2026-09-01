@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "../../build/proto/enums.pb.h"
+#include "enums.pb.h"
 
 #ifdef __cplusplus
 extern "C" {

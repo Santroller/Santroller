@@ -64,7 +64,7 @@ function(download_firmware PID URL CAB_FILENAME EXPECTED_SHA256)
     
     if(BSDTAR_EXECUTABLE)
         execute_process(
-            COMMAND ${BSDTAR_EXECUTABLE} -xf "${CAB_FILE}" -C "${FIRMWARE_DIR}" "${CAB_FILENAME}"
+                COMMAND ${BSDTAR_EXECUTABLE} -xf "${CAB_FILE}" -C "${FIRMWARE_DIR}"
             RESULT_VARIABLE EXTRACT_RESULT
             OUTPUT_QUIET ERROR_QUIET
         )
@@ -100,7 +100,19 @@ function(download_firmware PID URL CAB_FILENAME EXPECTED_SHA256)
     endif()
     
     # Rename extracted file to standard name
-    set(EXTRACTED_FILE "${FIRMWARE_DIR}/${CAB_FILENAME}")
+        set(EXTRACTED_FILE "${FIRMWARE_DIR}/${CAB_FILENAME}")
+        if(NOT EXISTS "${EXTRACTED_FILE}")
+            file(GLOB_RECURSE EXTRACTED_FILES "${FIRMWARE_DIR}/*")
+            string(TOLOWER "${CAB_FILENAME}" CAB_FILENAME_LOWER)
+            foreach(CANDIDATE ${EXTRACTED_FILES})
+                get_filename_component(CANDIDATE_NAME "${CANDIDATE}" NAME)
+                string(TOLOWER "${CANDIDATE_NAME}" CANDIDATE_NAME_LOWER)
+                if(CANDIDATE_NAME_LOWER STREQUAL CAB_FILENAME_LOWER)
+                    set(EXTRACTED_FILE "${CANDIDATE}")
+                    break()
+                endif()
+            endforeach()
+        endif()
     if(EXISTS "${EXTRACTED_FILE}")
         file(RENAME "${EXTRACTED_FILE}" "${OUTPUT_FILE}")
     else()

@@ -26,7 +26,7 @@ if(SANTROLLER_VARIANT_DRIVER AND NOT SANTROLLER_VARIANT_BUILD)
   project(santroller_variants NONE)
 
   add_custom_target(prepare_board_variants
-    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/santroller.uf2" "${CMAKE_BINARY_DIR}/santroller_fota.uf2"
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/santroller.uf2" "${CMAKE_BINARY_DIR}/santroller_fota.uf2" "${CMAKE_BINARY_DIR}/santroller_fota_image.bin"
   )
 
   foreach(SANTROLLER_VARIANT IN LISTS SANTROLLER_BOARD_VARIANTS)
@@ -46,6 +46,7 @@ if(SANTROLLER_VARIANT_DRIVER AND NOT SANTROLLER_VARIANT_BUILD)
       COMMAND ${CMAKE_COMMAND} --build "${SANTROLLER_VARIANT_BINARY_DIR}" --parallel
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SANTROLLER_VARIANT_BINARY_DIR}/santroller.uf2" "${CMAKE_BINARY_DIR}/santroller_${SANTROLLER_VARIANT}.uf2"
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SANTROLLER_VARIANT_BINARY_DIR}/santroller_fota.uf2" "${CMAKE_BINARY_DIR}/santroller_${SANTROLLER_VARIANT}_fota.uf2"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SANTROLLER_VARIANT_BINARY_DIR}/santroller_fota_image.bin" "${CMAKE_BINARY_DIR}/santroller_${SANTROLLER_VARIANT}.bin"
     )
     add_dependencies(build_${SANTROLLER_VARIANT} prepare_board_variants)
   endforeach()

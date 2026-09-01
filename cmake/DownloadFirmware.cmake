@@ -17,7 +17,7 @@ set(FIRMWARE_02FE_FILE "FW_ACC_00U.bin")
 set(FIRMWARE_02FE_SHA "48084d9fa53b9bb04358f3bb127b7495dc8f7bb0b3ca1437bd24ef2b6eabdf66")
 
 # Only include external USB dongles (02e6, 02fe)
-# Excluded: 02f9 (Xbox One S built-in), 091e (Xbox One X built-in)
+# Excluded: 02f9, 091e, these were built into some laptops
 set(FIRMWARE_PIDS "02e6" "02fe")
 
 # Create firmware directory

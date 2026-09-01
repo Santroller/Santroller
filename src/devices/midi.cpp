@@ -6,7 +6,7 @@
 #include "devices/usb/host/hid/hid_host.h"
 #include "main.hpp"
 #include "config/config.hpp"
-MidiDevice::MidiDevice(std::shared_ptr<MidiDevice> prev, uint16_t id, bool usbBased) : Device(id), drumMode(false), usbBased(usbBased)
+MidiDevice::MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased) : Device(id), drumMode(false), usbBased(usbBased)
 {
     tu_memclr(&ep_stream, sizeof(ep_stream));
     tu_edpt_stream_init(&ep_stream.rx, true, false, false,
@@ -21,11 +21,17 @@ MidiDevice::MidiDevice(std::shared_ptr<MidiDevice> prev, uint16_t id, bool usbBa
     memset(midiStringVelocities, 0, sizeof(midiStringVelocities));
     memset(&midiButtons, 0, sizeof(midiButtons));
     memset(seenChannels, 0, sizeof(seenChannels));
-    if (prev) {
-        memcpy(seenChannels, prev->seenChannels, sizeof(prev->seenChannels));
+    if (state) {
+        memcpy(seenChannels, state->seen_midi_channels, sizeof(seenChannels));
     }
     // default to neutral
     midiButtons.dpad = 8;
+}
+
+void MidiDevice::save_reload_state(DeviceReloadState& state) const
+{
+    state.valid = true;
+    memcpy(state.seen_midi_channels, seenChannels, sizeof(seenChannels));
 }
 void MidiDevice::rescan(bool first)
 {

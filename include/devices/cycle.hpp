@@ -7,13 +7,14 @@
 class CycleDevice : public Device
 {
 public:
-    CycleDevice(std::shared_ptr<CycleDevice> old, proto_CycleDevice device, uint16_t id, uint32_t current, std::vector<uint32_t> states);
+    CycleDevice(const DeviceReloadState* state, proto_CycleDevice device, uint16_t id, uint32_t current, std::vector<uint32_t> states);
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
     void cycle(bool forward);
     uint32_t get_value() {return m_current_value;}
+    void save_reload_state(DeviceReloadState& state) const override;
 private:
     proto_CycleDevice m_device;
     std::vector<uint32_t> m_states;

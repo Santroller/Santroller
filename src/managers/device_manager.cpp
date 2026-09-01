@@ -73,6 +73,7 @@ void DeviceManager::remove_disconnected_root_devices()
     {
         if (!it->second->still_connected)
         {
+            it->second->end(false);
             it = m_root_devices.erase(it);
         }
         else

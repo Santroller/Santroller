@@ -4,11 +4,17 @@
 #include "emulation/usb/hid_device.h"
 #include "config/config.hpp"
 #include "utils.h"
-CycleDevice::CycleDevice(std::shared_ptr<CycleDevice> old, proto_CycleDevice device, uint16_t id, uint32_t current_index, std::vector<uint32_t> states) : Device(id), m_device(device), m_states(states), m_current_value(states[current_index]), m_current_index(current_index)
+CycleDevice::CycleDevice(const DeviceReloadState* state, proto_CycleDevice device, uint16_t id, uint32_t current_index, std::vector<uint32_t> states) : Device(id), m_device(device), m_states(states), m_current_value(states[current_index]), m_current_index(current_index)
 {
-    if (old) {
-        m_last = old->m_last;
+    if (state) {
+        m_last = state->debounce_time;
     }
+}
+
+void CycleDevice::save_reload_state(DeviceReloadState& state) const
+{
+    state.valid = true;
+    state.debounce_time = m_last;
 }
 
 void CycleDevice::begin()

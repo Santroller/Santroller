@@ -4,11 +4,19 @@
 #include "emulation/usb/hid_device.h"
 #include "config/config.hpp"
 #include "utils.h"
-ToggleDevice::ToggleDevice(std::shared_ptr<ToggleDevice> old, proto_ToggleDevice device, uint16_t id, bool current) : Device(id), m_device(device),m_current_value(current)
+ToggleDevice::ToggleDevice(const DeviceReloadState* state, proto_ToggleDevice device, uint16_t id, bool current) : Device(id), m_device(device),m_current_value(current)
 {
-    if (old) {
-        m_last = old->m_last;
+    if (state) {
+        m_last = state->debounce_time;
+        m_current_value = state->toggle_value;
     }
+}
+
+void ToggleDevice::save_reload_state(DeviceReloadState& state) const
+{
+    state.valid = true;
+    state.debounce_time = m_last;
+    state.toggle_value = m_current_value;
 }
 
 void ToggleDevice::begin()

@@ -30,19 +30,9 @@
 #include "devices/dmx.hpp"
 
 // Static storage for emulation devices and state
-static proto_PSXEmulationDevice s_ps2_emulation_device;
-static proto_WiiEmulationDevice s_wii_emulation_device;
 static std::map<int32_t, int32_t> s_cycle_states;
 static std::map<int32_t, bool> s_toggle_states;
 static std::vector<uint32_t> s_last_cycle_states;
-
-proto_PSXEmulationDevice& DeviceFactory::get_ps2_emulation_device() {
-    return s_ps2_emulation_device;
-}
-
-proto_WiiEmulationDevice& DeviceFactory::get_wii_emulation_device() {
-    return s_wii_emulation_device;
-}
 
 // Cycle state management
 void DeviceFactory::set_cycle_state(int32_t id, int32_t state) {
@@ -96,7 +86,7 @@ const std::vector<uint32_t>& DeviceFactory::get_last_cycle_states() {
 std::shared_ptr<Device> DeviceFactory::create_device(
     const proto_Device& proto_device,
     uint32_t device_id,
-    std::shared_ptr<Device> previous_device)
+    const DeviceReloadState* previous_state)
 {
     std::shared_ptr<Device> device;
     
@@ -117,7 +107,7 @@ std::shared_ptr<Device> DeviceFactory::create_device(
     case proto_Device_wii_tag:
         // Preserve state from previous device
         device = std::make_shared<WiiDevice>(
-            std::static_pointer_cast<WiiDevice>(previous_device),
+            previous_state,
             proto_device.device.wii,
             device_id
         );
@@ -126,7 +116,7 @@ std::shared_ptr<Device> DeviceFactory::create_device(
     case proto_Device_psx_tag:
         // Preserve state from previous device
         device = std::make_shared<PS2Device>(
-            std::static_pointer_cast<PS2Device>(previous_device),
+            previous_state,
             proto_device.device.psx,
             device_id
         );
@@ -134,12 +124,10 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         
     case proto_Device_psxEmulation_tag:
         device = std::make_shared<PSXEmulationDevice>(proto_device.device.psxEmulation, device_id);
-        s_ps2_emulation_device = proto_device.device.psxEmulation;
         break;
         
     case proto_Device_wiiEmulation_tag:
         device = std::make_shared<WiiEmulationDevice>(proto_device.device.wiiEmulation, device_id);
-        s_wii_emulation_device = proto_device.device.wiiEmulation;
         break;
         
     case proto_Device_protarNeck_tag:
@@ -148,7 +136,7 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         
     case proto_Device_bhDrum_tag:
         device = std::make_shared<BandHeroDrumDevice>(
-            std::static_pointer_cast<BandHeroDrumDevice>(previous_device),
+            previous_state,
             proto_device.device.bhDrum,
             device_id
         );
@@ -156,7 +144,7 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         
     case proto_Device_worldTourDrum_tag:
         device = std::make_shared<WorldTourDrumDevice>(
-            std::static_pointer_cast<WorldTourDrumDevice>(previous_device),
+            previous_state,
             proto_device.device.worldTourDrum,
             device_id
         );
@@ -196,7 +184,7 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         
     case proto_Device_midiSerial_tag:
         device = std::make_shared<MidiSerialDevice>(
-            std::static_pointer_cast<MidiSerialDevice>(previous_device),
+            previous_state,
             proto_device.device.midiSerial,
             device_id
         );
@@ -232,7 +220,7 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         
     case proto_Device_cycle_tag:
         device = std::make_shared<CycleDevice>(
-            std::static_pointer_cast<CycleDevice>(previous_device),
+            previous_state,
             proto_device.device.cycle,
             device_id,
             s_cycle_states[device_id],
@@ -243,7 +231,7 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         
     case proto_Device_toggle_tag:
         device = std::make_shared<ToggleDevice>(
-            std::static_pointer_cast<ToggleDevice>(previous_device),
+            previous_state,
             proto_device.device.toggle,
             device_id,
             s_toggle_states[device_id]

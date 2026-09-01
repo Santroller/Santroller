@@ -1,5 +1,5 @@
 #include "config/instance_factory.hpp"
-#include "config/device_factory.hpp"
+#include "config/emulation_device_config.hpp"
 #include "managers/profile_manager.hpp"
 #include "managers/config_manager.hpp"
 #include "emulation/bt/bt_gamepad.h"
@@ -31,7 +31,9 @@ void InstanceFactory::setup_instance_from_profile(
 
 std::shared_ptr<Instance> InstanceFactory::create_instance(
     int assignment_mask,
-    std::shared_ptr<Profile> profile)
+    std::shared_ptr<Profile> profile,
+    ConsoleMode usb_mode,
+    const EmulationDeviceConfig& emulation_devices)
 {
     std::shared_ptr<Instance> instance;
     
@@ -39,18 +41,24 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
         instance = std::make_shared<BTGamepadDevice>();
     }
     else if (assignment_mask & ProfileAssignMask_AssignPsx) {
+        if (!emulation_devices.has_psx) {
+            return nullptr;
+        }
         instance = std::make_shared<Ps2EmulationDeviceInstance>(
-            DeviceFactory::get_ps2_emulation_device()
+            emulation_devices.psx
         );
     }
     else if (assignment_mask & ProfileAssignMask_AssignWiimoteExtension) {
+        if (!emulation_devices.has_wii) {
+            return nullptr;
+        }
         instance = std::make_shared<WiiEmulationDeviceInstance>(
-            DeviceFactory::get_wii_emulation_device()
+            emulation_devices.wii
         );
     }
     else if (assignment_mask & ProfileAssignMask_AssignUsb) {
-        auto usb_instance = create_usb_instance(config_mgr.get_mode(), profile->subtype);
-        return std::static_pointer_cast<Instance>(usb_instance);
+        instance = std::static_pointer_cast<Instance>(
+            create_usb_instance(usb_mode, profile->subtype));
     }
     
     if (!instance) {
@@ -74,7 +82,7 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
     
     if (subtype == SubType_KeyboardMouse) {
         instance = std::make_shared<HIDKeyboardDevice>();
-        config_mgr.set_new_mode(ModeHid);
+        config_mgr.request_mode(ModeHid);
         return instance;
     }
     

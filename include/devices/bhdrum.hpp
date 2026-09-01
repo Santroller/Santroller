@@ -6,7 +6,7 @@ class BandHeroDrumDevice : public MidiDevice
 {
 public:
     ~BandHeroDrumDevice() {}
-    BandHeroDrumDevice(std::shared_ptr<BandHeroDrumDevice> prev, proto_BandHeroDrumDevice device, uint16_t id);
+    BandHeroDrumDevice(const DeviceReloadState* state, proto_BandHeroDrumDevice device, uint16_t id);
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);

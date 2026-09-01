@@ -11,7 +11,7 @@ class PS2Device : public Device
 {
 public:
     ~PS2Device() {}
-    PS2Device(std::shared_ptr<PS2Device> old, proto_PSXDevice device, uint16_t id);
+    PS2Device(const DeviceReloadState* state, proto_PSXDevice device, uint16_t id);
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);
@@ -20,6 +20,7 @@ public:
     bool is_ps2_device(PS2ControllerType type);
     void rescan(bool first);
     bool using_pin(uint8_t pin);
+    void save_reload_state(DeviceReloadState& state) const override;
 
 private:
     PSXController m_controller;

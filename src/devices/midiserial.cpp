@@ -3,7 +3,7 @@
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
 #include "config/config.hpp"
-MidiSerialDevice::MidiSerialDevice(std::shared_ptr<MidiSerialDevice> prev, proto_SerialMidiDevice device, uint16_t id) : MidiDevice(prev, id, false), serial(this, device.uart.block, device.uart.tx, device.uart.rx, device.uart.baudrate), m_device(device)
+MidiSerialDevice::MidiSerialDevice(const DeviceReloadState* state, proto_SerialMidiDevice device, uint16_t id) : MidiDevice(state, id, false), serial(this, device.uart.block, device.uart.tx, device.uart.rx, device.uart.baudrate), m_device(device)
 {
 }
 void MidiSerialDevice::begin()

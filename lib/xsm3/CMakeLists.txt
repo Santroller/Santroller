@@ -1,5 +1,6 @@
 add_library(xsm3 INTERFACE)
 target_include_directories(xsm3 INTERFACE .)
+target_compile_options(xsm3 INTERFACE -Os)
 target_link_libraries(xsm3 INTERFACE
     pico_stdlib
 )

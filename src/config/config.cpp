@@ -3,6 +3,7 @@
 #include "managers/device_manager.hpp"
 #include "managers/config_manager.hpp"
 #include "config/device_factory.hpp"
+#include "config/emulation_device_config.hpp"
 #include "config/input_factory.hpp"
 #include "config/mapping_factory.hpp"
 #include "config/trigger_factory.hpp"
@@ -100,6 +101,7 @@ ConsoleMode newMode = mode;
 struct ConfigDecodeContext
 {
     std::shared_ptr<Profile> profile;
+    const EmulationDeviceConfig *emulation_devices = nullptr;
     ShortcutInput *last_shortcut = nullptr;
     Input *last_special = nullptr;
 };
@@ -123,18 +125,42 @@ bool load_device_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
+    auto *emulation_devices = static_cast<EmulationDeviceConfig *>(arg ? *arg : nullptr);
     proto_Device proto_device proto_Device_init_zero;
     proto_device.cb_device.funcs.decode = load_device_dev;
+    proto_device.cb_device.arg = arg ? *arg : nullptr;
     pb_decode(stream, proto_Device_fields, &proto_device);
     
-    auto device_id = proto_device.deviceid;
-    auto prev_device = device_mgr.get_root_device(device_id);
-    if (prev_device)
+    if (emulation_devices)
     {
-        prev_device->end(false);
+        if (proto_device.which_device == proto_Device_psxEmulation_tag)
+        {
+            emulation_devices->psx = proto_device.device.psxEmulation;
+            emulation_devices->has_psx = true;
+        }
+        else if (proto_device.which_device == proto_Device_wiiEmulation_tag)
+        {
+            emulation_devices->wii = proto_device.device.wiiEmulation;
+            emulation_devices->has_wii = true;
+        }
     }
     
-    auto device = DeviceFactory::create_device(proto_device, device_id, prev_device);
+    auto device_id = proto_device.deviceid;
+    DeviceReloadState previous_state;
+    auto previous_device = device_mgr.get_root_device(device_id);
+    if (previous_device)
+    {
+        previous_device->save_reload_state(previous_state);
+        previous_device->end(false);
+        device_mgr.remove_root_device(device_id);
+        previous_device.reset();
+    }
+    
+    auto device = DeviceFactory::create_device(
+        proto_device,
+        device_id,
+        previous_state.valid ? &previous_state : nullptr
+    );
     if (!device)
     {
         return false;
@@ -454,13 +480,18 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     // printf("load_profile\r\n");
+    auto *emulation_devices = static_cast<EmulationDeviceConfig *>(arg ? *arg : nullptr);
+    if (!emulation_devices)
+    {
+        return false;
+    }
     auto profile = std::make_shared<Profile>();
     device_mgr.for_each_active_device([profile](const auto &device)
     {
         profile->devices.emplace(device->m_id, device);
         // printf("load device: %p %p %d\r\n", profile.get(), device.get(), device->m_id);
     });
-    ConfigDecodeContext context{profile};
+    ConfigDecodeContext context{profile, emulation_devices};
     proto_Profile proto_profile;
     memset(&proto_profile, 0, sizeof(proto_profile));
     proto_profile.assignments.funcs.decode = &load_assignments;
@@ -479,13 +510,21 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         if (list->validate(true, false, false))
         {
             int assignedDevices = list->assignedDevices();
+            ConsoleMode usb_mode = config_mgr.get_requested_mode();
+            ConsoleMode forced_usb_mode;
+            if (list->forcedConsoleMode(forced_usb_mode))
+            {
+                printf("setting requested mode: %d, old: %d\r\n", forced_usb_mode, config_mgr.get_requested_mode());
+                config_mgr.request_mode(forced_usb_mode);
+                usb_mode = forced_usb_mode;
+            }
             printf("profile assigned! profile_id=%d\r\n", profile->profile_id);
             
             // Track subtype changes
             profile_mgr.track_profile_type(profile->profile_id, profile->subtype);
             
             // Assign profile to appropriate devices
-            profile_mgr.assign_profile_to_devices(profile, assignedDevices);
+            profile_mgr.assign_profile_to_devices(profile, assignedDevices, usb_mode, *context.emulation_devices);
             break;
         }
     }
@@ -652,7 +691,7 @@ bool load()
         return false;
     }
 
-    const bool loaded = ConfigLoader::apply(image, config_mgr.get_mode());
+    const bool loaded = ConfigLoader::apply(image, config_mgr.get_current_mode());
     config_mgr.set_loaded_any(loaded);
     return loaded;
 }

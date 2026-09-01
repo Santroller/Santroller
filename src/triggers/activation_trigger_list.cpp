@@ -56,3 +56,18 @@ int ActivationTriggerList::assignedDevices()
     }
     return assigned;
 }
+
+bool ActivationTriggerList::forcedConsoleMode(ConsoleMode& mode) const
+{
+    bool found = false;
+    for (auto &trigger : triggers)
+    {
+        ConsoleMode trigger_mode;
+        if (trigger->forcedConsoleMode(trigger_mode))
+        {
+            mode = trigger_mode;
+            found = true;
+        }
+    }
+    return found;
+}

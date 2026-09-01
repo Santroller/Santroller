@@ -467,7 +467,7 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
             {
                 uint8_t const report_id = tu_u16_low(request->wValue);
                 if (report_id == 0xF2)
-                    ConfigManager::instance().set_new_mode(ModePs3);
+                    ConfigManager::instance().request_mode(ModePs3);
             }
             break;
         }
@@ -487,7 +487,7 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
                 xsm3_set_identification_data(xsm3_id_data_ms_controller);
                 tud_control_xfer(TUD_OPT_RHPORT, request, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
             }
-            ConfigManager::instance().set_new_mode(ModeXbox360);
+                    ConfigManager::instance().request_mode(ModeXbox360);
             return true;
         case 0x82:
             if (stage == CONTROL_STAGE_SETUP)

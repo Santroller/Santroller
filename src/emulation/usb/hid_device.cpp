@@ -89,7 +89,7 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
     clearedOut |= tu_edpt_dir(request->wIndex) == TUSB_DIR_OUT;
     if (clearedIn && clearedOut)
     {
-      ConfigManager::instance().set_new_mode(ModeSwitch);
+      ConfigManager::instance().request_mode(ModeSwitch);
       return false;
     }
   }
@@ -100,7 +100,7 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
     {
       if (request->bRequest == 6 && request->wValue == 0x4200)
       {
-        ConfigManager::instance().set_new_mode(ModeOgXbox);
+        ConfigManager::instance().request_mode(ModeOgXbox);
         return false;
       }
     }
@@ -126,12 +126,12 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
           {
             if (xinput_on_windows)
             {
-              ConfigManager::instance().set_new_mode(ModeXbox360);
+              ConfigManager::instance().request_mode(ModeXbox360);
             }
           }
           else
           {
-            ConfigManager::instance().set_new_mode(ModeXboxOne);
+            ConfigManager::instance().request_mode(ModeXboxOne);
           }
         }
       }

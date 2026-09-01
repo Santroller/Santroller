@@ -12,15 +12,16 @@ public:
     }
 
     // Console mode management
-    ConsoleMode get_mode() const { return m_mode; }
-    void set_mode(ConsoleMode mode) { m_mode = mode; }
-    ConsoleMode get_new_mode() const { return m_new_mode; }
-    void set_new_mode(ConsoleMode mode) { m_new_mode = mode; }
+    ConsoleMode get_current_mode() const { return m_current_mode; }
+    void set_current_mode(ConsoleMode mode) { m_current_mode = mode; }
+    ConsoleMode get_requested_mode() const { return m_requested_mode; }
+    void request_mode(ConsoleMode mode) { m_requested_mode = mode; }
+    void begin_config_load() { m_requested_mode = m_current_mode; }
     bool has_mode_changed() const { return m_mode_changed; }
     void set_mode_changed(bool changed) { m_mode_changed = changed; }
     bool mode_recently_changed(uint32_t now, uint32_t window_ms = 2000) const;
     void mark_mode_change_time(uint32_t now) { m_time_since_mode = now; }
-    void sync_new_mode_to_current() { m_new_mode = m_mode; }
+    void sync_requested_mode_to_current() { m_requested_mode = m_current_mode; }
     
     // Config loading state
     bool is_working() const { return m_working; }
@@ -47,8 +48,8 @@ public:
 
 private:
     ConfigManager() 
-        : m_mode(ModeHid)
-        , m_new_mode(ModeHid)
+        : m_current_mode(ModeHid)
+        , m_requested_mode(ModeHid)
         , m_mode_changed(false)
         , m_working(false)
         , m_loaded_any(false)
@@ -63,8 +64,8 @@ private:
     ConfigManager(const ConfigManager&) = delete;
     ConfigManager& operator=(const ConfigManager&) = delete;
 
-    ConsoleMode m_mode;
-    ConsoleMode m_new_mode;
+    ConsoleMode m_current_mode;
+    ConsoleMode m_requested_mode;
     bool m_mode_changed;
     bool m_working;
     bool m_loaded_any;

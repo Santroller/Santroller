@@ -84,14 +84,6 @@ compile_proto()
 
 pico_sdk_init()
 
-# Compress CYW43 WiFi firmware to save flash (only if WiFi is enabled)
-if(ENABLE_WIFI)
-    include(cmake/CompressCyw43Firmware.cmake)
-else()
-    message(STATUS "WiFi disabled - CYW43 driver will not be included")
-    set(CYW43_FIRMWARE_COMPRESSED FALSE)
-endif()
-
 add_compile_options(-fdata-sections -ffunction-sections)
 add_link_options(-Wl,--gc-sections)
 
@@ -99,25 +91,6 @@ include(cmake/Uzlib.cmake)
 add_subdirectory(lib)
 add_subdirectory(lib/pico_fota_bootloader)
 
-# Add compressed CYW43 firmware if available
-if(ENABLE_WIFI)
-    if(CYW43_FIRMWARE_COMPRESSED)
-        message(STATUS "Using compressed CYW43 firmware")
-        add_compile_definitions(USE_COMPRESSED_CYW43_FIRMWARE=1)
-        # Override the firmware include file to use our compressed version
-        add_compile_definitions(CYW43_CHIPSET_FIRMWARE_INCLUDE_FILE="firmware/cyw43_firmware_override.h")
-        set(CYW43_FIRMWARE_SOURCES
-            ${CMAKE_BINARY_DIR}/generated/cyw43_firmware_compressed.c
-          src/firmware/cyw43_firmware_override.c
-        )
-    endif()
-else()
-    # Disable CYW43 driver entirely
-    add_compile_definitions(CYW43_LWIP=0)
-    add_compile_definitions(PICO_CYW43_ARCH_POLL=0)
-    add_compile_definitions(PICO_CYW43_ARCH_THREADSAFE_BACKGROUND=0)
-    set(CYW43_FIRMWARE_SOURCES "")
-endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   # Activate some compiler / linker options to aid us with diagnosing stack space issues in Debug builds

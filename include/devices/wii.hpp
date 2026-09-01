@@ -7,7 +7,7 @@
 class WiiDevice : public MidiDevice
 {
 public:
-    WiiDevice(std::shared_ptr<WiiDevice> old, proto_WiiDevice device, uint16_t id);
+    WiiDevice(const DeviceReloadState* state, proto_WiiDevice device, uint16_t id);
     ~WiiDevice();
     void begin();
     void end(bool full);
@@ -17,6 +17,7 @@ public:
     bool readButton(proto_WiiButtonType type);
     bool is_wii_extension(WiiExtType type);
     bool using_pin(uint8_t pin);
+    void save_reload_state(DeviceReloadState& state) const override;
 
 private:
     WiiExtension m_extension;

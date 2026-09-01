@@ -30,7 +30,7 @@ class MidiDevice : public Device
     friend class MidiHost;
 
 public:
-    MidiDevice(std::shared_ptr<MidiDevice> prev, uint16_t id, bool usbBased);
+    MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased);
     virtual ~MidiDevice();
     void processMidiData(uint8_t *data, uint16_t len);
     virtual void update(bool full_poll, bool send_events);
@@ -41,6 +41,7 @@ public:
     bool readProGuitarButton(proto_ProGuitarMidiButtonType button);
     uint16_t readProGuitarAxis(proto_ProGuitarAxisType axis);
     bool has_midi_channel(uint8_t channel) { return seenChannels[channel]; }
+    void save_reload_state(DeviceReloadState& state) const override;
 
 private:
     // Endpoint stream

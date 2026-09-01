@@ -25,7 +25,6 @@ void LedDevice::set_led(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brig
     }
 }
 
-LedDevice::LedDevice(uint16_t id, bool supportsColour, bool supports_brightness) : Device(id), m_supportsColour(supportsColour), m_supportsBrightness(supports_brightness)
+LedDevice::LedDevice(uint16_t id, uint16_t led_count, bool supportsColour, bool supports_brightness) : Device(id), m_supportsColour(supportsColour), m_supportsBrightness(supports_brightness)
 {
-    memset(led_state, 0, sizeof(led_state));
 }

@@ -8,16 +8,12 @@
 
 class DeviceFactory {
 public:
-    // Create a device from protobuf, optionally preserving state from previous device
+    // Create a device from protobuf, optionally restoring a small logical state snapshot
     static std::shared_ptr<Device> create_device(
         const proto_Device& proto_device,
         uint32_t device_id,
-        std::shared_ptr<Device> previous_device = nullptr
+        const DeviceReloadState* previous_state = nullptr
     );
-    
-    // Access emulation device state
-    static proto_PSXEmulationDevice& get_ps2_emulation_device();
-    static proto_WiiEmulationDevice& get_wii_emulation_device();
     
     // Cycle state management
     static void set_cycle_state(int32_t id, int32_t state);

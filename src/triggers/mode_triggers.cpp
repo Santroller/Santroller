@@ -14,11 +14,6 @@ UsbModeActivationTrigger::UsbModeActivationTrigger(proto_UsbDeviceAssignment con
 
 bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    if (m_config.has_forcedType && claim_device)
-    {
-        printf("setting new mode: %d, old: %d\r\n", m_config.forcedType, ConfigManager::instance().get_new_mode());
-        ConfigManager::instance().set_new_mode(m_config.forcedType);
-    }
     if (!m_config.has_consoleType)
     {
         if (send_events && full_poll)
@@ -69,6 +64,16 @@ bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
         HIDConfigDevice::send_event(event, true);
     }
     return matched;
+}
+
+bool UsbModeActivationTrigger::forcedConsoleMode(ConsoleMode& mode) const
+{
+    if (!m_config.has_forcedType)
+    {
+        return false;
+    }
+    mode = m_config.forcedType;
+    return true;
 }
 
 BluetoothModeActivationTrigger::BluetoothModeActivationTrigger(proto_BluetoothMode mode, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_mode(mode)

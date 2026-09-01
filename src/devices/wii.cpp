@@ -5,15 +5,20 @@
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
 #include "config/config.hpp"
-WiiDevice::WiiDevice(std::shared_ptr<WiiDevice> old, proto_WiiDevice device, uint16_t id) : MidiDevice(old, id, false), m_extension(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
+WiiDevice::WiiDevice(const DeviceReloadState* state, proto_WiiDevice device, uint16_t id) : MidiDevice(state, id, false), m_extension(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
 {
-    if (old)
+    if (state)
     {
-        printf("old\r\n");
-        m_lastExtType = old->m_lastExtType;
-        m_lastValue = old->m_lastValue;
-        m_extension.load_state(&old->m_extension);
+        m_lastExtType = state->wii_extension;
+        m_lastValue = state->last_value;
     }
+}
+
+void WiiDevice::save_reload_state(DeviceReloadState& state) const
+{
+    MidiDevice::save_reload_state(state);
+    state.wii_extension = m_lastExtType;
+    state.last_value = m_lastValue;
 }
 
 WiiDevice::~WiiDevice() {}

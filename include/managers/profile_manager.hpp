@@ -11,6 +11,7 @@
 
 class Device;
 class UsbDevice;
+struct EmulationDeviceConfig;
 
 class ProfileManager
 {
@@ -28,7 +29,12 @@ public:
     void update_device_assignments(bool full_poll, bool send_events);
     void update_active_instances();
     void update(bool full_poll, bool send_events);
-    bool assign_profile_to_devices(std::shared_ptr<Profile> profile, int assigned_devices);
+    bool assign_profile_to_devices(
+        std::shared_ptr<Profile> profile,
+        int assigned_devices,
+        ConsoleMode usb_mode,
+        const EmulationDeviceConfig& emulation_devices
+    );
     
     void register_instance(std::shared_ptr<Instance> instance, std::shared_ptr<Profile> profile);
     void remove_instance(std::shared_ptr<Instance> instance);

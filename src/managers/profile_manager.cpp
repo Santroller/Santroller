@@ -1,9 +1,28 @@
 #include "managers/profile_manager.hpp"
 #include "config/config.hpp"
+#include "config/emulation_device_config.hpp"
 #include "config/instance_factory.hpp"
 #include "managers/config_manager.hpp"
 #include "devices/base.hpp"
+#include "mappings/mapping.hpp"
+#include "leds/led_mappings.hpp"
+#include "triggers/activation_trigger.hpp"
 #include <algorithm>
+
+namespace
+{
+void release_profile_contents(std::unordered_map<uint32_t, std::shared_ptr<Profile>>& profiles)
+{
+    for (auto& profile_pair : profiles)
+    {
+        auto& profile = profile_pair.second;
+        profile->mappings.clear();
+        profile->triggers.clear();
+        profile->leds.clear();
+        profile->devices.clear();
+    }
+}
+}
 
 void ProfileManager::add_profile(uint32_t profile_id, std::shared_ptr<Profile> profile)
 {
@@ -101,7 +120,11 @@ void ProfileManager::update_active_instances()
     }
 }
 
-bool ProfileManager::assign_profile_to_devices(std::shared_ptr<Profile> profile, int assigned_devices)
+bool ProfileManager::assign_profile_to_devices(
+    std::shared_ptr<Profile> profile,
+    int assigned_devices,
+    ConsoleMode usb_mode,
+    const EmulationDeviceConfig& emulation_devices)
 {
     bool assigned = false;
     auto& config_mgr = ConfigManager::instance();
@@ -124,7 +147,7 @@ bool ProfileManager::assign_profile_to_devices(std::shared_ptr<Profile> profile,
             continue;
         }
 
-        auto instance = InstanceFactory::create_instance(assignment_type, profile);
+        auto instance = InstanceFactory::create_instance(assignment_type, profile, usb_mode, emulation_devices);
         if (instance)
         {
             config_mgr.mark_seen_assignment(assignment_type);
@@ -160,6 +183,7 @@ void ProfileManager::prepare_for_config_reload()
 {
     m_instances.clear();
     m_active_instances.clear();
+    release_profile_contents(m_profiles);
     m_profiles.clear();
     m_profile_to_instance.clear();
     m_prev_types = m_current_types;
@@ -210,6 +234,7 @@ void ProfileManager::update_profile_components(uint32_t profile_id, bool profile
 void ProfileManager::clear_all() {
     m_instances.clear();
     m_active_instances.clear();
+    release_profile_contents(m_profiles);
     m_profiles.clear();
     m_profile_to_instance.clear();
     m_prev_types.clear();

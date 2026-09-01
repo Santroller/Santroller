@@ -53,7 +53,7 @@ void HIDConfigDevice::process()
 {
   if (clearedIn && clearedOut)
   {
-    ConfigManager::instance().set_new_mode(ModeSwitch);
+    ConfigManager::instance().request_mode(ModeSwitch);
   }
   if (tool_closed())
   {

@@ -5,12 +5,15 @@
 #include "config.pb.h"
 
 class UsbDevice;
+struct EmulationDeviceConfig;
 
 class InstanceFactory {
 public:
     static std::shared_ptr<Instance> create_instance(
         int assignment_mask,
-        std::shared_ptr<Profile> profile
+        std::shared_ptr<Profile> profile,
+        ConsoleMode usb_mode,
+        const EmulationDeviceConfig& emulation_devices
     );
     
     static std::shared_ptr<UsbDevice> create_usb_instance(

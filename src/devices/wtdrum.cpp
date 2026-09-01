@@ -3,7 +3,7 @@
 #include "main.hpp"
 #include "config/config.hpp"
 #include "emulation/usb/hid_device.h"
-WorldTourDrumDevice::WorldTourDrumDevice(std::shared_ptr<WorldTourDrumDevice> prev, proto_WorldTourDrumDevice device, uint16_t id) : MidiDevice(prev, id, false), m_world_tour_drum(this, device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.csPin), m_device(device)
+WorldTourDrumDevice::WorldTourDrumDevice(const DeviceReloadState* state, proto_WorldTourDrumDevice device, uint16_t id) : MidiDevice(state, id, false), m_world_tour_drum(this, device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.csPin), m_device(device)
 {
 }
 void WorldTourDrumDevice::begin()

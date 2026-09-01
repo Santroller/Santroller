@@ -8,14 +8,20 @@
 #include "utils.h"
 #include "stdio.h"
 #include <algorithm>
-PS2Device::PS2Device(std::shared_ptr<PS2Device> old, proto_PSXDevice device, uint16_t id) : Device(id), m_controller(device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.attPin, device.ackPin), m_device(device)
+PS2Device::PS2Device(const DeviceReloadState* state, proto_PSXDevice device, uint16_t id) : Device(id), m_controller(device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.attPin, device.ackPin), m_device(device)
 {
-    if (old)
+    if (state)
     {
-        m_lastValue = old->m_lastValue;
-        m_lastControllerType = old->m_lastControllerType;
-        m_controller.load_state(&old->m_controller);
+        m_lastValue = state->last_value;
+        m_lastControllerType = state->ps2_controller;
     }
+}
+
+void PS2Device::save_reload_state(DeviceReloadState& state) const
+{
+    state.valid = true;
+    state.last_value = m_lastValue;
+    state.ps2_controller = m_lastControllerType;
 }
 void PS2Device::begin()
 {

@@ -7,14 +7,14 @@ bool ConfigManager::mode_recently_changed(uint32_t now, uint32_t window_ms) cons
 
 bool ConfigManager::should_reinit(uint32_t now) const
 {
-    return m_new_mode != m_mode || (m_reinit_time && now > m_reinit_time);
+    return m_requested_mode != m_current_mode || (m_reinit_time && now > m_reinit_time);
 }
 
 void ConfigManager::begin_reinit()
 {
     m_mode_changed = true;
     m_reloading = true;
-    m_mode = m_new_mode;
+    m_current_mode = m_requested_mode;
     m_reinit_time = 0;
 }
 
@@ -26,8 +26,8 @@ void ConfigManager::finish_reinit(uint32_t now)
 
 void ConfigManager::clear_all()
 {
-    m_mode = ModeHid;
-    m_new_mode = ModeHid;
+    m_current_mode = ModeHid;
+    m_requested_mode = ModeHid;
     m_mode_changed = false;
     m_working = false;
     m_loaded_any = false;

@@ -101,18 +101,18 @@ void HIDGamepadDevice::process()
     // Switch 2 does read the hid descriptor
     if (detection.seen_hid_descriptor_read())
     {
-      ConfigManager::instance().set_new_mode(ModeSwitch);
+      ConfigManager::instance().request_mode(ModeSwitch);
     }
     else if (tud_ready() && (subtype == RockBandGuitar || subtype == RockBandDrums))
     {
       // PS2 / Wii / WiiU does not read hid descriptor
       // The wii however will configure the usb device before it stops communicating
-      ConfigManager::instance().set_new_mode(ModeWiiRb);
+      ConfigManager::instance().request_mode(ModeWiiRb);
     }
     else
     {
       // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
-      ConfigManager::instance().set_new_mode(ModePs3);
+      ConfigManager::instance().request_mode(ModePs3);
     }
   }
   // if usb stack isnt ready, then we want to update inputs
@@ -256,7 +256,7 @@ void HIDGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
     switch (report_id)
     {
     case ReportId::ReportIdPs3F4:
-      ConfigManager::instance().set_new_mode(ModePs3);
+      ConfigManager::instance().request_mode(ModePs3);
       break;
     }
   }
@@ -275,23 +275,23 @@ uint16_t HIDGamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
   switch (report_id)
   {
   case ReportId::ReportIdPs3F2:
-    ConfigManager::instance().set_new_mode(ModePs3);
+    ConfigManager::instance().request_mode(ModePs3);
     return 0;
   case ReportId::ReportIdPs4Feature:
     if (supports_ps4 && reqlen == 0x30)
     {
       if (auth_broker.has_handler(ModePs5))
       {
-        ConfigManager::instance().set_new_mode(ModePs5);
+        ConfigManager::instance().request_mode(ModePs5);
       }
       else
       {
-        ConfigManager::instance().set_new_mode(ModePs4);
+        ConfigManager::instance().request_mode(ModePs4);
       }
     }
     else
     {
-      ConfigManager::instance().set_new_mode(ModePs3);
+      ConfigManager::instance().request_mode(ModePs3);
     }
     return 0;
   }

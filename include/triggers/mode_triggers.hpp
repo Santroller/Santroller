@@ -9,6 +9,7 @@ public:
     ~UsbModeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignUsb; }
+    bool forcedConsoleMode(ConsoleMode& mode) const;
 
 protected:
     proto_UsbDeviceAssignment m_config;

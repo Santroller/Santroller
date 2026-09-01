@@ -157,8 +157,8 @@ void hid_task(void)
         return;
     }
     
-    ConsoleMode new_mode = config_mgr.get_new_mode();
-    ConsoleMode current_mode = config_mgr.get_mode();
+    ConsoleMode requested_mode = config_mgr.get_requested_mode();
+    ConsoleMode current_mode = config_mgr.get_current_mode();
     
     uint32_t now = millis();
     if (config_mgr.should_reinit(now))
@@ -169,7 +169,7 @@ void hid_task(void)
             HIDConfigDevice::send_event(event, true);
             tud_task();
         }
-        printf("new: %d old: %d init: %d\r\n", new_mode, current_mode, config_mgr.get_reinit_time());
+        printf("requested: %d current: %d init: %d\r\n", requested_mode, current_mode, config_mgr.get_reinit_time());
         config_mgr.begin_reinit();
         load();
         config_mgr.finish_reinit(millis());
@@ -249,7 +249,7 @@ int main()
         // handle performed rollback if needed
     }
     pfb_firmware_commit();
-    ConfigManager::instance().sync_new_mode_to_current();
+    ConfigManager::instance().sync_requested_mode_to_current();
     set_sys_clock_khz(180000, true);
     multicore_launch_core1(core1);
     adc_init();
@@ -261,7 +261,7 @@ int main()
         load_empty();
         // load();
     }
-    printf("init %d\r\n", ConfigManager::instance().get_mode());
+    printf("init %d\r\n", ConfigManager::instance().get_current_mode());
     initialize_device_stack();
     ConfigManager::instance().finish_reinit(millis());
     

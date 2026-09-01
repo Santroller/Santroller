@@ -8,6 +8,27 @@
 #include "managers/device_manager.hpp"
 #include "hidparser.h"
 
+Ps5Host::~Ps5Host()
+{
+    if (m_auth_registered)
+    {
+        auth_broker.unregister_handler(ModePs5);
+        auth_broker.unregister_auth_device(ModePs5);
+        m_auth_registered = false;
+    }
+}
+
+void Ps5Host::disconnect()
+{
+    if (m_auth_registered)
+    {
+        auth_broker.unregister_handler(ModePs5);
+        auth_broker.unregister_auth_device(ModePs5);
+        m_auth_registered = false;
+    }
+
+    UsbHostInterface::disconnect();
+}
 
 std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
@@ -140,6 +161,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
             });
             // Also register the device itself for HID feature report auth
             auth_broker.register_auth_device(ModePs5, intf);
+            intf->m_auth_registered = true;
         }
         else
         {

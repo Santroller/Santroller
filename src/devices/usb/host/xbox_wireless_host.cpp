@@ -203,6 +203,7 @@ std::shared_ptr<UsbHostInterface> XboxWirelessHost::open(std::shared_ptr<UsbHost
     return intf;
 }
 
+
 bool XboxWirelessHost::set_config()
 {
     printf("XboxWirelessHost::set_config\r\n");
@@ -262,8 +263,6 @@ void XboxWirelessHost::create_controller_interface(uint8_t controller_idx, uint8
     
     m_controller_interfaces[controller_idx] = controller_intf;
     
-    DeviceManager::instance().add_assignable_usb_device(controller_intf);
-    
     host_devices[m_dev_addr]->host_devices_by_itf[controller_idx] = controller_intf;
     
     printf("XboxWirelessHost: Controller %d virtual interface created and assignable\r\n", 
@@ -298,6 +297,10 @@ void XboxWirelessHost::remove_controller_interface(uint8_t controller_idx)
     DeviceManager::instance().remove_assignable_usb_device(controller_intf.get());
     
     m_controller_interfaces[controller_idx].reset();
+    if (host_devices[m_dev_addr])
+    {
+        host_devices[m_dev_addr]->host_devices_by_itf[controller_idx].reset();
+    }
     
     printf("XboxWirelessHost: Controller %d virtual interface removed\r\n", controller_idx);
 }
@@ -322,6 +325,12 @@ bool XboxWirelessHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t x
     }
     
     return true;
+}
+
+
+void XboxWirelessHost::send_report_from_host(uint8_t* packet, uint16_t len)
+{
+    gip_report_queue_push(m_report_queue, packet, len);
 }
 
 void XboxWirelessHost::update(bool full_poll, bool send_events)

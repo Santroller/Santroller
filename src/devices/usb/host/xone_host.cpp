@@ -40,8 +40,25 @@ XboxOneHost::XboxOneHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : Usb
 
 XboxOneHost::~XboxOneHost()
 {
+    if (m_auth_registered)
+    {
+        auth_broker.unregister_handler(ModeXboxOne);
+        m_auth_registered = false;
+    }
+
     gip_device_cleanup(&m_gip_device);
     gip_report_queue_destroy(m_report_queue);
+}
+
+void XboxOneHost::disconnect()
+{
+    if (m_auth_registered)
+    {
+        auth_broker.unregister_handler(ModeXboxOne);
+        m_auth_registered = false;
+    }
+
+    UsbHostInterface::disconnect();
 }
 
 void XboxOneHost::send_report_from_host(XGIPProtocol *report)
@@ -105,6 +122,7 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
             auth_broker.register_handler(ModeXboxOne, [intf](XGIPProtocol* packet) {
                 intf->send_report_from_host(packet);
             });
+            intf->m_auth_registered = true;
         }
         
         // Auth registration handled by auth_broker above

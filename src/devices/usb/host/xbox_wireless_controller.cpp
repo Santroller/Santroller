@@ -1,5 +1,6 @@
 #include "devices/usb/host/xbox_wireless_controller.h"
 #include "devices/usb/host/xbox_wireless_host.h"
+#include "usb/auth_broker.h"
 #include "class/hid/hid.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
@@ -41,10 +42,43 @@ XboxWirelessController::XboxWirelessController(XboxWirelessHost* adapter, uint8_
     m_controller.gip_device.user_context = this;
     m_controller.gip_device.interface = &wireless_gip_interface;
     m_controller.status = XBOX_CONTROLLER_DISCONNECTED;
+    if (!auth_broker.has_handler(ModeXboxOne))
+    {
+        auth_broker.register_handler(ModeXboxOne, [this](XGIPProtocol* packet) {
+            this->send_report_from_host(packet);
+        });
+        m_auth_registered = true;
+    }
     
     printf("XboxWirelessController: Created virtual interface for controller %d\r\n", controller_idx);
 }
 
+XboxWirelessController::~XboxWirelessController()
+{
+    if (m_auth_registered)
+    {
+        auth_broker.unregister_handler(ModeXboxOne);
+        m_auth_registered = false;
+    }
+}
+
+void XboxWirelessController::disconnect()
+{
+    if (m_auth_registered)
+    {
+        auth_broker.unregister_handler(ModeXboxOne);
+        m_auth_registered = false;
+    }
+
+    UsbHostInterface::disconnect();
+}
+
+void XboxWirelessController::send_report_from_host(XGIPProtocol *report)
+{
+    m_controller.gip_device.outgoing_xgip->copyAttributes(report);
+    m_adapter->send_report_from_host(m_controller.gip_device.outgoing_xgip->generatePacket(), 
+                          m_controller.gip_device.outgoing_xgip->getPacketLength());
+}
 bool XboxWirelessController::tick_digital(proto_Output &type)
 {
     xbox_controller_t* controller = get_controller_data();

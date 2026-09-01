@@ -31,6 +31,7 @@ public:
     
     int send_gip_to_controller(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *data, uint16_t len);
     
+    void send_report_from_host(uint8_t* packet, uint16_t len);
 private:
     void initialize_adapter();
     

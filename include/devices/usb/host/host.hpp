@@ -25,7 +25,7 @@ public:
     }
     void begin() {};
     void end(bool full) {};
-    void disconnect();
+    virtual void disconnect();
     virtual bool tick_digital(proto_Output& type) = 0;
     virtual uint16_t tick_analog(proto_Output& type) = 0;
     virtual void update(bool full_poll, bool send_events);

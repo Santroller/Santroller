@@ -7,6 +7,7 @@
 #include "emulation/usb/usb_devices.h"
 #include "devices/usb.hpp"
 #include "config/config.hpp"
+#include "managers/device_manager.hpp"
 #include "utils.h"
 
 extern "C" {
@@ -146,6 +147,10 @@ void XboxWirelessController::on_device_descriptor(SubType subtype)
     m_controller.gip_device.subtype = subtype;
     m_subtype = subtype;
     m_controller.status = XBOX_CONTROLLER_READY;
+        
+    // Move from enumerating to assignable
+    DeviceManager::instance().add_assignable_usb_device(host_devices[m_adapter->dev_addr()]->host_devices_by_itf[m_adapter->interface()]);
+    process_delayed_init();
     printf("Wireless controller %d identified as type %d\n", m_controller_idx, (uint8_t)subtype);
 }
 

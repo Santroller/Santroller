@@ -232,11 +232,6 @@ void XboxWirelessHost::initialize_adapter()
     
     m_adapter_initialized = true;
     
-    DeviceManager::instance().remove_enumerating_usb_device(this);
-    DeviceManager::instance().add_assignable_usb_device(
-        host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
-    process_delayed_init();
-    
     printf("XboxWirelessHost: MT76 adapter initialized and ready\r\n");
 }
 

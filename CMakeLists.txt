@@ -33,6 +33,10 @@ if(SANTROLLER_VARIANT_DRIVER AND NOT SANTROLLER_VARIANT_BUILD)
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
   file(WRITE "${CMAKE_BINARY_DIR}/commit.hash" "${SANTROLLER_GIT_COMMIT}")
+  if(ENABLE_XBOX_WIRELESS)
+    include(cmake/DownloadFirmware.cmake)
+    include(cmake/ConvertFirmware.cmake)
+  endif()
 
   project(santroller_variants NONE)
 
@@ -56,6 +60,7 @@ if(SANTROLLER_VARIANT_DRIVER AND NOT SANTROLLER_VARIANT_BUILD)
         -DPICO_SDK_PATH=${PICO_SDK_PATH}
         -DPICO_SDK_FETCH_FROM_GIT=OFF
         -DSANTROLLER_GIT_COMMIT=${SANTROLLER_GIT_COMMIT}
+        -DSANTROLLER_SHARED_GENERATED_DIR=${CMAKE_BINARY_DIR}/generated
         -DSANTROLLER_VARIANT_BUILD=ON
       COMMAND ${CMAKE_COMMAND} --build "${SANTROLLER_VARIANT_BINARY_DIR}" --parallel
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SANTROLLER_VARIANT_BINARY_DIR}/santroller.uf2" "${CMAKE_BINARY_DIR}/santroller_${SANTROLLER_VARIANT}.uf2"
@@ -79,6 +84,12 @@ set(PFB_WITH_IMAGE_ENCRYPTION OFF)
 set(PFB_WITH_SHA256_HASHING OFF)
 set(PFB_RESERVED_FILESYSTEM_SIZE_KB 8)
 set(PFB_WITH_BOOTLOADER_LOGS OFF)
+
+if(DEFINED SANTROLLER_SHARED_GENERATED_DIR)
+  set(SANTROLLER_GENERATED_DIR "${SANTROLLER_SHARED_GENERATED_DIR}")
+else()
+  set(SANTROLLER_GENERATED_DIR "${CMAKE_BINARY_DIR}/generated")
+endif()
 
 include(pico_sdk_import.cmake)
 include(pico_extras_import.cmake)
@@ -298,9 +309,11 @@ if(ENABLE_XBOX_WIRELESS)
     set(HAVE_MBEDTLS TRUE)
     message(STATUS "Using Pico SDK's mbedTLS with Xbox Wireless crypto features")
 
-    # Download and convert firmware
-    include(cmake/DownloadFirmware.cmake)
-    include(cmake/ConvertFirmware.cmake)
+    if(NOT DEFINED SANTROLLER_SHARED_GENERATED_DIR)
+      # Download and convert firmware once for a normal single-board build.
+      include(cmake/DownloadFirmware.cmake)
+      include(cmake/ConvertFirmware.cmake)
+    endif()
 
     # Add MT76 sources to main executable
     target_sources(${TARGET} PRIVATE
@@ -311,7 +324,7 @@ if(ENABLE_XBOX_WIRELESS)
         src/devices/usb/host/xbox/firmware_decompress.c
         src/devices/usb/host/xbox_wireless_host.cpp
         src/devices/usb/host/xbox_wireless_controller.cpp
-        ${CMAKE_BINARY_DIR}/generated/firmware_data.c
+        ${SANTROLLER_GENERATED_DIR}/firmware_data.c
     )
 
     # Add include directories
@@ -339,7 +352,8 @@ target_include_directories(${TARGET} PUBLIC
   ${SRC}
   include
   ${PROTO_OUTPUT_DIR}
-  ${CMAKE_BINARY_DIR}/headers)
+  ${CMAKE_BINARY_DIR}/headers
+  ${SANTROLLER_GENERATED_DIR})
 
 # if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
 # pico_enable_stdio_uart(${TARGET} 0)

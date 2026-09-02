@@ -7,7 +7,30 @@
 #include "mt76_defs.h"
 
 #define MT76_MAC_ADDR_LEN 6
-#define MT76_NUM_CHANNELS 11
+#define MT76_NUM_CHANNELS 12
+#define MT76_MAX_CLIENTS 8
+#define MT76_EVENT_QUEUE_SIZE 16
+
+enum mt76_wireless_event_type {
+    MT76_EVENT_ASSOCIATION,
+    MT76_EVENT_DISASSOCIATION,
+    MT76_EVENT_CLIENT_LOST,
+    MT76_EVENT_CLIENT_COMMAND,
+};
+
+struct mt76_client {
+    bool used;
+    uint8_t addr[MT76_MAC_ADDR_LEN];
+    uint8_t key[16];
+    bool encryption_enabled;
+};
+
+struct mt76_wireless_event {
+    enum mt76_wireless_event_type type;
+    uint8_t wcid;
+    uint8_t command;
+    uint8_t addr[MT76_MAC_ADDR_LEN];
+};
 
 struct mt76_channel {
     uint8_t index;
@@ -22,14 +45,21 @@ struct mt76_channel {
 struct mt76_dev {
     uint8_t dev_addr;
     uint8_t mac_address[MT76_MAC_ADDR_LEN];
+    void *owner;
     uint32_t control_data;
     bool initialized;
     struct mt76_channel channels[MT76_NUM_CHANNELS];
     struct mt76_channel *current_channel;
+    CFG_TUSB_MEM_ALIGN uint8_t bulk_buffer[MT_FW_CHUNK_SIZE + MT_CMD_HDR_LEN * 2];
+    CFG_TUSB_MEM_ALIGN uint8_t tx_buffer[512];
+    struct mt76_client clients[MT76_MAX_CLIENTS];
+    struct mt76_wireless_event event_queue[MT76_EVENT_QUEUE_SIZE];
+    volatile uint8_t event_queue_head;
+    volatile uint8_t event_queue_tail;
+    uint32_t pairing_start_time;
+    bool pairing_active;
+    volatile int8_t pending_pairing;
 };
-
-// Global MT76 device instance (defined in xbox_driver.c)
-extern struct mt76_dev mt76_device;
 
 bool mt76_init(struct mt76_dev *dev, uint8_t dev_addr);
 void mt76_deinit(struct mt76_dev *dev);
@@ -42,6 +72,7 @@ int mt76_load_firmware(struct mt76_dev *dev, const uint8_t *fw_data, uint32_t fw
 int mt76_load_ivb(struct mt76_dev *dev);
 
 int mt76_send_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, enum mt76_mcu_cmd cmd);
+int mt76_send_wlan(struct mt76_dev *dev, const uint8_t *data, uint16_t len);
 
 int mt76_read_efuse(struct mt76_dev *dev, uint16_t addr, void *data, int len);
 

@@ -16,6 +16,8 @@ extern "C" {
 
 #define XBOX_MAX_CONTROLLERS 8
 
+struct mt76_dev;
+
 // GIP System Commands (from Microsoft spec / SDL)
 #define GIP_CMD_PROTO_CONTROL   0x01  // Protocol control
 #define GIP_CMD_HELLO_DEVICE    0x02  // Device announcement
@@ -89,11 +91,11 @@ extern "C" {
 #endif
 
 bool xbox_adapter_mounted(void);
-xbox_controller_t* xbox_get_controller(uint8_t index);
+xbox_controller_t* xbox_get_controller(struct mt76_dev *dev, uint8_t index);
 void xbox_adapter_mount(uint8_t dev_addr, uint8_t instance);
 void xbox_adapter_unmount(uint8_t dev_addr);
 void xbox_adapter_process_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
-void xbox_adapter_process_gip_data(const uint8_t *data, uint16_t len);
+void xbox_adapter_process_gip_data(struct mt76_dev *dev, const uint8_t *data, uint16_t len);
 int xbox_adapter_send_gip_packet(uint8_t controller_idx, const uint8_t *data, uint16_t len);
 
 #ifdef __cplusplus

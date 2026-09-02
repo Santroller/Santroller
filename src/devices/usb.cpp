@@ -273,7 +273,6 @@ bool usbh_set_config(uint8_t dev_addr, uint8_t itf_num)
 
 bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
-    TU_VERIFY(result == XFER_RESULT_SUCCESS);
     if (!host_devices[dev_addr])
     {
         return false;

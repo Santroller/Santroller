@@ -8,7 +8,16 @@
 #include <stdint.h>
 
 // Xbox-specific wireless frame type
-#define XONE_MT_WLAN_RESERVED 0x00d0
+#define XONE_MT_WLAN_RESERVED 0x70
+
+#define XONE_MT_EVT_BUTTON 0x04
+#define XONE_MT_EVT_CHANNELS 0x0a
+#define XONE_MT_EVT_PACKET_RX 0x0c
+#define XONE_MT_EVT_CLIENT_LOST 0x0e
+
+#define XONE_MT_CLIENT_PAIR_REQ 0x01
+#define XONE_MT_CLIENT_PAIR_RESP 0x02
+#define XONE_MT_CLIENT_ENABLE_ENCRYPTION 0x10
 #include <stdbool.h>
 
 /* Bit manipulation macros */
@@ -29,8 +38,9 @@
 #endif
 
 /* USB Endpoints */
-#define MT_EP_OUT 0x08
-#define MT_EP_IN 0x84
+#define MT_EP_OUT      0x08
+#define MT_EP_IN_WLAN  0x84  // Wireless data
+#define MT_EP_IN_CMD   0x85  // Command responses and events
 
 /* Firmware loading constants */
 #define MT_FW_CHUNK_SIZE 0x3800

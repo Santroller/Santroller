@@ -7,240 +7,458 @@
 #include <stdio.h>
 #include <string.h>
 
-// MT76 event types (from xone)
-#define XONE_MT_EVT_BUTTON      0x01
-#define XONE_MT_EVT_PACKET_RX   0x02
-#define XONE_MT_EVT_CLIENT_LOST 0x03
-
-// Client command types
-#define XONE_MT_WLAN_RESERVED       0x00d0
-#define XONE_MT_CLIENT_PAIR_REQ     0x01
-#define XONE_MT_CLIENT_ENABLE_ENCRYPTION 0x02
-
-#define MAX_CLIENTS 8
-static struct {
-    bool used;
-    uint8_t addr[6];
-    uint8_t key[16];  // Encryption key
-    bool encryption_enabled;
-} clients[MAX_CLIENTS];
-
 #define PAIRING_TIMEOUT_MS 30000
-static uint32_t pairing_start_time = 0;
-static bool pairing_active = false;
 
-static void wireless_handle_client_lost(const uint8_t *data, uint16_t len);
-static void wireless_handle_client_command(const uint8_t *data, uint16_t len, uint8_t wcid, const uint8_t *addr);
-static void wireless_handle_disassociation(uint8_t wcid);
+static void wireless_handle_client_lost(struct mt76_dev *dev, const uint8_t *data, uint16_t len);
+static void wireless_handle_client_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, uint8_t wcid, const uint8_t *addr);
+static void wireless_handle_disassociation(struct mt76_dev *dev, uint8_t wcid);
 
-void wireless_task(void) {
-    if (pairing_active) {
-        uint32_t now = to_ms_since_boot(get_absolute_time());
-        if (now - pairing_start_time >= PAIRING_TIMEOUT_MS) {
-            printf("Pairing timeout - disabling pairing mode\n");
-            mt76_set_pairing(&mt76_device, false);
-            pairing_active = false;
-        }
+static bool wireless_queue_event(struct mt76_dev *dev, const struct mt76_wireless_event *event)
+{
+    uint8_t next = (dev->event_queue_head + 1) % MT76_EVENT_QUEUE_SIZE;
+    if (next == dev->event_queue_tail)
+    {
+        printf("Wireless event queue full\n");
+        return false;
     }
+
+    dev->event_queue[dev->event_queue_head] = *event;
+    dev->event_queue_head = next;
+    return true;
 }
 
-void wireless_process_data(const uint8_t *data, uint16_t len) {
-    if (len < 8) {
-        return;  // Too short for RX info header
+static bool wireless_dequeue_event(struct mt76_dev *dev, struct mt76_wireless_event *event)
+{
+    if (dev->event_queue_tail == dev->event_queue_head)
+    {
+        return false;
     }
-    
-    uint32_t info = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
-    uint8_t port = (info >> 27) & 0x07;  // MT_RX_FCE_INFO_D_PORT
-    uint8_t evt_type = (info >> 16) & 0xFF;  // MT_RX_FCE_INFO_EVT_TYPE
-    
-    printf("Wireless RX: port=%d, evt_type=0x%02X, len=%d\n", port, evt_type, len);
-    
-    if (port == 3) {  // MT_CPU_RX_PORT
-        switch (evt_type) {
-            case XONE_MT_EVT_BUTTON:
-                printf("Pairing button pressed on adapter!\n");
-                mt76_set_pairing(&mt76_device, true);
-                pairing_active = true;
-                pairing_start_time = to_ms_since_boot(get_absolute_time());
-                printf("Pairing mode enabled - will timeout in 30 seconds\n");
-                break;
-                
-            case XONE_MT_EVT_PACKET_RX:
-                printf("Wireless packet received\n");
-                wireless_process_packet(data, len);
-                break;
-                
-            case XONE_MT_EVT_CLIENT_LOST:
-                if (len > 8) {
-                    wireless_handle_client_lost(data + 8, len - 8);
-                }
-                break;
-                
-            default:
-                printf("Unknown event type: 0x%02X\n", evt_type);
-                break;
-        }
-    } else {
-        wireless_process_packet(data, len);
-    }
+
+    *event = dev->event_queue[dev->event_queue_tail];
+    dev->event_queue_tail = (dev->event_queue_tail + 1) % MT76_EVENT_QUEUE_SIZE;
+    return true;
 }
 
-void wireless_process_packet(const uint8_t *data, uint16_t len) {
-    if (len < sizeof(struct mt76_rxwi) + sizeof(struct ieee80211_hdr)) {
+static void wireless_queue_association(struct mt76_dev *dev, const uint8_t *addr)
+{
+    struct mt76_wireless_event event = { .type = MT76_EVENT_ASSOCIATION };
+    memcpy(event.addr, addr, sizeof(event.addr));
+    wireless_queue_event(dev, &event);
+}
+
+static void wireless_queue_client_command(struct mt76_dev *dev, uint8_t command, uint8_t wcid, const uint8_t *addr)
+{
+    struct mt76_wireless_event event = {
+        .type = MT76_EVENT_CLIENT_COMMAND,
+        .wcid = wcid,
+        .command = command,
+    };
+    memcpy(event.addr, addr, sizeof(event.addr));
+    wireless_queue_event(dev, &event);
+}
+
+static void wireless_request_pairing(struct mt76_dev *dev, bool enable)
+{
+    dev->pending_pairing = enable ? 1 : 0;
+}
+
+static void wireless_apply_pairing(struct mt76_dev *dev, bool enable)
+{
+    if (mt76_set_pairing(dev, enable) < 0)
+    {
+        printf("Failed to %s pairing mode\n", enable ? "enable" : "disable");
         return;
     }
-    
+
+    bool has_clients = false;
+    for (int i = 0; i < MT76_MAX_CLIENTS; i++)
+    {
+        if (dev->clients[i].used)
+        {
+            has_clients = true;
+            break;
+        }
+    }
+
+    mt76_set_led_mode(dev,
+                      enable ? MT_LED_BLINK : (has_clients ? MT_LED_ON : MT_LED_OFF));
+    dev->pairing_active = enable;
+    if (enable)
+    {
+        dev->pairing_start_time = to_ms_since_boot(get_absolute_time());
+    }
+}
+
+void wireless_task(struct mt76_dev *dev)
+{
+    struct mt76_wireless_event event;
+    if (wireless_dequeue_event(dev, &event))
+    {
+        switch (event.type)
+        {
+        case MT76_EVENT_ASSOCIATION:
+            wireless_handle_association(dev, event.addr);
+            break;
+        case MT76_EVENT_DISASSOCIATION:
+            wireless_handle_disassociation(dev, event.wcid);
+            break;
+        case MT76_EVENT_CLIENT_LOST:
+            wireless_handle_client_lost(dev, &event.wcid, 1);
+            break;
+        case MT76_EVENT_CLIENT_COMMAND: {
+            uint8_t command_data[2] = { XONE_MT_WLAN_RESERVED & 0xFF, event.command };
+            wireless_handle_client_command(dev, command_data, sizeof(command_data), event.wcid, event.addr);
+            break;
+        }
+        }
+    }
+
+    if (dev->pending_pairing >= 0)
+    {
+        bool enable = dev->pending_pairing != 0;
+        dev->pending_pairing = -1;
+        wireless_apply_pairing(dev, enable);
+    }
+
+    if (dev->pairing_active)
+    {
+        uint32_t now = to_ms_since_boot(get_absolute_time());
+        if (now - dev->pairing_start_time >= PAIRING_TIMEOUT_MS)
+        {
+            printf("Pairing timeout - disabling pairing mode\n");
+            wireless_request_pairing(dev, false);
+        }
+    }
+}
+
+void wireless_process_data(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
+{
+    if (len < 8)
+    {
+        return; // Too short for RX info header
+    }
+
+    uint32_t info = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+    uint8_t port = FIELD_GET(MT_RX_FCE_INFO_D_PORT, info);
+    uint8_t evt_type = FIELD_GET(MT_RX_FCE_INFO_EVT_TYPE, info);
+
+    if (FIELD_GET(MT_RX_FCE_INFO_CMD_SEQ, info) == 0x01)
+    {
+        return;
+    }
+
+    printf("Wireless RX: port=%d, evt_type=0x%02X, len=%d\n", port, evt_type, len);
+
+    if (port == MT_CPU_RX_PORT)
+    {
+        switch (evt_type)
+        {
+        case XONE_MT_EVT_BUTTON:
+            printf("Pairing button pressed on adapter!\n");
+            wireless_request_pairing(dev, true);
+            break;
+
+        case XONE_MT_EVT_PACKET_RX:
+            printf("Wireless packet received\n");
+            if (len > MT_CMD_HDR_LEN * 2)
+            {
+                wireless_process_packet(dev, data + MT_CMD_HDR_LEN, len - MT_CMD_HDR_LEN * 2);
+            }
+            break;
+
+        case XONE_MT_EVT_CLIENT_LOST:
+            if (len > MT_CMD_HDR_LEN * 2)
+            {
+                struct mt76_wireless_event event = {
+                    .type = MT76_EVENT_CLIENT_LOST,
+                    .wcid = data[MT_CMD_HDR_LEN],
+                };
+                wireless_queue_event(dev, &event);
+            }
+            break;
+
+        default:
+            printf("Unknown event type: 0x%02X\n", evt_type);
+            break;
+        }
+    }
+    else if (port == MT_WLAN_PORT)
+    {
+        if (len > MT_CMD_HDR_LEN * 2)
+        {
+            wireless_process_packet(dev, data + MT_CMD_HDR_LEN, len - MT_CMD_HDR_LEN * 2);
+        }
+    }
+}
+
+static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
+{
+    if (len < sizeof(struct mt76_rxwi) + sizeof(struct ieee80211_hdr))
+    {
+        return;
+    }
+
     const struct mt76_rxwi *rxwi = (const struct mt76_rxwi *)data;
     data += sizeof(struct mt76_rxwi);
     len -= sizeof(struct mt76_rxwi);
-    
+
+    uint32_t rxinfo = rxwi->rxinfo;
+    uint16_t ctl = rxwi->ctl;
+    uint16_t mpdu_len = FIELD_GET(MT_RXWI_CTL_MPDU_LEN, ctl);
+    uint16_t padding_len = (rxinfo & MT_RXINFO_L2PAD) ? 2 : 0;
+    uint16_t header_len = sizeof(struct ieee80211_hdr);
+
+    if (mpdu_len < header_len || mpdu_len + padding_len > len)
+    {
+        return;
+    }
+
+    len = mpdu_len;
+
     const struct ieee80211_hdr *hdr = (const struct ieee80211_hdr *)data;
     uint16_t frame_control = hdr->frame_control;
     uint16_t ftype = frame_control & IEEE80211_FCTL_FTYPE;
     uint16_t stype = frame_control & IEEE80211_FCTL_STYPE;
-    
-    printf("802.11 frame: type=0x%04X, ftype=0x%04X, stype=0x%04X\n", 
+
+    printf("802.11 frame: type=0x%04X, ftype=0x%04X, stype=0x%04X\n",
            frame_control, ftype, stype);
-    
-    uint32_t ctl = rxwi->ctl;
-    uint8_t wcid = (ctl >> 16) & 0xFF;  // MT_RXWI_CTL_WCID
-    
-    if (ftype == IEEE80211_FTYPE_MGMT) {
-        if (stype == IEEE80211_STYPE_ASSOC_REQ) {
+
+    uint8_t wcid = FIELD_GET(MT_RXWI_CTL_WCID, ctl);
+    if (ftype == IEEE80211_FTYPE_DATA && stype == IEEE80211_STYPE_QOS_DATA)
+    {
+        header_len += 2;
+    }
+
+    if (mpdu_len < header_len + padding_len)
+    {
+        return;
+    }
+
+    const uint8_t *payload = data + header_len + padding_len;
+    uint16_t payload_len = len - header_len - padding_len;
+
+    if (ftype == IEEE80211_FTYPE_MGMT)
+    {
+        if (stype == IEEE80211_STYPE_ASSOC_REQ)
+        {
             printf("Association request from: %02X:%02X:%02X:%02X:%02X:%02X\n",
                    hdr->addr2[0], hdr->addr2[1], hdr->addr2[2],
                    hdr->addr2[3], hdr->addr2[4], hdr->addr2[5]);
-            wireless_handle_association(hdr->addr2);
-        } else if (stype == IEEE80211_STYPE_DISASSOC) {
-            wireless_handle_disassociation(wcid);
-        } else if (stype == XONE_MT_WLAN_RESERVED) {
-            const uint8_t *cmd_data = data + sizeof(struct ieee80211_hdr);
-            uint16_t cmd_len = len - sizeof(struct ieee80211_hdr);
-            wireless_handle_client_command(cmd_data, cmd_len, wcid, hdr->addr2);
+            wireless_queue_association(dev, hdr->addr2);
+        }
+        else if (stype == IEEE80211_STYPE_DISASSOC)
+        {
+            struct mt76_wireless_event event = {
+                .type = MT76_EVENT_DISASSOCIATION,
+                .wcid = wcid,
+            };
+            wireless_queue_event(dev, &event);
+        }
+        else if (stype == XONE_MT_WLAN_RESERVED)
+        {
+            if (payload_len >= 2)
+            {
+                    wireless_queue_client_command(dev, payload[1], wcid, hdr->addr2);
+            }
         }
     }
-    else if (ftype == IEEE80211_FTYPE_DATA) {
-        if (stype == IEEE80211_STYPE_QOS_DATA) {
-            if (wcid > 0 && wcid <= MAX_CLIENTS) {
+    else if (ftype == IEEE80211_FTYPE_DATA)
+    {
+        if (stype == IEEE80211_STYPE_QOS_DATA)
+        {
+            if (wcid > 0 && wcid <= MT76_MAX_CLIENTS)
+            {
                 printf("QoS data from WCID %d, len=%d\n", wcid, len);
-                
+
                 // Skip 802.11 QoS header (26 bytes: 24 base + 2 QoS control)
-                if (len >= 26) {
-                    const uint8_t *gip_data = data + 26;
-                    uint16_t gip_len = len - 26;
-                    
-                    xbox_adapter_process_gip_data(gip_data, gip_len);
+                if (payload_len >= 2)
+                {
+                    xbox_adapter_process_gip_data(dev, payload, payload_len);
                 }
             }
         }
     }
 }
 
-static int find_free_wcid(void) {
-    for (int i = 0; i < MAX_CLIENTS; i++) {
-        if (!clients[i].used) {
-            return i + 1;  // WCID is 1-based
+void wireless_process_packet(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
+{
+    while (len >= sizeof(struct mt76_rxwi) + sizeof(struct ieee80211_hdr))
+    {
+        const struct mt76_rxwi *rxwi = (const struct mt76_rxwi *)data;
+        uint16_t mpdu_len = FIELD_GET(MT_RXWI_CTL_MPDU_LEN, rxwi->ctl);
+        uint16_t frame_len = sizeof(struct mt76_rxwi) + mpdu_len;
+        uint16_t transfer_len = (frame_len + 3) & ~3;
+
+        if (mpdu_len < sizeof(struct ieee80211_hdr) || transfer_len > len)
+        {
+            return;
         }
+
+        wireless_process_frame(dev, data, frame_len);
+        data += transfer_len;
+        len -= transfer_len;
     }
-    return -1;  // No free slots
 }
 
-static void remove_client(uint8_t wcid) {
-    if (wcid > 0 && wcid <= MAX_CLIENTS) {
-        clients[wcid - 1].used = false;
-        memset(clients[wcid - 1].addr, 0, 6);
+static int find_free_wcid(struct mt76_dev *dev)
+{
+    for (int i = 0; i < MT76_MAX_CLIENTS; i++)
+    {
+        if (!dev->clients[i].used)
+        {
+            return i + 1; // WCID is 1-based
+        }
+    }
+    return -1; // No free slots
+}
+
+static void remove_client(struct mt76_dev *dev, uint8_t wcid)
+{
+    if (wcid > 0 && wcid <= MT76_MAX_CLIENTS)
+    {
+        dev->clients[wcid - 1].used = false;
+        memset(dev->clients[wcid - 1].addr, 0, 6);
+        memset(dev->clients[wcid - 1].key, 0, sizeof(dev->clients[wcid - 1].key));
+        dev->clients[wcid - 1].encryption_enabled = false;
         printf("Client WCID %d removed\n", wcid);
     }
 }
 
-static void wireless_handle_client_command(const uint8_t *data, uint16_t len, uint8_t wcid, const uint8_t *addr) {
-    if (len < 2 || data[0] != (XONE_MT_WLAN_RESERVED & 0xFF)) {
-        return;
+static void wireless_handle_client_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, uint8_t wcid, const uint8_t *addr)
+{
+    if (len < 2 || data[0] != (XONE_MT_WLAN_RESERVED & 0xFF))
+    {
+        return; 
     }
-    
+
     uint8_t cmd = data[1];
-    
-    switch (cmd) {
-        case XONE_MT_CLIENT_PAIR_REQ:
-            printf("Pairing request from %02X:%02X:%02X:%02X:%02X:%02X\n",
-                   addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
-            
-            mt76_send_pair_response(&mt76_device, addr);
-            
-            mt76_set_pairing(&mt76_device, false);
-            pairing_active = false;
-            
-            printf("Pairing response sent, pairing mode disabled\n");
-            break;
-            
-        case XONE_MT_CLIENT_ENABLE_ENCRYPTION:
-            printf("Enable encryption request from WCID %d\n", wcid);
-            
-            if (wcid > 0 && wcid <= MAX_CLIENTS && clients[wcid - 1].used) {
-                gip_crypto_random_bytes(clients[wcid - 1].key, 16);
-                
-                mt76_set_client_key(&mt76_device, wcid, clients[wcid - 1].key, 16);
-                
-                uint8_t ack_data[] = { 0x00, 0x00 };
-                mt76_send_client_command(&mt76_device, wcid, addr, 
-                                        XONE_MT_CLIENT_ENABLE_ENCRYPTION, 
-                                        ack_data, sizeof(ack_data));
-                
-                clients[wcid - 1].encryption_enabled = true;
-                printf("Encryption enabled for WCID %d\n", wcid);
-            } else {
-                printf("Invalid WCID %d for encryption\n", wcid);
+
+    switch (cmd)
+    {
+    case XONE_MT_CLIENT_PAIR_REQ:
+        printf("Pairing request from %02X:%02X:%02X:%02X:%02X:%02X\n",
+               addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+
+        mt76_send_pair_response(dev, addr);
+
+        wireless_request_pairing(dev, false);
+
+        printf("Pairing response sent, pairing mode disabled\n");
+        break;
+
+    case XONE_MT_CLIENT_ENABLE_ENCRYPTION:
+        printf("Enable encryption request from WCID %d\n", wcid);
+
+        if (wcid > 0 && wcid <= MT76_MAX_CLIENTS && dev->clients[wcid - 1].used)
+        {
+            gip_crypto_random_bytes(dev->clients[wcid - 1].key, 16);
+
+            if (mt76_set_client_key(dev, wcid, dev->clients[wcid - 1].key, 16) < 0)
+            {
+                printf("Failed to enable encryption for WCID %d\n", wcid);
+                break;
             }
-            break;
-            
-        default:
-            printf("Unknown client command: 0x%02X\n", cmd);
-            break;
+
+            uint8_t ack_data[] = {0x00, 0x00};
+            if (mt76_send_client_command(dev, wcid, addr,
+                                         XONE_MT_CLIENT_ENABLE_ENCRYPTION,
+                                         ack_data, sizeof(ack_data)) < 0)
+            {
+                printf("Failed to acknowledge encryption for WCID %d\n", wcid);
+                break;
+            }
+
+            dev->clients[wcid - 1].encryption_enabled = true;
+            printf("Encryption enabled for WCID %d\n", wcid);
+        }
+        else
+        {
+            printf("Invalid WCID %d for encryption\n", wcid);
+        }
+        break;
+
+    default:
+        printf("Unknown client command: 0x%02X\n", cmd);
+        break;
     }
 }
 
-static void wireless_handle_disassociation(uint8_t wcid) {
+static void wireless_handle_disassociation(struct mt76_dev *dev, uint8_t wcid)
+{
     printf("Disassociation from WCID %d\n", wcid);
-    
-    mt76_remove_client(&mt76_device, wcid);
-    
-    remove_client(wcid);
+
+    if (wcid == 0 || wcid > MT76_MAX_CLIENTS)
+    {
+        return; 
+    }
+
+    mt76_remove_client(dev, wcid);
+
+    remove_client(dev, wcid);
+
+    for (int i = 0; i < MT76_MAX_CLIENTS; i++)
+    {
+        if (dev->clients[i].used)
+        {
+            return;
+        }
+    }
+
+    mt76_set_led_mode(dev, MT_LED_OFF);
 }
 
-static void wireless_handle_client_lost(const uint8_t *data, uint16_t len) {
-    if (len < 1) {
+static void wireless_handle_client_lost(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
+{
+    if (len < 1)
+    {
         return;
     }
-    
+
     uint8_t wcid = data[0];
+    if (wcid == 0 || wcid > MT76_MAX_CLIENTS)
+    {
+        return;
+    }
+
     printf("Client lost event: WCID %d\n", wcid);
-    remove_client(wcid);
+    mt76_remove_client(dev, wcid);
+    remove_client(dev, wcid);
 }
 
-void wireless_handle_association(const uint8_t *addr) {
+void wireless_handle_association(struct mt76_dev *dev, const uint8_t *addr)
+{
     printf("Association request from: %02X:%02X:%02X:%02X:%02X:%02X\n",
            addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
-    
-    int wcid = find_free_wcid();
-    if (wcid < 0) {
+
+    int wcid = find_free_wcid(dev);
+    if (wcid < 0)
+    {
         printf("No free WCID slots!\n");
         return;
     }
-    
+
     printf("Allocated WCID %d for controller\n", wcid);
-    
-    clients[wcid - 1].used = true;
-    memcpy(clients[wcid - 1].addr, addr, 6);
-    
-    xbox_controller_t *controller = xbox_get_controller(wcid - 1);
-    if (controller) {
+
+    dev->clients[wcid - 1].used = true;
+    memcpy(dev->clients[wcid - 1].addr, addr, 6);
+
+    xbox_controller_t *controller = xbox_get_controller(dev, wcid - 1);
+    if (controller)
+    {
         memcpy(controller->mac_addr, addr, 6);
     }
-    
-    if (mt76_add_client(&mt76_device, wcid, addr) < 0) {
+
+    if (mt76_add_client(dev, wcid, addr) < 0)
+    {
+        remove_client(dev, (uint8_t)wcid);
         printf("Failed to add client to MT76\n");
         return;
     }
-    
+
+    if (!dev->pairing_active)
+    {
+        mt76_set_led_mode(dev, MT_LED_ON);
+    }
+
     printf("Controller associated successfully with WCID %d\n", wcid);
 }

@@ -43,13 +43,6 @@ XboxWirelessController::XboxWirelessController(XboxWirelessHost* adapter, uint8_
     m_controller.gip_device.user_context = this;
     m_controller.gip_device.interface = &wireless_gip_interface;
     m_controller.status = XBOX_CONTROLLER_DISCONNECTED;
-    if (!auth_broker.has_handler(ModeXboxOne))
-    {
-        auth_broker.register_handler(ModeXboxOne, [this](XGIPProtocol* packet) {
-            this->send_report_from_host(packet);
-        });
-        m_auth_registered = true;
-    }
     
     printf("XboxWirelessController: Created virtual interface for controller %d\r\n", controller_idx);
 }
@@ -116,20 +109,20 @@ void XboxWirelessController::update(bool full_poll, bool send_events)
     
     uint32_t now = to_ms_since_boot(get_absolute_time());
     auto queue_lambda = [](void *context, const uint8_t *data, uint16_t len) {
-        uint8_t controller_idx = *(uint8_t *)context;
-        xbox_adapter_send_gip_packet(controller_idx, data, len);
+        auto controller = static_cast<XboxWirelessController *>(context);
+        controller->send_gip_packet(data, len);
     };
-    gip_device_update(&controller->gip_device, now, XGIP_ACK_WAIT_TIMEOUT, queue_lambda, &m_controller_idx);
+    gip_device_update(&controller->gip_device, now, XGIP_ACK_WAIT_TIMEOUT, queue_lambda, this);
 }
 
 bool XboxWirelessController::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
-    return true;
+    return m_adapter->xfer_cb(ep_addr, result, xferred_bytes);
 }
 
 bool XboxWirelessController::set_config()
 {
-    return true;
+    return m_adapter->set_config();
 }
 
 static void wireless_on_device_descriptor_wrapper(void *context, SubType subtype)
@@ -148,9 +141,15 @@ void XboxWirelessController::on_device_descriptor(SubType subtype)
     m_subtype = subtype;
     m_controller.status = XBOX_CONTROLLER_READY;
         
-    // Move from enumerating to assignable
-    DeviceManager::instance().add_assignable_usb_device(host_devices[m_adapter->dev_addr()]->host_devices_by_itf[m_adapter->interface()]);
+    DeviceManager::instance().add_assignable_usb_device(m_adapter->get_controller_interface(m_controller_idx));
     process_delayed_init();
+    if (!auth_broker.has_handler(ModeXboxOne))
+    {
+        auth_broker.register_handler(ModeXboxOne, [this](XGIPProtocol* packet) {
+            this->send_report_from_host(packet);
+        });
+        m_auth_registered = true;
+    }
     printf("Wireless controller %d identified as type %d\n", m_controller_idx, (uint8_t)subtype);
 }
 
@@ -168,6 +167,11 @@ static void wireless_on_arrival_wrapper(void *context)
 
 int XboxWirelessController::send_gip_packet(const uint8_t *data, uint16_t len)
 {
+    if (!data || len == 0)
+    {
+        return -1;
+    }
+
     printf("TX GIP to controller %d: cmd=0x%02X, len=%d\n", 
            m_controller_idx, data[0], len);
     

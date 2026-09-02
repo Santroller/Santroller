@@ -331,11 +331,11 @@ int mt76_send_assoc_response(struct mt76_dev *dev, uint8_t wcid, const uint8_t *
     
     // TXWI header (32 bytes)
     struct mt76_txwi txwi = {0};
-    txwi.flags = 0x0008;  // MT_TXWI_FLAGS_MPDU_DENSITY = 4
-    txwi.rate = 0x0000;   // MT_PHY_TYPE_OFDM
-    txwi.ack_ctl = 0x01;  // MT_TXWI_ACK_CTL_REQ
+    txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, 4);
+    txwi.rate = FIELD_PREP(MT_RXWI_RATE_PHY, MT_PHY_TYPE_OFDM);
+    txwi.ack_ctl = MT_TXWI_ACK_CTL_REQ;
     txwi.wcid = 0xff;     // Broadcast WCID
-    txwi.len_ctl = 32 + 8; // 802.11 header + assoc_resp + padding
+    txwi.len_ctl = sizeof(struct ieee80211_hdr) + 6 + 8;
     
     memcpy(&frame[offset], &txwi, sizeof(txwi));
     offset += sizeof(txwi);
@@ -367,17 +367,7 @@ int mt76_send_assoc_response(struct mt76_dev *dev, uint8_t wcid, const uint8_t *
     // 8 bytes padding
     memset(&frame[offset], 0, 8); offset += 8;
     
-    // Prepare message header
-    uint32_t info = (3 << 27) |  // MT_WLAN_PORT
-                    (2 << 16) |  // MT_QSEL_EDCA
-                    (1 << 15) |  // MT_TXD_INFO_WIV
-                    (1 << 14);   // MT_TXD_INFO_80211
-    
-    static uint8_t msg[512];
-    memcpy(msg, &info, 4);
-    memcpy(msg + 4, frame, offset);
-    
-    return mt76_send_command(dev, msg, offset + 4, 0);  // Send as raw USB transfer
+    return mt76_send_wlan(dev, frame, offset);
 }
 
 // Send pairing response to controller
@@ -390,11 +380,11 @@ int mt76_send_pair_response(struct mt76_dev *dev, const uint8_t *addr) {
     
     // TXWI header
     struct mt76_txwi txwi = {0};
-    txwi.flags = 0x0008;
-    txwi.rate = 0x0000;
-    txwi.ack_ctl = 0x01;
+    txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, 4);
+    txwi.rate = FIELD_PREP(MT_RXWI_RATE_PHY, MT_PHY_TYPE_OFDM);
+    txwi.ack_ctl = MT_TXWI_ACK_CTL_REQ;
     txwi.wcid = 0xff;
-    txwi.len_ctl = 24 + 2 + 9;  // hdr + reserved + data
+    txwi.len_ctl = sizeof(struct ieee80211_hdr) + 2 + 9;
     
     memcpy(&frame[offset], &txwi, sizeof(txwi));
     offset += sizeof(txwi);
@@ -418,12 +408,7 @@ int mt76_send_pair_response(struct mt76_dev *dev, const uint8_t *addr) {
     offset += sizeof(pair_data);
     
     // Send via USB
-    uint32_t info = (3 << 27) | (2 << 16) | (1 << 15) | (1 << 14);
-    static uint8_t msg[512];
-    memcpy(msg, &info, 4);
-    memcpy(msg + 4, frame, offset);
-    
-    return mt76_send_command(dev, msg, offset + 4, 0);
+    return mt76_send_wlan(dev, frame, offset);
 }
 
 // Set encryption key for client
@@ -453,7 +438,8 @@ int mt76_set_client_key(struct mt76_dev *dev, uint8_t wcid, const uint8_t *key, 
     }
     
     // Set WCID attributes (AES-CCMP encryption, pairwise)
-    uint32_t attr = (7 << 1) | 1;  // MT_CIPHER_AES_CCMP=7, MT_WCID_ATTR_PAIRWISE=1
+    uint32_t attr = FIELD_PREP(MT_WCID_ATTR_PKEY_MODE, MT_CIPHER_AES_CCMP) |
+                    MT_WCID_ATTR_PAIRWISE;
     err = mt76_write_burst(dev, MT_WCID_ATTR(wcid), (uint8_t*)&attr, sizeof(attr));
     if (err) {
         printf("MT76: Failed to write WCID attributes\n");
@@ -471,15 +457,15 @@ int mt76_send_client_command(struct mt76_dev *dev, uint8_t wcid, const uint8_t *
     uint16_t offset = 0;
     
     // TX info header (8 bytes)
-    uint32_t info = (MT_WLAN_PORT << 27) | (MT_QSEL_EDCA << 16);
-    memcpy(&frame[offset], &info, 4); offset += 4;
-    memset(&frame[offset], 0, 4); offset += 4;
+    uint8_t info[8] = { 0x00, 0x00, 0x00, (uint8_t)(wcid - 1),
+                        0x00, 0x00, 0x00, 0x00 };
+    memcpy(&frame[offset], info, sizeof(info)); offset += sizeof(info);
     
     // TXWI header
     struct mt76_txwi txwi = {0};
-    txwi.flags = (4 << 0);  // MPDU_DENSITY_4
-    txwi.rate = (0 << 0);   // PHY_TYPE_OFDM
-    txwi.ack_ctl = 1;       // Request ACK
+    txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, 4);
+    txwi.rate = MT_PHY_TYPE_OFDM;
+    txwi.ack_ctl = MT_TXWI_ACK_CTL_REQ;
     txwi.wcid = wcid - 1;
     txwi.len_ctl = sizeof(struct ieee80211_hdr) + 2 + len;
     memcpy(&frame[offset], &txwi, sizeof(txwi));
@@ -505,7 +491,7 @@ int mt76_send_client_command(struct mt76_dev *dev, uint8_t wcid, const uint8_t *
     printf("MT76: Sending client command 0x%02X to WCID %d, total_len=%d\n", cmd, wcid, offset);
     
     // Send via USB bulk OUT (not MCU command)
-    return mt76_usb_bulk_out(dev, frame, offset);
+    return mt76_send_command(dev, frame, offset, 0);
 }
 
 int mt76_send_gip_data(struct mt76_dev *dev, uint8_t wcid, const uint8_t *addr,
@@ -513,16 +499,11 @@ int mt76_send_gip_data(struct mt76_dev *dev, uint8_t wcid, const uint8_t *addr,
     static uint8_t frame[512];
     uint16_t offset = 0;
     
-    // TX info header (8 bytes)
-    uint32_t info = (MT_WLAN_PORT << 27) | (MT_QSEL_EDCA << 16) | (1 << 15) | (1 << 7);  // WIV | 80211
-    memcpy(&frame[offset], &info, 4); offset += 4;
-    memset(&frame[offset], 0, 4); offset += 4;
-    
     // TXWI header
     struct mt76_txwi txwi = {0};
-    txwi.flags = (4 << 0);  // MPDU_DENSITY_4
-    txwi.rate = (0 << 0);   // PHY_TYPE_OFDM
-    txwi.ack_ctl = 1;       // Request ACK
+    txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, 4);
+    txwi.rate = FIELD_PREP(MT_RXWI_RATE_PHY, MT_PHY_TYPE_OFDM);
+    txwi.ack_ctl = MT_TXWI_ACK_CTL_REQ;
     txwi.wcid = wcid - 1;
     txwi.len_ctl = 26 + gip_len;  // 802.11 QoS header (26 bytes) + GIP data
     memcpy(&frame[offset], &txwi, sizeof(txwi));
@@ -544,8 +525,7 @@ int mt76_send_gip_data(struct mt76_dev *dev, uint8_t wcid, const uint8_t *addr,
     
     printf("MT76: Sending GIP data to WCID %d, gip_len=%d, total_len=%d\n", wcid, gip_len, offset);
     
-    // Send via USB bulk OUT (not MCU command)
-    return mt76_usb_bulk_out(dev, frame, offset);
+    return mt76_send_wlan(dev, frame, offset);
 }
 
 // Remove client (controller disconnection)
@@ -554,20 +534,41 @@ int mt76_remove_client(struct mt76_dev *dev, uint8_t wcid) {
     
     printf("MT76: Removing client wcid=%d\n", wcid);
     
-    // Clear WCID address
-    uint8_t zero_addr[6] = {0};
-    err = mt76_write_burst(dev, MT_WCID_ADDR(wcid), zero_addr, 6);
-    if (err) {
-        printf("MT76: Failed to clear WCID address\n");
-        return err;
-    }
-    
     // Send REMOVE_CLIENT command to firmware
     // Data format: [wcid-1, 0x00, 0x00, 0x00]
     uint8_t data[4] = { wcid - 1, 0x00, 0x00, 0x00 };
     err = mt76_send_ms_command(dev, XONE_MT_REMOVE_CLIENT, data, sizeof(data));
     if (err) {
         printf("MT76: Failed to send REMOVE_CLIENT command\n");
+        return err;
+    }
+
+    uint8_t zero_addr[6] = {0};
+    uint8_t zero_iv[8] = {0};
+    uint8_t zero_key[16] = {0};
+    uint32_t zero_attr = 0;
+
+    err = mt76_write_burst(dev, MT_WCID_ADDR(wcid), zero_addr, sizeof(zero_addr));
+    if (err) {
+        printf("MT76: Failed to clear WCID address\n");
+        return err;
+    }
+
+    err = mt76_write_burst(dev, MT_WCID_IV(wcid), zero_iv, sizeof(zero_iv));
+    if (err) {
+        printf("MT76: Failed to clear WCID IV\n");
+        return err;
+    }
+
+    err = mt76_write_burst(dev, MT_WCID_ATTR(wcid), &zero_attr, sizeof(zero_attr));
+    if (err) {
+        printf("MT76: Failed to clear WCID attributes\n");
+        return err;
+    }
+
+    err = mt76_write_burst(dev, MT_WCID_KEY(wcid), zero_key, sizeof(zero_key));
+    if (err) {
+        printf("MT76: Failed to clear WCID key\n");
         return err;
     }
     
@@ -750,22 +751,22 @@ static const struct mt76_channel default_channels[MT76_NUM_CHANNELS] = {
     { 0x99, MT_CH_5G_LOW, MT_PHY_BW_80, MT_CH_5G_UNII_3, false, 0, false },
     { 0x9d, MT_CH_5G_HIGH, MT_PHY_BW_80, MT_CH_5G_UNII_3, true, 0, false },
     { 0xa1, MT_CH_5G_HIGH, MT_PHY_BW_80, MT_CH_5G_UNII_3, false, 0, false },
+    { 0xa5, MT_CH_5G_HIGH, MT_PHY_BW_80, MT_CH_5G_UNII_3, false, 0, false },
 };
 
 int mt76_switch_channel(struct mt76_dev *dev, struct mt76_channel *chan) {
-    uint8_t data[8];
+    uint8_t data[20] = {0};
     int err;
     
     printf("MT76: Switching to channel 0x%02X (band=%d, bw=%d, scan=%d)\n",
            chan->index, chan->band, chan->bandwidth, chan->scan);
     
-    memset(data, 0, sizeof(data));
     data[0] = chan->index;
-    data[1] = chan->scan ? 1 : 0;
-    data[2] = chan->band;
-    data[3] = chan->bandwidth;
-    data[4] = chan->band_5g;
-    data[5] = chan->primary ? 1 : 0;
+    data[4] = 0x01;
+    data[5] = 0x01;
+    data[16] = chan->bandwidth;
+    data[17] = chan->power;
+    data[18] = chan->scan ? 1 : 0;
     
     err = mt76_send_command(dev, data, sizeof(data), MT_CMD_SWITCH_CHANNEL_OP);
     if (err) {
@@ -778,22 +779,40 @@ int mt76_switch_channel(struct mt76_dev *dev, struct mt76_channel *chan) {
 }
 
 int mt76_get_channel_power(struct mt76_dev *dev, struct mt76_channel *chan) {
-    uint8_t data[4];
-    int err;
-    
-    data[0] = chan->index;
-    data[1] = 0;
-    data[2] = 0;
-    data[3] = 0;
-    
-    err = mt76_send_command(dev, data, sizeof(data), MT_CMD_GET_CHANNEL_POWER);
-    if (err) {
-        return err;
+    uint16_t addr;
+    uint8_t index;
+    uint8_t entry[8];
+    uint8_t target;
+    uint8_t adjustment;
+
+    if (chan->bandwidth == MT_PHY_BW_20)
+    {
+        addr = MT_EE_TX_POWER_0_START_2G;
+        index = 4;
     }
-    
-    // Power value would be returned via MCU response
-    // Setting to 0 is fine - actual power is managed by MT76 firmware
-    chan->power = 0;
+    else
+    {
+        addr = MT_EE_TX_POWER_0_START_5G + chan->band_5g * MT_TX_POWER_GROUP_SIZE_5G;
+        index = 5;
+    }
+
+    if (mt76_read_efuse(dev, addr, entry, sizeof(entry)) < 0)
+    {
+        return -1;
+    }
+
+    target = entry[index];
+    adjustment = entry[index + chan->band];
+    if (adjustment & BIT(7))
+    {
+        uint8_t magnitude = adjustment & GENMASK(5, 0);
+        chan->power = (adjustment & BIT(6)) ? target + magnitude : target - magnitude;
+    }
+    else
+    {
+        chan->power = target;
+    }
+
     return 0;
 }
 
@@ -807,12 +826,14 @@ int mt76_evaluate_channels(struct mt76_dev *dev) {
     for (i = 0; i < MT76_NUM_CHANNELS; i++) {
         struct mt76_channel *chan = &dev->channels[i];
         
-        // Get channel power
-        mt76_get_channel_power(dev, chan);
-        
-        // Increase power for certain 5GHz channels (0x24 to 0x30)
-        if (chan->index >= 0x24 && chan->index <= 0x30) {
-            chan->power += 10;
+        if (mt76_get_channel_power(dev, chan) < 0)
+        {
+            return -1;
+        }
+
+        chan->scan = true;
+        if (mt76_switch_channel(dev, chan) < 0) {
+            return -1;
         }
         
         printf("MT76: Channel 0x%02X power: %d\n", chan->index, chan->power);
@@ -875,7 +896,27 @@ int mt76_init_channels(struct mt76_dev *dev) {
     printf("MT76: Disabling promiscuous mode\n");
     mt76_write_register(dev, MT_RX_FILTR_CFG, 0x017f17);
     
-    // Set channel candidates
+    err = mt76_set_power_mode(dev, MT_RADIO_OFF);
+    if (err) {
+        printf("MT76: Radio off failed\n");
+        return err;
+    }
+
+    sleep_ms(50);
+
+    err = mt76_set_power_mode(dev, MT_RADIO_ON);
+    if (err) {
+        printf("MT76: Radio on failed\n");
+        return err;
+    }
+
+    dev->current_channel->scan = false;
+    err = mt76_switch_channel(dev, dev->current_channel);
+    if (err) {
+        printf("MT76: Final channel switch failed\n");
+        return err;
+    }
+
     err = mt76_set_channel_candidates(dev);
     if (err) {
         printf("MT76: Set channel candidates failed\n");
@@ -889,14 +930,9 @@ int mt76_init_channels(struct mt76_dev *dev) {
 // LED Control
 
 int mt76_set_led_mode(struct mt76_dev *dev, uint8_t mode) {
-    uint8_t data[4];
-    
-    data[0] = mode & 0xff;
-    data[1] = (mode >> 8) & 0xff;
-    data[2] = (mode >> 16) & 0xff;
-    data[3] = (mode >> 24) & 0xff;
-    
-    return mt76_send_command(dev, data, sizeof(data), MT_CMD_LED_MODE_OP);
+    uint32_t data = mode;
+
+    return mt76_send_command(dev, (uint8_t *)&data, sizeof(data), MT_CMD_LED_MODE_OP);
 }
 
 // Beacon Functions
@@ -983,42 +1019,17 @@ int mt76_set_pairing(struct mt76_dev *dev, bool enable) {
     
     printf("MT76: %s pairing mode\n", enable ? "Enabling" : "Disabling");
     
-    // Set LED mode: blink when pairing, solid when not
-    err = mt76_set_led_mode(dev, enable ? MT_LED_BLINK : MT_LED_ON);
-    if (err) {
-        printf("MT76: LED mode set failed\n");
-        return err;
-    }
-    // Service USB stack to complete the transfer
-    for (int i = 0; i < 20; i++) {
-        tuh_task();
-        tud_task();
-        sleep_ms(10);
-    }
-    
     // Write beacon frame
     err = mt76_write_beacon(dev, enable);
     if (err) {
         printf("MT76: Beacon write failed\n");
         return err;
     }
-    // Service USB stack to complete the transfer
-    for (int i = 0; i < 30; i++) {
-        tuh_task();
-        tud_task();
-        sleep_ms(10);
-    }
     
     if (dev->current_channel) {
         dev->current_channel->scan = enable;
         printf("MT76: Scan mode %s on channel 0x%02X\n", 
                enable ? "enabled" : "disabled", dev->current_channel->index);
-    }
-    // Service USB stack to complete the transfer
-    for (int i = 0; i < 20; i++) {
-        tuh_task();
-        tud_task();
-        sleep_ms(10);
     }
     
     // Enable RX and TX in MAC system control

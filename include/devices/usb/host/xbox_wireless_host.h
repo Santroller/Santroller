@@ -8,7 +8,10 @@ extern "C" {
 #include "gip_report_queue.h"
 }
 
-struct mt76_dev;
+extern "C" {
+#include "devices/usb/host/xbox/mt76.h"
+}
+
 class XboxWirelessController;
 
 class XboxWirelessHost : public UsbHostInterface
@@ -35,20 +38,17 @@ public:
 private:
     void initialize_adapter();
     
-    uint8_t m_ep_in;
-    uint8_t m_ep_out;
-    uint8_t m_ep_in_size;
-    uint8_t m_ep_out_size;
-    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[512];
+    CFG_TUSB_MEM_ALIGN uint8_t m_cmd_buf[512];
+    CFG_TUSB_MEM_ALIGN uint8_t m_data_buf[512];
     
-    struct mt76_dev *m_mt76_dev;
+    struct mt76_dev m_mt76_dev;
     
     std::array<std::shared_ptr<XboxWirelessController>, XBOX_MAX_CONTROLLERS> m_controller_interfaces;
     
     bool m_adapter_initialized;
     bool m_firmware_loaded;
     bool m_radio_initialized;
-    bool m_pairing_enabled;
+    bool m_pairing_initialized;
     
     uint32_t m_last_update_time;
     uint32_t m_init_start_time;

@@ -1,11 +1,33 @@
 #include "mt76.h"
 #include "tusb.h"
 #include "host/usbh.h"
+#include "host/usbh_pvt.h"
 #include <stdio.h>
 #include <string.h>
 
-static uint8_t bulk_buffer[MT_FW_CHUNK_SIZE + MT_CMD_HDR_LEN * 2];
-static uint8_t tx_buffer[512];  // Buffer for wireless TX packets
+static int mt76_usb_bulk_out_blocking(struct mt76_dev *dev, uint8_t *buffer, uint16_t len) {
+    if (!usbh_edpt_claim(dev->dev_addr, MT_EP_OUT)) {
+        return -1;
+    }
+
+    if (!usbh_edpt_xfer(dev->dev_addr, MT_EP_OUT, buffer, len)) {
+        usbh_edpt_release(dev->dev_addr, MT_EP_OUT);
+        return -1;
+    }
+
+    absolute_time_t deadline = make_timeout_time_ms(1000);
+    while (usbh_edpt_busy(dev->dev_addr, MT_EP_OUT)) {
+        tuh_task();
+        tud_task();
+        if (time_reached(deadline)) {
+            printf("MT76: Bulk OUT transfer timed out\n");
+            tuh_edpt_abort_xfer(dev->dev_addr, MT_EP_OUT);
+            return -1;
+        }
+    }
+
+    return 0;
+}
 
 bool mt76_init(struct mt76_dev *dev, uint8_t dev_addr) {
     memset(dev, 0, sizeof(*dev));
@@ -205,63 +227,51 @@ static void mt76_prep_message(uint8_t *buffer, uint16_t *len, uint32_t info) {
 }
 
 int mt76_send_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, enum mt76_mcu_cmd cmd) {
-    if (len > sizeof(bulk_buffer) - MT_CMD_HDR_LEN * 2) {
+    if (len > sizeof(dev->bulk_buffer) - MT_CMD_HDR_LEN * 2) {
         printf("MT76: Command too large\n");
         return -1;
     }
     
-    memcpy(bulk_buffer + MT_CMD_HDR_LEN, data, len);
+    memcpy(dev->bulk_buffer + MT_CMD_HDR_LEN, data, len);
     
     uint32_t info = MT_MCU_MSG_TYPE_CMD |
                     FIELD_PREP(MT_MCU_MSG_PORT, MT_CPU_TX_PORT) |
                     FIELD_PREP(MT_MCU_MSG_CMD_TYPE, cmd);
     
     uint16_t total_len = len;
-    mt76_prep_message(bulk_buffer + MT_CMD_HDR_LEN, &total_len, info);
+    mt76_prep_message(dev->bulk_buffer + MT_CMD_HDR_LEN, &total_len, info);
     
     printf("MT76: Sending command 0x%02X, len=%d (dev_addr=%d, ep=0x%02X)\n", 
            cmd, total_len, dev->dev_addr, MT_EP_OUT);
     
-    tuh_xfer_t xfer = {
-        .daddr = dev->dev_addr,
-        .ep_addr = MT_EP_OUT,
-        .buflen = total_len,
-        .buffer = bulk_buffer,
-        .complete_cb = NULL,  // Blocking
-        .user_data = 0
-    };
-    
-    // Retry a few times if endpoint is busy
-    int retries = 5;
-    while (retries > 0) {
-        if (tuh_edpt_xfer(&xfer)) {
-            break;  // Success
-        }
-        
-        retries--;
-        if (retries > 0) {
-            printf("MT76: Endpoint busy, retrying... (%d left)\n", retries);
-            // Process USB events to clear any pending state
-            for (int i = 0; i < 10; i++) {
-                tuh_task();
-                tud_task();
-                sleep_ms(2);
-            }
-        } else {
-            printf("MT76: Bulk transfer failed (tuh_edpt_xfer returned false)\n");
-            printf("MT76: Device may not be ready or endpoint not available\n");
-            return -1;
-        }
-    }
-    
-    if (xfer.result != XFER_RESULT_SUCCESS) {
-        printf("MT76: Bulk transfer completed with error\n");
+    if (mt76_usb_bulk_out_blocking(dev, dev->bulk_buffer, total_len) < 0) {
+        printf("MT76: Bulk transfer failed\n");
         return -1;
     }
     
-    // Give device time to process command before next one
-    sleep_ms(10);
-    
+    return 0;
+}
+
+int mt76_send_wlan(struct mt76_dev *dev, const uint8_t *data, uint16_t len) {
+    uint32_t info = FIELD_PREP(MT_TXD_INFO_DPORT, MT_WLAN_PORT) |
+                    FIELD_PREP(MT_TXD_INFO_QSEL, MT_QSEL_EDCA) |
+                    MT_TXD_INFO_WIV |
+                    MT_TXD_INFO_80211;
+    uint16_t total_len = len;
+
+    if (len > sizeof(dev->bulk_buffer) - MT_CMD_HDR_LEN * 2) {
+        printf("MT76: WLAN packet too large\n");
+        return -1;
+    }
+
+    memcpy(dev->bulk_buffer + MT_CMD_HDR_LEN, data, len);
+    mt76_prep_message(dev->bulk_buffer + MT_CMD_HDR_LEN, &total_len, info);
+
+    if (mt76_usb_bulk_out_blocking(dev, dev->bulk_buffer, total_len) < 0) {
+        printf("MT76: WLAN transfer failed\n");
+        return -1;
+    }
+
     return 0;
 }
 
@@ -386,40 +396,22 @@ int mt76_load_firmware(struct mt76_dev *dev, const uint8_t *fw_data, uint32_t fw
     return 0;
 }
 
-static void bulk_out_complete_cb(tuh_xfer_t* xfer) {
-    if (xfer->result == XFER_RESULT_SUCCESS) {
-        printf("MT76: Bulk OUT complete, sent %d bytes\n", xfer->actual_len);
-    } else {
-        printf("MT76: Bulk OUT failed: %d\n", xfer->result);
-    }
-}
-
 int mt76_usb_bulk_out(struct mt76_dev *dev, const uint8_t *data, uint16_t len) {
     printf("MT76: USB bulk OUT, len=%d\n", len);
     
-    if (len > sizeof(tx_buffer)) {
+    if (len > sizeof(dev->tx_buffer)) {
         printf("MT76: TX packet too large: %d\n", len);
         return -1;
     }
     
     // Copy to static buffer for async transfer
-    memcpy(tx_buffer, data, len);
+    memcpy(dev->tx_buffer, data, len);
     
     // MT_EP_OUT is 0x08
     #define MT_EP_OUT 0x08
     
-    // Create transfer structure
-    static tuh_xfer_t xfer_out;
-    xfer_out.daddr = dev->dev_addr;
-    xfer_out.ep_addr = MT_EP_OUT;
-    xfer_out.buflen = len;
-    xfer_out.buffer = tx_buffer;
-    xfer_out.complete_cb = bulk_out_complete_cb;
-    xfer_out.user_data = 0;
-    
-    // Queue async bulk OUT transfer
-    if (!tuh_edpt_xfer(&xfer_out)) {
-        printf("MT76: Failed to queue bulk OUT transfer\n");
+    if (mt76_usb_bulk_out_blocking(dev, dev->tx_buffer, len) < 0) {
+        printf("MT76: Bulk OUT transfer failed\n");
         return -1;
     }
     

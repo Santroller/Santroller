@@ -79,7 +79,7 @@ public:
 
     void write(const char *buf, int len)
     {
-        if (!m_initialized || !can_send())
+        if (!m_initialized)
         {
             return;
         }

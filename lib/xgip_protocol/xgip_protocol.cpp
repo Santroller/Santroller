@@ -127,6 +127,7 @@ bool XGIPProtocol::parse(const uint8_t *buffer, uint16_t len)
             actualDataReceived += packet_len;
             numberOfChunksSent++; // count our chunks for the ACK
             isValidPacket = true;
+            return true;  // Successfully processed chunk
         }
         else
         {

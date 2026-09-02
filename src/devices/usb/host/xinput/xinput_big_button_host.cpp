@@ -45,7 +45,7 @@ std::shared_ptr<UsbHostInterface> XInputBigButtonHost::open(std::shared_ptr<UsbH
     {
         list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
     }
-    DeviceManager::instance().add_assignable_usb_device(intf);
+    usb_host_add_assignable_interface(intf);
     *out_len = (uint16_t)((uintptr_t)p_desc - (uintptr_t)desc_itf);
     return intf;
 }

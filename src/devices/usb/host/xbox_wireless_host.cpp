@@ -24,6 +24,12 @@ extern "C"
 
 #include <algorithm>
 
+namespace
+{
+constexpr uint16_t XBOX_WIRELESS_ADAPTER_VID = 0x045E;
+constexpr uint16_t XBOX_WIRELESS_ADAPTER_PID = 0x02E6;
+}
+
 static XboxWirelessHost *wireless_host(struct mt76_dev *dev)
 {
     return static_cast<XboxWirelessHost *>(dev ? dev->owner : nullptr);
@@ -68,21 +74,37 @@ int XboxWirelessHost::send_gip_to_controller(uint8_t wcid, const uint8_t *mac_ad
 extern "C" void xbox_adapter_process_gip_data(struct mt76_dev *dev, uint8_t wcid, const uint8_t *data, uint16_t len)
 {
     auto host = wireless_host(dev);
-    if (!host || len < 4 || wcid == 0)
+    if (!host || wcid == 0)
     {
+        if (!host) printf("xbox_adapter_process_gip_data: no host\n");
+        if (wcid == 0) printf("xbox_adapter_process_gip_data: wcid=0\n");
+        return;
+    }
+
+    if (len < 4)
+    {
+        printf("xbox_adapter_process_gip_data: wcid=%d, len=%d (too short)\n", wcid, len);
         return;
     }
 
     uint8_t controller_idx = wcid - 1;
     if (controller_idx >= XBOX_MAX_CONTROLLERS)
     {
+        printf("xbox_adapter_process_gip_data: controller_idx=%d out of range\n", controller_idx);
         return;
     }
+
+    printf("xbox_adapter_process_gip_data: wcid=%d, controller_idx=%d, len=%d, cmd=0x%02X\n",
+           wcid, controller_idx, len, data[0]);
 
     auto controller = host->get_controller_interface(controller_idx);
     if (controller)
     {
         controller->process_gip_data(data, len);
+    }
+    else
+    {
+        printf("  No controller interface for idx %d\n", controller_idx);
     }
 }
 
@@ -111,6 +133,11 @@ std::shared_ptr<UsbHostInterface> XboxWirelessHost::open(std::shared_ptr<UsbHost
     TU_VERIFY(desc_itf->bInterfaceNumber == 0, nullptr);
 
     uint8_t dev_addr = list->dev_addr();
+    uint16_t vid;
+    uint16_t pid;
+    tuh_vid_pid_get(dev_addr, &vid, &pid);
+    TU_VERIFY(vid == XBOX_WIRELESS_ADAPTER_VID && pid == XBOX_WIRELESS_ADAPTER_PID, nullptr);
+
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
 
     auto intf = std::make_shared<XboxWirelessHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);
@@ -150,7 +177,7 @@ std::shared_ptr<UsbHostInterface> XboxWirelessHost::open(std::shared_ptr<UsbHost
         }
     }
 
-    DeviceManager::instance().add_enumerating_usb_device(intf);
+    usb_host_add_enumerating_interface(intf);
 
     printf("XboxWirelessHost: Interface opened, size=%d\r\n", size);
     *out_len = size;
@@ -243,7 +270,7 @@ void XboxWirelessHost::remove_controller_interface(uint8_t controller_idx)
 
     printf("XboxWirelessHost: Removing virtual interface for controller %d\r\n", controller_idx);
 
-    DeviceManager::instance().remove_assignable_usb_device(controller_intf.get());
+    usb_host_remove_assignable_interface(controller_intf.get());
 
     m_controller_interfaces[controller_idx].reset();
 

@@ -114,7 +114,7 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
     }
     if (desc_itf->bInterfaceNumber == 0)
     {
-        DeviceManager::instance().add_enumerating_usb_device(intf);
+        usb_host_add_enumerating_interface(intf);
         
         // Register as auth provider if not already registered
         if (!auth_broker.has_handler(ModeXboxOne))
@@ -151,8 +151,8 @@ static void xone_on_device_descriptor_wrapper(void *context, SubType subtype)
         host->m_gip_device.subtype = subtype;
         
         // Move from enumerating to assignable
-        DeviceManager::instance().remove_enumerating_usb_device(host);
-        DeviceManager::instance().add_assignable_usb_device(host_devices[host->dev_addr()]->host_devices_by_itf[host->interface()]);
+        usb_host_remove_enumerating_interface(host);
+        usb_host_add_assignable_interface(host_devices[host->dev_addr()]->host_devices_by_itf[host->interface()]);
         
         // Send power-on sequence using device interface
         gip_send_power_on_sequence(&host->m_gip_device);

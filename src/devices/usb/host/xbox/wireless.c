@@ -290,7 +290,11 @@ static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, ui
         {
             if (wcid > 0 && wcid <= MT76_MAX_CLIENTS)
             {
-                printf("QoS data from WCID %d, len=%d\n", wcid, len);
+                printf("QoS data from WCID %d, len=%d, payload_len=%d\n", wcid, len, payload_len);
+                if (payload_len >= 4) {
+                    printf("  First 4 bytes: 0x%02X 0x%02X 0x%02X 0x%02X\n",
+                           payload[0], payload[1], payload[2], payload[3]);
+                }
 
                 // Skip 802.11 QoS header (26 bytes: 24 base + 2 QoS control)
                 if (payload_len >= 2)

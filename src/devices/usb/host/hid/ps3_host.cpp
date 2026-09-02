@@ -144,7 +144,7 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
         {
             list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
         }
-        DeviceManager::instance().add_assignable_usb_device(intf);
+        usb_host_add_assignable_interface(intf);
         USB_FreeReportInfo(info);
         return intf;
     }

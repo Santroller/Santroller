@@ -80,34 +80,6 @@ public:
         }
     }
     
-    // USB host interfaces
-    void add_assignable_usb_device(std::shared_ptr<UsbHostInterface> device);
-    void add_enumerating_usb_device(std::shared_ptr<UsbHostInterface> device);
-    void remove_assignable_usb_device(UsbHostInterface *device);
-    void remove_enumerating_usb_device(UsbHostInterface *device);
-    void remove_assignable_usb_devices_by_address(uint8_t dev_addr);
-    void remove_enumerating_usb_devices_by_address(uint8_t dev_addr);
-    size_t assignable_usb_device_count() const;
-    size_t enumerating_usb_device_count() const;
-    void add_assignable_devices_from_usb_hosts(bool rescan);
-    void clear_usb_devices();
-    template <typename Func>
-    void for_each_assignable_usb_device(Func func)
-    {
-        for (const auto &device : m_assignable_usb_devices)
-        {
-            func(device);
-        }
-    }
-    template <typename Func>
-    void for_each_enumerating_usb_device(Func func)
-    {
-        for (const auto &device : m_enumerating_usb_devices)
-        {
-            func(device);
-        }
-    }
-    
     // Auth devices (by console mode)
     std::shared_ptr<UsbHostInterface> get_auth_device(ConsoleMode mode);
     void set_auth_device(ConsoleMode mode, std::shared_ptr<UsbHostInterface> device);
@@ -126,7 +98,5 @@ private:
     std::vector<std::shared_ptr<Device>> m_active_devices;
     std::unordered_map<uint32_t, std::shared_ptr<Device>> m_root_devices;
     std::vector<std::shared_ptr<Device>> m_assignable_devices;
-    std::vector<std::shared_ptr<UsbHostInterface>> m_assignable_usb_devices;
-    std::vector<std::shared_ptr<UsbHostInterface>> m_enumerating_usb_devices;
     std::map<ConsoleMode, std::shared_ptr<UsbHostInterface>> m_auth_devices;
 };

@@ -141,7 +141,7 @@ void XboxWirelessController::on_device_descriptor(SubType subtype)
     m_subtype = subtype;
     m_controller.status = XBOX_CONTROLLER_READY;
         
-    DeviceManager::instance().add_assignable_usb_device(m_adapter->get_controller_interface(m_controller_idx));
+    usb_host_add_assignable_interface(m_adapter->get_controller_interface(m_controller_idx));
     process_delayed_init();
     if (!auth_broker.has_handler(ModeXboxOne))
     {
@@ -159,8 +159,6 @@ static void wireless_on_arrival_wrapper(void *context)
     
     if (ctrl) {
         ctrl->m_controller.status = XBOX_CONTROLLER_CONNECTED;
-        printf("Controller %d connected\n", ctrl->m_controller_idx);
-        
         gip_default_arrival_callback(&ctrl->m_controller.gip_device, wireless_queue_packet_wrapper);
     }
 }
@@ -192,13 +190,18 @@ static void wireless_queue_packet_wrapper(void *context, const uint8_t *data, ui
 void XboxWirelessController::process_gip_data(const uint8_t *data, uint16_t len)
 {
     if (len < 4) {
+        printf("RX GIP to controller %d: len=%d (too short)\n", m_controller_idx, len);
         return;
     }
     
     xbox_controller_t *controller = get_controller_data();
     if (!controller) {
+        printf("RX GIP to controller %d: no controller data\n", m_controller_idx);
         return;
     }
+    
+    printf("RX GIP from controller %d: cmd=0x%02X, len=%d, status=%d\n",
+           m_controller_idx, data[0], len, controller->status);
     
     gip_device_process_incoming(&controller->gip_device, data, len);
 }

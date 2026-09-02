@@ -164,7 +164,7 @@ std::shared_ptr<UsbHostInterface> MidiHost::open(std::shared_ptr<UsbHostDevice> 
       TU_VERIFY(tuh_edpt_open(dev_addr, p_ep), 0);
       tu_edpt_stream_open(ep_stream, dev_addr, p_ep, tu_edpt_packet_size(p_ep));
       tu_edpt_stream_clear(ep_stream);
-      DeviceManager::instance().add_assignable_usb_device(intf);
+      usb_host_add_assignable_interface(intf);
       break;
     }
 

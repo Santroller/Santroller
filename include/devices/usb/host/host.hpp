@@ -76,6 +76,15 @@ protected:
     bool send_intr_xfer(uint8_t endpoint, const void *buffer, uint8_t len);
 };
 
+void usb_host_add_assignable_interface(std::shared_ptr<UsbHostInterface> device);
+void usb_host_add_enumerating_interface(std::shared_ptr<UsbHostInterface> device);
+void usb_host_remove_assignable_interface(UsbHostInterface *device);
+void usb_host_remove_enumerating_interface(UsbHostInterface *device);
+void usb_host_remove_interfaces_by_address(uint8_t dev_addr);
+size_t usb_host_assignable_interface_count();
+void usb_host_add_assignable_devices(bool rescan);
+void usb_host_update_interfaces(bool full_poll, bool send_events);
+
 class UsbHostDevice : public Device
 {
 public:

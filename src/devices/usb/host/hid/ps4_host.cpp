@@ -159,7 +159,7 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
             auth_broker.register_auth_device(ModePs4, intf);
             intf->m_auth_registered = true;
         }
-        DeviceManager::instance().add_assignable_usb_device(intf);
+        usb_host_add_assignable_interface(intf);
         USB_FreeReportInfo(info);
         return intf;
     }

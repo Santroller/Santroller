@@ -133,6 +133,8 @@ struct wiimote_state_sys
   struct ext_crypto_state extension_crypto_state;
   bool extension_report;
   bool extension_encrypted;
+  bool extension_stream_valid;
+  uint8_t extension_stream_size;
   uint8_t extension_report_type;
   uint8_t extension_type;
   uint8_t wmp_state; //0 inactive, 1 active, 2 deactivated
@@ -191,18 +193,29 @@ struct wiimote_buttons{
 typedef struct{
   struct wiimote_buttons wiimote;
     struct wiimote_nunchuk nunchuk;
-  struct wiimote_classic classic;
   uint8_t switch_mode;
   uint8_t mode;
   uint8_t reset_ir;
   uint8_t fake_motion;
   uint8_t center_accel;
+  uint8_t extension_type;
+  uint8_t extension_size;
+  uint8_t extension_data[32];
 }WiimoteReport;
 
 enum MODE_WIIMOTE{
     NO_EXTENSION = 0xFF,
     WIIMOTE_AND_NUNCHUCK = 0x00,
     CLASSIC_CONTROLLER = 0x01
+};
+
+enum wiimote_extension_type {
+  WIIMOTE_EXTENSION_NUNCHUK = 0,
+  WIIMOTE_EXTENSION_CLASSIC = 1,
+  WIIMOTE_EXTENSION_GUITAR = 3,
+  WIIMOTE_EXTENSION_DRUMS = 4,
+  WIIMOTE_EXTENSION_TURNTABLE = 5,
+  WIIMOTE_EXTENSION_BALANCE_BOARD = 6,
 };
 
 void wiimote_init(struct wiimote_state *state);

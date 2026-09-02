@@ -16,7 +16,7 @@ cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(SANTROLLER_BOARD_VARIANTS pico_w pico2_w CACHE STRING "Board variants to build")
+set(SANTROLLER_BOARD_VARIANTS pico_w_compat pico2_w_compat CACHE STRING "Board variants to build")
 option(SANTROLLER_VARIANT_DRIVER "Configure this build tree as a board variant driver" OFF)
 option(SANTROLLER_VARIANT_BUILD "Internal flag for single-board variant builds" OFF)
 option(ENABLE_WIFI "Enable WiFi support (CYW43 driver)" ON)
@@ -79,6 +79,8 @@ set(PICO_PIO_USB_PATH ${CMAKE_SOURCE_DIR}/lib/pico_pio_usb)
 set(PICO_TINYUSB_PATH ${CMAKE_SOURCE_DIR}/lib/tinyusb)
 set(PICO_BTSTACK_PATH ${CMAKE_SOURCE_DIR}/lib/btstack)
 set(PICO_BOARD pico_w CACHE STRING "Board type")
+list(PREPEND PICO_BOARD_HEADER_DIRS ${CMAKE_SOURCE_DIR}/boards)
+set(PICO_BOARD_HEADER_DIRS ${PICO_BOARD_HEADER_DIRS} CACHE STRING "PICO board header directories" FORCE)
 set(BLUEPAD32_ROOT ${CMAKE_SOURCE_DIR}/lib/bluepad32)
 set(PFB_WITH_IMAGE_ENCRYPTION OFF)
 set(PFB_WITH_SHA256_HASHING OFF)
@@ -291,6 +293,8 @@ add_executable(
   src/config/config_loader.cpp
   src/config/config_storage.cpp
   src/emulation/bt/bt_gamepad.cpp
+  src/emulation/bt/wii_remote_emulation.cpp
+  src/emulation/wii_extension_input.cpp
   src/emulation/bt/bt_descriptors.cpp
   ${PROTO_OUTPUT_DIR}/input_enums.pb.c
   ${PROTO_OUTPUT_DIR}/enums.pb.c
@@ -433,7 +437,7 @@ target_link_libraries(
 
 pfb_compile_with_bootloader(${TARGET})
 
-if (PICO_BOARD STREQUAL "pico2_w")
+if (PICO_PLATFORM MATCHES "^rp2350")
   set_property(TARGET ${TARGET} PROPERTY PICOTOOL_EXTRA_UF2_ARGS --platform rp2350)
 endif()
 pico_add_extra_outputs(${TARGET})
@@ -463,5 +467,9 @@ if(NOT SANTROLLER_VARIANT_BUILD)
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico_w_fota.uf2" "${CMAKE_BINARY_DIR}/santroller_pico_w_fota.uf2"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico2_w.uf2" "${CMAKE_BINARY_DIR}/santroller_pico2_w.uf2"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico2_w_fota.uf2" "${CMAKE_BINARY_DIR}/santroller_pico2_w_fota.uf2"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico_w_compat.uf2" "${CMAKE_BINARY_DIR}/santroller_pico_w_compat.uf2"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico_w_compat_fota.uf2" "${CMAKE_BINARY_DIR}/santroller_pico_w_compat_fota.uf2"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico2_w_compat.uf2" "${CMAKE_BINARY_DIR}/santroller_pico2_w_compat.uf2"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico2_w_compat_fota.uf2" "${CMAKE_BINARY_DIR}/santroller_pico2_w_compat_fota.uf2"
   )
 endif()

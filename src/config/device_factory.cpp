@@ -127,7 +127,7 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         break;
         
     case proto_Device_wiiEmulation_tag:
-        device = std::make_shared<WiiEmulationDevice>(proto_device.device.wiiEmulation, device_id);
+        device = std::make_shared<WiiExtensionEmulationDevice>(proto_device.device.wiiEmulation, device_id);
         break;
         
     case proto_Device_protarNeck_tag:

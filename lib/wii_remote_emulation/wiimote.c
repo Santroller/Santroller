@@ -6,20 +6,10 @@
 #include "wiimote.h"
 #include "wm_reports.h"
 #include "eeprom.bin.h"
+#include "wii_extension_backend.h"
 
 static uint8_t *eeprom_bin;
 int tries = 0;
-
-static uint8_t classic_calibration[16] =
-{
-  // 0xF8, 0x04, 0x7A, 0xF8, 0x04, 0x7A, 0xF8, 0x04, 0x7A, 0xF8, 0x04, 0x7A, 0x00, 0x00, 0x00, 0x00
-  0xE1, 0x19, 0x7C, 0xEF, 0x22, 0x7C, 0xE6, 0x1E, 0x85, 0xDE, 0x15, 0x8B, 0x0E, 0x22, 0x8F, 0xE4
-};
-
-static uint8_t nunchuk_calibration[16] =
-{
-  0x81, 0x80, 0x7F, 0x22, 0xB5, 0xB3, 0xB3, 0x03, 0x00, 0x00, 0x7C, 0x00, 0x00, 0x83, 0x14, 0x69
-};
 
 int process_report(struct wiimote_state *state, const uint8_t * buf, int len)
 {
@@ -302,6 +292,7 @@ void write_eeprom(struct wiimote_state * state, uint32_t offset, uint8_t size, c
 void read_register(struct wiimote_state *state, uint32_t offset, uint16_t size)
 {
   uint8_t * buffer;
+  uint8_t extension_buffer[256];
   struct report * rpt;
   int i;
   bool encrypt = false;
@@ -331,12 +322,16 @@ void read_register(struct wiimote_state *state, uint32_t offset, uint16_t size)
       else
       {
         buffer = state->sys.register_a4 + (offset & 0xff);
+        if (size > sizeof(extension_buffer) || (offset & 0xff) + size > sizeof(extension_buffer))
+          return;
+        for (i = 0; i < size; i++)
+          extension_buffer[i] = wii_extension_backend_read(
+              state->sys.register_a4, state->sys.extension_encrypted,
+              &state->sys.extension_crypto_state, (uint8_t)((offset + i) & 0xff));
+        buffer = extension_buffer;
       }
 
-      if (state->sys.extension_encrypted)
-      {
-        encrypt = true;
-      }
+      encrypt = state->sys.wmp_state == 1 && state->sys.extension_encrypted;
 
       break;
     case 0xa6: //motionplus
@@ -380,12 +375,26 @@ void write_register(struct wiimote_state *state, uint32_t offset, uint8_t size, 
 {
   uint8_t * reg;
   int result = 0x00;
+  int i;
 
   switch ((offset >> 16) & 0xfe) //select register, ignore lsb
   {
     case 0xa2: //speaker
       reg = state->sys.register_a2;
-      memcpy(reg + (offset & 0xff), buf, size);
+      if (state->sys.wmp_state == 0)
+      {
+        for (i = 0; i < size; i++)
+        {
+          wii_extension_backend_write(state->sys.register_a4,
+                                      &state->sys.extension_encrypted,
+                                      &state->sys.extension_crypto_state,
+                                      (uint8_t)((offset + i) & 0xff), buf[i]);
+        }
+      }
+      else
+      {
+        memcpy(reg + (offset & 0xff), buf, size);
+      }
       break;
     case 0xa4: //extension
       reg = (state->sys.wmp_state == 1) ? state->sys.register_a6 : state->sys.register_a4;
@@ -426,19 +435,8 @@ void write_register(struct wiimote_state *state, uint32_t offset, uint8_t size, 
       }
       else if ((offset & 0xff) == 0x4c) //last part of encryption code
       {
-        ext_generate_tables(&state->sys.extension_crypto_state, &reg[0x40]);
-        state->sys.extension_encrypted = 1;
-      }
-      else if ((offset & 0xff) == 0xf0)
-      {
-        if (buf[0] == 0xaa)
-        {
-          state->sys.extension_encrypted = 1;
-        }
-        else if (buf[0] == 0x55)
-        {
-          state->sys.extension_encrypted = 0;
-        }
+        wii_extension_backend_generate_tables(reg, &state->sys.extension_crypto_state,
+                                              &state->sys.extension_encrypted);
       }
       else if ((offset & 0xff) == 0xf1)
       {
@@ -776,32 +774,27 @@ void init_extension(struct wiimote_state * state)
       return;
     }
 
-    memset(&state->sys.register_a4[0xf0], 0x0, 0x10);
-
-    state->sys.register_a4[0xf0] = 0x55;
-    state->sys.register_a4[0xfc] = 0xa4;
-    state->sys.register_a4[0xfd] = 0x20;
-
+    uint8_t extension_type;
     switch (state->sys.connected_extension_type)
     {
-      default:
-      case Nunchuk:
-        state->sys.register_a4[0xfe] = 0x00;
-        state->sys.register_a4[0xff] = 0x00;
-        memcpy(&state->sys.register_a4[0x20], nunchuk_calibration, 0x10);
-        memcpy(&state->sys.register_a4[0x30], nunchuk_calibration, 0x10);
-        break;
-      case Classic:
-        state->sys.register_a4[0xfe] = 0x01;
-        state->sys.register_a4[0xff] = 0x01;
-        memcpy(&state->sys.register_a4[0x20], classic_calibration, 0x10);
-        memcpy(&state->sys.register_a4[0x30], classic_calibration, 0x10);
-        break;
-      case BalanceBoard:
-        state->sys.register_a4[0xfe] = 0x04;
-        state->sys.register_a4[0xff] = 0x02;
-        break;
+    case Nunchuk:
+      extension_type = WII_EXTENSION_NUNCHUK;
+      break;
+    case Classic:
+      extension_type = WII_EXTENSION_CLASSIC;
+      break;
+    case BalanceBoard:
+      extension_type = WII_EXTENSION_BALANCE_BOARD;
+      break;
+    default:
+            extension_type = (uint8_t)state->sys.connected_extension_type == (uint8_t)WIIMOTE_EXTENSION_GUITAR
+                         ? WII_EXTENSION_GUITAR
+              : (uint8_t)state->sys.connected_extension_type == (uint8_t)WIIMOTE_EXTENSION_DRUMS
+                         ? WII_EXTENSION_DRUMS
+                         : WII_EXTENSION_TURNTABLE;
+      break;
     }
+    wii_extension_backend_init(state->sys.register_a4, &state->sys.extension_encrypted, extension_type);
 
     state->sys.extension_report_type = state->sys.register_a4[0xfe];
     state->sys.extension_type = state->sys.register_a4[0xff];
@@ -838,8 +831,6 @@ void wiimote_init(struct wiimote_state *state)
   state->usr.accel_z = 0x9f << 2;
 
   reset_input_ir(state->usr.ir_object);
-  reset_input_nunchuk(&state->usr.nunchuk);
-  reset_input_classic(&state->usr.classic);
   reset_input_motionplus(&state->usr.motionplus);
 
   state->usr.connected_extension_type = NoExtension;

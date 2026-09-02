@@ -131,13 +131,8 @@ void wireless_task(struct mt76_dev *dev)
     }
 }
 
-void wireless_process_data(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
+static void wireless_process_message(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
 {
-    if (len < 8)
-    {
-        return; // Too short for RX info header
-    }
-
     uint32_t info = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
     uint8_t port = FIELD_GET(MT_RX_FCE_INFO_D_PORT, info);
     uint8_t evt_type = FIELD_GET(MT_RX_FCE_INFO_EVT_TYPE, info);
@@ -191,6 +186,27 @@ void wireless_process_data(struct mt76_dev *dev, const uint8_t *data, uint16_t l
     }
 }
 
+void wireless_process_data(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
+{
+    // A single bulk transfer can carry several concatenated messages.
+    while (len >= MT_CMD_HDR_LEN * 2)
+    {
+        uint32_t info = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+        uint16_t msg_len = FIELD_GET(MT_RX_FCE_INFO_LEN, info);
+        uint16_t total = MT_CMD_HDR_LEN + ((msg_len + 3) & ~3) + MT_CMD_HDR_LEN;
+
+        // Payload-less events such as the pairing button are header + trailer only.
+        if (total > len)
+        {
+            return;
+        }
+
+        wireless_process_message(dev, data, total);
+        data += total;
+        len -= total;
+    }
+}
+
 static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
 {
     if (len < sizeof(struct mt76_rxwi) + sizeof(struct ieee80211_hdr))
@@ -203,17 +219,15 @@ static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, ui
     len -= sizeof(struct mt76_rxwi);
 
     uint32_t rxinfo = rxwi->rxinfo;
-    uint16_t ctl = rxwi->ctl;
+    uint32_t ctl = rxwi->ctl;
     uint16_t mpdu_len = FIELD_GET(MT_RXWI_CTL_MPDU_LEN, ctl);
     uint16_t padding_len = (rxinfo & MT_RXINFO_L2PAD) ? 2 : 0;
     uint16_t header_len = sizeof(struct ieee80211_hdr);
 
-    if (mpdu_len < header_len || mpdu_len + padding_len > len)
+    if (mpdu_len < header_len || header_len + padding_len > len)
     {
         return;
     }
-
-    len = mpdu_len;
 
     const struct ieee80211_hdr *hdr = (const struct ieee80211_hdr *)data;
     uint16_t frame_control = hdr->frame_control;
@@ -229,13 +243,21 @@ static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, ui
         header_len += 2;
     }
 
-    if (mpdu_len < header_len + padding_len)
+    if (mpdu_len < header_len || header_len + padding_len > len)
     {
         return;
     }
 
+    // The L2 padding sits between the header and payload and is not counted in MPDU_LEN.
     const uint8_t *payload = data + header_len + padding_len;
-    uint16_t payload_len = len - header_len - padding_len;
+    uint16_t payload_len = mpdu_len - header_len;
+
+    if (header_len + padding_len + payload_len > len)
+    {
+        return;
+    }
+
+    len = mpdu_len;
 
     if (ftype == IEEE80211_FTYPE_MGMT)
     {
@@ -273,7 +295,7 @@ static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, ui
                 // Skip 802.11 QoS header (26 bytes: 24 base + 2 QoS control)
                 if (payload_len >= 2)
                 {
-                    xbox_adapter_process_gip_data(dev, payload, payload_len);
+                    xbox_adapter_process_gip_data(dev, wcid, payload, payload_len);
                 }
             }
         }
@@ -286,15 +308,22 @@ void wireless_process_packet(struct mt76_dev *dev, const uint8_t *data, uint16_t
     {
         const struct mt76_rxwi *rxwi = (const struct mt76_rxwi *)data;
         uint16_t mpdu_len = FIELD_GET(MT_RXWI_CTL_MPDU_LEN, rxwi->ctl);
-        uint16_t frame_len = sizeof(struct mt76_rxwi) + mpdu_len;
+        uint16_t padding_len = (rxwi->rxinfo & MT_RXINFO_L2PAD) ? 2 : 0;
+        uint16_t frame_len = sizeof(struct mt76_rxwi) + mpdu_len + padding_len;
         uint16_t transfer_len = (frame_len + 3) & ~3;
 
-        if (mpdu_len < sizeof(struct ieee80211_hdr) || transfer_len > len)
+        if (mpdu_len < sizeof(struct ieee80211_hdr) || frame_len > len)
         {
             return;
         }
 
         wireless_process_frame(dev, data, frame_len);
+
+        if (transfer_len >= len)
+        {
+            return;
+        }
+
         data += transfer_len;
         len -= transfer_len;
     }
@@ -320,6 +349,7 @@ static void remove_client(struct mt76_dev *dev, uint8_t wcid)
         memset(dev->clients[wcid - 1].addr, 0, 6);
         memset(dev->clients[wcid - 1].key, 0, sizeof(dev->clients[wcid - 1].key));
         dev->clients[wcid - 1].encryption_enabled = false;
+        xbox_remove_controller(dev, wcid - 1);
         printf("Client WCID %d removed\n", wcid);
     }
 }
@@ -441,6 +471,8 @@ void wireless_handle_association(struct mt76_dev *dev, const uint8_t *addr)
 
     dev->clients[wcid - 1].used = true;
     memcpy(dev->clients[wcid - 1].addr, addr, 6);
+
+    xbox_create_controller(dev, wcid - 1);
 
     xbox_controller_t *controller = xbox_get_controller(dev, wcid - 1);
     if (controller)

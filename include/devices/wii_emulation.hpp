@@ -6,11 +6,11 @@
 #include <memory>
 #include <set>
 
-class WiiEmulationDevice : public Device
+class WiiExtensionEmulationDevice : public Device
 {
 public:
-    ~WiiEmulationDevice() {}
-    WiiEmulationDevice(proto_WiiEmulationDevice device, uint16_t id);
+    ~WiiExtensionEmulationDevice() {}
+    WiiExtensionEmulationDevice(proto_WiiEmulationDevice device, uint16_t id);
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);

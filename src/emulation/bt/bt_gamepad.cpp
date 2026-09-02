@@ -123,13 +123,9 @@ BTGamepadDevice::~BTGamepadDevice()
     {
         return;
     }
-    hci_power_control(HCI_POWER_OFF);
     hids_device_register_packet_handler(nullptr);
     gap_advertisements_enable(0);
     gap_advertisements_set_data(0, nullptr);
-    att_server_deinit();
-    sm_deinit();
-    l2cap_deinit();
     printf("btgamepaddevice deinit\r\n");
 }
 void BTGamepadDevice::initialize()

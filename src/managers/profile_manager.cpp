@@ -130,6 +130,7 @@ bool ProfileManager::assign_profile_to_devices(
     auto& config_mgr = ConfigManager::instance();
     const int assignment_types[] = {
         ProfileAssignMask_AssignBluetoothGamepad,
+        ProfileAssignMask_AssignBluetoothWiimote,
         ProfileAssignMask_AssignPsx,
         ProfileAssignMask_AssignWiimoteExtension,
         ProfileAssignMask_AssignUsb
@@ -142,7 +143,9 @@ bool ProfileManager::assign_profile_to_devices(
             continue;
         }
 
-        if (assignment_type == ProfileAssignMask_AssignBluetoothGamepad && !config_mgr.has_bluetooth())
+        if ((assignment_type == ProfileAssignMask_AssignBluetoothGamepad ||
+             assignment_type == ProfileAssignMask_AssignBluetoothWiimote) &&
+            !config_mgr.has_bluetooth())
         {
             continue;
         }

@@ -1,6 +1,7 @@
 #include "wm_reports.h"
 #include "wm_crypto.h"
 #include "inet.h"
+#include "wii_extension_backend.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -233,6 +234,25 @@ void report_append_interleaved(struct wiimote_state * state, uint8_t * buf)
 
 void report_append_extension(struct wiimote_state * state, uint8_t * buf, uint8_t bytes)
 {
+  bool interleaved_motionplus = state->sys.extension_report_type == 0x05 ||
+                                state->sys.extension_report_type == 0x07;
+
+  if (state->sys.extension_stream_valid &&
+      !(interleaved_motionplus && state->sys.extension_report))
+  {
+    uint8_t count = bytes;
+    if (count > state->sys.extension_stream_size)
+      count = state->sys.extension_stream_size;
+    for (uint8_t i = 0; i < count; i++)
+      buf[i] = wii_extension_backend_read(
+          state->sys.register_a4, state->sys.extension_encrypted,
+          &state->sys.extension_crypto_state, (uint8_t)(0x08 + i));
+    memset(buf + count, 0, bytes - count);
+    if (interleaved_motionplus)
+      state->sys.extension_report = 1;
+    return;
+  }
+
   //a600fe = 0x04 activate motionplus, 0x05 activate nunchuk passthrough, 0x07 activate classic passthrough
       //if no other extension, send 0x20
 
@@ -254,182 +274,27 @@ void report_append_extension(struct wiimote_state * state, uint8_t * buf, uint8_
   //right now, they are always the same in all situations
   int addr_offset = 0x08, length = 6;
 
-  switch (state->sys.extension_report_type)
+  bool motionplus_report = state->sys.extension_report_type == 0x04 ||
+                           (interleaved_motionplus && state->sys.extension_report);
+  if (motionplus_report)
   {
-    case 0x00: //nunchuk
-    {
-      struct report_ext_nunchuk * rpt = (struct report_ext_nunchuk *)buf;
+    struct report_ext_motionplus * rpt = (struct report_ext_motionplus *)buf;
 
-      rpt->x = state->usr.nunchuk.x;
-      rpt->y = state->usr.nunchuk.y;
+    rpt->yaw_hi = state->usr.motionplus.yaw_down >> 8;
+    rpt->yaw_lo = state->usr.motionplus.yaw_down;
+    rpt->roll_hi = state->usr.motionplus.roll_left >> 8;
+    rpt->roll_lo = state->usr.motionplus.roll_left;
+    rpt->pitch_hi = state->usr.motionplus.pitch_left >> 8;
+    rpt->pitch_lo = state->usr.motionplus.pitch_left;
 
-      rpt->accel_x_hi = state->usr.nunchuk.accel_x >> 2;
-      rpt->accel_y_hi = state->usr.nunchuk.accel_y >> 2;
-      rpt->accel_z_hi = state->usr.nunchuk.accel_z >> 2;
-      rpt->accel_x_lo = state->usr.nunchuk.accel_x;
-      rpt->accel_y_lo = state->usr.nunchuk.accel_y;
-      rpt->accel_z_lo = state->usr.nunchuk.accel_z;
+    rpt->yaw_slow = state->usr.motionplus.yaw_slow;
+    rpt->pitch_slow = state->usr.motionplus.pitch_slow;
+    rpt->roll_slow = state->usr.motionplus.roll_slow;
 
-      rpt->c = !state->usr.nunchuk.c;
-      rpt->z = !state->usr.nunchuk.z;
-
-      break;
-    }
-    case 0x01: //classic
-    {
-      struct report_ext_classic * rpt = (struct report_ext_classic *)buf;
-
-      rpt->lx = state->usr.classic.ls_x;
-      rpt->ly = state->usr.classic.ls_y;
-      rpt->rx_hi = state->usr.classic.rs_x >> 3;
-      rpt->rx_m = state->usr.classic.rs_x >> 1;
-      rpt->rx_lo = state->usr.classic.rs_x;
-      rpt->ry = state->usr.classic.rs_y;
-
-      rpt->lt_hi = state->usr.classic.lt >> 3;
-      rpt->lt_lo = state->usr.classic.lt;
-      rpt->rt = state->usr.classic.rt;
-
-      rpt->left = !state->usr.classic.left;
-      rpt->right = !state->usr.classic.right;
-      rpt->up = !state->usr.classic.up;
-      rpt->down = !state->usr.classic.down;
-      rpt->ltrigger = !state->usr.classic.ltrigger;
-      rpt->rtrigger = !state->usr.classic.rtrigger;
-      rpt->lz = !state->usr.classic.lz;
-      rpt->rz = !state->usr.classic.rz;
-      rpt->a = !state->usr.classic.a;
-      rpt->b = !state->usr.classic.b;
-      rpt->x = !state->usr.classic.x;
-      rpt->y = !state->usr.classic.y;
-      rpt->plus = !state->usr.classic.plus;
-      rpt->minus = !state->usr.classic.minus;
-      rpt->home = !state->usr.classic.home;
-
-      rpt->unused = 1;
-
-      break;
-    }
-    case 0x04: //motionplus
-    {
-      struct report_ext_motionplus * rpt = (struct report_ext_motionplus *)buf;
-
-      rpt->yaw_hi = state->usr.motionplus.yaw_down >> 8;
-      rpt->yaw_lo = state->usr.motionplus.yaw_down;
-      rpt->roll_hi = state->usr.motionplus.roll_left >> 8;
-      rpt->roll_lo = state->usr.motionplus.roll_left;
-      rpt->pitch_hi = state->usr.motionplus.pitch_left >> 8;
-      rpt->pitch_lo = state->usr.motionplus.pitch_left;
-
-      rpt->yaw_slow = state->usr.motionplus.yaw_slow;
-      rpt->pitch_slow = state->usr.motionplus.pitch_slow;
-      rpt->roll_slow = state->usr.motionplus.roll_slow;
-
-      rpt->ext = 0;
-      rpt->unused_0 = 1;
-
-      break;
-    }
-    case 0x05: //motionplus + nunchuk
-      if (state->sys.extension_report)
-      {
-        struct report_ext_motionplus * rpt = (struct report_ext_motionplus *)buf;
-
-        rpt->yaw_hi = state->usr.motionplus.yaw_down >> 8;
-        rpt->yaw_lo = state->usr.motionplus.yaw_down;
-        rpt->roll_hi = state->usr.motionplus.roll_left >> 8;
-        rpt->roll_lo = state->usr.motionplus.roll_left;
-        rpt->pitch_hi = state->usr.motionplus.pitch_left >> 8;
-        rpt->pitch_lo = state->usr.motionplus.pitch_left;
-
-        rpt->yaw_slow = state->usr.motionplus.yaw_slow;
-        rpt->pitch_slow = state->usr.motionplus.pitch_slow;
-        rpt->roll_slow = state->usr.motionplus.roll_slow;
-
-        rpt->ext = 1;
-        rpt->unused_0 = 1;
-
-        state->sys.extension_report = 0;
-      }
-      else
-      {
-        struct report_ext_nunchuk_pt * rpt = (struct report_ext_nunchuk_pt *)buf;
-
-        rpt->x = state->usr.nunchuk.x;
-        rpt->y = state->usr.nunchuk.y;
-
-        rpt->accel_x_hi = state->usr.nunchuk.accel_x >> 2;
-        rpt->accel_y_hi = state->usr.nunchuk.accel_y >> 2;
-        rpt->accel_z_hi = state->usr.nunchuk.accel_z >> 3;
-        rpt->accel_x_lo = state->usr.nunchuk.accel_x >> 1;
-        rpt->accel_y_lo = state->usr.nunchuk.accel_y >> 1;
-        rpt->accel_z_lo = state->usr.nunchuk.accel_z >> 1;
-
-        rpt->c = !state->usr.nunchuk.c;
-        rpt->z = !state->usr.nunchuk.z;
-
-        rpt->ext = 1;
-
-        state->sys.extension_report = 1;
-      }
-      break;
-    case 0x07: //motionplus + classic
-      if (state->sys.extension_report)
-      {
-        struct report_ext_motionplus * rpt = (struct report_ext_motionplus *)buf;
-
-        rpt->yaw_hi = state->usr.motionplus.yaw_down >> 8;
-        rpt->yaw_lo = state->usr.motionplus.yaw_down;
-        rpt->roll_hi = state->usr.motionplus.roll_left >> 8;
-        rpt->roll_lo = state->usr.motionplus.roll_left;
-        rpt->pitch_hi = state->usr.motionplus.pitch_left >> 8;
-        rpt->pitch_lo = state->usr.motionplus.pitch_left;
-
-        rpt->yaw_slow = state->usr.motionplus.yaw_slow;
-        rpt->pitch_slow = state->usr.motionplus.pitch_slow;
-        rpt->roll_slow = state->usr.motionplus.roll_slow;
-
-        rpt->ext = 1;
-        rpt->unused_0 = 1;
-
-        state->sys.extension_report = 0;
-      }
-      else
-      {
-        struct report_ext_classic_pt * rpt = (struct report_ext_classic_pt *)buf;
-
-        rpt->lx = state->usr.classic.ls_x >> 1;
-        rpt->ly = state->usr.classic.ls_y >> 1;
-        rpt->rx_hi = state->usr.classic.rs_x >> 3;
-        rpt->rx_m = state->usr.classic.rs_x >> 1;
-        rpt->rx_lo = state->usr.classic.rs_x;
-        rpt->ry = state->usr.classic.rs_y;
-
-        rpt->lt_hi = state->usr.classic.lt >> 3;
-        rpt->lt_lo = state->usr.classic.lt;
-        rpt->rt = state->usr.classic.rt;
-
-        rpt->left = !state->usr.classic.left;
-        rpt->right = !state->usr.classic.right;
-        rpt->up = !state->usr.classic.up;
-        rpt->down = !state->usr.classic.down;
-        rpt->ltrigger = !state->usr.classic.ltrigger;
-        rpt->rtrigger = !state->usr.classic.rtrigger;
-        rpt->lz = !state->usr.classic.lz;
-        rpt->rz = !state->usr.classic.rz;
-        rpt->a = !state->usr.classic.a;
-        rpt->b = !state->usr.classic.b;
-        rpt->x = !state->usr.classic.x;
-        rpt->y = !state->usr.classic.y;
-        rpt->plus = !state->usr.classic.plus;
-        rpt->minus = !state->usr.classic.minus;
-        rpt->home = !state->usr.classic.home;
-
-        rpt->ext = 1;
-
-        state->sys.extension_report = 1;
-      }
-      break;
+    rpt->ext = interleaved_motionplus ? 1 : 0;
+    rpt->unused_0 = 1;
+    if (interleaved_motionplus)
+      state->sys.extension_report = 0;
   }
 
 

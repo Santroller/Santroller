@@ -13,11 +13,11 @@
 #include <vector>
 #include <memory>
 
-class WiiEmulationDeviceInstance : public Instance
+class WiiExtensionEmulationDeviceInstance : public Instance
 {
 public:
-    ~WiiEmulationDeviceInstance();
-    WiiEmulationDeviceInstance(proto_WiiEmulationDevice device);
+    ~WiiExtensionEmulationDeviceInstance();
+    WiiExtensionEmulationDeviceInstance(proto_WiiEmulationDevice device);
     void initialize();
     void process(bool full_poll, bool send_events);
 private:

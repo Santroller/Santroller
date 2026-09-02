@@ -38,8 +38,9 @@ public:
 private:
     void initialize_adapter();
     
-    CFG_TUSB_MEM_ALIGN uint8_t m_cmd_buf[512];
-    CFG_TUSB_MEM_ALIGN uint8_t m_data_buf[512];
+    CFG_TUSB_MEM_ALIGN uint8_t m_cmd_buf[0x0654];
+    // RX bulk aggregation is disabled, so one message per transfer bounds this at a single MPDU.
+    CFG_TUSB_MEM_ALIGN uint8_t m_data_buf[0x1000];
     
     struct mt76_dev m_mt76_dev;
     

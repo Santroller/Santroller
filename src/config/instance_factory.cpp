@@ -5,6 +5,7 @@
 #include "emulation/bt/bt_gamepad.h"
 #include "emulation/ps2_emulation.hpp"
 #include "emulation/wii_emulation.hpp"
+#include "emulation/bt/wii_remote_emulation.hpp"
 #include "emulation/usb/hid_device.h"
 #include "emulation/usb/ogxbox_device.h"
 #include "emulation/usb/xinput_device.h"
@@ -38,7 +39,17 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
     std::shared_ptr<Instance> instance;
     
     if (assignment_mask & ProfileAssignMask_AssignBluetoothGamepad) {
+        if (!config_mgr.has_bluetooth()) {
+            return nullptr;
+        }
         instance = std::make_shared<BTGamepadDevice>();
+    }
+    else if (assignment_mask & ProfileAssignMask_AssignBluetoothWiimote) {
+        if (!config_mgr.has_bluetooth()) {
+            return nullptr;
+        }
+        instance = std::make_shared<WiiRemoteEmulationDeviceInstance>();
+        usb_mode = ModeWiiRb;
     }
     else if (assignment_mask & ProfileAssignMask_AssignPsx) {
         if (!emulation_devices.has_psx) {
@@ -52,7 +63,7 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
         if (!emulation_devices.has_wii) {
             return nullptr;
         }
-        instance = std::make_shared<WiiEmulationDeviceInstance>(
+        instance = std::make_shared<WiiExtensionEmulationDeviceInstance>(
             emulation_devices.wii
         );
     }

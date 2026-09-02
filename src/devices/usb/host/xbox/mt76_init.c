@@ -14,6 +14,10 @@
 #define XONE_MT_SET_IDLE_TIME       0x05
 #define XONE_MT_SET_CHAN_CANDIDATES 0x07
 
+// Dongle TX queue selector
+#define XONE_MT_QUEUE_DATA          0x00
+#define XONE_MT_QUEUE_AUDIO         0x02
+
 // MCU Command Functions
 
 int mt76_select_function(struct mt76_dev *dev, enum mt76_mcu_function func, uint32_t val) {
@@ -498,7 +502,14 @@ int mt76_send_gip_data(struct mt76_dev *dev, uint8_t wcid, const uint8_t *addr,
                        const uint8_t *gip_data, uint16_t gip_len) {
     static uint8_t frame[512];
     uint16_t offset = 0;
-    
+    bool encrypted = (wcid > 0 && wcid <= MT76_MAX_CLIENTS) &&
+                     dev->clients[wcid - 1].encryption_enabled;
+
+    // WCID/queue selector consumed by the dongle firmware, ahead of the TXWI.
+    uint8_t info[8] = { 0x00, 0x00, XONE_MT_QUEUE_DATA, wcid - 1, 0x00, 0x00, 0x00, 0x00 };
+    memcpy(&frame[offset], info, sizeof(info));
+    offset += sizeof(info);
+
     // TXWI header
     struct mt76_txwi txwi = {0};
     txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, 4);
@@ -510,22 +521,30 @@ int mt76_send_gip_data(struct mt76_dev *dev, uint8_t wcid, const uint8_t *addr,
     offset += sizeof(txwi);
     
     // 802.11 QoS Data header (26 bytes)
-    uint16_t frame_control = IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_DATA;
+    uint16_t frame_control = IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_DATA |
+                             IEEE80211_FCTL_FROMDS;
+    if (encrypted) {
+        frame_control |= IEEE80211_FCTL_PROTECTED;
+    }
+    uint16_t duration = 144;
     memcpy(&frame[offset], &frame_control, 2); offset += 2;  // Frame control
-    memset(&frame[offset], 0, 2); offset += 2;                // Duration
+    memcpy(&frame[offset], &duration, 2); offset += 2;        // Duration
     memcpy(&frame[offset], addr, 6); offset += 6;             // Address 1 (destination)
     memcpy(&frame[offset], dev->mac_address, 6); offset += 6; // Address 2 (source)
     memcpy(&frame[offset], dev->mac_address, 6); offset += 6; // Address 3 (BSSID)
     memset(&frame[offset], 0, 2); offset += 2;                // Sequence control
     memset(&frame[offset], 0, 2); offset += 2;                // QoS control
-    
+
+    // L2 padding between the header and payload, excluded from len_ctl.
+    memset(&frame[offset], 0, 2); offset += 2;
+
     // GIP data payload
     memcpy(&frame[offset], gip_data, gip_len);
     offset += gip_len;
     
     printf("MT76: Sending GIP data to WCID %d, gip_len=%d, total_len=%d\n", wcid, gip_len, offset);
     
-    return mt76_send_wlan(dev, frame, offset);
+    return mt76_send_command(dev, frame, offset, 0);
 }
 
 // Remove client (controller disconnection)
@@ -941,15 +960,7 @@ static int mt76_write_beacon(struct mt76_dev *dev, bool pair) {
     uint8_t beacon_data[256];
     int offset = 0;
     
-    // TXWI (TX Wireless Info) - 16 bytes
-    struct {
-        uint16_t flags;
-        uint16_t rate;
-        uint8_t ack_ctl;
-        uint8_t wcid;
-        uint16_t len_ctl;
-        uint32_t reserved[2];
-    } __attribute__((packed)) txwi = {0};
+    struct mt76_txwi txwi = {0};
     
     // Generate beacon timestamp, use hardware sequence control
     txwi.flags = MT_TXWI_FLAGS_TS;

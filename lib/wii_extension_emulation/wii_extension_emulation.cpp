@@ -1,48 +1,20 @@
 #include "wii_extension_emulation.hpp"
+#include "wii_extension_backend.h"
 #include <hardware/gpio.h>
 #include <pico/time.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <pico/i2c_slave.h>
-// calibration data
-const unsigned char cal_data[32] = {
-    0xE1, 0x19, 0x7C, 0xEF, 0x22, 0x7C, 0xE6, 0x1E, 0x85, 0xDE, 0x15, 0x8B, 0x0E, 0x22, 0x8F, 0xE4};
-const uint8_t id_guitar[6] = {0x00, 0x00, 0xA4, 0x20, 0x01, 0x03};
-const uint8_t id_drum[6] = {0x01, 0x00, 0xA4, 0x20, 0x01, 0x03};
-const uint8_t id_turntable[6] = {0x03, 0x00, 0xA4, 0x20, 0x01, 0x03};
-const uint8_t id_classic[6] = {0x00, 0x00, 0xA4, 0x20, 0x01, 0x01};
 static wii_extension_context_t context0;
 static wii_extension_context_t context1;
 static void init(wii_extension_context_t *context)
 {
-    memset(context->twi_reg, 0, sizeof(context->twi_reg));
-    context->twi_reg[0xF0] = 0; // disable encryption
-    // set id
-    for (unsigned int i = 0, j = 0xFA; i < 6; i++, j++)
-    {
-        switch (context->type)
-        {
-        case GuitarHeroGuitar:
-            context->twi_reg[j] = id_guitar[i];
-            break;
-        case GuitarHeroDrums:
-            context->twi_reg[j] = id_drum[i];
-            break;
-        case DjHeroTurntable:
-            context->twi_reg[j] = id_turntable[i];
-            break;
-        default:
-            context->twi_reg[j] = id_classic[i];
-            break;
-        }
-    }
-
-    // set calibration data
-    for (unsigned int i = 0, j = 0x20; i < 6; i++, j++)
-    {
-        context->twi_reg[j] = cal_data[i];
-    }
+    uint8_t extension_id = context->type == GuitarHeroGuitar ? WII_EXTENSION_GUITAR :
+                           context->type == GuitarHeroDrums ? WII_EXTENSION_DRUMS :
+                           context->type == DjHeroTurntable ? WII_EXTENSION_TURNTABLE :
+                           WII_EXTENSION_CLASSIC;
+    wii_extension_backend_init(context->twi_reg, &context->encrypted, extension_id);
 }
 static void i2c_slave_handler(i2c_inst_t *i2c, wii_extension_context_t *context, i2c_slave_event_t event)
 {
@@ -63,17 +35,8 @@ static void i2c_slave_handler(i2c_inst_t *i2c, wii_extension_context_t *context,
         {
             // save into memory
             uint8_t data = i2c_read_byte_raw(i2c);
-            if (context->mem_address == 0xF0 && data == 0x55)
-            {
-                context->encrypted = false;
-                memset(context->twi_reg, 0x40, 0x10);
-            }
-            if (context->encrypted && context->mem_address != 0xF0) // if encryption is on
-            {
-                // decrypt
-                data = (data ^ context->state.sb[context->mem_address % 8]) + context->state.ft[context->mem_address % 8];
-            }
-            context->twi_reg[context->mem_address] = data;
+            wii_extension_backend_write(context->twi_reg, &context->encrypted,
+                                        &context->state, context->mem_address, data);
             // Euphoria LED
             if (context->mem_address == 0xFB)
             {
@@ -89,12 +52,8 @@ static void i2c_slave_handler(i2c_inst_t *i2c, wii_extension_context_t *context,
     {
         // master is requesting data
         // load from memory
-        uint8_t data = context->twi_reg[context->mem_address];
-        if (context->encrypted) // encryption is on
-        {
-            // encrypt
-            data = (context->twi_reg[context->mem_address] - context->state.ft[context->mem_address % 8]) ^ context->state.sb[context->mem_address % 8];
-        }
+        uint8_t data = wii_extension_backend_read(context->twi_reg, context->encrypted,
+                                                   &context->state, context->mem_address);
         i2c_write_byte_raw(i2c, data);
         context->mem_address++;
         context->transfer_len++;
@@ -108,8 +67,8 @@ static void i2c_slave_handler(i2c_inst_t *i2c, wii_extension_context_t *context,
             if (context->mem_address == 0x50)
             {
                 // generate tables once all data is loaded
-                ext_generate_tables(&context->state, &context->twi_reg[0x40]);
-                context->encrypted = true;
+                wii_extension_backend_generate_tables(context->twi_reg, &context->state,
+                                                       &context->encrypted);
             }
             context->mem_address_written = false;
         }

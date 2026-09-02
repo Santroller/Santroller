@@ -41,20 +41,39 @@ extern "C" xbox_controller_t *xbox_get_controller(struct mt76_dev *dev, uint8_t 
     return controller ? controller->get_controller_data() : nullptr;
 }
 
+// The real subtype only arrives later via the GIP device descriptor.
+extern "C" void xbox_create_controller(struct mt76_dev *dev, uint8_t index)
+{
+    auto host = wireless_host(dev);
+    if (host)
+    {
+        host->create_controller_interface(index, SubType_Gamepad);
+    }
+}
+
+extern "C" void xbox_remove_controller(struct mt76_dev *dev, uint8_t index)
+{
+    auto host = wireless_host(dev);
+    if (host)
+    {
+        host->remove_controller_interface(index);
+    }
+}
+
 int XboxWirelessHost::send_gip_to_controller(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *data, uint16_t len)
 {
     return mt76_send_gip_data(&m_mt76_dev, wcid, mac_addr, data, len);
 }
 
-extern "C" void xbox_adapter_process_gip_data(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
+extern "C" void xbox_adapter_process_gip_data(struct mt76_dev *dev, uint8_t wcid, const uint8_t *data, uint16_t len)
 {
     auto host = wireless_host(dev);
-    if (!host || len < 4)
+    if (!host || len < 4 || wcid == 0)
     {
         return;
     }
 
-    uint8_t controller_idx = len > 4 ? data[4] & 0x0F : 0;
+    uint8_t controller_idx = wcid - 1;
     if (controller_idx >= XBOX_MAX_CONTROLLERS)
     {
         return;
@@ -235,6 +254,20 @@ bool XboxWirelessHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t x
 {
     printf("XboxWirelessHost: RX endpoint 0x%02X, result=%d, bytes=%lu\r\n",
            ep_addr, result, xferred_bytes);
+
+    if ((ep_addr == MT_EP_IN_CMD || ep_addr == MT_EP_IN_WLAN) &&
+        result == XFER_RESULT_SUCCESS && xferred_bytes >= 8)
+    {
+        printf("XboxWirelessHost: RX header %02X %02X %02X %02X %02X %02X %02X %02X\r\n",
+               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[0] : m_data_buf[0],
+               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[1] : m_data_buf[1],
+               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[2] : m_data_buf[2],
+               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[3] : m_data_buf[3],
+               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[4] : m_data_buf[4],
+               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[5] : m_data_buf[5],
+               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[6] : m_data_buf[6],
+               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[7] : m_data_buf[7]);
+    }
 
     if (ep_addr == MT_EP_IN_CMD && result != XFER_RESULT_FAILED)
     {

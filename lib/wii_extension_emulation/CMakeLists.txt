@@ -5,4 +5,6 @@ target_link_libraries(wii_extension_emulation INTERFACE
     hardware_i2c
     wm_crypto
 )
-target_sources(wii_extension_emulation INTERFACE wii_extension_emulation.cpp)
+target_sources(wii_extension_emulation INTERFACE
+    wii_extension_emulation.cpp
+    wii_extension_backend.c)

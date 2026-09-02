@@ -92,10 +92,12 @@ extern "C" {
 
 bool xbox_adapter_mounted(void);
 xbox_controller_t* xbox_get_controller(struct mt76_dev *dev, uint8_t index);
+void xbox_create_controller(struct mt76_dev *dev, uint8_t index);
+void xbox_remove_controller(struct mt76_dev *dev, uint8_t index);
 void xbox_adapter_mount(uint8_t dev_addr, uint8_t instance);
 void xbox_adapter_unmount(uint8_t dev_addr);
 void xbox_adapter_process_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
-void xbox_adapter_process_gip_data(struct mt76_dev *dev, const uint8_t *data, uint16_t len);
+void xbox_adapter_process_gip_data(struct mt76_dev *dev, uint8_t wcid, const uint8_t *data, uint16_t len);
 int xbox_adapter_send_gip_packet(uint8_t controller_idx, const uint8_t *data, uint16_t len);
 
 #ifdef __cplusplus

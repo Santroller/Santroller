@@ -45,6 +45,8 @@ static btstack_packet_callback_registration_t hci_event_callback_registration;
 static uint16_t sdp_server_l2cap_cid;
 static uint16_t sdp_server_response_size;
 static uint8_t sdp_response_buffer[SDP_RESPONSE_BUFFER_SIZE];
+static uint32_t hid_service_handle;
+static uint32_t pnp_service_handle;
 
 
 static void send_data(){
@@ -390,21 +392,20 @@ void wiimote_emulator(void *report){
     };
 
 
-    hid_create_sdp_record(hid_service_buffer, sdp_create_service_record_handle(), &hid_sdp_record);
+    hid_service_handle = sdp_create_service_record_handle();
+    hid_create_sdp_record(hid_service_buffer, hid_service_handle, &hid_sdp_record);
     btstack_assert(de_get_len( hid_service_buffer) <= sizeof(hid_service_buffer));
     sdp_register_service(hid_service_buffer);
 
     // See https://www.bluetooth.com/specifications/assigned-numbers/company-identifiers if you don't have a USB Vendor ID and need a Bluetooth Vendor ID
     // device info: BlueKitchen GmbH, product 1, version 1
-    device_id_create_sdp_record(pnp_service_buffer, sdp_create_service_record_handle(), DEVICE_ID_VENDOR_ID_SOURCE_BLUETOOTH, BLUETOOTH_COMPANY_ID_BLUEKITCHEN_GMBH, 1, 1);
+    pnp_service_handle = sdp_create_service_record_handle();
+    device_id_create_sdp_record(pnp_service_buffer, pnp_service_handle, DEVICE_ID_VENDOR_ID_SOURCE_BLUETOOTH, BLUETOOTH_COMPANY_ID_BLUEKITCHEN_GMBH, 1, 1);
     btstack_assert(de_get_len(pnp_service_buffer) <= sizeof(pnp_service_buffer));
     sdp_register_service(pnp_service_buffer);
 
      // register for HID events
     hid_device_register_packet_handler(&hci_packet_handler);
-
-    // Power on!
-    hci_power_control(HCI_POWER_ON);
 
     // Init wiimote structure
     wiimote_init(&wiimote);
@@ -417,15 +418,57 @@ void wiimote_emulator(void *report){
     loop_wii.process = &task_wiimote;
 }
 
+void wiimote_emulator_shutdown(void)
+{
+    btstack_run_loop_remove_timer(&loop_wii);
+    btstack_run_loop_remove_timer(&led_state);
+
+    if (hid_cid)
+    {
+        hid_device_disconnect(hid_cid);
+        hid_cid = 0;
+    }
+
+    hid_device_register_report_data_callback(NULL);
+    hid_device_register_packet_handler(NULL);
+    hci_remove_event_handler(&hci_event_callback_registration);
+    l2cap_unregister_service(BLUETOOTH_PSM_SDP);
+    if (hid_service_handle)
+    {
+        sdp_unregister_service(hid_service_handle);
+        hid_service_handle = 0;
+    }
+    if (pnp_service_handle)
+    {
+        sdp_unregister_service(pnp_service_handle);
+        pnp_service_handle = 0;
+    }
+    sdp_deinit();
+    hid_device_deinit();
+    wiimote_destroy(&wiimote);
+    sdp_server_l2cap_cid = 0;
+    sdp_server_response_size = 0;
+}
+
 
 static void input_update_wiimote(){
 
+    wiimote.usr.connected_extension_type = input_report->extension_type;
+    wiimote.sys.extension_stream_valid = input_report->extension_size > 0;
+    wiimote.sys.extension_stream_size = input_report->extension_size;
+    if (wiimote.sys.extension_stream_valid)
+    {
+        uint8_t size = input_report->extension_size;
+        if (size > 32)
+            size = 32;
+        for (uint8_t i = 0; i < size; i++)
+            wiimote.sys.register_a4[0x08 + i] = input_report->extension_data[i];
+    }
+
     if(input_report->reset_ir){
-        reset_input_classic(&wiimote.usr.classic);
-        reset_input_nunchuk(&wiimote.usr.nunchuk);
         reset_input_ir(wiimote.usr.ir_object);
         // Change the extension too
-        wiimote.usr.connected_extension_type = input_report->mode;
+        wiimote.usr.connected_extension_type = input_report->extension_type;
         input_report->reset_ir = 0;
     }
 
@@ -449,11 +492,7 @@ static void input_update_wiimote(){
             // Wiimote
             float pointer_delta_x = 0, pointer_delta_y = 0;
             struct wiimote_buttons wiimote_report = input_report->wiimote;
-            struct wiimote_nunchuk nunchuk_report = input_report->nunchuk;
             memcpy(&wiimote.usr, &wiimote_report, 14);
-
-            // Nunchuck
-            memcpy(&wiimote.usr.nunchuk, &nunchuk_report, sizeof(struct wiimote_nunchuk));
 
             pointer_delta_x += (input_report->wiimote.ir_x / 127.0) * 0.008;
             pointer_delta_y += (input_report->wiimote.ir_y / 127.0) * 0.008;
@@ -474,11 +513,8 @@ static void input_update_wiimote(){
             }
         }
             break;
-        case CLASSIC_CONTROLLER:{
-            struct wiimote_classic classic_report = input_report->classic;
-            memcpy(&wiimote.usr.classic, &classic_report, sizeof(struct wiimote_classic));
+        case CLASSIC_CONTROLLER:
             break;
-        }
         default:
             break;
     }

@@ -14,6 +14,32 @@ static void wireless_handle_client_lost(struct mt76_dev *dev, const uint8_t *dat
 static void wireless_handle_client_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, uint8_t wcid, const uint8_t *addr);
 static void wireless_handle_disassociation(struct mt76_dev *dev, uint8_t wcid);
 
+static void wireless_drop_client_events(struct mt76_dev *dev, uint8_t wcid, const uint8_t *addr)
+{
+    uint8_t count = 0;
+    uint8_t original_count = (dev->event_queue_head + MT76_EVENT_QUEUE_SIZE - dev->event_queue_tail) % MT76_EVENT_QUEUE_SIZE;
+    for (uint8_t i = 0; i < original_count; i++)
+    {
+        uint8_t index = (dev->event_queue_tail + i) % MT76_EVENT_QUEUE_SIZE;
+        struct mt76_wireless_event *event = &dev->event_queue[index];
+        bool matches = event->wcid == wcid && event->type != MT76_EVENT_ASSOCIATION;
+        if (event->type == MT76_EVENT_ASSOCIATION && addr)
+        {
+            matches = memcmp(event->addr, addr, MT76_MAC_ADDR_LEN) == 0;
+        }
+        if (!matches)
+        {
+            uint8_t destination = (dev->event_queue_tail + count) % MT76_EVENT_QUEUE_SIZE;
+            if (destination != index)
+            {
+                dev->event_queue[destination] = *event;
+            }
+            count++;
+        }
+    }
+    dev->event_queue_head = (dev->event_queue_tail + count) % MT76_EVENT_QUEUE_SIZE;
+}
+
 static bool wireless_queue_event(struct mt76_dev *dev, const struct mt76_wireless_event *event)
 {
     uint8_t next = (dev->event_queue_head + 1) % MT76_EVENT_QUEUE_SIZE;
@@ -363,6 +389,9 @@ static void remove_client(struct mt76_dev *dev, uint8_t wcid)
 {
     if (wcid > 0 && wcid <= MT76_MAX_CLIENTS)
     {
+        uint8_t addr[MT76_MAC_ADDR_LEN];
+        memcpy(addr, dev->clients[wcid - 1].addr, sizeof(addr));
+        wireless_drop_client_events(dev, wcid, addr);
         dev->clients[wcid - 1].used = false;
         memset(dev->clients[wcid - 1].addr, 0, 6);
         memset(dev->clients[wcid - 1].key, 0, sizeof(dev->clients[wcid - 1].key));

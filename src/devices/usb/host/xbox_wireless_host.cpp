@@ -279,6 +279,7 @@ void XboxWirelessHost::remove_controller_interface(uint8_t controller_idx)
 
     usb_host_remove_assignable_interface(controller_intf.get());
     DeviceManager::instance().remove_device(controller_intf.get());
+    clear_queued_packets(controller_idx + 1);
 
     m_controller_interfaces[controller_idx].reset();
 
@@ -346,6 +347,32 @@ void XboxWirelessHost::send_report_from_host(uint8_t wcid, const uint8_t *mac_ad
 void XboxWirelessHost::send_ack_from_host(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *packet, uint16_t len)
 {
     queue_gip_packet(wcid, mac_addr, packet, len, true);
+}
+
+void XboxWirelessHost::clear_queued_packets(uint8_t wcid)
+{
+    if (m_gip_queue_count == 0)
+    {
+        return;
+    }
+
+    uint8_t remaining_count = 0;
+    for (uint8_t i = 0; i < m_gip_queue_count; i++)
+    {
+        uint8_t index = (m_gip_queue_head + i) % WIRELESS_GIP_QUEUE_CAPACITY;
+        if (m_gip_queue[index].wcid != wcid)
+        {
+            uint8_t destination = (m_gip_queue_head + remaining_count) % WIRELESS_GIP_QUEUE_CAPACITY;
+            if (destination != index)
+            {
+                m_gip_queue[destination] = m_gip_queue[index];
+            }
+            remaining_count++;
+        }
+    }
+
+    m_gip_queue_head = 0;
+    m_gip_queue_count = remaining_count;
 }
 
 void XboxWirelessHost::update(bool full_poll, bool send_events)

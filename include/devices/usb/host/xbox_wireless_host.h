@@ -36,6 +36,7 @@ public:
     
     void send_report_from_host(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *packet, uint16_t len);
     void send_ack_from_host(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *packet, uint16_t len);
+    void clear_queued_packets(uint8_t wcid);
 private:
     static constexpr uint8_t WIRELESS_GIP_QUEUE_CAPACITY = 8;
 

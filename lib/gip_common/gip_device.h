@@ -19,6 +19,11 @@ typedef struct gip_device_t {
     SubType subtype;              // Device subtype
     bool waiting_ack;             // Waiting for ACK response
     uint32_t waiting_ack_timeout; // ACK timeout timestamp
+    // Incoming chunked reliable-transfer tracking, per MS-GIPUSB "Reliable Message Acknowledgement"
+    bool incoming_chunk_pending;           // Waiting on remaining fragments of a chunked reliable transfer
+    uint32_t incoming_chunk_last_data_at;  // Timestamp (ms) of the last received fragment, 0 = not yet timestamped
+    uint32_t incoming_chunk_last_ack_at;   // Timestamp (ms) the last ACK was sent for this transfer
+    uint8_t incoming_chunk_heartbeat_acks; // Heartbeat ACKs sent since the last received fragment
     void *user_context;           // User context (e.g., pointer to owning controller instance)
     const gip_device_interface_t *interface;  // Interface for callbacks
 } gip_device_t;

@@ -66,6 +66,14 @@ void gip_report_queue_pop(gip_report_queue_t* queue);
  */
 bool gip_report_queue_push(gip_report_queue_t* queue, const void* report, uint16_t len);
 
+/**
+ * Add an item at the front of the queue.
+ *
+ * Used for protocol acknowledgments that must precede packets generated while
+ * processing the acknowledged report.
+ */
+bool gip_report_queue_push_front(gip_report_queue_t* queue, const void* report, uint16_t len);
+
 #ifdef __cplusplus
 }
 #endif

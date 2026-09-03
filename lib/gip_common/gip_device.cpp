@@ -5,6 +5,15 @@
 #include <string.h>
 #include <stdio.h>
 
+// MS-GIPUSB "Reliable Message Acknowledgement" (5a4be035-9e20-4350-b81a-a08627a985ca)
+#define GIP_RELIABLE_MESSAGE_TIMEOUT_MS 1000
+#define GIP_RELIABLE_MESSAGE_ACK_INTERVAL_MS 100
+
+// Fires on every parsed packet; printf blocks on real UART hardware drain (confirmed via gdb),
+// so keep this off outside active tracing sessions.
+#define GIP_TRACE_ENABLED 0
+#define GIP_RELIABLE_MESSAGE_MAX_HEARTBEAT_ACKS 8
+
 void gip_device_init(gip_device_t *device)
 {
     if (!device) return;
@@ -42,7 +51,24 @@ bool gip_device_process_incoming(
     if (!device->incoming_xgip->parse((uint8_t *)data, len)) {
         return false;  // Failed to parse
     }
+#if GIP_TRACE_ENABLED
     printf("gip_device_process_incoming: parsed successfully, cmd=0x%02X\n", device->incoming_xgip->getCommand());
+#endif
+    
+    if (device->incoming_xgip->getChunked()) {
+        if (!device->incoming_xgip->endOfChunk()) {
+            // Mid-transfer chunk fragment; accumulate and wait for the terminating chunk.
+            // Timestamps are (re)established on the next gip_device_update() tick.
+            device->incoming_chunk_pending = true;
+            device->incoming_chunk_last_data_at = 0;
+            device->incoming_chunk_heartbeat_acks = 0;
+            return true;
+        }
+        device->incoming_chunk_pending = false;
+        device->incoming_chunk_last_data_at = 0;
+        device->incoming_chunk_last_ack_at = 0;
+        device->incoming_chunk_heartbeat_acks = 0;
+    }
     
     // Store input report data directly in raw_input buffer
     if (device->incoming_xgip->getCommand() == GIP_INPUT_REPORT) {
@@ -117,6 +143,37 @@ void gip_device_update(
     // Check ACK timeout
     if (gip_device_ack_timeout(device, current_time, ack_timeout_ms)) {
         gip_device_clear_ack_wait(device);
+    }
+    
+    // MS-GIPUSB "Reliable Message Acknowledgement": while a chunked transfer is
+    // incomplete, nudge the sender with periodic ACKs of contiguous bytes received,
+    // and abandon/re-request the transfer if no data arrives within the timeout.
+    if (device->incoming_chunk_pending) {
+        if (device->incoming_chunk_last_data_at == 0) {
+            device->incoming_chunk_last_data_at = current_time;
+            device->incoming_chunk_last_ack_at = current_time;
+        }
+        
+        if ((current_time - device->incoming_chunk_last_data_at) >= GIP_RELIABLE_MESSAGE_TIMEOUT_MS) {
+            printf("GIP: reliable transfer timed out, retrying identify request\n");
+            device->incoming_chunk_pending = false;
+            device->incoming_chunk_last_data_at = 0;
+            device->incoming_chunk_last_ack_at = 0;
+            device->incoming_chunk_heartbeat_acks = 0;
+            if (device->incoming_xgip) {
+                device->incoming_xgip->reset();
+            }
+            gip_request_device_descriptor(device);
+        }
+        else if (device->incoming_chunk_heartbeat_acks < GIP_RELIABLE_MESSAGE_MAX_HEARTBEAT_ACKS &&
+                 (current_time - device->incoming_chunk_last_ack_at) >= GIP_RELIABLE_MESSAGE_ACK_INTERVAL_MS)
+        {
+            uint8_t *ack_data = device->incoming_xgip->generateAckPacket();
+            uint16_t ack_len = device->incoming_xgip->getPacketLength();
+            queue_packet(context, ack_data, ack_len);
+            device->incoming_chunk_last_ack_at = current_time;
+            device->incoming_chunk_heartbeat_acks++;
+        }
     }
     
     // Do not send new packets until ACK returns

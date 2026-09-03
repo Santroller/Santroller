@@ -118,6 +118,14 @@ bool XGIPProtocol::parse(const uint8_t *buffer, uint16_t len)
                 memcpy((void *)&header, buffer, sizeof(GipHeader_t));
                 dataLength = total_len_or_offset;
             }
+            else if (total_len_or_offset != actualDataReceived)
+            {
+                // MS-GIPUSB: a fragment offset that does not directly follow the last
+                // received fragment indicates a missed/out-of-order packet. Discard it;
+                // our next ACK reports the true contiguous total so the sender resends.
+                isValidPacket = false;
+                return false;
+            }
             if (packet_len > sizeof(data) - actualDataReceived || packet + packet_len > buffer + len)
             {
                 isValidPacket = false;

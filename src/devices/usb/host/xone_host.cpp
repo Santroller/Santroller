@@ -23,6 +23,33 @@ static void xone_on_device_descriptor_wrapper(void *context, SubType subtype);
 static void xone_on_arrival_wrapper(void *context);
 static void xone_queue_packet_wrapper(void *context, const uint8_t *data, uint16_t len);
 
+#define GIP_TRACE_ENABLED 0
+#define GIP_TRACE_HEXDUMP 0
+
+static void dump_gip_packet(const char *direction, const uint8_t *data, uint16_t len)
+{
+#if GIP_TRACE_ENABLED
+#if GIP_TRACE_HEXDUMP
+    printf("GIP %s: size = %d\n", direction, len);
+    for (uint16_t offset = 0; offset < len; offset += 8)
+    {
+        printf("%02X:      ", offset);
+        for (uint16_t index = offset; index < len && index < offset + 8; ++index)
+        {
+            printf(" 0x%02X", data[index]);
+        }
+        printf("\n");
+    }
+#else
+    printf("GIP %s: size = %d, cmd=0x%02X\n", direction, len, len > 0 ? data[0] : 0);
+#endif
+#else
+    (void)direction;
+    (void)data;
+    (void)len;
+#endif
+}
+
 static const gip_device_interface_t xone_gip_interface = {
     .on_device_descriptor = xone_on_device_descriptor_wrapper,
     .on_arrival = xone_on_arrival_wrapper,
@@ -175,30 +202,47 @@ static void xone_queue_packet_wrapper(void *context, const uint8_t *data, uint16
     XboxOneHost *host = (XboxOneHost *)context;
     if (!host || !gip_report_queue_push(host->m_report_queue, data, len))
     {
+#if GIP_TRACE_ENABLED
         printf("XboxOneHost: Failed to queue GIP packet len=%d\r\n", len);
+#endif
     }
 }
 
 bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
+#if GIP_TRACE_ENABLED
+    printf("XboxOneHost::xfer_cb: ep=0x%02X result=%d bytes=%u\n", ep_addr, result, xferred_bytes);
+#endif
     if (ep_addr & 0x80 && result != XFER_RESULT_FAILED)
     {
         if (xferred_bytes == 0)
         {
-            usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+            if (!usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size))
+            {
+#if GIP_TRACE_ENABLED
+                printf("XboxOneHost::xfer_cb: re-arm failed (empty xfer)\n");
+#endif
+            }
             return true;
         }
         
+        dump_gip_packet("received", m_ep_in_buf, xferred_bytes);
         gip_device_process_incoming(&m_gip_device, m_ep_in_buf, xferred_bytes);
 
         uint8_t *ack_data;
         uint16_t ack_len;
         if (gip_device_generate_ack(&m_gip_device, &ack_data, &ack_len))
         {
-            gip_report_queue_push(m_report_queue, ack_data, ack_len);
+            dump_gip_packet("queued ACK", ack_data, ack_len);
+            gip_report_queue_push_front(m_report_queue, ack_data, ack_len);
         }
 
-        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+        if (!usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size))
+        {
+#if GIP_TRACE_ENABLED
+            printf("XboxOneHost::xfer_cb: re-arm failed after processing packet\n");
+#endif
+        }
     }
     return true;
 }
@@ -214,6 +258,7 @@ void XboxOneHost::update(bool full_poll, bool send_events)
         const gip_report_queue_item_t* item = gip_report_queue_front(m_report_queue);
         if (item && send_intr_xfer(m_ep_out, item->report, item->len))
         {
+            dump_gip_packet("sent", item->report, item->len);
             gip_report_queue_pop(m_report_queue);
         }
     }

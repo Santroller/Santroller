@@ -70,8 +70,9 @@ void XboxWirelessController::disconnect()
 void XboxWirelessController::send_report_from_host(XGIPProtocol *report)
 {
     m_controller.gip_device.outgoing_xgip->copyAttributes(report);
-    m_adapter->send_report_from_host(m_controller.gip_device.outgoing_xgip->generatePacket(), 
-                          m_controller.gip_device.outgoing_xgip->getPacketLength());
+    m_adapter->send_report_from_host(m_controller_idx + 1, m_controller.mac_addr,
+                                     m_controller.gip_device.outgoing_xgip->generatePacket(),
+                                     m_controller.gip_device.outgoing_xgip->getPacketLength());
 }
 bool XboxWirelessController::tick_digital(proto_Output &type)
 {
@@ -110,7 +111,8 @@ void XboxWirelessController::update(bool full_poll, bool send_events)
     uint32_t now = to_ms_since_boot(get_absolute_time());
     auto queue_lambda = [](void *context, const uint8_t *data, uint16_t len) {
         auto controller = static_cast<XboxWirelessController *>(context);
-        controller->send_gip_packet(data, len);
+        controller->m_adapter->send_report_from_host(controller->m_controller_idx + 1,
+                                                     controller->m_controller.mac_addr, data, len);
     };
     gip_device_update(&controller->gip_device, now, XGIP_ACK_WAIT_TIMEOUT, queue_lambda, this);
 }
@@ -142,6 +144,7 @@ void XboxWirelessController::on_device_descriptor(SubType subtype)
     m_controller.status = XBOX_CONTROLLER_READY;
         
     usb_host_add_assignable_interface(m_adapter->get_controller_interface(m_controller_idx));
+    gip_send_power_on_sequence(&m_controller.gip_device);
     process_delayed_init();
     if (!auth_broker.has_handler(ModeXboxOne))
     {
@@ -170,9 +173,6 @@ int XboxWirelessController::send_gip_packet(const uint8_t *data, uint16_t len)
         return -1;
     }
 
-    printf("TX GIP to controller %d: cmd=0x%02X, len=%d\n", 
-           m_controller_idx, data[0], len);
-    
     uint8_t wcid = m_controller_idx + 1;
     
     return m_adapter->send_gip_to_controller(wcid, m_controller.mac_addr, data, len);
@@ -200,8 +200,12 @@ void XboxWirelessController::process_gip_data(const uint8_t *data, uint16_t len)
         return;
     }
     
-    printf("RX GIP from controller %d: cmd=0x%02X, len=%d, status=%d\n",
-           m_controller_idx, data[0], len, controller->status);
-    
     gip_device_process_incoming(&controller->gip_device, data, len);
+
+    uint8_t *ack_data;
+    uint16_t ack_len;
+    if (gip_device_generate_ack(&controller->gip_device, &ack_data, &ack_len))
+    {
+        m_adapter->send_ack_from_host(m_controller_idx + 1, controller->mac_addr, ack_data, ack_len);
+    }
 }

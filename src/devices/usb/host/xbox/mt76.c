@@ -4,6 +4,7 @@
 #include "host/usbh_pvt.h"
 #include <stdio.h>
 #include <string.h>
+#include <uzlib.h>
 
 static int mt76_usb_bulk_out_blocking(struct mt76_dev *dev, uint8_t *buffer, uint16_t len) {
     if (!usbh_edpt_claim(dev->dev_addr, MT_EP_OUT)) {
@@ -27,6 +28,168 @@ static int mt76_usb_bulk_out_blocking(struct mt76_dev *dev, uint8_t *buffer, uin
     }
 
     return 0;
+}
+
+static int mt76_send_firmware_part(struct mt76_dev *dev, uint32_t base_offset,
+                                   const uint8_t *data, uint32_t len);
+
+static uint8_t firmware_stream_output[MT_FW_CHUNK_SIZE];
+static uint8_t firmware_stream_chunk[MT_FW_CHUNK_SIZE];
+static uint8_t firmware_stream_dictionary[32768];
+
+struct mt76_firmware_stream {
+    struct mt76_fw_header header;
+    uint32_t header_len;
+    uint32_t output_len;
+    uint32_t section_offset;
+    uint32_t section_sent;
+    uint32_t chunk_len;
+    uint8_t section;
+    bool configured;
+};
+
+static struct uzlib_uncomp firmware_stream_decompressor;
+static struct mt76_firmware_stream firmware_stream;
+static uint32_t firmware_stream_expected_len;
+static bool firmware_stream_active;
+
+static int mt76_stream_output(struct mt76_dev *dev, struct mt76_firmware_stream *stream,
+                              const uint8_t *data, uint32_t len)
+{
+    while (len > 0)
+    {
+        if (stream->header_len < sizeof(stream->header))
+        {
+            uint32_t count = sizeof(stream->header) - stream->header_len;
+            if (count > len) count = len;
+            memcpy((uint8_t *)&stream->header + stream->header_len, data, count);
+            stream->header_len += count;
+            stream->output_len += count;
+            data += count;
+            len -= count;
+            if (stream->header_len < sizeof(stream->header)) continue;
+
+            if (stream->header.ilm_len == 0 || stream->header.dlm_len == 0) return -1;
+            mt76_write_register(dev, MT_USB_U3DMA_CFG | MT_VEND_TYPE_CFG,
+                                MT_USB_DMA_CFG_TX_BULK_EN | MT_USB_DMA_CFG_RX_BULK_EN);
+            mt76_write_register(dev, MT_FCE_PSE_CTRL, 0x01);
+            mt76_write_register(dev, MT_TX_CPU_FROM_FCE_BASE_PTR, 0x00400230);
+            mt76_write_register(dev, MT_TX_CPU_FROM_FCE_MAX_COUNT, 0x01);
+            mt76_write_register(dev, MT_TX_CPU_FROM_FCE_CPU_DESC_IDX, 0x01);
+            mt76_write_register(dev, MT_FCE_PDMA_GLOBAL_CONF, 0x44);
+            mt76_write_register(dev, MT_FCE_SKIP_FS, 0x03);
+            stream->configured = true;
+        }
+
+        if (stream->section > 1) return -1;
+        uint32_t section_len = stream->section == 0 ? stream->header.ilm_len : stream->header.dlm_len;
+        if (stream->section_offset > section_len) return -1;
+
+        uint32_t count = len;
+        uint32_t remaining = section_len - stream->section_offset;
+        if (count > remaining) count = remaining;
+        if (count > MT_FW_CHUNK_SIZE - stream->chunk_len) count = MT_FW_CHUNK_SIZE - stream->chunk_len;
+        if (count == 0)
+        {
+            if (stream->section_offset != section_len) return -1;
+            stream->section++;
+            stream->section_offset = 0;
+            stream->section_sent = 0;
+            continue;
+        }
+
+        memcpy(firmware_stream_chunk + stream->chunk_len, data, count);
+        stream->chunk_len += count;
+        stream->section_offset += count;
+        stream->output_len += count;
+        data += count;
+        len -= count;
+
+        if (stream->chunk_len == MT_FW_CHUNK_SIZE || stream->section_offset == section_len)
+        {
+            uint32_t base = stream->section == 0 ? MT_FW_ILM_OFFSET : MT_FW_DLM_OFFSET;
+            if (mt76_send_firmware_part(dev, base + stream->section_sent,
+                                        firmware_stream_chunk, stream->chunk_len) < 0) return -1;
+            stream->section_sent += stream->chunk_len;
+            stream->chunk_len = 0;
+        }
+
+        if (stream->section_offset == section_len)
+        {
+            stream->section++;
+            stream->section_offset = 0;
+            stream->section_sent = 0;
+        }
+    }
+    return 0;
+}
+
+int mt76_begin_firmware_compressed(struct mt76_dev *dev, const uint8_t *compressed_data,
+                                   uint32_t compressed_len, uint32_t decompressed_len)
+{
+    if (firmware_stream_active || !compressed_data || compressed_len < 4 ||
+        decompressed_len < sizeof(struct mt76_fw_header)) return -1;
+
+    uint32_t dma_addr = mt76_read_register(dev, MT_FCE_DMA_ADDR | MT_VEND_TYPE_CFG);
+    if (dma_addr)
+    {
+        uint32_t rf_patch = mt76_read_register(dev, MT_RF_PATCH | MT_VEND_TYPE_CFG);
+        mt76_write_register(dev, MT_RF_PATCH | MT_VEND_TYPE_CFG, rf_patch & ~BIT(19));
+
+        if (mt76_load_ivb(dev) < 0 ||
+            !mt76_poll(dev, MT_FCE_DMA_ADDR | MT_VEND_TYPE_CFG, 0x80000000, 0x80000000))
+        {
+            return -1;
+        }
+    }
+
+    memset(&firmware_stream, 0, sizeof(firmware_stream));
+    uzlib_uncompress_init(&firmware_stream_decompressor, firmware_stream_dictionary,
+                          sizeof(firmware_stream_dictionary));
+    firmware_stream_decompressor.source = compressed_data;
+    firmware_stream_decompressor.source_limit = compressed_data + compressed_len - 4;
+    if (uzlib_gzip_parse_header(&firmware_stream_decompressor) != TINF_OK) return -1;
+
+    firmware_stream_expected_len = decompressed_len;
+    firmware_stream_active = true;
+    return 1;
+}
+
+int mt76_step_firmware_compressed(struct mt76_dev *dev)
+{
+    if (!firmware_stream_active) return -1;
+
+    firmware_stream_decompressor.dest_start = firmware_stream_output;
+    firmware_stream_decompressor.dest = firmware_stream_output;
+    firmware_stream_decompressor.dest_limit = firmware_stream_output + sizeof(firmware_stream_output);
+    int result = uzlib_uncompress_chksum(&firmware_stream_decompressor);
+    tuh_task();
+    tud_task();
+
+    if (mt76_stream_output(dev, &firmware_stream, firmware_stream_output,
+                           firmware_stream_decompressor.dest - firmware_stream_output) < 0 ||
+        firmware_stream.output_len > firmware_stream_expected_len)
+    {
+        firmware_stream_active = false;
+        return -1;
+    }
+
+    if (result == TINF_OK) return 1;
+    firmware_stream_active = false;
+    if (result != TINF_DONE || !firmware_stream.configured ||
+        firmware_stream.output_len != firmware_stream_expected_len ||
+        firmware_stream.section != 2 || firmware_stream.chunk_len != 0) return -1;
+
+    mt76_write_register(dev, MT_FCE_DMA_ADDR | MT_VEND_TYPE_CFG, 0);
+    return 0;
+}
+
+int mt76_load_firmware_compressed(struct mt76_dev *dev, const uint8_t *compressed_data,
+                                  uint32_t compressed_len, uint32_t decompressed_len)
+{
+    int result = mt76_begin_firmware_compressed(dev, compressed_data, compressed_len, decompressed_len);
+    while (result == 1) result = mt76_step_firmware_compressed(dev);
+    return result;
 }
 
 bool mt76_init(struct mt76_dev *dev, uint8_t dev_addr) {
@@ -284,8 +447,8 @@ static int mt76_send_firmware_part(struct mt76_dev *dev, uint32_t base_offset,
                               MT_FW_CHUNK_SIZE : (len - offset);
         uint32_t chunk_len_aligned = (chunk_size + 3) & ~3;
         
-        printf("MT76: Loading chunk at offset %lu, size %lu (aligned %lu)\n", 
-               offset, chunk_size, chunk_len_aligned);
+         printf("MT76: Loading chunk at offset 0x%06lX, size %lu (aligned %lu)\n", 
+             (unsigned long)(base_offset + offset), chunk_size, chunk_len_aligned);
         
         // Write DMA registers BEFORE sending data (like xone)
         mt76_write_register(dev, MT_FCE_DMA_ADDR | MT_VEND_TYPE_CFG, 
@@ -295,104 +458,22 @@ static int mt76_send_firmware_part(struct mt76_dev *dev, uint32_t base_offset,
         
         // Send firmware chunk with MCU message header (cmd=0 for firmware data)
         if (mt76_send_command(dev, data + offset, chunk_size, 0) < 0) {
-            printf("MT76: Firmware chunk send failed at offset %lu\n", offset);
+                 printf("MT76: Firmware chunk send failed at offset 0x%06lX\n",
+                     (unsigned long)(base_offset + offset));
             return -1;
         }
         
         // Poll for DMA completion
         uint32_t expected = 0xc0000000 | (chunk_len_aligned << 16);
         if (!mt76_poll(dev, MT_FCE_DMA_LEN | MT_VEND_TYPE_CFG, 0xffffffff, expected)) {
-            printf("MT76: Firmware chunk completion timeout at offset %lu\n", offset);
+                 printf("MT76: Firmware chunk completion timeout at offset 0x%06lX\n",
+                     (unsigned long)(base_offset + offset));
             return -1;
         }
         
         offset += chunk_size;
     }
     
-    return 0;
-}
-
-int mt76_load_firmware(struct mt76_dev *dev, const uint8_t *fw_data, uint32_t fw_len) {
-    const struct mt76_fw_header *hdr;
-    uint32_t ilm_len, dlm_len;
-    
-    printf("MT76: Loading firmware (%lu bytes)\n", fw_len);
-    
-    // Check if firmware is already loaded (warm reboot case)
-    uint32_t dma_addr = mt76_read_register(dev, MT_FCE_DMA_ADDR | MT_VEND_TYPE_CFG);
-    if (dma_addr) {
-        printf("MT76: Firmware already loaded, resetting...\n");
-        
-        // Apply power-on RF patch
-        uint32_t val = mt76_read_register(dev, MT_RF_PATCH | MT_VEND_TYPE_CFG);
-        mt76_write_register(dev, MT_RF_PATCH | MT_VEND_TYPE_CFG, val & ~BIT(19));
-        
-        // Load IVB to reset
-        if (mt76_load_ivb(dev) < 0) {
-            printf("MT76: Reset IVB load failed\n");
-            return -1;
-        }
-        
-        // Wait for reset completion (different bit pattern for reset)
-        if (!mt76_poll(dev, MT_FCE_DMA_ADDR | MT_VEND_TYPE_CFG, 0x80000000, 0x80000000)) {
-            printf("MT76: Reset timeout\n");
-            return -1;
-        }
-        
-        printf("MT76: Firmware reset complete\n");
-        return 0;
-    }
-    
-    // Parse firmware header
-    if (fw_len < sizeof(struct mt76_fw_header)) {
-        printf("MT76: Firmware too small\n");
-        return -1;
-    }
-    
-    hdr = (const struct mt76_fw_header *)fw_data;
-    ilm_len = hdr->ilm_len;
-    dlm_len = hdr->dlm_len;
-    
-    if (fw_len != sizeof(*hdr) + ilm_len + dlm_len) {
-        printf("MT76: Firmware size mismatch (expected %lu, got %lu)\n",
-               (uint32_t)(sizeof(*hdr) + ilm_len + dlm_len), fw_len);
-        return -1;
-    }
-    
-    printf("MT76: Firmware build: %.16s\n", hdr->build_time);
-    printf("MT76: ILM length: %lu bytes\n", ilm_len);
-    printf("MT76: DLM length: %lu bytes\n", dlm_len);
-    
-    printf("MT76: Configuring DMA...\n");
-    mt76_write_register(dev, MT_USB_U3DMA_CFG | MT_VEND_TYPE_CFG,
-                       MT_USB_DMA_CFG_TX_BULK_EN | MT_USB_DMA_CFG_RX_BULK_EN);
-    mt76_write_register(dev, MT_FCE_PSE_CTRL, 0x01);
-    mt76_write_register(dev, MT_TX_CPU_FROM_FCE_BASE_PTR, 0x00400230);
-    mt76_write_register(dev, MT_TX_CPU_FROM_FCE_MAX_COUNT, 0x01);
-    mt76_write_register(dev, MT_TX_CPU_FROM_FCE_CPU_DESC_IDX, 0x01);
-    mt76_write_register(dev, MT_FCE_PDMA_GLOBAL_CONF, 0x44);
-    mt76_write_register(dev, MT_FCE_SKIP_FS, 0x03);
-    
-    // Send ILM (Instruction Local Memory)
-    printf("MT76: Sending ILM...\n");
-    if (mt76_send_firmware_part(dev, MT_FW_ILM_OFFSET, 
-                                 fw_data + sizeof(*hdr), ilm_len) < 0) {
-        printf("MT76: ILM send failed\n");
-        return -1;
-    }
-    
-    // Send DLM (Data Local Memory)
-    printf("MT76: Sending DLM...\n");
-    if (mt76_send_firmware_part(dev, MT_FW_DLM_OFFSET,
-                                 fw_data + sizeof(*hdr) + ilm_len, dlm_len) < 0) {
-        printf("MT76: DLM send failed\n");
-        return -1;
-    }
-    
-    printf("MT76: Firmware data sent, finalizing...\n");
-    mt76_write_register(dev, MT_FCE_DMA_ADDR | MT_VEND_TYPE_CFG, 0);
-    
-    printf("MT76: Firmware loaded successfully\n");
     return 0;
 }
 

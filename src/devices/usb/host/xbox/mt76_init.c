@@ -404,7 +404,7 @@ int mt76_send_pair_response(struct mt76_dev *dev, const uint8_t *addr) {
     
     // Pairing response data (from xone)
     frame[offset++] = XONE_MT_WLAN_RESERVED & 0xFF;
-    frame[offset++] = 0x03;  // XONE_MT_CLIENT_PAIR_RESP
+    frame[offset++] = XONE_MT_CLIENT_PAIR_RESP;
     
     // Pairing response data
     uint8_t pair_data[] = { 0x00, 0x45, 0x55, 0x01, 0x0f, 0x8f, 0xff, 0x87, 0x1f };
@@ -468,7 +468,7 @@ int mt76_send_client_command(struct mt76_dev *dev, uint8_t wcid, const uint8_t *
     // TXWI header
     struct mt76_txwi txwi = {0};
     txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, 4);
-    txwi.rate = MT_PHY_TYPE_OFDM;
+    txwi.rate = FIELD_PREP(MT_RXWI_RATE_PHY, MT_PHY_TYPE_OFDM);
     txwi.ack_ctl = MT_TXWI_ACK_CTL_REQ;
     txwi.wcid = wcid - 1;
     txwi.len_ctl = sizeof(struct ieee80211_hdr) + 2 + len;

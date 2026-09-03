@@ -15,7 +15,6 @@ extern "C"
 #include "devices/usb/host/xbox/mt76.h"
 #include "devices/usb/host/xbox/xbox_adapter.h"
 #include "devices/usb/host/xbox/wireless.h"
-#include "devices/usb/host/xbox/firmware_decompress.h"
 #include "firmware_data.h"
 #include "gip_button_mapping.h"
 #include "gip_packet_handler.h"
@@ -27,7 +26,8 @@ extern "C"
 namespace
 {
 constexpr uint16_t XBOX_WIRELESS_ADAPTER_VID = 0x045E;
-constexpr uint16_t XBOX_WIRELESS_ADAPTER_PID = 0x02E6;
+constexpr uint16_t XBOX_WIRELESS_ADAPTER_PID_02E6 = 0x02E6;
+constexpr uint16_t XBOX_WIRELESS_ADAPTER_PID_02FE = 0x02FE;
 }
 
 static XboxWirelessHost *wireless_host(struct mt76_dev *dev)
@@ -94,9 +94,6 @@ extern "C" void xbox_adapter_process_gip_data(struct mt76_dev *dev, uint8_t wcid
         return;
     }
 
-    printf("xbox_adapter_process_gip_data: wcid=%d, controller_idx=%d, len=%d, cmd=0x%02X\n",
-           wcid, controller_idx, len, data[0]);
-
     auto controller = host->get_controller_interface(controller_idx);
     if (controller)
     {
@@ -109,18 +106,18 @@ extern "C" void xbox_adapter_process_gip_data(struct mt76_dev *dev, uint8_t wcid
 }
 
 XboxWirelessHost::XboxWirelessHost(uint8_t dev_addr, uint8_t interface, uint16_t id)
-    : UsbHostInterface(dev_addr, interface, id), m_adapter_initialized(false), m_firmware_loaded(false), m_radio_initialized(false), m_pairing_initialized(false), m_last_update_time(0), m_init_start_time(0)
+    : UsbHostInterface(dev_addr, interface, id), m_adapter_initialized(false), m_firmware_loaded(false), m_firmware_loading(false), m_radio_initialized(false), m_pairing_initialized(false), m_last_update_time(0), m_init_start_time(0)
 {
     m_delayed_init = true;
     m_controller_interfaces.fill(nullptr);
-    m_report_queue = gip_report_queue_create();
+    m_gip_queue_head = 0;
+    m_gip_queue_count = 0;
 
     printf("XboxWirelessHost: Created for dev_addr=%d, interface=%d\r\n", dev_addr, interface);
 }
 
 XboxWirelessHost::~XboxWirelessHost()
 {
-    gip_report_queue_destroy(m_report_queue);
     mt76_deinit(&m_mt76_dev);
 
     printf("XboxWirelessHost: Destroyed\r\n");
@@ -134,15 +131,17 @@ std::shared_ptr<UsbHostInterface> XboxWirelessHost::open(std::shared_ptr<UsbHost
 
     uint8_t dev_addr = list->dev_addr();
     uint16_t vid;
-    uint16_t pid;
-    tuh_vid_pid_get(dev_addr, &vid, &pid);
-    TU_VERIFY(vid == XBOX_WIRELESS_ADAPTER_VID && pid == XBOX_WIRELESS_ADAPTER_PID, nullptr);
+        uint16_t pid;
+        TU_VERIFY(tuh_vid_pid_get(dev_addr, &vid, &pid), nullptr);
+        TU_VERIFY(vid == XBOX_WIRELESS_ADAPTER_VID &&
+                  (pid == XBOX_WIRELESS_ADAPTER_PID_02E6 || pid == XBOX_WIRELESS_ADAPTER_PID_02FE),
+                  nullptr);
 
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
 
     auto intf = std::make_shared<XboxWirelessHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);
     intf->set_subtype(SubType_Gamepad);
-
+    intf->m_adapter_pid = pid;
     uint8_t endpoints = desc_itf->bNumEndpoints;
     printf("XboxWirelessHost: Parsing %d endpoints\r\n", endpoints);
 
@@ -279,23 +278,6 @@ void XboxWirelessHost::remove_controller_interface(uint8_t controller_idx)
 
 bool XboxWirelessHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
-    printf("XboxWirelessHost: RX endpoint 0x%02X, result=%d, bytes=%lu\r\n",
-           ep_addr, result, xferred_bytes);
-
-    if ((ep_addr == MT_EP_IN_CMD || ep_addr == MT_EP_IN_WLAN) &&
-        result == XFER_RESULT_SUCCESS && xferred_bytes >= 8)
-    {
-        printf("XboxWirelessHost: RX header %02X %02X %02X %02X %02X %02X %02X %02X\r\n",
-               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[0] : m_data_buf[0],
-               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[1] : m_data_buf[1],
-               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[2] : m_data_buf[2],
-               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[3] : m_data_buf[3],
-               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[4] : m_data_buf[4],
-               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[5] : m_data_buf[5],
-               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[6] : m_data_buf[6],
-               ep_addr == MT_EP_IN_CMD ? m_cmd_buf[7] : m_data_buf[7]);
-    }
-
     if (ep_addr == MT_EP_IN_CMD && result != XFER_RESULT_FAILED)
     {
         if (xferred_bytes > 0)
@@ -324,9 +306,37 @@ bool XboxWirelessHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t x
     return true;
 }
 
-void XboxWirelessHost::send_report_from_host(uint8_t *packet, uint16_t len)
+bool XboxWirelessHost::queue_gip_packet(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *packet, uint16_t len, bool priority)
 {
-    gip_report_queue_push(m_report_queue, packet, len);
+    if (!packet || !mac_addr || len == 0 || len > GIP_REPORT_QUEUE_MAX_SIZE ||
+        m_gip_queue_count >= WIRELESS_GIP_QUEUE_CAPACITY)
+    {
+        return false;
+    }
+
+    if (priority)
+    {
+        m_gip_queue_head = (m_gip_queue_head + WIRELESS_GIP_QUEUE_CAPACITY - 1) % WIRELESS_GIP_QUEUE_CAPACITY;
+    }
+    uint8_t index = priority ? m_gip_queue_head :
+        (m_gip_queue_head + m_gip_queue_count) % WIRELESS_GIP_QUEUE_CAPACITY;
+    auto &item = m_gip_queue[index];
+    memcpy(item.packet, packet, len);
+    memcpy(item.mac_addr, mac_addr, MT76_MAC_ADDR_LEN);
+    item.len = len;
+    item.wcid = wcid;
+    m_gip_queue_count++;
+    return true;
+}
+
+void XboxWirelessHost::send_report_from_host(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *packet, uint16_t len)
+{
+    queue_gip_packet(wcid, mac_addr, packet, len, false);
+}
+
+void XboxWirelessHost::send_ack_from_host(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *packet, uint16_t len)
+{
+    queue_gip_packet(wcid, mac_addr, packet, len, true);
 }
 
 void XboxWirelessHost::update(bool full_poll, bool send_events)
@@ -344,45 +354,56 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
     {
         printf("XboxWirelessHost: Loading firmware\r\n");
 
-        const uint8_t *firmware_data = mt76_firmware_02e6;
-        uint32_t firmware_len = mt76_firmware_02e6_len;
-        uint8_t *firmware_decompressed = NULL;
+        const uint8_t *firmware_data;
+        uint32_t firmware_len;
+        uint32_t firmware_compressed_len;
 
-#if mt76_firmware_02e6_is_compressed
-        printf("Decompressing firmware (%u bytes compressed -> %u bytes)\r\n",
-               mt76_firmware_02e6_compressed_len, mt76_firmware_02e6_len);
-        firmware_decompressed = decompress_firmware(firmware_data,
-                                                    mt76_firmware_02e6_compressed_len,
-                                                    mt76_firmware_02e6_len);
-        if (firmware_decompressed)
+        if (m_adapter_pid == XBOX_WIRELESS_ADAPTER_PID_02FE)
         {
-            firmware_data = firmware_decompressed;
+            firmware_data = mt76_firmware_02fe;
+            firmware_len = mt76_firmware_02fe_len;
+            firmware_compressed_len = mt76_firmware_02fe_compressed_len;
         }
         else
         {
+            firmware_data = mt76_firmware_02e6;
+            firmware_len = mt76_firmware_02e6_len;
+            firmware_compressed_len = mt76_firmware_02e6_compressed_len;
+        }
+
+        if (!m_firmware_loading)
+        {
+            printf("Decompressing firmware (%u bytes compressed -> %u bytes)\r\n",
+                   firmware_compressed_len, firmware_len);
+            if (mt76_begin_firmware_compressed(&m_mt76_dev, firmware_data,
+                                               firmware_compressed_len, firmware_len) < 0)
+            {
+                printf("XboxWirelessHost: Firmware decompression failed\r\n");
+                return;
+            }
+            m_firmware_loading = true;
+        }
+
+        int stream_result = mt76_step_firmware_compressed(&m_mt76_dev);
+        if (stream_result > 0)
+        {
+            m_last_update_time = now;
+            return;
+        }
+        if (stream_result < 0)
+        {
+            m_firmware_loading = false;
             printf("XboxWirelessHost: Firmware decompression failed\r\n");
             return;
         }
-#endif
 
-        if (mt76_load_firmware(&m_mt76_dev, firmware_data, firmware_len) == 0)
-        {
-            printf("XboxWirelessHost: Firmware loaded successfully\r\n");
-            m_firmware_loaded = true;
+        printf("XboxWirelessHost: Firmware loaded successfully\r\n");
+        m_firmware_loading = false;
+        m_firmware_loaded = true;
 
-            if (mt76_load_ivb(&m_mt76_dev) == 0)
-            {
-                printf("XboxWirelessHost: IVB loaded successfully\r\n");
-            }
-        }
-        else
+        if (mt76_load_ivb(&m_mt76_dev) == 0)
         {
-            printf("XboxWirelessHost: Firmware load failed\r\n");
-        }
-
-        if (firmware_decompressed)
-        {
-            free(firmware_decompressed);
+            printf("XboxWirelessHost: IVB loaded successfully\r\n");
         }
     }
 
@@ -421,12 +442,13 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
     {
         wireless_task(&m_mt76_dev);
     }
-    if (!gip_report_queue_empty(m_report_queue))
+    if (m_gip_queue_count > 0)
     {
-        const gip_report_queue_item_t *item = gip_report_queue_front(m_report_queue);
-        if (item && mt76_usb_bulk_out(&m_mt76_dev, item->report, item->len) == 0)
+        auto &item = m_gip_queue[m_gip_queue_head];
+        if (mt76_send_gip_data(&m_mt76_dev, item.wcid, item.mac_addr, item.packet, item.len) == 0)
         {
-            gip_report_queue_pop(m_report_queue);
+            m_gip_queue_head = (m_gip_queue_head + 1) % WIRELESS_GIP_QUEUE_CAPACITY;
+            m_gip_queue_count--;
         }
     }
 

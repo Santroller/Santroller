@@ -58,6 +58,7 @@ struct mt76_dev {
     volatile uint8_t event_queue_tail;
     uint32_t pairing_start_time;
     bool pairing_active;
+    bool pairing_response_sent;
     volatile int8_t pending_pairing;
 };
 
@@ -68,7 +69,11 @@ uint32_t mt76_read_register(struct mt76_dev *dev, uint32_t addr);
 void mt76_write_register(struct mt76_dev *dev, uint32_t addr, uint32_t val);
 bool mt76_poll(struct mt76_dev *dev, uint32_t offset, uint32_t mask, uint32_t val);
 
-int mt76_load_firmware(struct mt76_dev *dev, const uint8_t *fw_data, uint32_t fw_len);
+int mt76_begin_firmware_compressed(struct mt76_dev *dev, const uint8_t *compressed_data,
+                                   uint32_t compressed_len, uint32_t decompressed_len);
+int mt76_step_firmware_compressed(struct mt76_dev *dev);
+int mt76_load_firmware_compressed(struct mt76_dev *dev, const uint8_t *compressed_data,
+                                  uint32_t compressed_len, uint32_t decompressed_len);
 int mt76_load_ivb(struct mt76_dev *dev);
 
 int mt76_send_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, enum mt76_mcu_cmd cmd);

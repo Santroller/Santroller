@@ -64,8 +64,12 @@ static void wireless_request_pairing(struct mt76_dev *dev, bool enable)
 
 static void wireless_apply_pairing(struct mt76_dev *dev, bool enable)
 {
+    bool was_pairing_active = dev->pairing_active;
+    dev->pairing_active = enable;
+
     if (mt76_set_pairing(dev, enable) < 0)
     {
+        dev->pairing_active = was_pairing_active;
         printf("Failed to %s pairing mode\n", enable ? "enable" : "disable");
         return;
     }
@@ -82,10 +86,10 @@ static void wireless_apply_pairing(struct mt76_dev *dev, bool enable)
 
     mt76_set_led_mode(dev,
                       enable ? MT_LED_BLINK : (has_clients ? MT_LED_ON : MT_LED_OFF));
-    dev->pairing_active = enable;
     if (enable)
     {
         dev->pairing_start_time = to_ms_since_boot(get_absolute_time());
+        dev->pairing_response_sent = false;
     }
 }
 
@@ -142,19 +146,19 @@ static void wireless_process_message(struct mt76_dev *dev, const uint8_t *data, 
         return;
     }
 
-    printf("Wireless RX: port=%d, evt_type=0x%02X, len=%d\n", port, evt_type, len);
-
     if (port == MT_CPU_RX_PORT)
     {
         switch (evt_type)
         {
         case XONE_MT_EVT_BUTTON:
             printf("Pairing button pressed on adapter!\n");
-            wireless_request_pairing(dev, true);
+            if (!dev->pairing_active && dev->pending_pairing != 1)
+            {
+                wireless_request_pairing(dev, true);
+            }
             break;
 
         case XONE_MT_EVT_PACKET_RX:
-            printf("Wireless packet received\n");
             if (len > MT_CMD_HDR_LEN * 2)
             {
                 wireless_process_packet(dev, data + MT_CMD_HDR_LEN, len - MT_CMD_HDR_LEN * 2);
@@ -173,7 +177,6 @@ static void wireless_process_message(struct mt76_dev *dev, const uint8_t *data, 
             break;
 
         default:
-            printf("Unknown event type: 0x%02X\n", evt_type);
             break;
         }
     }
@@ -234,9 +237,6 @@ static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, ui
     uint16_t ftype = frame_control & IEEE80211_FCTL_FTYPE;
     uint16_t stype = frame_control & IEEE80211_FCTL_STYPE;
 
-    printf("802.11 frame: type=0x%04X, ftype=0x%04X, stype=0x%04X\n",
-           frame_control, ftype, stype);
-
     uint8_t wcid = FIELD_GET(MT_RXWI_CTL_WCID, ctl);
     if (ftype == IEEE80211_FTYPE_DATA && stype == IEEE80211_STYPE_QOS_DATA)
     {
@@ -263,9 +263,6 @@ static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, ui
     {
         if (stype == IEEE80211_STYPE_ASSOC_REQ)
         {
-            printf("Association request from: %02X:%02X:%02X:%02X:%02X:%02X\n",
-                   hdr->addr2[0], hdr->addr2[1], hdr->addr2[2],
-                   hdr->addr2[3], hdr->addr2[4], hdr->addr2[5]);
             wireless_queue_association(dev, hdr->addr2);
         }
         else if (stype == IEEE80211_STYPE_DISASSOC)
@@ -290,12 +287,6 @@ static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, ui
         {
             if (wcid > 0 && wcid <= MT76_MAX_CLIENTS)
             {
-                printf("QoS data from WCID %d, len=%d, payload_len=%d\n", wcid, len, payload_len);
-                if (payload_len >= 4) {
-                    printf("  First 4 bytes: 0x%02X 0x%02X 0x%02X 0x%02X\n",
-                           payload[0], payload[1], payload[2], payload[3]);
-                }
-
                 // Skip 802.11 QoS header (26 bytes: 24 base + 2 QoS control)
                 if (payload_len >= 2)
                 {
@@ -370,11 +361,20 @@ static void wireless_handle_client_command(struct mt76_dev *dev, const uint8_t *
     switch (cmd)
     {
     case XONE_MT_CLIENT_PAIR_REQ:
+        if (dev->pairing_response_sent)
+        {
+            break;
+        }
+
         printf("Pairing request from %02X:%02X:%02X:%02X:%02X:%02X\n",
                addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
 
-        mt76_send_pair_response(dev, addr);
+        if (mt76_send_pair_response(dev, addr) < 0)
+        {
+            break;
+        }
 
+        dev->pairing_response_sent = true;
         wireless_request_pairing(dev, false);
 
         printf("Pairing response sent, pairing mode disabled\n");

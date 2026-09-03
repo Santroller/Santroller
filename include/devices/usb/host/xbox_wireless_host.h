@@ -34,9 +34,20 @@ public:
     
     int send_gip_to_controller(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *data, uint16_t len);
     
-    void send_report_from_host(uint8_t* packet, uint16_t len);
+    void send_report_from_host(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *packet, uint16_t len);
+    void send_ack_from_host(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *packet, uint16_t len);
 private:
+    static constexpr uint8_t WIRELESS_GIP_QUEUE_CAPACITY = 8;
+
+    struct wireless_gip_queue_item {
+        uint8_t packet[GIP_REPORT_QUEUE_MAX_SIZE];
+        uint16_t len;
+        uint8_t wcid;
+        uint8_t mac_addr[MT76_MAC_ADDR_LEN];
+    };
+
     void initialize_adapter();
+    bool queue_gip_packet(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *packet, uint16_t len, bool priority);
     
     CFG_TUSB_MEM_ALIGN uint8_t m_cmd_buf[0x0654];
     // RX bulk aggregation is disabled, so one message per transfer bounds this at a single MPDU.
@@ -46,13 +57,18 @@ private:
     
     std::array<std::shared_ptr<XboxWirelessController>, XBOX_MAX_CONTROLLERS> m_controller_interfaces;
     
+    uint16_t m_adapter_pid = 0;
+    
     bool m_adapter_initialized;
     bool m_firmware_loaded;
+    bool m_firmware_loading;
     bool m_radio_initialized;
     bool m_pairing_initialized;
     
     uint32_t m_last_update_time;
     uint32_t m_init_start_time;
     
-    gip_report_queue_t* m_report_queue;
+    std::array<wireless_gip_queue_item, WIRELESS_GIP_QUEUE_CAPACITY> m_gip_queue;
+    uint8_t m_gip_queue_head;
+    uint8_t m_gip_queue_count;
 };

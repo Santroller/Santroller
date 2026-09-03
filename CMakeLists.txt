@@ -325,7 +325,6 @@ if(ENABLE_XBOX_WIRELESS)
         src/devices/usb/host/xbox/mt76_init.c
         src/devices/usb/host/xbox/wireless.c
         src/devices/usb/host/xbox/gip_crypto.c
-        src/devices/usb/host/xbox/firmware_decompress.c
         src/devices/usb/host/xbox_wireless_host.cpp
         src/devices/usb/host/xbox_wireless_controller.cpp
         ${SANTROLLER_GENERATED_DIR}/firmware_data.c

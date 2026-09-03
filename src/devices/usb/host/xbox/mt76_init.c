@@ -330,21 +330,30 @@ static int mt76_send_ms_command(struct mt76_dev *dev, uint8_t cmd, const void *d
     return mt76_send_command(dev, buffer, sizeof(uint32_t) + len, MT_CMD_INIT_GAIN_OP);
 }
 
+static int mt76_send_wlan_frame(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
+{
+    uint8_t frame[512];
+    struct mt76_txwi txwi = {0};
+
+    if (sizeof(txwi) + len > sizeof(frame)) {
+        return -1;
+    }
+
+    txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, IEEE80211_HT_MPDU_DENSITY_4);
+    txwi.rate = FIELD_PREP(MT_RXWI_RATE_PHY, MT_PHY_TYPE_OFDM);
+    txwi.ack_ctl = MT_TXWI_ACK_CTL_REQ;
+    txwi.wcid = 0xff;
+    txwi.len_ctl = len;
+
+    memcpy(frame, &txwi, sizeof(txwi));
+    memcpy(frame + sizeof(txwi), data, len);
+    return mt76_send_wlan(dev, frame, sizeof(txwi) + len);
+}
+
 // Send association response frame
 int mt76_send_assoc_response(struct mt76_dev *dev, uint8_t wcid, const uint8_t *addr) {
     static uint8_t frame[256];
     int offset = 0;
-    
-    // TXWI header (32 bytes)
-    struct mt76_txwi txwi = {0};
-    txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, 4);
-    txwi.rate = FIELD_PREP(MT_RXWI_RATE_PHY, MT_PHY_TYPE_OFDM);
-    txwi.ack_ctl = MT_TXWI_ACK_CTL_REQ;
-    txwi.wcid = 0xff;     // Broadcast WCID
-    txwi.len_ctl = sizeof(struct ieee80211_hdr) + 6 + 8;
-    
-    memcpy(&frame[offset], &txwi, sizeof(txwi));
-    offset += sizeof(txwi);
     
     // 802.11 management frame header (24 bytes)
     uint16_t frame_control = IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_ASSOC_RESP;
@@ -373,7 +382,7 @@ int mt76_send_assoc_response(struct mt76_dev *dev, uint8_t wcid, const uint8_t *
     // 8 bytes padding
     memset(&frame[offset], 0, 8); offset += 8;
     
-    return mt76_send_wlan(dev, frame, offset);
+    return mt76_send_wlan_frame(dev, frame, offset);
 }
 
 // Send pairing response to controller
@@ -383,17 +392,6 @@ int mt76_send_pair_response(struct mt76_dev *dev, const uint8_t *addr) {
     // Build 802.11 management frame with pairing response
     static uint8_t frame[256];
     int offset = 0;
-    
-    // TXWI header
-    struct mt76_txwi txwi = {0};
-    txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, 4);
-    txwi.rate = FIELD_PREP(MT_RXWI_RATE_PHY, MT_PHY_TYPE_OFDM);
-    txwi.ack_ctl = MT_TXWI_ACK_CTL_REQ;
-    txwi.wcid = 0xff;
-    txwi.len_ctl = sizeof(struct ieee80211_hdr) + 2 + 9;
-    
-    memcpy(&frame[offset], &txwi, sizeof(txwi));
-    offset += sizeof(txwi);
     
     // 802.11 header
     uint16_t frame_control = IEEE80211_FTYPE_MGMT | XONE_MT_WLAN_RESERVED;
@@ -413,16 +411,8 @@ int mt76_send_pair_response(struct mt76_dev *dev, const uint8_t *addr) {
     memcpy(&frame[offset], pair_data, sizeof(pair_data));
     offset += sizeof(pair_data);
 
-#if MT76_PAIR_TRACE
-    printf("MT76: Pair response frame (%d bytes):", offset);
-    for (int i = 0; i < offset; i++) {
-        printf(" %02X", frame[i]);
-    }
-    printf("\n");
-#endif
-    
     // Send via USB
-    return mt76_send_wlan(dev, frame, offset);
+    return mt76_send_wlan_frame(dev, frame, offset);
 }
 
 // Set encryption key for client
@@ -477,7 +467,7 @@ int mt76_send_client_command(struct mt76_dev *dev, uint8_t wcid, const uint8_t *
     
     // TXWI header
     struct mt76_txwi txwi = {0};
-    txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, 4);
+    txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, IEEE80211_HT_MPDU_DENSITY_4);
     txwi.rate = FIELD_PREP(MT_RXWI_RATE_PHY, MT_PHY_TYPE_OFDM);
     txwi.ack_ctl = MT_TXWI_ACK_CTL_REQ;
     txwi.wcid = wcid - 1;
@@ -522,7 +512,7 @@ int mt76_send_gip_data(struct mt76_dev *dev, uint8_t wcid, const uint8_t *addr,
 
     // TXWI header
     struct mt76_txwi txwi = {0};
-    txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, 4);
+    txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, IEEE80211_HT_MPDU_DENSITY_4);
     txwi.rate = FIELD_PREP(MT_RXWI_RATE_PHY, MT_PHY_TYPE_OFDM);
     txwi.ack_ctl = MT_TXWI_ACK_CTL_REQ;
     txwi.wcid = wcid - 1;

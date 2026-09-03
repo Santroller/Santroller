@@ -123,7 +123,7 @@ void DeviceManager::remove_device(Device *device)
 
     for (auto it = m_auth_devices.begin(); it != m_auth_devices.end(); )
     {
-        if (it->second.get() == device)
+        if (reinterpret_cast<void*>(it->second.get()) == reinterpret_cast<void*>(device))
         {
             it = m_auth_devices.erase(it);
         }

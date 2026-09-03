@@ -362,6 +362,18 @@ void usbh_close(uint8_t dev_addr)
     if (host_devices[dev_addr])
     {
         host_devices[dev_addr]->disconnect();
+        for (auto &device : host_devices[dev_addr]->host_devices_by_itf)
+        {
+            DeviceManager::instance().remove_device(device.get());
+        }
+        for (auto &device : host_devices[dev_addr]->host_devices_by_endpoint_in)
+        {
+            DeviceManager::instance().remove_device(device.get());
+        }
+        for (auto &device : host_devices[dev_addr]->host_devices_by_endpoint_out)
+        {
+            DeviceManager::instance().remove_device(device.get());
+        }
         usb_host_remove_interfaces_by_address(dev_addr);
         m_devices_changed = millis() + 500;
         host_devices[dev_addr] = nullptr;

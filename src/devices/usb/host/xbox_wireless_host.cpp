@@ -118,6 +118,14 @@ XboxWirelessHost::XboxWirelessHost(uint8_t dev_addr, uint8_t interface, uint16_t
 
 XboxWirelessHost::~XboxWirelessHost()
 {
+    for (auto &controller : m_controller_interfaces)
+    {
+        if (controller)
+        {
+            usb_host_remove_assignable_interface(controller.get());
+            DeviceManager::instance().remove_device(controller.get());
+        }
+    }
     mt76_deinit(&m_mt76_dev);
 
     printf("XboxWirelessHost: Destroyed\r\n");
@@ -270,6 +278,7 @@ void XboxWirelessHost::remove_controller_interface(uint8_t controller_idx)
     printf("XboxWirelessHost: Removing virtual interface for controller %d\r\n", controller_idx);
 
     usb_host_remove_assignable_interface(controller_intf.get());
+    DeviceManager::instance().remove_device(controller_intf.get());
 
     m_controller_interfaces[controller_idx].reset();
 

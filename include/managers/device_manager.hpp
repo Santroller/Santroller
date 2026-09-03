@@ -84,6 +84,7 @@ public:
     std::shared_ptr<UsbHostInterface> get_auth_device(ConsoleMode mode);
     void set_auth_device(ConsoleMode mode, std::shared_ptr<UsbHostInterface> device);
     void clear_auth_devices();
+    void remove_device(Device *device);
     
     void update(bool profile_changed, bool send_events);
     void update_all_devices(bool profile_changed, bool send_events);

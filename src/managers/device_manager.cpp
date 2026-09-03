@@ -105,6 +105,35 @@ void DeviceManager::clear_auth_devices()
     m_auth_devices.clear();
 }
 
+void DeviceManager::remove_device(Device *device)
+{
+    if (!device)
+    {
+        return;
+    }
+
+    auto is_device = [device](const std::shared_ptr<Device> &candidate) {
+        return candidate.get() == device;
+    };
+
+    m_active_devices.erase(std::remove_if(m_active_devices.begin(), m_active_devices.end(), is_device),
+                           m_active_devices.end());
+    m_assignable_devices.erase(std::remove_if(m_assignable_devices.begin(), m_assignable_devices.end(), is_device),
+                               m_assignable_devices.end());
+
+    for (auto it = m_auth_devices.begin(); it != m_auth_devices.end(); )
+    {
+        if (it->second.get() == device)
+        {
+            it = m_auth_devices.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
 void DeviceManager::clear_all()
 {
     m_active_devices.clear();

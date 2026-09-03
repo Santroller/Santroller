@@ -6,8 +6,8 @@
 class MultiplexerInput: public Input {
    public:
     MultiplexerInput(proto_MultiplexerInput input, std::shared_ptr<MultiplexerDevice> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
    private:
     void setup();
     uint8_t m_channel;

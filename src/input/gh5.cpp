@@ -6,7 +6,7 @@
 Gh5ButtonInput::Gh5ButtonInput(proto_Gh5NeckButtonInput input, std::shared_ptr<GH5NeckDevice> device) : m_input(input), m_device(device)
 {
 }
-bool Gh5ButtonInput::tickDigital()
+bool Gh5ButtonInput::tick_digital()
 {
     switch (m_input.button)
     {
@@ -33,9 +33,9 @@ bool Gh5ButtonInput::tickDigital()
     }
     return false;
 }
-uint16_t Gh5ButtonInput::tickAnalog()
+uint16_t Gh5ButtonInput::tick_analog()
 {
-    return tickDigital() ? 32767 : 0;
+    return tick_digital() ? 32767 : 0;
 }
 void Gh5ButtonInput::setup()
 {

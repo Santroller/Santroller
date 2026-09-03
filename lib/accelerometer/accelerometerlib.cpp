@@ -12,7 +12,7 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     Accelerometer *inst = (Accelerometer *)user_data;
     if (inst)
     {
-        inst->processData(0, false, false, false, false);
+        inst->process_data(0, false, false, false, false);
     }
     return 0;
 }
@@ -38,7 +38,7 @@ void Accelerometer::begin()
     seen_response_mpu6050_1 = true;
     seen_response_mpu6050_2 = true;
     status = ACCEL_INIT;
-    processData(0, false, false, false, false);
+    process_data(0, false, false, false, false);
 }
 void Accelerometer::end()
 {
@@ -51,9 +51,9 @@ void Accelerometer::end()
     interface.dmaDeinit(LIS3DH_ADDRESS);
     interface.dmaDeinit(LIS3DH_ADDRESS_2);
 }
-void Accelerometer::processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
+void Accelerometer::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
-    // printf("processData %02x %d %d %d %d %d\r\n", addr, status, running, timeout, abort_detected, stop_detected);
+    // printf("process_data %02x %d %d %d %d %d\r\n", addr, status, running, timeout, abort_detected, stop_detected);
     // If we have started init, ignore i2c data from the other accelerometers
     if (status != ACCEL_INIT && addr && addr != address)
     {

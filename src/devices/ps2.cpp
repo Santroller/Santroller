@@ -12,7 +12,7 @@ PS2Device::PS2Device(const DeviceReloadState* state, proto_PSXDevice device, uin
 {
     if (state)
     {
-        m_lastValue = state->last_value;
+        m_last_value = state->last_value;
         m_lastControllerType = state->ps2_controller;
     }
 }
@@ -20,7 +20,7 @@ PS2Device::PS2Device(const DeviceReloadState* state, proto_PSXDevice device, uin
 void PS2Device::save_reload_state(DeviceReloadState& state) const
 {
     state.valid = true;
-    state.last_value = m_lastValue;
+    state.last_value = m_last_value;
     state.ps2_controller = m_lastControllerType;
 }
 void PS2Device::begin()
@@ -58,13 +58,13 @@ bool PS2Device::using_pin(uint8_t pin)
 {
     return pin == m_device.spi.mosi || pin == m_device.spi.miso || pin == m_device.spi.sck || pin == m_device.ackPin || pin == m_device.attPin;
 }
-uint16_t PS2Device::readAxis(proto_PS2AxisType type)
+uint16_t PS2Device::read_axis(proto_PS2AxisType type)
 {
-    return m_controller.readAxis(type);
+    return m_controller.read_axis(type);
 }
-bool PS2Device::readButton(proto_PS2ButtonType type)
+bool PS2Device::read_button(proto_PS2ButtonType type)
 {
-    return m_controller.readButton(type);
+    return m_controller.read_button(type);
 }
 bool PS2Device::is_ps2_device(PS2ControllerType type)
 {

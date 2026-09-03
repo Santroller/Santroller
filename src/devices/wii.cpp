@@ -10,7 +10,7 @@ WiiDevice::WiiDevice(const DeviceReloadState* state, proto_WiiDevice device, uin
     if (state)
     {
         m_lastExtType = state->wii_extension;
-        m_lastValue = state->last_value;
+        m_last_value = state->last_value;
     }
 }
 
@@ -18,7 +18,7 @@ void WiiDevice::save_reload_state(DeviceReloadState& state) const
 {
     MidiDevice::save_reload_state(state);
     state.wii_extension = m_lastExtType;
-    state.last_value = m_lastValue;
+    state.last_value = m_last_value;
 }
 
 WiiDevice::~WiiDevice() {}
@@ -56,13 +56,13 @@ void WiiDevice::update(bool full_poll, bool send_events)
     }
     MidiDevice::update(full_poll, send_events);
 }
-uint16_t WiiDevice::readAxis(proto_WiiAxisType type)
+uint16_t WiiDevice::read_axis(proto_WiiAxisType type)
 {
-    return m_extension.readAxis(type);
+    return m_extension.read_axis(type);
 }
-bool WiiDevice::readButton(proto_WiiButtonType type)
+bool WiiDevice::read_button(proto_WiiButtonType type)
 {
-    return m_extension.readButton(type);
+    return m_extension.read_button(type);
 }
 bool WiiDevice::is_wii_extension(WiiExtType type)
 {

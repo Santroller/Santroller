@@ -6,7 +6,7 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     GuitarHero5Neck *inst = (GuitarHero5Neck *)user_data;
     if (inst)
     {
-        inst->processData(0, false, false, false, false);
+        inst->process_data(0, false, false, false, false);
     }
     return 0;
 }
@@ -20,14 +20,14 @@ void GuitarHero5Neck::begin()
 {
     interface.dmaInit(GH5NECK_ADDR, this);
     status = GH5_NECK_CHECK_STATUS;
-    processData(0, false, false, false, false);
+    process_data(0, false, false, false, false);
 }
 void GuitarHero5Neck::end()
 {
     cancel_alarm(restart_alarm_id);
     interface.dmaDeinit(GH5NECK_ADDR);
 }
-void GuitarHero5Neck::processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
+void GuitarHero5Neck::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     cancel_alarm(restart_alarm_id);
     if (timeout || abort_detected)

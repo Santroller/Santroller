@@ -52,33 +52,33 @@ static const uint8_t SWITCH_INIT_REPORT[10] = {SwitchReportID::REPORT_CONFIGURAT
 typedef struct {
     uint8_t data[9];
 
-    void getMin(uint16_t& x, uint16_t& y) { packCalib(6, x, y); }
-    void getCenter(uint16_t& x, uint16_t& y) { packCalib(3, x, y); }
-    void getMax(uint16_t& x, uint16_t& y) { packCalib(0, x, y); }
+    void get_min(uint16_t& x, uint16_t& y) { pack_calibration(6, x, y); }
+    void get_center(uint16_t& x, uint16_t& y) { pack_calibration(3, x, y); }
+    void get_max(uint16_t& x, uint16_t& y) { pack_calibration(0, x, y); }
 
-    void getRealMin(uint16_t& x, uint16_t& y) {
+    void get_real_min(uint16_t& x, uint16_t& y) {
         uint16_t minX, minY;
         uint16_t cenX, cenY;
 
-        getMin(minX, minY);
-        getCenter(cenX, cenY);
+        get_min(minX, minY);
+        get_center(cenX, cenY);
 
         x = cenX - minX;
         y = cenY - minY;
     }
 
-    void getRealMax(uint16_t& x, uint16_t& y) {
+    void get_real_max(uint16_t& x, uint16_t& y) {
         uint16_t maxX, maxY;
         uint16_t cenX, cenY;
 
-        getMax(maxX, maxY);
-        getCenter(cenX, cenY);
+        get_max(maxX, maxY);
+        get_center(cenX, cenY);
 
         x = cenX + maxX;
         y = cenY + maxY;
     }
 
-    void packCalib(uint8_t offset, uint16_t& x, uint16_t& y) {
+    void pack_calibration(uint8_t offset, uint16_t& x, uint16_t& y) {
         x = static_cast<uint16_t>(data[offset]) | ((data[offset + 1] & 0x0F) << 8);
         y = static_cast<uint16_t>(data[offset + 2] << 4) | (data[offset + 1] >> 4);
     }
@@ -87,33 +87,33 @@ typedef struct {
 typedef struct {
     uint8_t data[9];
 
-    void getMin(uint16_t& x, uint16_t& y) { packCalib(3, x, y); }
-    void getCenter(uint16_t& x, uint16_t& y) { packCalib(0, x, y); }
-    void getMax(uint16_t& x, uint16_t& y) { packCalib(6, x, y); }
+    void get_min(uint16_t& x, uint16_t& y) { pack_calibration(3, x, y); }
+    void get_center(uint16_t& x, uint16_t& y) { pack_calibration(0, x, y); }
+    void get_max(uint16_t& x, uint16_t& y) { pack_calibration(6, x, y); }
 
-    void getRealMin(uint16_t& x, uint16_t& y) {
+    void get_real_min(uint16_t& x, uint16_t& y) {
         uint16_t minX, minY;
         uint16_t cenX, cenY;
 
-        getMin(minX, minY);
-        getCenter(cenX, cenY);
+        get_min(minX, minY);
+        get_center(cenX, cenY);
 
         x = cenX - minX;
         y = cenY - minY;
     }
 
-    void getRealMax(uint16_t& x, uint16_t& y) {
+    void get_real_max(uint16_t& x, uint16_t& y) {
         uint16_t maxX, maxY;
         uint16_t cenX, cenY;
 
-        getMax(maxX, maxY);
-        getCenter(cenX, cenY);
+        get_max(maxX, maxY);
+        get_center(cenX, cenY);
 
         x = cenX + maxX;
         y = cenY + maxY;
     }
 
-    void packCalib(uint8_t offset, uint16_t& x, uint16_t& y) {
+    void pack_calibration(uint8_t offset, uint16_t& x, uint16_t& y) {
         x = static_cast<uint16_t>(data[offset]) | ((data[offset + 1] & 0x0F) << 8);
         y = static_cast<uint16_t>(data[offset + 2] << 4) | (data[offset + 1] >> 4);
     }

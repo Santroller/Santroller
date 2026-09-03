@@ -9,8 +9,8 @@ class ToggleInput : public Input
 public:
     ToggleInput();
     void load(proto_ToggleInput config, std::shared_ptr<ToggleDevice> device, std::unique_ptr<Input> input);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
     void setup();
 
 private:

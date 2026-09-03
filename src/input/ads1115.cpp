@@ -9,11 +9,11 @@ ADS1115Input::ADS1115Input(proto_ADS1115Input input, std::shared_ptr<ADS1115Devi
 void ADS1115Input::setup()
 {
 }
-bool ADS1115Input::tickDigital()
+bool ADS1115Input::tick_digital()
 {
     return m_device->ads1115.inputs[m_channel] > 0;
 }
-uint16_t ADS1115Input::tickAnalog()
+uint16_t ADS1115Input::tick_analog()
 {
     return m_device->ads1115.inputs[m_channel];
 }

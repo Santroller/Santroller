@@ -185,13 +185,13 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)epin_buf;
     for (const auto &profile : profiles)
     {
-        profile->drum_state.blueCymbal = 0;
-        profile->drum_state.bluePad = 0;
-        profile->drum_state.yellowCymbal = 0;
-        profile->drum_state.yellowPad = 0;
-        profile->drum_state.greenCymbal = 0;
-        profile->drum_state.greenPad = 0;
-        profile->drum_state.redPad = 0;
+        profile->drum_state.blue_cymbal = 0;
+        profile->drum_state.blue_pad = 0;
+        profile->drum_state.yellow_cymbal = 0;
+        profile->drum_state.yellow_pad = 0;
+        profile->drum_state.green_cymbal = 0;
+        profile->drum_state.green_pad = 0;
+        profile->drum_state.red_pad = 0;
         for (const auto &mapping : profile->mappings)
         {
             mapping->update(full_poll, send_events);

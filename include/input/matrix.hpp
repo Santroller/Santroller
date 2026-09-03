@@ -7,8 +7,8 @@ class MatrixInput : public Input
 {
 public:
     MatrixInput(proto_MatrixInput input, std::shared_ptr<MatrixDevice> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();

@@ -59,7 +59,7 @@ private:
     bool m_updating = false;
     bool m_raw = false;
     crkd_drum_t m_CrkdDrum;
-    uint32_t m_lastPoll;
+    uint32_t m_last_poll;
     uint32_t m_nextParam;
     bool m_error = false;
     uint32_t m_lastSend;

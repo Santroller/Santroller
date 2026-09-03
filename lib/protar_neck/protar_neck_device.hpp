@@ -33,14 +33,14 @@ class ProtarNeck
 public:
     ProtarNeck(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin);
     void tick();
-    uint16_t readAxis(ProGuitarNeckAxisType type);
-    bool readButton(ProGuitarNeckButtonType type);
+    uint16_t read_axis(ProGuitarNeckAxisType type);
+    bool read_button(ProGuitarNeckButtonType type);
     bool controller_valid() { return valid; }
 
 private:
-    bool autoShiftData();
-    void noAttention();
-    void signalAttention();
+    bool auto_shift_data();
+    void no_attention();
+    void signal_attention();
     SPIMasterInterface interface;
     uint8_t m_attPin;
     bool valid = false;

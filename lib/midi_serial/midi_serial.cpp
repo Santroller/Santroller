@@ -15,7 +15,7 @@ static void on_uart_rx_0()
     while (uart_is_readable(uart0))
     {
         uint8_t data = uart_getc(uart0);
-        uart0_midi_device->processMidiData(&data, 1);
+        uart0_midi_device->process_midi_data(&data, 1);
     }
 }
 
@@ -24,7 +24,7 @@ static void on_uart_rx_1()
     while (uart_is_readable(uart1))
     {
         uint8_t data = uart_getc(uart1);
-        uart1_midi_device->processMidiData(&data, 1);
+        uart1_midi_device->process_midi_data(&data, 1);
     }
 }
 

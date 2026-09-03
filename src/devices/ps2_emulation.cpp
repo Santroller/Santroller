@@ -27,11 +27,11 @@ bool PSXEmulationDevice::using_pin(uint8_t pin)
 {
     return pin == m_device.clockPin || pin == m_device.commandPin || pin == m_device.dataPin || pin == m_device.attentionPin || pin == m_device.acknowledgePin;
 }
-uint16_t PSXEmulationDevice::readAxis(proto_PS2AxisType type)
+uint16_t PSXEmulationDevice::read_axis(proto_PS2AxisType type)
 {
     return 0;
 }
-bool PSXEmulationDevice::readButton(proto_PS2ButtonType type)
+bool PSXEmulationDevice::read_button(proto_PS2ButtonType type)
 {
     return false;
 }

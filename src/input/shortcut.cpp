@@ -10,18 +10,18 @@ void ShortcutInput::setup()
         input->setup();
     }
 }
-bool ShortcutInput::tickDigital()
+bool ShortcutInput::tick_digital()
 {
     for (auto &input : inputs)
     {
-        if (!input->tickDigital())
+        if (!input->tick_digital())
         {
             return false;
         }
     }
     return true;
 }
-uint16_t ShortcutInput::tickAnalog()
+uint16_t ShortcutInput::tick_analog()
 {
-    return tickDigital() ? 65535 : 0;
+    return tick_digital() ? 65535 : 0;
 }

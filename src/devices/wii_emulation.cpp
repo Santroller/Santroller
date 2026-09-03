@@ -27,11 +27,11 @@ bool WiiExtensionEmulationDevice::using_pin(uint8_t pin)
 {
     return pin == m_device.i2c.sda || pin == m_device.i2c.scl;
 }
-uint16_t WiiExtensionEmulationDevice::readAxis(proto_PS2AxisType type)
+uint16_t WiiExtensionEmulationDevice::read_axis(proto_PS2AxisType type)
 {
     return 0;
 }
-bool WiiExtensionEmulationDevice::readButton(proto_PS2ButtonType type)
+bool WiiExtensionEmulationDevice::read_button(proto_PS2ButtonType type)
 {
     return false;
 }

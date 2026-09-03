@@ -94,13 +94,13 @@ static const uint8_t commandPollInput[] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
 static PSXController *controller;
 void attentionInterrupt(uint gpio, uint32_t events)
 {
-    controller->processData(true, false);
+    controller->process_data(true, false);
 }
 
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
     PSXController *inst = (PSXController *)user_data;
-    inst->processData(false, true);
+    inst->process_data(false, true);
     return 0;
 }
 PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin) : interface(block, SPI_CPHA_1, SPI_CPOL_1, sck, mosi, miso, false, clock), m_attPin(attPin), m_ackPin(ackPin)
@@ -114,7 +114,7 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
 }
 void PSXController::begin() {
     gpio_set_irq_enabled_with_callback(m_ackPin, GPIO_IRQ_EDGE_RISE, true, &attentionInterrupt);
-    autoShiftData(commandPollInput, sizeof(commandPollInput));
+    auto_shift_data(commandPollInput, sizeof(commandPollInput));
 }
 void PSXController::end() {
     gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
@@ -140,19 +140,19 @@ void PSXController::load_state(PSXController* state) {
 PSXController::~PSXController() {
     printf("~PSXController\r\n");
 }
-void PSXController::noAttention(void)
+void PSXController::no_attention(void)
 {
     done = true;
     gpio_put(m_attPin, true);
     timeout_alarm_id = add_alarm_in_us(packet_delay, restart_handler, this, true);
 }
-void PSXController::signalAttention(void)
+void PSXController::signal_attention(void)
 {
     done = false;
     gpio_put(m_attPin, false);
     timeout_alarm_id = add_alarm_in_us(ATTN_DELAY, restart_handler, this, true);
 }
-bool PSXController::autoShiftData(const uint8_t *out, const uint8_t len)
+bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
 {
     uint8_t *ret = nullptr;
     ps2Idx = 0;
@@ -160,10 +160,10 @@ bool PSXController::autoShiftData(const uint8_t *out, const uint8_t len)
     ps2DataLen = len;
     ps2DataOut = out;
     memset(ps2Data, 0, sizeof(ps2Data[0]));
-    signalAttention();
+    signal_attention();
     return ret;
 }
-void PSXController::processData(bool ack, bool timeout)
+void PSXController::process_data(bool ack, bool timeout)
 {
     // if the controller sends an ack after we are done, ignore it!
     if (done && ack)
@@ -185,18 +185,18 @@ void PSXController::processData(bool ack, bool timeout)
             break;
         case CONNECTION_DELAY:
             status = FIRST_INPUTS;
-            autoShiftData(commandPollInput, sizeof(commandPollInput));
+            auto_shift_data(commandPollInput, sizeof(commandPollInput));
             return;
         case FIRST_INPUTS:
             if (isConfigReply(ps2Data))
             {
                 status = ENABLE_ANALOG_MODE;
-                autoShiftData(commandSetMode, sizeof(commandSetMode));
+                auto_shift_data(commandSetMode, sizeof(commandSetMode));
             }
             else
             {
                 status = ENTER_CONFIG;
-                autoShiftData(commandEnterConfig, sizeof(commandEnterConfig));
+                auto_shift_data(commandEnterConfig, sizeof(commandEnterConfig));
             }
             return;
         case ENTER_CONFIG:
@@ -210,19 +210,19 @@ void PSXController::processData(bool ack, bool timeout)
                 // config mode not supported
                 status = SECOND_INPUTS;
             }
-            autoShiftData(commandPollInput, sizeof(commandPollInput));
+            auto_shift_data(commandPollInput, sizeof(commandPollInput));
             return;
         case ENABLE_ANALOG_MODE:
             status = ENABLE_PRESSURES;
-            autoShiftData(commandSetPressures, sizeof(commandSetPressures));
+            auto_shift_data(commandSetPressures, sizeof(commandSetPressures));
             return;
         case ENABLE_PRESSURES:
             status = ENABLE_PRESSURES_2;
-            autoShiftData(commandSetPressures, sizeof(commandSetPressures));
+            auto_shift_data(commandSetPressures, sizeof(commandSetPressures));
             return;
         case ENABLE_PRESSURES_2:
             status = EXIT_CONFIG;
-            autoShiftData(commandExitConfig, sizeof(commandExitConfig));
+            auto_shift_data(commandExitConfig, sizeof(commandExitConfig));
             return;
         case EXIT_CONFIG:
             if (!isConfigReply(ps2Data))
@@ -234,7 +234,7 @@ void PSXController::processData(bool ack, bool timeout)
                 status = DISCONNECTED;
                 break;
             }
-            autoShiftData(commandPollInput, sizeof(commandPollInput));
+            auto_shift_data(commandPollInput, sizeof(commandPollInput));
             return;
         case SECOND_INPUTS:
             status = ENUMERATED;
@@ -314,7 +314,7 @@ void PSXController::processData(bool ack, bool timeout)
             }
             break;
         }
-        autoShiftData(commandPollInput, sizeof(commandPollInput));
+        auto_shift_data(commandPollInput, sizeof(commandPollInput));
         return;
     }
 
@@ -334,7 +334,7 @@ void PSXController::processData(bool ack, bool timeout)
         else
         {
             valid = false;
-            noAttention();
+            no_attention();
             return;
         }
     }
@@ -344,10 +344,10 @@ void PSXController::processData(bool ack, bool timeout)
         return;
     }
     valid = true;
-    noAttention();
+    no_attention();
 }
 
-uint16_t PSXController::readAxis(PS2AxisType axisType)
+uint16_t PSXController::read_axis(PS2AxisType axisType)
 {
     switch (type)
     {
@@ -471,7 +471,7 @@ uint16_t PSXController::readAxis(PS2AxisType axisType)
     }
     return 0;
 }
-bool PSXController::readButton(PS2ButtonType buttonType)
+bool PSXController::read_button(PS2ButtonType buttonType)
 {
     switch (type)
     {

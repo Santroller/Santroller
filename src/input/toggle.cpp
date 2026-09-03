@@ -18,19 +18,19 @@ void ToggleInput::setup()
 {
     m_input->setup();
 }
-bool ToggleInput::tickDigital()
+bool ToggleInput::tick_digital()
 {
      if (m_input)
     {
-        if (m_input->tickDigital() && !m_last_state)
+        if (m_input->tick_digital() && !m_last_state)
         {
             m_device->toggle();
         }
-        m_last_state = m_input->tickDigital();
+        m_last_state = m_input->tick_digital();
     }
     return m_device->get_value();
 }
-uint16_t ToggleInput::tickAnalog()
+uint16_t ToggleInput::tick_analog()
 {
-    return tickDigital() ? 65535 : 0;
+    return tick_digital() ? 65535 : 0;
 }

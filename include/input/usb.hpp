@@ -8,8 +8,8 @@ class USBAxisInput : public Input
 {
 public:
     USBAxisInput(proto_USBAxisInput input, std::shared_ptr<UsbHostInterface> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();
@@ -20,8 +20,8 @@ class USBButtonInput : public Input
 {
 public:
     USBButtonInput(proto_USBButtonInput input, std::shared_ptr<UsbHostInterface> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();
@@ -32,8 +32,8 @@ class KeyboardKeyInput : public Input
 {
 public:
     KeyboardKeyInput(proto_KeyboardKeyInput input, std::shared_ptr<UsbHostInterface> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();
@@ -44,8 +44,8 @@ class MouseButtonInput : public Input
 {
 public:
     MouseButtonInput(proto_MouseButtonInput input, std::shared_ptr<UsbHostInterface> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();
@@ -56,8 +56,8 @@ class MouseAxisInput : public Input
 {
 public:
     MouseAxisInput(proto_MouseAxisInput input, std::shared_ptr<UsbHostInterface> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();

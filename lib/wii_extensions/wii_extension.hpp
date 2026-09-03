@@ -53,10 +53,10 @@ public:
     void end();
     void load_state(WiiExtension* state);
     void tick();
-    void processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
+    void process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
     WiiExtType mType = WiiExtType::WiiNoExtension;
-    uint16_t readAxis(proto_WiiAxisType type);
-    bool readButton(proto_WiiButtonType type);
+    uint16_t read_axis(proto_WiiAxisType type);
+    bool read_button(proto_WiiButtonType type);
     uint8_t mBuffer[8];
 
 private:

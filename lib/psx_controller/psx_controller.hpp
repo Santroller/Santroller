@@ -69,15 +69,15 @@ public:
     void load_state(PSXController* state);
     void tick();
     PS2ControllerType type = PS2ControllerTypeUnknown;
-    uint16_t readAxis(PS2AxisType type);
-    bool readButton(PS2ButtonType type);
+    uint16_t read_axis(PS2AxisType type);
+    bool read_button(PS2ButtonType type);
     bool controller_valid();
-    void processData(bool ack, bool timeout);
+    void process_data(bool ack, bool timeout);
 
 private:
-    bool autoShiftData(const uint8_t *out, const uint8_t len);
-    void noAttention();
-    void signalAttention();
+    bool auto_shift_data(const uint8_t *out, const uint8_t len);
+    void no_attention();
+    void signal_attention();
     SPIMasterInterface interface;
     uint8_t m_attPin;
     uint8_t m_ackPin;

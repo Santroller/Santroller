@@ -103,7 +103,7 @@ private:
     bool m_connected = false;
     bool m_updating = false;
     crkd_neck_t m_crkdNeck;
-    long m_lastPoll;
+    long m_last_poll;
     bool m_error = false;
     long m_lastSend;
 };

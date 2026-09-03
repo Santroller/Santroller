@@ -6,7 +6,7 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     BandHeroDrum *inst = (BandHeroDrum *)user_data;
     if (inst)
     {
-        inst->processData(0, false, false, false, false);
+        inst->process_data(0, false, false, false, false);
     }
     return 0;
 }
@@ -18,14 +18,14 @@ void BandHeroDrum::begin()
 {
     interface.dmaInit(DRUM_ADDR, this);
     status = BH_DRUM_CHECK_STATUS;
-    processData(0, false, false, false, false);
+    process_data(0, false, false, false, false);
 }
 void BandHeroDrum::end()
 {
     cancel_alarm(restart_alarm_id);
     interface.dmaDeinit(DRUM_ADDR);
 }
-void BandHeroDrum::processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
+void BandHeroDrum::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     cancel_alarm(restart_alarm_id);
     if (timeout || abort_detected)
@@ -56,7 +56,7 @@ void BandHeroDrum::processData(uint8_t addr, bool running, bool timeout, bool ab
             break;
         case BH_DRUM_READ_DATA:
             status = BH_DRUM_CHECK_STATUS;
-            m_device->processMidiData(bufferRx, numPackets * PACKET_SIZE);
+            m_device->process_midi_data(bufferRx, numPackets * PACKET_SIZE);
             break;
         }
 

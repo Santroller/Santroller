@@ -6,8 +6,8 @@
 class AccelerometerInput: public Input {
    public:
     AccelerometerInput(proto_AccelerometerInput input, std::shared_ptr<AccelerometerDevice> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
    private:
     void setup();
     uint8_t m_channel;

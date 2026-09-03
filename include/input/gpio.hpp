@@ -4,8 +4,8 @@
 class GPIOInput: public Input {
    public:
     GPIOInput(proto_GPIOInput input);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
     void setup();
    private:
     bool m_analog;

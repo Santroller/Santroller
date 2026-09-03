@@ -9,11 +9,11 @@ MultiplexerInput::MultiplexerInput(proto_MultiplexerInput input, std::shared_ptr
 void MultiplexerInput::setup()
 {
 }
-bool MultiplexerInput::tickDigital()
+bool MultiplexerInput::tick_digital()
 {
     return m_device->read(m_channel) > 0;
 }
-uint16_t MultiplexerInput::tickAnalog()
+uint16_t MultiplexerInput::tick_analog()
 {
     return m_device->read(m_channel);
 }

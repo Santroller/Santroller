@@ -24,37 +24,37 @@ void GuitarHeroGuitarButtonMapping::update_wii(uint8_t format, uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroGuitar_Red:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroGuitar_Yellow:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroGuitar_Blue:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroGuitar_Orange:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_Pedal:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_TapGreen:
-        report->tapGreen |= m_lastValue;
+        report->tapGreen |= m_last_value;
         break;
     case GuitarHeroGuitar_TapRed:
-        report->tapRed |= m_lastValue;
+        report->tapRed |= m_last_value;
         break;
     case GuitarHeroGuitar_TapYellow:
-        report->tapYellow |= m_lastValue;
+        report->tapYellow |= m_last_value;
         break;
     case GuitarHeroGuitar_TapBlue:
-        report->tapBlue |= m_lastValue;
+        report->tapBlue |= m_last_value;
         break;
     case GuitarHeroGuitar_TapOrange:
-        report->tapOrange |= m_lastValue;
+        report->tapOrange |= m_last_value;
         break;
     }
 }
@@ -64,22 +64,22 @@ void GuitarHeroGuitarButtonMapping::update_switch(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroGuitar_Red:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroGuitar_Yellow:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroGuitar_Blue:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroGuitar_Pedal:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_Orange:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_TapGreen:
     case GuitarHeroGuitar_TapRed:
@@ -96,38 +96,38 @@ void GuitarHeroGuitarButtonMapping::update_ps2(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
-        report->green |= m_lastValue;
+        report->green |= m_last_value;
         break;
     case GuitarHeroGuitar_Red:
-        report->red |= m_lastValue;
+        report->red |= m_last_value;
         break;
     case GuitarHeroGuitar_Yellow:
-        report->yellow |= m_lastValue;
+        report->yellow |= m_last_value;
         break;
     case GuitarHeroGuitar_Blue:
-        report->blue |= m_lastValue;
+        report->blue |= m_last_value;
         break;
     case GuitarHeroGuitar_Orange:
-        report->orange |= m_lastValue;
+        report->orange |= m_last_value;
         break;
     case GuitarHeroGuitar_Pedal:
         // TODO: get a ps2 wt guitar pcb and see if we can figure this one out
-        // report->rightShoulder |= m_lastValue;
+        // report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_TapGreen:
-        report->tapGreen |= m_lastValue;
+        report->tapGreen |= m_last_value;
         break;
     case GuitarHeroGuitar_TapRed:
-        report->tapRed |= m_lastValue;
+        report->tapRed |= m_last_value;
         break;
     case GuitarHeroGuitar_TapYellow:
-        report->tapYellow |= m_lastValue;
+        report->tapYellow |= m_last_value;
         break;
     case GuitarHeroGuitar_TapBlue:
-        report->tapBlue |= m_lastValue;
+        report->tapBlue |= m_last_value;
         break;
     case GuitarHeroGuitar_TapOrange:
-        report->tapOrange |= m_lastValue;
+        report->tapOrange |= m_last_value;
         break;
     default:
         break;
@@ -140,37 +140,37 @@ void GuitarHeroGuitarButtonMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroGuitar_Red:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroGuitar_Yellow:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroGuitar_Blue:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroGuitar_Orange:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_Pedal:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_TapGreen:
-        report->tapGreen |= m_lastValue;
+        report->tapGreen |= m_last_value;
         break;
     case GuitarHeroGuitar_TapRed:
-        report->tapRed |= m_lastValue;
+        report->tapRed |= m_last_value;
         break;
     case GuitarHeroGuitar_TapYellow:
-        report->tapYellow |= m_lastValue;
+        report->tapYellow |= m_last_value;
         break;
     case GuitarHeroGuitar_TapBlue:
-        report->tapBlue |= m_lastValue;
+        report->tapBlue |= m_last_value;
         break;
     case GuitarHeroGuitar_TapOrange:
-        report->tapOrange |= m_lastValue;
+        report->tapOrange |= m_last_value;
         break;
     default:
         break;
@@ -183,37 +183,37 @@ void GuitarHeroGuitarButtonMapping::update_ps4(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroGuitar_Red:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroGuitar_Yellow:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroGuitar_Blue:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroGuitar_Orange:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_Pedal:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_TapGreen:
-        report->soloGreen |= m_lastValue;
+        report->soloGreen |= m_last_value;
         break;
     case GuitarHeroGuitar_TapRed:
-        report->soloRed |= m_lastValue;
+        report->soloRed |= m_last_value;
         break;
     case GuitarHeroGuitar_TapYellow:
-        report->soloYellow |= m_lastValue;
+        report->soloYellow |= m_last_value;
         break;
     case GuitarHeroGuitar_TapBlue:
-        report->soloBlue |= m_lastValue;
+        report->soloBlue |= m_last_value;
         break;
     case GuitarHeroGuitar_TapOrange:
-        report->soloOrange |= m_lastValue;
+        report->soloOrange |= m_last_value;
         break;
     default:
         break;
@@ -226,37 +226,37 @@ void GuitarHeroGuitarButtonMapping::update_ps5(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroGuitar_Red:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroGuitar_Yellow:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroGuitar_Blue:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroGuitar_Orange:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_Pedal:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_TapGreen:
-        report->soloGreen |= m_lastValue;
+        report->soloGreen |= m_last_value;
         break;
     case GuitarHeroGuitar_TapRed:
-        report->soloRed |= m_lastValue;
+        report->soloRed |= m_last_value;
         break;
     case GuitarHeroGuitar_TapYellow:
-        report->soloYellow |= m_lastValue;
+        report->soloYellow |= m_last_value;
         break;
     case GuitarHeroGuitar_TapBlue:
-        report->soloBlue |= m_lastValue;
+        report->soloBlue |= m_last_value;
         break;
     case GuitarHeroGuitar_TapOrange:
-        report->soloOrange |= m_lastValue;
+        report->soloOrange |= m_last_value;
         break;
     default:
         break;
@@ -269,37 +269,37 @@ void GuitarHeroGuitarButtonMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroGuitar_Red:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroGuitar_Yellow:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroGuitar_Blue:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroGuitar_Orange:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_Pedal:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_TapGreen:
-        report->tapGreen |= m_lastValue;
+        report->tapGreen |= m_last_value;
         break;
     case GuitarHeroGuitar_TapRed:
-        report->tapRed |= m_lastValue;
+        report->tapRed |= m_last_value;
         break;
     case GuitarHeroGuitar_TapYellow:
-        report->tapYellow |= m_lastValue;
+        report->tapYellow |= m_last_value;
         break;
     case GuitarHeroGuitar_TapBlue:
-        report->tapBlue |= m_lastValue;
+        report->tapBlue |= m_last_value;
         break;
     case GuitarHeroGuitar_TapOrange:
-        report->tapOrange |= m_lastValue;
+        report->tapOrange |= m_last_value;
         break;
     default:
         break;
@@ -311,37 +311,37 @@ void GuitarHeroGuitarButtonMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroGuitar_Red:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroGuitar_Yellow:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroGuitar_Blue:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroGuitar_Orange:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_Pedal:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_TapGreen:
-        report->tapGreen |= m_lastValue;
+        report->tapGreen |= m_last_value;
         break;
     case GuitarHeroGuitar_TapRed:
-        report->tapRed |= m_lastValue;
+        report->tapRed |= m_last_value;
         break;
     case GuitarHeroGuitar_TapYellow:
-        report->tapYellow |= m_lastValue;
+        report->tapYellow |= m_last_value;
         break;
     case GuitarHeroGuitar_TapBlue:
-        report->tapBlue |= m_lastValue;
+        report->tapBlue |= m_last_value;
         break;
     case GuitarHeroGuitar_TapOrange:
-        report->tapOrange |= m_lastValue;
+        report->tapOrange |= m_last_value;
         break;
     default:
         break;
@@ -353,37 +353,37 @@ void GuitarHeroGuitarButtonMapping::update_xboxone(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroGuitar_Red:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroGuitar_Yellow:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroGuitar_Blue:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroGuitar_Orange:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_Pedal:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_TapGreen:
-        report->soloGreen |= m_lastValue;
+        report->soloGreen |= m_last_value;
         break;
     case GuitarHeroGuitar_TapRed:
-        report->soloRed |= m_lastValue;
+        report->soloRed |= m_last_value;
         break;
     case GuitarHeroGuitar_TapYellow:
-        report->soloYellow |= m_lastValue;
+        report->soloYellow |= m_last_value;
         break;
     case GuitarHeroGuitar_TapBlue:
-        report->soloBlue |= m_lastValue;
+        report->soloBlue |= m_last_value;
         break;
     case GuitarHeroGuitar_TapOrange:
-        report->soloOrange |= m_lastValue;
+        report->soloOrange |= m_last_value;
         break;
     default:
         break;
@@ -399,50 +399,50 @@ void GuitarHeroGuitarGamepadButtonMapping::update_ps2(uint8_t *buf)
     switch (m_mapping.mapping.mapping.gamepadButton)
     {
     case Gamepad_A:
-        report->green |= m_lastValue;
+        report->green |= m_last_value;
         break;
     case Gamepad_B:
-        report->red |= m_lastValue;
+        report->red |= m_last_value;
         break;
     case Gamepad_X:
-        report->blue |= m_lastValue;
+        report->blue |= m_last_value;
         break;
     case Gamepad_Y:
-        report->yellow |= m_lastValue;
+        report->yellow |= m_last_value;
         break;
     case Gamepad_Start:
-        report->start |= m_lastValue;
+        report->start |= m_last_value;
         break;
     case Gamepad_Back:
-        report->back |= m_lastValue;
+        report->back |= m_last_value;
         break;
     case Gamepad_Capture:
         break;
     case Gamepad_LeftShoulder:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case Gamepad_RightShoulder:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case Gamepad_LeftThumbClick:
-        report->leftThumbClick |= m_lastValue;
+        report->leftThumbClick |= m_last_value;
         break;
     case Gamepad_RightThumbClick:
-        report->rightThumbClick |= m_lastValue;
+        report->rightThumbClick |= m_last_value;
         break;
     case Gamepad_DpadUp:
-        report->psDpadUp |= m_lastValue;
-        report->dpadUp |= m_lastValue;
+        report->psDpadUp |= m_last_value;
+        report->dpadUp |= m_last_value;
         break;
     case Gamepad_DpadDown:
-        report->psDpadDown |= m_lastValue;
-        report->dpadDown |= m_lastValue;
+        report->psDpadDown |= m_last_value;
+        report->dpadDown |= m_last_value;
         break;
     case Gamepad_DpadLeft:
-        report->psDpadLeft |= m_lastValue;
+        report->psDpadLeft |= m_last_value;
         break;
     case Gamepad_DpadRight:
-        report->psDpadRight |= m_lastValue;
+        report->psDpadRight |= m_last_value;
         break;
     default:
         break;
@@ -475,10 +475,10 @@ void GuitarHeroGuitarAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibratedValue >> 11;
+        report->whammy = m_calibrated_value >> 11;
         break;
     case GuitarHeroGuitar_Tilt:
-        // report->tilt = m_calibratedValue >> 8;
+        // report->tilt = m_calibrated_value >> 8;
         break;
     default:
         break;
@@ -494,10 +494,10 @@ void GuitarHeroGuitarAxisMapping::update_switch(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibratedValue >> 8;
+        report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = m_calibratedValue >> 8;
+        report->tilt = m_calibrated_value >> 8;
         break;
     default:
         break;
@@ -514,10 +514,10 @@ void GuitarHeroGuitarAxisMapping::update_ps2(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibratedValue >> 8;
+        report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = m_calibratedValue >> 8;
+        report->tilt = m_calibrated_value >> 8;
         break;
     default:
         break;
@@ -531,14 +531,14 @@ void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
         return;
     }
     // tilt is flipped
-    int tilt = m_calibratedValue - 32768;
+    int tilt = m_calibrated_value - 32768;
     // tilt centers at 512 but isnt actually full range
     tilt = 512 - (tilt >> 8);
     PS3GuitarHeroGuitar_Data_t *report = (PS3GuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibratedValue >> 8;
+        report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroGuitar_Tilt:
         report->tilt = tilt;
@@ -556,10 +556,10 @@ void GuitarHeroGuitarAxisMapping::update_ps4(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibratedValue >> 8;
+        report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = m_calibratedValue >> 8;
+        report->tilt = m_calibrated_value >> 8;
         break;
     default:
         break;
@@ -575,10 +575,10 @@ void GuitarHeroGuitarAxisMapping::update_ps5(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibratedValue >> 8;
+        report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = m_calibratedValue >> 8;
+        report->tilt = m_calibrated_value >> 8;
         break;
     default:
         break;
@@ -595,10 +595,10 @@ void GuitarHeroGuitarAxisMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibratedValue - 32768;
+        report->whammy = m_calibrated_value - 32768;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = m_calibratedValue - 32768;
+        report->tilt = m_calibrated_value - 32768;
         break;
     default:
         break;
@@ -614,10 +614,10 @@ void GuitarHeroGuitarAxisMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibratedValue - 32768;
+        report->whammy = m_calibrated_value - 32768;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = m_calibratedValue - 32768;
+        report->tilt = m_calibrated_value - 32768;
         break;
     default:
         break;
@@ -633,10 +633,10 @@ void GuitarHeroGuitarAxisMapping::update_xboxone(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibratedValue >> 8;
+        report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = m_calibratedValue >> 8;
+        report->tilt = m_calibrated_value >> 8;
         break;
     default:
         break;
@@ -682,10 +682,10 @@ void GuitarHeroDrumsAxisMapping::update_wii(uint8_t format, uint8_t *buf)
         report->leftShoulder = true;
         break;
     // case GuitarHeroDrums_LeftStickX:
-    //     report->leftStickX = m_calibratedValue >> 10;
+    //     report->leftStickX = m_calibrated_value >> 10;
     //     break;
     // case GuitarHeroDrums_LeftStickY:
-    //     report->leftStickY = m_calibratedValue >> 10;
+    //     report->leftStickY = m_calibrated_value >> 10;
     //     break;
     default:
         break;
@@ -711,27 +711,27 @@ void GuitarHeroDrumsAxisMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghDrumAxis)
     {
     case GuitarHeroDrums_RedPad:
-        report->redVelocity = m_calibratedValue >> 8;
+        report->redVelocity = m_calibrated_value >> 8;
         report->b = true;
         break;
     case GuitarHeroDrums_YellowPad:
-        report->yellowVelocity = m_calibratedValue >> 8;
+        report->yellowVelocity = m_calibrated_value >> 8;
         report->y = true;
         break;
     case GuitarHeroDrums_BluePad:
-        report->blueVelocity = m_calibratedValue >> 8;
+        report->blueVelocity = m_calibrated_value >> 8;
         report->x = true;
         break;
     case GuitarHeroDrums_OrangePad:
-        report->orangeVelocity = m_calibratedValue >> 8;
+        report->orangeVelocity = m_calibrated_value >> 8;
         report->rightShoulder = true;
         break;
     case GuitarHeroDrums_GreenPad:
-        report->greenVelocity = m_calibratedValue >> 8;
+        report->greenVelocity = m_calibrated_value >> 8;
         report->a = true;
         break;
     case GuitarHeroDrums_KickPedal:
-        report->kickVelocity = m_calibratedValue >> 8;
+        report->kickVelocity = m_calibrated_value >> 8;
         report->leftShoulder = true;
         break;
     }
@@ -758,27 +758,27 @@ void GuitarHeroDrumsAxisMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghDrumAxis)
     {
     case GuitarHeroDrums_RedPad:
-        report->redVelocity = m_calibratedValue - 32768;
+        report->redVelocity = m_calibrated_value - 32768;
         report->b = true;
         break;
     case GuitarHeroDrums_YellowPad:
-        report->yellowVelocity = m_calibratedValue - 32768;
+        report->yellowVelocity = m_calibrated_value - 32768;
         report->y = true;
         break;
     case GuitarHeroDrums_BluePad:
-        report->blueVelocity = m_calibratedValue - 32768;
+        report->blueVelocity = m_calibrated_value - 32768;
         report->x = true;
         break;
     case GuitarHeroDrums_OrangePad:
-        report->orangeVelocity = m_calibratedValue - 32768;
+        report->orangeVelocity = m_calibrated_value - 32768;
         report->rightShoulder = true;
         break;
     case GuitarHeroDrums_GreenPad:
-        report->greenVelocity = m_calibratedValue - 32768;
+        report->greenVelocity = m_calibrated_value - 32768;
         report->a = true;
         break;
     case GuitarHeroDrums_KickPedal:
-        report->kickVelocity = m_calibratedValue - 32768;
+        report->kickVelocity = m_calibrated_value - 32768;
         report->leftShoulder = true;
         break;
     }
@@ -793,27 +793,27 @@ void GuitarHeroDrumsAxisMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghDrumAxis)
     {
     case GuitarHeroDrums_RedPad:
-        report->redVelocity = m_calibratedValue - 32768;
+        report->redVelocity = m_calibrated_value - 32768;
         report->b = true;
         break;
     case GuitarHeroDrums_YellowPad:
-        report->yellowVelocity = m_calibratedValue - 32768;
+        report->yellowVelocity = m_calibrated_value - 32768;
         report->y = true;
         break;
     case GuitarHeroDrums_BluePad:
-        report->blueVelocity = m_calibratedValue - 32768;
+        report->blueVelocity = m_calibrated_value - 32768;
         report->x = true;
         break;
     case GuitarHeroDrums_OrangePad:
-        report->orangeVelocity = m_calibratedValue - 32768;
+        report->orangeVelocity = m_calibrated_value - 32768;
         report->rightShoulder = true;
         break;
     case GuitarHeroDrums_GreenPad:
-        report->greenVelocity = m_calibratedValue - 32768;
+        report->greenVelocity = m_calibrated_value - 32768;
         report->a = true;
         break;
     case GuitarHeroDrums_KickPedal:
-        report->kickVelocity = m_calibratedValue - 32768;
+        report->kickVelocity = m_calibrated_value - 32768;
         report->leftShoulder = true;
         break;
     }
@@ -833,22 +833,22 @@ void GuitarHeroArcadeButtonMapping::update_hid(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghaButton)
     {
     case GuitarHeroArcade_Green:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroArcade_Red:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroArcade_Yellow:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroArcade_Blue:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroArcade_Orange:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroArcade_Side:
-        report->side |= m_lastValue;
+        report->side |= m_last_value;
         break;
     }
 }
@@ -899,7 +899,7 @@ void GuitarHeroArcadeAxisMapping::update_hid(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghaAxis)
     {
     case GuitarHeroArcade_Tilt:
-        report->tilt = m_calibratedValue - 32768;
+        report->tilt = m_calibrated_value - 32768;
         break;
     }
 }
@@ -965,29 +965,29 @@ void LiveGuitarButtonMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghlButton)
     {
     case GuitarHeroLiveGuitar_White1:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_White2:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_White3:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black1:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black2:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black3:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_StrumUp:
-        report->dpadUp |= m_lastValue;
+        report->dpadUp |= m_last_value;
         report->strumBar = 0;
         break;
     case GuitarHeroLiveGuitar_StrumDown:
-        report->dpadDown |= m_lastValue;
+        report->dpadDown |= m_last_value;
         report->strumBar = 0xFF;
         break;
     default:
@@ -1001,29 +1001,29 @@ void LiveGuitarButtonMapping::update_ps4(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghlButton)
     {
     case GuitarHeroLiveGuitar_White1:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_White2:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_White3:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black1:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black2:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black3:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_StrumUp:
-        report->dpadUp |= m_lastValue;
+        report->dpadUp |= m_last_value;
         report->strumBar = 0;
         break;
     case GuitarHeroLiveGuitar_StrumDown:
-        report->dpadDown |= m_lastValue;
+        report->dpadDown |= m_last_value;
         report->strumBar = 0xFF;
         break;
     default:
@@ -1037,29 +1037,29 @@ void LiveGuitarButtonMapping::update_ps5(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghlButton)
     {
     case GuitarHeroLiveGuitar_White1:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_White2:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_White3:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black1:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black2:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black3:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_StrumUp:
-        report->dpadUp |= m_lastValue;
+        report->dpadUp |= m_last_value;
         report->strumBar = 0;
         break;
     case GuitarHeroLiveGuitar_StrumDown:
-        report->dpadDown |= m_lastValue;
+        report->dpadDown |= m_last_value;
         report->strumBar = 0xFF;
         break;
     default:
@@ -1073,29 +1073,29 @@ void LiveGuitarButtonMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghlButton)
     {
     case GuitarHeroLiveGuitar_White1:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_White2:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_White3:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black1:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black2:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black3:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_StrumUp:
-        report->dpadUp |= m_lastValue;
+        report->dpadUp |= m_last_value;
         report->strumBar = INT16_MAX;
         break;
     case GuitarHeroLiveGuitar_StrumDown:
-        report->dpadDown |= m_lastValue;
+        report->dpadDown |= m_last_value;
         report->strumBar = INT16_MIN;
         break;
     default:
@@ -1108,29 +1108,29 @@ void LiveGuitarButtonMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghlButton)
     {
     case GuitarHeroLiveGuitar_White1:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_White2:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_White3:
-        report->rightShoulder |= m_lastValue;
+        report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black1:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black2:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_Black3:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_StrumUp:
-        report->dpadUp |= m_lastValue;
+        report->dpadUp |= m_last_value;
         report->strumBar = INT16_MAX;
         break;
     case GuitarHeroLiveGuitar_StrumDown:
-        report->dpadDown |= m_lastValue;
+        report->dpadDown |= m_last_value;
         report->strumBar = INT16_MIN;
         break;
     default:
@@ -1174,10 +1174,10 @@ void LiveGuitarAxisMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghlAxis)
     {
     case GuitarHeroLiveGuitar_Whammy:
-        report->whammy = m_calibratedValue >> 8;
+        report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroLiveGuitar_Tilt:
-        report->tilt = m_calibratedValue >> 8;
+        report->tilt = m_calibrated_value >> 8;
         break;
     }
 }
@@ -1192,10 +1192,10 @@ void LiveGuitarAxisMapping::update_ps4(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghlAxis)
     {
     case GuitarHeroLiveGuitar_Whammy:
-        report->whammy = m_calibratedValue >> 8;
+        report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroLiveGuitar_Tilt:
-        report->tilt = m_calibratedValue >> 8;
+        report->tilt = m_calibrated_value >> 8;
         break;
     default:
         break;
@@ -1212,10 +1212,10 @@ void LiveGuitarAxisMapping::update_ps5(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghlAxis)
     {
     case GuitarHeroLiveGuitar_Whammy:
-        report->whammy = m_calibratedValue >> 8;
+        report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroLiveGuitar_Tilt:
-        report->tilt = m_calibratedValue >> 8;
+        report->tilt = m_calibrated_value >> 8;
         break;
     default:
         break;
@@ -1232,10 +1232,10 @@ void LiveGuitarAxisMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghlAxis)
     {
     case GuitarHeroLiveGuitar_Whammy:
-        report->whammy = m_calibratedValue - 32768;
+        report->whammy = m_calibrated_value - 32768;
         break;
     case GuitarHeroLiveGuitar_Tilt:
-        report->tilt = m_calibratedValue - 32768;
+        report->tilt = m_calibrated_value - 32768;
         break;
     }
 }
@@ -1249,10 +1249,10 @@ void LiveGuitarAxisMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghlAxis)
     {
     case GuitarHeroLiveGuitar_Whammy:
-        report->whammy = m_calibratedValue - 32768;
+        report->whammy = m_calibrated_value - 32768;
         break;
     case GuitarHeroLiveGuitar_Tilt:
-        report->tilt = m_calibratedValue - 32768;
+        report->tilt = m_calibrated_value - 32768;
         break;
     }
 }
@@ -1277,22 +1277,22 @@ void DJHTurntableButtonMapping::update_wii(uint8_t format, uint8_t *buf)
     switch (m_mapping.mapping.mapping.djhButton)
     {
     case DJHTurntable_LeftGreen:
-        report->leftGreen |= m_lastValue;
+        report->leftGreen |= m_last_value;
         break;
     case DJHTurntable_LeftRed:
-        report->leftRed |= m_lastValue;
+        report->leftRed |= m_last_value;
         break;
     case DJHTurntable_LeftBlue:
-        report->leftBlue |= m_lastValue;
+        report->leftBlue |= m_last_value;
         break;
     case DJHTurntable_RightGreen:
-        report->rightGreen |= m_lastValue;
+        report->rightGreen |= m_last_value;
         break;
     case DJHTurntable_RightRed:
-        report->rightRed |= m_lastValue;
+        report->rightRed |= m_last_value;
         break;
     case DJHTurntable_RightBlue:
-        report->rightBlue |= m_lastValue;
+        report->rightBlue |= m_last_value;
         break;
     }
 }
@@ -1312,28 +1312,28 @@ void DJHTurntableButtonMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.mapping.djhButton)
     {
     case DJHTurntable_LeftGreen:
-        report->a |= m_lastValue;
-        report->leftGreen |= m_lastValue;
+        report->a |= m_last_value;
+        report->leftGreen |= m_last_value;
         break;
     case DJHTurntable_LeftRed:
-        report->b |= m_lastValue;
-        report->leftRed |= m_lastValue;
+        report->b |= m_last_value;
+        report->leftRed |= m_last_value;
         break;
     case DJHTurntable_LeftBlue:
-        report->x |= m_lastValue;
-        report->leftBlue |= m_lastValue;
+        report->x |= m_last_value;
+        report->leftBlue |= m_last_value;
         break;
     case DJHTurntable_RightGreen:
-        report->a |= m_lastValue;
-        report->rightGreen |= m_lastValue;
+        report->a |= m_last_value;
+        report->rightGreen |= m_last_value;
         break;
     case DJHTurntable_RightRed:
-        report->b |= m_lastValue;
-        report->rightRed |= m_lastValue;
+        report->b |= m_last_value;
+        report->rightRed |= m_last_value;
         break;
     case DJHTurntable_RightBlue:
-        report->x |= m_lastValue;
-        report->rightBlue |= m_lastValue;
+        report->x |= m_last_value;
+        report->rightBlue |= m_last_value;
         break;
     default:
         break;
@@ -1356,28 +1356,28 @@ void DJHTurntableButtonMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.mapping.djhButton)
     {
     case DJHTurntable_LeftGreen:
-        report->a |= m_lastValue;
-        report->leftGreen |= m_lastValue;
+        report->a |= m_last_value;
+        report->leftGreen |= m_last_value;
         break;
     case DJHTurntable_LeftRed:
-        report->b |= m_lastValue;
-        report->leftRed |= m_lastValue;
+        report->b |= m_last_value;
+        report->leftRed |= m_last_value;
         break;
     case DJHTurntable_LeftBlue:
-        report->x |= m_lastValue;
-        report->leftBlue |= m_lastValue;
+        report->x |= m_last_value;
+        report->leftBlue |= m_last_value;
         break;
     case DJHTurntable_RightGreen:
-        report->a |= m_lastValue;
-        report->rightGreen |= m_lastValue;
+        report->a |= m_last_value;
+        report->rightGreen |= m_last_value;
         break;
     case DJHTurntable_RightRed:
-        report->b |= m_lastValue;
-        report->rightRed |= m_lastValue;
+        report->b |= m_last_value;
+        report->rightRed |= m_last_value;
         break;
     case DJHTurntable_RightBlue:
-        report->x |= m_lastValue;
-        report->rightBlue |= m_lastValue;
+        report->x |= m_last_value;
+        report->rightBlue |= m_last_value;
         break;
     default:
         break;
@@ -1389,28 +1389,28 @@ void DJHTurntableButtonMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.mapping.djhButton)
     {
     case DJHTurntable_LeftGreen:
-        report->a |= m_lastValue;
-        report->leftGreen |= m_lastValue;
+        report->a |= m_last_value;
+        report->leftGreen |= m_last_value;
         break;
     case DJHTurntable_LeftRed:
-        report->b |= m_lastValue;
-        report->leftRed |= m_lastValue;
+        report->b |= m_last_value;
+        report->leftRed |= m_last_value;
         break;
     case DJHTurntable_LeftBlue:
-        report->x |= m_lastValue;
-        report->leftBlue |= m_lastValue;
+        report->x |= m_last_value;
+        report->leftBlue |= m_last_value;
         break;
     case DJHTurntable_RightGreen:
-        report->a |= m_lastValue;
-        report->rightGreen |= m_lastValue;
+        report->a |= m_last_value;
+        report->rightGreen |= m_last_value;
         break;
     case DJHTurntable_RightRed:
-        report->b |= m_lastValue;
-        report->rightRed |= m_lastValue;
+        report->b |= m_last_value;
+        report->rightRed |= m_last_value;
         break;
     case DJHTurntable_RightBlue:
-        report->x |= m_lastValue;
-        report->rightBlue |= m_lastValue;
+        report->x |= m_last_value;
+        report->rightBlue |= m_last_value;
         break;
     default:
         break;
@@ -1441,24 +1441,24 @@ void DJHTurntableAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     switch (m_mapping.mapping.mapping.djhAxis)
     {
     case DJHTurntable_LeftVelocity:
-        intermediate.leftTableVelocity = m_calibratedValue >> 10;
+        intermediate.leftTableVelocity = m_calibrated_value >> 10;
         report->leftTableVelocity40 = intermediate.leftTableVelocity40;
         report->leftTableVelocity5 = intermediate.leftTableVelocity5;
         break;
     case DJHTurntable_RightVelocity:
-        intermediate.rightTableVelocity = m_calibratedValue >> 10;
+        intermediate.rightTableVelocity = m_calibrated_value >> 10;
         report->rightTableVelocity0 = intermediate.rightTableVelocity0;
         report->rightTableVelocity21 = intermediate.rightTableVelocity21;
         report->rightTableVelocity43 = intermediate.rightTableVelocity43;
         report->rightTableVelocity5 = intermediate.rightTableVelocity5;
         break;
     case DJHTurntable_EffectsKnob:
-        intermediate.effectsKnob = m_calibratedValue >> 11;
+        intermediate.effectsKnob = m_calibrated_value >> 11;
         report->effectsKnob20 = intermediate.effectsKnob20;
         report->effectsKnob43 = intermediate.effectsKnob43;
         break;
     case DJHTurntable_Crossfader:
-        report->crossfader = m_calibratedValue >> 12;
+        report->crossfader = m_calibrated_value >> 12;
         break;
     default:
         break;
@@ -1484,16 +1484,16 @@ void DJHTurntableAxisMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.mapping.djhAxis)
     {
     case DJHTurntable_LeftVelocity:
-        report->leftTableVelocity = m_calibratedValue >> 8;
+        report->leftTableVelocity = m_calibrated_value >> 8;
         break;
     case DJHTurntable_RightVelocity:
-        report->rightTableVelocity = m_calibratedValue >> 8;
+        report->rightTableVelocity = m_calibrated_value >> 8;
         break;
     case DJHTurntable_EffectsKnob:
-        report->effectsKnob = m_calibratedValue >> 6;
+        report->effectsKnob = m_calibrated_value >> 6;
         break;
     case DJHTurntable_Crossfader:
-        report->crossfader = m_calibratedValue >> 6;
+        report->crossfader = m_calibrated_value >> 6;
         break;
     }
 }
@@ -1518,16 +1518,16 @@ void DJHTurntableAxisMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.mapping.djhAxis)
     {
     case DJHTurntable_LeftVelocity:
-        report->leftTableVelocity = m_calibratedValue - 32768;
+        report->leftTableVelocity = m_calibrated_value - 32768;
         break;
     case DJHTurntable_RightVelocity:
-        report->rightTableVelocity = m_calibratedValue - 32768;
+        report->rightTableVelocity = m_calibrated_value - 32768;
         break;
     case DJHTurntable_EffectsKnob:
-        report->effectsKnob = m_calibratedValue - 32768;
+        report->effectsKnob = m_calibrated_value - 32768;
         break;
     case DJHTurntable_Crossfader:
-        report->crossfader = m_calibratedValue - 32768;
+        report->crossfader = m_calibrated_value - 32768;
         break;
     default:
         break;
@@ -1543,16 +1543,16 @@ void DJHTurntableAxisMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.mapping.djhAxis)
     {
     case DJHTurntable_LeftVelocity:
-        report->leftTableVelocity = m_calibratedValue - 32768;
+        report->leftTableVelocity = m_calibrated_value - 32768;
         break;
     case DJHTurntable_RightVelocity:
-        report->rightTableVelocity = m_calibratedValue - 32768;
+        report->rightTableVelocity = m_calibrated_value - 32768;
         break;
     case DJHTurntable_EffectsKnob:
-        report->effectsKnob = m_calibratedValue - 32768;
+        report->effectsKnob = m_calibrated_value - 32768;
         break;
     case DJHTurntable_Crossfader:
-        report->crossfader = m_calibratedValue - 32768;
+        report->crossfader = m_calibrated_value - 32768;
         break;
     default:
         break;

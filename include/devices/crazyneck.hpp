@@ -15,5 +15,5 @@ public:
 private:
     CrazyGuitarNeck m_crazy_guitar_neck;
     proto_CrazyGuitarNeckDevice m_device;
-    uint32_t m_lastValue = 0;
+    uint32_t m_last_value = 0;
 };

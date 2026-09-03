@@ -121,8 +121,8 @@ void CrkdDrum::setParam(CrkdDrumCalibrationType type, CrkdDrumAxisType axisType,
 }
 void CrkdDrum::tick()
 {
-    m_lastPoll = interface.last_read_time();
-    m_connected = millis() - m_lastPoll < 20;
+    m_last_poll = interface.last_read_time();
+    m_connected = millis() - m_last_poll < 20;
     if (!m_connected)
     {
         red_pad = 0;

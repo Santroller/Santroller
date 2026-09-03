@@ -9,8 +9,8 @@ class CycleInput : public Input
 public:
     CycleInput();
     void load(proto_CycleInput config, std::shared_ptr<CycleDevice> device, std::unique_ptr<Input> input, std::unique_ptr<Input> input_reverse);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
     void setup();
 
 private:

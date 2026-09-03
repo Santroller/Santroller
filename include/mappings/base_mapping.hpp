@@ -35,7 +35,7 @@ protected:
     proto_Mapping m_mapping;
     uint16_t m_id;
     std::shared_ptr<Profile> m_profile;
-    uint32_t m_lastValueRaw = 0;
+    uint32_t m_last_value_raw = 0;
     uint32_t m_last_sent_value = 0;
     uint32_t m_last_sent_calibrated_value = 0;
     uint32_t m_last_send = 0;
@@ -50,10 +50,10 @@ public:
     void update(bool full_poll, bool send_events);
 
 protected:
-    bool m_lastValue = false;
+    bool m_last_value = false;
     bool m_last_sent_value = false;
-    bool m_calibratedValue = false;
-    uint64_t m_lastPoll = 0;
+    bool m_calibrated_value = false;
+    uint64_t m_last_poll = 0;
 };
 
 class AxisMapping : public Mapping
@@ -64,9 +64,9 @@ public:
     void update(bool full_poll, bool send_events);
 
 protected:
-    uint32_t m_calibratedValue = 0;
+    uint32_t m_calibrated_value = 0;
     bool m_centered = false;
     bool m_trigger;
-    uint32_t m_lastValue = 0;
-    uint64_t m_lastPoll = 0;
+    uint32_t m_last_value = 0;
+    uint64_t m_last_poll = 0;
 };

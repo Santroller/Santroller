@@ -6,8 +6,8 @@
 class ShortcutInput: public Input {
    public:
     ShortcutInput();
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
     void setup();
     std::vector<std::unique_ptr<Input>> inputs;
 };

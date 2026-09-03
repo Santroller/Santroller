@@ -14,16 +14,16 @@ ProtarNeck::ProtarNeck(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint
     lastInit = millis();
 }
 
-void ProtarNeck::noAttention(void)
+void ProtarNeck::no_attention(void)
 {
     gpio_put(m_attPin, true);
 }
-void ProtarNeck::signalAttention(void)
+void ProtarNeck::signal_attention(void)
 {
     gpio_put(m_attPin, false);
 }
 
-uint16_t ProtarNeck::readAxis(ProGuitarNeckAxisType axisType)
+uint16_t ProtarNeck::read_axis(ProGuitarNeckAxisType axisType)
 {
     switch (axisType)
     {
@@ -44,7 +44,7 @@ uint16_t ProtarNeck::readAxis(ProGuitarNeckAxisType axisType)
     }
     return 0;
 }
-bool ProtarNeck::readButton(ProGuitarNeckButtonType buttonType)
+bool ProtarNeck::read_button(ProGuitarNeckButtonType buttonType)
 {
 
     switch (buttonType)
@@ -79,7 +79,7 @@ void ProtarNeck::tick()
     if (micros() - last > 500)
     {
         last = micros();
-        signalAttention();
+        signal_attention();
         uint8_t resp = interface.transfer(0x80);
         if (resp == 0x00)
         {
@@ -100,7 +100,7 @@ void ProtarNeck::tick()
             lastInput = millis();
         }
     }
-    noAttention();
+    no_attention();
     if (millis() - lastInput > 10)
     {
         memset(&lastInputs, 0, sizeof(lastInputs));

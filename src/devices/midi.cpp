@@ -64,7 +64,7 @@ MidiDevice::~MidiDevice()
     tu_edpt_stream_deinit(&ep_stream.tx);
 }
 
-void MidiDevice::processMidiData(uint8_t *data, uint16_t len)
+void MidiDevice::process_midi_data(uint8_t *data, uint16_t len)
 {
     tu_edpt_stream_t *ep_str_rx = &ep_stream.rx;
     memcpy(ep_str_rx->ep_buf, data, len);
@@ -332,20 +332,20 @@ void MidiDevice::update(bool full_poll, bool send_events)
         }
     }
 }
-uint16_t MidiDevice::readMidiNote(uint8_t channel, uint8_t note)
+uint16_t MidiDevice::read_midi_note(uint8_t channel, uint8_t note)
 {
     return midiVelocities[channel][note] << 9;
 }
-uint16_t MidiDevice::readMidiControlChange(uint8_t channel, uint8_t cc)
+uint16_t MidiDevice::read_midi_control_change(uint8_t channel, uint8_t cc)
 {
     return midiControlChanges[channel][cc] << 9;
 }
-int16_t MidiDevice::readMidiPitchBend(uint8_t channel)
+int16_t MidiDevice::read_midi_pitch_bend(uint8_t channel)
 {
     return midiPitchWheel[channel];
 }
 
-bool MidiDevice::readProGuitarButton(proto_ProGuitarMidiButtonType button)
+bool MidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
 {
     uint8_t dpad = midiButtons.dpad >= 0x08 ? 0 : HidHost::dpad_bindings_reverse[midiButtons.dpad];
     bool up = dpad & UP;
@@ -493,7 +493,7 @@ bool MidiDevice::readProGuitarButton(proto_ProGuitarMidiButtonType button)
     }
     return 0;
 }
-uint16_t MidiDevice::readProGuitarAxis(proto_ProGuitarAxisType axis)
+uint16_t MidiDevice::read_pro_guitar_axis(proto_ProGuitarAxisType axis)
 {
     // we want fret inputs to stay at the standard range
     // but then everything else needs to be scaled up
@@ -534,11 +534,11 @@ uint16_t MidiDevice::readProGuitarAxis(proto_ProGuitarAxisType axis)
 }
 
 
-bool ProGuitarMidiDevice::readProGuitarButton(proto_ProGuitarMidiButtonType button)
+bool ProGuitarMidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
 {
-    return m_midi_device->readProGuitarButton(button);
+    return m_midi_device->read_pro_guitar_button(button);
 }
-uint16_t ProGuitarMidiDevice::readProGuitarAxis(proto_ProGuitarAxisType axis)
+uint16_t ProGuitarMidiDevice::read_pro_guitar_axis(proto_ProGuitarAxisType axis)
 {
-    return m_midi_device->readProGuitarAxis(axis);
+    return m_midi_device->read_pro_guitar_axis(axis);
 }

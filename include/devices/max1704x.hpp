@@ -15,5 +15,5 @@ public:
 private:
     Max1704X m_max1704x;
     proto_Max1704xDevice m_device;
-    uint32_t m_lastValue = 0;
+    uint32_t m_last_value = 0;
 };

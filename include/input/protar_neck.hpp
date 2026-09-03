@@ -7,8 +7,8 @@ class ProtarNeckAxisInput : public Input
 {
 public:
     ProtarNeckAxisInput(proto_ProtarNeckAxisInput input, std::shared_ptr<ProtarNeckDevice> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();
@@ -19,8 +19,8 @@ class ProtarNeckButtonInput : public Input
 {
 public:
     ProtarNeckButtonInput(proto_ProtarNeckButtonInput input, std::shared_ptr<ProtarNeckDevice> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();

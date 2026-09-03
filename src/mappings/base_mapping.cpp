@@ -86,30 +86,30 @@ uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, flo
 
 void ButtonMapping::update(bool full_poll, bool send_events)
 {
-    auto calcVal = m_input->tickDigital();
+    auto calcVal = m_input->tick_digital();
 
     if (m_mapping.inverted) {
         calcVal = !calcVal;
     }
     if (m_mapping.has_trigger)
     {
-        auto val = m_input->tickAnalog();
+        auto val = m_input->tick_analog();
         calcVal = false;
         if (m_mapping.trigger == AnalogToDigitalTriggerType_JoyHigh)
         {
-            calcVal = m_input->tickAnalog() > m_mapping.triggerValue;
+            calcVal = m_input->tick_analog() > m_mapping.triggerValue;
         }
         else if (m_mapping.trigger == AnalogToDigitalTriggerType_JoyLow)
         {
-            calcVal = m_input->tickAnalog() < m_mapping.triggerValue;
+            calcVal = m_input->tick_analog() < m_mapping.triggerValue;
         }
         else if (m_mapping.trigger == AnalogToDigitalTriggerType_Exact)
         {
-            calcVal = m_input->tickAnalog() == m_mapping.triggerValue;
+            calcVal = m_input->tick_analog() == m_mapping.triggerValue;
         }
         else if (m_mapping.trigger == AnalogToDigitalTriggerType_Range)
         {
-            calcVal = m_input->tickAnalog() > m_mapping.triggerValue && m_input->tickAnalog() < m_mapping.maxTriggerValue;
+            calcVal = m_input->tick_analog() > m_mapping.triggerValue && m_input->tick_analog() < m_mapping.maxTriggerValue;
         }
         if (m_mapping.inverted) {
             calcVal = !calcVal;
@@ -129,21 +129,21 @@ void ButtonMapping::update(bool full_poll, bool send_events)
     }
     if (calcVal)
     {
-        m_lastPoll = millis();
-        m_lastValue = calcVal;
+        m_last_poll = millis();
+        m_last_value = calcVal;
     }
-    else if (!m_mapping.has_debounce || (millis() - m_lastPoll) > m_mapping.debounce)
+    else if (!m_mapping.has_debounce || (millis() - m_last_poll) > m_mapping.debounce)
     {
-        m_lastValue = calcVal;
+        m_last_value = calcVal;
     }
 }
 void AxisMapping::update(bool full_poll, bool send_events)
 {
-    auto uncalibrated = m_input->tickAnalog();
+    auto uncalibrated = m_input->tick_analog();
     auto val = uncalibrated;
     if (m_mapping.has_pressed)
     {
-        if (m_input->tickDigital())
+        if (m_input->tick_digital())
         {
             val = m_mapping.pressed;
         }
@@ -162,23 +162,23 @@ void AxisMapping::update(bool full_poll, bool send_events)
     }
     if (val != m_mapping.center)
     {
-        m_lastPoll = millis();
-        if ((!m_mapping.has_peakBased && !m_mapping.peakBased) || val > m_calibratedValue)
+        m_last_poll = millis();
+        if ((!m_mapping.has_peakBased && !m_mapping.peakBased) || val > m_calibrated_value)
         {
-            m_calibratedValue = val;
+            m_calibrated_value = val;
         }
     }
-    else if (!m_mapping.has_debounce || (millis() - m_lastPoll) > m_mapping.debounce)
+    else if (!m_mapping.has_debounce || (millis() - m_last_poll) > m_mapping.debounce)
     {
-        m_calibratedValue = val;
+        m_calibrated_value = val;
     }
-    m_centered = m_calibratedValue == (uint32_t)m_mapping.center;
+    m_centered = m_calibrated_value == (uint32_t)m_mapping.center;
 
-    if (send_events && (uncalibrated != m_last_sent_value || m_calibratedValue != m_last_sent_calibrated_value || full_poll))
+    if (send_events && (uncalibrated != m_last_sent_value || m_calibrated_value != m_last_sent_calibrated_value || full_poll))
     {
         m_last_sent_value = uncalibrated;
-        m_last_sent_calibrated_value = m_calibratedValue;
-        proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, uncalibrated, m_calibratedValue}}};
+        m_last_sent_calibrated_value = m_calibrated_value;
+        proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, uncalibrated, m_calibrated_value}}};
         HIDConfigDevice::send_event(event, false);
     }
 }

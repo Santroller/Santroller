@@ -17,7 +17,7 @@
 #include "input/mpr121.hpp"
 #include "input/ps2.hpp"
 #include "input/midi.hpp"
-#include "input/protarNeck.hpp"
+#include "input/protar_neck.hpp"
 #include "input/held.hpp"
 #include "input/cycle.hpp"
 #include "input/toggle.hpp"
@@ -472,7 +472,6 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->supports_ps4 = opts.has_ps4OrPs5Mode && opts.ps4OrPs5Mode;
     profile->supports_slider = opts.has_supportsSlider && opts.supportsSlider;
     profile->cymbal_glitch_fix = opts.has_cymbalGlitchFix && opts.cymbalGlitchFix;
-    profile->drum_state.cymbalGlitchFix = opts.has_cymbalGlitchFix && opts.cymbalGlitchFix;
     profile->subtype = opts.deviceToEmulate;
     ProfileManager::instance().add_profile(profile->profile_id, profile);
     return true;

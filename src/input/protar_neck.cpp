@@ -1,4 +1,4 @@
-#include "input/protarNeck.hpp"
+#include "input/protar_neck.hpp"
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 #include "stdio.h"
@@ -6,13 +6,13 @@
 ProtarNeckAxisInput::ProtarNeckAxisInput(proto_ProtarNeckAxisInput input, std::shared_ptr<ProtarNeckDevice> device) : m_input(input), m_device(device)
 {
 }
-bool ProtarNeckAxisInput::tickDigital()
+bool ProtarNeckAxisInput::tick_digital()
 {
-    return m_device->readAxis(m_input.axis) != 0;
+    return m_device->read_axis(m_input.axis) != 0;
 }
-uint16_t ProtarNeckAxisInput::tickAnalog()
+uint16_t ProtarNeckAxisInput::tick_analog()
 {
-    return m_device->readAxis(m_input.axis);
+    return m_device->read_axis(m_input.axis);
 }
 void ProtarNeckAxisInput::setup()
 {
@@ -21,13 +21,13 @@ void ProtarNeckAxisInput::setup()
 ProtarNeckButtonInput::ProtarNeckButtonInput(proto_ProtarNeckButtonInput input, std::shared_ptr<ProtarNeckDevice> device) : m_input(input), m_device(device)
 {
 }
-bool ProtarNeckButtonInput::tickDigital()
+bool ProtarNeckButtonInput::tick_digital()
 {
-    return m_device->readButton(m_input.button);
+    return m_device->read_button(m_input.button);
 }
-uint16_t ProtarNeckButtonInput::tickAnalog()
+uint16_t ProtarNeckButtonInput::tick_analog()
 {
-    return tickDigital() ? 65535 : 0;
+    return tick_digital() ? 65535 : 0;
 }
 void ProtarNeckButtonInput::setup()
 {

@@ -17,7 +17,7 @@ class I2CDMAInterface
 public:
     I2CDMAInterface() {};
     ~I2CDMAInterface() {};
-    virtual void processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected) = 0;
+    virtual void process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected) = 0;
 };
 typedef struct
 {

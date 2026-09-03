@@ -33,7 +33,7 @@ inline void process_dma(i2c_dma_t *i2c_dma)
     }
     if (i2c_dma->dmaInterface[i2c_dma->currentDevAddr])
     {
-        i2c_dma->dmaInterface[i2c_dma->currentDevAddr]->processData(i2c_dma->currentDevAddr, i2c_dma->running, i2c_dma->timeout, i2c_dma->abort_detected, i2c_dma->stop_detected);
+        i2c_dma->dmaInterface[i2c_dma->currentDevAddr]->process_data(i2c_dma->currentDevAddr, i2c_dma->running, i2c_dma->timeout, i2c_dma->abort_detected, i2c_dma->stop_detected);
     }
     i2c_dma->timeout = false;
     i2c_dma->abort_detected = false;

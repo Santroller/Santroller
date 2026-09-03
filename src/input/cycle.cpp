@@ -19,27 +19,27 @@ void CycleInput::setup()
 {
     m_input->setup();
 }
-bool CycleInput::tickDigital()
+bool CycleInput::tick_digital()
 {
-    return tickAnalog() > 0;
+    return tick_analog() > 0;
 }
-uint16_t CycleInput::tickAnalog()
+uint16_t CycleInput::tick_analog()
 {
     if (m_input)
     {
-        if (m_input->tickDigital() && !m_last_state)
+        if (m_input->tick_digital() && !m_last_state)
         {
             m_device->cycle(true);
         }
-        m_last_state = m_input->tickDigital();
+        m_last_state = m_input->tick_digital();
     }
     if (m_input_reverse)
     {
-        if (m_input_reverse->tickDigital() && !m_last_state_reverse)
+        if (m_input_reverse->tick_digital() && !m_last_state_reverse)
         {
             m_device->cycle(false);
         }
-        m_last_state_reverse = m_input_reverse->tickDigital();
+        m_last_state_reverse = m_input_reverse->tick_digital();
     }
     return m_device->get_value();
 }

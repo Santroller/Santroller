@@ -7,8 +7,8 @@ class WiiAxisInput : public Input
 {
 public:
     WiiAxisInput(proto_WiiAxisInput input, std::shared_ptr<WiiDevice> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();
@@ -19,8 +19,8 @@ class WiiButtonInput : public Input
 {
 public:
     WiiButtonInput(proto_WiiButtonInput input, std::shared_ptr<WiiDevice> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();

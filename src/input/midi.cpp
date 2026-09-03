@@ -8,13 +8,13 @@ MidiNoteInput::MidiNoteInput(proto_MidiNoteInput input, std::shared_ptr<MidiDevi
 {
     printf("MidiNoteInput: %d\r\n", m_input.note);
 }
-bool MidiNoteInput::tickDigital()
+bool MidiNoteInput::tick_digital()
 {
-    return m_device->readMidiNote(m_input.channel - 1, m_input.note) > 0;
+    return m_device->read_midi_note(m_input.channel - 1, m_input.note) > 0;
 }
-uint16_t MidiNoteInput::tickAnalog()
+uint16_t MidiNoteInput::tick_analog()
 {
-    return m_device->readMidiNote(m_input.channel - 1, m_input.note);
+    return m_device->read_midi_note(m_input.channel - 1, m_input.note);
 }
 void MidiNoteInput::setup()
 {
@@ -22,13 +22,13 @@ void MidiNoteInput::setup()
 MidiControlChangeInput::MidiControlChangeInput(proto_MidiControlChangeInput input, std::shared_ptr<MidiDevice> device) : m_input(input), m_device(device)
 {
 }
-bool MidiControlChangeInput::tickDigital()
+bool MidiControlChangeInput::tick_digital()
 {
-    return m_device->readMidiControlChange(m_input.channel - 1, m_input.cc) > 0;
+    return m_device->read_midi_control_change(m_input.channel - 1, m_input.cc) > 0;
 }
-uint16_t MidiControlChangeInput::tickAnalog()
+uint16_t MidiControlChangeInput::tick_analog()
 {
-    return m_device->readMidiControlChange(m_input.channel - 1, m_input.cc);
+    return m_device->read_midi_control_change(m_input.channel - 1, m_input.cc);
 }
 void MidiControlChangeInput::setup()
 {
@@ -36,13 +36,13 @@ void MidiControlChangeInput::setup()
 MidiPitchBendInput::MidiPitchBendInput(proto_MidiPitchBendInput input, std::shared_ptr<MidiDevice> device) : m_input(input), m_device(device)
 {
 }
-bool MidiPitchBendInput::tickDigital()
+bool MidiPitchBendInput::tick_digital()
 {
-    return m_device->readMidiPitchBend(m_input.channel - 1) != 0;
+    return m_device->read_midi_pitch_bend(m_input.channel - 1) != 0;
 }
-uint16_t MidiPitchBendInput::tickAnalog()
+uint16_t MidiPitchBendInput::tick_analog()
 {
-    return m_device->readMidiPitchBend(m_input.channel - 1);
+    return m_device->read_midi_pitch_bend(m_input.channel - 1);
 }
 void MidiPitchBendInput::setup()
 {
@@ -51,13 +51,13 @@ void MidiPitchBendInput::setup()
 MidiProGuitarButtonInput::MidiProGuitarButtonInput(proto_MidiProGuitarButtonInput input, std::shared_ptr<ProGuitarMidiDevice> device) : m_input(input), m_device(device)
 {
 }
-bool MidiProGuitarButtonInput::tickDigital()
+bool MidiProGuitarButtonInput::tick_digital()
 {
-    return m_device->readProGuitarButton(m_input.button);
+    return m_device->read_pro_guitar_button(m_input.button);
 }
-uint16_t MidiProGuitarButtonInput::tickAnalog()
+uint16_t MidiProGuitarButtonInput::tick_analog()
 {
-    return m_device->readProGuitarButton(m_input.button) ? 65535 : 0;
+    return m_device->read_pro_guitar_button(m_input.button) ? 65535 : 0;
 }
 void MidiProGuitarButtonInput::setup()
 {
@@ -66,13 +66,13 @@ void MidiProGuitarButtonInput::setup()
 MidiProGuitarAxisInput::MidiProGuitarAxisInput(proto_MidiProGuitarAxisInput input, std::shared_ptr<ProGuitarMidiDevice> device) : m_input(input), m_device(device)
 {
 }
-bool MidiProGuitarAxisInput::tickDigital()
+bool MidiProGuitarAxisInput::tick_digital()
 {
-    return m_device->readProGuitarAxis(m_input.axis) > 0;
+    return m_device->read_pro_guitar_axis(m_input.axis) > 0;
 }
-uint16_t MidiProGuitarAxisInput::tickAnalog()
+uint16_t MidiProGuitarAxisInput::tick_analog()
 {
-    return m_device->readProGuitarAxis(m_input.axis);
+    return m_device->read_pro_guitar_axis(m_input.axis);
 }
 void MidiProGuitarAxisInput::setup()
 {

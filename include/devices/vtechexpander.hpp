@@ -17,5 +17,5 @@ public:
 private:
     VTechGuitarIOExpander m_vtech_expander;
     proto_VTechGuitarIOExpanderDevice m_device;
-    uint32_t m_lastValue = 0;
+    uint32_t m_last_value = 0;
 };

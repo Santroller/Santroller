@@ -14,8 +14,8 @@ public:
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);
-    uint16_t readAxis(proto_PS2AxisType type);
-    bool readButton(proto_PS2ButtonType type);
+    uint16_t read_axis(proto_PS2AxisType type);
+    bool read_button(proto_PS2ButtonType type);
     void rescan(bool first);
     bool using_pin(uint8_t pin);
 

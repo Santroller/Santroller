@@ -218,7 +218,7 @@ add_executable(
   src/input/ps2.cpp
   src/input/midi.cpp
   src/input/mpr121.cpp
-  src/input/protarNeck.cpp
+  src/input/protar_neck.cpp
   src/input/vtechexpander.cpp
   src/input/cycle.cpp
   src/input/toggle.cpp

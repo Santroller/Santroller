@@ -5,7 +5,7 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     MPR121 *inst = (MPR121 *)user_data;
     if (inst)
     {
-        inst->processData(0, false, false, false, false);
+        inst->process_data(0, false, false, false, false);
     }
     return 0;
 }
@@ -21,14 +21,14 @@ void MPR121::begin()
 {
     interface.dmaInit(MPR121_I2CADDR_DEFAULT, this);
     status = MPR121_INIT_SOFTRESET;
-    processData(0, false, false, false, false);
+    process_data(0, false, false, false, false);
 }
 void MPR121::end()
 {
     cancel_alarm(restart_alarm_id);
     interface.dmaDeinit(MPR121_I2CADDR_DEFAULT);
 }
-void MPR121::processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
+void MPR121::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     cancel_alarm(restart_alarm_id);
     if (timeout || abort_detected)

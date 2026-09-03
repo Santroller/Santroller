@@ -12,7 +12,7 @@
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
     WiiExtension *inst = (WiiExtension *)user_data;
-    inst->processData(WII_ADDR, false, false, false, false);
+    inst->process_data(WII_ADDR, false, false, false, false);
     return 0;
 }
 
@@ -35,7 +35,7 @@ bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
     return true;
 }
 // state machine to handle polling wii extensions
-void WiiExtension::processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
+void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     if (timeout || abort_detected)
     {
@@ -209,7 +209,7 @@ void WiiExtension::processData(uint8_t addr, bool running, bool timeout, bool ab
                     {
                         // Sadly the wii drums don't include the status byte, so we have to make one up.
                         uint8_t packet[] = {0, (uint8_t)(MIDI_CIN_NOTE_ON << 4 | channel), note, velocity};
-                        m_device->processMidiData(packet, sizeof(packet));
+                        m_device->process_midi_data(packet, sizeof(packet));
                     }
                 }
                 if (mType == WiiExtType::WiiGuitarHeroGuitar)
@@ -349,7 +349,7 @@ void WiiExtension::begin()
 {
     printf("WiiExtension::begin\r\n");
     mInterface.dmaInit(WII_ADDR, this);
-    processData(WII_ADDR, false, false, false, false);
+    process_data(WII_ADDR, false, false, false, false);
 }
 void WiiExtension::load_state(WiiExtension *state)
 {
@@ -398,7 +398,7 @@ uint16_t atanAxis(uint16_t y, uint16_t x)
     return theta * 65535 / M_PI;
 }
 
-uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
+uint16_t WiiExtension::read_axis(proto_WiiAxisType type)
 {
     switch (mType)
     {
@@ -422,14 +422,14 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
                 if (mType == WiiClassicControllerPro)
                 {
 
-                    return readButton(WiiButtonClassicZl) ? 65535 : 0;
+                    return read_button(WiiButtonClassicZl) ? 65535 : 0;
                 }
                 return mBuffer[4] << 8;
             case WiiAxisType::WiiAxisClassicRightTrigger:
                 if (mType == WiiClassicControllerPro)
                 {
 
-                    return readButton(WiiButtonClassicZr) ? 65535 : 0;
+                    return read_button(WiiButtonClassicZr) ? 65535 : 0;
                 }
                 return mBuffer[5] << 8;
             default:
@@ -453,14 +453,14 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
                 if (mType == WiiClassicControllerPro)
                 {
 
-                    return readButton(WiiButtonClassicZl) ? 65535 : 0;
+                    return read_button(WiiButtonClassicZl) ? 65535 : 0;
                 }
                 return (((mBuffer[3] & 0xE0) >> 5 | (mBuffer[2] & 0x60) >> 2)) << 11;
             case WiiAxisType::WiiAxisClassicRightTrigger:
                 if (mType == WiiClassicControllerPro)
                 {
 
-                    return readButton(WiiButtonClassicZr) ? 65535 : 0;
+                    return read_button(WiiButtonClassicZr) ? 65535 : 0;
                 }
                 return (mBuffer[3] & 0x1f) << 11;
             default:
@@ -578,7 +578,7 @@ uint16_t WiiExtension::readAxis(proto_WiiAxisType type)
     }
     return 0;
 }
-bool WiiExtension::readButton(proto_WiiButtonType type)
+bool WiiExtension::read_button(proto_WiiButtonType type)
 {
     auto lastTap = hasTapBar ? (mBuffer[2] & 0x1f) : 0x0F;
     auto wiiButtonsLow = ~mBuffer[4];

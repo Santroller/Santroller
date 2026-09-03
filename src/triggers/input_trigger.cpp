@@ -12,7 +12,7 @@ InputActivationTrigger::InputActivationTrigger(bool any_time, proto_InputActivat
 
 bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    auto val = m_input->tickDigital();
+    auto val = m_input->tick_digital();
 
     if (m_activation_trigger.inverted)
     {
@@ -20,22 +20,22 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
     }
     if (m_activation_trigger.has_trigger)
     {
-        auto analog_val = m_input->tickAnalog();
+        auto analog_val = m_input->tick_analog();
         if (m_activation_trigger.trigger == AnalogToDigitalTriggerType_JoyHigh)
         {
-            val = m_input->tickAnalog() > m_activation_trigger.triggerValue;
+            val = m_input->tick_analog() > m_activation_trigger.triggerValue;
         }
         else if (m_activation_trigger.trigger == AnalogToDigitalTriggerType_JoyLow)
         {
-            val = m_input->tickAnalog() < m_activation_trigger.triggerValue;
+            val = m_input->tick_analog() < m_activation_trigger.triggerValue;
         }
         else if (m_activation_trigger.trigger == AnalogToDigitalTriggerType_Exact)
         {
-            val = m_input->tickAnalog() == m_activation_trigger.triggerValue;
+            val = m_input->tick_analog() == m_activation_trigger.triggerValue;
         }
         else if (m_activation_trigger.trigger == AnalogToDigitalTriggerType_Range)
         {
-            val = m_input->tickAnalog() > m_activation_trigger.triggerValue && m_input->tickAnalog() < m_activation_trigger.maxTriggerValue;
+            val = m_input->tick_analog() > m_activation_trigger.triggerValue && m_input->tick_analog() < m_activation_trigger.maxTriggerValue;
         }
         if (m_activation_trigger.inverted)
         {

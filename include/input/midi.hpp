@@ -8,8 +8,8 @@ class MidiNoteInput : public Input
 {
 public:
     MidiNoteInput(proto_MidiNoteInput input, std::shared_ptr<MidiDevice> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();
@@ -20,8 +20,8 @@ class MidiControlChangeInput : public Input
 {
 public:
     MidiControlChangeInput(proto_MidiControlChangeInput input, std::shared_ptr<MidiDevice> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();
@@ -32,8 +32,8 @@ class MidiPitchBendInput : public Input
 {
 public:
     MidiPitchBendInput(proto_MidiPitchBendInput input, std::shared_ptr<MidiDevice> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();
@@ -44,8 +44,8 @@ class MidiProGuitarButtonInput : public Input
 {
 public:
     MidiProGuitarButtonInput(proto_MidiProGuitarButtonInput input, std::shared_ptr<ProGuitarMidiDevice> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();
@@ -56,8 +56,8 @@ class MidiProGuitarAxisInput : public Input
 {
 public:
     MidiProGuitarAxisInput(proto_MidiProGuitarAxisInput input, std::shared_ptr<ProGuitarMidiDevice> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();

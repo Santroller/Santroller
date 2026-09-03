@@ -6,7 +6,7 @@
 #include "emulation/usb/hid_device.h"
 void InputLedMapping::update(bool full_poll, bool send_events)
 {
-    uint16_t raw = m_input->tickAnalog();
+    uint16_t raw = m_input->tick_analog();
     uint16_t curr = (raw - m_mapping.min) * m_multiplier;
     if (send_events && ((full_poll || (raw != m_last_val)) && (millis() - m_last_poll) > 10))
     {

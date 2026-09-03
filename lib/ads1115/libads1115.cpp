@@ -7,12 +7,12 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     ADS1115 *inst = (ADS1115 *)user_data;
     if (inst)
     {
-        inst->processData(0, false, false, false, false);
+        inst->process_data(0, false, false, false, false);
     }
     return 0;
 }
 static ADS1115 *ready_handlers[NUM_BANK0_GPIOS] = {};
-void ADS1115::processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
+void ADS1115::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     if (status != ADS1115_INIT && addr && addr != address)
     {
@@ -165,7 +165,7 @@ void ADS1115::begin()
     interface.dmaInit(ADS1115_ADDRESS_ADDR_SCL, this);
     status = ADS1115_INIT;
     memset(seen, true, sizeof(seen));
-    processData(0, false, false, false, false);
+    process_data(0, false, false, false, false);
 }
 
 void ADS1115::end()
@@ -195,7 +195,7 @@ void ADS1115::tick()
     {
         m_ready = false;
         status = ADS1115_POLL;
-        processData(0, false, false, false, false);
+        process_data(0, false, false, false, false);
     }
     interface.tick();
 }

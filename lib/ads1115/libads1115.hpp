@@ -97,7 +97,7 @@ public:
         return status != ADS1115_INIT;
     }
     uint16_t inputs[4];
-    void processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
+    void process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
     void begin();
     void end();
 

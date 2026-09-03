@@ -15,12 +15,12 @@ public:
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);
-    uint16_t readAxis(ProGuitarNeckAxisType type);
-    bool readButton(ProGuitarNeckButtonType type);
+    uint16_t read_axis(ProGuitarNeckAxisType type);
+    bool read_button(ProGuitarNeckButtonType type);
     bool using_pin(uint8_t pin);
 
 private:
     ProtarNeck m_controller;
     proto_ProtarNeckDevice m_device;
-    uint32_t m_lastValue = 0;
+    uint32_t m_last_value = 0;
 };

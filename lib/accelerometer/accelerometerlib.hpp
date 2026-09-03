@@ -85,7 +85,7 @@ public:
     }
     uint16_t lis3dhAdc[3];
     int32_t accel[3];
-    void processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
+    void process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
 
 private:
     I2CMasterInterface interface;

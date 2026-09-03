@@ -26,9 +26,9 @@ class VTechGuitarIOExpander {
     void tick();
     void begin();
     void end();
-    void processData(bool ack, bool timeout);
-    void noAttention();
-    void signalAttention();
+    void process_data(bool ack, bool timeout);
+    void no_attention();
+    void signal_attention();
     bool read_button(uint8_t pin);
     void set_led(uint8_t i, uint8_t val);
     inline bool is_connected() {

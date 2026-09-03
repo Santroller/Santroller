@@ -6,11 +6,11 @@
 CrkdDrumInput::CrkdDrumInput(proto_CrkdDrumAxisInput input, std::shared_ptr<CrkdDrumDevice> device) : m_input(input), m_device(device)
 {
 }
-bool CrkdDrumInput::tickDigital()
+bool CrkdDrumInput::tick_digital()
 {
-    return tickAnalog() > 0;
+    return tick_analog() > 0;
 }
-uint16_t CrkdDrumInput::tickAnalog()
+uint16_t CrkdDrumInput::tick_analog()
 {
     switch (m_input.axis)
     {

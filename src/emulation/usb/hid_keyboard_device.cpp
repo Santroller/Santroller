@@ -59,7 +59,7 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
   for (const auto &profile : profiles)
   {
     auto &state = profile->keyboard_state;
-    state.pressedKeys = 0;
+    state.pressed_keys = 0;
     for (const auto &mapping : profile->mappings)
     {
       mapping->update(full_poll, send_events);
@@ -70,12 +70,12 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
       led->update(full_poll, send_events);
     }
     size_t current = 0;
-    for (size_t i = 0; i < sizeof(state.lastSeenKeys); i++)
+    for (size_t i = 0; i < sizeof(state.last_seen_keys); i++)
     {
-      if (state.lastSeenKeys[i] && state.pressedKeys & (1 << state.lastSeenKeys[i]))
+      if (state.last_seen_keys[i] && state.pressed_keys & (1 << state.last_seen_keys[i]))
       {
-        report->keycode[current++] = state.lastSeenKeys[i];
-        state.pressedKeys &= ~(1 << state.lastSeenKeys[i]);
+        report->keycode[current++] = state.last_seen_keys[i];
+        state.pressed_keys &= ~(1 << state.last_seen_keys[i]);
       }
     }
     for (size_t i = 0; i < 255; i++)
@@ -84,12 +84,12 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
       {
         break;
       }
-      if (state.pressedKeys & (1 << i))
+      if (state.pressed_keys & (1 << i))
       {
         report->keycode[current++] = i;
       }
     }
-    memcpy(state.lastSeenKeys, report->keycode, sizeof(report->keycode));
+    memcpy(state.last_seen_keys, report->keycode, sizeof(report->keycode));
   }
   if (!ready())
   {

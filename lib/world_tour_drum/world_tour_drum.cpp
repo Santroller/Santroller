@@ -7,7 +7,7 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     WorldTourDrum *inst = (WorldTourDrum *)user_data;
     if (inst)
     {
-        inst->processData();
+        inst->process_data();
     }
     return 0;
 }
@@ -30,7 +30,7 @@ void WorldTourDrum::begin()
     if (finished) {
         return;
     }
-    processData();
+    process_data();
 }
 void WorldTourDrum::end()
 {
@@ -38,7 +38,7 @@ void WorldTourDrum::end()
     finished = true;
     printf("wt end\r\n");
 }
-void WorldTourDrum::processData()
+void WorldTourDrum::process_data()
 {
     if (finished) {
         return;
@@ -81,7 +81,7 @@ void WorldTourDrum::processData()
         for (size_t i = 0; i < resp; i++)
         {
             data = mInterface.transfer(0x00);
-            m_device->processMidiData(&data, 1);
+            m_device->process_midi_data(&data, 1);
             sleep_us(50);
         }
         gpio_put(mCsPin, true);

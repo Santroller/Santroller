@@ -13,8 +13,8 @@ public:
     void end(bool full);
     void rescan(bool first);
     void update(bool full_poll, bool send_events);
-    uint16_t readAxis(proto_WiiAxisType type);
-    bool readButton(proto_WiiButtonType type);
+    uint16_t read_axis(proto_WiiAxisType type);
+    bool read_button(proto_WiiButtonType type);
     bool is_wii_extension(WiiExtType type);
     bool using_pin(uint8_t pin);
     void save_reload_state(DeviceReloadState& state) const override;
@@ -22,7 +22,7 @@ public:
 private:
     WiiExtension m_extension;
     proto_WiiDevice m_device;
-    uint32_t m_lastValue = 0;
+    uint32_t m_last_value = 0;
     WiiExtType m_lastExtType = WiiExtType::WiiNoExtension;
     bool m_has_scanned = false;
 };

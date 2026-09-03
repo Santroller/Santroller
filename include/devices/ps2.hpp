@@ -15,8 +15,8 @@ public:
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);
-    uint16_t readAxis(proto_PS2AxisType type);
-    bool readButton(proto_PS2ButtonType type);
+    uint16_t read_axis(proto_PS2AxisType type);
+    bool read_button(proto_PS2ButtonType type);
     bool is_ps2_device(PS2ControllerType type);
     void rescan(bool first);
     bool using_pin(uint8_t pin);
@@ -25,6 +25,6 @@ public:
 private:
     PSXController m_controller;
     proto_PSXDevice m_device;
-    uint32_t m_lastValue = 0;
+    uint32_t m_last_value = 0;
     PS2ControllerType m_lastControllerType = PS2ControllerType::PS2ControllerTypeUnknown;
 };

@@ -11,42 +11,42 @@ void PowerGigGuitarButtonMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.mapping.rbButton)
     {
     case RockBandGuitar_Green:
-        report->a |= m_lastValue;
+        report->a |= m_last_value;
         break;
     case RockBandGuitar_Red:
-        report->b |= m_lastValue;
+        report->b |= m_last_value;
         break;
     case RockBandGuitar_Yellow:
-        report->y |= m_lastValue;
+        report->y |= m_last_value;
         break;
     case RockBandGuitar_Blue:
-        report->x |= m_lastValue;
+        report->x |= m_last_value;
         break;
     case RockBandGuitar_Orange:
-        report->leftShoulder |= m_lastValue;
+        report->leftShoulder |= m_last_value;
         break;
     case RockBandGuitar_Pedal:
-        report->tilt |= m_lastValue;
+        report->tilt |= m_last_value;
         break;
     case RockBandGuitar_SoloGreen:
-        report->a |= m_lastValue;
-        report->solo |= m_lastValue;
+        report->a |= m_last_value;
+        report->solo |= m_last_value;
         break;
     case RockBandGuitar_SoloRed:
-        report->b |= m_lastValue;
-        report->solo |= m_lastValue;
+        report->b |= m_last_value;
+        report->solo |= m_last_value;
         break;
     case RockBandGuitar_SoloYellow:
-        report->y |= m_lastValue;
-        report->solo |= m_lastValue;
+        report->y |= m_last_value;
+        report->solo |= m_last_value;
         break;
     case RockBandGuitar_SoloBlue:
-        report->x |= m_lastValue;
-        report->solo |= m_lastValue;
+        report->x |= m_last_value;
+        report->solo |= m_last_value;
         break;
     case RockBandGuitar_SoloOrange:
-        report->leftShoulder |= m_lastValue;
-        report->solo |= m_lastValue;
+        report->leftShoulder |= m_last_value;
+        report->solo |= m_last_value;
         break;
     }
 }
@@ -66,13 +66,13 @@ void PowerGigGuitarAxisMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.mapping.rbAxis)
     {
     case RockBandGuitar_Whammy:
-        report->whammy = m_calibratedValue >> 8;
+        report->whammy = m_calibrated_value >> 8;
         break;
     case RockBandGuitar_Tilt:
-        report->tilt = m_calibratedValue >> 8;
+        report->tilt = m_calibrated_value >> 8;
         break;
     case RockBandGuitar_Pickup:
-        report->pickup = m_calibratedValue >> 8;
+        report->pickup = m_calibrated_value >> 8;
         break;
     }
 }
@@ -88,7 +88,7 @@ void PowerGigDrumsButtonMapping::update_ps3(uint8_t *buf)
     {
     case RockBandDrums_Kick1Pedal:
     case RockBandDrums_Kick2Pedal:
-        report->leftThumbClick |= m_lastValue;
+        report->leftThumbClick |= m_last_value;
         break;
     }
 }
@@ -105,7 +105,7 @@ void PowerGigDrumsAxisMapping::update_ps3(uint8_t *buf)
     }
 
     PS3PowerGigDrums_Data_t *report = (PS3PowerGigDrums_Data_t *)buf;
-    uint8_t pressure = m_calibratedValue >> 8;
+    uint8_t pressure = m_calibrated_value >> 8;
     switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:

@@ -6,8 +6,8 @@
 class MPR121Input: public Input {
    public:
     MPR121Input(proto_MPR121Input input, std::shared_ptr<MPR121Device> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
    private:
     void setup();
     proto_MPR121Input m_input;

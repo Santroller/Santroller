@@ -12,24 +12,24 @@ void HeldInput::setup()
 {
     m_input->setup();
 }
-bool HeldInput::tickDigital()
+bool HeldInput::tick_digital()
 {
-    if (m_input->tickDigital())
+    if (m_input->tick_digital())
     {
-        if (m_lastPressed == 0)
+        if (m_last_pressed == 0)
         {
-            m_lastPressed = millis();
+            m_last_pressed = millis();
         }
-        if (millis() - m_lastPressed > m_time)
+        if (millis() - m_last_pressed > m_time)
         {
             return true;
         }
     } else {
-        m_lastPressed = 0;
+        m_last_pressed = 0;
     }
     return false;
 }
-uint16_t HeldInput::tickAnalog()
+uint16_t HeldInput::tick_analog()
 {
-    return tickDigital() ? 65535 : 0;
+    return tick_digital() ? 65535 : 0;
 }

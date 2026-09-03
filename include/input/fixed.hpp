@@ -4,8 +4,8 @@
 class FixedInput: public Input {
    public:
     FixedInput(proto_FixedInput input);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
     void setup();
    private:
     proto_FixedInput m_input;

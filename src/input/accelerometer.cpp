@@ -6,11 +6,11 @@
 AccelerometerInput::AccelerometerInput(proto_AccelerometerInput input, std::shared_ptr<AccelerometerDevice> device) : m_input(input), m_device(device)
 {
 }
-bool AccelerometerInput::tickDigital()
+bool AccelerometerInput::tick_digital()
 {
     return false;
 }
-uint16_t AccelerometerInput::tickAnalog()
+uint16_t AccelerometerInput::tick_analog()
 {
     switch (m_input.type)
     {

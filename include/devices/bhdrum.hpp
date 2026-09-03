@@ -15,5 +15,5 @@ public:
 private:
     BandHeroDrum m_band_hero_drum;
     proto_BandHeroDrumDevice m_device;
-    uint32_t m_lastValue = 0;
+    uint32_t m_last_value = 0;
 };

@@ -15,5 +15,5 @@ public:
 private:
     DJHeroTurntable m_turntable;
     proto_DJHeroTurntableDevice m_device;
-    uint32_t m_lastValue = 0;
+    uint32_t m_last_value = 0;
 };

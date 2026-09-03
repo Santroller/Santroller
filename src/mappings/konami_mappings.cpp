@@ -21,25 +21,25 @@ void GuitarFreaksButtonMapping::update_hid(uint8_t *buf)
     // switch (m_mapping.mapping.mapping.gfButton)
     // {
     // case GuitarFreaksGreen:
-    //     report->a |= m_lastValue;
+    //     report->a |= m_last_value;
     //     break;
     // case GuitarFreaksRed:
-    //     report->b |= m_lastValue;
+    //     report->b |= m_last_value;
     //     break;
     // case GuitarFreaksBlue:
-    //     report->y |= m_lastValue;
+    //     report->y |= m_last_value;
     //     break;
     // case GuitarFreaksBack:
-    //     report->back |= m_lastValue;
+    //     report->back |= m_last_value;
     //     break;
     // case GuitarFreaksStart:
-    //     report->start |= m_lastValue;
+    //     report->start |= m_last_value;
     //     break;
     // case GuitarFreaksGuide:
-    //     report->guide |= m_lastValue;
+    //     report->guide |= m_last_value;
     //     break;
     // case GuitarFreaksStrum:
-    //     report->dpadUp |= m_lastValue;
+    //     report->dpadUp |= m_last_value;
     //     break;
     // }
 }

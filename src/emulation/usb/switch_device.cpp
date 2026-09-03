@@ -76,12 +76,12 @@ SwitchGamepadDevice::SwitchGamepadDevice()
 
     last_report_timer = to_ms_since_boot(get_absolute_time());
 
-    factoryConfig->leftStickCalibration.getRealMin(leftMinX, leftMinY);
-    factoryConfig->leftStickCalibration.getCenter(leftCenX, leftCenY);
-    factoryConfig->leftStickCalibration.getRealMax(leftMaxX, leftMaxY);
-    factoryConfig->rightStickCalibration.getRealMin(rightMinX, rightMinY);
-    factoryConfig->rightStickCalibration.getCenter(rightCenX, rightCenY);
-    factoryConfig->rightStickCalibration.getRealMax(rightMaxX, rightMaxY);
+    factoryConfig->leftStickCalibration.get_real_min(leftMinX, leftMinY);
+    factoryConfig->leftStickCalibration.get_center(leftCenX, leftCenY);
+    factoryConfig->leftStickCalibration.get_real_max(leftMaxX, leftMaxY);
+    factoryConfig->rightStickCalibration.get_real_min(rightMinX, rightMinY);
+    factoryConfig->rightStickCalibration.get_center(rightCenX, rightCenY);
+    factoryConfig->rightStickCalibration.get_real_max(rightMaxX, rightMaxY);
 }
 void SwitchGamepadDevice::initialize()
 {

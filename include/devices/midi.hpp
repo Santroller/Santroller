@@ -32,14 +32,14 @@ class MidiDevice : public Device
 public:
     MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased);
     virtual ~MidiDevice();
-    void processMidiData(uint8_t *data, uint16_t len);
+    void process_midi_data(uint8_t *data, uint16_t len);
     virtual void update(bool full_poll, bool send_events);
     void rescan(bool first);
-    uint16_t readMidiNote(uint8_t channel, uint8_t note);
-    uint16_t readMidiControlChange(uint8_t channel, uint8_t cc);
-    int16_t readMidiPitchBend(uint8_t channel);
-    bool readProGuitarButton(proto_ProGuitarMidiButtonType button);
-    uint16_t readProGuitarAxis(proto_ProGuitarAxisType axis);
+    uint16_t read_midi_note(uint8_t channel, uint8_t note);
+    uint16_t read_midi_control_change(uint8_t channel, uint8_t cc);
+    int16_t read_midi_pitch_bend(uint8_t channel);
+    bool read_pro_guitar_button(proto_ProGuitarMidiButtonType button);
+    uint16_t read_pro_guitar_axis(proto_ProGuitarAxisType axis);
     bool has_midi_channel(uint8_t channel) { return seenChannels[channel]; }
     void save_reload_state(DeviceReloadState& state) const override;
 
@@ -73,8 +73,8 @@ class ProGuitarMidiDevice : public Device
 public:
     ProGuitarMidiDevice(uint16_t id, std::shared_ptr<MidiDevice> midi_device) : Device(id), m_midi_device(midi_device) {}
     ~ProGuitarMidiDevice() {}
-    bool readProGuitarButton(proto_ProGuitarMidiButtonType button);
-    uint16_t readProGuitarAxis(proto_ProGuitarAxisType axis);
+    bool read_pro_guitar_button(proto_ProGuitarMidiButtonType button);
+    uint16_t read_pro_guitar_axis(proto_ProGuitarAxisType axis);
     void update(bool full_poll, bool send_events) {};
     void begin() {};
     void end(bool full) {};

@@ -6,10 +6,10 @@
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
     VTechGuitarIOExpander *inst = (VTechGuitarIOExpander *)user_data;
-    inst->processData(false, true);
+    inst->process_data(false, true);
     return 0;
 }
-void VTechGuitarIOExpander::noAttention(void)
+void VTechGuitarIOExpander::no_attention(void)
 {
     attention = false;
     gpio_put(mCsPin, true);
@@ -27,7 +27,7 @@ bool VTechGuitarIOExpander::read_button(uint8_t pin)
 {
     return (~button_data) & (1 << pin);
 }
-void VTechGuitarIOExpander::signalAttention(void)
+void VTechGuitarIOExpander::signal_attention(void)
 {
     attention = true;
     gpio_put(mCsPin, false);
@@ -52,7 +52,7 @@ void VTechGuitarIOExpander::begin()
     status = INIT_POWER_ON;
     connected = false;
     attention = false;
-    processData(false, false);
+    process_data(false, false);
 };
 VTechGuitarIOExpander::VTechGuitarIOExpander(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t csPin) : mInterface(block, SPI_CPHA_0, SPI_CPOL_0, sck, mosi, miso, true, clock), mCsPin(csPin)
 {
@@ -64,12 +64,12 @@ void VTechGuitarIOExpander::end()
 {
     cancel_alarm(timeout_alarm_id);
 };
-void VTechGuitarIOExpander::processData(bool ack, bool timeout)
+void VTechGuitarIOExpander::process_data(bool ack, bool timeout)
 {
     uint8_t resp;
     if (!attention)
     {
-        signalAttention();
+        signal_attention();
         return;
     }
     // printf("status: %d\r\n", status);
@@ -78,7 +78,7 @@ void VTechGuitarIOExpander::processData(bool ack, bool timeout)
     case CHECK:
         mInterface.transfer(0x00);
         resp = mInterface.transfer(0x00);
-        noAttention();
+        no_attention();
         // If init was successful, this final command responds with 0x5A
         if (resp == 0x5A)
         {
@@ -94,74 +94,74 @@ void VTechGuitarIOExpander::processData(bool ack, bool timeout)
     case POLL:
         mInterface.transfer(0x0E);
         resp = mInterface.transfer(0x0E);
-        noAttention();
+        no_attention();
         button_data = resp;
         status = UPDATE_LED;
         break;
     case UPDATE_LED:
         mInterface.transfer(0x81);
         mInterface.transfer(led_data);
-        noAttention();
+        no_attention();
         status = CHECK;
         break;
     case INIT_POWER_ON:
         mInterface.transfer(0xFF);
         mInterface.transfer(0x00);
-        noAttention();
+        no_attention();
         status = INIT_2;
         break;
     case INIT_2:
         mInterface.transfer(0x88);
         mInterface.transfer(0xA5);
-        noAttention();
+        no_attention();
         status = INIT_3;
         break;
     case INIT_3:
         mInterface.transfer(0x80);
         mInterface.transfer(0x5A);
-        noAttention();
+        no_attention();
         status = INIT_4;
         break;
     case INIT_4:
         mInterface.transfer(0x84);
         mInterface.transfer(0xFF);
-        noAttention();
+        no_attention();
         status = INIT_5;
         break;
     case INIT_5:
         mInterface.transfer(0x89);
         mInterface.transfer(0xFF);
-        noAttention();
+        no_attention();
         status = INIT_6;
         break;
     case INIT_6:
         mInterface.transfer(0x85);
         mInterface.transfer(0xFF);
-        noAttention();
+        no_attention();
         status = INIT_7;
         break;
     case INIT_7:
         mInterface.transfer(0x81);
         mInterface.transfer(0x00);
-        noAttention();
+        no_attention();
         status = INIT_8;
         break;
     case INIT_8:
         mInterface.transfer(0x8A);
         mInterface.transfer(0xFF);
-        noAttention();
+        no_attention();
         status = INIT_9;
         break;
     case INIT_9:
         mInterface.transfer(0x86);
         mInterface.transfer(0x00);
-        noAttention();
+        no_attention();
         status = INIT_10;
         break;
     case INIT_10:
         mInterface.transfer(0x82);
         mInterface.transfer(0xFF);
-        noAttention();
+        no_attention();
         status = CHECK;
         break;
     }

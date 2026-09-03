@@ -23,8 +23,8 @@ void CrkdNeck::end() {
 }
 void CrkdNeck::tick()
 {
-    m_lastPoll = interface.last_read_time();
-    m_connected = millis() - m_lastPoll < 10;
+    m_last_poll = interface.last_read_time();
+    m_connected = millis() - m_last_poll < 10;
     if (m_connected) {
         green = m_crkdNeck.green;
         red = m_crkdNeck.red;
@@ -41,7 +41,7 @@ void CrkdNeck::tick()
         dpadDown = m_crkdNeck.dpadUpDown == 0xFF;
         dpadRight = m_crkdNeck.dpadLeftRight == 0x00;
         dpadLeft = m_crkdNeck.dpadLeftRight == 0xFF;
-    } else if (millis() - m_lastPoll > 500) {
+    } else if (millis() - m_last_poll > 500) {
         green = false;
         red = false;
         yellow = false;

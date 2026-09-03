@@ -5,7 +5,7 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     DJHeroTurntable *inst = (DJHeroTurntable *)user_data;
     if (inst)
     {
-        inst->processData(0, false, false, false, false);
+        inst->process_data(0, false, false, false, false);
     }
     return 0;
 }
@@ -16,13 +16,13 @@ void DJHeroTurntable::tick()
 void DJHeroTurntable::begin() {
     interface.dmaInit(address, this);
     status = DJH_CHECK_STATUS;
-    processData(0, false, false, false, false);
+    process_data(0, false, false, false, false);
 }
 void DJHeroTurntable::end() {
     cancel_alarm(restart_alarm_id);
     interface.dmaDeinit(address);
 }
-void DJHeroTurntable::processData(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
+void DJHeroTurntable::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     cancel_alarm(restart_alarm_id);
     if (timeout || abort_detected)

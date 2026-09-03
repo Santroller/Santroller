@@ -7,8 +7,8 @@ class VTechExpanderInput : public Input
 {
 public:
     VTechExpanderInput(proto_VTechGuitarIOExpanderInput input, std::shared_ptr<VTechGuitarIOExpanderDevice> device);
-    bool tickDigital();
-    uint16_t tickAnalog();
+    bool tick_digital();
+    uint16_t tick_analog();
 
 private:
     void setup();

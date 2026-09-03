@@ -6,7 +6,7 @@
 CrkdButtonInput::CrkdButtonInput(proto_CrkdNeckButtonInput input, std::shared_ptr<CrkdDevice> device) : m_input(input), m_device(device)
 {
 }
-bool CrkdButtonInput::tickDigital()
+bool CrkdButtonInput::tick_digital()
 {
     switch (m_input.button)
     {
@@ -41,9 +41,9 @@ bool CrkdButtonInput::tickDigital()
     }
     return false;
 }
-uint16_t CrkdButtonInput::tickAnalog()
+uint16_t CrkdButtonInput::tick_analog()
 {
-    return tickDigital() ? UINT16_MAX : 0;
+    return tick_digital() ? UINT16_MAX : 0;
 }
 void CrkdButtonInput::setup()
 {

@@ -14,7 +14,7 @@
 #include "input/ps2.hpp"
 #include "input/mpr121.hpp"
 #include "input/midi.hpp"
-#include "input/protarNeck.hpp"
+#include "input/protar_neck.hpp"
 #include "input/usb.hpp"
 
 template<typename InputType, typename DeviceType, typename ConfigType>

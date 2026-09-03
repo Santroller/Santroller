@@ -6,13 +6,13 @@
 WiiAxisInput::WiiAxisInput(proto_WiiAxisInput input, std::shared_ptr<WiiDevice> device) : m_input(input), m_device(device)
 {
 }
-bool WiiAxisInput::tickDigital()
+bool WiiAxisInput::tick_digital()
 {
-    return m_device->readAxis(m_input.axis) > 0;
+    return m_device->read_axis(m_input.axis) > 0;
 }
-uint16_t WiiAxisInput::tickAnalog()
+uint16_t WiiAxisInput::tick_analog()
 {
-    return m_device->readAxis(m_input.axis);
+    return m_device->read_axis(m_input.axis);
 }
 void WiiAxisInput::setup()
 {
@@ -20,13 +20,13 @@ void WiiAxisInput::setup()
 WiiButtonInput::WiiButtonInput(proto_WiiButtonInput input, std::shared_ptr<WiiDevice> device) : m_input(input), m_device(device)
 {
 }
-bool WiiButtonInput::tickDigital()
+bool WiiButtonInput::tick_digital()
 {
-    return m_device->readButton(m_input.button) > 0;
+    return m_device->read_button(m_input.button) > 0;
 }
-uint16_t WiiButtonInput::tickAnalog()
+uint16_t WiiButtonInput::tick_analog()
 {
-    return m_device->readButton(m_input.button) ? 65535 : 0;
+    return m_device->read_button(m_input.button) ? 65535 : 0;
 }
 void WiiButtonInput::setup()
 {

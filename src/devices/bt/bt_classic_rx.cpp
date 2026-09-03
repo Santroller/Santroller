@@ -45,6 +45,7 @@ struct device devices[MAX_DEVICES];
 static int deviceCount = 0;
 
 static uint16_t hid_host_cid = 0;
+static bool hid_host_connection_pending = false;
 static bool hid_host_descriptor_available = false;
 static hid_protocol_mode_t hid_host_report_mode = HID_PROTOCOL_MODE_REPORT;
 
@@ -78,9 +79,6 @@ static int getDeviceIndexForAddress(bd_addr_t addr) {
 static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
 
 static void hid_host_setup(void) {
-    // Initialize L2CAP
-    l2cap_init();
-
 #ifdef ENABLE_BLE
     // Initialize LE Security Manager. Needed for cross-transport key derivation
     sm_init();
@@ -206,8 +204,10 @@ static void handle_sdp_client_query_result(uint8_t packet_type, uint16_t channel
             printf("Found device: %02x %02x\r\n", 0, 0);
             printf("SDP query done.\n");
 
+            hid_host_connection_pending = true;
             status = hid_host_connect(remote_addr, hid_host_report_mode, &hid_host_cid);
             if (status != ERROR_CODE_SUCCESS) {
+                hid_host_connection_pending = false;
                 printf("HID host connect failed, status 0x%02x.\r\n", status);
             }
             break;
@@ -320,6 +320,9 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     break;
                 /* LISTING_PAUSE */
                 case HCI_EVENT_PIN_CODE_REQUEST:
+                    if (!hid_host_connection_pending && hid_host_cid == 0) {
+                        break;
+                    }
                     // inform about pin code request
                     printf("Pin code request - using '0000'\r\n");
                     hci_event_pin_code_request_get_bd_addr(packet, event_addr);
@@ -336,6 +339,9 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 case HCI_EVENT_HID_META:
                     switch (hci_event_hid_meta_get_subevent_code(packet)) {
                         case HID_SUBEVENT_INCOMING_CONNECTION:
+                            if (!hid_host_connection_pending) {
+                                break;
+                            }
                             // There is an incoming connection: we can accept it or decline it.
                             // The hid_host_report_mode in the hid_host_accept_connection function
                             // allows the application to request a protocol mode.
@@ -344,6 +350,9 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                             break;
 
                         case HID_SUBEVENT_CONNECTION_OPENED:
+                            if (!hid_host_connection_pending && hid_host_cid == 0) {
+                                break;
+                            }
                             // The status field of this event indicates if the control and interrupt
                             // connections were opened successfully.
                             status = hid_subevent_connection_opened_get_status(packet);
@@ -351,8 +360,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                                 printf("Connection failed, status 0x%02x\r\n", status);
                                 app_state = APP_IDLE;
                                 hid_host_cid = 0;
+                                hid_host_connection_pending = false;
                                 return;
                             }
+                            hid_host_connection_pending = false;
                             app_state = APP_CONNECTED;
                             // bluetooth_connected();
                             hid_host_descriptor_available = false;
@@ -436,8 +447,12 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                             break;
 
                         case HID_SUBEVENT_CONNECTION_CLOSED:
+                            if (hid_subevent_connection_closed_get_hid_cid(packet) != hid_host_cid) {
+                                break;
+                            }
                             // The connection was closed.
                             hid_host_cid = 0;
+                            hid_host_connection_pending = false;
                             hid_host_descriptor_available = false;
                             printf("HID Host disconnected.\r\n");
                             if (has_address) {
@@ -458,9 +473,11 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 }
 /* LISTING_END */
 
-int btstack_classic_main(void) {
+int btstack_classic_main(bool enable_hid_host) {
     printf("btclassic init\r\n");
-    hid_host_setup();
+    if (enable_hid_host) {
+        hid_host_setup();
+    }
     hci_set_inquiry_mode(INQUIRY_MODE_RSSI_AND_EIR);
 
 #ifdef BT_ADDR
@@ -475,4 +492,8 @@ int btstack_classic_main(void) {
     }
 #endif
     return 0;
+}
+
+void btstack_classic_set_accept_incoming(bool accept) {
+    hid_host_set_accept_incoming(accept);
 }

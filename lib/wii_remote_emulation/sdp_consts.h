@@ -178,6 +178,5 @@ static const uint8_t wiimote_report_descriptor[] = {
 0x95, 0x15,        //   Report Count (21)
 0x09, 0x01,        //   Usage (0x01)
 0x81, 0x00,        //   Input (Data,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
-0xC0,              // End Collection
-0x00              // Unknown (bTag: 0x00, bType: 0x00)
+0xC0               // End Collection
 };

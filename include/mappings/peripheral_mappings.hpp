@@ -93,6 +93,7 @@ public:
     GamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
+    void update_wiimote_core(wiimote_buttons *buttons);
     void update_switch(uint8_t *report);
     void update_ps2(uint8_t *report);
     void update_ps3(uint8_t *report);

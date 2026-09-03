@@ -149,10 +149,12 @@ bool ProfileManager::assign_profile_to_devices(
         {
             continue;
         }
+        printf("Attempting to assign profile %u to assignment type %d\n", profile->profile_id, assignment_type);
 
         auto instance = InstanceFactory::create_instance(assignment_type, profile, usb_mode, emulation_devices);
         if (instance)
         {
+            printf("Successfully assigned profile %u to assignment type %d\n", profile->profile_id, assignment_type);
             config_mgr.mark_seen_assignment(assignment_type);
             assigned = true;
         }

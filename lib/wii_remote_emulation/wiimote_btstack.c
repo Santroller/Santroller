@@ -4,7 +4,6 @@
 #include "btstack.h"
 
 #include "sdp_consts.h"
-#include "wiimote.h"
 #include "motion.h"
 
 #define SDP_RESPONSE_BUFFER_SIZE (HCI_ACL_PAYLOAD_SIZE-L2CAP_HEADER_SIZE)
@@ -44,6 +43,7 @@ static btstack_packet_callback_registration_t hci_event_callback_registration;
 
 static uint16_t sdp_server_l2cap_cid;
 static uint16_t sdp_server_response_size;
+static uint8_t sdp_response_index;
 static uint8_t sdp_response_buffer[SDP_RESPONSE_BUFFER_SIZE];
 static uint32_t hid_service_handle;
 static uint32_t pnp_service_handle;
@@ -52,6 +52,16 @@ static uint32_t pnp_service_handle;
 static void send_data(){
     input_update_wiimote();
     process_report(&wiimote, buf, len);
+    if (input_report)
+    {
+        input_report->extension_format = wiimote.sys.register_a4[0xfe];
+        input_report->euphoria_led = wiimote.sys.register_a4[0xfb];
+        input_report->player_led = (wiimote.sys.led_1 ? 0x01 : 0) |
+                                   (wiimote.sys.led_2 ? 0x02 : 0) |
+                                   (wiimote.sys.led_3 ? 0x04 : 0) |
+                                   (wiimote.sys.led_4 ? 0x08 : 0);
+        input_report->rumble = wiimote.sys.rumble;
+    }
     len = generate_report(&wiimote, buf);
     if (len > 0){
         hid_device_send_interrupt_message(hid_cid, &buf[0], len);
@@ -110,8 +120,6 @@ static void sdp_respond(void)
 
 }
 
-
-
 static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t* packet, uint16_t size)
 {
     UNUSED(channel);
@@ -120,7 +128,6 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t* p
     static int set_iac_lap = 0;
 
     uint8_t status;
-
     // We only care about HCI packets
     if (packet_type != HCI_EVENT_PACKET) {
         return;
@@ -138,24 +145,39 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t* p
         case HCI_EVENT_COMMAND_COMPLETE:
             // Check IAC LAP result
             if (hci_event_command_complete_get_command_opcode(packet) == hci_write_current_iac_lap_one_iac.opcode) {
-                uint8_t status = hci_event_command_complete_get_return_parameters(packet)[0];
-                printf("Set IAC LAP: %s\n", (status != ERROR_CODE_SUCCESS) ? "Failed" : "OK");
+            }
+            if (hci_event_command_complete_get_command_opcode(packet) == HCI_OPCODE_HCI_WRITE_SCAN_ENABLE) {
+            }
+            if (hci_event_command_complete_get_command_opcode(packet) == hci_pin_code_request_reply.opcode) {
+            }
+            if (hci_event_command_complete_get_command_opcode(packet) == hci_link_key_request_negative_reply.opcode) {
             }
             break;
-        case HCI_EVENT_PIN_CODE_REQUEST:
-                    // inform about pin code request
-                    uint8_t pin_code[6];
-                    hci_event_pin_code_request_get_bd_addr(packet, wii_baddr);
-                    reverse_bd_addr(wii_baddr, pin_code);
-                    //printf_hexdump(pin_code, sizeof(pin_code));
+            case HCI_EVENT_PIN_CODE_REQUEST:
+                uint8_t pin_code[6];
+                hci_event_pin_code_request_get_bd_addr(packet, wii_baddr);
+                reverse_bd_addr(wii_baddr, pin_code);
                     gap_pin_code_response_binary(wii_baddr, pin_code, sizeof(pin_code));
                     break;
+            case HCI_EVENT_AUTHENTICATION_COMPLETE:
+                break;
+        case HCI_EVENT_LINK_KEY_REQUEST:
+            hci_event_link_key_request_get_bd_addr(packet, wii_baddr);
+            break;
+        case HCI_EVENT_IO_CAPABILITY_REQUEST:
+            hci_event_io_capability_request_get_bd_addr(packet, wii_baddr);
+            break;
+        case HCI_EVENT_USER_CONFIRMATION_REQUEST:
+            hci_event_user_confirmation_request_get_bd_addr(packet, wii_baddr);
+            break;
+        case HCI_EVENT_SIMPLE_PAIRING_COMPLETE:
+            hci_event_simple_pairing_complete_get_bd_addr(packet, wii_baddr);
+            break;
         case L2CAP_EVENT_CHANNEL_OPENED: {
             uint16_t cid = l2cap_event_channel_opened_get_local_cid(packet);
             uint8_t status = l2cap_event_channel_opened_get_status(packet);
 
             if (status == ERROR_CODE_SUCCESS) {
-                printf("L2CAP channel opened (cid %d)\n", (int)cid);
             } else {
                     if (status == L2CAP_CONNECTION_RESPONSE_RESULT_REFUSED_SECURITY) {
                     // Assume remote has forgotten link key, delete it and try again
@@ -181,6 +203,7 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t* p
                             return;
                         }
                         hid_cid = hid_subevent_connection_opened_get_hid_cid(packet);
+                        hid_subevent_connection_opened_get_bd_addr(packet, wii_baddr);
                         printf("Connected to ");
                         printf_hexdump(wii_baddr, sizeof(wii_baddr));
                         // Remove timer led
@@ -215,23 +238,21 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t* p
     // Write IAC LAP when ready
     if (set_iac_lap && hci_can_send_command_packet_now()) {
         set_iac_lap = 0;
-        // Limited Inquiry Access Code
-        hci_send_cmd(&hci_write_current_iac_lap_one_iac, 1, GAP_IAC_LIMITED_INQUIRY);
+        // General Inquiry Access Code
+        hci_send_cmd(&hci_write_current_iac_lap_one_iac, 1, GAP_IAC_GENERAL_INQUIRY);
 
         // Set device discoverable now, to emit a write scan enable after IAC LAP is set
+        gap_connectable_control(1);
         gap_discoverable_control(1);
 
         // It's weird but this fix the lag on sticks 
         gap_set_default_link_policy_settings(LM_LINK_POLICY_ENABLE_SNIFF_MODE);
 
-        // HID Device
-        hid_device_init(1, sizeof(wiimote_report_descriptor),wiimote_report_descriptor);
-
-        // HID Device report callback 
+        hid_device_init(1, sizeof(wiimote_report_descriptor), wiimote_report_descriptor);
         hid_device_register_report_data_callback(&get_data_wii);
+
     }
 }
-
 
 static void l2cap_sdp_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size)
 {
@@ -239,16 +260,9 @@ static void l2cap_sdp_packet_handler(uint8_t packet_type, uint16_t channel, uint
 
     switch (packet_type) {
         case L2CAP_DATA_PACKET: {
-
-            uint16_t transaction_id = big_endian_read_16(packet, 1);
-
             //printf("SDP Request: type %u, transaction id %u, len %u, mtu %u\n", pdu_id, transaction_id, param_len, remote_mtu);
 
-            //use the transaction id to determine the response to send
-            state = transaction_id;
-
-            if (state >= 0){
-                switch (state) {
+            switch (sdp_response_index) {
                     case 0:
                         sdp_server_response_size = sizeof(resp0);
                         memcpy(sdp_response_buffer, resp0, sizeof(resp0));
@@ -270,13 +284,17 @@ static void l2cap_sdp_packet_handler(uint8_t packet_type, uint16_t channel, uint
                         memcpy(sdp_response_buffer, resp4, sizeof(resp4));
                         break;
                     default:
+                        sdp_server_response_size = 0;
                         break;
-                }
             }
 
             if (!sdp_server_response_size) {
                 break;
             }
+
+            sdp_response_buffer[2] = packet[1];
+            sdp_response_buffer[3] = packet[2];
+            sdp_response_index++;
 
             l2cap_request_can_send_now_event(sdp_server_l2cap_cid);
             break;
@@ -294,10 +312,10 @@ static void l2cap_sdp_packet_handler(uint8_t packet_type, uint16_t channel, uint
                     // Accept connection
                     sdp_server_l2cap_cid = channel;
                     sdp_server_response_size = 0;
+                    sdp_response_index = 0;
                     l2cap_accept_connection(sdp_server_l2cap_cid);
                     break;
                 case L2CAP_EVENT_CHANNEL_OPENED:
-                    // Reset if open failed
                     if (packet[2]) {
                         wiimote_emulator_reset();
                     }
@@ -306,9 +324,9 @@ static void l2cap_sdp_packet_handler(uint8_t packet_type, uint16_t channel, uint
                     sdp_respond();
                     break;
                 case L2CAP_EVENT_CHANNEL_CLOSED:
-                    // Reset if channel closed
                     if (channel == sdp_server_l2cap_cid) {
                         wiimote_emulator_reset();
+                        sdp_response_index = 0;
                     }
                     break;
                 default:
@@ -364,47 +382,24 @@ void wiimote_emulator(void *report){
     hci_event_callback_registration.callback = &hci_packet_handler;
     hci_add_event_handler(&hci_event_callback_registration);
 
-    // init L2CAP
-    l2cap_init();
-
-    // Register SDP service with max possible MTU
-    l2cap_register_service(l2cap_sdp_packet_handler, BLUETOOTH_PSM_SDP, 0xffff, LEVEL_0);
-
-    // SDP Server
     sdp_init();
     memset(hid_service_buffer, 0, sizeof(hid_service_buffer));
 
     hid_sdp_record_t hid_sdp_record = {
-        // hid sevice subclass 2504 Gamepad?, hid counntry code 33 US
-        0x2504,
-        33,
-        1,
-        1,
-        1,
-        0,
-        0,
-        0xFFFF,
-        0xFFFF,
-        3200,
-        wiimote_report_descriptor,
-        sizeof(wiimote_report_descriptor),
-        hid_device_name
+        0x2504, 33, 1, 1, 1, 0, 0, 0xFFFF, 0xFFFF, 3200,
+        wiimote_report_descriptor, sizeof(wiimote_report_descriptor), hid_device_name
     };
-
-
     hid_service_handle = sdp_create_service_record_handle();
     hid_create_sdp_record(hid_service_buffer, hid_service_handle, &hid_sdp_record);
-    btstack_assert(de_get_len( hid_service_buffer) <= sizeof(hid_service_buffer));
+    btstack_assert(de_get_len(hid_service_buffer) <= sizeof(hid_service_buffer));
     sdp_register_service(hid_service_buffer);
 
-    // See https://www.bluetooth.com/specifications/assigned-numbers/company-identifiers if you don't have a USB Vendor ID and need a Bluetooth Vendor ID
-    // device info: BlueKitchen GmbH, product 1, version 1
     pnp_service_handle = sdp_create_service_record_handle();
-    device_id_create_sdp_record(pnp_service_buffer, pnp_service_handle, DEVICE_ID_VENDOR_ID_SOURCE_BLUETOOTH, BLUETOOTH_COMPANY_ID_BLUEKITCHEN_GMBH, 1, 1);
+    device_id_create_sdp_record(pnp_service_buffer, pnp_service_handle,
+                                DEVICE_ID_VENDOR_ID_SOURCE_BLUETOOTH,
+                                BLUETOOTH_COMPANY_ID_BLUEKITCHEN_GMBH, 1, 1);
     btstack_assert(de_get_len(pnp_service_buffer) <= sizeof(pnp_service_buffer));
     sdp_register_service(pnp_service_buffer);
-
-     // register for HID events
     hid_device_register_packet_handler(&hci_packet_handler);
 
     // Init wiimote structure
@@ -514,6 +509,8 @@ static void input_update_wiimote(){
         }
             break;
         case CLASSIC_CONTROLLER:
+            struct wiimote_buttons wiimote_report = input_report->wiimote;
+            memcpy(&wiimote.usr, &wiimote_report, 14);
             break;
         default:
             break;

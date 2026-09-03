@@ -49,6 +49,7 @@
 #include <pico_fota_bootloader/core.h>
 #include "ring_buffer.h"
 #include "hci.h"
+#include "devices/bt/bluetooth_stack.hpp"
 
 class HidConsoleBridge
 {
@@ -195,7 +196,7 @@ static void initialize_device_stack()
     tud_rhport_init(TUD_OPT_RHPORT, &rh_init);
     if (ConfigManager::instance().has_bluetooth())
     {
-        hci_power_control(HCI_POWER_ON);
+        BluetoothStack::instance().power_on();
         printf("bt init done\r\n");
     }
 }
@@ -204,7 +205,7 @@ void reinitialize_device_stack()
 {
     if (ConfigManager::instance().has_bluetooth())
     {
-        hci_power_control(HCI_POWER_OFF);
+        BluetoothStack::instance().power_off();
         printf("bt init done\r\n");
     }
     tud_deinit(TUD_OPT_RHPORT);

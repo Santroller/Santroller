@@ -102,6 +102,14 @@ void initialize_wii_extension_report(SubType subtype, uint8_t format,
     *size = wii_extension_report_size(subtype, format);
 }
 
+void finalize_wii_extension_report(uint8_t *report,
+                                   uint8_t buttons_low_offset,
+                                   uint8_t buttons_high_offset)
+{
+    report[buttons_low_offset] = ~report[buttons_low_offset];
+    report[buttons_high_offset] = ~report[buttons_high_offset];
+}
+
 void update_wii_extension_input(const std::vector<std::shared_ptr<Profile>> &profiles,
                                 bool full_poll, bool send_events,
                                 uint8_t format, uint8_t *report)

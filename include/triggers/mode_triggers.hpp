@@ -21,7 +21,7 @@ public:
     BluetoothModeActivationTrigger(proto_BluetoothMode mode, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~BluetoothModeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
-    int assignedDevices() { return AssignBluetoothGamepad; }
+    int assignedDevices() { return m_mode == BTWiimote ? AssignBluetoothWiimote : AssignBluetoothGamepad; }
 
 private:
     proto_BluetoothMode m_mode;

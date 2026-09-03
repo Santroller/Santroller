@@ -12,6 +12,7 @@
 #include "emulation/bt/bt_descriptors.h"
 #include "emulation/bt/bt_gamepad.h"
 #include "managers/config_manager.hpp"
+#include "devices/bt/bluetooth_stack.hpp"
 #include "btstack.h"
 #include "utils.h"
 #define SIZE_OF_BD_ADDRESS 18
@@ -135,9 +136,10 @@ void BTGamepadDevice::initialize()
         return;
     }
     printf("btgamepaddevice init\r\n");
-    l2cap_init();
-
-    sm_init();
+    if (!BluetoothStack::instance().begin())
+    {
+        return;
+    }
     sm_set_io_capabilities(IO_CAPABILITY_NO_INPUT_NO_OUTPUT);
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_MITM_PROTECTION | SM_AUTHREQ_BONDING);
 

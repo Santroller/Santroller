@@ -398,12 +398,21 @@ void write_register(struct wiimote_state *state, uint32_t offset, uint8_t size, 
       break;
     case 0xa4: //extension
       reg = (state->sys.wmp_state == 1) ? state->sys.register_a6 : state->sys.register_a4;
-
-      memcpy(reg + (offset & 0xff), buf, size);
+      if (state->sys.wmp_state == 1)
+      {
+        memcpy(reg + (offset & 0xff), buf, size);
+      }
+      else
+      {
+        for (i = 0; i < size; i++)
+        {
+          wii_extension_backend_write(state->sys.register_a4,
+                                      &state->sys.extension_encrypted,
+                                      &state->sys.extension_crypto_state,
+                                      (uint8_t)((offset + i) & 0xff), buf[i]);
+        }
+      }
       if (state->sys.wmp_state == 0 && (offset & 0xff) >= 0xfb && ((offset & 0xff) + size) <= 0xfb + size) {
-      // TODO: grab a copy of djh and see what this ends up like, does it need decryption?
-      printf("djh led: %d\r\n",state->sys.register_a4[0xfb]);
-        // djhEuphoriaLedState = state->sys.register_a4[0xfb];
       }
 
       //TODO: double check what this does, the buf location it's looking for
@@ -839,7 +848,7 @@ void wiimote_init(struct wiimote_state *state)
 
   //power on report
   struct report * rpt = report_queue_push(state);
-  rpt->len = 4;
+  rpt->len = 2;
   rpt->data.io = 0xa1;
   rpt->data.type = 0x30;
 }

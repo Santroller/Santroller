@@ -199,6 +199,10 @@ typedef struct{
   uint8_t fake_motion;
   uint8_t center_accel;
   uint8_t extension_type;
+  uint8_t extension_format;
+  uint8_t euphoria_led;
+  uint8_t player_led;
+  uint8_t rumble;
   uint8_t extension_size;
   uint8_t extension_data[32];
 }WiimoteReport;

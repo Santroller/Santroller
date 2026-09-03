@@ -6,37 +6,33 @@
 #include "managers/config_manager.hpp"
 #include "devices/bt/bt_classic_rx.hpp"
 #include "devices/bt/ble_rx.hpp"
-static bool bluetooth_initted = false;
+#include "devices/bt/bluetooth_stack.hpp"
 BluetoothDevice::BluetoothDevice(proto_BluetoothDevice device, uint16_t id) : Device(id), m_device(device)
 {
 }
 void BluetoothDevice::begin()
 {
     // TODO: if we add support for swapping pins, then we gotta deinit here if the pins change
-    if (bluetooth_initted)
+    if (BluetoothStack::instance().initialized())
     {
         return;
     }
-    printf("bt device init %d\r\n", bluetooth_initted);
-    if (cyw43_arch_init() == 0)
+    printf("bt device init\r\n");
+    if (BluetoothStack::instance().begin())
     {
         ConfigManager::instance().set_bluetooth_available(true);
         printf("bt device init success\r\n");
-        ble_main();
-        btstack_classic_main();
     }
     else
     {
         printf("bt device init failed\r\n");
         ConfigManager::instance().set_bluetooth_available(false);
     }
-    bluetooth_initted = true;
 }
 
 void BluetoothDevice::end(bool full)
 {
-    cyw43_arch_deinit();
-    bluetooth_initted = false;
+    BluetoothStack::instance().power_off();
 }
 BluetoothDevice::~BluetoothDevice()
 {

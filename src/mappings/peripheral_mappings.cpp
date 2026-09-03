@@ -458,6 +458,23 @@ void GamepadButtonMapping::update_wii(uint8_t format, uint8_t *buf)
     }
 }
 
+void GamepadButtonMapping::update_wiimote_core(wiimote_buttons *buttons)
+{
+    switch (m_mapping.mapping.mapping.gamepadButton)
+    {
+    case Gamepad_A: buttons->a |= m_lastValue; break;
+    case Gamepad_B: buttons->b |= m_lastValue; break;
+    case Gamepad_Back: buttons->minus |= m_lastValue; break;
+    case Gamepad_Start: buttons->plus |= m_lastValue; break;
+    case Gamepad_Guide: buttons->home |= m_lastValue; break;
+    case Gamepad_DpadUp: buttons->up |= m_lastValue; break;
+    case Gamepad_DpadDown: buttons->down |= m_lastValue; break;
+    case Gamepad_DpadLeft: buttons->left |= m_lastValue; break;
+    case Gamepad_DpadRight: buttons->right |= m_lastValue; break;
+    default: break;
+    }
+}
+
 void GamepadButtonMapping::update_switch(uint8_t *buf)
 {
     SwitchInputReport *report = (SwitchInputReport *)buf;

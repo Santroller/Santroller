@@ -18,8 +18,11 @@ public:
 
 private:
     WiimoteReport m_report = {};
+    uint8_t m_extension_initial_report[32] = {};
     uint8_t m_extension_report[32] = {};
     uint8_t m_extension_size = 0;
-    uint8_t m_extension_format = 3;
+    uint8_t m_extension_format = 1;
+    uint8_t m_buttons_low_idx = 0;
+    uint8_t m_buttons_high_idx = 0;
     bool m_initialized = false;
 };

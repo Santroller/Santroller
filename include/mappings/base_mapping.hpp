@@ -5,6 +5,7 @@
 #include "profiles/profile.hpp"
 #include "input.pb.h"
 #include "config.pb.h"
+#include "wiimote.h"
 
 class Mapping
 {
@@ -18,6 +19,7 @@ public:
     virtual void update(bool full_poll, bool send_events) = 0;
     virtual void update_hid(uint8_t *report) { (void)report; }
     virtual void update_wii(uint8_t format, uint8_t *buf) { (void)format; (void)buf; }
+    virtual void update_wiimote_core(wiimote_buttons *buttons) { (void)buttons; }
     virtual void update_switch(uint8_t *report) { (void)report; }
     virtual void update_ps2(uint8_t *report) { (void)report; }
     virtual void update_ps3(uint8_t *report) { (void)report; }

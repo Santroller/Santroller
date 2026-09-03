@@ -49,7 +49,6 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
             return nullptr;
         }
         instance = std::make_shared<WiiRemoteEmulationDeviceInstance>();
-        usb_mode = ModeWiiRb;
     }
     else if (assignment_mask & ProfileAssignMask_AssignPsx) {
         if (!emulation_devices.has_psx) {

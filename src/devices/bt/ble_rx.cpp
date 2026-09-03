@@ -533,7 +533,6 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
 
     if (packet_type != HCI_EVENT_PACKET)
         return;
-    printf("hci evt: %02x\r\n", hci_event_packet_get_type(packet));
     switch (hci_event_packet_get_type(packet))
     {
     case SM_EVENT_JUST_WORKS_REQUEST:
@@ -595,8 +594,6 @@ int ble_main(void)
     // hci_dump_init(hci_dump_embedded_stdout_get_instance());
 
     //
-    l2cap_init();
-    sm_init();
     sm_set_io_capabilities(IO_CAPABILITY_DISPLAY_ONLY);
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_BONDING);
     gatt_client_init();

@@ -255,6 +255,7 @@ add_executable(
   src/mappings/rock_revolution_mappings.cpp
   src/devices/bt/ble_rx.cpp
   src/devices/bt/bt_classic_rx.cpp
+  src/devices/bt/bluetooth_stack.cpp
   src/devices/usb.cpp
   src/usb/auth_broker.cpp
   src/devices/wii.cpp

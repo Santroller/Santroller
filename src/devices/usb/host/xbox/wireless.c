@@ -8,6 +8,7 @@
 #include <string.h>
 
 #define PAIRING_TIMEOUT_MS 30000
+#define PAIRING_RESPONSE_GRACE_MS 200
 
 static void wireless_handle_client_lost(struct mt76_dev *dev, const uint8_t *data, uint16_t len);
 static void wireless_handle_client_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, uint8_t wcid, const uint8_t *addr);
@@ -59,17 +60,28 @@ static void wireless_queue_client_command(struct mt76_dev *dev, uint8_t command,
 
 static void wireless_request_pairing(struct mt76_dev *dev, bool enable)
 {
+    enum mt76_pairing_state requested_state = enable ? MT76_PAIRING_ENABLING : MT76_PAIRING_DISABLING;
+    if (dev->pairing_state == requested_state ||
+        (enable && dev->pairing_state == MT76_PAIRING_ACTIVE) ||
+        (!enable && dev->pairing_state == MT76_PAIRING_DISABLED))
+    {
+        return;
+    }
+
+    dev->pairing_state = requested_state;
     dev->pending_pairing = enable ? 1 : 0;
 }
 
 static void wireless_apply_pairing(struct mt76_dev *dev, bool enable)
 {
     bool was_pairing_active = dev->pairing_active;
+    enum mt76_pairing_state was_pairing_state = dev->pairing_state;
     dev->pairing_active = enable;
 
     if (mt76_set_pairing(dev, enable) < 0)
     {
         dev->pairing_active = was_pairing_active;
+        dev->pairing_state = was_pairing_state;
         printf("Failed to %s pairing mode\n", enable ? "enable" : "disable");
         return;
     }
@@ -88,8 +100,14 @@ static void wireless_apply_pairing(struct mt76_dev *dev, bool enable)
                       enable ? MT_LED_BLINK : (has_clients ? MT_LED_ON : MT_LED_OFF));
     if (enable)
     {
+        dev->pairing_state = MT76_PAIRING_ACTIVE;
         dev->pairing_start_time = to_ms_since_boot(get_absolute_time());
         dev->pairing_response_sent = false;
+        dev->pairing_disable_at = 0;
+    }
+    else
+    {
+        dev->pairing_state = MT76_PAIRING_DISABLED;
     }
 }
 
@@ -127,7 +145,12 @@ void wireless_task(struct mt76_dev *dev)
     if (dev->pairing_active)
     {
         uint32_t now = to_ms_since_boot(get_absolute_time());
-        if (now - dev->pairing_start_time >= PAIRING_TIMEOUT_MS)
+        if (dev->pairing_response_sent && dev->pairing_disable_at != 0 &&
+            now >= dev->pairing_disable_at)
+        {
+            wireless_request_pairing(dev, false);
+        }
+        else if (!dev->pairing_response_sent && now - dev->pairing_start_time >= PAIRING_TIMEOUT_MS)
         {
             printf("Pairing timeout - disabling pairing mode\n");
             wireless_request_pairing(dev, false);
@@ -152,7 +175,7 @@ static void wireless_process_message(struct mt76_dev *dev, const uint8_t *data, 
         {
         case XONE_MT_EVT_BUTTON:
             printf("Pairing button pressed on adapter!\n");
-            if (!dev->pairing_active && dev->pending_pairing != 1)
+            if (dev->pairing_state == MT76_PAIRING_DISABLED)
             {
                 wireless_request_pairing(dev, true);
             }
@@ -361,7 +384,7 @@ static void wireless_handle_client_command(struct mt76_dev *dev, const uint8_t *
     switch (cmd)
     {
     case XONE_MT_CLIENT_PAIR_REQ:
-        if (dev->pairing_response_sent)
+        if (dev->pairing_state != MT76_PAIRING_ACTIVE || dev->pairing_response_sent)
         {
             break;
         }
@@ -375,9 +398,9 @@ static void wireless_handle_client_command(struct mt76_dev *dev, const uint8_t *
         }
 
         dev->pairing_response_sent = true;
-        wireless_request_pairing(dev, false);
+        dev->pairing_disable_at = to_ms_since_boot(get_absolute_time()) + PAIRING_RESPONSE_GRACE_MS;
 
-        printf("Pairing response sent, pairing mode disabled\n");
+        printf("Pairing response sent, pairing mode will disable\n");
         break;
 
     case XONE_MT_CLIENT_ENABLE_ENCRYPTION:

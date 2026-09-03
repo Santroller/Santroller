@@ -18,6 +18,13 @@ enum mt76_wireless_event_type {
     MT76_EVENT_CLIENT_COMMAND,
 };
 
+enum mt76_pairing_state {
+    MT76_PAIRING_DISABLED,
+    MT76_PAIRING_ACTIVE,
+    MT76_PAIRING_ENABLING,
+    MT76_PAIRING_DISABLING,
+};
+
 struct mt76_client {
     bool used;
     uint8_t addr[MT76_MAC_ADDR_LEN];
@@ -59,7 +66,9 @@ struct mt76_dev {
     uint32_t pairing_start_time;
     bool pairing_active;
     bool pairing_response_sent;
+    enum mt76_pairing_state pairing_state;
     volatile int8_t pending_pairing;
+    uint32_t pairing_disable_at;
 };
 
 bool mt76_init(struct mt76_dev *dev, uint8_t dev_addr);

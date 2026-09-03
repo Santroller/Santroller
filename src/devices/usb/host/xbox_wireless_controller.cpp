@@ -54,6 +54,7 @@ XboxWirelessController::~XboxWirelessController()
         auth_broker.unregister_handler(ModeXboxOne);
         m_auth_registered = false;
     }
+    gip_device_cleanup(&m_controller.gip_device);
 }
 
 void XboxWirelessController::disconnect()

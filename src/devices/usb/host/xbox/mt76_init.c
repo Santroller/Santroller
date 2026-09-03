@@ -18,6 +18,8 @@
 #define XONE_MT_QUEUE_DATA          0x00
 #define XONE_MT_QUEUE_AUDIO         0x02
 
+#define MT76_PAIR_TRACE 0
+
 // MCU Command Functions
 
 int mt76_select_function(struct mt76_dev *dev, enum mt76_mcu_function func, uint32_t val) {
@@ -410,6 +412,14 @@ int mt76_send_pair_response(struct mt76_dev *dev, const uint8_t *addr) {
     uint8_t pair_data[] = { 0x00, 0x45, 0x55, 0x01, 0x0f, 0x8f, 0xff, 0x87, 0x1f };
     memcpy(&frame[offset], pair_data, sizeof(pair_data));
     offset += sizeof(pair_data);
+
+#if MT76_PAIR_TRACE
+    printf("MT76: Pair response frame (%d bytes):", offset);
+    for (int i = 0; i < offset; i++) {
+        printf(" %02X", frame[i]);
+    }
+    printf("\n");
+#endif
     
     // Send via USB
     return mt76_send_wlan(dev, frame, offset);

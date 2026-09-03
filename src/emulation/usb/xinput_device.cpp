@@ -50,16 +50,16 @@ void XInputGamepadDevice::initialize()
     ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
     ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
 
-    memset(&initialReport, 0, sizeof(initialReport));
-    initialReport.leftStickX = 0;
-    initialReport.leftStickY = 0;
-    initialReport.rightStickX = 0;
-    initialReport.rightStickY = 0;
+    memset(&m_initial_report, 0, sizeof(m_initial_report));
+    m_initial_report.leftStickX = 0;
+    m_initial_report.leftStickY = 0;
+    m_initial_report.rightStickX = 0;
+    m_initial_report.rightStickY = 0;
     switch (subtype)
     {
     case RockBandDrums:
     {
-        XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)&initialReport;
+        XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)&m_initial_report;
         report->redVelocity = -1;
         report->blueVelocity = -1;
         report->greenVelocity = 0;
@@ -73,26 +73,26 @@ void XInputGamepadDevice::initialize()
         // {
         //     report->whammy = (INT16_MAX + (uint32_t)(report->whammy)) >> 1;
         // }
-        XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)&initialReport;
+        XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
     case LiveGuitar:
     {
-        XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&initialReport;
+        XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
     case GuitarHeroDrums:
     {
-        XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)&initialReport;
+        XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)&m_initial_report;
         report->leftThumbClick = true;
         break;
     }
     default:
         break;
     }
-    initialReport.rsize = sizeof(XInputGamepad_Data_t);
+    m_initial_report.rsize = sizeof(XInputGamepad_Data_t);
 }
 
 uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16_t max_len)
@@ -181,7 +181,7 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
     }
     if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
-    memcpy(epin_buf, &initialReport, sizeof(initialReport));
+    memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)epin_buf;
     for (const auto &profile : profiles)
     {

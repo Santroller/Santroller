@@ -21,7 +21,7 @@ void Ps2EmulationDeviceInstance::initialize()
     {
     case Gamepad:
     {
-        PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)initialReport;
+        PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)m_initial_report;
         memset(report, 0, sizeof(PS2Gamepad_Data_t));
         m_size = sizeof(PS2Gamepad_Data_t);
         report->leftStickX = PS3_STICK_CENTER;
@@ -34,7 +34,7 @@ void Ps2EmulationDeviceInstance::initialize()
     case GuitarHeroGuitar:
     {
 
-        PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)initialReport;
+        PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)m_initial_report;
         memset(report, 0, sizeof(PS2GuitarHeroGuitar_Data_t));
         m_size = sizeof(PS2GuitarHeroGuitar_Data_t);
         break;
@@ -47,7 +47,7 @@ void Ps2EmulationDeviceInstance::process(bool full_poll, bool send_events)
 {
     // TODO: do we need to limit poll rate with this
     // m_device->ready();
-    memcpy(m_buffer, initialReport, sizeof(initialReport));
+    memcpy(m_buffer, m_initial_report, sizeof(m_initial_report));
     for (const auto &profile : profiles)
     {
         for (const auto &mapping : profile->mappings)

@@ -6,15 +6,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <pico/i2c_slave.h>
-static wii_extension_context_t context0;
-static wii_extension_context_t context1;
+static wii_extension_context_t context_0;
+static wii_extension_context_t context_1;
 static void init(wii_extension_context_t *context)
 {
     uint8_t extension_id = context->type == GuitarHeroGuitar ? WII_EXTENSION_GUITAR :
                            context->type == GuitarHeroDrums ? WII_EXTENSION_DRUMS :
                            context->type == DjHeroTurntable ? WII_EXTENSION_TURNTABLE :
                            WII_EXTENSION_CLASSIC;
-    wii_extension_backend_init(context->twi_reg, &context->encrypted, extension_id);
+    wii_extension_backend_init(context->registers, &context->encrypted, extension_id);
 }
 static void i2c_slave_handler(i2c_inst_t *i2c, wii_extension_context_t *context, i2c_slave_event_t event)
 {
@@ -29,21 +29,21 @@ static void i2c_slave_handler(i2c_inst_t *i2c, wii_extension_context_t *context,
             uint8_t data = i2c_read_byte_raw(i2c);
             context->mem_address = data;
             context->mem_address_written = true;
-            context->transfer_len = 0;
+            context->transfer_length = 0;
         }
         else
         {
             // save into memory
             uint8_t data = i2c_read_byte_raw(i2c);
-            wii_extension_backend_write(context->twi_reg, &context->encrypted,
+            wii_extension_backend_write(context->registers, &context->encrypted,
                                         &context->state, context->mem_address, data);
             // Euphoria LED
             if (context->mem_address == 0xFB)
             {
-                context->djhEuphoriaLedState = data;
+                context->djh_euphoria_led_state = data;
             }
 
-            context->transfer_len++;
+            context->transfer_length++;
             context->mem_address++;
         }
         break;
@@ -52,22 +52,22 @@ static void i2c_slave_handler(i2c_inst_t *i2c, wii_extension_context_t *context,
     {
         // master is requesting data
         // load from memory
-        uint8_t data = wii_extension_backend_read(context->twi_reg, context->encrypted,
+        uint8_t data = wii_extension_backend_read(context->registers, context->encrypted,
                                                    &context->state, context->mem_address);
         i2c_write_byte_raw(i2c, data);
         context->mem_address++;
-        context->transfer_len++;
+        context->transfer_length++;
         break;
     }
     case I2C_SLAVE_FINISH:
     {
         // master has signalled Stop / Restart
-        if (context->transfer_len)
+        if (context->transfer_length)
         {
             if (context->mem_address == 0x50)
             {
                 // generate tables once all data is loaded
-                wii_extension_backend_generate_tables(context->twi_reg, &context->state,
+                wii_extension_backend_generate_tables(context->registers, &context->state,
                                                        &context->encrypted);
             }
             context->mem_address_written = false;
@@ -80,33 +80,33 @@ static void i2c_slave_handler(i2c_inst_t *i2c, wii_extension_context_t *context,
 }
 static void i2c_slave_handler0(i2c_inst_t *i2c, i2c_slave_event_t event)
 {
-    i2c_slave_handler(i2c, &context0, event);
+    i2c_slave_handler(i2c, &context_0, event);
 }
 static void i2c_slave_handler1(i2c_inst_t *i2c, i2c_slave_event_t event)
 {
-    i2c_slave_handler(i2c, &context1, event);
+    i2c_slave_handler(i2c, &context_1, event);
 }
 void WiiExtensionEmulation::begin(SubType type)
 {
-    printf("WiiExtensionEmulation begin %d %d %d\r\n", sda, scl, mBlock);
-    if (mBlock == 0)
+    printf("WiiExtensionEmulation begin %d %d %d\r\n", m_sda, m_scl, m_block);
+    if (m_block == 0)
     {
-        context = &context0;
+        m_context = &context_0;
     }
     else
     {
-        context = &context1;
+        m_context = &context_1;
     }
-    context->type = type;
-    init(context);
-    gpio_init(sda);
-    gpio_set_function(sda, GPIO_FUNC_I2C);
-    gpio_pull_up(sda);
+    m_context->type = type;
+    init(m_context);
+    gpio_init(m_sda);
+    gpio_set_function(m_sda, GPIO_FUNC_I2C);
+    gpio_pull_up(m_sda);
 
-    gpio_init(scl);
-    gpio_set_function(scl, GPIO_FUNC_I2C);
-    gpio_pull_up(scl);
-    if (mBlock == 0)
+    gpio_init(m_scl);
+    gpio_set_function(m_scl, GPIO_FUNC_I2C);
+    gpio_pull_up(m_scl);
+    if (m_block == 0)
     {
         i2c_init(i2c0, 100000);
         // configure I2C0 for slave mode
@@ -119,15 +119,15 @@ void WiiExtensionEmulation::begin(SubType type)
         i2c_slave_init(i2c1, WII_ADDR, &i2c_slave_handler1);
     }
 }
-WiiExtensionEmulation::WiiExtensionEmulation(uint8_t block, uint8_t sda, uint8_t scl) : mBlock(block), sda(sda), scl(scl)
+WiiExtensionEmulation::WiiExtensionEmulation(uint8_t block, uint8_t sda, uint8_t scl) : m_block(block), m_sda(sda), m_scl(scl)
 {
 }
-void WiiExtensionEmulation::setInputs(uint8_t *inputs, uint8_t len)
+void WiiExtensionEmulation::set_inputs(uint8_t *inputs, uint8_t len)
 {
-    memcpy(context->twi_reg, inputs, len);
+    memcpy(m_context->registers, inputs, len);
 }
 
 uint8_t WiiExtensionEmulation::wii_data_format()
 {
-    return context->twi_reg[0xFE];
+    return m_context->registers[0xFE];
 }

@@ -40,8 +40,8 @@ void PS5GamepadDevice::initialize()
     m_epout = next_epout();
     ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
     ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
-    PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)initialReport;
-    memset(initialReport, 0, sizeof(initialReport));
+    PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)m_initial_report;
+    memset(m_initial_report, 0, sizeof(m_initial_report));
     gamepad->report_id = 1;
     gamepad->leftStickX = PS3_STICK_CENTER;
     gamepad->leftStickY = PS3_STICK_CENTER;
@@ -74,7 +74,7 @@ void PS5GamepadDevice::process(bool full_poll, bool send_events)
     }
     if (!ready() || !got_feature)
         return;
-    memcpy(epin_buf, &initialReport, sizeof(initialReport));
+    memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     for (const auto &profile : profiles)
     {
         for (const auto &mapping : profile->mappings)

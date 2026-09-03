@@ -51,8 +51,8 @@ protected:
   CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
   CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
   CFG_TUSB_MEM_ALIGN uint8_t ctrl_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
-  uint8_t initialReport[CFG_TUD_XINPUT_TX_BUFSIZE];
-  uint8_t lastReport[CFG_TUD_XINPUT_TX_BUFSIZE];
+  uint8_t m_initial_report[CFG_TUD_XINPUT_TX_BUFSIZE];
+  uint8_t m_last_report[CFG_TUD_XINPUT_TX_BUFSIZE];
 };
 
 class HIDConfigDevice : public HIDDevice

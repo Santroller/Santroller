@@ -52,5 +52,5 @@ public:
     static uint8_t lastIntf;
 
 private:
-    XInputGamepad_Data_t initialReport;
+    XInputGamepad_Data_t m_initial_report;
 };

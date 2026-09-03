@@ -21,7 +21,7 @@ public:
     void process(bool full_poll, bool send_events);
 
 private:
-    uint8_t initialReport[CFG_TUD_XINPUT_TX_BUFSIZE];
-    uint8_t lastReport[CFG_TUD_XINPUT_TX_BUFSIZE];
-    uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
+    uint8_t m_initial_report[CFG_TUD_XINPUT_TX_BUFSIZE];
+    uint8_t m_last_report[CFG_TUD_XINPUT_TX_BUFSIZE];
+    uint8_t m_epin_buffer[CFG_TUD_XINPUT_TX_BUFSIZE];
 };

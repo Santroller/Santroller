@@ -48,7 +48,7 @@ void PS4GamepadDevice::initialize()
     ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
     ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
 
-    PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)initialReport;
+    PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)m_initial_report;
     gamepad->report_id = 1;
     gamepad->leftStickX = PS3_STICK_CENTER;
     gamepad->leftStickY = PS3_STICK_CENTER;
@@ -81,7 +81,7 @@ void PS4GamepadDevice::process(bool full_poll, bool send_events)
     }
     if (!ready())
         return;
-    memcpy(epin_buf, &initialReport, sizeof(initialReport));
+    memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     for (const auto &profile : profiles)
     {
         for (const auto &mapping : profile->mappings)
@@ -98,7 +98,7 @@ void PS4GamepadDevice::process(bool full_poll, bool send_events)
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
     send_report(sizeof(PS4Dpad_Data_t), 0, epin_buf);
-    PS4Dpad_Data_t *initial = (PS4Dpad_Data_t *)initialReport;
+    PS4Dpad_Data_t *initial = (PS4Dpad_Data_t *)m_initial_report;
     initial->reportCounter++;
     if (initial->reportCounter == 0) {
         initial->reportCounter = 1;

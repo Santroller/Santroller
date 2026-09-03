@@ -175,7 +175,7 @@ void PS3GamepadDevice::initialize()
     ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
     if (subtype == Gamepad)
     {
-        PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)initialReport;
+        PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)m_initial_report;
         memset(report, 0, sizeof(PS3Gamepad_Data_t));
         report->report_id = 1;
         report->accelX = __builtin_bswap16(PS3_ACCEL_CENTER);
@@ -188,7 +188,7 @@ void PS3GamepadDevice::initialize()
         report->rightStickY = PS3_STICK_CENTER;
         return;
     }
-    PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)initialReport;
+    PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)m_initial_report;
     memset(gamepad, 0, sizeof(PS3Dpad_Data_t));
 
     asm volatile("" ::
@@ -213,7 +213,7 @@ void PS3GamepadDevice::initialize()
 
     case RockBandDrums:
     {
-        PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)initialReport;
+        PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)m_initial_report;
         report->redVelocity = 0;
         report->blueVelocity = 0;
         report->greenVelocity = 0;
@@ -222,7 +222,7 @@ void PS3GamepadDevice::initialize()
     }
     case RockBandGuitar:
     {
-        PS3RockBandGuitar_Data_t *report = (PS3RockBandGuitar_Data_t *)initialReport;
+        PS3RockBandGuitar_Data_t *report = (PS3RockBandGuitar_Data_t *)m_initial_report;
         report->whammy = 0;
         break;
     }
@@ -270,7 +270,7 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
         }
         return;
     }
-    memcpy(epin_buf, &initialReport, sizeof(initialReport));
+    memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     for (const auto &profile : profiles)
     {
         for (const auto &mapping : profile->mappings)
@@ -582,7 +582,7 @@ void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
                 {
                     m_enabled = true;
                     m_pg_id = 0;
-                    PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)initialReport;
+                    PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)m_initial_report;
                     if (subtype == PowerGigGuitar)
                     {
                         gamepad->accelX = __builtin_bswap16(POWERGIG_GUITAR_PG_MODE);

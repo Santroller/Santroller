@@ -35,12 +35,12 @@ void HIDGamepadDevice::initialize()
   m_strid = next_strid();
   ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
   ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
-  memset(&initialReport, 0, sizeof(initialReport));
+  memset(&m_initial_report, 0, sizeof(m_initial_report));
   switch (subtype)
   {
   case RockBandDrums:
   {
-    XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)&initialReport;
+    XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)&m_initial_report;
     report->redVelocity = -1;
     report->blueVelocity = -1;
     report->greenVelocity = 0;
@@ -49,26 +49,26 @@ void HIDGamepadDevice::initialize()
   }
   case GuitarHeroGuitar:
   {
-    XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)&initialReport;
+    XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)&m_initial_report;
     report->whammy = INT16_MIN;
     break;
   }
   case LiveGuitar:
   {
-    XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&initialReport;
+    XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&m_initial_report;
     report->whammy = INT16_MIN;
     break;
   }
   case GuitarHeroDrums:
   {
-    XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)&initialReport;
+    XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)&m_initial_report;
     report->leftThumbClick = true;
     break;
   }
   default:
     break;
   }
-  XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)initialReport;
+  XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)m_initial_report;
   gamepad->rsize = sizeof(XInputGamepad_Data_t);
 }
 void HIDGamepadDevice::process(bool full_poll, bool send_events)
@@ -121,7 +121,7 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
     return;
   }
   PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
-  memcpy(epin_buf, initialReport, sizeof(epin_buf));
+  memcpy(epin_buf, m_initial_report, sizeof(epin_buf));
   report->rid = ReportIdGamepad;
   report->rsize = sizeof(PCGamepadDpad_Data_t);
 
@@ -161,13 +161,13 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
     XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
     reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
   }
-  // if (memcmp(lastReport, epin_buf, sizeof(XInputGamepad_Data_t)) != 0)
+  // if (memcmp(m_last_report, epin_buf, sizeof(XInputGamepad_Data_t)) != 0)
   // {
   if (!ready()) {
     return;
   }
   send_report(sizeof(XInputGamepad_Data_t), 0, epin_buf);
-  //   memcpy(lastReport, epin_buf, sizeof(XInputGamepad_Data_t));
+  //   memcpy(m_last_report, epin_buf, sizeof(XInputGamepad_Data_t));
   // }
 }
 

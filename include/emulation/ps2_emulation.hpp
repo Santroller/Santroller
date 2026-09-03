@@ -24,7 +24,7 @@ private:
     proto_PSXEmulationDevice m_device;
     PSXEmulation m_controller;
     uint8_t m_size;
-    uint8_t initialReport[32];
+    uint8_t m_initial_report[32];
     uint8_t m_buffer[32];
     uint8_t m_buffer_formatted[32];
 };

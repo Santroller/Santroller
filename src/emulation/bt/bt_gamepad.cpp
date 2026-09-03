@@ -198,12 +198,12 @@ void BTGamepadDevice::initialize()
     // register for HIDS
     hids_device_register_packet_handler(packet_handler);
 
-    memset(&initialReport, 0, sizeof(initialReport));
+    memset(&m_initial_report, 0, sizeof(m_initial_report));
     switch (subtype)
     {
     case RockBandDrums:
     {
-        XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)&initialReport;
+        XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)&m_initial_report;
         report->redVelocity = -1;
         report->blueVelocity = -1;
         report->greenVelocity = 0;
@@ -212,34 +212,34 @@ void BTGamepadDevice::initialize()
     }
     case GuitarHeroGuitar:
     {
-        XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)&initialReport;
+        XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
     case LiveGuitar:
     {
-        XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&initialReport;
+        XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
     case GuitarHeroDrums:
     {
-        XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)&initialReport;
+        XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)&m_initial_report;
         report->leftThumbClick = true;
         break;
     }
     default:
         break;
     }
-    XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)initialReport;
+    XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)m_initial_report;
     gamepad->rsize = sizeof(XInputGamepad_Data_t);
 }
 void BTGamepadDevice::process(bool full_poll, bool send_events)
 {
     if (con_handle != HCI_CON_HANDLE_INVALID)
     {
-        PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
-        memcpy(epin_buf, initialReport, sizeof(epin_buf));
+        PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)m_epin_buffer;
+        memcpy(m_epin_buffer, m_initial_report, sizeof(m_epin_buffer));
         report->rid = ReportIdGamepad;
         report->rsize = sizeof(PCGamepadDpad_Data_t);
 
@@ -248,7 +248,7 @@ void BTGamepadDevice::process(bool full_poll, bool send_events)
             for (const auto &mapping : profile->mappings)
             {
                 mapping->update(full_poll, send_events);
-                mapping->update_hid(epin_buf);
+                mapping->update_hid(m_epin_buffer);
             }
             for (const auto &led : profile->leds)
             {
@@ -272,11 +272,11 @@ void BTGamepadDevice::process(bool full_poll, bool send_events)
             XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
             reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
         }
-        if (memcmp(lastReport, epin_buf, sizeof(XInputGamepad_Data_t)) != 0)
+        if (memcmp(m_last_report, m_epin_buffer, sizeof(XInputGamepad_Data_t)) != 0)
         {
 
-            send_report(sizeof(XInputGamepad_Data_t), epin_buf);
-            memcpy(lastReport, epin_buf, sizeof(XInputGamepad_Data_t));
+            send_report(sizeof(XInputGamepad_Data_t), m_epin_buffer);
+            memcpy(m_last_report, m_epin_buffer, sizeof(XInputGamepad_Data_t));
         }
     }
 }

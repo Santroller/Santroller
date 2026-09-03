@@ -51,5 +51,5 @@ public:
 
     CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
     CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
-    OGXboxGamepad_Data_t initialReport;
+    OGXboxGamepad_Data_t m_initial_report;
 };

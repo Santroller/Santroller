@@ -143,12 +143,12 @@ void OGXboxGamepadDevice::initialize()
     ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
     ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
 
-    memset(&initialReport, 0, sizeof(initialReport));
+    memset(&m_initial_report, 0, sizeof(m_initial_report));
     switch (subtype)
     {
     case RockBandDrums:
     {
-        OGXboxRockBandDrums_Data_t *report = (OGXboxRockBandDrums_Data_t *)&initialReport;
+        OGXboxRockBandDrums_Data_t *report = (OGXboxRockBandDrums_Data_t *)&m_initial_report;
         report->redVelocity = -1;
         report->blueVelocity = -1;
         report->greenVelocity = 0;
@@ -162,26 +162,26 @@ void OGXboxGamepadDevice::initialize()
         // {
         //     report->whammy = (INT16_MAX + (uint32_t)(report->whammy)) >> 1;
         // }
-        OGXboxGuitarHeroGuitar_Data_t *report = (OGXboxGuitarHeroGuitar_Data_t *)&initialReport;
+        OGXboxGuitarHeroGuitar_Data_t *report = (OGXboxGuitarHeroGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
     case LiveGuitar:
     {
-        OGXboxGHLGuitar_Data_t *report = (OGXboxGHLGuitar_Data_t *)&initialReport;
+        OGXboxGHLGuitar_Data_t *report = (OGXboxGHLGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
     case GuitarHeroDrums:
     {
-        OGXboxGuitarHeroDrums_Data_t *report = (OGXboxGuitarHeroDrums_Data_t *)&initialReport;
+        OGXboxGuitarHeroDrums_Data_t *report = (OGXboxGuitarHeroDrums_Data_t *)&m_initial_report;
         report->leftThumbClick = true;
         break;
     }
     default:
         break;
     }
-    initialReport.rsize = sizeof(OGXboxGamepad_Data_t);
+    m_initial_report.rsize = sizeof(OGXboxGamepad_Data_t);
 }
 void OGXboxGamepadDevice::process(bool full_poll, bool send_events)
 {

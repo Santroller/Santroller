@@ -390,7 +390,7 @@ bool XboxOneGamepadDevice::send_xbone_usb(uint8_t const *report, uint16_t report
 
 void XboxOneGamepadDevice::process_report_queue(uint32_t now)
 {
-    if (!report_queue.empty() && (now - lastReportQueue) > REPORT_QUEUE_INTERVAL)
+    if (!report_queue.empty() && (now - m_last_report_queue) > REPORT_QUEUE_INTERVAL)
     {
         if (send_xbone_usb(report_queue.front().report, report_queue.front().len))
         {

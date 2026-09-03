@@ -72,7 +72,7 @@ private:
     XGIPProtocol outgoingXGIP;
     XGIPProtocol incomingXGIP;
     // Check report queue every 35 milliseconds
-    uint32_t lastReportQueue = 0;
+    uint32_t m_last_report_queue = 0;
 
     std::queue<report_queue_t> report_queue;
 

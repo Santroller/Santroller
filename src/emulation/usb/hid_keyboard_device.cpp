@@ -28,7 +28,7 @@ void HIDKeyboardDevice::initialize()
   m_strid = next_strid();
   ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
   ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
-  memset(&initialReport, 0, sizeof(initialReport));
+  memset(&m_initial_report, 0, sizeof(m_initial_report));
 }
 void HIDKeyboardDevice::process(bool full_poll, bool send_events)
 {
@@ -55,7 +55,7 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
     return;
   }
   hid_keyboard_report_t *report = (hid_keyboard_report_t *)epin_buf;
-  memcpy(epin_buf, initialReport, sizeof(epin_buf));
+  memcpy(epin_buf, m_initial_report, sizeof(epin_buf));
   for (const auto &profile : profiles)
   {
     auto &state = profile->keyboard_state;

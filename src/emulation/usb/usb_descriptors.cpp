@@ -229,7 +229,7 @@ bool usb_device_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
   }
   else
   {
-    dev = ProfileManager::instance().get_usb_instance_by_epout(ep_addr & (~0x80));
+    dev = ProfileManager::instance().get_usb_instance_by_epin(ep_addr & (~0x80));
   }
   if (!dev)
   {

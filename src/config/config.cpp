@@ -484,48 +484,67 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
         return false;
     }
-    auto profile = std::make_shared<Profile>();
-    device_mgr.for_each_active_device([profile](const auto &device)
+    // Snapshot this profile submessage's bytes (config is decoded from an in-memory
+    // buffer, so this is just a cheap copy of the stream cursor) so it can be
+    // re-decoded once per physical device combo that matches its triggers. That
+    // gives each matching device (e.g. two identical USB guitars) its own bound
+    // Profile/Instance instead of them fighting over one shared one.
+    pb_istream_t profile_bytes = *stream;
+
+    while (true)
     {
-        profile->devices.emplace(device->m_id, device);
-        // printf("load device: %p %p %d\r\n", profile.get(), device.get(), device->m_id);
-    });
-    ConfigDecodeContext context{profile, emulation_devices};
-    proto_Profile proto_profile;
-    memset(&proto_profile, 0, sizeof(proto_profile));
-    proto_profile.assignments.funcs.decode = &load_assignments;
-    proto_profile.assignments.arg = &context;
-    proto_profile.mappings.funcs.decode = &load_mapping;
-    proto_profile.mappings.arg = &context;
-    proto_profile.opts.funcs.decode = &load_opts;
-    proto_profile.opts.arg = &context;
-    proto_profile.leds.funcs.decode = &load_leds;
-    proto_profile.leds.arg = &context;
-    pb_decode(stream, proto_Profile_fields, &proto_profile);
-    
-    // Validate triggers and assign profile to devices
-    for (auto &list : profile->triggers)
-    {
-        if (list->validate(true, false, false))
+        auto profile = std::make_shared<Profile>();
+        device_mgr.for_each_active_device([profile](const auto &device)
         {
-            int assignedDevices = list->assignedDevices();
-            ConsoleMode usb_mode = config_mgr.get_requested_mode();
-            ConsoleMode forced_usb_mode;
-            if (list->forcedConsoleMode(forced_usb_mode))
+            profile->devices.emplace(device->m_id, device);
+            // printf("load device: %p %p %d\r\n", profile.get(), device.get(), device->m_id);
+        });
+        ConfigDecodeContext context{profile, emulation_devices};
+        proto_Profile proto_profile;
+        memset(&proto_profile, 0, sizeof(proto_profile));
+        proto_profile.assignments.funcs.decode = &load_assignments;
+        proto_profile.assignments.arg = &context;
+        proto_profile.mappings.funcs.decode = &load_mapping;
+        proto_profile.mappings.arg = &context;
+        proto_profile.opts.funcs.decode = &load_opts;
+        proto_profile.opts.arg = &context;
+        proto_profile.leds.funcs.decode = &load_leds;
+        proto_profile.leds.arg = &context;
+        pb_istream_t decode_stream = profile_bytes;
+        pb_decode(&decode_stream, proto_Profile_fields, &proto_profile);
+
+        // Validate triggers and assign profile to devices - every list that matches
+        // (not just the first) gets activated, so one profile can drive multiple devices at once.
+        bool matched = false;
+        for (auto &list : profile->triggers)
+        {
+            if (list->validate(true, false, false))
             {
-                printf("setting requested mode: %d, old: %d\r\n", forced_usb_mode, config_mgr.get_requested_mode());
-                config_mgr.request_mode(forced_usb_mode);
-                usb_mode = forced_usb_mode;
+                matched = true;
+                int assignedDevices = list->assignedDevices();
+                ConsoleMode usb_mode = config_mgr.get_requested_mode();
+                ConsoleMode forced_usb_mode;
+                if (list->forcedConsoleMode(forced_usb_mode))
+                {
+                    printf("setting requested mode: %d, old: %d\r\n", forced_usb_mode, config_mgr.get_requested_mode());
+                    config_mgr.request_mode(forced_usb_mode);
+                    usb_mode = forced_usb_mode;
+                }
+                printf("profile assigned! profile_id=%d\r\n", profile->profile_id);
+                
+                // Track subtype changes
+                profile_mgr.track_profile_type(profile->profile_id, profile->subtype);
+                
+                // Assign profile to appropriate devices
+                profile_mgr.assign_profile_to_devices(profile, assignedDevices, usb_mode, *context.emulation_devices);
             }
-            printf("profile assigned! profile_id=%d\r\n", profile->profile_id);
-            
-            // Track subtype changes
-            profile_mgr.track_profile_type(profile->profile_id, profile->subtype);
-            
-            // Assign profile to appropriate devices
-            profile_mgr.assign_profile_to_devices(profile, assignedDevices, usb_mode, *context.emulation_devices);
+        }
+
+        if (!matched)
+        {
             break;
         }
+        // loop again: other still-assignable devices may satisfy this profile too
     }
     return true;
 }

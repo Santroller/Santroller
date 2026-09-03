@@ -11,22 +11,24 @@
 
 namespace
 {
-void release_profile_contents(std::unordered_map<uint32_t, std::shared_ptr<Profile>>& profiles)
+void release_profile_contents(std::unordered_map<uint32_t, std::vector<std::shared_ptr<Profile>>>& profiles)
 {
     for (auto& profile_pair : profiles)
     {
-        auto& profile = profile_pair.second;
-        profile->mappings.clear();
-        profile->triggers.clear();
-        profile->leds.clear();
-        profile->devices.clear();
+        for (auto& profile : profile_pair.second)
+        {
+            profile->mappings.clear();
+            profile->triggers.clear();
+            profile->leds.clear();
+            profile->devices.clear();
+        }
     }
 }
 }
 
 void ProfileManager::add_profile(uint32_t profile_id, std::shared_ptr<Profile> profile)
 {
-    m_profiles[profile_id] = profile;
+    m_profiles[profile_id].push_back(profile);
 }
 
 void ProfileManager::remove_profile(uint32_t profile_id)
@@ -34,28 +36,47 @@ void ProfileManager::remove_profile(uint32_t profile_id)
     auto it = m_profile_to_instance.find(profile_id);
     if (it != m_profile_to_instance.end())
     {
-        remove_instance(it->second);
+        // copy first since remove_instance() mutates m_profile_to_instance
+        auto instances = it->second;
+        for (auto& instance : instances)
+        {
+            remove_instance(instance);
+        }
     }
     m_profiles.erase(profile_id);
 }
 
 std::shared_ptr<Profile> ProfileManager::get_profile(uint32_t profile_id)
 {
+    // A profile_id can back multiple physical instances; return the first as a representative.
     auto it = m_profiles.find(profile_id);
-    return (it != m_profiles.end()) ? it->second : nullptr;
+    if (it == m_profiles.end() || it->second.empty())
+    {
+        return nullptr;
+    }
+    return it->second.front();
 }
 
 void ProfileManager::register_instance(std::shared_ptr<Instance> instance, std::shared_ptr<Profile> profile)
 {
     m_active_instances.push_back(instance);
-    m_profile_to_instance[profile->profile_id] = instance;
+    m_profile_to_instance[profile->profile_id].push_back(instance);
 }
 
 void ProfileManager::remove_instance(std::shared_ptr<Instance> instance)
 {
     for (const auto& profile : instance->profiles)
     {
-        m_profile_to_instance.erase(profile->profile_id);
+        auto it = m_profile_to_instance.find(profile->profile_id);
+        if (it != m_profile_to_instance.end())
+        {
+            auto& instances = it->second;
+            instances.erase(std::remove(instances.begin(), instances.end(), instance), instances.end());
+            if (instances.empty())
+            {
+                m_profile_to_instance.erase(it);
+            }
+        }
         
         for (auto& device_pair : profile->devices)
         {
@@ -74,15 +95,16 @@ void ProfileManager::update_device_assignments(bool full_poll, bool send_events)
 {
     for (auto& profile_pair : m_profiles)
     {
-        auto& profile = profile_pair.second;
-        
-        for (auto& trigger_list : profile->triggers)
+        for (auto& profile : profile_pair.second)
         {
-            bool matched = trigger_list->validate(false, full_poll, send_events);
-            
-            if (matched)
+            for (auto& trigger_list : profile->triggers)
             {
-                trigger_list->validate(true, full_poll, send_events);
+                bool matched = trigger_list->validate(false, full_poll, send_events);
+                
+                if (matched)
+                {
+                    trigger_list->validate(true, full_poll, send_events);
+                }
             }
         }
     }
@@ -138,7 +160,10 @@ bool ProfileManager::assign_profile_to_devices(
 
     for (int assignment_type : assignment_types)
     {
-        if (!(assigned_devices & assignment_type) || config_mgr.has_seen_assignment(assignment_type))
+        // USB is composite (multiple interfaces), so unlike the single-resource
+        // assignments below it can be granted to more than one profile per boot.
+        bool exclusive = assignment_type != ProfileAssignMask_AssignUsb;
+        if (!(assigned_devices & assignment_type) || (exclusive && config_mgr.has_seen_assignment(assignment_type)))
         {
             continue;
         }
@@ -155,7 +180,10 @@ bool ProfileManager::assign_profile_to_devices(
         if (instance)
         {
             printf("Successfully assigned profile %u to assignment type %d\n", profile->profile_id, assignment_type);
-            config_mgr.mark_seen_assignment(assignment_type);
+            if (exclusive)
+            {
+                config_mgr.mark_seen_assignment(assignment_type);
+            }
             assigned = true;
         }
     }
@@ -205,10 +233,12 @@ bool ProfileManager::has_previous_types() const
 }
 
 void ProfileManager::update_all_profile_devices(bool profile_changed, bool send_events) {
-    for (const auto &profile : m_profiles) {
-        for (const auto &device : profile.second->devices) {
-            if (device.second) {
-                device.second->update(profile_changed, send_events);
+    for (const auto &entry : m_profiles) {
+        for (const auto &profile : entry.second) {
+            for (const auto &device : profile->devices) {
+                if (device.second) {
+                    device.second->update(profile_changed, send_events);
+                }
             }
         }
     }

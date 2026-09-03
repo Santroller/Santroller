@@ -41,6 +41,7 @@ std::shared_ptr<UsbHostInterface> HidHost::open(std::shared_ptr<UsbHostDevice> l
 
     uint16_t vid, pid;
     tuh_vid_pid_get(dev_addr, &vid, &pid);
+    printf("vid_pid: %04x_%04x\r\n", vid, pid);
     tuh_descriptor_get_hid_report_sync(dev_addr, desc_itf->bInterfaceNumber, x_desc->bReportType, 0, temp_buf, x_desc->wReportLength);
     HID_ReportInfo_t *info;
     if (USB_ProcessHIDReport(temp_buf, x_desc->wReportLength, &info) == HID_PARSE_Successful)

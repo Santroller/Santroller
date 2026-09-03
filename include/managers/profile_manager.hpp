@@ -40,12 +40,17 @@ public:
     void remove_instance(std::shared_ptr<Instance> instance);
     
     bool has_active_instances() const;
+    // Calls func(profile_id, profile) once per physical Profile instance -
+    // a profile_id can have more than one instance if multiple devices matched it.
     template <typename Func>
     void for_each_profile(Func func) const
     {
-        for (const auto &profile : m_profiles)
+        for (const auto &entry : m_profiles)
         {
-            func(profile.first, profile.second);
+            for (const auto &profile : entry.second)
+            {
+                func(entry.first, profile);
+            }
         }
     }
     
@@ -93,9 +98,9 @@ private:
     ProfileManager(const ProfileManager&) = delete;
     ProfileManager& operator=(const ProfileManager&) = delete;
 
-    std::unordered_map<uint32_t, std::shared_ptr<Profile>> m_profiles;
+    std::unordered_map<uint32_t, std::vector<std::shared_ptr<Profile>>> m_profiles;
     std::vector<std::shared_ptr<Instance>> m_active_instances;
-    std::unordered_map<uint32_t, std::shared_ptr<Instance>> m_profile_to_instance;
+    std::unordered_map<uint32_t, std::vector<std::shared_ptr<Instance>>> m_profile_to_instance;
     
     std::vector<std::shared_ptr<Instance>> m_instances;
     std::shared_ptr<UsbDevice> m_usb_instances[32];

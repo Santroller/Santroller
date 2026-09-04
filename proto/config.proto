@@ -184,9 +184,15 @@ message ActiveProfileDevice {
   optional uint32 sourceId = 3;
 }
 
+message ActiveProfileAssignment {
+  required int32 profile = 1;
+  required uint32 listId = 2;
+}
+
 message GetActiveProfiles {
   repeated int32 profiles = 1;
   repeated ActiveProfileDevice profileDevices = 2;
+  repeated ActiveProfileAssignment activeAssignments = 3;
 }
 
 message GetVersion {

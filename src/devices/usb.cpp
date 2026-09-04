@@ -246,6 +246,7 @@ void process_product_string(tuh_xfer_t *xfer)
 }
 bool UsbHostInterface::set_config()
 {
+    still_connected = true;
     // TODO: get lang id and use it
     // also, deal with devices that dont have product names
     if (m_has_name)
@@ -266,6 +267,7 @@ bool UsbHostInterface::set_config()
 
 void UsbHostInterface::update(bool full_poll, bool send_events)
 {
+    still_connected = true;
     MidiDevice::update(full_poll, send_events);
     if (send_events && full_poll)
     {
@@ -428,6 +430,7 @@ void UsbHostDevice::disconnect()
 
 void UsbHostInterface::disconnect()
 {
+    still_connected = false;
     proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, SubType_Gamepad, m_dev_addr, m_interface, false}}};
     event.event.usb.has_sourceId = true;
     event.event.usb.sourceId = source_id();

@@ -11,6 +11,12 @@
 // Destructor must be defined where ActivationTrigger is a complete type
 ActivationTriggerList::~ActivationTriggerList() = default;
 
+void send_activation_list_event(uint32_t list_id, bool state)
+{
+    proto_Event event = {which_event : proto_Event_activationList_tag, event : {activationList : {list_id, state}}};
+    HIDConfigDevice::send_event(event, true);
+}
+
 bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool send_events)
 {
     if (claim_devices && m_claimed)
@@ -21,10 +27,12 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
     {
         return false;
     }
+    bool matched = true;
     for (auto &trigger : triggers)
     {
         if (!trigger->validate(false, full_poll, send_events))
         {
+            matched = false;
             if (claim_devices)
             {
                 return false;
@@ -33,7 +41,16 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
     }
     if (!claim_devices)
     {
-        return true;
+        if (send_events && (matched != m_last_val || full_poll))
+        {
+            m_last_val = matched;
+            send_activation_list_event(list_id, matched);
+        }
+        else
+        {
+            m_last_val = matched;
+        }
+        return matched;
     }
     for (auto &trigger : triggers)
     {

@@ -410,6 +410,7 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     auto profile = context->profile;
     // printf("load_assignments: %p\r\n", profile.get());
     auto list = new ActivationTriggerList();
+    list->list_id = profile->triggers.size();
     profile->triggers.emplace_back(list);
     proto_ProfileAssignment proto_assignment;
     proto_assignment.assignments.funcs.decode = &load_assignment_info;
@@ -417,7 +418,6 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     // printf("load_assignments start?\r\n");
     pb_decode(stream, proto_ProfileAssignment_fields, &proto_assignment);
     // printf("load_assignments done?\r\n");
-    list->validate(true, false, false);
     return true;
 }
 bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)

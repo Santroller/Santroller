@@ -1,7 +1,7 @@
 #include "midi.hpp"
 #include "config.h"
 #include "shared_main.h"
-MidiDevice::MidiDevice(bool usbBased, Midi_Data_t* data) : usbBased(usbBased), midiData(data)
+MidiDevice::MidiDevice(bool usbBased, Midi_Data_t *data) : usbBased(usbBased), midiData(data)
 {
     tu_memclr(&ep_stream, sizeof(ep_stream));
     tu_edpt_stream_init(&ep_stream.rx, true, false, false,
@@ -62,7 +62,8 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 cable_state->actual_size = 0xFF;
             }
             // Running status
-            if (status <= MIDI_MAX_DATA_VAL) {
+            if (status <= MIDI_MAX_DATA_VAL)
+            {
                 // The status byte is reused, so shift the packet and insert it back
                 status = cable_state->status;
                 cable_state->data[1] = cable_state->data[0];
@@ -122,7 +123,10 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 cable_state->actual_size = 1;
                 cable_state->sysex_in_progress = false;
             }
-            cable_state->status = status;
+            if (status < MIDI_STATUS_SYSEX_START)
+            {
+                cable_state->status = status;
+            }
         }
         else
         {
@@ -152,6 +156,15 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 // interleaved in the middle of a sysex message
                 // and we don't care about that right now
                 // so we ignore it
+            }
+            if (cable_state->sysex_in_progress && cable_state->pos >= sizeof(cable_state->data))
+            {
+                // No 0xF7 yet after filling the whole buffer - drop this message instead of
+                // treating it as "complete" once pos catches up to the 0xFF sentinel.
+                cable_state->pos = 0;
+                cable_state->actual_size = 0;
+                cable_state->sysex_in_progress = false;
+                continue;
             }
         }
         usb_pos++;
@@ -223,11 +236,13 @@ void MidiDevice::update(bool full_poll, bool send_events)
                     //     }
                     // }
 
-                    if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_MUSTANG && DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != ROCK_BAND_PRO_GUITAR_MUSTANG) {
+                    if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_MUSTANG && DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != ROCK_BAND_PRO_GUITAR_MUSTANG)
+                    {
                         proGuitarType = ROCK_BAND_PRO_GUITAR_MUSTANG;
                         reset_usb();
                     }
-                    if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_SQUIER && DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != ROCK_BAND_PRO_GUITAR_SQUIRE) {
+                    if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_SQUIER && DEVICE_TYPE_IS_PRO_GUITAR && proGuitarType != ROCK_BAND_PRO_GUITAR_SQUIRE)
+                    {
                         proGuitarType = ROCK_BAND_PRO_GUITAR_SQUIRE;
                         reset_usb();
                     }
@@ -270,7 +285,8 @@ void MidiDevice::update(bool full_poll, bool send_events)
                         // picking events
                         uint8_t string = cable_state->data[5] - 1;
                         uint8_t velocity = cable_state->data[6];
-                        if (midiData->midiStringVelocities[string] == velocity) {
+                        if (midiData->midiStringVelocities[string] == velocity)
+                        {
                             velocity ^= 1;
                         }
                         midiData->midiStringVelocities[string] = velocity;

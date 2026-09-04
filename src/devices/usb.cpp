@@ -245,6 +245,8 @@ void UsbHostInterface::update(bool full_poll, bool send_events)
     {
         m_sent_type = true;
         proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, m_dev_addr, m_interface, true}}};
+        event.event.usb.has_sourceId = true;
+        event.event.usb.sourceId = source_id();
         for (size_t i = 0; i < sizeof(event.event.usb.name); i++)
         {
             // skip header
@@ -396,6 +398,8 @@ void UsbHostDevice::disconnect()
 void UsbHostInterface::disconnect()
 {
     proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, SubType_Gamepad, m_dev_addr, m_interface, false}}};
+    event.event.usb.has_sourceId = true;
+    event.event.usb.sourceId = source_id();
     HIDConfigDevice::send_event(event, true);
 }
 

@@ -5,6 +5,7 @@ import "input_enums.proto";
 
 message SetProfileCommand {
   required uint32 profileId = 1;
+  optional uint32 sourceId = 2;
 }
 
 message DetectPinCommand {

@@ -20,6 +20,7 @@ void release_profile_contents(std::unordered_map<uint32_t, std::vector<std::shar
             profile->mappings.clear();
             profile->triggers.clear();
             profile->leds.clear();
+            profile->activation_sources.clear();
             profile->devices.clear();
         }
     }
@@ -57,6 +58,37 @@ std::shared_ptr<Profile> ProfileManager::get_profile(uint32_t profile_id)
     return it->second.front();
 }
 
+std::shared_ptr<Profile> ProfileManager::get_profile(uint32_t profile_id, int32_t source_id)
+{
+    if (source_id < 0)
+    {
+        return get_profile(profile_id);
+    }
+
+    auto it = m_profile_to_instance.find(profile_id);
+    if (it == m_profile_to_instance.end())
+    {
+        return get_profile(profile_id);
+    }
+
+    for (const auto& instance : it->second)
+    {
+        for (const auto& profile : instance->profiles)
+        {
+            if (profile && profile->profile_id == profile_id &&
+                std::find_if(profile->activation_sources.begin(), profile->activation_sources.end(), [source_id](const auto& source)
+                {
+                    return source.source_id == static_cast<uint32_t>(source_id);
+                }) != profile->activation_sources.end())
+            {
+                return profile;
+            }
+        }
+    }
+
+    return get_profile(profile_id);
+}
+
 void ProfileManager::register_instance(std::shared_ptr<Instance> instance, std::shared_ptr<Profile> profile)
 {
     m_active_instances.push_back(instance);
@@ -82,6 +114,7 @@ void ProfileManager::remove_instance(std::shared_ptr<Instance> instance)
         {
             device_pair.second->still_connected = false;
         }
+        profile->activation_sources.clear();
         profile->devices.clear();
     }
     
@@ -244,8 +277,8 @@ void ProfileManager::update_all_profile_devices(bool profile_changed, bool send_
     }
 }
 
-void ProfileManager::update_profile_components(uint32_t profile_id, bool profile_changed, bool send_events) {
-    auto profile = get_profile(profile_id);
+void ProfileManager::update_profile_components(uint32_t profile_id, int32_t device_id, bool profile_changed, bool send_events) {
+    auto profile = get_profile(profile_id, device_id);
     if (!profile) {
         return;
     }

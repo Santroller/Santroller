@@ -5,6 +5,7 @@
 #include <memory>
 #include <cstddef>
 #include <stdint.h>
+#include <algorithm>
 #include "profiles/profile.hpp"
 #include "instance.hpp"
 #include "config.pb.h"
@@ -25,6 +26,7 @@ public:
     void add_profile(uint32_t profile_id, std::shared_ptr<Profile> profile);
     void remove_profile(uint32_t profile_id);
     std::shared_ptr<Profile> get_profile(uint32_t profile_id);
+    std::shared_ptr<Profile> get_profile(uint32_t profile_id, int32_t source_id);
     
     void update_device_assignments(bool full_poll, bool send_events);
     void update_active_instances();
@@ -40,6 +42,23 @@ public:
     void remove_instance(std::shared_ptr<Instance> instance);
     
     bool has_active_instances() const;
+    template <typename Func>
+    void for_each_active_profile(Func func) const
+    {
+        for (const auto &entry : m_profile_to_instance)
+        {
+            for (const auto &instance : entry.second)
+            {
+                for (const auto &profile : instance->profiles)
+                {
+                    if (profile && profile->profile_id == entry.first)
+                    {
+                        func(entry.first, profile);
+                    }
+                }
+            }
+        }
+    }
     // Calls func(profile_id, profile) once per physical Profile instance -
     // a profile_id can have more than one instance if multiple devices matched it.
     template <typename Func>
@@ -55,7 +74,7 @@ public:
     }
     
     void update_all_profile_devices(bool profile_changed, bool send_events);
-    void update_profile_components(uint32_t profile_id, bool profile_changed, bool send_events);
+    void update_profile_components(uint32_t profile_id, int32_t source_id, bool profile_changed, bool send_events);
     
     bool is_profile_active(uint32_t profile_id) const;
     void clear_all();

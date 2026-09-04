@@ -12,6 +12,12 @@
 class Mapping;
 class LedMapping;
 
+struct ActiveProfileSource
+{
+    uint16_t device_id;
+    uint32_t source_id;
+};
+
 class Profile
 {
 public:
@@ -28,6 +34,7 @@ public:
     std::vector<std::unique_ptr<Mapping>> mappings;
     std::vector<std::unique_ptr<ActivationTriggerList>> triggers;
     std::vector<std::unique_ptr<LedMapping>> leds;
+    std::vector<ActiveProfileSource> activation_sources;
     std::map<uint16_t, std::shared_ptr<Device>> devices;
     DrumState drum_state;
     KeyboardState keyboard_state;

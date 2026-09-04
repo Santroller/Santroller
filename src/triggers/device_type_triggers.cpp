@@ -7,6 +7,20 @@
 #include "main.hpp"
 #include "config/config.hpp"
 #include "emulation/usb/hid_device.h"
+#include <algorithm>
+
+static void claim_profile_device(const std::shared_ptr<Profile> &profile, const std::shared_ptr<Device> &device)
+{
+    profile->devices[device->m_id] = device;
+    const auto source_id = device->source_id();
+    if (std::find_if(profile->activation_sources.begin(), profile->activation_sources.end(), [source_id](const auto &source)
+        {
+            return source.source_id == source_id;
+        }) == profile->activation_sources.end())
+    {
+        profile->activation_sources.push_back({device->m_id, source_id});
+    }
+}
 
 template <typename Predicate>
 static std::shared_ptr<Device> get_assignable_device(bool claim_device, Predicate predicate)
@@ -32,7 +46,7 @@ bool WiiExtTypeActivationTrigger::validate(bool claim_device, bool full_poll, bo
     {
         if (claim_device)
         {
-            m_profile->devices[device->m_id] = device;
+            claim_profile_device(m_profile, device);
         }
         m_last_val = true;
         return true;
@@ -59,7 +73,7 @@ bool PS2ControllerTypeActivationTrigger::validate(bool claim_device, bool full_p
     {
         if (claim_device)
         {
-            m_profile->devices[device->m_id] = device;
+            claim_profile_device(m_profile, device);
         }
         m_last_val = true;
         return true;
@@ -86,7 +100,7 @@ bool UsbTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
     {
         if (claim_device)
         {
-            m_profile->devices.insert_or_assign(device->m_id, device);
+            claim_profile_device(m_profile, device);
         }
         m_last_val = true;
         return true;
@@ -113,7 +127,7 @@ bool SpecificUsbDeviceActivationTrigger::validate(bool claim_device, bool full_p
     {
         if (claim_device)
         {
-            m_profile->devices[device->m_id] = device;
+            claim_profile_device(m_profile, device);
         }
         m_last_val = true;
         return true;
@@ -140,7 +154,7 @@ bool BluetoothTypeActivationTrigger::validate(bool claim_device, bool full_poll,
     {
         if (claim_device)
         {
-            m_profile->devices[device->m_id] = device;
+            claim_profile_device(m_profile, device);
         }
         m_last_val = true;
         return true;
@@ -167,7 +181,7 @@ bool SpecificBluetoothDeviceActivationTrigger::validate(bool claim_device, bool 
     {
         if (claim_device)
         {
-            m_profile->devices[device->m_id] = device;
+            claim_profile_device(m_profile, device);
         }
         m_last_val = true;
         return true;
@@ -194,7 +208,7 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
     {
         if (claim_device)
         {
-            m_profile->devices[device->m_id] = device;
+            claim_profile_device(m_profile, device);
             printf("Claimed device: %d %p %p\r\n", m_profile, m_profile, device);
         }
         m_last_val = true;

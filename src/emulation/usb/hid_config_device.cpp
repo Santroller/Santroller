@@ -82,7 +82,7 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
   }
   if (profile_selected)
   {
-    auto selected_ptr = ProfileManager::instance().get_profile(selected_profile);
+    auto selected_ptr = ProfileManager::instance().get_profile(selected_profile, selected_source);
     if (!selected_ptr)
     {
       return;
@@ -176,7 +176,7 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
       {
         DeviceManager::instance().update_all_devices(profile_changed, true);
       }
-      ProfileManager::instance().update_profile_components(selected_profile, profile_changed, true);
+      ProfileManager::instance().update_profile_components(selected_profile, selected_source, profile_changed, true);
     }
   }
   process_events();
@@ -241,6 +241,7 @@ void HIDConfigDevice::handle_command(proto_Command command)
     profile_selected = true;
     profile_changed = true;
     selected_profile = command.command.setProfile.profileId;
+    selected_source = command.command.setProfile.has_sourceId ? command.command.setProfile.sourceId : -1;
     break;
   }
   case proto_Command_reboot_tag:
@@ -425,10 +426,10 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
 bool encode_active_profiles(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
   bool ok = true;
-  ProfileManager::instance().for_each_profile([stream, field, &ok](uint32_t profile_id, const auto &profile)
+  ProfileManager::instance().for_each_active_profile([stream, field, &ok](uint32_t profile_id, const auto &profile)
   {
     (void)profile;
-    if (!ok || !ProfileManager::instance().is_profile_active(profile_id))
+    if (!ok)
       return;
     if (!pb_encode_tag_for_field(stream, field))
     {
@@ -439,6 +440,33 @@ bool encode_active_profiles(pb_ostream_t *stream, const pb_field_t *field, void 
     if (!pb_encode_varint(stream, profile_id))
     {
       ok = false;
+    }
+  });
+  return ok;
+}
+
+bool encode_active_profile_devices(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+{
+  bool ok = true;
+  ProfileManager::instance().for_each_active_profile([stream, field, &ok](uint32_t profile_id, const auto &profile)
+  {
+    if (!ok)
+      return;
+
+    for (const auto &source : profile->activation_sources)
+    {
+      proto_ActiveProfileDevice active_device = proto_ActiveProfileDevice_init_zero;
+      active_device.profile = profile_id;
+      active_device.device = source.device_id;
+      active_device.has_sourceId = true;
+      active_device.sourceId = source.source_id;
+
+      if (!pb_encode_tag_for_field(stream, field) ||
+          !pb_encode_submessage(stream, proto_ActiveProfileDevice_fields, &active_device))
+      {
+        ok = false;
+        return;
+      }
     }
   });
   return ok;
@@ -484,6 +512,7 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
     auto stream = pb_ostream_from_buffer(buffer, reqlen);
     proto_GetActiveProfiles resp;
     resp.profiles.funcs.encode = encode_active_profiles;
+    resp.profileDevices.funcs.encode = encode_active_profile_devices;
     if (!pb_encode_delimited(&stream, proto_GetActiveProfiles_fields, &resp))
       return 1;
     return 64;

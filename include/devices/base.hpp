@@ -31,6 +31,7 @@ public:
     virtual bool is_ps2_device(PS2ControllerType type);
     virtual bool has_midi_channel(uint8_t channel);
     virtual bool using_pin(uint8_t pin) = 0;
+    virtual uint32_t source_id() const { return m_id; }
     virtual void rescan(bool first);
     virtual void handle_command(proto_Command command) {};
     virtual void save_reload_state(DeviceReloadState& state) const { state.valid = true; }

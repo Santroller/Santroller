@@ -63,6 +63,7 @@ public:
     uint8_t interface() const { return m_interface; }
     SubType subtype() const { return m_subtype; }
     void set_subtype(SubType type) { m_subtype = type; }
+    uint32_t source_id() const { return (static_cast<uint32_t>(m_id) << 16) | (static_cast<uint32_t>(m_dev_addr) << 8) | m_interface; }
 
 protected:
     uint8_t m_dev_addr;

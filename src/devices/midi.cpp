@@ -170,7 +170,14 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 cable_state->actual_size = 1;
                 cable_state->sysex_in_progress = false;
             }
-            cable_state->status = status;
+            // Running status only applies to channel voice messages - System
+            // Realtime bytes (e.g. Active Sensing) can appear anywhere in the
+            // stream and must never overwrite it, or the next running-status
+            // data byte gets misread as a bogus 1-byte message.
+            if (status < MIDI_STATUS_SYSEX_START)
+            {
+                cable_state->status = status;
+            }
         }
         else
         {
@@ -200,6 +207,14 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 // interleaved in the middle of a sysex message
                 // and we don't care about that right now
                 // so we ignore it
+            }
+            if (cable_state->sysex_in_progress && cable_state->pos >= sizeof(cable_state->data))
+            {
+                // No 0xF7 yet after filling the whole buffer - drop this message instead of
+                // treating it as "complete" once pos catches up to the 0xFF sentinel.
+                cable_state->pos = 0;
+                cable_state->actual_size = 0;
+                cable_state->sysex_in_progress = false;
             }
         }
         usb_pos++;

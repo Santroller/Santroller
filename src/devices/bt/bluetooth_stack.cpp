@@ -82,6 +82,15 @@ void BluetoothStack::request_wiimote(void *report)
     }
 }
 
+void BluetoothStack::update_wiimote_report(void *report)
+{
+    m_wiimote_report = report;
+    if (m_initialized)
+    {
+        wiimote_emulator_update_report(report);
+    }
+}
+
 void BluetoothStack::release_wiimote()
 {
     if (m_wiimote_report)

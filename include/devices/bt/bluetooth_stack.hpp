@@ -11,6 +11,7 @@ public:
     void power_on();
     void power_off();
     void request_wiimote(void *report);
+    void update_wiimote_report(void *report);
     void release_wiimote();
     bool initialized() const;
 

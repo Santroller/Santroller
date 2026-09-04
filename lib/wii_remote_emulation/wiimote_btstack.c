@@ -28,16 +28,29 @@ volatile WiimoteReport *input_report;
 
 static void l2cap_sdp_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
 static void input_update_wiimote();
+static void get_data_wii(uint16_t cid, hid_report_type_t report_type, uint16_t report_id, int report_size, uint8_t * report);
 
+// Set once the stack reaches HCI_STATE_WORKING; enable_wiimote_discovery() is then
+// run from hci_packet_handler as soon as a command slot is free.
+static int set_iac_lap = 0;
 
-/**
- * The default command format always writes 2 IACs, but we only want one
- * @param num_current_iac must be 1
- * @param iac_lap
- */
-static const hci_cmd_t hci_write_current_iac_lap_one_iac = {
-    HCI_OPCODE_HCI_WRITE_CURRENT_IAC_LAP_TWO_IACS, "13"
-};
+static void enable_wiimote_discovery(void)
+{
+    // Advertise both GIAC and LIAC - the Wii console's Sync button does a Limited
+    // Inquiry (LIAC), while a normal Bluetooth scan uses General Inquiry (GIAC).
+    hci_send_cmd(&hci_write_current_iac_lap_two_iacs, 2, GAP_IAC_GENERAL_INQUIRY, GAP_IAC_LIMITED_INQUIRY);
+
+    // Set device discoverable now, to emit a write scan enable after IAC LAP is set
+    gap_connectable_control(1);
+    gap_discoverable_control(1);
+
+    // It's weird but this fix the lag on sticks
+    gap_set_default_link_policy_settings(LM_LINK_POLICY_ENABLE_SNIFF_MODE);
+
+    hid_device_init(1, sizeof(wiimote_report_descriptor), wiimote_report_descriptor);
+    hid_device_register_report_data_callback(&get_data_wii);
+}
+
 
 static btstack_packet_callback_registration_t hci_event_callback_registration;
 
@@ -125,8 +138,6 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t* p
     UNUSED(channel);
     UNUSED(size);
 
-    static int set_iac_lap = 0;
-
     uint8_t status;
     // We only care about HCI packets
     if (packet_type != HCI_EVENT_PACKET) {
@@ -144,7 +155,7 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t* p
             break;
         case HCI_EVENT_COMMAND_COMPLETE:
             // Check IAC LAP result
-            if (hci_event_command_complete_get_command_opcode(packet) == hci_write_current_iac_lap_one_iac.opcode) {
+            if (hci_event_command_complete_get_command_opcode(packet) == hci_write_current_iac_lap_two_iacs.opcode) {
             }
             if (hci_event_command_complete_get_command_opcode(packet) == HCI_OPCODE_HCI_WRITE_SCAN_ENABLE) {
             }
@@ -238,19 +249,7 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t* p
     // Write IAC LAP when ready
     if (set_iac_lap && hci_can_send_command_packet_now()) {
         set_iac_lap = 0;
-        // General Inquiry Access Code
-        hci_send_cmd(&hci_write_current_iac_lap_one_iac, 1, GAP_IAC_GENERAL_INQUIRY);
-
-        // Set device discoverable now, to emit a write scan enable after IAC LAP is set
-        gap_connectable_control(1);
-        gap_discoverable_control(1);
-
-        // It's weird but this fix the lag on sticks 
-        gap_set_default_link_policy_settings(LM_LINK_POLICY_ENABLE_SNIFF_MODE);
-
-        hid_device_init(1, sizeof(wiimote_report_descriptor), wiimote_report_descriptor);
-        hid_device_register_report_data_callback(&get_data_wii);
-
+        enable_wiimote_discovery();
     }
 }
 
@@ -352,6 +351,11 @@ static void led_handler(struct btstack_timer_source *ts)
 }
 
 
+void wiimote_emulator_update_report(void *report){
+    // Single aligned pointer store - atomic with respect to the CAN_SEND_NOW IRQ.
+    input_report = report;
+}
+
 void wiimote_emulator(void *report){
 
     printf("Init Wiimote Emulator\n");
@@ -381,6 +385,18 @@ void wiimote_emulator(void *report){
     // and to catch the connection handle
     hci_event_callback_registration.callback = &hci_packet_handler;
     hci_add_event_handler(&hci_event_callback_registration);
+
+    // If the stack already reached HCI_STATE_WORKING before this instance was created
+    // (e.g. BT power-on happened before profile/instance assignment), the BTSTACK_EVENT_STATE
+    // transition already fired and hci_packet_handler will never see it - catch up here so
+    // the device still becomes discoverable/connectable instead of staying invisible forever.
+    if (hci_get_state() == HCI_STATE_WORKING) {
+        if (hci_can_send_command_packet_now()) {
+            enable_wiimote_discovery();
+        } else {
+            set_iac_lap = 1;
+        }
+    }
 
     sdp_init();
     memset(hid_service_buffer, 0, sizeof(hid_service_buffer));

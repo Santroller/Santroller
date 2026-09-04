@@ -86,32 +86,35 @@ uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, flo
 
 void ButtonMapping::update(bool full_poll, bool send_events)
 {
-    auto calcVal = m_input->tick_digital();
+    uint16_t event_value;
+    bool event_driven = m_input->consumes_events();
+    bool event_received = event_driven && m_input->consume_event(event_value);
+    auto calcVal = event_driven ? event_received : m_input->tick_digital();
 
-    if (m_mapping.inverted) {
+    if (!event_driven && m_mapping.inverted) {
         calcVal = !calcVal;
     }
     if (m_mapping.has_trigger)
     {
-        auto val = m_input->tick_analog();
+        auto val = event_driven ? (event_received ? event_value : 0) : m_input->tick_analog();
         calcVal = false;
         if (m_mapping.trigger == AnalogToDigitalTriggerType_JoyHigh)
         {
-            calcVal = m_input->tick_analog() > m_mapping.triggerValue;
+            calcVal = val > m_mapping.triggerValue;
         }
         else if (m_mapping.trigger == AnalogToDigitalTriggerType_JoyLow)
         {
-            calcVal = m_input->tick_analog() < m_mapping.triggerValue;
+            calcVal = val < m_mapping.triggerValue;
         }
         else if (m_mapping.trigger == AnalogToDigitalTriggerType_Exact)
         {
-            calcVal = m_input->tick_analog() == m_mapping.triggerValue;
+            calcVal = val == m_mapping.triggerValue;
         }
         else if (m_mapping.trigger == AnalogToDigitalTriggerType_Range)
         {
-            calcVal = m_input->tick_analog() > m_mapping.triggerValue && m_input->tick_analog() < m_mapping.maxTriggerValue;
+            calcVal = val > m_mapping.triggerValue && val < m_mapping.maxTriggerValue;
         }
-        if (m_mapping.inverted) {
+        if (!event_driven && m_mapping.inverted) {
             calcVal = !calcVal;
         }
         if (send_events && (val != m_last_sent_value || full_poll))
@@ -139,11 +142,14 @@ void ButtonMapping::update(bool full_poll, bool send_events)
 }
 void AxisMapping::update(bool full_poll, bool send_events)
 {
-    auto uncalibrated = m_input->tick_analog();
+    uint16_t event_value;
+    bool event_driven = m_input->consumes_events();
+    bool event_received = event_driven && m_input->consume_event(event_value);
+    auto uncalibrated = event_driven ? (event_received ? event_value : 0) : m_input->tick_analog();
     auto val = uncalibrated;
     if (m_mapping.has_pressed)
     {
-        if (m_input->tick_digital())
+        if (event_driven ? event_received : m_input->tick_digital())
         {
             val = m_mapping.pressed;
         }

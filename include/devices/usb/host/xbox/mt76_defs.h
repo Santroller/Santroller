@@ -61,6 +61,7 @@ enum ieee80211_min_mpdu_spacing {
 
 /* Firmware loading constants */
 #define MT_FW_CHUNK_SIZE 0x3800
+#define MT_FW_TRANSFER_CHUNK_SIZE 0x0200
 #define MT_FW_ILM_OFFSET 0x080000
 #define MT_FW_DLM_OFFSET 0x110800
 #define MT_FW_LOAD_IVB 0x12

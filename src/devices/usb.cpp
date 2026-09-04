@@ -19,7 +19,6 @@
 #include <vector>
 #include "utils.h"
 static uint8_t usb_host_id;
-static uint32_t usb_host_midi_note_minimum_hold_ms = MidiDevice::DEFAULT_MIDI_NOTE_MINIMUM_HOLD_MS;
 static bool m_initialized = false;
 static int8_t m_last_first_pin = -1;
 static bool m_last_dp_first = false;
@@ -96,9 +95,6 @@ void process_delayed_init()
 }
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : UsbHostInterface(0, 0, id), m_device(device)
 {
-    usb_host_midi_note_minimum_hold_ms = device.has_noteHoldTime
-        ? device.noteHoldTime
-        : MidiDevice::DEFAULT_MIDI_NOTE_MINIMUM_HOLD_MS;
     printf("UsbHostHardwareDevice: %p\r\n", this);
 }
 
@@ -339,7 +335,7 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
 {
     if (!host_devices[dev_addr])
     {
-        host_devices[dev_addr] = std::make_shared<UsbHostDevice>(dev_addr, usb_host_id, usb_host_midi_note_minimum_hold_ms);
+        host_devices[dev_addr] = std::make_shared<UsbHostDevice>(dev_addr, usb_host_id);
     }
     if (TUSB_CLASS_HUB == desc_itf->bInterfaceClass)
     {

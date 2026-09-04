@@ -464,7 +464,7 @@ static void wireless_handle_client_command(struct mt76_dev *dev, const uint8_t *
         break;
 
     default:
-        printf("Unknown client command: 0x%02X\n", cmd);
+        // printf("Unknown client command: 0x%02X\n", cmd);
         break;
     }
 }

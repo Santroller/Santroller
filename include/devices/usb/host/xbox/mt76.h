@@ -57,7 +57,7 @@ struct mt76_dev {
     bool initialized;
     struct mt76_channel channels[MT76_NUM_CHANNELS];
     struct mt76_channel *current_channel;
-    CFG_TUSB_MEM_ALIGN uint8_t bulk_buffer[MT_FW_CHUNK_SIZE + MT_CMD_HDR_LEN * 2];
+    CFG_TUSB_MEM_ALIGN uint8_t bulk_buffer[MT_FW_TRANSFER_CHUNK_SIZE + MT_CMD_HDR_LEN * 2];
     CFG_TUSB_MEM_ALIGN uint8_t tx_buffer[512];
     struct mt76_client clients[MT76_MAX_CLIENTS];
     struct mt76_wireless_event event_queue[MT76_EVENT_QUEUE_SIZE];

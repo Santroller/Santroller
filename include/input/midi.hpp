@@ -10,11 +10,14 @@ public:
     MidiNoteInput(proto_MidiNoteInput input, std::shared_ptr<MidiDevice> device);
     bool tick_digital();
     uint16_t tick_analog();
+    bool consumes_events() const override { return true; }
+    bool consume_event(uint16_t &value) override;
 
 private:
     void setup();
     proto_MidiNoteInput m_input;
     std::shared_ptr<MidiDevice> m_device;
+    uint16_t m_last_event_sequence = 0;
 };
 class MidiControlChangeInput : public Input
 {

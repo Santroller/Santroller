@@ -7,7 +7,7 @@
 #include "devices/usb/host/hid/hid_host.h"
 #include "main.hpp"
 #include "config/config.hpp"
-MidiDevice::MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased) : Device(id), drumMode(false), usbBased(usbBased)
+MidiDevice::MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased) : Device(id), usbBased(usbBased)
 {
     tu_memclr(&ep_stream, sizeof(ep_stream));
     tu_edpt_stream_init(&ep_stream.rx, true, false, false,
@@ -15,9 +15,7 @@ MidiDevice::MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBase
     tu_edpt_stream_init(&ep_stream.tx, true, true, false,
                         ep_stream.tx_ff_buf, 512, m_ep_out_buf);
     memset(cable_status, 0, sizeof(cable_status));
-    memset(midiVelocities, 0, sizeof(midiVelocities));
-    memset(midiLastVelocities, 0, sizeof(midiLastVelocities));
-    memset(midiLastNoteOn, 0, sizeof(midiLastNoteOn));
+    memset(midiNoteEvents, 0, sizeof(midiNoteEvents));
     memset(midiPitchWheel, 0, sizeof(midiPitchWheel));
     memset(midiControlChanges, 0, sizeof(midiControlChanges));
     memset(midiFrets, 0, sizeof(midiFrets));
@@ -239,23 +237,11 @@ void MidiDevice::update(bool full_poll, bool send_events)
             switch (status)
             {
             case MIDI_CIN_NOTE_OFF:
-                // ignore note off since some drums don't send it, or they sent it too quick so we make our own note off later
-                if (drumMode)
-                {
-                    break;
-                }
-                // velocity 0 for note off
-                cable_state->data[2] = 0;
-                [[fallthrough]];
+                break;
             case MIDI_CIN_NOTE_ON:
-                midiVelocities[channel][cable_state->data[1]] = cable_state->data[2];
                 if (cable_state->data[2] != 0)
                 {
-                    if (cable_state->data[2] > midiLastVelocities[channel][cable_state->data[1]])
-                    {
-                        midiLastVelocities[channel][cable_state->data[1]] = cable_state->data[2];
-                    }
-                    midiLastNoteOn[channel][cable_state->data[1]] = millis();
+                    push_midi_note_event(channel, cable_state->data[1], cable_state->data[2]);
                 }
                 break;
             case MIDI_CIN_CONTROL_CHANGE:
@@ -359,19 +345,41 @@ void MidiDevice::update(bool full_poll, bool send_events)
         }
     }
 }
-uint16_t MidiDevice::read_midi_note(uint8_t channel, uint8_t note)
+
+void MidiDevice::push_midi_note_event(uint8_t channel, uint8_t note, uint8_t velocity)
 {
-    if (midiVelocities[channel][note] != 0)
+    MidiNoteEvent &event = midiNoteEvents[(midiNoteEventHead + midiNoteEventCount) % MIDI_NOTE_EVENT_CAPACITY];
+    event.sequence = ++midiNoteEventSequence;
+    event.channel = channel;
+    event.note = note;
+    event.velocity = velocity;
+
+    if (midiNoteEventCount < MIDI_NOTE_EVENT_CAPACITY)
     {
-        return midiLastVelocities[channel][note] << 9;
+        midiNoteEventCount++;
     }
-    if (millis() - midiLastNoteOn[channel][note] <= midiNoteMinimumHoldMs)
+    else
     {
-        return midiLastVelocities[channel][note] << 9;
+        midiNoteEventHead = (midiNoteEventHead + 1) % MIDI_NOTE_EVENT_CAPACITY;
     }
-    midiLastVelocities[channel][note] = 0;
-    return 0;
 }
+
+bool MidiDevice::consume_midi_note_event(uint8_t channel, uint8_t note, uint16_t &sequence, uint16_t &velocity)
+{
+    for (size_t index = 0; index < midiNoteEventCount; index++)
+    {
+        const MidiNoteEvent &event = midiNoteEvents[(midiNoteEventHead + index) % MIDI_NOTE_EVENT_CAPACITY];
+        if (event.channel == channel && event.note == note &&
+            static_cast<int16_t>(event.sequence - sequence) > 0)
+        {
+            sequence = event.sequence;
+            velocity = static_cast<uint16_t>(event.velocity) << 9;
+            return true;
+        }
+    }
+    return false;
+}
+
 uint16_t MidiDevice::read_midi_control_change(uint8_t channel, uint8_t cc)
 {
     return midiControlChanges[channel][cc] << 9;

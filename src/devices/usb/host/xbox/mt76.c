@@ -33,8 +33,8 @@ static int mt76_usb_bulk_out_blocking(struct mt76_dev *dev, uint8_t *buffer, uin
 static int mt76_send_firmware_part(struct mt76_dev *dev, uint32_t base_offset,
                                    const uint8_t *data, uint32_t len);
 
-static uint8_t firmware_stream_output[MT_FW_CHUNK_SIZE];
-static uint8_t firmware_stream_chunk[MT_FW_CHUNK_SIZE];
+static uint8_t firmware_stream_output[MT_FW_TRANSFER_CHUNK_SIZE];
+static uint8_t firmware_stream_chunk[MT_FW_TRANSFER_CHUNK_SIZE];
 static uint8_t firmware_stream_dictionary[32768];
 
 struct mt76_firmware_stream {
@@ -88,7 +88,7 @@ static int mt76_stream_output(struct mt76_dev *dev, struct mt76_firmware_stream 
         uint32_t count = len;
         uint32_t remaining = section_len - stream->section_offset;
         if (count > remaining) count = remaining;
-        if (count > MT_FW_CHUNK_SIZE - stream->chunk_len) count = MT_FW_CHUNK_SIZE - stream->chunk_len;
+        if (count > MT_FW_TRANSFER_CHUNK_SIZE - stream->chunk_len) count = MT_FW_TRANSFER_CHUNK_SIZE - stream->chunk_len;
         if (count == 0)
         {
             if (stream->section_offset != section_len) return -1;
@@ -105,7 +105,7 @@ static int mt76_stream_output(struct mt76_dev *dev, struct mt76_firmware_stream 
         data += count;
         len -= count;
 
-        if (stream->chunk_len == MT_FW_CHUNK_SIZE || stream->section_offset == section_len)
+        if (stream->chunk_len == MT_FW_TRANSFER_CHUNK_SIZE || stream->section_offset == section_len)
         {
             uint32_t base = stream->section == 0 ? MT_FW_ILM_OFFSET : MT_FW_DLM_OFFSET;
             if (mt76_send_firmware_part(dev, base + stream->section_sent,
@@ -443,8 +443,8 @@ static int mt76_send_firmware_part(struct mt76_dev *dev, uint32_t base_offset,
     uint32_t offset = 0;
     
     while (offset < len) {
-        uint32_t chunk_size = (len - offset > MT_FW_CHUNK_SIZE) ? 
-                              MT_FW_CHUNK_SIZE : (len - offset);
+        uint32_t chunk_size = (len - offset > MT_FW_TRANSFER_CHUNK_SIZE) ? 
+                              MT_FW_TRANSFER_CHUNK_SIZE : (len - offset);
         uint32_t chunk_len_aligned = (chunk_size + 3) & ~3;
         
          printf("MT76: Loading chunk at offset 0x%06lX, size %lu (aligned %lu)\n", 

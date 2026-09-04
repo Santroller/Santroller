@@ -61,3 +61,7 @@
 - [ ] Port over logic for waking up 360s
 - [ ] max1704x
 - [ ] battery level estimate via ADC pin
+
+
+## UI
+Assignments are complicated. we need to make them more obvious. it feels like theres a solution here where the ui tells you what you need to configure instead of it just having a bunch of add buttons

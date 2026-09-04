@@ -9,6 +9,8 @@ public:
     virtual bool tick_digital() = 0;
     virtual uint16_t tick_analog() = 0;
     virtual void setup() = 0;
+    virtual bool consumes_events() const { return false; }
+    virtual bool consume_event(uint16_t &value) { (void)value; return false; }
 };
 
 

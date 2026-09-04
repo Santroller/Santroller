@@ -67,7 +67,6 @@ std::shared_ptr<UsbHostInterface> MidiHost::open(std::shared_ptr<UsbHostDevice> 
   TU_LOG_DRV("MIDI opening Interface %u (addr = %u)\r\n", desc_itf->bInterfaceNumber, dev_addr);
 
   auto intf = std::make_shared<MidiHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);
-  intf->set_midi_note_minimum_hold(list->midi_note_minimum_hold_ms());
 
   bool found_new_interface = false;
   do

@@ -30,14 +30,12 @@ class MidiDevice : public Device
     friend class MidiHost;
 
 public:
-    static constexpr uint32_t DEFAULT_MIDI_NOTE_MINIMUM_HOLD_MS = 10;
     MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased);
     virtual ~MidiDevice();
     void process_midi_data(uint8_t *data, uint16_t len);
     virtual void update(bool full_poll, bool send_events);
     void rescan(bool first);
-    uint16_t read_midi_note(uint8_t channel, uint8_t note);
-    void set_midi_note_minimum_hold(uint32_t duration_ms) { midiNoteMinimumHoldMs = duration_ms; }
+    bool consume_midi_note_event(uint8_t channel, uint8_t note, uint16_t &sequence, uint16_t &velocity);
     uint16_t read_midi_control_change(uint8_t channel, uint8_t cc);
     int16_t read_midi_pitch_bend(uint8_t channel);
     bool read_pro_guitar_button(proto_ProGuitarMidiButtonType button);
@@ -57,20 +55,29 @@ private:
     } ep_stream;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[TUH_EPSIZE_BULK_MAX];
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[TUH_EPSIZE_BULK_MAX];
-    uint8_t midiVelocities[16][128];
-    uint8_t midiLastVelocities[16][128];
-    uint32_t midiLastNoteOn[16][128];
+    static constexpr size_t MIDI_NOTE_EVENT_CAPACITY = 32;
+    struct MidiNoteEvent
+    {
+        uint16_t sequence;
+        uint8_t channel;
+        uint8_t note;
+        uint8_t velocity;
+    };
+    MidiNoteEvent midiNoteEvents[MIDI_NOTE_EVENT_CAPACITY];
+    uint8_t midiNoteEventHead = 0;
+    uint8_t midiNoteEventCount = 0;
+    uint16_t midiNoteEventSequence = 0;
     int16_t midiPitchWheel[16];
     uint8_t midiControlChanges[16][128];
     uint8_t midiFrets[6];
     uint8_t midiStringVelocities[6];
-    uint32_t midiNoteMinimumHoldMs = DEFAULT_MIDI_NOTE_MINIMUM_HOLD_MS;
     bool seenChannels[18];
     ProGuitar_Sysex_Buttons_t midiButtons;
-    bool drumMode;
     bool usbBased;
     cable_state_t cable_status[16];
     uint8_t usb_pos = 0;
+
+    void push_midi_note_event(uint8_t channel, uint8_t note, uint8_t velocity);
 };
 
 class ProGuitarMidiDevice : public Device

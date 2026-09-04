@@ -5,10 +5,6 @@
 #include "config/config.hpp"
 MidiSerialDevice::MidiSerialDevice(const DeviceReloadState* state, proto_SerialMidiDevice device, uint16_t id) : MidiDevice(state, id, false), serial(this, device.uart.block, device.uart.tx, device.uart.rx, device.uart.baudrate), m_device(device)
 {
-    if (device.has_noteHoldTime)
-    {
-        set_midi_note_minimum_hold(device.noteHoldTime);
-    }
 }
 void MidiSerialDevice::begin()
 {

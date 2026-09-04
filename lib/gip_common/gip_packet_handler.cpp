@@ -1,6 +1,7 @@
 #include "gip_packet_handler.h"
 #include "gip_device_mappings.h"
 #include "gip_device.h"
+#include "usb/auth_broker.h"
 #include "../../lib/xgip_protocol/xgip_protocol.h"
 #include "../../include/protocols/xbox_one.hpp"
 #include <string.h>
@@ -74,6 +75,15 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device)
                 
                 // Pass detected subtype to callback
                 interface->on_device_descriptor(context, (SubType)subtype);
+                
+                // not emulating xb1, so skip auth
+                if (!auth_broker.get_auth_device(ModeXboxOne)) {
+                    gip_default_auth_callback(
+                    device,
+                    xgip->getData(),
+                    xgip->getDataLength()
+                );
+                }
             }
             return true;
             

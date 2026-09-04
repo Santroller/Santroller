@@ -222,8 +222,9 @@ void MidiDevice::update(bool full_poll, bool send_events)
         {
             // then this is the last byte of the message, so reset pos for next message
             cable_state->pos = 0;
-            // lets not send timing clock signals to the monitor
-            if (cable_state->data[0] != MIDI_STATUS_SYSREAL_TIMING_CLOCK)
+            // timing clock and active sensing are sent continuously and would otherwise flood the monitor
+            if (cable_state->data[0] != MIDI_STATUS_SYSREAL_TIMING_CLOCK &&
+                cable_state->data[0] != MIDI_STATUS_SYSREAL_ACTIVE_SENSING)
             {
                 uint8_t data_size = MIN(32, cable_state->actual_size);
                 proto_Event event = {which_event : proto_Event_midiDebug_tag, event : {midiDebug : {data : {size : data_size, bytes : {0}}}}};

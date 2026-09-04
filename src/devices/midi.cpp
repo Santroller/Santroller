@@ -251,7 +251,10 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 midiVelocities[channel][cable_state->data[1]] = cable_state->data[2];
                 if (cable_state->data[2] != 0)
                 {
-                    midiLastVelocities[channel][cable_state->data[1]] = cable_state->data[2];
+                    if (cable_state->data[2] > midiLastVelocities[channel][cable_state->data[1]])
+                    {
+                        midiLastVelocities[channel][cable_state->data[1]] = cable_state->data[2];
+                    }
                     midiLastNoteOn[channel][cable_state->data[1]] = millis();
                 }
                 break;
@@ -360,12 +363,13 @@ uint16_t MidiDevice::read_midi_note(uint8_t channel, uint8_t note)
 {
     if (midiVelocities[channel][note] != 0)
     {
-        return midiVelocities[channel][note] << 9;
+        return midiLastVelocities[channel][note] << 9;
     }
     if (millis() - midiLastNoteOn[channel][note] <= midiNoteMinimumHoldMs)
     {
         return midiLastVelocities[channel][note] << 9;
     }
+    midiLastVelocities[channel][note] = 0;
     return 0;
 }
 uint16_t MidiDevice::read_midi_control_change(uint8_t channel, uint8_t cc)

@@ -14,56 +14,57 @@ UsbModeActivationTrigger::UsbModeActivationTrigger(proto_UsbDeviceAssignment con
 
 bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    if (!m_config.has_consoleType)
-    {
-        if (send_events && full_poll)
-        {
-            proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
-            HIDConfigDevice::send_event(event, true);
-        }
-        return true;
-    }
+    bool eligible = true;
     bool matched = false;
-    switch (m_profile->mode)
+    if (m_config.has_consoleType)
     {
-    case ModeGuitarHeroArcade:
-    case ModeHid:
-        matched = m_config.consoleType == ConsolePC;
-        break;
-    case ModeOgXbox:
-        matched = m_config.consoleType == ConsoleOgXbox;
-        break;
-    case ModeXbox360:
-        matched = m_config.consoleType == ConsoleXbox360;
-        break;
-    case ModeXboxOne:
-        matched = m_config.consoleType == ConsoleXboxOne;
-        break;
-    case ModePs3:
-        matched = m_config.consoleType == ConsolePS3;
-        break;
-    case ModePs4:
-        matched = m_config.consoleType == ConsolePS4_PS5;
-        break;
-    case ModePs5:
-        matched = m_config.consoleType == ConsolePS4_PS5;
-        break;
-    case ModeWiiRb:
-        matched = m_config.consoleType == ConsoleWii_WiiU;
-        break;
-    case ModeSwitch:
-        matched = m_config.consoleType == ConsoleSwitch_Switch2;
-        break;
-    default:
-        break;
+        switch (m_profile->mode)
+        {
+        case ModeGuitarHeroArcade:
+        case ModeHid:
+            matched = m_config.consoleType == ConsolePC;
+            break;
+        case ModeOgXbox:
+            matched = m_config.consoleType == ConsoleOgXbox;
+            break;
+        case ModeXbox360:
+            matched = m_config.consoleType == ConsoleXbox360;
+            break;
+        case ModeXboxOne:
+            matched = m_config.consoleType == ConsoleXboxOne;
+            break;
+        case ModePs3:
+            matched = m_config.consoleType == ConsolePS3;
+            break;
+        case ModePs4:
+            matched = m_config.consoleType == ConsolePS4_PS5;
+            break;
+        case ModePs5:
+            matched = m_config.consoleType == ConsolePS4_PS5;
+            break;
+        case ModeWiiRb:
+            matched = m_config.consoleType == ConsoleWii_WiiU;
+            break;
+        case ModeSwitch:
+            matched = m_config.consoleType == ConsoleSwitch_Switch2;
+            break;
+        default:
+            break;
+        }
+        eligible = matched;
     }
 
-    if (send_events && full_poll)
+    if (send_events && (matched != m_last_val || full_poll))
     {
+        m_last_val = matched;
         proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, matched}}};
         HIDConfigDevice::send_event(event, true);
     }
-    return matched;
+    else
+    {
+        m_last_val = matched;
+    }
+    return eligible;
 }
 
 bool UsbModeActivationTrigger::forcedConsoleMode(ConsoleMode& mode) const
@@ -82,8 +83,9 @@ BluetoothModeActivationTrigger::BluetoothModeActivationTrigger(proto_BluetoothMo
 
 bool BluetoothModeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    if (send_events && full_poll)
+    if (send_events && (!m_last_val || full_poll))
     {
+        m_last_val = true;
         proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
         HIDConfigDevice::send_event(event, true);
     }
@@ -96,8 +98,9 @@ WiiExtensionEmulationActivationTrigger::WiiExtensionEmulationActivationTrigger(p
 
 bool WiiExtensionEmulationActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    if (send_events && full_poll)
+    if (send_events && (!m_last_val || full_poll))
     {
+        m_last_val = true;
         proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
         HIDConfigDevice::send_event(event, true);
     }
@@ -110,8 +113,9 @@ PS2ControllerEmulationActivationTrigger::PS2ControllerEmulationActivationTrigger
 
 bool PS2ControllerEmulationActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    if (send_events && full_poll)
+    if (send_events && (!m_last_val || full_poll))
     {
+        m_last_val = true;
         proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
         HIDConfigDevice::send_event(event, true);
     }

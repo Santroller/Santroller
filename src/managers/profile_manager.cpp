@@ -49,6 +49,21 @@ void ProfileManager::remove_profile(uint32_t profile_id)
 
 std::shared_ptr<Profile> ProfileManager::get_profile(uint32_t profile_id)
 {
+    auto instance_it = m_profile_to_instance.find(profile_id);
+    if (instance_it != m_profile_to_instance.end())
+    {
+        for (const auto& instance : instance_it->second)
+        {
+            for (const auto& profile : instance->profiles)
+            {
+                if (profile && profile->profile_id == profile_id && !profile->devices.empty())
+                {
+                    return profile;
+                }
+            }
+        }
+    }
+
     // A profile_id can back multiple physical instances; return the first as a representative.
     auto it = m_profiles.find(profile_id);
     if (it == m_profiles.end() || it->second.empty())

@@ -56,6 +56,11 @@ message ActivationTriggerEvent {
     required bool state = 4;
 }
 
+message ActivationListEvent {
+    required uint32 listId = 1;
+    required bool state = 2;
+}
+
 message PinDetectionEvent {
     required int32 pin = 1;
 }
@@ -123,6 +128,7 @@ message Event {
         ToggleEvent toggle = 15;
         CrkdCalibrationDataEvent crkdDrum = 16;
         ReloadEvent reload = 17;
+        ActivationListEvent activationList = 18;
     };
 }
 

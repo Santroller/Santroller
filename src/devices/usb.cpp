@@ -247,11 +247,16 @@ void UsbHostInterface::update(bool full_poll, bool send_events)
         proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, m_dev_addr, m_interface, true}}};
         event.event.usb.has_sourceId = true;
         event.event.usb.sourceId = source_id();
-        for (size_t i = 0; i < sizeof(event.event.usb.name); i++)
+        // name is a nanopb static "string" field (nul-terminated, no length
+        // counter) - always leave room for the terminator or encoding reads
+        // past the array looking for one.
+        size_t max_len = sizeof(event.event.usb.name) - 1;
+        for (size_t i = 0; i < max_len; i++)
         {
             // skip header
             event.event.usb.name[i] = m_name[(i + 1) * 2];
         }
+        event.event.usb.name[max_len] = '\0';
         HIDConfigDevice::send_event(event, true);
     }
 }

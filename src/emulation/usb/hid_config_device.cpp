@@ -191,12 +191,38 @@ void HIDConfigDevice::process_events()
 
   processing = true;
   epin_buf[0] = ReportId::ReportIdConfig;
-  pb_ostream_t outputStream = pb_ostream_from_buffer(epin_buf + 1, 63);
-  if (pb_encode_delimited(&outputStream, proto_EventList_fields, &list))
+
+  // A full batch (up to max_count events) can overflow the 63 byte report once a
+  // large event (e.g. UsbDeviceHotplugEvent's name) is in it - shrink the batch
+  // (in place, no extra stack copy of the struct) until it actually fits instead
+  // of silently dropping everything on overflow.
+  pb_size_t total_count = list.event_count;
+  pb_size_t sent_count = total_count;
+  bool encoded = false;
+  while (sent_count > 0)
   {
-    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, 64, false);
+    list.event_count = sent_count;
+    pb_ostream_t outputStream = pb_ostream_from_buffer(epin_buf + 1, 63);
+    if (pb_encode_delimited(&outputStream, proto_EventList_fields, &list))
+    {
+      usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, 64, false);
+      encoded = true;
+      break;
+    }
+    sent_count--;
   }
-  list.event_count = 0;
+  if (!encoded)
+  {
+    // Not even a single event fits - drop it rather than spin on it forever.
+    sent_count = 1;
+  }
+
+  // Keep whatever didn't get sent this round queued for the next flush.
+  for (pb_size_t i = sent_count; i < total_count; i++)
+  {
+    list.event[i - sent_count] = list.event[i];
+  }
+  list.event_count = total_count - sent_count;
   processing = false;
 }
 

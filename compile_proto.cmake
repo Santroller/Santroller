@@ -24,7 +24,7 @@ function(compile_proto)
 	set(PROTO_OUTPUT_DIR ${PROTO_OUTPUT_DIR} PARENT_SCOPE)
 
 	add_custom_command(
-		DEPENDS ${VENV_FILE} ${NANOPB_GENERATOR} ${CMAKE_SOURCE_DIR}/proto/enums.proto ${CMAKE_SOURCE_DIR}/proto/input_enums.proto ${CMAKE_SOURCE_DIR}/proto/config.proto ${CMAKE_SOURCE_DIR}/proto/device.proto ${CMAKE_SOURCE_DIR}/proto/input.proto ${CMAKE_SOURCE_DIR}/lib/nanopb/generator/proto/nanopb.proto ${CMAKE_SOURCE_DIR}/proto/events.proto ${CMAKE_SOURCE_DIR}/proto/commands.proto
+		DEPENDS ${VENV_FILE} ${NANOPB_GENERATOR} ${CMAKE_SOURCE_DIR}/proto/enums.proto ${CMAKE_SOURCE_DIR}/proto/input_enums.proto ${CMAKE_SOURCE_DIR}/proto/config.proto ${CMAKE_SOURCE_DIR}/proto/device.proto ${CMAKE_SOURCE_DIR}/proto/input.proto ${CMAKE_SOURCE_DIR}/lib/nanopb/generator/proto/nanopb.proto ${CMAKE_SOURCE_DIR}/proto/events.proto ${CMAKE_SOURCE_DIR}/proto/commands.proto ${CMAKE_SOURCE_DIR}/proto/enums.options ${CMAKE_SOURCE_DIR}/proto/input_enums.options ${CMAKE_SOURCE_DIR}/proto/config.options ${CMAKE_SOURCE_DIR}/proto/device.options ${CMAKE_SOURCE_DIR}/proto/input.options ${CMAKE_SOURCE_DIR}/proto/events.options
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		COMMAND ${CMAKE_COMMAND} -E make_directory ${PROTO_OUTPUT_DIR}
 		COMMAND ${VENV_BIN_DIR}/python ${NANOPB_GENERATOR}

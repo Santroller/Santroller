@@ -60,7 +60,10 @@ message DJHeroTurntableDevice {
 
 message BandHeroDrumDevice { required I2CDevice i2c = 1; }
 
-message SerialMidiDevice { required UARTDevice uart = 1; }
+message SerialMidiDevice {
+  required UARTDevice uart = 1;
+  optional uint32 noteHoldTime = 2;
+}
 message CrkdNeckDevice { required UARTDevice uart = 1; }
 message CrkdDrumDevice { required UARTDevice uart = 1; }
 message DebugDevice { required UARTDevice uart = 1; }
@@ -69,6 +72,7 @@ message UsbHostDevice {
   required bool enable5v = 2;
   required bool dmFirst = 3;
   required MappingMode mappingMode = 4;
+  optional uint32 noteHoldTime = 5;
 }
 message BluetoothDevice {
 }

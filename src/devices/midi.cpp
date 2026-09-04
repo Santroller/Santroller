@@ -1,5 +1,6 @@
 #include "devices/midi.hpp"
 #include "managers/device_manager.hpp"
+#include "utils.h"
 
 #include "events.pb.h"
 #include "emulation/usb/hid_device.h"
@@ -15,6 +16,8 @@ MidiDevice::MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBase
                         ep_stream.tx_ff_buf, 512, m_ep_out_buf);
     memset(cable_status, 0, sizeof(cable_status));
     memset(midiVelocities, 0, sizeof(midiVelocities));
+    memset(midiLastVelocities, 0, sizeof(midiLastVelocities));
+    memset(midiLastNoteOn, 0, sizeof(midiLastNoteOn));
     memset(midiPitchWheel, 0, sizeof(midiPitchWheel));
     memset(midiControlChanges, 0, sizeof(midiControlChanges));
     memset(midiFrets, 0, sizeof(midiFrets));
@@ -246,6 +249,11 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 [[fallthrough]];
             case MIDI_CIN_NOTE_ON:
                 midiVelocities[channel][cable_state->data[1]] = cable_state->data[2];
+                if (cable_state->data[2] != 0)
+                {
+                    midiLastVelocities[channel][cable_state->data[1]] = cable_state->data[2];
+                    midiLastNoteOn[channel][cable_state->data[1]] = millis();
+                }
                 break;
             case MIDI_CIN_CONTROL_CHANGE:
                 midiControlChanges[channel][cable_state->data[1]] = cable_state->data[2];
@@ -350,7 +358,15 @@ void MidiDevice::update(bool full_poll, bool send_events)
 }
 uint16_t MidiDevice::read_midi_note(uint8_t channel, uint8_t note)
 {
-    return midiVelocities[channel][note] << 9;
+    if (midiVelocities[channel][note] != 0)
+    {
+        return midiVelocities[channel][note] << 9;
+    }
+    if (millis() - midiLastNoteOn[channel][note] <= midiNoteMinimumHoldMs)
+    {
+        return midiLastVelocities[channel][note] << 9;
+    }
+    return 0;
 }
 uint16_t MidiDevice::read_midi_control_change(uint8_t channel, uint8_t cc)
 {

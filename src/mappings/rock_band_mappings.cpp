@@ -701,6 +701,66 @@ RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(proto_Mapping mapping, std::u
 {
 }
 
+static bool is_rock_band_drum_cymbal(RockBandDrumsAxisType axis)
+{
+    return axis == RockBandDrums_YellowCymbal || axis == RockBandDrums_BlueCymbal || axis == RockBandDrums_GreenCymbal;
+}
+
+bool RockBandDrumsAxisMapping::should_emit_cymbal_hit(RockBandDrumsAxisType axis, uint32_t &calibrated_value)
+{
+    if (!m_profile->drum_state.cymbal_glitch_fix || !m_mapping.has_debounce || !is_rock_band_drum_cymbal(axis))
+    {
+        return true;
+    }
+
+    auto &drum_state = m_profile->drum_state;
+    auto now = millis();
+    auto can_emit_next = now - drum_state.last_global_poll > m_mapping.debounce;
+
+    if (drum_state.buffered_cymbal == axis && drum_state.last_drum != axis)
+    {
+        if (can_emit_next)
+        {
+            calibrated_value = drum_state.buffered_cymbal_value;
+            drum_state.buffered_cymbal = RockBandDrums_RedPad;
+            drum_state.buffered_cymbal_value = 0;
+            drum_state.last_global_poll = now;
+            drum_state.last_drum = axis;
+            return true;
+        }
+
+        if (calibrated_value > drum_state.buffered_cymbal_value)
+        {
+            drum_state.buffered_cymbal_value = calibrated_value;
+        }
+        return false;
+    }
+
+    if (drum_state.last_drum == RockBandDrums_RedPad || can_emit_next)
+    {
+        if (drum_state.buffered_cymbal != RockBandDrums_RedPad && drum_state.buffered_cymbal != axis)
+        {
+            return false;
+        }
+
+        drum_state.last_global_poll = now;
+        drum_state.last_drum = axis;
+        return true;
+    }
+
+    if (drum_state.last_drum == axis)
+    {
+        return true;
+    }
+
+    drum_state.buffered_cymbal = axis;
+    if (calibrated_value > drum_state.buffered_cymbal_value)
+    {
+        drum_state.buffered_cymbal_value = calibrated_value;
+    }
+    return false;
+}
+
 void RockBandDrumsAxisMapping::update_hid(uint8_t *buf)
 {
     // santroller hid uses an xinput style report descriptor for compatibility reasons
@@ -722,48 +782,38 @@ void RockBandDrumsAxisMapping::update_ps2(uint8_t *buf)
 
 void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
 {
-    if (m_centered)
+    auto axis = m_mapping.mapping.mapping.rbDrumAxis;
+    auto calibrated_value = m_calibrated_value;
+    if (m_centered && (!m_profile->drum_state.cymbal_glitch_fix || m_profile->drum_state.buffered_cymbal != axis))
     {
         return;
     }
-    if (m_profile->drum_state.cymbal_glitch_fix && m_mapping.has_debounce)
+    if (!should_emit_cymbal_hit(axis, calibrated_value))
     {
-        if (m_mapping.mapping.mapping.rbDrumAxis >= RockBandDrums_GreenPad && m_mapping.mapping.mapping.rbDrumAxis <= RockBandDrums_GreenCymbal)
-        {
-            if (millis() - m_profile->drum_state.last_global_poll > m_mapping.debounce) {
-                m_profile->drum_state.last_drum = RockBandDrums_RedPad;
-            }
-            if (m_profile->drum_state.last_drum != RockBandDrums_RedPad && m_profile->drum_state.last_drum != m_mapping.mapping.mapping.rbDrumAxis)
-            {
-                m_last_poll = millis();
-                return;
-            }
-            m_profile->drum_state.last_global_poll = millis();
-            m_profile->drum_state.last_drum = m_mapping.mapping.mapping.rbDrumAxis;
-        }
+        return;
     }
-    switch (m_mapping.mapping.mapping.rbDrumAxis)
+    switch (axis)
     {
     case RockBandDrums_RedPad:
-        m_profile->drum_state.red_pad = m_calibrated_value;
+        m_profile->drum_state.red_pad = calibrated_value;
         break;
     case RockBandDrums_YellowPad:
-        m_profile->drum_state.yellow_pad = m_calibrated_value;
+        m_profile->drum_state.yellow_pad = calibrated_value;
         break;
     case RockBandDrums_BluePad:
-        m_profile->drum_state.blue_pad = m_calibrated_value;
+        m_profile->drum_state.blue_pad = calibrated_value;
         break;
     case RockBandDrums_GreenPad:
-        m_profile->drum_state.green_pad = m_calibrated_value;
+        m_profile->drum_state.green_pad = calibrated_value;
         break;
     case RockBandDrums_YellowCymbal:
-        m_profile->drum_state.yellow_cymbal = m_calibrated_value;
+        m_profile->drum_state.yellow_cymbal = calibrated_value;
         break;
     case RockBandDrums_BlueCymbal:
-        m_profile->drum_state.blue_cymbal = m_calibrated_value;
+        m_profile->drum_state.blue_cymbal = calibrated_value;
         break;
     case RockBandDrums_GreenCymbal:
-        m_profile->drum_state.green_cymbal = m_calibrated_value;
+        m_profile->drum_state.green_cymbal = calibrated_value;
         break;
     default:
         break;
@@ -927,48 +977,38 @@ void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
 
 void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
 {
-    if (m_centered)
+    auto axis = m_mapping.mapping.mapping.rbDrumAxis;
+    auto calibrated_value = m_calibrated_value;
+    if (m_centered && (!m_profile->drum_state.cymbal_glitch_fix || m_profile->drum_state.buffered_cymbal != axis))
     {
         return;
     }
-    if (m_profile->drum_state.cymbal_glitch_fix && m_mapping.has_debounce)
+    if (!should_emit_cymbal_hit(axis, calibrated_value))
     {
-        if (m_mapping.mapping.mapping.rbDrumAxis >= RockBandDrums_GreenPad && m_mapping.mapping.mapping.rbDrumAxis <= RockBandDrums_GreenCymbal)
-        {
-            if (millis() - m_profile->drum_state.last_global_poll > m_mapping.debounce) {
-                m_profile->drum_state.last_drum = RockBandDrums_RedPad;
-            }
-            if (m_profile->drum_state.last_drum != RockBandDrums_RedPad && m_profile->drum_state.last_drum != m_mapping.mapping.mapping.rbDrumAxis)
-            {
-                m_last_poll = millis();
-                return;
-            }
-            m_profile->drum_state.last_global_poll = millis();
-            m_profile->drum_state.last_drum = m_mapping.mapping.mapping.rbDrumAxis;
-        }
+        return;
     }
-    switch (m_mapping.mapping.mapping.rbDrumAxis)
+    switch (axis)
     {
     case RockBandDrums_RedPad:
-        m_profile->drum_state.red_pad = m_calibrated_value;
+        m_profile->drum_state.red_pad = calibrated_value;
         break;
     case RockBandDrums_YellowPad:
-        m_profile->drum_state.yellow_pad = m_calibrated_value;
+        m_profile->drum_state.yellow_pad = calibrated_value;
         break;
     case RockBandDrums_BluePad:
-        m_profile->drum_state.blue_pad = m_calibrated_value;
+        m_profile->drum_state.blue_pad = calibrated_value;
         break;
     case RockBandDrums_GreenPad:
-        m_profile->drum_state.green_pad = m_calibrated_value;
+        m_profile->drum_state.green_pad = calibrated_value;
         break;
     case RockBandDrums_YellowCymbal:
-        m_profile->drum_state.yellow_cymbal = m_calibrated_value;
+        m_profile->drum_state.yellow_cymbal = calibrated_value;
         break;
     case RockBandDrums_BlueCymbal:
-        m_profile->drum_state.blue_cymbal = m_calibrated_value;
+        m_profile->drum_state.blue_cymbal = calibrated_value;
         break;
     case RockBandDrums_GreenCymbal:
-        m_profile->drum_state.green_cymbal = m_calibrated_value;
+        m_profile->drum_state.green_cymbal = calibrated_value;
         break;
     default:
         break;

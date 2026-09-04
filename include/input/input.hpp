@@ -16,14 +16,16 @@ class DrumState {
 public:
     bool cymbal_glitch_fix = false;
     RockBandDrumsAxisType last_drum = RockBandDrums_RedPad;
-    uint32_t red_pad;
-    uint32_t yellow_cymbal;
-    uint32_t yellow_pad;
-    uint32_t blue_cymbal;
-    uint32_t blue_pad;
-    uint32_t green_cymbal;
-    uint32_t green_pad;
-    uint64_t last_global_poll;
+    RockBandDrumsAxisType buffered_cymbal = RockBandDrums_RedPad;
+    uint32_t red_pad = 0;
+    uint32_t yellow_cymbal = 0;
+    uint32_t yellow_pad = 0;
+    uint32_t blue_cymbal = 0;
+    uint32_t blue_pad = 0;
+    uint32_t green_cymbal = 0;
+    uint32_t green_pad = 0;
+    uint32_t buffered_cymbal_value = 0;
+    uint64_t last_global_poll = 0;
 };
 
 class KeyboardState {

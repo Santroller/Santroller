@@ -68,6 +68,9 @@ public:
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
+
+private:
+    bool should_emit_cymbal_hit(RockBandDrumsAxisType axis, uint32_t &calibrated_value);
 };
 
 class ProGuitarButtonMapping : public ButtonMapping

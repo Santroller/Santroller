@@ -19,6 +19,7 @@
 #include <vector>
 #include "utils.h"
 static uint8_t usb_host_id;
+static uint32_t usb_host_midi_note_minimum_hold_ms = MidiDevice::DEFAULT_MIDI_NOTE_MINIMUM_HOLD_MS;
 static bool m_initialized = false;
 static int8_t m_last_first_pin = -1;
 static bool m_last_dp_first = false;
@@ -95,6 +96,9 @@ void process_delayed_init()
 }
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : UsbHostInterface(0, 0, id), m_device(device)
 {
+    usb_host_midi_note_minimum_hold_ms = device.has_noteHoldTime
+        ? device.noteHoldTime
+        : MidiDevice::DEFAULT_MIDI_NOTE_MINIMUM_HOLD_MS;
     printf("UsbHostHardwareDevice: %p\r\n", this);
 }
 
@@ -123,15 +127,37 @@ void USBHostHardwareDevice::begin()
     m_last_dp_first = m_device.dmFirst;
     m_last_first_pin = m_device.firstPin;
     printf("USBHostHardwareDevice init! %d %d %d\r\n", m_device.dmFirst, m_device.firstPin, m_device.firstPin + 1);
-    m_initialized = true;
     int8_t tx_ch = -1;
     int8_t tx_sm = -1;
     int8_t rx_sm = -1;
     int8_t eop_sm = -1;
     tx_ch = dma_claim_unused_channel(false);
-    tx_sm = pio_claim_unused_sm(pio0, true);
-    rx_sm = pio_claim_unused_sm(pio0, true);
-    eop_sm = pio_claim_unused_sm(pio0, true);
+    tx_sm = pio_claim_unused_sm(pio0, false);
+    rx_sm = pio_claim_unused_sm(pio0, false);
+    eop_sm = pio_claim_unused_sm(pio0, false);
+    if (tx_ch < 0 || tx_sm < 0 || rx_sm < 0 || eop_sm < 0)
+    {
+        printf("USBHostHardwareDevice init failed: dma=%d tx_sm=%d rx_sm=%d eop_sm=%d\r\n", tx_ch, tx_sm, rx_sm, eop_sm);
+        if (tx_ch >= 0)
+        {
+            dma_channel_unclaim(tx_ch);
+        }
+        if (tx_sm >= 0)
+        {
+            pio_sm_unclaim(pio0, tx_sm);
+        }
+        if (rx_sm >= 0)
+        {
+            pio_sm_unclaim(pio0, rx_sm);
+        }
+        if (eop_sm >= 0)
+        {
+            pio_sm_unclaim(pio0, eop_sm);
+        }
+        m_last_first_pin = -1;
+        return;
+    }
+    m_initialized = true;
     pio_usb_configuration_t host_config = {
         pin_dp : (uint8_t)(m_device.firstPin + m_device.dmFirst),
         pio_tx_num : 0,
@@ -311,7 +337,7 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
 {
     if (!host_devices[dev_addr])
     {
-        host_devices[dev_addr] = std::make_shared<UsbHostDevice>(dev_addr, usb_host_id);
+        host_devices[dev_addr] = std::make_shared<UsbHostDevice>(dev_addr, usb_host_id, usb_host_midi_note_minimum_hold_ms);
     }
     if (TUSB_CLASS_HUB == desc_itf->bInterfaceClass)
     {

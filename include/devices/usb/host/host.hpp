@@ -91,7 +91,7 @@ class UsbHostDevice : public Device
 public:
     ~UsbHostDevice() { printf("~UsbHostDevice(%p)\r\n", this); }
 
-    UsbHostDevice(uint8_t d_addr, uint16_t id) : Device(id), m_dev_addr(d_addr)
+    UsbHostDevice(uint8_t d_addr, uint16_t id, uint32_t midi_note_minimum_hold_ms) : Device(id), m_dev_addr(d_addr), m_midi_note_minimum_hold_ms(midi_note_minimum_hold_ms)
     {
          printf("UsbHostDevice(%p)\r\n", this);
     }
@@ -102,6 +102,7 @@ public:
     {
         return m_dev_addr;
     }
+    uint32_t midi_note_minimum_hold_ms() const { return m_midi_note_minimum_hold_ms; }
     void update(bool full_poll, bool send_events)
     {
     }
@@ -139,4 +140,5 @@ public:
 
 protected:
     uint8_t m_dev_addr;
+    uint32_t m_midi_note_minimum_hold_ms;
 };

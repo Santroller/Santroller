@@ -510,6 +510,8 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         proto_profile.opts.arg = &context;
         proto_profile.leds.funcs.decode = &load_leds;
         proto_profile.leds.arg = &context;
+        // Make sure to deal with triggers that don't assign any devices
+        size_t assignable_before = device_mgr.assignable_device_count();
         pb_istream_t decode_stream = profile_bytes;
         pb_decode(&decode_stream, proto_Profile_fields, &proto_profile);
 
@@ -540,7 +542,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
             }
         }
 
-        if (!matched)
+        if (!matched || device_mgr.assignable_device_count() == assignable_before)
         {
             break;
         }

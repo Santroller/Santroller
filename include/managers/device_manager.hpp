@@ -42,6 +42,7 @@ public:
     // Assignable devices
     void add_assignable_device(std::shared_ptr<Device> device);
     void clear_assignable_devices();
+    size_t assignable_device_count() const;
     std::shared_ptr<Device> last_assignable_device() const;
     template <typename Predicate>
     std::shared_ptr<Device> find_assignable_device_if(Predicate predicate) const

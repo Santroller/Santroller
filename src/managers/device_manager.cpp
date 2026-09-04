@@ -66,6 +66,11 @@ void DeviceManager::add_assignable_device(std::shared_ptr<Device> device)
     m_assignable_devices.push_back(device);
 }
 
+size_t DeviceManager::assignable_device_count() const
+{
+    return m_assignable_devices.size();
+}
+
 void DeviceManager::clear_assignable_devices()
 {
     m_assignable_devices.clear();

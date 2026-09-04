@@ -1,4 +1,5 @@
 #include "config/device_factory.hpp"
+#include <cstring>
 #include "devices/accelerometer.hpp"
 #include "devices/crkd.hpp"
 #include "devices/crkd_drum.hpp"
@@ -32,6 +33,7 @@
 // Static storage for emulation devices and state
 static std::map<int32_t, int32_t> s_cycle_states;
 static std::map<int32_t, bool> s_toggle_states;
+static std::map<int32_t, DeviceFactory::BluetoothPairingStateData> s_bluetooth_pairing_states;
 static std::vector<uint32_t> s_last_cycle_states;
 
 // Cycle state management
@@ -75,6 +77,34 @@ void DeviceFactory::clear_toggle_states() {
 
 void DeviceFactory::foreach_toggle_state(std::function<void(int32_t id, bool state)> callback) {
     for (auto& state : s_toggle_states) {
+        callback(state.first, state.second);
+    }
+}
+
+// Bluetooth pairing state management
+void DeviceFactory::set_bluetooth_pairing_state(int32_t id, const uint8_t mac[6], const char *name, bool ble) {
+    BluetoothPairingStateData &state = s_bluetooth_pairing_states[id];
+    memcpy(state.mac, mac, sizeof(state.mac));
+    strncpy(state.name, name, sizeof(state.name) - 1);
+    state.name[sizeof(state.name) - 1] = '\0';
+    state.ble = ble;
+}
+
+bool DeviceFactory::get_bluetooth_pairing_state(int32_t id, BluetoothPairingStateData &out) {
+    auto it = s_bluetooth_pairing_states.find(id);
+    if (it == s_bluetooth_pairing_states.end()) {
+        return false;
+    }
+    out = it->second;
+    return true;
+}
+
+void DeviceFactory::clear_bluetooth_pairing_states() {
+    s_bluetooth_pairing_states.clear();
+}
+
+void DeviceFactory::foreach_bluetooth_pairing_state(std::function<void(int32_t id, const BluetoothPairingStateData &state)> callback) {
+    for (auto& state : s_bluetooth_pairing_states) {
         callback(state.first, state.second);
     }
 }

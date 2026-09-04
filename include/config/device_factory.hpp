@@ -27,7 +27,18 @@ public:
     static bool get_toggle_state(int32_t id);
     static void clear_toggle_states();
     static void foreach_toggle_state(std::function<void(int32_t id, bool state)> callback);
-    
+
+    // Bluetooth pairing state management (e.g. last-connected host, to reconnect after reboot)
+    struct BluetoothPairingStateData {
+        uint8_t mac[6];
+        char name[32];
+        bool ble;
+    };
+    static void set_bluetooth_pairing_state(int32_t id, const uint8_t mac[6], const char *name, bool ble);
+    static bool get_bluetooth_pairing_state(int32_t id, BluetoothPairingStateData &out);
+    static void clear_bluetooth_pairing_states();
+    static void foreach_bluetooth_pairing_state(std::function<void(int32_t id, const BluetoothPairingStateData &state)> callback);
+
     // Get last cycle states for device creation
     static const std::vector<uint32_t>& get_last_cycle_states();
 };

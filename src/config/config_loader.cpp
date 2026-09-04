@@ -31,6 +31,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
 
     DeviceFactory::clear_cycle_states();
     DeviceFactory::clear_toggle_states();
+    DeviceFactory::clear_bluetooth_pairing_states();
     pb_istream_t inputStream = pb_istream_from_buffer(image.data, image.main_size);
     device_mgr.clear_assignable_devices();
 

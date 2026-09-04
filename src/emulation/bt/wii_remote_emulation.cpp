@@ -2,8 +2,22 @@
 #include "emulation/wii_extension_input.hpp"
 #include "protocols/wii.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
+#include "config/config.hpp"
+#include "config/device_factory.hpp"
 #include "utils.h"
 #include <string.h>
+
+// Single, exclusive Bluetooth Wiimote slot (the board only has one BT radio), so a
+// fixed id is fine for persisting the last-bonded console across reboots.
+namespace
+{
+constexpr uint32_t kWiiBluetoothPairingId = 0xFFFFFFFEu;
+
+void on_wiimote_connected(const uint8_t *mac)
+{
+    update_aux_bluetooth_pairing(kWiiBluetoothPairingId, mac, "", false);
+}
+}
 
 WiiRemoteEmulationDeviceInstance::WiiRemoteEmulationDeviceInstance()
 {
@@ -34,6 +48,15 @@ void WiiRemoteEmulationDeviceInstance::initialize()
                                     &m_buttons_low_idx, &m_buttons_high_idx);
     memcpy(m_extension_report, m_extension_initial_report, sizeof(m_extension_report));
     m_active_buffer = 0;
+
+    DeviceFactory::BluetoothPairingStateData pairing_state;
+    if (DeviceFactory::get_bluetooth_pairing_state(kWiiBluetoothPairingId, pairing_state) && !pairing_state.ble)
+    {
+        // Actively reconnect to the last-known console, like a real Wiimote does on power-on,
+        // instead of only waiting to be found via inquiry.
+        wiimote_emulator_set_reconnect_address(pairing_state.mac);
+    }
+    wiimote_emulator_set_connection_callback(&on_wiimote_connected);
     BluetoothStack::instance().request_wiimote(&m_report_buffers[m_active_buffer]);
     m_initialized = true;
 }

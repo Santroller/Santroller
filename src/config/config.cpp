@@ -1,4 +1,5 @@
 #include "config/config.hpp"
+#include <cstring>
 #include "managers/profile_manager.hpp"
 #include "managers/device_manager.hpp"
 #include "managers/config_manager.hpp"
@@ -592,7 +593,10 @@ bool decode_bluetooth_states(pb_istream_t *stream, const pb_field_t *field, void
 {
     proto_BluetoothPairingState proto_bluetooth;
     auto ret = pb_decode(stream, proto_BluetoothPairingState_fields, &proto_bluetooth);
-    
+    if (ret)
+    {
+        DeviceFactory::set_bluetooth_pairing_state(proto_bluetooth.id, proto_bluetooth.macAddress, proto_bluetooth.name, proto_bluetooth.ble);
+    }
     return ret;
 }
 bool encode_toggle_input_states(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
@@ -607,11 +611,27 @@ bool encode_toggle_input_states(pb_ostream_t *stream, const pb_field_t *field, v
     return true;
 }
 
+bool encode_bluetooth_states(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+{
+    proto_BluetoothPairingState proto_bluetooth proto_BluetoothPairingState_init_zero;
+    DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state) {
+        proto_bluetooth.id = id;
+        memcpy(proto_bluetooth.macAddress, state.mac, sizeof(proto_bluetooth.macAddress));
+        strncpy(proto_bluetooth.name, state.name, sizeof(proto_bluetooth.name) - 1);
+        proto_bluetooth.name[sizeof(proto_bluetooth.name) - 1] = '\0';
+        proto_bluetooth.ble = state.ble;
+        pb_encode_tag_for_field(stream, field);
+        pb_encode_submessage(stream, proto_BluetoothPairingState_fields, &proto_bluetooth);
+    });
+    return true;
+}
+
 bool encode_auxiliary(uint8_t *buffer, uint32_t capacity, uint32_t &written, void *context)
 {
     proto_AuxConfigBlock block proto_AuxConfigBlock_init_zero;
     block.states.funcs.encode = encode_cycle_input_states;
     block.toggleStates.funcs.encode = encode_toggle_input_states;
+    block.bluetoothStates.funcs.encode = encode_bluetooth_states;
 
     pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, capacity);
     if (!pb_encode(&outputStream, proto_AuxConfigBlock_fields, &block))
@@ -663,6 +683,16 @@ void update_aux_toggle(uint32_t id, bool state)
         return;
     }
     DeviceFactory::set_toggle_state(id, state);
+    config_storage.update_auxiliary(encode_auxiliary);
+}
+
+void update_aux_bluetooth_pairing(uint32_t id, const uint8_t mac[6], const char *name, bool ble)
+{
+    if (config_mgr.get_reinit_time())
+    {
+        return;
+    }
+    DeviceFactory::set_bluetooth_pairing_state(id, mac, name, ble);
     config_storage.update_auxiliary(encode_auxiliary);
 }
 

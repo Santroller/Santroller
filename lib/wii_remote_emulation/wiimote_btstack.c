@@ -34,6 +34,22 @@ static void get_data_wii(uint16_t cid, hid_report_type_t report_type, uint16_t r
 // run from hci_packet_handler as soon as a command slot is free.
 static int set_iac_lap = 0;
 
+// Address of a previously-bonded console to actively reconnect to once the stack is up.
+static bd_addr_t pending_reconnect_addr;
+static bool has_pending_reconnect = false;
+static void (*connection_established_callback)(const uint8_t *mac) = NULL;
+
+void wiimote_emulator_set_reconnect_address(const uint8_t *mac)
+{
+    memcpy(pending_reconnect_addr, mac, sizeof(pending_reconnect_addr));
+    has_pending_reconnect = true;
+}
+
+void wiimote_emulator_set_connection_callback(void (*callback)(const uint8_t *mac))
+{
+    connection_established_callback = callback;
+}
+
 static void enable_wiimote_discovery(void)
 {
     // Advertise both GIAC and LIAC - the Wii console's Sync button does a Limited
@@ -49,6 +65,13 @@ static void enable_wiimote_discovery(void)
 
     hid_device_init(1, sizeof(wiimote_report_descriptor), wiimote_report_descriptor);
     hid_device_register_report_data_callback(&get_data_wii);
+
+    if (has_pending_reconnect) {
+        has_pending_reconnect = false;
+        memcpy(wii_baddr, pending_reconnect_addr, sizeof(wii_baddr));
+        // Actively seek out the last-known host, like a real Wiimote does on power-on.
+        hid_device_connect(wii_baddr, &hid_cid);
+    }
 }
 
 
@@ -217,6 +240,9 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t* p
                         hid_subevent_connection_opened_get_bd_addr(packet, wii_baddr);
                         printf("Connected to ");
                         printf_hexdump(wii_baddr, sizeof(wii_baddr));
+                        if (connection_established_callback) {
+                            connection_established_callback(wii_baddr);
+                        }
                         // Remove timer led
                         btstack_run_loop_remove_timer(&led_state);
                         // Set the led on

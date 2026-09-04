@@ -27,3 +27,4 @@ void update();
 void reload();
 void update_aux_cycle(uint32_t id, uint32_t state);
 void update_aux_toggle(uint32_t id, bool state);
+void update_aux_bluetooth_pairing(uint32_t id, const uint8_t mac[6], const char *name, bool ble);

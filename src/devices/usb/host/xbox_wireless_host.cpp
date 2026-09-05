@@ -287,14 +287,8 @@ void XboxWirelessHost::remove_controller_interface(uint8_t controller_idx)
 
     printf("XboxWirelessHost: Controller %d virtual interface removed\r\n", controller_idx);
 }
-static uint32_t test = 0;
 bool XboxWirelessHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
-    if (millis() - test > 500)
-    {
-        test = millis();
-        printf("XboxWirelessHost: xfer_cb called with ep_addr=0x%02X, result=%d, xferred_bytes=%u\r\n", ep_addr, result, xferred_bytes);
-    }   
     if (ep_addr == MT_EP_IN_CMD)
     {
         if (xferred_bytes > 0 && result != XFER_RESULT_FAILED)

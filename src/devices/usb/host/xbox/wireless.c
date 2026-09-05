@@ -190,7 +190,6 @@ static void wireless_process_message(struct mt76_dev *dev, const uint8_t *data, 
     uint32_t info = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
     uint8_t port = FIELD_GET(MT_RX_FCE_INFO_D_PORT, info);
     uint8_t evt_type = FIELD_GET(MT_RX_FCE_INFO_EVT_TYPE, info);
-
     if (FIELD_GET(MT_RX_FCE_INFO_CMD_SEQ, info) == 0x01)
     {
         return;
@@ -248,7 +247,6 @@ void wireless_process_data(struct mt76_dev *dev, tu_edpt_stream_t* stream)
         uint32_t info = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
         uint16_t msg_len = FIELD_GET(MT_RX_FCE_INFO_LEN, info);
         uint16_t total = MT_CMD_HDR_LEN + ((msg_len + 3) & ~3) + MT_CMD_HDR_LEN;
-
         if (total > tu_fifo_count(&stream->ff))
         {
             return;

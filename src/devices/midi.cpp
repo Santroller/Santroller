@@ -29,6 +29,13 @@ MidiDevice::MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBase
     midiButtons.dpad = 8;
 }
 
+MidiDevice::~MidiDevice()
+{
+    printf("MIDI Device destroyed\r\n");
+    tu_edpt_stream_deinit(&ep_stream.rx);
+    tu_edpt_stream_deinit(&ep_stream.tx);
+}
+
 void MidiDevice::save_reload_state(DeviceReloadState& state) const
 {
     state.valid = true;
@@ -56,13 +63,6 @@ void MidiDevice::rescan(bool first)
             }
         }
     }
-}
-
-MidiDevice::~MidiDevice()
-{
-    printf("MIDI Device destroyed\r\n");
-    tu_edpt_stream_deinit(&ep_stream.rx);
-    tu_edpt_stream_deinit(&ep_stream.tx);
 }
 
 void MidiDevice::process_midi_data(uint8_t *data, uint16_t len)

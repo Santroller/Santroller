@@ -518,7 +518,7 @@ void wireless_handle_association(struct mt76_dev *dev, const uint8_t *addr)
            addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
     for (int i = 0; i < MT76_MAX_CLIENTS; i++)
     {
-        if (memcmp(dev->clients[i].addr, addr, 6) == 0)
+        if (dev->clients[i].used && memcmp(dev->clients[i].addr, addr, 6) == 0)
         {
             printf("Client already seen!\n");
             return;

@@ -210,3 +210,4 @@ void XboxWirelessController::process_gip_data(const uint8_t *data, uint16_t len)
         m_adapter->send_ack_from_host(m_controller_idx + 1, controller->mac_addr, ack_data, ack_len);
     }
 }
+

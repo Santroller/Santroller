@@ -114,16 +114,6 @@ XboxWirelessHost::XboxWirelessHost(uint8_t dev_addr, uint8_t interface, uint16_t
     m_controller_interfaces.fill(nullptr);
     m_gip_queue_head = 0;
     m_gip_queue_count = 0;
-    tu_memclr(&m_cmd_stream, sizeof(m_cmd_stream));
-    tu_memclr(&m_data_stream, sizeof(m_data_stream));
-    tu_memclr(m_cmd_buf, sizeof(m_cmd_buf));
-    tu_memclr(m_data_buf, sizeof(m_data_buf));
-    tu_memclr(m_cmd_ff_buf, sizeof(m_cmd_ff_buf));
-    tu_memclr(m_data_ff_buf, sizeof(m_data_ff_buf));
-    tu_edpt_stream_init(&m_cmd_stream, true, true, false,
-                        m_cmd_ff_buf, sizeof(m_cmd_ff_buf), m_cmd_buf);
-    tu_edpt_stream_init(&m_data_stream, true, true, false,
-                        m_data_ff_buf, sizeof(m_data_ff_buf), m_data_buf);
 
     printf("XboxWirelessHost: Created for dev_addr=%d, interface=%d\r\n", dev_addr, interface);
 }
@@ -139,8 +129,6 @@ XboxWirelessHost::~XboxWirelessHost()
         }
     }
     mt76_deinit(&m_mt76_dev);
-    tu_edpt_stream_deinit(&m_cmd_stream);
-    tu_edpt_stream_deinit(&m_data_stream);
 
     printf("XboxWirelessHost: Destroyed\r\n");
 }
@@ -182,16 +170,11 @@ std::shared_ptr<UsbHostInterface> XboxWirelessHost::open(std::shared_ptr<UsbHost
             list->host_devices_by_endpoint_in[desc_ep->bEndpointAddress & (~0x80)] = intf;
             if (desc_ep->bEndpointAddress == MT_EP_IN_CMD)
             {
-
-                tu_edpt_stream_open(&intf->m_cmd_stream, dev_addr, desc_ep, tu_edpt_packet_size(desc_ep));
-                tu_edpt_stream_clear(&intf->m_cmd_stream);
-                tu_edpt_stream_read_xfer(&intf->m_cmd_stream);
+                usbh_edpt_xfer(dev_addr, desc_ep->bEndpointAddress, intf->m_cmd_buf, sizeof(intf->m_cmd_buf));
             }
             else if (desc_ep->bEndpointAddress == MT_EP_IN_WLAN)
             {
-                tu_edpt_stream_open(&intf->m_data_stream, dev_addr, desc_ep, tu_edpt_packet_size(desc_ep));
-                tu_edpt_stream_clear(&intf->m_data_stream);
-                tu_edpt_stream_read_xfer(&intf->m_data_stream);
+                usbh_edpt_xfer(dev_addr, desc_ep->bEndpointAddress, intf->m_data_buf, sizeof(intf->m_data_buf));
             }
         }
         else
@@ -304,28 +287,30 @@ void XboxWirelessHost::remove_controller_interface(uint8_t controller_idx)
 
     printf("XboxWirelessHost: Controller %d virtual interface removed\r\n", controller_idx);
 }
+static uint32_t test = 0;
 bool XboxWirelessHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
     if (ep_addr == MT_EP_IN_CMD)
     {
         if (xferred_bytes > 0)
         {
-           tu_edpt_stream_read_xfer_complete(&m_cmd_stream, xferred_bytes);
+            wireless_process_data(&m_mt76_dev, m_cmd_buf, xferred_bytes);
         }
+
         if (result != XFER_RESULT_FAILED)
         {
-            tu_edpt_stream_read_xfer(&m_cmd_stream);
+            usbh_edpt_xfer(m_dev_addr, ep_addr, m_cmd_buf, sizeof(m_cmd_buf));
         }
     }
     else if (ep_addr == MT_EP_IN_WLAN)
     {
         if (xferred_bytes > 0)
         {
-           tu_edpt_stream_read_xfer_complete(&m_data_stream, xferred_bytes);
+            wireless_process_data(&m_mt76_dev, m_data_buf, xferred_bytes);
         }
         if (result != XFER_RESULT_FAILED)
         {
-            tu_edpt_stream_read_xfer(&m_data_stream);
+            usbh_edpt_xfer(m_dev_addr, ep_addr, m_data_buf, sizeof(m_data_buf));
         }
     }
     return true;
@@ -399,9 +384,6 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
     {
         return;
     }
-
-    wireless_process_data(&m_mt76_dev, &m_data_stream);
-    wireless_process_data(&m_mt76_dev, &m_cmd_stream);
     if (!m_firmware_loaded && (now - m_init_start_time) > 500)
     {
         const uint8_t *firmware_data;
@@ -490,7 +472,6 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
     {
         wireless_task(&m_mt76_dev);
     }
-
     if (m_gip_queue_count > 0)
     {
         auto &item = m_gip_queue[m_gip_queue_head];

@@ -170,11 +170,16 @@ std::shared_ptr<UsbHostInterface> XboxWirelessHost::open(std::shared_ptr<UsbHost
             list->host_devices_by_endpoint_in[desc_ep->bEndpointAddress & (~0x80)] = intf;
             if (desc_ep->bEndpointAddress == MT_EP_IN_CMD)
             {
-                usbh_edpt_xfer(dev_addr, desc_ep->bEndpointAddress, intf->m_cmd_buf, sizeof(intf->m_cmd_buf));
+
+                tu_edpt_stream_open(&intf->m_cmd_stream, dev_addr, desc_ep, tu_edpt_packet_size(desc_ep));
+                tu_edpt_stream_clear(&intf->m_cmd_stream);
+                tu_edpt_stream_read_xfer(&intf->m_cmd_stream);
             }
             else if (desc_ep->bEndpointAddress == MT_EP_IN_WLAN)
             {
-                usbh_edpt_xfer(dev_addr, desc_ep->bEndpointAddress, intf->m_data_buf, sizeof(intf->m_data_buf));
+                tu_edpt_stream_open(&intf->m_data_stream, dev_addr, desc_ep, tu_edpt_packet_size(desc_ep));
+                tu_edpt_stream_clear(&intf->m_data_stream);
+                tu_edpt_stream_read_xfer(&intf->m_data_stream);
             }
         }
         else
@@ -291,21 +296,25 @@ bool XboxWirelessHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t x
 {
     if (ep_addr == MT_EP_IN_CMD)
     {
-        if (xferred_bytes > 0 && result != XFER_RESULT_FAILED)
+        if (xferred_bytes > 0)
         {
-            wireless_process_data(&m_mt76_dev, m_cmd_buf, xferred_bytes);
+           tu_edpt_stream_read_xfer_complete(&m_cmd_stream, xferred_bytes);
         }
-
-        usbh_edpt_xfer(m_dev_addr, ep_addr, m_cmd_buf, sizeof(m_cmd_buf));
+        if (result != XFER_RESULT_FAILED)
+        {
+            tu_edpt_stream_read_xfer(&m_cmd_stream);
+        }
     }
     else if (ep_addr == MT_EP_IN_WLAN)
     {
-        if (xferred_bytes > 0 && result != XFER_RESULT_FAILED)
+        if (xferred_bytes > 0)
         {
-            wireless_process_data(&m_mt76_dev, m_data_buf, xferred_bytes);
+           tu_edpt_stream_read_xfer_complete(&m_data_stream, xferred_bytes);
         }
-
-        usbh_edpt_xfer(m_dev_addr, ep_addr, m_data_buf, sizeof(m_data_buf));
+        if (result != XFER_RESULT_FAILED)
+        {
+            tu_edpt_stream_read_xfer(&m_data_stream);
+        }
     }
     return true;
 }
@@ -467,6 +476,9 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
     {
         wireless_task(&m_mt76_dev);
     }
+
+    wireless_process_data(&m_mt76_dev, &m_data_stream);
+    wireless_process_data(&m_mt76_dev, &m_cmd_stream);
     if (m_gip_queue_count > 0)
     {
         auto &item = m_gip_queue[m_gip_queue_head];

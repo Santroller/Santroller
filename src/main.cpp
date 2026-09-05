@@ -11,7 +11,7 @@
 
 #include "config.pb.h"
 #include "pico/stdlib.h"
-#include "FlashPROM.h"
+#include "config/FlashPROM.h"
 #include "CRC32.h"
 #include "pico/multicore.h"
 #include "hardware/clocks.h"

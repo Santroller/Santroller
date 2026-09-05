@@ -50,6 +50,8 @@ private:
     void initialize_adapter();
     bool queue_gip_packet(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *packet, uint16_t len, bool priority);
     
+    tu_edpt_stream_t m_cmd_stream;
+    tu_edpt_stream_t m_data_stream;
     CFG_TUSB_MEM_ALIGN uint8_t m_cmd_buf[0x0654];
     // RX bulk aggregation is disabled, so one message per transfer bounds this at a single MPDU.
     CFG_TUSB_MEM_ALIGN uint8_t m_data_buf[0x1000];
@@ -60,6 +62,7 @@ private:
     
     uint16_t m_adapter_pid = 0;
     
+    bool m_about_to_flash = false;
     bool m_adapter_initialized;
     bool m_firmware_loaded;
     bool m_firmware_loading;

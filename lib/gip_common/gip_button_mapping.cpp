@@ -87,9 +87,13 @@ bool gip_tick_digital(const void *input_data, uint8_t subtype, proto_Output *typ
     case SubType_RockBandDrums:
         if (type->which_mapping == proto_Output_rbDrumButton_tag)
         {
+            auto data = (const XboxOneRockBandDrums_Data_t *)input_data;
             switch (type->mapping.rbDrumButton)
             {
-            // TODO: Add drum button mappings when needed
+                case RockBandDrums_Kick1Pedal:
+                    return data->leftShoulder;
+                case RockBandDrums_Kick2Pedal:
+                    return data->rightShoulder;
             default:
                 return false;
             }
@@ -155,6 +159,31 @@ uint16_t gip_tick_analog(const void *input_data, uint8_t subtype, proto_Output *
         }
         break;
         
+    case SubType_RockBandDrums:
+        if (type->which_mapping == proto_Output_rbDrumAxis_tag)
+        {
+            auto data = (const XboxOneRockBandDrums_Data_t *)input_data;
+            switch (type->mapping.rbDrumAxis)
+            {
+            case RockBandDrums_GreenPad:
+                return data->greenVelocity << 12;
+            case RockBandDrums_RedPad:
+                return data->redVelocity << 12;
+            case RockBandDrums_YellowPad:
+                return data->yellowVelocity << 12;
+            case RockBandDrums_BluePad:
+                return data->blueVelocity << 12;
+            case RockBandDrums_GreenCymbal:
+                return data->greenCymbalVelocity << 12;
+            case RockBandDrums_YellowCymbal:
+                return data->yellowCymbalVelocity << 12;
+            case RockBandDrums_BlueCymbal:
+                return data->blueCymbalVelocity << 12;
+            default:
+                return 0;
+            }
+        }
+        break;
     case SubType_RockBandGuitar:
         if (type->which_mapping == proto_Output_rbAxis_tag)
         {

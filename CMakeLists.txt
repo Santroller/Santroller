@@ -290,6 +290,7 @@ add_executable(
   src/devices/led.cpp
   src/devices/bluetooth.cpp
   src/devices/stp16cpc.cpp
+  src/config/FlashPROM.cpp
   src/config/config.cpp
   src/config/config_loader.cpp
   src/config/config_storage.cpp
@@ -377,7 +378,6 @@ target_link_libraries(
   pico_btstack_classic
   pico_btstack_ble
   pico_cyw43_arch_threadsafe_background
-  FlashPROM
   ring_buffer
   CRC32
   protar_neck
@@ -432,6 +432,8 @@ target_link_libraries(
   tinyusb_host
   tinyusb_device
   tinyusb_pico_pio_usb
+  pico_multicore
+  hardware_flash
   pico_fota_bootloader_lib
   tinyusb_device_unmarked)
 

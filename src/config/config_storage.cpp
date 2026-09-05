@@ -1,7 +1,7 @@
 #include "config/config_storage.hpp"
 
 #include "CRC32.h"
-#include "FlashPROM.h"
+#include "config/FlashPROM.h"
 #include "config.pb.h"
 #include <pb_decode.h>
 

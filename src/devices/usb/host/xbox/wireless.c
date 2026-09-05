@@ -9,7 +9,7 @@
 
 #define PAIRING_TIMEOUT_MS 30000
 #define PAIRING_RESPONSE_GRACE_MS 200
-
+uint8_t scratch[1024];
 static void wireless_handle_client_lost(struct mt76_dev *dev, const uint8_t *data, uint16_t len);
 static void wireless_handle_client_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, uint8_t wcid, const uint8_t *addr);
 static void wireless_handle_disassociation(struct mt76_dev *dev, uint8_t wcid);
@@ -239,24 +239,28 @@ static void wireless_process_message(struct mt76_dev *dev, const uint8_t *data, 
     }
 }
 
-void wireless_process_data(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
+void wireless_process_data(struct mt76_dev *dev, tu_edpt_stream_t* stream)
 {
-    // A single bulk transfer can carry several concatenated messages.
-    while (len >= MT_CMD_HDR_LEN * 2)
+    uint8_t data[4];
+    
+    while (tu_fifo_peek_n(&stream->ff, data, 4) == 4)
     {
         uint32_t info = data[0] | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
         uint16_t msg_len = FIELD_GET(MT_RX_FCE_INFO_LEN, info);
         uint16_t total = MT_CMD_HDR_LEN + ((msg_len + 3) & ~3) + MT_CMD_HDR_LEN;
 
-        // Payload-less events such as the pairing button are header + trailer only.
-        if (total > len)
+        if (total > tu_fifo_count(&stream->ff))
         {
             return;
         }
-
-        wireless_process_message(dev, data, total);
-        data += total;
-        len -= total;
+        if (total > sizeof(scratch)) {
+            // The message is too large to fit in the scratch buffer.
+            printf("Message too large to fit in scratch buffer, skipping. %d\r\n", total);
+            tu_fifo_discard_n(&stream->ff, total);
+            return;
+        }
+        tu_fifo_read_n(&stream->ff, scratch, total);
+        wireless_process_message(dev, scratch, total);
     }
 }
 

@@ -3,32 +3,39 @@
  * SPDX-FileCopyrightText: Copyright (c) 2021 Jason Skuby (mytechtoybox.com)
  */
 
-#include "FlashPROM.h"
+#include "config/FlashPROM.h"
 #include <stdio.h>
+#include "tusb.h"
+#include "utils.h"
 
 uint8_t FlashPROM::writeCache[EEPROM_SIZE_BYTES];
-volatile static spin_lock_t *flashLock = nullptr;
 
 int64_t writeToFlash(alarm_id_t id, void *flashCache)
 {
-	while (is_spin_locked(flashLock))
-		;
-
 	multicore_lockout_start_blocking();
-	uint32_t interrupts = spin_lock_blocking(flashLock);
-	flash_range_erase((intptr_t)EEPROM_ADDRESS_START - (intptr_t)XIP_BASE, EEPROM_SIZE_BYTES);
-	flash_range_program((intptr_t)EEPROM_ADDRESS_START - (intptr_t)XIP_BASE, reinterpret_cast<uint8_t *>(flashCache), EEPROM_SIZE_BYTES);
-
+	for (uint32_t i = 0; i < EEPROM_SIZE_BYTES; i += FLASH_SECTOR_SIZE)
+	{
+		tud_task();
+		tuh_task();
+		auto status = save_and_disable_interrupts();
+		flash_range_erase((intptr_t)EEPROM_ADDRESS_START - (intptr_t)XIP_BASE + i, FLASH_SECTOR_SIZE);
+		restore_interrupts(status);
+	}
+	for (uint32_t i = 0; i < EEPROM_SIZE_BYTES; i += FLASH_PAGE_SIZE)
+	{
+		tud_task();
+		tuh_task();
+		auto status = save_and_disable_interrupts();
+		flash_range_program((intptr_t)EEPROM_ADDRESS_START - (intptr_t)XIP_BASE + i, reinterpret_cast<uint8_t *>(flashCache) + i, FLASH_PAGE_SIZE);
+		restore_interrupts(status);
+	}
 	multicore_lockout_end_blocking();
-	spin_unlock(flashLock, interrupts);
 
 	return 0;
 }
 
 void FlashPROM::start()
 {
-	if (flashLock == nullptr)
-		flashLock = spin_lock_instance(spin_lock_claim_unused(true));
 
 	memcpy(writeCache, reinterpret_cast<uint8_t *>(EEPROM_ADDRESS_START), EEPROM_SIZE_BYTES);
 }
@@ -45,9 +52,10 @@ void FlashPROM::commit_now()
 {
 	writeToFlash(0, writeCache);
 }
-void FlashPROM::tick() {
-	if (should_commit_at != 0 && to_ms_since_boot(get_absolute_time()) >= should_commit_at) {
-		printf("Committing flash at %lu ms\n", to_ms_since_boot(get_absolute_time()));
+void FlashPROM::tick()
+{
+	if (should_commit_at != 0 && to_ms_since_boot(get_absolute_time()) >= should_commit_at)
+	{
 		commit_now();
 		should_commit_at = 0;
 	}

@@ -11,22 +11,25 @@
 
 namespace
 {
-void release_profile_contents(std::unordered_map<uint32_t, std::vector<std::shared_ptr<Profile>>>& profiles)
-{
-    for (auto& profile_pair : profiles)
+    void release_profile_contents(std::unordered_map<uint32_t, std::vector<std::shared_ptr<Profile>>> &profiles)
     {
-        for (auto& profile : profile_pair.second)
+        for (auto &profile_pair : profiles)
         {
-            profile->mappings.clear();
-            profile->triggers.clear();
-            profile->leds.clear();
-            profile->activation_sources.clear();
-            profile->devices.clear();
+            for (auto &profile : profile_pair.second)
+            {
+                profile->mappings.clear();
+                profile->triggers.clear();
+                profile->leds.clear();
+                profile->activation_sources.clear();
+                profile->devices.clear();
+            }
         }
     }
 }
+bool ProfileManager::changed_types()
+{
+    return m_subtypes_changed || !m_last_subtypes.empty();
 }
-
 void ProfileManager::add_profile(uint32_t profile_id, std::shared_ptr<Profile> profile)
 {
     m_profiles[profile_id].push_back(profile);
@@ -39,7 +42,7 @@ void ProfileManager::remove_profile(uint32_t profile_id)
     {
         // copy first since remove_instance() mutates m_profile_to_instance
         auto instances = it->second;
-        for (auto& instance : instances)
+        for (auto &instance : instances)
         {
             remove_instance(instance);
         }
@@ -52,9 +55,9 @@ std::shared_ptr<Profile> ProfileManager::get_profile(uint32_t profile_id)
     auto instance_it = m_profile_to_instance.find(profile_id);
     if (instance_it != m_profile_to_instance.end())
     {
-        for (const auto& instance : instance_it->second)
+        for (const auto &instance : instance_it->second)
         {
-            for (const auto& profile : instance->profiles)
+            for (const auto &profile : instance->profiles)
             {
                 if (profile && profile->profile_id == profile_id && !profile->devices.empty())
                 {
@@ -86,15 +89,13 @@ std::shared_ptr<Profile> ProfileManager::get_profile(uint32_t profile_id, int32_
         return get_profile(profile_id);
     }
 
-    for (const auto& instance : it->second)
+    for (const auto &instance : it->second)
     {
-        for (const auto& profile : instance->profiles)
+        for (const auto &profile : instance->profiles)
         {
             if (profile && profile->profile_id == profile_id &&
-                std::find_if(profile->activation_sources.begin(), profile->activation_sources.end(), [source_id](const auto& source)
-                {
-                    return source.source_id == static_cast<uint32_t>(source_id);
-                }) != profile->activation_sources.end())
+                std::find_if(profile->activation_sources.begin(), profile->activation_sources.end(), [source_id](const auto &source)
+                             { return source.source_id == static_cast<uint32_t>(source_id); }) != profile->activation_sources.end())
             {
                 return profile;
             }
@@ -106,49 +107,56 @@ std::shared_ptr<Profile> ProfileManager::get_profile(uint32_t profile_id, int32_
 
 void ProfileManager::register_instance(std::shared_ptr<Instance> instance, std::shared_ptr<Profile> profile)
 {
+    if (m_last_subtypes.empty() || m_last_subtypes.front() != instance->subtype)
+    {
+        m_subtypes_changed = true;
+    }
+    if (!m_last_subtypes.empty())
+    {
+        m_last_subtypes.pop();
+    }
     m_active_instances.push_back(instance);
     m_profile_to_instance[profile->profile_id].push_back(instance);
 }
 
 void ProfileManager::remove_instance(std::shared_ptr<Instance> instance)
 {
-    for (const auto& profile : instance->profiles)
+    for (const auto &profile : instance->profiles)
     {
         auto it = m_profile_to_instance.find(profile->profile_id);
         if (it != m_profile_to_instance.end())
         {
-            auto& instances = it->second;
+            auto &instances = it->second;
             instances.erase(std::remove(instances.begin(), instances.end(), instance), instances.end());
             if (instances.empty())
             {
                 m_profile_to_instance.erase(it);
             }
         }
-        
-        for (auto& device_pair : profile->devices)
+
+        for (auto &device_pair : profile->devices)
         {
             device_pair.second->still_connected = false;
         }
         profile->activation_sources.clear();
         profile->devices.clear();
     }
-    
+
     m_active_instances.erase(
         std::remove(m_active_instances.begin(), m_active_instances.end(), instance),
-        m_active_instances.end()
-    );
+        m_active_instances.end());
 }
 
 void ProfileManager::update_device_assignments(bool full_poll, bool send_events)
 {
-    for (auto& profile_pair : m_profiles)
+    for (auto &profile_pair : m_profiles)
     {
-        for (auto& profile : profile_pair.second)
+        for (auto &profile : profile_pair.second)
         {
-            for (auto& trigger_list : profile->triggers)
+            for (auto &trigger_list : profile->triggers)
             {
                 bool matched = trigger_list->validate(false, full_poll, send_events);
-                
+
                 if (matched)
                 {
                     trigger_list->validate(true, full_poll, send_events);
@@ -163,10 +171,10 @@ void ProfileManager::update_active_instances()
     auto it = m_active_instances.begin();
     while (it != m_active_instances.end())
     {
-        auto& instance = *it;
+        auto &instance = *it;
         bool has_devices = false;
-        
-        for (const auto& profile : instance->profiles)
+
+        for (const auto &profile : instance->profiles)
         {
             if (!profile->devices.empty())
             {
@@ -174,10 +182,10 @@ void ProfileManager::update_active_instances()
                 break;
             }
         }
-        
+
         if (!has_devices)
         {
-            for (const auto& profile : instance->profiles)
+            for (const auto &profile : instance->profiles)
             {
                 m_profile_to_instance.erase(profile->profile_id);
             }
@@ -194,17 +202,16 @@ bool ProfileManager::assign_profile_to_devices(
     std::shared_ptr<Profile> profile,
     int assigned_devices,
     ConsoleMode usb_mode,
-    const EmulationDeviceConfig& emulation_devices)
+    const EmulationDeviceConfig &emulation_devices)
 {
     bool assigned = false;
-    auto& config_mgr = ConfigManager::instance();
+    auto &config_mgr = ConfigManager::instance();
     const int assignment_types[] = {
         ProfileAssignMask_AssignBluetoothGamepad,
         ProfileAssignMask_AssignBluetoothWiimote,
         ProfileAssignMask_AssignPsx,
         ProfileAssignMask_AssignWiimoteExtension,
-        ProfileAssignMask_AssignUsb
-    };
+        ProfileAssignMask_AssignUsb};
 
     for (int assignment_type : assignment_types)
     {
@@ -262,29 +269,33 @@ bool ProfileManager::has_active_instances() const
 
 void ProfileManager::prepare_for_config_reload()
 {
+    m_last_subtypes = std::queue<SubType>();
+    for (auto &instance : m_active_instances)
+    {
+        m_last_subtypes.push(instance->subtype);
+    }
+    m_subtypes_changed = false;
     m_instances.clear();
     m_active_instances.clear();
     release_profile_contents(m_profiles);
     m_profiles.clear();
     m_profile_to_instance.clear();
-    m_prev_types = m_current_types;
-    m_current_types.clear();
     m_emulated_devices.clear();
     std::fill(std::begin(m_usb_instances), std::end(m_usb_instances), nullptr);
     std::fill(std::begin(m_usb_instances_by_epin), std::end(m_usb_instances_by_epin), nullptr);
     std::fill(std::begin(m_usb_instances_by_epout), std::end(m_usb_instances_by_epout), nullptr);
 }
 
-bool ProfileManager::has_previous_types() const
+void ProfileManager::update_all_profile_devices(bool profile_changed, bool send_events)
 {
-    return !m_prev_types.empty();
-}
-
-void ProfileManager::update_all_profile_devices(bool profile_changed, bool send_events) {
-    for (const auto &entry : m_profiles) {
-        for (const auto &profile : entry.second) {
-            for (const auto &device : profile->devices) {
-                if (device.second) {
+    for (const auto &entry : m_profiles)
+    {
+        for (const auto &profile : entry.second)
+        {
+            for (const auto &device : profile->devices)
+            {
+                if (device.second)
+                {
                     device.second->update(profile_changed, send_events);
                 }
             }
@@ -292,37 +303,42 @@ void ProfileManager::update_all_profile_devices(bool profile_changed, bool send_
     }
 }
 
-void ProfileManager::update_profile_components(uint32_t profile_id, int32_t device_id, bool profile_changed, bool send_events) {
+void ProfileManager::update_profile_components(uint32_t profile_id, int32_t device_id, bool profile_changed, bool send_events)
+{
     auto profile = get_profile(profile_id, device_id);
-    if (!profile) {
+    if (!profile)
+    {
         return;
     }
-    
+
     // Update mappings
-    for (const auto &mapping : profile->mappings) {
+    for (const auto &mapping : profile->mappings)
+    {
         mapping->update(profile_changed, send_events);
     }
-    
+
     // Validate triggers
-    for (const auto &trigger : profile->triggers) {
+    for (const auto &trigger : profile->triggers)
+    {
         trigger->validate(false, profile_changed, send_events);
     }
-    
+
     // Update LEDs
-    for (const auto &led : profile->leds) {
+    for (const auto &led : profile->leds)
+    {
         led->update(profile_changed, send_events);
     }
 }
 
-void ProfileManager::clear_all() {
+void ProfileManager::clear_all()
+{
     m_instances.clear();
     m_active_instances.clear();
     release_profile_contents(m_profiles);
     m_profiles.clear();
     m_profile_to_instance.clear();
-    m_prev_types.clear();
-    m_current_types.clear();
     m_emulated_devices.clear();
+    m_prev_types.clear();
     std::fill(std::begin(m_usb_instances), std::end(m_usb_instances), nullptr);
     std::fill(std::begin(m_usb_instances_by_epin), std::end(m_usb_instances_by_epin), nullptr);
     std::fill(std::begin(m_usb_instances_by_epout), std::end(m_usb_instances_by_epout), nullptr);
@@ -346,7 +362,8 @@ std::shared_ptr<UsbDevice> ProfileManager::get_usb_instance(uint8_t id)
 
 void ProfileManager::set_usb_instance(uint8_t id, std::shared_ptr<UsbDevice> instance)
 {
-    if (id < 32) m_usb_instances[id] = instance;
+    if (id < 32)
+        m_usb_instances[id] = instance;
 }
 
 std::shared_ptr<UsbDevice> ProfileManager::get_usb_instance_by_epin(uint8_t ep)
@@ -356,7 +373,8 @@ std::shared_ptr<UsbDevice> ProfileManager::get_usb_instance_by_epin(uint8_t ep)
 
 void ProfileManager::set_usb_instance_by_epin(uint8_t ep, std::shared_ptr<UsbDevice> instance)
 {
-    if (ep < 16) m_usb_instances_by_epin[ep] = instance;
+    if (ep < 16)
+        m_usb_instances_by_epin[ep] = instance;
 }
 
 std::shared_ptr<UsbDevice> ProfileManager::get_usb_instance_by_epout(uint8_t ep)
@@ -366,7 +384,8 @@ std::shared_ptr<UsbDevice> ProfileManager::get_usb_instance_by_epout(uint8_t ep)
 
 void ProfileManager::set_usb_instance_by_epout(uint8_t ep, std::shared_ptr<UsbDevice> instance)
 {
-    if (ep < 16) m_usb_instances_by_epout[ep] = instance;
+    if (ep < 16)
+        m_usb_instances_by_epout[ep] = instance;
 }
 
 void ProfileManager::map_usb_instance_epin(uint8_t ep, uint8_t interface_id)
@@ -388,43 +407,4 @@ std::shared_ptr<UsbDevice> ProfileManager::get_emulated_device(ConsoleMode mode)
 void ProfileManager::set_emulated_device(ConsoleMode mode, std::shared_ptr<UsbDevice> device)
 {
     m_emulated_devices[mode] = device;
-}
-
-// Type tracking methods
-SubType ProfileManager::get_previous_type(uint32_t profile_id)
-{
-    auto it = m_prev_types.find(profile_id);
-    return (it != m_prev_types.end()) ? it->second : SubType_Gamepad;
-}
-
-void ProfileManager::set_previous_type(uint32_t profile_id, SubType type)
-{
-    m_prev_types[profile_id] = type;
-}
-
-void ProfileManager::track_profile_type(uint32_t profile_id, SubType type)
-{
-    auto match = m_prev_types.find(profile_id);
-    if (match != m_prev_types.end())
-    {
-        if (match->second != type)
-        {
-            m_prev_types[profile_id] = type;
-        }
-    }
-    else
-    {
-        m_prev_types.emplace(profile_id, type);
-    }
-}
-
-SubType ProfileManager::get_current_type(uint32_t profile_id)
-{
-    auto it = m_current_types.find(profile_id);
-    return (it != m_current_types.end()) ? it->second : SubType_Gamepad;
-}
-
-void ProfileManager::set_current_type(uint32_t profile_id, SubType type)
-{
-    m_current_types[profile_id] = type;
 }

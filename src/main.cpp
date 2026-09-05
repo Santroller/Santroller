@@ -203,6 +203,7 @@ static void initialize_device_stack()
 
 void reinitialize_device_stack()
 {
+    printf("Reinitializing device stack\r\n");
     if (ConfigManager::instance().has_bluetooth())
     {
         BluetoothStack::instance().power_off();

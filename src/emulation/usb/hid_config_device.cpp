@@ -55,11 +55,15 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
   {
     ConfigManager::instance().request_mode(ModeSwitch);
   }
+  // if (millis() - lastKeepAlive > 10000) {
+  //   if (debug_enabled) {
+  //     deinitDebug();
+  //     debug_enabled = false;
+  //   }
+  // }
   if (tool_closed())
   {
     profile_selected = false;
-    // if (!ConfigManager::instance().is_working() && !ConfigManager::instance().is_reloading())
-    //   deinitDebug();
     return;
   }
   bool profile_just_changed = profile_changed;
@@ -425,7 +429,11 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       lastKeepAlive = millis();
       tool_seen = true;
       just_loaded = true;
-      initDebug();
+      if (!debug_enabled)
+      {
+        initDebug();
+        debug_enabled = true;
+      }
       break;
     case ReportId::ReportIdKeepalive:
       if (!ConfigManager::instance().is_working())

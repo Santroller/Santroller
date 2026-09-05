@@ -79,7 +79,6 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
     setup_instance_from_profile(instance, profile);
     profile_mgr.register_instance(instance, profile);
     instance->initialize();
-    profile_mgr.set_current_type(profile->profile_id, profile->subtype);
     
     return instance;
 }

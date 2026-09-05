@@ -96,7 +96,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
         confDevice->initialize();
     }
     device_mgr.remove_disconnected_root_devices();
-    if (config_mgr.has_mode_changed() || resolved_mode != current_mode || profile_mgr.has_previous_types())
+    if (resolved_mode != current_mode || profile_mgr.changed_types())
     {
         reinitialize_device_stack();
     }

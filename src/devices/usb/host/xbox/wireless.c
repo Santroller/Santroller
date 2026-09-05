@@ -68,7 +68,7 @@ static bool wireless_dequeue_event(struct mt76_dev *dev, struct mt76_wireless_ev
 
 static void wireless_queue_association(struct mt76_dev *dev, const uint8_t *addr)
 {
-    struct mt76_wireless_event event = { .type = MT76_EVENT_ASSOCIATION };
+    struct mt76_wireless_event event = {.type = MT76_EVENT_ASSOCIATION};
     memcpy(event.addr, addr, sizeof(event.addr));
     wireless_queue_event(dev, &event);
 }
@@ -153,8 +153,9 @@ void wireless_task(struct mt76_dev *dev)
         case MT76_EVENT_CLIENT_LOST:
             wireless_handle_client_lost(dev, &event.wcid, 1);
             break;
-        case MT76_EVENT_CLIENT_COMMAND: {
-            uint8_t command_data[2] = { XONE_MT_WLAN_RESERVED & 0xFF, event.command };
+        case MT76_EVENT_CLIENT_COMMAND:
+        {
+            uint8_t command_data[2] = {XONE_MT_WLAN_RESERVED & 0xFF, event.command};
             wireless_handle_client_command(dev, command_data, sizeof(command_data), event.wcid, event.addr);
             break;
         }
@@ -326,7 +327,7 @@ static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, ui
         {
             if (payload_len >= 2)
             {
-                    wireless_queue_client_command(dev, payload[1], wcid, hdr->addr2);
+                wireless_queue_client_command(dev, payload[1], wcid, hdr->addr2);
             }
         }
     }
@@ -405,7 +406,7 @@ static void wireless_handle_client_command(struct mt76_dev *dev, const uint8_t *
 {
     if (len < 2 || data[0] != (XONE_MT_WLAN_RESERVED & 0xFF))
     {
-        return; 
+        return;
     }
 
     uint8_t cmd = data[1];
@@ -475,7 +476,7 @@ static void wireless_handle_disassociation(struct mt76_dev *dev, uint8_t wcid)
 
     if (wcid == 0 || wcid > MT76_MAX_CLIENTS)
     {
-        return; 
+        return;
     }
 
     mt76_remove_client(dev, wcid);
@@ -515,7 +516,14 @@ void wireless_handle_association(struct mt76_dev *dev, const uint8_t *addr)
 {
     printf("Association request from: %02X:%02X:%02X:%02X:%02X:%02X\n",
            addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
-
+    for (int i = 0; i < MT76_MAX_CLIENTS; i++)
+    {
+        if (memcmp(dev->clients[i].addr, addr, 6) == 0)
+        {
+            printf("Client already seen!\n");
+            return;
+        }
+    }
     int wcid = find_free_wcid(dev);
     if (wcid < 0)
     {

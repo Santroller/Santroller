@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <map>
 #include <memory>
+#include <queue>
 #include <cstddef>
 #include <stdint.h>
 #include <algorithm>
@@ -37,6 +38,7 @@ public:
         ConsoleMode usb_mode,
         const EmulationDeviceConfig& emulation_devices
     );
+    bool changed_types();
     
     void register_instance(std::shared_ptr<Instance> instance, std::shared_ptr<Profile> profile);
     void remove_instance(std::shared_ptr<Instance> instance);
@@ -79,7 +81,6 @@ public:
     bool is_profile_active(uint32_t profile_id) const;
     void clear_all();
     void prepare_for_config_reload();
-    bool has_previous_types() const;
     
     void add_instance(std::shared_ptr<Instance> instance);
     size_t instance_count() const;
@@ -105,11 +106,6 @@ public:
     std::shared_ptr<UsbDevice> get_emulated_device(ConsoleMode mode);
     void set_emulated_device(ConsoleMode mode, std::shared_ptr<UsbDevice> device);
     
-    SubType get_previous_type(uint32_t profile_id);
-    void set_previous_type(uint32_t profile_id, SubType type);
-    void track_profile_type(uint32_t profile_id, SubType type);
-    SubType get_current_type(uint32_t profile_id);
-    void set_current_type(uint32_t profile_id, SubType type);
 
 private:
     ProfileManager() = default;
@@ -119,6 +115,8 @@ private:
 
     std::unordered_map<uint32_t, std::vector<std::shared_ptr<Profile>>> m_profiles;
     std::vector<std::shared_ptr<Instance>> m_active_instances;
+    std::queue<SubType> m_last_subtypes;
+    bool m_subtypes_changed = false;
     std::unordered_map<uint32_t, std::vector<std::shared_ptr<Instance>>> m_profile_to_instance;
     
     std::vector<std::shared_ptr<Instance>> m_instances;
@@ -126,6 +124,5 @@ private:
     std::shared_ptr<UsbDevice> m_usb_instances_by_epin[16];
     std::shared_ptr<UsbDevice> m_usb_instances_by_epout[16];
     std::map<ConsoleMode, std::shared_ptr<UsbDevice>> m_emulated_devices;
-    std::unordered_map<uint32_t, SubType> m_prev_types;
-    std::unordered_map<uint32_t, SubType> m_current_types;
+    std::unordered_map<uint32_t, std::pair<ActiveProfileSource, SubType>> m_prev_types;
 };

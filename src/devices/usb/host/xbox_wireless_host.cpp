@@ -25,9 +25,9 @@ extern "C"
 
 namespace
 {
-constexpr uint16_t XBOX_WIRELESS_ADAPTER_VID = 0x045E;
-constexpr uint16_t XBOX_WIRELESS_ADAPTER_PID_02E6 = 0x02E6;
-constexpr uint16_t XBOX_WIRELESS_ADAPTER_PID_02FE = 0x02FE;
+    constexpr uint16_t XBOX_WIRELESS_ADAPTER_VID = 0x045E;
+    constexpr uint16_t XBOX_WIRELESS_ADAPTER_PID_02E6 = 0x02E6;
+    constexpr uint16_t XBOX_WIRELESS_ADAPTER_PID_02FE = 0x02FE;
 }
 
 static XboxWirelessHost *wireless_host(struct mt76_dev *dev)
@@ -76,8 +76,10 @@ extern "C" void xbox_adapter_process_gip_data(struct mt76_dev *dev, uint8_t wcid
     auto host = wireless_host(dev);
     if (!host || wcid == 0)
     {
-        if (!host) printf("xbox_adapter_process_gip_data: no host\n");
-        if (wcid == 0) printf("xbox_adapter_process_gip_data: wcid=0\n");
+        if (!host)
+            printf("xbox_adapter_process_gip_data: no host\n");
+        if (wcid == 0)
+            printf("xbox_adapter_process_gip_data: wcid=0\n");
         return;
     }
 
@@ -139,11 +141,11 @@ std::shared_ptr<UsbHostInterface> XboxWirelessHost::open(std::shared_ptr<UsbHost
 
     uint8_t dev_addr = list->dev_addr();
     uint16_t vid;
-        uint16_t pid;
-        TU_VERIFY(tuh_vid_pid_get(dev_addr, &vid, &pid), nullptr);
-        TU_VERIFY(vid == XBOX_WIRELESS_ADAPTER_VID &&
+    uint16_t pid;
+    TU_VERIFY(tuh_vid_pid_get(dev_addr, &vid, &pid), nullptr);
+    TU_VERIFY(vid == XBOX_WIRELESS_ADAPTER_VID &&
                   (pid == XBOX_WIRELESS_ADAPTER_PID_02E6 || pid == XBOX_WIRELESS_ADAPTER_PID_02FE),
-                  nullptr);
+              nullptr);
 
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
 
@@ -165,7 +167,7 @@ std::shared_ptr<UsbHostInterface> XboxWirelessHost::open(std::shared_ptr<UsbHost
             printf("XboxWirelessHost: Bulk IN endpoint 0x%02X, size=%d\r\n",
                    desc_ep->bEndpointAddress, desc_ep->wMaxPacketSize);
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-                 list->host_devices_by_endpoint_in[desc_ep->bEndpointAddress & (~0x80)] = intf;
+            list->host_devices_by_endpoint_in[desc_ep->bEndpointAddress & (~0x80)] = intf;
             if (desc_ep->bEndpointAddress == MT_EP_IN_CMD)
             {
                 usbh_edpt_xfer(dev_addr, desc_ep->bEndpointAddress, intf->m_cmd_buf, sizeof(intf->m_cmd_buf));
@@ -285,34 +287,32 @@ void XboxWirelessHost::remove_controller_interface(uint8_t controller_idx)
 
     printf("XboxWirelessHost: Controller %d virtual interface removed\r\n", controller_idx);
 }
-
+static uint32_t test = 0;
 bool XboxWirelessHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
-    if (ep_addr == MT_EP_IN_CMD && result != XFER_RESULT_FAILED)
+    if (millis() - test > 500)
     {
-        if (xferred_bytes > 0)
+        test = millis();
+        printf("XboxWirelessHost: xfer_cb called with ep_addr=0x%02X, result=%d, xferred_bytes=%u\r\n", ep_addr, result, xferred_bytes);
+    }   
+    if (ep_addr == MT_EP_IN_CMD)
+    {
+        if (xferred_bytes > 0 && result != XFER_RESULT_FAILED)
         {
             wireless_process_data(&m_mt76_dev, m_cmd_buf, xferred_bytes);
         }
 
         usbh_edpt_xfer(m_dev_addr, ep_addr, m_cmd_buf, sizeof(m_cmd_buf));
     }
-    else if (ep_addr == MT_EP_IN_WLAN && result != XFER_RESULT_FAILED)
+    else if (ep_addr == MT_EP_IN_WLAN)
     {
-        if (xferred_bytes > 0)
+        if (xferred_bytes > 0 && result != XFER_RESULT_FAILED)
         {
             wireless_process_data(&m_mt76_dev, m_data_buf, xferred_bytes);
         }
 
         usbh_edpt_xfer(m_dev_addr, ep_addr, m_data_buf, sizeof(m_data_buf));
     }
-    else if (ep_addr == MT_EP_IN_CMD || ep_addr == MT_EP_IN_WLAN)
-    {
-        usbh_edpt_xfer(m_dev_addr, ep_addr,
-                       ep_addr == MT_EP_IN_CMD ? m_cmd_buf : m_data_buf,
-                       ep_addr == MT_EP_IN_CMD ? sizeof(m_cmd_buf) : sizeof(m_data_buf));
-    }
-
     return true;
 }
 
@@ -328,8 +328,7 @@ bool XboxWirelessHost::queue_gip_packet(uint8_t wcid, const uint8_t *mac_addr, c
     {
         m_gip_queue_head = (m_gip_queue_head + WIRELESS_GIP_QUEUE_CAPACITY - 1) % WIRELESS_GIP_QUEUE_CAPACITY;
     }
-    uint8_t index = priority ? m_gip_queue_head :
-        (m_gip_queue_head + m_gip_queue_count) % WIRELESS_GIP_QUEUE_CAPACITY;
+    uint8_t index = priority ? m_gip_queue_head : (m_gip_queue_head + m_gip_queue_count) % WIRELESS_GIP_QUEUE_CAPACITY;
     auto &item = m_gip_queue[index];
     memcpy(item.packet, packet, len);
     memcpy(item.mac_addr, mac_addr, MT76_MAC_ADDR_LEN);

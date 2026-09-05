@@ -106,6 +106,7 @@ struct ConfigDecodeContext
     ShortcutInput *last_shortcut = nullptr;
     Input *last_special = nullptr;
     bool matched = false;
+    bool changed = false;
 };
 
 bool load_cycle_state(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -430,9 +431,6 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
         }
         printf("profile assigned! profile_id=%d\r\n", profile->profile_id);
 
-        // Track subtype changes
-        profile_mgr.track_profile_type(profile->profile_id, profile->subtype);
-
         // Assign profile to appropriate devices
         profile_mgr.assign_profile_to_devices(profile, assignedDevices, usb_mode, *context->emulation_devices);
     }
@@ -512,10 +510,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
         auto profile = std::make_shared<Profile>();
         device_mgr.for_each_active_device([profile](const auto &device)
-                                          {
-                                              profile->devices.emplace(device->m_id, device);
-                                              // printf("load device: %p %p %d\r\n", profile.get(), device.get(), device->m_id);
-                                          });
+                                          { profile->devices.emplace(device->m_id, device); });
         ConfigDecodeContext context{profile, emulation_devices};
         context.matched = false;
         proto_Profile proto_profile;
@@ -537,8 +532,10 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         {
             break;
         }
+
         // loop again: other still-assignable devices may satisfy this profile too
     }
+    // printf("load_profile: finished processing profile bytes\r\n");
     return true;
 }
 bool load_empty()

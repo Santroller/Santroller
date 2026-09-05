@@ -271,6 +271,7 @@ int main()
         tud_task(); // tinyusb device task
         tuh_task();
         hid_task();
+        HidConsoleBridge::instance().flush();
     }
     return 0;
 }

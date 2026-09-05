@@ -388,8 +388,6 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
 
     if (!m_firmware_loaded && (now - m_init_start_time) > 500)
     {
-        printf("XboxWirelessHost: Loading firmware\r\n");
-
         const uint8_t *firmware_data;
         uint32_t firmware_len;
         uint32_t firmware_compressed_len;
@@ -409,8 +407,6 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
 
         if (!m_firmware_loading)
         {
-            printf("Decompressing firmware (%u bytes compressed -> %u bytes)\r\n",
-                   firmware_compressed_len, firmware_len);
             if (mt76_begin_firmware_compressed(&m_mt76_dev, firmware_data,
                                                firmware_compressed_len, firmware_len) < 0)
             {

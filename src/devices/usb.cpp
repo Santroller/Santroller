@@ -69,6 +69,7 @@ void usb_host_add_assignable_devices(bool rescan)
 {
     for (const auto &device : usb_assignable_interfaces)
     {
+        device->still_connected = true;
         DeviceManager::instance().add_assignable_device(device);
         if (rescan)
         {

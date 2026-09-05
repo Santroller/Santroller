@@ -91,9 +91,9 @@
 #include "utils.h"
 #include "hci.h"
 
-static auto& profile_mgr = ProfileManager::instance();
-static auto& device_mgr = DeviceManager::instance();
-static auto& config_mgr = ConfigManager::instance();
+static auto &profile_mgr = ProfileManager::instance();
+static auto &device_mgr = DeviceManager::instance();
+static auto &config_mgr = ConfigManager::instance();
 static ConfigStorage config_storage;
 
 ConsoleMode mode = ModeHid;
@@ -105,6 +105,7 @@ struct ConfigDecodeContext
     const EmulationDeviceConfig *emulation_devices = nullptr;
     ShortcutInput *last_shortcut = nullptr;
     Input *last_special = nullptr;
+    bool matched = false;
 };
 
 bool load_cycle_state(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -131,7 +132,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_device.cb_device.funcs.decode = load_device_dev;
     proto_device.cb_device.arg = arg ? *arg : nullptr;
     pb_decode(stream, proto_Device_fields, &proto_device);
-    
+
     if (emulation_devices)
     {
         if (proto_device.which_device == proto_Device_psxEmulation_tag)
@@ -145,7 +146,7 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
             emulation_devices->has_wii = true;
         }
     }
-    
+
     auto device_id = proto_device.deviceid;
     DeviceReloadState previous_state;
     auto previous_device = device_mgr.get_root_device(device_id);
@@ -156,17 +157,16 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         device_mgr.remove_root_device(device_id);
         previous_device.reset();
     }
-    
+
     auto device = DeviceFactory::create_device(
         proto_device,
         device_id,
-        previous_state.valid ? &previous_state : nullptr
-    );
+        previous_state.valid ? &previous_state : nullptr);
     if (!device)
     {
         return false;
     }
-    
+
     device_mgr.set_root_device(device_id, device);
     device_mgr.add_active_device(device);
     device->still_connected = true;
@@ -187,7 +187,7 @@ std::unique_ptr<Input> make_input(proto_Input input, ConfigDecodeContext &contex
         context.last_shortcut = nullptr;
         return std::unique_ptr<Input>(ret);
     }
-    
+
     return InputFactory::create_input(input, context.profile);
 }
 
@@ -340,10 +340,10 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_mapping.input.cb_input.funcs.decode = load_input_dev;
     proto_mapping.input.cb_input.arg = *arg;
     pb_decode(stream, proto_Mapping_fields, &proto_mapping);
-    
+
     std::unique_ptr<Input> input = make_input(proto_mapping.input, *context, stream);
     size_t mapping_id = profile->mappings.size();
-    
+
     auto mapping = MappingFactory::create_mapping(proto_mapping, profile, std::move(input), mapping_id);
     if (mapping)
     {
@@ -377,7 +377,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
     proto_assignment.cb_assignment.funcs.decode = load_assignment_dev;
     proto_assignment.cb_assignment.arg = *arg;
     pb_decode(stream, proto_ProfileAssignmentInfo_fields, &proto_assignment);
-    
+
     // Get input for input-based triggers
     std::unique_ptr<Input> input;
     if (proto_assignment.which_assignment == proto_ProfileAssignmentInfo_input_tag)
@@ -388,20 +388,19 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
     {
         input = make_input(proto_assignment.assignment.inputAnyTime.input, *context, stream);
     }
-    
+
     auto trigger = TriggerFactory::create_trigger(
         proto_assignment,
         profile,
         std::move(input),
         list->triggers.size(),
-        profile->triggers.size() - 1
-    );
-    
+        profile->triggers.size() - 1);
+
     if (trigger)
     {
         list->triggers.push_back(std::move(trigger));
     }
-    
+
     return true;
 }
 
@@ -409,16 +408,34 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto *context = static_cast<ConfigDecodeContext *>(*arg);
     auto profile = context->profile;
-    // printf("load_assignments: %p\r\n", profile.get());
     auto list = new ActivationTriggerList();
     list->list_id = profile->triggers.size();
     profile->triggers.emplace_back(list);
     proto_ProfileAssignment proto_assignment;
     proto_assignment.assignments.funcs.decode = &load_assignment_info;
     proto_assignment.assignments.arg = *arg;
-    // printf("load_assignments start?\r\n");
     pb_decode(stream, proto_ProfileAssignment_fields, &proto_assignment);
-    // printf("load_assignments done?\r\n");
+    // Assign triggers before building the profile
+    if (list->validate(true, false, false))
+    {
+        context->matched = true;
+        int assignedDevices = list->assignedDevices();
+        ConsoleMode usb_mode = config_mgr.get_requested_mode();
+        ConsoleMode forced_usb_mode;
+        if (list->forcedConsoleMode(forced_usb_mode))
+        {
+            printf("setting requested mode: %d, old: %d\r\n", forced_usb_mode, config_mgr.get_requested_mode());
+            config_mgr.request_mode(forced_usb_mode);
+            usb_mode = forced_usb_mode;
+        }
+        printf("profile assigned! profile_id=%d\r\n", profile->profile_id);
+
+        // Track subtype changes
+        profile_mgr.track_profile_type(profile->profile_id, profile->subtype);
+
+        // Assign profile to appropriate devices
+        profile_mgr.assign_profile_to_devices(profile, assignedDevices, usb_mode, *context->emulation_devices);
+    }
     return true;
 }
 bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -429,33 +446,32 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_led.mapping.led.inputMapping.input.cb_input.funcs.decode = load_input_dev;
     proto_led.mapping.led.inputMapping.input.cb_input.arg = *arg;
     pb_decode(stream, proto_Led_fields, &proto_led);
-    
+
     auto device = LedFactory::create_led_device(proto_led.device, profile);
     if (!device)
     {
         return false;
     }
-    
+
     // Get input for input-based LED mappings
     std::unique_ptr<Input> input;
     if (proto_led.mapping.which_led == proto_LedMapping_inputMapping_tag)
     {
         input = make_input(proto_led.mapping.led.inputMapping.input, *context, stream);
     }
-    
+
     auto led_mapping = LedFactory::create_led_mapping(
         proto_led.mapping,
         profile,
         std::move(device),
         std::move(input),
-        profile->leds.size()
-    );
-    
+        profile->leds.size());
+
     if (led_mapping)
     {
         profile->leds.push_back(std::move(led_mapping));
     }
-    
+
     return true;
 }
 bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -496,11 +512,12 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
         auto profile = std::make_shared<Profile>();
         device_mgr.for_each_active_device([profile](const auto &device)
-        {
-            profile->devices.emplace(device->m_id, device);
-            // printf("load device: %p %p %d\r\n", profile.get(), device.get(), device->m_id);
-        });
+                                          {
+                                              profile->devices.emplace(device->m_id, device);
+                                              // printf("load device: %p %p %d\r\n", profile.get(), device.get(), device->m_id);
+                                          });
         ConfigDecodeContext context{profile, emulation_devices};
+        context.matched = false;
         proto_Profile proto_profile;
         memset(&proto_profile, 0, sizeof(proto_profile));
         proto_profile.assignments.funcs.decode = &load_assignments;
@@ -516,34 +533,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         pb_istream_t decode_stream = profile_bytes;
         pb_decode(&decode_stream, proto_Profile_fields, &proto_profile);
 
-        // Validate triggers and assign profile to devices - every list that matches
-        // (not just the first) gets activated, so one profile can drive multiple devices at once.
-        bool matched = false;
-        for (auto &list : profile->triggers)
-        {
-            if (list->validate(true, false, false))
-            {
-                matched = true;
-                int assignedDevices = list->assignedDevices();
-                ConsoleMode usb_mode = config_mgr.get_requested_mode();
-                ConsoleMode forced_usb_mode;
-                if (list->forcedConsoleMode(forced_usb_mode))
-                {
-                    printf("setting requested mode: %d, old: %d\r\n", forced_usb_mode, config_mgr.get_requested_mode());
-                    config_mgr.request_mode(forced_usb_mode);
-                    usb_mode = forced_usb_mode;
-                }
-                printf("profile assigned! profile_id=%d\r\n", profile->profile_id);
-                
-                // Track subtype changes
-                profile_mgr.track_profile_type(profile->profile_id, profile->subtype);
-                
-                // Assign profile to appropriate devices
-                profile_mgr.assign_profile_to_devices(profile, assignedDevices, usb_mode, *context.emulation_devices);
-            }
-        }
-
-        if (!matched || device_mgr.assignable_device_count() == assignable_before)
+        if (!context.matched || device_mgr.assignable_device_count() == assignable_before)
         {
             break;
         }
@@ -574,12 +564,12 @@ bool decode_cycle_input_states(pb_istream_t *stream, const pb_field_t *field, vo
 bool encode_cycle_input_states(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
     proto_CyclingInputState proto_cycle;
-    DeviceFactory::foreach_cycle_state([&](int32_t id, int32_t state) {
+    DeviceFactory::foreach_cycle_state([&](int32_t id, int32_t state)
+                                       {
         proto_cycle.id = id;
         proto_cycle.state = state;
         pb_encode_tag_for_field(stream, field);
-        pb_encode_submessage(stream, proto_CyclingInputState_fields, &proto_cycle);
-    });
+        pb_encode_submessage(stream, proto_CyclingInputState_fields, &proto_cycle); });
     return true;
 }
 bool decode_toggle_input_states(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -602,27 +592,27 @@ bool decode_bluetooth_states(pb_istream_t *stream, const pb_field_t *field, void
 bool encode_toggle_input_states(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
     proto_ToggleInputState proto_toggle;
-    DeviceFactory::foreach_toggle_state([&](int32_t id, bool state) {
+    DeviceFactory::foreach_toggle_state([&](int32_t id, bool state)
+                                        {
         proto_toggle.id = id;
         proto_toggle.state = state;
         pb_encode_tag_for_field(stream, field);
-        pb_encode_submessage(stream, proto_ToggleInputState_fields, &proto_toggle);
-    });
+        pb_encode_submessage(stream, proto_ToggleInputState_fields, &proto_toggle); });
     return true;
 }
 
 bool encode_bluetooth_states(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
     proto_BluetoothPairingState proto_bluetooth proto_BluetoothPairingState_init_zero;
-    DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state) {
+    DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state)
+                                                   {
         proto_bluetooth.id = id;
         memcpy(proto_bluetooth.macAddress, state.mac, sizeof(proto_bluetooth.macAddress));
         strncpy(proto_bluetooth.name, state.name, sizeof(proto_bluetooth.name) - 1);
         proto_bluetooth.name[sizeof(proto_bluetooth.name) - 1] = '\0';
         proto_bluetooth.ble = state.ble;
         pb_encode_tag_for_field(stream, field);
-        pb_encode_submessage(stream, proto_BluetoothPairingState_fields, &proto_bluetooth);
-    });
+        pb_encode_submessage(stream, proto_BluetoothPairingState_fields, &proto_bluetooth); });
     return true;
 }
 

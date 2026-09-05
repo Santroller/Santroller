@@ -44,7 +44,7 @@ XboxWirelessController::XboxWirelessController(XboxWirelessHost* adapter, uint8_
     m_controller.gip_device.interface = &wireless_gip_interface;
     m_controller.status = XBOX_CONTROLLER_DISCONNECTED;
     
-    printf("XboxWirelessController: Created virtual interface for controller %d\r\n", controller_idx);
+    printf("XboxWirelessController: Created virtual interface for controller %d (%p)\r\n", controller_idx, this);
 }
 
 XboxWirelessController::~XboxWirelessController()

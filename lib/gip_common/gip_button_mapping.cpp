@@ -1,19 +1,6 @@
 #include "gip_button_mapping.h"
 #include <stdint.h>
-
-// SubType enum values (from device.pb.h)
-#ifndef SubType_Gamepad
-#define SubType_Gamepad 0
-#endif
-#ifndef SubType_RockBandGuitar
-#define SubType_RockBandGuitar 1
-#endif
-#ifndef SubType_RockBandDrums
-#define SubType_RockBandDrums 2
-#endif
-#ifndef SubType_LiveGuitar
-#define SubType_LiveGuitar 5
-#endif
+#include "device.pb.h"
 
 bool gip_tick_digital(const void *input_data, uint8_t subtype, proto_Output *type)
 {

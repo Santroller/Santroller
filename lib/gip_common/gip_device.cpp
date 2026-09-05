@@ -74,7 +74,6 @@ bool gip_device_process_incoming(
     if (device->incoming_xgip->getCommand() == GIP_INPUT_REPORT) {
         const uint8_t *input_data = device->incoming_xgip->getData();
         uint16_t input_len = device->incoming_xgip->getDataLength();
-        
         if (input_len <= sizeof(device->raw_input)) {
             memcpy(device->raw_input, input_data, input_len);
         }

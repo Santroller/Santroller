@@ -58,7 +58,8 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
   if (tool_closed())
   {
     profile_selected = false;
-    deinitDebug();
+    // if (!ConfigManager::instance().is_working() && !ConfigManager::instance().is_reloading())
+    //   deinitDebug();
     return;
   }
   bool profile_just_changed = profile_changed;

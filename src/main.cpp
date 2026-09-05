@@ -273,6 +273,7 @@ int main()
         tuh_task();
         hid_task();
         HidConsoleBridge::instance().flush();
+        EEPROM.tick();
     }
     return 0;
 }

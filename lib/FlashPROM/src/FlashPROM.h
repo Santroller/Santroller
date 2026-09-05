@@ -25,9 +25,13 @@ public:
 	void start();
 	void commit();
 	void reset();
+	void tick();
 	void commit_now();
 
 	static uint8_t writeCache[EEPROM_SIZE_BYTES];
+
+private:
+	volatile uint32_t should_commit_at = 0;
 };
 
 inline FlashPROM EEPROM;

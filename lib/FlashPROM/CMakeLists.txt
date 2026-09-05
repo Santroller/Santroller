@@ -8,4 +8,5 @@ target_link_libraries(FlashPROM
 pico_stdlib
 pico_multicore
 hardware_flash
+tinyusb_pico_pio_usb
 )

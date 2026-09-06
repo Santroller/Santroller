@@ -4,9 +4,9 @@ if(WIN32)
 else()
     set(USERHOME $ENV{HOME})
 endif()
-set(sdkVersion 2.3.0)
+set(sdkVersion 2.3.1)
 set(toolchainVersion 15_2_Rel1)
-set(picotoolVersion 2.3.0)
+set(picotoolVersion 2.3.1)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
 if (EXISTS ${picoVscode})
     include(${picoVscode})
@@ -25,6 +25,7 @@ set(ENABLE_XBOX_WIRELESS ON CACHE BOOL "Enable Xbox Wireless Adapter support")
 if(SANTROLLER_VARIANT_DRIVER AND NOT SANTROLLER_VARIANT_BUILD)
   # Resolve the SDK once in the driver tree and share it with all variants.
   set(PICO_SDK_FETCH_FROM_GIT TRUE)
+  set(PICOTOOL_FETCH_FROM_GIT TRUE)
   include(pico_sdk_import.cmake)
   execute_process(
     COMMAND git rev-parse --short=8 HEAD
@@ -59,6 +60,8 @@ if(SANTROLLER_VARIANT_DRIVER AND NOT SANTROLLER_VARIANT_BUILD)
         -DENABLE_XBOX_WIRELESS=${ENABLE_XBOX_WIRELESS}
         -DPICO_SDK_PATH=${PICO_SDK_PATH}
         -DPICO_SDK_FETCH_FROM_GIT=OFF
+        -DPICOTOOL_FETCH_FROM_GIT=OFF
+        -DPICOTOOL_FETCH_FROM_GIT_PATH=${PICOTOOL_FETCH_FROM_GIT_PATH}
         -DSANTROLLER_GIT_COMMIT=${SANTROLLER_GIT_COMMIT}
         -DSANTROLLER_SHARED_GENERATED_DIR=${CMAKE_BINARY_DIR}/generated
         -DSANTROLLER_VARIANT_BUILD=ON

@@ -442,9 +442,6 @@ target_link_libraries(
 
 pfb_compile_with_bootloader(${TARGET})
 
-if (PICO_PLATFORM MATCHES "^rp2350")
-  set_property(TARGET ${TARGET} PROPERTY PICOTOOL_EXTRA_UF2_ARGS --platform rp2350)
-endif()
 pico_add_extra_outputs(${TARGET})
 
 add_custom_target(build_combined ALL

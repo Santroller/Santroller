@@ -32,8 +32,6 @@ public:
     
     std::shared_ptr<XboxWirelessController> get_controller_interface(uint8_t controller_idx);
     
-    int send_gip_to_controller(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *data, uint16_t len);
-    
     void send_report_from_host(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *packet, uint16_t len);
     void send_ack_from_host(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *packet, uint16_t len);
     void clear_queued_packets(uint8_t wcid);

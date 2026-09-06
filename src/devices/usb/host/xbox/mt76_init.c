@@ -542,7 +542,7 @@ int mt76_send_gip_data(struct mt76_dev *dev, uint8_t wcid, const uint8_t *addr,
     memcpy(&frame[offset], gip_data, gip_len);
     offset += gip_len;
     
-    printf("MT76: Sending GIP data to WCID %d, gip_len=%d, total_len=%d\n", wcid, gip_len, offset);
+    // printf("MT76: Sending GIP data to WCID %d, gip_len=%d, total_len=%d\n", wcid, gip_len, offset);
     
     return mt76_send_command(dev, frame, offset, 0);
 }

@@ -66,11 +66,6 @@ extern "C" void xbox_remove_controller(struct mt76_dev *dev, uint8_t index)
     }
 }
 
-int XboxWirelessHost::send_gip_to_controller(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *data, uint16_t len)
-{
-    return mt76_send_gip_data(&m_mt76_dev, wcid, mac_addr, data, len);
-}
-
 extern "C" void xbox_adapter_process_gip_data(struct mt76_dev *dev, uint8_t wcid, const uint8_t *data, uint16_t len)
 {
     auto host = wireless_host(dev);
@@ -474,6 +469,7 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
     if (m_gip_queue_count > 0)
     {
         auto &item = m_gip_queue[m_gip_queue_head];
+        // printf("XboxWirelessHost: Sending GIP packet, wcid=%d, len=%d, cmd=0x%02X\n", item.wcid, item.len, item.packet[0]);
         if (mt76_send_gip_data(&m_mt76_dev, item.wcid, item.mac_addr, item.packet, item.len) == 0)
         {
             m_gip_queue_head = (m_gip_queue_head + 1) % WIRELESS_GIP_QUEUE_CAPACITY;

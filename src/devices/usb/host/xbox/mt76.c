@@ -404,8 +404,8 @@ int mt76_send_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, e
     uint16_t total_len = len;
     mt76_prep_message(dev->bulk_buffer + MT_CMD_HDR_LEN, &total_len, info);
     
-    printf("MT76: Sending command 0x%02X, len=%d (dev_addr=%d, ep=0x%02X)\n", 
-           cmd, total_len, dev->dev_addr, MT_EP_OUT);
+    // printf("MT76: Sending command 0x%02X, len=%d (dev_addr=%d, ep=0x%02X)\n", 
+    //        cmd, total_len, dev->dev_addr, MT_EP_OUT);
     
     if (mt76_usb_bulk_out_blocking(dev, dev->bulk_buffer, total_len) < 0) {
         printf("MT76: Bulk transfer failed\n");

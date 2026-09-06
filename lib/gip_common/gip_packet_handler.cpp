@@ -162,8 +162,8 @@ uint8_t gip_detect_device_subtype(
         // Check against known device types
         for (size_t i = 0; i < mapping_count; i++) {
             if (strncmp((char *)data, mappings[i].name, str_len) == 0) {
-                printf("GIP: Detected device type: %s (subtype %d)\r\n", 
-                       mappings[i].name, mappings[i].subtype);
+                // printf("GIP: Detected device type: %s (subtype %d)\r\n", 
+                //        mappings[i].name, mappings[i].subtype);
                 return mappings[i].subtype;
             }
         }
@@ -185,30 +185,34 @@ void gip_send_power_on_sequence(gip_device_t *device)
     XGIPProtocol *xgip = device->outgoing_xgip;
     void *context = device->user_context;
     auto queue = device->interface->queue_packet;
-    
+    xgip->incrementSequence();
     // Power on command 1
     xgip->reset();
-    xgip->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, 2, 1, 0, 0);
+    xgip->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, xgip->getSequence(), 1, 0, 0);
     xgip->setData(XBOXONE_POWER_ON, sizeof(XBOXONE_POWER_ON));
     queue(context, xgip->generatePacket(), xgip->getPacketLength());
+    xgip->incrementSequence();
     
     // Power on command 2
     xgip->reset();
-    xgip->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, 3, 1, 0, 0);
+    xgip->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, xgip->getSequence(), 1, 0, 0);
     xgip->setData(XBOXONE_POWER_ON_SINGLE, sizeof(XBOXONE_POWER_ON_SINGLE));
     queue(context, xgip->generatePacket(), xgip->getPacketLength());
+    xgip->incrementSequence();
     
     // LED on
     xgip->reset();
-    xgip->setAttributes(GIP_CMD_LED_ON, 1, 1, 0, 0);
+    xgip->setAttributes(GIP_CMD_LED_ON, xgip->getSequence(), 1, 0, 0);
     xgip->setData(XBOXONE_LED_ON, sizeof(XBOXONE_LED_ON));
     queue(context, xgip->generatePacket(), xgip->getPacketLength());
+    xgip->incrementSequence();
     
     // Rumble on
     xgip->reset();
-    xgip->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, 1, 1, 0, 0);
+    xgip->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, xgip->getSequence(), 1, 0, 0);
     xgip->setData(XBOXONE_RUMBLE_ON, sizeof(XBOXONE_RUMBLE_ON));
     queue(context, xgip->generatePacket(), xgip->getPacketLength());
+    xgip->incrementSequence();
 }
 
 void gip_request_device_descriptor(gip_device_t *device)
@@ -240,5 +244,5 @@ void gip_send_auth_complete(gip_device_t *device)
     xgip->setData(auth_complete, sizeof(auth_complete));
     device->interface->queue_packet(device->user_context, xgip->generatePacket(), xgip->getPacketLength());
     
-    printf("GIP: Sent auth complete packet\n");
+    // printf("GIP: Sent auth complete packet\n");
 }

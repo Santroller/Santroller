@@ -46,13 +46,12 @@ bool gip_device_process_incoming(
     if (!device || !device->incoming_xgip || !device->interface) {
         return false;
     }
-    
     // Feed data to incoming XGIP protocol parser
     if (!device->incoming_xgip->parse((uint8_t *)data, len)) {
         return false;  // Failed to parse
     }
 #if GIP_TRACE_ENABLED
-    printf("gip_device_process_incoming: parsed successfully, cmd=0x%02X\n", device->incoming_xgip->getCommand());
+    printf("gip_device_process_incoming: parsed successfully, cmd=0x%02X, chunked=%d, endOfChunk=%d, ackRequired=%d\n", device->incoming_xgip->getCommand(), device->incoming_xgip->getChunked(), device->incoming_xgip->endOfChunk(), device->incoming_xgip->ackRequired());
 #endif
     
     if (device->incoming_xgip->getChunked()) {

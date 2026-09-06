@@ -176,7 +176,8 @@ int XboxWirelessController::send_gip_packet(const uint8_t *data, uint16_t len)
 
     uint8_t wcid = m_controller_idx + 1;
     
-    return m_adapter->send_gip_to_controller(wcid, m_controller.mac_addr, data, len);
+    m_adapter->send_report_from_host(wcid, m_controller.mac_addr, data, len);
+    return 0;
 }
 
 static void wireless_queue_packet_wrapper(void *context, const uint8_t *data, uint16_t len)

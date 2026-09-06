@@ -3,44 +3,45 @@
 #include "CRC32.h"
 #include "config/FlashPROM.h"
 #include "config.pb.h"
+#include "tusb.h"
 #include <pb_decode.h>
 
 namespace
 {
-struct __attribute__((packed)) ConfigFooter
-{
-    uint32_t dataSize;
-    uint32_t dataCrc;
-    uint32_t mainSize;
-    uint32_t auxSize;
-    uint32_t magic;
-    uint32_t currentProfile;
-};
-
-constexpr uint32_t FOOTER_MAGIC = 0xd2f1e365;
-
-const ConfigFooter *footer_at(const uint8_t *end)
-{
-    return reinterpret_cast<const ConfigFooter *>(end - sizeof(ConfigFooter));
-}
-
-bool read_image(const uint8_t *end, ConfigImage &image)
-{
-    const ConfigFooter *footer = footer_at(end);
-    if (footer->magic != FOOTER_MAGIC ||
-        footer->dataSize + sizeof(ConfigFooter) > EEPROM_SIZE_BYTES ||
-        CRC32::calculate(end - sizeof(ConfigFooter) - footer->dataSize, footer->dataSize) != footer->dataCrc)
+    struct __attribute__((packed)) ConfigFooter
     {
-        return false;
+        uint32_t dataSize;
+        uint32_t dataCrc;
+        uint32_t mainSize;
+        uint32_t auxSize;
+        uint32_t magic;
+        uint32_t currentProfile;
+    };
+
+    constexpr uint32_t FOOTER_MAGIC = 0xd2f1e365;
+
+    const ConfigFooter *footer_at(const uint8_t *end)
+    {
+        return reinterpret_cast<const ConfigFooter *>(end - sizeof(ConfigFooter));
     }
 
-    image.data = end - sizeof(ConfigFooter) - footer->dataSize;
-    image.data_size = footer->dataSize;
-    image.main_size = footer->mainSize;
-    image.aux_size = footer->auxSize;
-    image.current_profile = footer->currentProfile;
-    return true;
-}
+    bool read_image(const uint8_t *end, ConfigImage &image)
+    {
+        const ConfigFooter *footer = footer_at(end);
+        if (footer->magic != FOOTER_MAGIC ||
+            footer->dataSize + sizeof(ConfigFooter) > EEPROM_SIZE_BYTES ||
+            CRC32::calculate(end - sizeof(ConfigFooter) - footer->dataSize, footer->dataSize) != footer->dataCrc)
+        {
+            return false;
+        }
+
+        image.data = end - sizeof(ConfigFooter) - footer->dataSize;
+        image.data_size = footer->dataSize;
+        image.main_size = footer->mainSize;
+        image.aux_size = footer->auxSize;
+        image.current_profile = footer->currentProfile;
+        return true;
+    }
 }
 
 bool ConfigStorage::read_cached(ConfigImage &image) const
@@ -72,8 +73,8 @@ bool ConfigStorage::read_flash(ConfigImage &image) const
 ConfigMetadata ConfigStorage::read_metadata(bool cached) const
 {
     const uint8_t *start = cached
-        ? reinterpret_cast<const uint8_t *>(EEPROM.writeCache)
-        : reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START);
+                               ? reinterpret_cast<const uint8_t *>(EEPROM.writeCache)
+                               : reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START);
     const ConfigFooter *footer = footer_at(start + EEPROM_SIZE_BYTES);
     return {
         footer->dataSize,
@@ -81,8 +82,7 @@ ConfigMetadata ConfigStorage::read_metadata(bool cached) const
         footer->mainSize,
         footer->auxSize,
         footer->magic,
-        footer->currentProfile
-    };
+        footer->currentProfile};
 }
 
 bool ConfigStorage::write_info(const uint8_t *buffer, uint16_t bufsize) const
@@ -103,8 +103,13 @@ bool ConfigStorage::write_info(const uint8_t *buffer, uint16_t bufsize) const
     return true;
 }
 
+void ConfigStorage::commit_after_write()
+{
+    m_should_commit = true;
+}
+
 ConfigStorage::WriteResult ConfigStorage::write_chunk(const uint8_t *buffer, uint16_t bufsize,
-                                                       uint32_t start) const
+                                                      uint32_t start)
 {
     const ConfigFooter &footer = *reinterpret_cast<const ConfigFooter *>(
         EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
@@ -124,8 +129,24 @@ ConfigStorage::WriteResult ConfigStorage::write_chunk(const uint8_t *buffer, uin
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize,
             EEPROM.writeCache, footer.dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
-    EEPROM.commit();
-    return WriteResult::Committed;
+    if (m_should_commit)
+    {
+        bool inited = tuh_inited();
+        // tear down usb host to make sure devices reboot since flash writes can break things
+        if (inited)
+            tuh_deinit(TUH_OPT_RHPORT);
+        EEPROM.commit_now();
+        if (inited)
+        {
+            const tusb_rhport_init_t rh_init = {
+                .role = TUSB_ROLE_HOST,
+                .speed = TUH_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL,
+            };
+            tusb_init(TUH_OPT_RHPORT, &rh_init);
+        }
+        m_should_commit = false;
+    }
+    return WriteResult::Done;
 }
 
 bool ConfigStorage::update_auxiliary(AuxiliaryWriter writer, void *context) const
@@ -138,8 +159,7 @@ bool ConfigStorage::update_auxiliary(AuxiliaryWriter writer, void *context) cons
 
     const uint32_t aux_capacity = EEPROM_SIZE_BYTES - footer->mainSize - sizeof(ConfigFooter);
     uint32_t aux_size = 0;
-    if (!writer || !writer(EEPROM.writeCache + footer->mainSize,
-                           aux_capacity, aux_size, context) || aux_size > aux_capacity)
+    if (!writer || !writer(EEPROM.writeCache + footer->mainSize, aux_capacity, aux_size, context) || aux_size > aux_capacity)
     {
         return false;
     }

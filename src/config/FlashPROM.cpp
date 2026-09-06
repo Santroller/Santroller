@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: MIT
- * SPDX-FileCopyrightText: Copyright (c) 2021 Jason Skuby (mytechtoybox.com)
- */
-
 #include "config/FlashPROM.h"
 #include <stdio.h>
 #include "tusb.h"
@@ -88,9 +83,6 @@ void FlashPROM::start()
 	memcpy(writeCache, reinterpret_cast<uint8_t *>(EEPROM_ADDRESS_START), EEPROM_SIZE_BYTES);
 }
 
-/* We don't have an actual EEPROM, so we need to be extra careful about minimizing writes. Instead
-	of writing when a commit is requested, we update a time to actually commit. That way, if we receive multiple requests
-	to commit in that timeframe, we'll hold off until the user is done sending changes. */
 void FlashPROM::commit()
 {
 	should_commit_at = to_ms_since_boot(get_absolute_time()) + EEPROM_WRITE_WAIT;

@@ -29,15 +29,18 @@ public:
     enum class WriteResult
     {
         InProgress,
-        Committed,
+        Done,
         Invalid
     };
 
     bool initialize_empty() const;
     bool read_cached(ConfigImage &image) const;
     bool read_flash(ConfigImage &image) const;
+    void commit_after_write();
     ConfigMetadata read_metadata(bool cached) const;
     bool write_info(const uint8_t *buffer, uint16_t bufsize) const;
-    WriteResult write_chunk(const uint8_t *buffer, uint16_t bufsize, uint32_t start) const;
+    WriteResult write_chunk(const uint8_t *buffer, uint16_t bufsize, uint32_t start);
     bool update_auxiliary(AuxiliaryWriter writer, void *context = nullptr) const;
+private:
+    bool m_should_commit = false;
 };

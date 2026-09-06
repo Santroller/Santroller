@@ -24,6 +24,9 @@ message DisconnectCommand {
 message ScanCommand {
 
 }
+message SaveCommand {
+
+}
 message CrkdCalibrationUpdateCommand {
   required uint32 id = 1;
   required CrkdDrumCalibrationType type = 2;
@@ -38,5 +41,6 @@ message Command {
         CrkdCalibrationUpdateCommand crkdDrum = 4;
         DisconnectCommand disconnect = 5;
         ScanCommand scan = 6;
+        SaveCommand save = 7;
     }
 }

@@ -14,7 +14,6 @@ void ConfigManager::begin_reinit()
 {
     m_mode_changed = true;
     m_reloading = true;
-    m_current_mode = m_requested_mode;
     m_reinit_time = 0;
 }
 

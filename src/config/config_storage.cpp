@@ -129,23 +129,6 @@ ConfigStorage::WriteResult ConfigStorage::write_chunk(const uint8_t *buffer, uin
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize,
             EEPROM.writeCache, footer.dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
-    if (m_should_commit)
-    {
-        bool inited = tuh_inited();
-        // tear down usb host to make sure devices reboot since flash writes can break things
-        if (inited)
-            tuh_deinit(TUH_OPT_RHPORT);
-        EEPROM.commit_now();
-        if (inited)
-        {
-            const tusb_rhport_init_t rh_init = {
-                .role = TUSB_ROLE_HOST,
-                .speed = TUH_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL,
-            };
-            tusb_init(TUH_OPT_RHPORT, &rh_init);
-        }
-        m_should_commit = false;
-    }
     return WriteResult::Done;
 }
 

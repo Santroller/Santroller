@@ -71,13 +71,12 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
   {
     profile_changed = false;
     ProfileManager::instance().for_each_profile([](uint32_t profile_id, const auto &profile)
-    {
+                                                {
       (void)profile_id;
       for (const auto &led : profile->leds)
       {
         led->off();
-      }
-    });
+      } });
   }
   if (just_loaded)
   {
@@ -285,6 +284,24 @@ void HIDConfigDevice::handle_command(proto_Command command)
     reload();
     return;
   }
+  case proto_Command_save_tag:
+  {
+    printf("Save command received\r\n");
+    bool inited = tuh_inited();
+    // tear down usb host to make sure devices reboot since flash writes can break things
+    if (inited)
+      tuh_deinit(TUH_OPT_RHPORT);
+    EEPROM.commit_now();
+    if (inited)
+    {
+      const tusb_rhport_init_t rh_init = {
+          .role = TUSB_ROLE_HOST,
+          .speed = TUH_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL,
+      };
+      tusb_init(TUH_OPT_RHPORT, &rh_init);
+    }
+    return;
+  }
   case proto_Command_disconnect_tag:
   {
     reset_keepalive();
@@ -314,12 +331,11 @@ void HIDConfigDevice::handle_command(proto_Command command)
         }
         bool found = false;
         DeviceManager::instance().for_each_active_device([&found, i](const auto &device)
-        {
+                                                         {
           if (device->using_pin(i))
           {
             found = true;
-          }
-        });
+          } });
         if (!found)
         {
           m_valid_pins |= 1 << i;
@@ -336,12 +352,11 @@ void HIDConfigDevice::handle_command(proto_Command command)
       {
         bool found = false;
         DeviceManager::instance().for_each_active_device([&found, i](const auto &device)
-        {
+                                                         {
           if (device->using_pin(i + ADC_BASE_PIN))
           {
             found = true;
-          }
-        });
+          } });
         if (!found)
         {
           m_valid_pins |= 1 << i;
@@ -467,7 +482,7 @@ bool encode_active_profiles(pb_ostream_t *stream, const pb_field_t *field, void 
 {
   bool ok = true;
   ProfileManager::instance().for_each_active_profile([stream, field, &ok](uint32_t profile_id, const auto &profile)
-  {
+                                                     {
     (void)profile;
     if (!ok)
       return;
@@ -480,8 +495,7 @@ bool encode_active_profiles(pb_ostream_t *stream, const pb_field_t *field, void 
     if (!pb_encode_varint(stream, profile_id))
     {
       ok = false;
-    }
-  });
+    } });
   return ok;
 }
 
@@ -489,7 +503,7 @@ bool encode_active_profile_devices(pb_ostream_t *stream, const pb_field_t *field
 {
   bool ok = true;
   ProfileManager::instance().for_each_active_profile([stream, field, &ok](uint32_t profile_id, const auto &profile)
-  {
+                                                     {
     if (!ok)
       return;
 
@@ -507,8 +521,7 @@ bool encode_active_profile_devices(pb_ostream_t *stream, const pb_field_t *field
         ok = false;
         return;
       }
-    }
-  });
+    } });
   return ok;
 }
 
@@ -516,7 +529,7 @@ bool encode_active_profile_assignments(pb_ostream_t *stream, const pb_field_t *f
 {
   bool ok = true;
   ProfileManager::instance().for_each_active_profile([stream, field, &ok](uint32_t profile_id, const auto &profile)
-  {
+                                                     {
     if (!ok)
       return;
 
@@ -537,8 +550,7 @@ bool encode_active_profile_assignments(pb_ostream_t *stream, const pb_field_t *f
         ok = false;
         return;
       }
-    }
-  });
+    } });
   return ok;
 }
 

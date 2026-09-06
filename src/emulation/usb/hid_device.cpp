@@ -16,6 +16,7 @@
 
 uint16_t HIDDevice::open(tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
+  printf("Opening HID device with interface class: %d, subclass: %d, protocol: %d\n", desc_itf->bInterfaceClass, desc_itf->bInterfaceSubClass, desc_itf->bInterfaceProtocol);
   TU_VERIFY(TUSB_CLASS_HID == desc_itf->bInterfaceClass, 0);
 
   uint16_t const drv_len = (uint16_t)(sizeof(tusb_desc_interface_t) + sizeof(tusb_hid_descriptor_hid_t) +

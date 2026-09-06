@@ -27,8 +27,6 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     ConfigManager &config_mgr = ConfigManager::instance();
     EmulationDeviceConfig emulation_devices;
 
-    config_mgr.begin_config_load();
-
     DeviceFactory::clear_cycle_states();
     DeviceFactory::clear_toggle_states();
     DeviceFactory::clear_bluetooth_pairing_states();
@@ -46,7 +44,26 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     profile_mgr.prepare_for_config_reload();
     UsbDevice::reset_ep();
 
-    switch (current_mode)
+
+    pb_istream_t auxInputStream = pb_istream_from_buffer(image.data + image.main_size, image.aux_size);
+    proto_AuxConfigBlock block proto_AuxConfigBlock_init_zero;
+    block.states.funcs.decode = decode_cycle_input_states;
+    block.toggleStates.funcs.decode = decode_toggle_input_states;
+    block.bluetoothStates.funcs.decode = decode_bluetooth_states;
+    pb_decode(&auxInputStream, proto_AuxConfigBlock_fields, &block);
+    auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
+
+    const ConsoleMode resolved_mode = config_mgr.get_requested_mode();
+    if (!profile_mgr.has_active_instances() || resolved_mode == ModeHid || resolved_mode == ModeXbox360)
+    {
+        printf("adding HID config device\r\n");
+        auto confDevice = HIDConfigDevice::instance;
+        confDevice->interface_id = profile_mgr.instance_count();
+        profile_mgr.add_instance(confDevice);
+        profile_mgr.set_usb_instance(confDevice->interface_id, confDevice);
+        confDevice->initialize();
+    }
+    switch (resolved_mode)
     {
     case ModeOgXbox:
     case ModeXboxOne:
@@ -76,30 +93,12 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
         break;
     }
     }
-
-    pb_istream_t auxInputStream = pb_istream_from_buffer(image.data + image.main_size, image.aux_size);
-    proto_AuxConfigBlock block proto_AuxConfigBlock_init_zero;
-    block.states.funcs.decode = decode_cycle_input_states;
-    block.toggleStates.funcs.decode = decode_toggle_input_states;
-    block.bluetoothStates.funcs.decode = decode_bluetooth_states;
-    pb_decode(&auxInputStream, proto_AuxConfigBlock_fields, &block);
-    auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
-
-    const ConsoleMode resolved_mode = config_mgr.get_requested_mode();
-    if (!profile_mgr.has_active_instances() || resolved_mode == ModeHid || resolved_mode == ModeXbox360)
-    {
-        printf("adding HID config device\r\n");
-        auto confDevice = HIDConfigDevice::instance;
-        confDevice->interface_id = profile_mgr.instance_count();
-        profile_mgr.add_instance(confDevice);
-        profile_mgr.set_usb_instance(confDevice->interface_id, confDevice);
-        confDevice->initialize();
-    }
     device_mgr.remove_disconnected_root_devices();
     printf("resolved_mode: %d, current_mode: %d\r\n", resolved_mode, current_mode);
     if (resolved_mode != current_mode || profile_mgr.changed_types())
     {
         reinitialize_device_stack();
     }
+    config_mgr.sync_requested_mode_to_current();
     return ret;
 }

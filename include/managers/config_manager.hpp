@@ -16,7 +16,6 @@ public:
     void set_current_mode(ConsoleMode mode) { m_current_mode = mode; }
     ConsoleMode get_requested_mode() const { return m_requested_mode; }
     void request_mode(ConsoleMode mode) { m_requested_mode = mode; }
-    void begin_config_load() { m_requested_mode = m_current_mode; }
     bool has_mode_changed() const { return m_mode_changed; }
     void set_mode_changed(bool changed) { m_mode_changed = changed; }
     bool mode_recently_changed(uint32_t now, uint32_t window_ms = 2000) const;

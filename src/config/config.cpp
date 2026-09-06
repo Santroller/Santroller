@@ -429,7 +429,7 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
             config_mgr.request_mode(forced_usb_mode);
             usb_mode = forced_usb_mode;
         }
-        printf("profile assigned! profile_id=%d\r\n", profile->profile_id);
+        printf("profile assigned! profile_id=%d mode=%d\r\n", profile->profile_id, usb_mode);
 
         // Assign profile to appropriate devices
         profile_mgr.assign_profile_to_devices(profile, assignedDevices, usb_mode, *context->emulation_devices);

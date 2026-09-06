@@ -78,6 +78,7 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
     profile_mgr.add_instance(instance);
     setup_instance_from_profile(instance, profile);
     profile_mgr.register_instance(instance, profile);
+    printf("Creating instance for profile with subtype: %d\n", profile->subtype);
     instance->initialize();
     
     return instance;
@@ -94,6 +95,7 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
         config_mgr.request_mode(ModeHid);
         return instance;
     }
+    printf("Creating USB instance with mode: %d, subtype: %d\n", mode, subtype);
     
     switch (mode) {
     case ModeHid:

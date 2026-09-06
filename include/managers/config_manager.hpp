@@ -34,6 +34,8 @@ public:
     void set_reloading(bool reloading) { m_reloading = reloading; }
     bool should_reinit(uint32_t now) const;
     void begin_reinit();
+    bool is_full_reload() const { return m_full_reload; }
+    void set_full_reload(bool full_reload) { m_full_reload = full_reload; }
     void finish_reinit(uint32_t now);
     uint32_t get_reinit_time() const { return m_reinit_time; }
     void schedule_reinit(uint32_t when) { m_reinit_time = when; }
@@ -55,6 +57,7 @@ private:
         , m_loaded_any(false)
         , m_has_bluetooth(false)
         , m_reloading(false)
+        , m_full_reload(false)
         , m_reinit_time(0)
         , m_time_since_mode(0)
         , m_seen_masks(0)
@@ -71,6 +74,7 @@ private:
     bool m_loaded_any;
     bool m_has_bluetooth;
     bool m_reloading;
+    bool m_full_reload;
     uint32_t m_reinit_time;
     uint32_t m_time_since_mode;
     uint32_t m_seen_masks;

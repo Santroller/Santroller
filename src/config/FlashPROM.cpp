@@ -7,11 +7,6 @@ uint8_t FlashPROM::writeCache[EEPROM_SIZE_BYTES];
 
 int64_t writeToFlash(alarm_id_t id, void *flashCache)
 {
-
-    bool inited = tuh_inited();
-    // tear down usb host to make sure devices reboot since flash writes can break things
-    if (inited)
-      tuh_deinit(TUH_OPT_RHPORT);
 	const uint8_t *flash_base = reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START);
 	const uint8_t *cache_base = reinterpret_cast<const uint8_t *>(flashCache);
 
@@ -70,15 +65,6 @@ int64_t writeToFlash(alarm_id_t id, void *flashCache)
 	}
 
 	multicore_lockout_end_blocking();
-
-    if (inited)
-    {
-      const tusb_rhport_init_t rh_init = {
-          .role = TUSB_ROLE_HOST,
-          .speed = TUH_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL,
-      };
-      tusb_init(TUH_OPT_RHPORT, &rh_init);
-    }
 
 	return 0;
 }

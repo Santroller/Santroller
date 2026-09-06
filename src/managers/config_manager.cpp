@@ -22,6 +22,7 @@ void ConfigManager::finish_reinit(uint32_t now)
 {
     m_time_since_mode = now;
     m_reloading = false;
+    m_full_reload = false;
 }
 
 void ConfigManager::clear_all()

@@ -287,7 +287,9 @@ void HIDConfigDevice::handle_command(proto_Command command)
   case proto_Command_save_tag:
   {
     printf("Save command received\r\n");
-    EEPROM.commit();
+    EEPROM.commit_now();
+    ConfigManager::instance().set_full_reload(true);
+    reload();
     return;
   }
   case proto_Command_disconnect_tag:

@@ -13,6 +13,7 @@
 #include "devices/usb/host/xbox_wireless_host.h"
 #include "hardware/pio.h"
 #include "config/config.hpp"
+#include "managers/config_manager.hpp"
 #include "emulation/usb/hid_device.h"
 #include "hardware/dma.h"
 #include <algorithm>
@@ -112,7 +113,7 @@ void USBHostHardwareDevice::begin()
     }
     if (m_initialized)
     {
-        if (m_last_dp_first == m_device.dmFirst && m_last_first_pin == m_device.firstPin)
+        if (m_last_dp_first == m_device.dmFirst && m_last_first_pin == m_device.firstPin && !ConfigManager::instance().is_full_reload())
         {
             printf("usbhost init already done\r\n");
             return;
@@ -187,6 +188,8 @@ void USBHostHardwareDevice::end(bool full)
     {
         printf("usbhost deinit\r\n");
         tusb_deinit(TUH_OPT_RHPORT);
+        // we are part way through a reload so we don't need to trigger a second one
+        m_devices_changed = 0;
     }
 }
 

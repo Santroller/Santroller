@@ -24,6 +24,9 @@ typedef struct gip_device_interface {
     
     // Called to send an immediate ACK packet with high priority
     void (*send_ack)(void *user_context, const uint8_t *data, uint16_t len);
+
+    // Called when device reports disconnection (e.g. via GIP_STATUS keepalive)
+    void (*on_disconnect)(void *user_context);
 } gip_device_interface_t;
 
 #ifdef __cplusplus

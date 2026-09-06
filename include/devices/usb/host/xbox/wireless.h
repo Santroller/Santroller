@@ -18,5 +18,8 @@ void wireless_process_packet(struct mt76_dev *dev, const uint8_t *data, uint16_t
 // Handle controller association request
 void wireless_handle_association(struct mt76_dev *dev, const uint8_t *addr);
 
+// Queue disassociation event for a client WCID
+void wireless_queue_disassociation(struct mt76_dev *dev, uint8_t wcid);
+
 #endif // WIRELESS_H
 

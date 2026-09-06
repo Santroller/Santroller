@@ -558,3 +558,17 @@ void wireless_handle_association(struct mt76_dev *dev, const uint8_t *addr)
 
     printf("Controller associated successfully with WCID %d\n", wcid);
 }
+
+void wireless_queue_disassociation(struct mt76_dev *dev, uint8_t wcid)
+{
+    if (wcid == 0 || wcid > MT76_MAX_CLIENTS)
+    {
+        return;
+    }
+
+    struct mt76_wireless_event event = {
+        .type = MT76_EVENT_DISASSOCIATION,
+        .wcid = wcid,
+    };
+    wireless_queue_event(dev, &event);
+}

@@ -281,6 +281,18 @@ void XboxWirelessHost::remove_controller_interface(uint8_t controller_idx)
 
     printf("XboxWirelessHost: Controller %d virtual interface removed\r\n", controller_idx);
 }
+
+void XboxWirelessHost::disconnect_controller(uint8_t controller_idx)
+{
+    if (controller_idx >= XBOX_MAX_CONTROLLERS)
+    {
+        return;
+    }
+
+    uint8_t wcid = controller_idx + 1;
+    wireless_queue_disassociation(&m_mt76_dev, wcid);
+}
+
 bool XboxWirelessHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
     if (ep_addr == MT_EP_IN_CMD)

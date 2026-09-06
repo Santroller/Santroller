@@ -109,6 +109,21 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device)
         // Handled in gip_device_process_incoming
         return true;
 
+    case GIP_KEEPALIVE: // GIP_STATUS (0x03)
+        if (xgip->getDataLength() >= 1)
+        {
+            uint8_t status = xgip->getData()[0];
+            // Bit 7 (0x80) indicates connected state: GIP_STATUS_CONNECTED
+            if (!(status & 0x80))
+            {
+                if (interface->on_disconnect)
+                {
+                    interface->on_disconnect(context);
+                }
+            }
+        }
+        return true;
+
     case GIP_ARRIVAL:
         if (interface->on_arrival)
         {

@@ -29,6 +29,7 @@ public:
     void create_controller_interface(uint8_t controller_idx, uint8_t subtype);
     
     void remove_controller_interface(uint8_t controller_idx);
+    void disconnect_controller(uint8_t controller_idx);
     
     std::shared_ptr<XboxWirelessController> get_controller_interface(uint8_t controller_idx);
     

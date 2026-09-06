@@ -29,6 +29,7 @@ public:
     
     void on_device_descriptor(SubType subtype);
     void on_auth(const uint8_t *data, uint16_t len);
+    void on_disconnect();
     
     xbox_controller_t m_controller;
     uint8_t m_controller_idx;

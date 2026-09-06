@@ -24,12 +24,14 @@ static void wireless_on_device_descriptor_wrapper(void *context, SubType subtype
 static void wireless_on_arrival_wrapper(void *context);
 static void wireless_queue_packet_wrapper(void *context, const uint8_t *data, uint16_t len);
 static void wireless_send_ack_wrapper(void *context, const uint8_t *data, uint16_t len);
+static void wireless_on_disconnect_wrapper(void *context);
 
 static const gip_device_interface_t wireless_gip_interface = {
     .on_device_descriptor = wireless_on_device_descriptor_wrapper,
     .on_arrival = wireless_on_arrival_wrapper,
     .queue_packet = wireless_queue_packet_wrapper,
-    .send_ack = wireless_send_ack_wrapper
+    .send_ack = wireless_send_ack_wrapper,
+    .on_disconnect = wireless_on_disconnect_wrapper
 };
 
 XboxWirelessController::XboxWirelessController(XboxWirelessHost* adapter, uint8_t controller_idx, uint8_t dev_addr, uint16_t id)
@@ -214,6 +216,25 @@ static void wireless_send_ack_wrapper(void *context, const uint8_t *data, uint16
     
     if (ctrl) {
         ctrl->send_ack_packet(data, len);
+    }
+}
+
+static void wireless_on_disconnect_wrapper(void *context)
+{
+    XboxWirelessController *ctrl = (XboxWirelessController *)context;
+    
+    if (ctrl) {
+        ctrl->on_disconnect();
+    }
+}
+
+void XboxWirelessController::on_disconnect()
+{
+    m_controller.status = XBOX_CONTROLLER_DISCONNECTED;
+    still_connected = false;
+    if (m_adapter)
+    {
+        m_adapter->disconnect_controller(m_controller_idx);
     }
 }
 

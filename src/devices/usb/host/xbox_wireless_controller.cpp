@@ -23,11 +23,13 @@ extern "C" {
 static void wireless_on_device_descriptor_wrapper(void *context, SubType subtype);
 static void wireless_on_arrival_wrapper(void *context);
 static void wireless_queue_packet_wrapper(void *context, const uint8_t *data, uint16_t len);
+static void wireless_send_ack_wrapper(void *context, const uint8_t *data, uint16_t len);
 
 static const gip_device_interface_t wireless_gip_interface = {
     .on_device_descriptor = wireless_on_device_descriptor_wrapper,
     .on_arrival = wireless_on_arrival_wrapper,
-    .queue_packet = wireless_queue_packet_wrapper
+    .queue_packet = wireless_queue_packet_wrapper,
+    .send_ack = wireless_send_ack_wrapper
 };
 
 XboxWirelessController::XboxWirelessController(XboxWirelessHost* adapter, uint8_t controller_idx, uint8_t dev_addr, uint16_t id)
@@ -71,6 +73,10 @@ void XboxWirelessController::disconnect()
 void XboxWirelessController::send_report_from_host(XGIPProtocol *report)
 {
     m_controller.gip_device.outgoing_xgip->copyAttributes(report);
+    if (m_controller.gip_device.outgoing_xgip->getSequence() == 0) {
+        uint8_t seq = gip_sequence_pool_next(&m_controller.gip_device.tx_sequence_pools, m_controller.gip_device.outgoing_xgip->getCommand());
+        m_controller.gip_device.outgoing_xgip->setSequence(seq);
+    }
     m_adapter->send_report_from_host(m_controller_idx + 1, m_controller.mac_addr,
                                      m_controller.gip_device.outgoing_xgip->generatePacket(),
                                      m_controller.gip_device.outgoing_xgip->getPacketLength());
@@ -180,12 +186,34 @@ int XboxWirelessController::send_gip_packet(const uint8_t *data, uint16_t len)
     return 0;
 }
 
+int XboxWirelessController::send_ack_packet(const uint8_t *data, uint16_t len)
+{
+    if (!data || len == 0)
+    {
+        return -1;
+    }
+
+    uint8_t wcid = m_controller_idx + 1;
+    
+    m_adapter->send_ack_from_host(wcid, m_controller.mac_addr, data, len);
+    return 0;
+}
+
 static void wireless_queue_packet_wrapper(void *context, const uint8_t *data, uint16_t len)
 {
     XboxWirelessController *ctrl = (XboxWirelessController *)context;
     
     if (ctrl) {
         ctrl->send_gip_packet(data, len);
+    }
+}
+
+static void wireless_send_ack_wrapper(void *context, const uint8_t *data, uint16_t len)
+{
+    XboxWirelessController *ctrl = (XboxWirelessController *)context;
+    
+    if (ctrl) {
+        ctrl->send_ack_packet(data, len);
     }
 }
 
@@ -203,12 +231,5 @@ void XboxWirelessController::process_gip_data(const uint8_t *data, uint16_t len)
     }
     
     gip_device_process_incoming(&controller->gip_device, data, len);
-
-    uint8_t *ack_data;
-    uint16_t ack_len;
-    if (gip_device_generate_ack(&controller->gip_device, &ack_data, &ack_len))
-    {
-        m_adapter->send_ack_from_host(m_controller_idx + 1, controller->mac_addr, ack_data, ack_len);
-    }
 }
 

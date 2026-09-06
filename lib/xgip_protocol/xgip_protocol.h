@@ -53,6 +53,7 @@ public:
     void setAttributes(uint8_t cmd, uint8_t seq, uint8_t internal, uint8_t isChunked, uint8_t needsAck); // Set attributes for next output packet
     void copyAttributes(XGIPProtocol *packet);                                                           // Copy attributes from incoming packet
     void incrementSequence();                                                                            // Add 1 to sequence
+    void setSequence(uint8_t seq);                                                                       // Set sequence directly
     bool setData(const uint8_t *data, uint16_t len);                                                     // Set data (buf and length)
     uint8_t *generatePacket();                                                                           // Generate output packet (chunk will generate on-going packet)
     uint8_t *generateAckPacket();                                                                        // Generate an ack for the last received packet
@@ -62,6 +63,7 @@ public:
     uint8_t getChunked();                                                                                // Is this packet chunked?
     uint8_t getPacketAck();                                                                              // Did the packet require an ACK?
     uint16_t getPacketLength();                                                                          // Get packet length of our last output
+    uint16_t getParsedWireLength() const;                                                                // Get wire length of last parsed packet
     uint8_t *getData();                                                                                  // Get data from a packet or packet-chunk
     uint16_t getDataLength();                                                                            // Get length of a packet or packet-chunk
     bool getChunkData(XGIPProtocol &packet);                                                             // Get chunk data from incoming packet
@@ -78,6 +80,8 @@ private:
     bool chunkEnded;             // did we hit the end of the chunk successfully?
     uint8_t packet[64];          // for output packets
     uint16_t packetLength;       // LAST SENT packet length
+    uint16_t parsedWireLength;   // Wire length of last parsed incoming packet
+    uint16_t lastChunkLength;    // Length processed by last parsed chunk
     uint8_t data[1024];          // Total data in this packet
     uint16_t dataLength;         // actual length of data
     bool isValidPacket;          // is this a valid packet or did we get an error?

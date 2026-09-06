@@ -58,6 +58,8 @@ void XGIPProtocol::reset()
     dataLength = 0;                    // Set data length to 0
     memset(packet, 0, sizeof(packet)); // Set our packet to 0
     packetLength = 0;                  // Set packet length to 0
+    parsedWireLength = 0;              // Set parsed wire length to 0
+    lastChunkLength = 0;
     isWaitingToSend = true;
 }
 
@@ -69,17 +71,19 @@ bool XGIPProtocol::parse(const uint8_t *buffer, uint16_t len)
     {
         reset();
         isValidPacket = false;
+        parsedWireLength = 0;
         return false;
     }
 
     // Set packet length
     packetLength = len;
+    parsedWireLength = 0;
 
     // Use buffer as a raw packet without copying to our internal structure
     GipHeader_t *newPacket = (GipHeader_t *)buffer;
     if (newPacket->command == GIP_ACK_RESPONSE)
     {
-        if (len != 13 || newPacket->internal != 0x01 || newPacket->length != 0x09)
+        if (len < 13 || newPacket->internal != 0x01 || newPacket->length != 0x09)
         {
             reset();
             isValidPacket = false;
@@ -87,6 +91,7 @@ bool XGIPProtocol::parse(const uint8_t *buffer, uint16_t len)
         }
         memcpy((void *)&header, buffer, sizeof(GipHeader_t));
         isValidPacket = true; // don't do anything with ack packets for now
+        parsedWireLength = 13;
         return true;
     }
     else
@@ -105,36 +110,49 @@ bool XGIPProtocol::parse(const uint8_t *buffer, uint16_t len)
                 // Verify chunk is good
                 if (dataLength != total_len_or_offset)
                 {
+                    printf("XGIP: chunk fail - end of chunk mismatch (dataLength=%d != total=%d, recvd=%d)\n",
+                           dataLength, total_len_or_offset, actualDataReceived);
                     isValidPacket = false;
                     return false;
                 }
                 chunkEnded = true;
                 isValidPacket = true;
+                parsedWireLength = (uint16_t)(packet - buffer);
                 return true; // we're good!
             }
+            uint16_t chunk_offset = 0;
             if (header.chunkStart == 1)
             { // START OF CHUNK
                 reset();
                 memcpy((void *)&header, buffer, sizeof(GipHeader_t));
                 dataLength = total_len_or_offset;
+                chunk_offset = 0;
             }
-            else if (total_len_or_offset != actualDataReceived)
+            else
             {
-                // MS-GIPUSB: a fragment offset that does not directly follow the last
-                // received fragment indicates a missed/out-of-order packet. Discard it;
-                // our next ACK reports the true contiguous total so the sender resends.
+                chunk_offset = total_len_or_offset;
+            }
+
+            if (chunk_offset + packet_len > sizeof(data) || packet + packet_len > buffer + len)
+            {
+                printf("XGIP: chunk fail - bounds check (offset=%d, packet_len=%d, available_in_buf=%ld, max_buf=%ld)\n",
+                       chunk_offset, packet_len, (long)(buffer + len - packet), (long)sizeof(data));
                 isValidPacket = false;
                 return false;
             }
-            if (packet_len > sizeof(data) - actualDataReceived || packet + packet_len > buffer + len)
+            memcpy(&data[chunk_offset], packet, packet_len);
+            lastChunkLength = chunk_offset + packet_len;
+            if (lastChunkLength > actualDataReceived)
             {
-                isValidPacket = false;
-                return false;
+                actualDataReceived = lastChunkLength;
             }
-            memcpy(&data[actualDataReceived], packet, packet_len); //
-            actualDataReceived += packet_len;
+            if (lastChunkLength == dataLength)
+            {
+                header.needsAck = 1;
+            }
             numberOfChunksSent++; // count our chunks for the ACK
             isValidPacket = true;
+            parsedWireLength = (uint16_t)((packet - buffer) + packet_len);
             return true;  // Successfully processed chunk
         }
         else
@@ -153,6 +171,8 @@ bool XGIPProtocol::parse(const uint8_t *buffer, uint16_t len)
             }
             actualDataReceived = header.length;
             dataLength = actualDataReceived;
+            packetLength = sizeof(GipHeader_t) + header.length;
+            parsedWireLength = packetLength;
             isValidPacket = true;
             return true;
         }
@@ -176,6 +196,11 @@ void XGIPProtocol::incrementSequence()
     header.sequence++;
     if (header.sequence == 0)
         header.sequence = 1;
+}
+
+void XGIPProtocol::setSequence(uint8_t seq)
+{
+    header.sequence = seq;
 }
 
 void XGIPProtocol::setAttributes(uint8_t cmd, uint8_t seq, uint8_t internal, uint8_t isChunked, uint8_t needsAck)
@@ -338,15 +363,15 @@ uint8_t *XGIPProtocol::generateAckPacket()
     packet[5] = header.command;
     packet[6] = 0x20;
 
-    // we have to keep track of # of chunks because data received for ACK is +2 for size of chunk
-    uint16_t dataReceived = actualDataReceived;
+    // For chunked transfers, ACK reports the offset+len of this specific chunk fragment (matching xone / GIP spec)
+    uint16_t dataReceived = (header.chunked == 1) ? lastChunkLength : actualDataReceived;
     packet[7] = dataReceived & 0x00FF;
     packet[8] = (dataReceived & 0xFF00) >> 8;
     packet[9] = 0x00;
     packet[10] = 0x00;
     if (header.chunked == true)
     { // Are we a chunk?
-        uint16_t left = dataLength - dataReceived;
+        uint16_t left = (dataLength >= dataReceived) ? (dataLength - dataReceived) : 0;
         packet[11] = left & 0x00FF;
         packet[12] = (left & 0xFF00) >> 8;
     }
@@ -363,6 +388,12 @@ uint8_t *XGIPProtocol::generateAckPacket()
 uint16_t XGIPProtocol::getPacketLength()
 {
     return packetLength;
+}
+
+// Get wire length of last parsed incoming packet
+uint16_t XGIPProtocol::getParsedWireLength() const
+{
+    return parsedWireLength;
 }
 
 // Get the header information if the packet needs an ACK

@@ -22,6 +22,7 @@ extern "C" {
 static void xone_on_device_descriptor_wrapper(void *context, SubType subtype);
 static void xone_on_arrival_wrapper(void *context);
 static void xone_queue_packet_wrapper(void *context, const uint8_t *data, uint16_t len);
+static void xone_send_ack_wrapper(void *context, const uint8_t *data, uint16_t len);
 
 #define GIP_TRACE_ENABLED 0
 #define GIP_TRACE_HEXDUMP 0
@@ -53,7 +54,8 @@ static void dump_gip_packet(const char *direction, const uint8_t *data, uint16_t
 static const gip_device_interface_t xone_gip_interface = {
     .on_device_descriptor = xone_on_device_descriptor_wrapper,
     .on_arrival = xone_on_arrival_wrapper,
-    .queue_packet = xone_queue_packet_wrapper
+    .queue_packet = xone_queue_packet_wrapper,
+    .send_ack = xone_send_ack_wrapper
 };
 
 XboxOneHost::XboxOneHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id)
@@ -91,6 +93,10 @@ void XboxOneHost::disconnect()
 void XboxOneHost::send_report_from_host(XGIPProtocol *report)
 {
     m_gip_device.outgoing_xgip->copyAttributes(report);
+    if (m_gip_device.outgoing_xgip->getSequence() == 0) {
+        uint8_t seq = gip_sequence_pool_next(&m_gip_device.tx_sequence_pools, m_gip_device.outgoing_xgip->getCommand());
+        m_gip_device.outgoing_xgip->setSequence(seq);
+    }
     gip_report_queue_push(m_report_queue, 
                           m_gip_device.outgoing_xgip->generatePacket(), 
                           m_gip_device.outgoing_xgip->getPacketLength());
@@ -208,6 +214,17 @@ static void xone_queue_packet_wrapper(void *context, const uint8_t *data, uint16
     }
 }
 
+// Send ACK callback
+static void xone_send_ack_wrapper(void *context, const uint8_t *data, uint16_t len)
+{
+    XboxOneHost *host = (XboxOneHost *)context;
+    if (host && host->m_report_queue)
+    {
+        dump_gip_packet("queued ACK", data, len);
+        gip_report_queue_push_front(host->m_report_queue, data, len);
+    }
+}
+
 bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
 #if GIP_TRACE_ENABLED
@@ -228,14 +245,6 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
         
         dump_gip_packet("received", m_ep_in_buf, xferred_bytes);
         gip_device_process_incoming(&m_gip_device, m_ep_in_buf, xferred_bytes);
-
-        uint8_t *ack_data;
-        uint16_t ack_len;
-        if (gip_device_generate_ack(&m_gip_device, &ack_data, &ack_len))
-        {
-            dump_gip_packet("queued ACK", ack_data, ack_len);
-            gip_report_queue_push_front(m_report_queue, ack_data, ack_len);
-        }
 
         if (!usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size))
         {

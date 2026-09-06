@@ -7,6 +7,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 #include "gip_device_interface.h"
+#include "gip_sequence.h"
 
 // Forward declaration
 typedef struct XGIPProtocol XGIPProtocol;
@@ -17,6 +18,7 @@ typedef struct gip_device_t {
     XGIPProtocol *outgoing_xgip;  // For generating outgoing packets
     uint8_t raw_input[64];        // Raw GIP input data (XboxOneGamepad_Data_t, etc.)
     SubType subtype;              // Device subtype
+    gip_sequence_pool_t tx_sequence_pools; // Rolling sequence pools for outgoing commands
     bool waiting_ack;             // Waiting for ACK response
     uint32_t waiting_ack_timeout; // ACK timeout timestamp
     // Incoming chunked reliable-transfer tracking, per MS-GIPUSB "Reliable Message Acknowledgement"
@@ -24,6 +26,8 @@ typedef struct gip_device_t {
     uint32_t incoming_chunk_last_data_at;  // Timestamp (ms) of the last received fragment, 0 = not yet timestamped
     uint32_t incoming_chunk_last_ack_at;   // Timestamp (ms) the last ACK was sent for this transfer
     uint8_t incoming_chunk_heartbeat_acks; // Heartbeat ACKs sent since the last received fragment
+    bool has_virtual_key_guide;           // Controller reports guide button via GIP_VIRTUAL_KEYCODE
+    uint8_t virtual_key_guide;            // Current guide button state from virtual key (0 or 1)
     void *user_context;           // User context (e.g., pointer to owning controller instance)
     const gip_device_interface_t *interface;  // Interface for callbacks
 } gip_device_t;

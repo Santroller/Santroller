@@ -25,6 +25,7 @@ public:
     void send_report_from_host(XGIPProtocol *report);
     
     int send_gip_packet(const uint8_t *data, uint16_t len);
+    int send_ack_packet(const uint8_t *data, uint16_t len);
     
     void on_device_descriptor(SubType subtype);
     void on_auth(const uint8_t *data, uint16_t len);

@@ -80,7 +80,6 @@ extern "C" void xbox_adapter_process_gip_data(struct mt76_dev *dev, uint8_t wcid
 
     if (len < 4)
     {
-        printf("xbox_adapter_process_gip_data: wcid=%d, len=%d (too short)\n", wcid, len);
         return;
     }
 
@@ -340,6 +339,7 @@ void XboxWirelessHost::send_report_from_host(uint8_t wcid, const uint8_t *mac_ad
 void XboxWirelessHost::send_ack_from_host(uint8_t wcid, const uint8_t *mac_addr, const uint8_t *packet, uint16_t len)
 {
     queue_gip_packet(wcid, mac_addr, packet, len, true);
+    update(false, false);
 }
 
 void XboxWirelessHost::clear_queued_packets(uint8_t wcid)

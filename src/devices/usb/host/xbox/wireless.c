@@ -241,6 +241,11 @@ static void wireless_process_message(struct mt76_dev *dev, const uint8_t *data, 
 
 void wireless_process_data(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
 {
+    if (!dev || !dev->initialized)
+    {
+        return;
+    }
+
     // A single bulk transfer can carry several concatenated messages.
     while (len >= MT_CMD_HDR_LEN * 2)
     {

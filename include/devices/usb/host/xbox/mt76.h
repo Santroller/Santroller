@@ -84,6 +84,8 @@ int mt76_step_firmware_compressed(struct mt76_dev *dev);
 int mt76_load_firmware_compressed(struct mt76_dev *dev, const uint8_t *compressed_data,
                                   uint32_t compressed_len, uint32_t decompressed_len);
 int mt76_load_ivb(struct mt76_dev *dev);
+int mt76_reset_firmware(struct mt76_dev *dev);
+int mt76_finish_firmware(struct mt76_dev *dev);
 
 int mt76_send_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, enum mt76_mcu_cmd cmd);
 int mt76_send_wlan(struct mt76_dev *dev, const uint8_t *data, uint16_t len);

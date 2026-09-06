@@ -124,6 +124,7 @@ XboxWirelessHost::~XboxWirelessHost()
     }
     mt76_deinit(&m_mt76_dev);
 
+    usb_host_remove_enumerating_interface(this);
     printf("XboxWirelessHost: Destroyed\r\n");
 }
 
@@ -162,14 +163,6 @@ std::shared_ptr<UsbHostInterface> XboxWirelessHost::open(std::shared_ptr<UsbHost
                    desc_ep->bEndpointAddress, desc_ep->wMaxPacketSize);
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
             list->host_devices_by_endpoint_in[desc_ep->bEndpointAddress & (~0x80)] = intf;
-            if (desc_ep->bEndpointAddress == MT_EP_IN_CMD)
-            {
-                usbh_edpt_xfer(dev_addr, desc_ep->bEndpointAddress, intf->m_cmd_buf, sizeof(intf->m_cmd_buf));
-            }
-            else if (desc_ep->bEndpointAddress == MT_EP_IN_WLAN)
-            {
-                usbh_edpt_xfer(dev_addr, desc_ep->bEndpointAddress, intf->m_data_buf, sizeof(intf->m_data_buf));
-            }
         }
         else
         {
@@ -194,6 +187,8 @@ bool XboxWirelessHost::set_config()
 
     initialize_adapter();
 
+    usbh_edpt_xfer(m_dev_addr, MT_EP_IN_CMD, m_cmd_buf, sizeof(m_cmd_buf));
+    usbh_edpt_xfer(m_dev_addr, MT_EP_IN_WLAN, m_data_buf, sizeof(m_data_buf));
     return true;
 }
 
@@ -411,8 +406,15 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
 
         if (!m_firmware_loading)
         {
-            if (mt76_begin_firmware_compressed(&m_mt76_dev, firmware_data,
-                                               firmware_compressed_len, firmware_len) < 0)
+            int begin_result = mt76_begin_firmware_compressed(&m_mt76_dev, firmware_data,
+                                                              firmware_compressed_len, firmware_len);
+            if (begin_result == 0)
+            {
+                printf("XboxWirelessHost: Firmware already loaded, warm reset complete\r\n");
+                m_firmware_loaded = true;
+                return;
+            }
+            if (begin_result < 0)
             {
                 printf("XboxWirelessHost: Firmware decompression failed\r\n");
                 return;
@@ -437,9 +439,13 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
         m_firmware_loading = false;
         m_firmware_loaded = true;
 
-        if (mt76_load_ivb(&m_mt76_dev) == 0)
+        if (mt76_finish_firmware(&m_mt76_dev) == 0)
         {
             printf("XboxWirelessHost: IVB loaded successfully\r\n");
+        }
+        else
+        {
+            printf("XboxWirelessHost: IVB load failed\r\n");
         }
     }
 

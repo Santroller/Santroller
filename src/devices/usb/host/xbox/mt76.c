@@ -133,14 +133,12 @@ int mt76_begin_firmware_compressed(struct mt76_dev *dev, const uint8_t *compress
     uint32_t dma_addr = mt76_read_register(dev, MT_FCE_DMA_ADDR | MT_VEND_TYPE_CFG);
     if (dma_addr)
     {
-        uint32_t rf_patch = mt76_read_register(dev, MT_RF_PATCH | MT_VEND_TYPE_CFG);
-        mt76_write_register(dev, MT_RF_PATCH | MT_VEND_TYPE_CFG, rf_patch & ~BIT(19));
-
-        if (mt76_load_ivb(dev) < 0 ||
-            !mt76_poll(dev, MT_FCE_DMA_ADDR | MT_VEND_TYPE_CFG, 0x80000000, 0x80000000))
+        printf("MT76: Firmware already loaded (FCE_DMA_ADDR=0x%08lX), resetting...\n", dma_addr);
+        if (mt76_reset_firmware(dev) < 0)
         {
             return -1;
         }
+        return 0;
     }
 
     memset(&firmware_stream, 0, sizeof(firmware_stream));
@@ -188,7 +186,9 @@ int mt76_load_firmware_compressed(struct mt76_dev *dev, const uint8_t *compresse
                                   uint32_t compressed_len, uint32_t decompressed_len)
 {
     int result = mt76_begin_firmware_compressed(dev, compressed_data, compressed_len, decompressed_len);
+    if (result == 0) return 0;
     while (result == 1) result = mt76_step_firmware_compressed(dev);
+    if (result == 0) result = mt76_finish_firmware(dev);
     return result;
 }
 
@@ -324,28 +324,66 @@ int mt76_load_ivb(struct mt76_dev *dev) {
         .user_data = 0
     };
     
-    if (!tuh_control_xfer(&xfer)) {
+    if (!tuh_control_xfer(&xfer) || xfer.result != XFER_RESULT_SUCCESS) {
         printf("MT76: IVB load failed\n");
         return -1;
     }
     
-    if (xfer.result != XFER_RESULT_SUCCESS) {
-        printf("MT76: IVB load transfer failed\n");
+    return 0;
+}
+
+int mt76_reset_firmware(struct mt76_dev *dev) {
+    printf("MT76: Resetting firmware...\n");
+
+    /* Apply power-on RF patch */
+    uint32_t val = mt76_read_register(dev, MT_RF_PATCH | MT_VEND_TYPE_CFG);
+    mt76_write_register(dev, MT_RF_PATCH | MT_VEND_TYPE_CFG, val & ~BIT(19));
+
+    if (mt76_load_ivb(dev) < 0) {
+        printf("MT76: Reset IVB load failed\n");
         return -1;
     }
-    
-    printf("MT76: Waiting for IVB completion...\n");
-    sleep_ms(100);  // Give device time to process IVB
-    
-    // Debug: check what the register contains
-    uint32_t reg_val = mt76_read_register(dev, MT_FCE_DMA_ADDR | MT_VEND_TYPE_CFG);
-    printf("MT76: FCE_DMA_ADDR = 0x%08lX\n", reg_val);
-    
+
+    /* Wait for reset */
+    if (!mt76_poll(dev, MT_FCE_DMA_ADDR | MT_VEND_TYPE_CFG, 0x80000000, 0x80000000)) {
+        printf("MT76: Firmware reset timeout\n");
+        return -1;
+    }
+
+    /*
+     * The MCU needs time to complete its startup sequence after the
+     * firmware reset before it can handle bulk USB commands (matches xone).
+     */
+    sleep_ms(500);
+    printf("MT76: Firmware reset complete\n");
+    return 0;
+}
+
+int mt76_finish_firmware(struct mt76_dev *dev) {
+    /*
+     * The warm-boot path (reset_firmware) applies an RF patch before
+     * triggering MCU execution via load_ivb. Without this patch the RF
+     * subsystem does not initialise correctly (matches dlundqvist/xone).
+     */
+    uint32_t val = mt76_read_register(dev, MT_RF_PATCH | MT_VEND_TYPE_CFG);
+    mt76_write_register(dev, MT_RF_PATCH | MT_VEND_TYPE_CFG, val & ~BIT(19));
+
+    if (mt76_load_ivb(dev) < 0) {
+        printf("MT76: IVB load failed\n");
+        return -1;
+    }
+
+    /*
+     * After load_ivb the chip briefly disconnects as part of startup.
+     * Wait long enough for disconnect/reconnect cycle before polling.
+     */
+    sleep_ms(500);
+
     if (!mt76_poll(dev, MT_FCE_DMA_ADDR | MT_VEND_TYPE_CFG, 0x01, 0x01)) {
         printf("MT76: IVB completion timeout\n");
         return -1;
     }
-    
+
     printf("MT76: IVB loaded successfully\n");
     return 0;
 }

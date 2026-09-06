@@ -182,11 +182,20 @@ void USBHostHardwareDevice::begin()
     pio_sm_unclaim(pio0, eop_sm);
     tusb_init(TUH_OPT_RHPORT, &rh_init);
 }
+void usbh_close(uint8_t dev_addr);
+
 void USBHostHardwareDevice::end(bool full)
 {
     if (full)
     {
         printf("usbhost deinit\r\n");
+        for (uint8_t dev_addr = 1; dev_addr < 127; dev_addr++)
+        {
+            if (host_devices[dev_addr])
+            {
+                usbh_close(dev_addr);
+            }
+        }
         tusb_deinit(TUH_OPT_RHPORT);
         // we are part way through a reload so we don't need to trigger a second one
         m_devices_changed = 0;

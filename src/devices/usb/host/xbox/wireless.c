@@ -333,15 +333,16 @@ static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, ui
     }
     else if (ftype == IEEE80211_FTYPE_DATA)
     {
-        if (stype == IEEE80211_STYPE_QOS_DATA)
+        if (stype == IEEE80211_STYPE_QOS_DATA || stype == IEEE80211_STYPE_DATA)
         {
             if (wcid > 0 && wcid <= MT76_MAX_CLIENTS)
             {
+                printf("Processing GIP data for WCID %02x %d, payload_len %d\n", wcid, stype, payload_len);
                 // Skip 802.11 QoS header (26 bytes: 24 base + 2 QoS control)
-                if (payload_len >= 2)
-                {
-                    xbox_adapter_process_gip_data(dev, wcid, payload, payload_len);
-                }
+                // if (payload_len >= 2)
+                // {
+                xbox_adapter_process_gip_data(dev, wcid, payload, payload_len);
+                // }
             }
         }
     }
@@ -558,4 +559,3 @@ void wireless_handle_association(struct mt76_dev *dev, const uint8_t *addr)
 
     printf("Controller associated successfully with WCID %d\n", wcid);
 }
-

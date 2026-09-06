@@ -251,7 +251,7 @@ void XboxOneHost::update(bool full_poll, bool send_events)
 {
     UsbHostInterface::update(full_poll, send_events);
     uint32_t now = to_ms_since_boot(get_absolute_time());
-    
+
     // Send queued reports
     if (!gip_report_queue_empty(m_report_queue))
     {

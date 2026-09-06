@@ -11,7 +11,7 @@
 
 // Fires on every parsed packet; printf blocks on real UART hardware drain (confirmed via gdb),
 // so keep this off outside active tracing sessions.
-#define GIP_TRACE_ENABLED 0
+#define GIP_TRACE_ENABLED 1
 #define GIP_RELIABLE_MESSAGE_MAX_HEARTBEAT_ACKS 8
 
 void gip_device_init(gip_device_t *device)

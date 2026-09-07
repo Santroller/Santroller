@@ -134,7 +134,7 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
         break;
       }
 
-      if (profile_changed || (detect_done && millis() > detect_done))
+      if (profile_just_changed || (detect_done && millis() > detect_done))
       {
         detect_done = 0;
       }
@@ -178,9 +178,10 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
     {
       if (profile_just_changed)
       {
-        DeviceManager::instance().update_all_devices(profile_changed, true);
+        DeviceManager::instance().update_all_devices(profile_just_changed, true);
+        ProfileManager::instance().update_all_profile_devices(profile_just_changed, true);
       }
-      ProfileManager::instance().update_profile_components(selected_profile, selected_instance, profile_changed, true);
+      ProfileManager::instance().update_profile_components(selected_profile, selected_instance, profile_just_changed, true);
     }
   }
   process_events();

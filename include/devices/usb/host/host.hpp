@@ -41,6 +41,10 @@ public:
     {
         return type == m_subtype;
     }
+    bool is_assignable() const override
+    {
+        return true;
+    }
     bool is_bluetooth_device(proto_SpecificUsbDevice type)
     {
         return false;

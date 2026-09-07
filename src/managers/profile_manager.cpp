@@ -157,7 +157,7 @@ void ProfileManager::update_device_assignments(bool full_poll, bool send_events)
             {
                 bool matched = trigger_list->validate(false, full_poll, send_events);
 
-                if (matched)
+                if (matched && !trigger_list->claimed())
                 {
                     trigger_list->validate(true, full_poll, send_events);
                 }

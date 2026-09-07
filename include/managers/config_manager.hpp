@@ -20,7 +20,7 @@ public:
     void set_mode_changed(bool changed) { m_mode_changed = changed; }
     bool mode_recently_changed(uint32_t now, uint32_t window_ms = 2000) const;
     void mark_mode_change_time(uint32_t now) { m_time_since_mode = now; }
-    void sync_requested_mode_to_current() { m_requested_mode = m_current_mode; }
+    void sync_requested_mode_to_current() { m_current_mode = m_requested_mode; }
     
     // Config loading state
     bool is_working() const { return m_working; }

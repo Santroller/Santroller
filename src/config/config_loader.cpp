@@ -54,6 +54,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
 
     const ConsoleMode resolved_mode = config_mgr.get_requested_mode();
+    printf("resolved_mode: %d, current_mode: %d\r\n", resolved_mode, current_mode);
     if (!profile_mgr.has_active_instances() || resolved_mode == ModeHid || resolved_mode == ModeXbox360)
     {
         printf("adding HID config device\r\n");

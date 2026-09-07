@@ -488,7 +488,6 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->supports_slider = opts.has_supportsSlider && opts.supportsSlider;
     profile->cymbal_glitch_fix = opts.has_cymbalGlitchFix && opts.cymbalGlitchFix;
     profile->subtype = opts.deviceToEmulate;
-    ProfileManager::instance().add_profile(profile->profile_id, profile);
     return true;
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -510,7 +509,12 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
         auto profile = std::make_shared<Profile>();
         device_mgr.for_each_active_device([profile](const auto &device)
-                                          { profile->devices.emplace(device->m_id, device); });
+                                          {
+                                              if (!device->is_assignable())
+                                              {
+                                                  profile->devices.emplace(device->m_id, device);
+                                              }
+                                          });
         ConfigDecodeContext context{profile, emulation_devices};
         context.matched = false;
         proto_Profile proto_profile;
@@ -527,6 +531,15 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         size_t assignable_before = device_mgr.assignable_device_count();
         pb_istream_t decode_stream = profile_bytes;
         pb_decode(&decode_stream, proto_Profile_fields, &proto_profile);
+
+        if (context.matched)
+        {
+            ProfileManager::instance().add_profile(profile->profile_id, profile);
+        }
+        else if (ProfileManager::instance().get_profile(profile->profile_id) == nullptr)
+        {
+            ProfileManager::instance().add_profile(profile->profile_id, profile);
+        }
 
         if (!context.matched || device_mgr.assignable_device_count() == assignable_before)
         {

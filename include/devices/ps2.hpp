@@ -18,6 +18,7 @@ public:
     uint16_t read_axis(proto_PS2AxisType type);
     bool read_button(proto_PS2ButtonType type);
     bool is_ps2_device(PS2ControllerType type);
+    bool is_assignable() const override { return true; }
     void rescan(bool first);
     bool using_pin(uint8_t pin);
     void save_reload_state(DeviceReloadState& state) const override;

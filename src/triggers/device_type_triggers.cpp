@@ -26,16 +26,16 @@ static void claim_profile_device(const std::shared_ptr<Profile> &profile, const 
 template <typename Predicate>
 static std::shared_ptr<Device> get_assignable_device(const std::shared_ptr<Profile> &profile, bool claim_device, Predicate predicate)
 {
-    if (claim_device)
-    {
-        return DeviceManager::instance().claim_assignable_device_if(predicate);
-    }
     for (const auto &device : profile->devices)
     {
         if (device.second && device.second->still_connected && predicate(device.second))
         {
             return device.second;
         }
+    }
+    if (claim_device)
+    {
+        return DeviceManager::instance().claim_assignable_device_if(predicate);
     }
     return DeviceManager::instance().find_assignable_device_if(predicate);
 }

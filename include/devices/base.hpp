@@ -30,6 +30,7 @@ public:
     virtual bool is_bluetooth_type(SubType type);
     virtual bool is_ps2_device(PS2ControllerType type);
     virtual bool has_midi_channel(uint8_t channel);
+    virtual bool is_assignable() const { return false; }
     virtual bool using_pin(uint8_t pin) = 0;
     virtual uint32_t source_id() const { return m_id; }
     virtual void rescan(bool first);

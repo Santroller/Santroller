@@ -17,6 +17,9 @@ public:
     void update(bool full_poll, bool send_events);
     void rescan(bool first);
     bool using_pin(uint8_t pin);
+    bool is_assignable() const override { return false; }
+    bool is_usb_type(SubType type) override { return false; }
+    bool is_usb_device(proto_SpecificUsbDevice type) override { return false; }
     bool tick_digital(proto_Output& type) { return false; }
     uint16_t tick_analog(proto_Output& type) { return 0; }
     bool set_config() { return false; }

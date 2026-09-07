@@ -27,7 +27,7 @@ namespace
 }
 bool ProfileManager::changed_types()
 {
-    return m_subtypes_changed || !m_last_subtypes.empty();
+    return m_subtypes_changed || (m_subtypes_idx < m_last_subtypes.size());
 }
 void ProfileManager::add_profile(uint32_t profile_id, std::shared_ptr<Profile> profile)
 {
@@ -83,14 +83,11 @@ std::shared_ptr<Profile> ProfileManager::get_profile(uint32_t profile_id, size_t
 
 void ProfileManager::register_instance(std::shared_ptr<Instance> instance, std::shared_ptr<Profile> profile)
 {
-    if (m_last_subtypes.empty() || m_last_subtypes.front() != instance->subtype)
+    if (m_subtypes_idx >= m_last_subtypes.size() || m_last_subtypes[m_subtypes_idx] != instance->subtype)
     {
         m_subtypes_changed = true;
     }
-    if (!m_last_subtypes.empty())
-    {
-        m_last_subtypes.pop();
-    }
+    m_subtypes_idx++;
     m_active_instances.push_back(instance);
     m_profile_to_instance[profile->profile_id].push_back(instance);
 }
@@ -255,11 +252,12 @@ bool ProfileManager::has_active_instances() const
 
 void ProfileManager::prepare_for_config_reload()
 {
-    m_last_subtypes = std::queue<SubType>();
+    m_last_subtypes.clear();
     for (auto &instance : m_active_instances)
     {
-        m_last_subtypes.push(instance->subtype);
+        m_last_subtypes.push_back(instance->subtype);
     }
+    m_subtypes_idx = 0;
     m_subtypes_changed = false;
     m_instances.clear();
     m_active_instances.clear();
@@ -323,6 +321,9 @@ void ProfileManager::clear_all()
     release_profile_contents(m_profiles);
     m_profiles.clear();
     m_profile_to_instance.clear();
+    m_last_subtypes.clear();
+    m_subtypes_idx = 0;
+    m_subtypes_changed = false;
     m_emulated_devices.clear();
     std::fill(std::begin(m_usb_instances), std::end(m_usb_instances), nullptr);
     std::fill(std::begin(m_usb_instances_by_epin), std::end(m_usb_instances_by_epin), nullptr);

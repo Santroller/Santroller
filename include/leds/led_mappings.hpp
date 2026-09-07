@@ -9,7 +9,8 @@ class Profile;
 class LedMapping
 {
 public:
-    LedMapping(std::unique_ptr<LedMappingDevice> device, std::shared_ptr<Profile> profile, uint32_t id) : m_device(std::move(device)), m_id(id), m_profile(profile) {}
+    LedMapping(std::unique_ptr<LedMappingDevice> device, Profile *profile, uint32_t id) : m_device(std::move(device)), m_id(id), m_profile(profile) {}
+    LedMapping(std::unique_ptr<LedMappingDevice> device, const std::shared_ptr<Profile> &profile, uint32_t id) : m_device(std::move(device)), m_id(id), m_profile(profile.get()) {}
     virtual ~LedMapping() {}
     void off();
     virtual void update(bool full_poll, bool send_events) = 0;
@@ -18,7 +19,7 @@ public:
 protected:
     std::unique_ptr<LedMappingDevice> m_device;
     uint32_t m_id;
-    std::shared_ptr<Profile> m_profile;
+    Profile *m_profile;
 };
 
 class InputLedMapping : public LedMapping

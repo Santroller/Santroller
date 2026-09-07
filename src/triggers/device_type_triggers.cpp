@@ -9,14 +9,14 @@
 #include "emulation/usb/hid_device.h"
 #include <algorithm>
 
-static void claim_profile_device(const std::shared_ptr<Profile> &profile, const std::shared_ptr<Device> &device)
+static void claim_profile_device(Profile *profile, const std::shared_ptr<Device> &device)
 {
-    printf("Claiming profile device: profile=%d (%p) device=%d (%p)\n", profile->profile_id, profile.get(), device->m_id, device.get());
+    printf("Claiming profile device: profile=%d (%p) device=%d (%p)\n", profile->profile_id, profile, device->m_id, device.get());
     profile->devices[device->m_id] = device;
 }
 
 template <typename Predicate>
-static std::shared_ptr<Device> get_assignable_device(const std::shared_ptr<Profile> &profile, bool claim_device, Predicate predicate)
+static std::shared_ptr<Device> get_assignable_device(Profile *profile, bool claim_device, Predicate predicate)
 {
     for (const auto &device : profile->devices)
     {

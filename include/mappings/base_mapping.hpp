@@ -10,7 +10,8 @@
 class Mapping
 {
 public:
-    Mapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : m_mapping(mapping), m_id(id), m_profile(profile), m_input(std::move(input)) {}
+    Mapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile) : m_mapping(mapping), m_id(id), m_profile(profile), m_input(std::move(input)) {}
+    Mapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : Mapping(mapping, std::move(input), id, profile.get()) {}
     virtual ~Mapping() {}
     inline void reload()
     {
@@ -34,7 +35,7 @@ public:
 protected:
     proto_Mapping m_mapping;
     uint16_t m_id;
-    std::shared_ptr<Profile> m_profile;
+    Profile *m_profile;
     uint32_t m_last_value_raw = 0;
     uint32_t m_last_sent_value = 0;
     uint32_t m_last_sent_calibrated_value = 0;
@@ -46,7 +47,8 @@ class ButtonMapping : public Mapping
 {
 public:
     ~ButtonMapping() {}
-    ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : Mapping(mapping, std::move(input), id, profile) {}
+    ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile) : Mapping(mapping, std::move(input), id, profile) {}
+    ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : Mapping(mapping, std::move(input), id, profile) {}
     void update(bool full_poll, bool send_events);
 
 protected:
@@ -60,7 +62,8 @@ class AxisMapping : public Mapping
 {
 public:
     ~AxisMapping() {}
-    AxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile, bool trigger) : Mapping(mapping, std::move(input), id, profile), m_trigger(trigger) {}
+    AxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile, bool trigger) : Mapping(mapping, std::move(input), id, profile), m_trigger(trigger) {}
+    AxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile, bool trigger) : Mapping(mapping, std::move(input), id, profile), m_trigger(trigger) {}
     void update(bool full_poll, bool send_events);
 
 protected:

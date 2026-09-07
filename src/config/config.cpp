@@ -536,13 +536,24 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
         pb_istream_t decode_stream = profile_bytes;
         pb_decode(&decode_stream, proto_Profile_fields, &proto_profile);
 
+        bool added = false;
         if (context.matched)
         {
             ProfileManager::instance().add_profile(profile->profile_id, profile);
+            added = true;
         }
         else if (ProfileManager::instance().get_profile(profile->profile_id) == nullptr)
         {
             ProfileManager::instance().add_profile(profile->profile_id, profile);
+            added = true;
+        }
+
+        if (!added)
+        {
+            profile->mappings.clear();
+            profile->triggers.clear();
+            profile->leds.clear();
+            profile->devices.clear();
         }
 
         if (!context.matched || device_mgr.assignable_device_count() == assignable_before)

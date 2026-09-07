@@ -20,7 +20,6 @@ namespace
                 profile->mappings.clear();
                 profile->triggers.clear();
                 profile->leds.clear();
-                profile->activation_sources.clear();
                 profile->devices.clear();
             }
         }
@@ -50,59 +49,36 @@ void ProfileManager::remove_profile(uint32_t profile_id)
     m_profiles.erase(profile_id);
 }
 
-std::shared_ptr<Profile> ProfileManager::get_profile(uint32_t profile_id)
+std::shared_ptr<Profile> ProfileManager::get_profile(uint32_t profile_id, size_t instance_id)
 {
     auto instance_it = m_profile_to_instance.find(profile_id);
-    if (instance_it != m_profile_to_instance.end())
+    if (instance_it != m_profile_to_instance.end() && !instance_it->second.empty())
     {
-        for (const auto &instance : instance_it->second)
+        if (instance_id >= instance_it->second.size())
         {
-            for (const auto &profile : instance->profiles)
-            {
-                if (profile && profile->profile_id == profile_id && !profile->devices.empty())
-                {
-                    return profile;
-                }
-            }
+            instance_id = 0;
         }
-    }
-
-    // A profile_id can back multiple physical instances; return the first as a representative.
-    auto it = m_profiles.find(profile_id);
-    if (it == m_profiles.end() || it->second.empty())
-    {
-        return nullptr;
-    }
-    return it->second.front();
-}
-
-std::shared_ptr<Profile> ProfileManager::get_profile(uint32_t profile_id, int32_t source_id)
-{
-    if (source_id < 0)
-    {
-        return get_profile(profile_id);
-    }
-
-    auto it = m_profile_to_instance.find(profile_id);
-    if (it == m_profile_to_instance.end())
-    {
-        return get_profile(profile_id);
-    }
-
-    for (const auto &instance : it->second)
-    {
+        auto &instance = instance_it->second[instance_id];
         for (const auto &profile : instance->profiles)
         {
-            if (profile && profile->profile_id == profile_id &&
-                std::find_if(profile->activation_sources.begin(), profile->activation_sources.end(), [source_id](const auto &source)
-                             { return source.source_id == static_cast<uint32_t>(source_id); }) != profile->activation_sources.end())
+            if (profile && profile->profile_id == profile_id)
             {
                 return profile;
             }
         }
     }
 
-    return get_profile(profile_id);
+    // A profile_id can back multiple physical instances; return the requested or first as a representative.
+    auto it = m_profiles.find(profile_id);
+    if (it == m_profiles.end() || it->second.empty())
+    {
+        return nullptr;
+    }
+    if (instance_id < it->second.size())
+    {
+        return it->second[instance_id];
+    }
+    return it->second.front();
 }
 
 void ProfileManager::register_instance(std::shared_ptr<Instance> instance, std::shared_ptr<Profile> profile)
@@ -138,7 +114,6 @@ void ProfileManager::remove_instance(std::shared_ptr<Instance> instance)
         {
             device_pair.second->still_connected = false;
         }
-        profile->activation_sources.clear();
         profile->devices.clear();
     }
 
@@ -303,9 +278,9 @@ void ProfileManager::update_all_profile_devices(bool profile_changed, bool send_
     }
 }
 
-void ProfileManager::update_profile_components(uint32_t profile_id, int32_t device_id, bool profile_changed, bool send_events)
+void ProfileManager::update_profile_components(uint32_t profile_id, size_t instance_id, bool profile_changed, bool send_events)
 {
-    auto profile = get_profile(profile_id, device_id);
+    auto profile = get_profile(profile_id, instance_id);
     if (!profile)
     {
         return;
@@ -338,7 +313,6 @@ void ProfileManager::clear_all()
     m_profiles.clear();
     m_profile_to_instance.clear();
     m_emulated_devices.clear();
-    m_prev_types.clear();
     std::fill(std::begin(m_usb_instances), std::end(m_usb_instances), nullptr);
     std::fill(std::begin(m_usb_instances_by_epin), std::end(m_usb_instances_by_epin), nullptr);
     std::fill(std::begin(m_usb_instances_by_epout), std::end(m_usb_instances_by_epout), nullptr);

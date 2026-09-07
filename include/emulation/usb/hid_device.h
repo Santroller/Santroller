@@ -84,7 +84,7 @@ private:
   bool debug_enabled = false;
   uint32_t start = 0;
   uint32_t selected_profile = 0;
-  int32_t selected_source = -1;
+  uint32_t selected_instance = 0;
   uint8_t current_pos = 1;
   uint32_t m_valid_pins;
   bool processing = false;

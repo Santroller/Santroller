@@ -26,8 +26,7 @@ public:
 
     void add_profile(uint32_t profile_id, std::shared_ptr<Profile> profile);
     void remove_profile(uint32_t profile_id);
-    std::shared_ptr<Profile> get_profile(uint32_t profile_id);
-    std::shared_ptr<Profile> get_profile(uint32_t profile_id, int32_t source_id);
+    std::shared_ptr<Profile> get_profile(uint32_t profile_id, size_t instance_id = 0);
     
     void update_device_assignments(bool full_poll, bool send_events);
     void update_active_instances();
@@ -76,7 +75,7 @@ public:
     }
     
     void update_all_profile_devices(bool profile_changed, bool send_events);
-    void update_profile_components(uint32_t profile_id, int32_t source_id, bool profile_changed, bool send_events);
+    void update_profile_components(uint32_t profile_id, size_t instance_id, bool profile_changed, bool send_events);
     
     bool is_profile_active(uint32_t profile_id) const;
     void clear_all();
@@ -125,5 +124,4 @@ private:
     std::shared_ptr<UsbDevice> m_usb_instances_by_epin[16];
     std::shared_ptr<UsbDevice> m_usb_instances_by_epout[16];
     std::map<ConsoleMode, std::shared_ptr<UsbDevice>> m_emulated_devices;
-    std::unordered_map<uint32_t, std::pair<ActiveProfileSource, SubType>> m_prev_types;
 };

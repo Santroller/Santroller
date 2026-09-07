@@ -13,14 +13,6 @@ static void claim_profile_device(const std::shared_ptr<Profile> &profile, const 
 {
     printf("Claiming profile device: profile=%d (%p) device=%d (%p)\n", profile->profile_id, profile.get(), device->m_id, device.get());
     profile->devices[device->m_id] = device;
-    const auto source_id = device->source_id();
-    if (std::find_if(profile->activation_sources.begin(), profile->activation_sources.end(), [source_id](const auto &source)
-        {
-            return source.source_id == source_id;
-        }) == profile->activation_sources.end())
-    {
-        profile->activation_sources.push_back({device->m_id, source_id});
-    }
 }
 
 template <typename Predicate>

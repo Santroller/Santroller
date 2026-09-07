@@ -86,7 +86,7 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
   }
   if (profile_selected)
   {
-    auto selected_ptr = ProfileManager::instance().get_profile(selected_profile, selected_source);
+    auto selected_ptr = ProfileManager::instance().get_profile(selected_profile, selected_instance);
     if (!selected_ptr)
     {
       return;
@@ -180,7 +180,7 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
       {
         DeviceManager::instance().update_all_devices(profile_changed, true);
       }
-      ProfileManager::instance().update_profile_components(selected_profile, selected_source, profile_changed, true);
+      ProfileManager::instance().update_profile_components(selected_profile, selected_instance, profile_changed, true);
     }
   }
   process_events();
@@ -272,11 +272,11 @@ void HIDConfigDevice::handle_command(proto_Command command)
   {
   case proto_Command_setProfile_tag:
   {
-    printf("Set id: %d\r\n", command.command.setProfile.profileId);
+    printf("Set id: %d, instance: %d\r\n", command.command.setProfile.profileId, command.command.setProfile.instanceId);
     profile_selected = true;
     profile_changed = true;
     selected_profile = command.command.setProfile.profileId;
-    selected_source = command.command.setProfile.has_sourceId ? command.command.setProfile.sourceId : -1;
+    selected_instance = command.command.setProfile.has_instanceId ? command.command.setProfile.instanceId : 0;
     break;
   }
   case proto_Command_reboot_tag:

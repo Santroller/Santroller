@@ -249,7 +249,8 @@ void PS3GamepadDevice::initialize()
 }
 void PS3GamepadDevice::process(bool full_poll, bool send_events)
 {
-    if (tud_suspended()) {
+    if (tud_suspended())
+    {
         for (const auto &profile : profiles)
         {
             for (const auto &led : profile->leds)
@@ -273,6 +274,13 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
     memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     for (const auto &profile : profiles)
     {
+        profile->drum_state.blue_cymbal = 0;
+        profile->drum_state.blue_pad = 0;
+        profile->drum_state.yellow_cymbal = 0;
+        profile->drum_state.yellow_pad = 0;
+        profile->drum_state.green_cymbal = 0;
+        profile->drum_state.green_pad = 0;
+        profile->drum_state.red_pad = 0;
         for (const auto &mapping : profile->mappings)
         {
             mapping->update(full_poll, send_events);

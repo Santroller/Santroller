@@ -119,7 +119,7 @@ void ButtonMapping::update(bool full_poll, bool send_events)
         }
         if (send_events && (val != m_last_sent_value || full_poll))
         {
-            proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, val, calcVal ? (uint16_t)65535 : (uint16_t)0}}};
+            proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, (uint32_t)val, calcVal ? (uint32_t)65535 : (uint32_t)0}}};
             HIDConfigDevice::send_event(event, false);
             m_last_sent_value = val;
         }
@@ -145,8 +145,8 @@ void AxisMapping::update(bool full_poll, bool send_events)
     uint16_t event_value;
     bool event_driven = m_input->consumes_events();
     bool event_received = event_driven && m_input->consume_event(event_value);
-    auto uncalibrated = event_driven ? (event_received ? event_value : 0) : m_input->tick_analog();
-    auto val = uncalibrated;
+    uint32_t uncalibrated = event_driven ? (event_received ? event_value : 0) : m_input->tick_analog();
+    uint32_t val = uncalibrated;
     if (m_mapping.has_pressed)
     {
         if (event_driven ? event_received : m_input->tick_digital())
@@ -166,7 +166,7 @@ void AxisMapping::update(bool full_poll, bool send_events)
     {
         val = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
     }
-    if (val != m_mapping.center)
+    if (val != (uint32_t)m_mapping.center)
     {
         m_last_poll = millis();
         if ((!m_mapping.has_peakBased && !m_mapping.peakBased) || val > m_calibrated_value)

@@ -128,13 +128,24 @@ void ProfileManager::update_device_assignments(bool full_poll, bool send_events)
     {
         for (auto &profile : profile_pair.second)
         {
+            bool has_claimed_list = false;
+            for (auto &trigger_list : profile->triggers)
+            {
+                if (trigger_list->claimed())
+                {
+                    has_claimed_list = true;
+                    break;
+                }
+            }
+
             for (auto &trigger_list : profile->triggers)
             {
                 bool matched = trigger_list->validate(false, full_poll, send_events);
 
-                if (matched && !trigger_list->claimed())
+                if (matched && !has_claimed_list)
                 {
                     trigger_list->validate(true, full_poll, send_events);
+                    has_claimed_list = true;
                 }
             }
         }

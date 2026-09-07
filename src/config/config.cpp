@@ -417,7 +417,7 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_assignment.assignments.arg = *arg;
     pb_decode(stream, proto_ProfileAssignment_fields, &proto_assignment);
     // Assign triggers before building the profile
-    if (list->validate(true, false, false))
+    if (!context->matched && list->validate(true, false, false))
     {
         context->matched = true;
         int assignedDevices = list->assignedDevices();
@@ -433,6 +433,10 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
 
         // Assign profile to appropriate devices
         profile_mgr.assign_profile_to_devices(profile, assignedDevices, usb_mode, *context->emulation_devices);
+    }
+    else if (context->matched)
+    {
+        list->validate(false, false, false);
     }
     return true;
 }

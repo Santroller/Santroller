@@ -200,6 +200,19 @@ uint16_t gip_tick_analog(const void *input_data, uint8_t subtype, proto_Output *
                 return 0;
             }
         }
+        else if (type->which_mapping == proto_Output_gamepadAxis_tag)
+        {
+            auto data = (const XboxOneRockBandGuitar_Data_t *)input_data;
+            switch (type->mapping.gamepadAxis)
+            {
+            case Gamepad_LeftStickX:
+                return data->joystickX + INT16_MAX;
+            case Gamepad_LeftStickY:
+                return data->joystickY + INT16_MAX;
+            default:
+                return 0;
+            }
+        }
         break;
         
     default:

@@ -489,61 +489,6 @@ bool encode_active_profiles(pb_ostream_t *stream, const pb_field_t *field, void 
   return ok;
 }
 
-bool encode_active_profile_devices(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
-{
-  bool ok = true;
-  ProfileManager::instance().for_each_active_profile([stream, field, &ok](uint32_t profile_id, const auto &profile)
-                                                     {
-    if (!ok)
-      return;
-
-    for (const auto &source : profile->activation_sources)
-    {
-      proto_ActiveProfileDevice active_device = proto_ActiveProfileDevice_init_zero;
-      active_device.profile = profile_id;
-      active_device.device = source.device_id;
-      active_device.has_sourceId = true;
-      active_device.sourceId = source.source_id;
-
-      if (!pb_encode_tag_for_field(stream, field) ||
-          !pb_encode_submessage(stream, proto_ActiveProfileDevice_fields, &active_device))
-      {
-        ok = false;
-        return;
-      }
-    } });
-  return ok;
-}
-
-bool encode_active_profile_assignments(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
-{
-  bool ok = true;
-  ProfileManager::instance().for_each_active_profile([stream, field, &ok](uint32_t profile_id, const auto &profile)
-                                                     {
-    if (!ok)
-      return;
-
-    for (const auto &trigger_list : profile->triggers)
-    {
-      if (!trigger_list->claimed())
-      {
-        continue;
-      }
-
-      proto_ActiveProfileAssignment active_assignment = proto_ActiveProfileAssignment_init_zero;
-      active_assignment.profile = profile_id;
-      active_assignment.listId = trigger_list->list_id;
-
-      if (!pb_encode_tag_for_field(stream, field) ||
-          !pb_encode_submessage(stream, proto_ActiveProfileAssignment_fields, &active_assignment))
-      {
-        ok = false;
-        return;
-      }
-    } });
-  return ok;
-}
-
 uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
 {
   (void)report_id;
@@ -581,11 +526,9 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
   {
     buffer[0] = report_id;
     buffer++;
-    auto stream = pb_ostream_from_buffer(buffer, reqlen);
-    proto_GetActiveProfiles resp;
+    auto stream = pb_ostream_from_buffer(buffer, reqlen - 1);
+    proto_GetActiveProfiles resp = proto_GetActiveProfiles_init_zero;
     resp.profiles.funcs.encode = encode_active_profiles;
-    resp.profileDevices.funcs.encode = encode_active_profile_devices;
-    resp.activeAssignments.funcs.encode = encode_active_profile_assignments;
     if (!pb_encode_delimited(&stream, proto_GetActiveProfiles_fields, &resp))
       return 1;
     return 64;

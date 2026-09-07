@@ -59,7 +59,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     {
         printf("adding HID config device\r\n");
         auto confDevice = HIDConfigDevice::instance;
-        confDevice->interface_id = profile_mgr.instance_count();
+        confDevice->interface_id = profile_mgr.usb_instance_count();
         profile_mgr.add_instance(confDevice);
         profile_mgr.set_usb_instance(confDevice->interface_id, confDevice);
         confDevice->initialize();
@@ -78,7 +78,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     case ModeXbox360:
     {
         auto secDevice = std::make_shared<XInputSecurityDevice>();
-        secDevice->interface_id = profile_mgr.instance_count();
+        secDevice->interface_id = profile_mgr.usb_instance_count();
         profile_mgr.add_instance(secDevice);
         profile_mgr.set_usb_instance(secDevice->interface_id, secDevice);
         secDevice->initialize();
@@ -87,7 +87,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     case ModeGuitarHeroArcade:
     {
         auto venDevice = std::make_shared<GHArcadeVendorDevice>();
-        venDevice->interface_id = profile_mgr.instance_count();
+        venDevice->interface_id = profile_mgr.usb_instance_count();
         profile_mgr.add_instance(venDevice);
         profile_mgr.set_usb_instance(venDevice->interface_id, venDevice);
         venDevice->initialize();

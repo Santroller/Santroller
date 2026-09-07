@@ -556,7 +556,7 @@ bool load_empty()
     config_storage.initialize_empty();
 
     auto confDevice2 = HIDConfigDevice::instance;
-    confDevice2->interface_id = profile_mgr.instance_count();
+    confDevice2->interface_id = profile_mgr.usb_instance_count();
     profile_mgr.add_instance(confDevice2);
     // HIDConfigDevice is a special singleton instance, not profile-based
     profile_mgr.set_usb_instance(confDevice2->interface_id, confDevice2);

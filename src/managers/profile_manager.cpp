@@ -355,6 +355,19 @@ size_t ProfileManager::instance_count() const
     return m_instances.size();
 }
 
+size_t ProfileManager::usb_instance_count() const
+{
+    size_t count = 0;
+    for (const auto &instance : m_usb_instances)
+    {
+        if (instance)
+        {
+            count++;
+        }
+    }
+    return count;
+}
+
 std::shared_ptr<UsbDevice> ProfileManager::get_usb_instance(uint8_t id)
 {
     return (id < 32) ? m_usb_instances[id] : nullptr;

@@ -146,7 +146,7 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
     }
     
     if (instance) {
-        instance->interface_id = profile_mgr.instance_count();
+        instance->interface_id = profile_mgr.usb_instance_count();
         profile_mgr.set_usb_instance(instance->interface_id, instance);
     }
     

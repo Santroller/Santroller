@@ -18,6 +18,7 @@ MidiDevice::MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBase
     memset(midiNoteEvents, 0, sizeof(midiNoteEvents));
     memset(midiPitchWheel, 0, sizeof(midiPitchWheel));
     memset(midiControlChanges, 0, sizeof(midiControlChanges));
+    memset(midiNoteVelocity, 0, sizeof(midiNoteVelocity));
     memset(midiFrets, 0, sizeof(midiFrets));
     memset(midiStringVelocities, 0, sizeof(midiStringVelocities));
     memset(&midiButtons, 0, sizeof(midiButtons));
@@ -237,11 +238,17 @@ void MidiDevice::update(bool full_poll, bool send_events)
             switch (status)
             {
             case MIDI_CIN_NOTE_OFF:
+                midiNoteVelocity[channel][cable_state->data[1]] = 0;
                 break;
             case MIDI_CIN_NOTE_ON:
                 if (cable_state->data[2] != 0)
                 {
+                    midiNoteVelocity[channel][cable_state->data[1]] = cable_state->data[2];
                     push_midi_note_event(channel, cable_state->data[1], cable_state->data[2]);
+                }
+                else
+                {
+                    midiNoteVelocity[channel][cable_state->data[1]] = 0;
                 }
                 break;
             case MIDI_CIN_CONTROL_CHANGE:
@@ -383,6 +390,18 @@ bool MidiDevice::consume_midi_note_event(uint8_t channel, uint8_t note, uint16_t
 uint16_t MidiDevice::read_midi_control_change(uint8_t channel, uint8_t cc)
 {
     return midiControlChanges[channel][cc] << 9;
+}
+uint8_t MidiDevice::read_midi_note(uint8_t channel, uint8_t note) const
+{
+    if (channel >= 16 || note >= 128)
+    {
+        return 0;
+    }
+    return midiNoteVelocity[channel][note];
+}
+bool MidiDevice::is_midi_note_pressed(uint8_t channel, uint8_t note) const
+{
+    return read_midi_note(channel, note) > 0;
 }
 int16_t MidiDevice::read_midi_pitch_bend(uint8_t channel)
 {

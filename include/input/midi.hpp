@@ -12,6 +12,10 @@ public:
     uint16_t tick_analog();
     bool consumes_events() const override { return true; }
     bool consume_event(uint16_t &value) override;
+    MidiNoteInput* as_midi_note() override { return this; }
+    uint8_t channel() const { return m_input.channel; }
+    uint8_t note() const { return m_input.note; }
+    std::shared_ptr<MidiDevice> device() const { return m_device; }
 
 private:
     void setup();

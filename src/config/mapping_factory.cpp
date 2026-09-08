@@ -119,6 +119,16 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
     case proto_Output_keycode_tag:
         return std::make_unique<KeyboardButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         
+    case proto_Output_proKeySingle_tag:
+    case proto_Output_proKeyMultiple_tag:
+        return std::make_unique<ProKeysKeyMapping>(proto_mapping, std::move(input), mapping_id, profile);
+        
+    case proto_Output_proKeyboardAxis_tag:
+        return std::make_unique<ProKeysAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
+        
+    case proto_Output_proKeyboardButton_tag:
+        return std::make_unique<ProKeysButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
+        
     default:
         return nullptr;
     }

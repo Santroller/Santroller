@@ -4,6 +4,8 @@
 #include "mappings/mapping.hpp"
 #include "tusb.h"
 #include "emulation/usb/usb_descriptors.h"
+#include "emulation/usb/hid_device.h"
+#include "input/midi.hpp"
 #include <pb_encode.h>
 #include <stdint.h>
 #include <utils.h>
@@ -1594,53 +1596,99 @@ void ProGuitarAxisMapping::update_xboxone(uint8_t *buf)
 {
 }
 
+static inline void set_keyboard_key(uint8_t &key1, uint8_t &key2, uint8_t &key3, uint8_t *velocities, uint8_t key, uint8_t velocity)
+{
+    if (key < 1 || key > 25)
+    {
+        return;
+    }
+    if (key <= 8)
+    {
+        key1 |= (1 << (8 - key));
+    }
+    else if (key <= 16)
+    {
+        key2 |= (1 << (16 - key));
+    }
+    else if (key <= 24)
+    {
+        key3 |= (1 << (24 - key));
+    }
+    else if (key == 25)
+    {
+        velocities[0] |= 0x80;
+    }
+
+    if (velocity > 0)
+    {
+        uint8_t vel = velocity > 127 ? 127 : velocity;
+        for (int i = 0; i < 5; i++)
+        {
+            if ((velocities[i] & 0x7F) == 0)
+            {
+                if (i == 0)
+                {
+                    velocities[0] = (velocities[0] & 0x80) | vel;
+                }
+                else
+                {
+                    velocities[i] = vel;
+                }
+                break;
+            }
+        }
+    }
+}
+
 ProKeysButtonMapping::ProKeysButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
-    
 }
 
 void ProKeysButtonMapping::update_hid(uint8_t *buf)
 {
-    // santroller hid uses an xinput style report descriptor for compatibility reasons
     return update_xinput(buf);
-    
 }
 void ProKeysButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
-    
 }
 void ProKeysButtonMapping::update_switch(uint8_t *buf)
 {
-    
 }
-
 void ProKeysButtonMapping::update_ps2(uint8_t *buf)
 {
-    
 }
-
 void ProKeysButtonMapping::update_ps3(uint8_t *buf)
 {
-    
+    PS3RockBandProKeyboard_Data_t *report = (PS3RockBandProKeyboard_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.proKeyboardButton)
+    {
+    case ProKeyboardOverdrive:
+        report->overdrive |= m_last_value;
+        break;
+    default:
+        break;
+    }
 }
-
 void ProKeysButtonMapping::update_ps4(uint8_t *buf)
 {
-    
 }
-
 void ProKeysButtonMapping::update_ps5(uint8_t *buf)
 {
-    
 }
-
 void ProKeysButtonMapping::update_xinput(uint8_t *buf)
 {
-    
+    XInputRockBandKeyboard_Data_t *report = (XInputRockBandKeyboard_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.proKeyboardButton)
+    {
+    case ProKeyboardOverdrive:
+        report->overdrive |= m_last_value;
+        break;
+    default:
+        break;
+    }
 }
 void ProKeysButtonMapping::update_ogxbox(uint8_t *buf)
 {
-    
 }
 void ProKeysButtonMapping::update_xboxone(uint8_t *buf)
 {
@@ -1652,7 +1700,6 @@ ProKeysAxisMapping::ProKeysAxisMapping(proto_Mapping mapping, std::unique_ptr<In
 
 void ProKeysAxisMapping::update_hid(uint8_t *buf)
 {
-    // santroller hid uses an xinput style report descriptor for compatibility reasons
     return update_xinput(buf);
 }
 void ProKeysAxisMapping::update_wii(uint8_t format, uint8_t *buf)
@@ -1661,29 +1708,227 @@ void ProKeysAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 void ProKeysAxisMapping::update_switch(uint8_t *buf)
 {
 }
-
 void ProKeysAxisMapping::update_ps2(uint8_t *buf)
 {
 }
-
 void ProKeysAxisMapping::update_ps3(uint8_t *buf)
 {
+    PS3RockBandProKeyboard_Data_t *report = (PS3RockBandProKeyboard_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.proKeyboardAxis)
+    {
+    case ProKeyboardPedal:
+        if (!m_centered)
+        {
+            report->pedalAnalog = m_calibrated_value >> 9;
+            report->pedalDigital = 1;
+        }
+        break;
+    case ProKeyboardTouchPad:
+        report->touchPad = m_calibrated_value >> 9;
+        break;
+    default:
+        break;
+    }
 }
-
 void ProKeysAxisMapping::update_ps4(uint8_t *buf)
 {
 }
-
 void ProKeysAxisMapping::update_ps5(uint8_t *buf)
 {
 }
-
 void ProKeysAxisMapping::update_xinput(uint8_t *buf)
 {
+    XInputRockBandKeyboard_Data_t *report = (XInputRockBandKeyboard_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.proKeyboardAxis)
+    {
+    case ProKeyboardPedal:
+        if (!m_centered)
+        {
+            report->pedalAnalog = m_calibrated_value >> 9;
+            report->pedalDigital = 1;
+        }
+        break;
+    case ProKeyboardTouchPad:
+        report->touchPad = m_calibrated_value >> 9;
+        break;
+    default:
+        break;
+    }
 }
 void ProKeysAxisMapping::update_ogxbox(uint8_t *buf)
 {
 }
 void ProKeysAxisMapping::update_xboxone(uint8_t *buf)
+{
+}
+
+ProKeysKeyMapping::ProKeysKeyMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile)
+    : Mapping(mapping, std::move(input), id, profile)
+{
+    m_is_multiple = (mapping.mapping.which_mapping == proto_Output_proKeyMultiple_tag);
+}
+
+void ProKeysKeyMapping::update(bool full_poll, bool send_events)
+{
+    if (m_is_multiple)
+    {
+        m_active_keys = 0;
+        auto midi = m_input->as_midi_note();
+        if (midi && midi->device())
+        {
+            uint8_t channel = midi->channel() - 1;
+            uint8_t root_note = midi->note();
+            int count = m_mapping.mapping.mapping.proKeyMultiple;
+            if (count > 25)
+            {
+                count = 25;
+            }
+            for (int i = 0; i < count; i++)
+            {
+                uint8_t vel = midi->device()->read_midi_note(channel, root_note + i);
+                if (vel > 0)
+                {
+                    m_active_keys |= (1 << i);
+                    m_key_velocities[i] = vel;
+                }
+                else
+                {
+                    m_key_velocities[i] = 0;
+                }
+            }
+        }
+        else
+        {
+            bool pressed = m_input->tick_digital();
+            if (pressed)
+            {
+                m_active_keys |= 1;
+                m_key_velocities[0] = 127;
+            }
+        }
+
+        bool any_pressed = m_active_keys != 0;
+        if (send_events && (any_pressed != m_last_sent_pressed || full_poll))
+        {
+            proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, any_pressed, any_pressed}}};
+            HIDConfigDevice::send_event(event, false);
+            m_last_sent_pressed = any_pressed;
+        }
+    }
+    else
+    {
+        bool pressed = false;
+        uint8_t vel = 0;
+        auto midi = m_input->as_midi_note();
+        if (midi && midi->device())
+        {
+            uint8_t channel = midi->channel() - 1;
+            uint8_t note = midi->note();
+            vel = midi->device()->read_midi_note(channel, note);
+            pressed = (vel > 0);
+        }
+        else
+        {
+            pressed = m_input->tick_digital();
+            if (m_mapping.inverted)
+            {
+                pressed = !pressed;
+            }
+            vel = pressed ? 127 : 0;
+        }
+
+        if (m_mapping.has_debounce)
+        {
+            if (pressed)
+            {
+                m_last_poll = millis();
+                m_single_pressed = pressed;
+            }
+            else if ((millis() - m_last_poll) > m_mapping.debounce)
+            {
+                m_single_pressed = pressed;
+            }
+        }
+        else
+        {
+            m_single_pressed = pressed;
+        }
+
+        m_single_velocity = m_single_pressed ? vel : 0;
+
+        if (send_events && (m_single_pressed != m_last_sent_pressed || full_poll))
+        {
+            proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, m_single_pressed, m_single_pressed}}};
+            HIDConfigDevice::send_event(event, false);
+            m_last_sent_pressed = m_single_pressed;
+        }
+    }
+}
+
+void ProKeysKeyMapping::update_hid(uint8_t *buf)
+{
+    return update_xinput(buf);
+}
+void ProKeysKeyMapping::update_wii(uint8_t format, uint8_t *buf)
+{
+}
+void ProKeysKeyMapping::update_switch(uint8_t *report)
+{
+}
+void ProKeysKeyMapping::update_ps2(uint8_t *report)
+{
+}
+void ProKeysKeyMapping::update_ps3(uint8_t *buf)
+{
+    PS3RockBandProKeyboard_Data_t *report = (PS3RockBandProKeyboard_Data_t *)buf;
+    if (m_is_multiple)
+    {
+        for (int i = 0; i < 25; i++)
+        {
+            if (m_active_keys & (1 << i))
+            {
+                set_keyboard_key(report->key1, report->key2, report->key3, report->velocities, i + 1, m_key_velocities[i]);
+            }
+        }
+    }
+    else
+    {
+        if (m_single_pressed)
+        {
+            set_keyboard_key(report->key1, report->key2, report->key3, report->velocities, m_mapping.mapping.mapping.proKeySingle, m_single_velocity);
+        }
+    }
+}
+void ProKeysKeyMapping::update_ps4(uint8_t *report)
+{
+}
+void ProKeysKeyMapping::update_ps5(uint8_t *report)
+{
+}
+void ProKeysKeyMapping::update_xinput(uint8_t *buf)
+{
+    XInputRockBandKeyboard_Data_t *report = (XInputRockBandKeyboard_Data_t *)buf;
+    if (m_is_multiple)
+    {
+        for (int i = 0; i < 25; i++)
+        {
+            if (m_active_keys & (1 << i))
+            {
+                set_keyboard_key(report->key1, report->key2, report->key3, report->velocities, i + 1, m_key_velocities[i]);
+            }
+        }
+    }
+    else
+    {
+        if (m_single_pressed)
+        {
+            set_keyboard_key(report->key1, report->key2, report->key3, report->velocities, m_mapping.mapping.mapping.proKeySingle, m_single_velocity);
+        }
+    }
+}
+void ProKeysKeyMapping::update_ogxbox(uint8_t *report)
+{
+}
+void ProKeysKeyMapping::update_xboxone(uint8_t *report)
 {
 }

@@ -140,3 +140,30 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
 };
+
+class ProKeysKeyMapping : public Mapping
+{
+public:
+    ~ProKeysKeyMapping() {}
+    ProKeysKeyMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    void update(bool full_poll, bool send_events);
+    void update_hid(uint8_t *report);
+    void update_wii(uint8_t format, uint8_t *buf);
+    void update_switch(uint8_t *report);
+    void update_ps2(uint8_t *report);
+    void update_ps3(uint8_t *report);
+    void update_ps4(uint8_t *report);
+    void update_ps5(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+    void update_xboxone(uint8_t *report);
+
+private:
+    bool m_is_multiple = false;
+    uint32_t m_active_keys = 0;
+    uint8_t m_key_velocities[25] = {0};
+    bool m_single_pressed = false;
+    uint8_t m_single_velocity = 0;
+    bool m_last_sent_pressed = false;
+    uint64_t m_last_poll = 0;
+};

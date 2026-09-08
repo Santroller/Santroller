@@ -36,6 +36,8 @@ public:
     virtual void update(bool full_poll, bool send_events);
     void rescan(bool first);
     bool consume_midi_note_event(uint8_t channel, uint8_t note, uint16_t &sequence, uint16_t &velocity);
+    uint8_t read_midi_note(uint8_t channel, uint8_t note) const;
+    bool is_midi_note_pressed(uint8_t channel, uint8_t note) const;
     uint16_t read_midi_control_change(uint8_t channel, uint8_t cc);
     int16_t read_midi_pitch_bend(uint8_t channel);
     bool read_pro_guitar_button(proto_ProGuitarMidiButtonType button);
@@ -70,6 +72,7 @@ private:
     uint16_t midiNoteEventSequence = 0;
     int16_t midiPitchWheel[16];
     uint8_t midiControlChanges[16][128];
+    uint8_t midiNoteVelocity[16][128];
     uint8_t midiFrets[6];
     uint8_t midiStringVelocities[6];
     bool seenChannels[18];

@@ -10,6 +10,10 @@ MidiNoteInput::MidiNoteInput(proto_MidiNoteInput input, std::shared_ptr<MidiDevi
 }
 bool MidiNoteInput::tick_digital()
 {
+    if (m_device)
+    {
+        return m_device->read_midi_note(m_input.channel - 1, m_input.note) > 0;
+    }
     uint16_t value;
     return consume_event(value);
 }

@@ -115,7 +115,7 @@ private:
     std::unordered_map<uint32_t, std::vector<std::shared_ptr<Profile>>> m_profiles;
     std::vector<std::shared_ptr<Instance>> m_active_instances;
     std::vector<SubType> m_last_subtypes;
-    size_t m_subtypes_idx = 0;
+    std::vector<SubType> m_current_subtypes;
     bool m_subtypes_changed = false;
     std::unordered_map<uint32_t, std::vector<std::shared_ptr<Instance>>> m_profile_to_instance;
     

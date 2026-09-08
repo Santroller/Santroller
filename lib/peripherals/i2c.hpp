@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <hardware/i2c.h>
 #include <hardware/gpio.h>
-#include <queue>
 
 #define I2C_MAX_ADDR 127
 #define I2C_MAX_TRANSFER_SIZE 32

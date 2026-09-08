@@ -1,6 +1,5 @@
 
 #pragma once
-#include <queue>
 #include "class/hid/hid.h"
 
 #include "commands.pb.h"

@@ -15,7 +15,6 @@
 #include "utils.h"
 #include "emulation/usb/usb_devices.h"
 #include "xgip_protocol.h"
-#include <queue>
 
 static uint8_t xb1_guide_on[] = {0x01, 0x5b};
 static uint8_t xb1_guide_off[] = {0x00, 0x5b};
@@ -210,8 +209,6 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         bool complete = incomingXGIP.parse(epout_buf, xferred_bytes);
 
         uint8_t command = incomingXGIP.getCommand();
-        // printf("got command (device): %02x %02x %02x\r\n", incomingXGIP.getCommand(), incomingXGIP.getSequence(), incomingXGIP.getChunked());
-
         // Setup an ack before we change anything about the incoming packet
         if (incomingXGIP.ackRequired() == true)
         {
@@ -317,8 +314,9 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 xboneDriverState = XboxOneDriverState::EMU_READY_ANNOUNCE;
                 incomingXGIP.reset();
                 outgoingXGIP.reset();
-                report_queue = {}; // clear the report queue
-                // timer_wait_for_announce = to_ms_since_boot(get_absolute_time());
+                report_queue_head = 0;
+                report_queue_count = 0;
+                timer_wait_for_announce = to_ms_since_boot(get_absolute_time());
                 break;
             default:
                 break;
@@ -340,7 +338,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             if (incomingXGIP.getDataLength() == 2 && memcmp(incomingXGIP.getData(), authReady, sizeof(authReady)) == 0)
             {
                 printf("auth done\r\n");
-                xboneDriverState = EMU_AUTH_DONE;
+                xboneDriverState = XboxOneDriverState::EMU_AUTH_DONE;
                 auth_completed = true;
             }
 
@@ -370,7 +368,15 @@ void XboxOneGamepadDevice::queue_xbone_report(void *report, uint16_t report_size
     report_queue_t item;
     memcpy(item.report, report, report_size);
     item.len = report_size;
-    report_queue.push(item);
+    if (report_queue_count >= REPORT_QUEUE_CAPACITY) {
+        return;
+    }
+    report_queue[(report_queue_head + report_queue_count) % REPORT_QUEUE_CAPACITY] = item;
+    if (report_queue_count < REPORT_QUEUE_CAPACITY) {
+        report_queue_count++;
+    } else {
+        report_queue_head = (report_queue_head + 1) % REPORT_QUEUE_CAPACITY;
+    }
 }
 
 bool XboxOneGamepadDevice::send_xbone_usb(uint8_t const *report, uint16_t report_size)
@@ -390,12 +396,13 @@ bool XboxOneGamepadDevice::send_xbone_usb(uint8_t const *report, uint16_t report
 
 void XboxOneGamepadDevice::process_report_queue(uint32_t now)
 {
-    if (!report_queue.empty() && (now - m_last_report_queue) > REPORT_QUEUE_INTERVAL)
+    if (report_queue_count > 0 && (now - m_last_report_queue) > REPORT_QUEUE_INTERVAL)
     {
-        if (send_xbone_usb(report_queue.front().report, report_queue.front().len))
+        if (send_xbone_usb(report_queue[report_queue_head].report, report_queue[report_queue_head].len))
         {
-            memcpy(last_report, &report_queue.front().report, report_queue.front().len);
-            report_queue.pop();
+            memcpy(last_report, &report_queue[report_queue_head].report, report_queue[report_queue_head].len);
+            report_queue_head = (report_queue_head + 1) % REPORT_QUEUE_CAPACITY;
+            report_queue_count--;
         }
         else
         {

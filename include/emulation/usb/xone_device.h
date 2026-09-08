@@ -4,7 +4,6 @@
 #include "device/usbd.h"
 #include "devices/usb/host/xone_host.h"
 #include "device.hpp"
-#include <queue>
 
 #ifndef CFG_TUD_XONE_EPSIZE
 #define CFG_TUD_XONE_EPSIZE 64
@@ -74,7 +73,10 @@ private:
     // Check report queue every 35 milliseconds
     uint32_t m_last_report_queue = 0;
 
-    std::queue<report_queue_t> report_queue;
+    static constexpr size_t REPORT_QUEUE_CAPACITY = 4;
+    report_queue_t report_queue[REPORT_QUEUE_CAPACITY];
+    uint8_t report_queue_head = 0;
+    uint8_t report_queue_count = 0;
 
     XboxOneDriverState xboneDriverState = EMU_NOT_READY;
 };

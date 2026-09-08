@@ -429,6 +429,19 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
             config_mgr.request_mode(forced_usb_mode);
             usb_mode = forced_usb_mode;
         }
+
+        bool xinput_win;
+        if (list->xinputOnWindows(xinput_win))
+        {
+            profile->xinput_on_windows = xinput_win;
+        }
+
+        bool ps4_mode;
+        if (list->ps4OrPs5Mode(ps4_mode))
+        {
+            profile->supports_ps4 = ps4_mode;
+        }
+
         printf("profile assigned! profile_id=%d mode=%d\r\n", profile->profile_id, usb_mode);
 
         // Assign profile to appropriate devices

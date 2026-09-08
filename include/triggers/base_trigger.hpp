@@ -14,6 +14,8 @@ public:
     virtual bool validate(bool claim_device, bool full_poll, bool send_events) = 0;
     virtual int assignedDevices() = 0;
     virtual bool forcedConsoleMode(ConsoleMode& mode) const { return false; }
+    virtual bool xinputOnWindows(bool &enabled) const { return false; }
+    virtual bool ps4OrPs5Mode(bool &enabled) const { return false; }
 
 protected:
     Profile *m_profile;

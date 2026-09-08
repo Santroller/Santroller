@@ -88,3 +88,33 @@ bool ActivationTriggerList::forcedConsoleMode(ConsoleMode& mode) const
     }
     return found;
 }
+
+bool ActivationTriggerList::xinputOnWindows(bool &enabled) const
+{
+    bool found = false;
+    for (auto &trigger : triggers)
+    {
+        bool trigger_val;
+        if (trigger->xinputOnWindows(trigger_val))
+        {
+            enabled = trigger_val;
+            found = true;
+        }
+    }
+    return found;
+}
+
+bool ActivationTriggerList::ps4OrPs5Mode(bool &enabled) const
+{
+    bool found = false;
+    for (auto &trigger : triggers)
+    {
+        bool trigger_val;
+        if (trigger->ps4OrPs5Mode(trigger_val))
+        {
+            enabled = trigger_val;
+            found = true;
+        }
+    }
+    return found;
+}

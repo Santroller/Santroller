@@ -77,6 +77,26 @@ bool UsbModeActivationTrigger::forcedConsoleMode(ConsoleMode& mode) const
     return true;
 }
 
+bool UsbModeActivationTrigger::xinputOnWindows(bool &enabled) const
+{
+    if (!m_config.has_xinputOnWindows)
+    {
+        return false;
+    }
+    enabled = m_config.xinputOnWindows;
+    return true;
+}
+
+bool UsbModeActivationTrigger::ps4OrPs5Mode(bool &enabled) const
+{
+    if (!m_config.has_ps4OrPs5Mode)
+    {
+        return false;
+    }
+    enabled = m_config.ps4OrPs5Mode;
+    return true;
+}
+
 BluetoothModeActivationTrigger::BluetoothModeActivationTrigger(proto_BluetoothMode mode, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_mode(mode)
 {
 }

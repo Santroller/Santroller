@@ -16,6 +16,8 @@ public:
     bool validate(bool claim_devices, bool full_poll, bool send_events);
     int assignedDevices();
     bool forcedConsoleMode(ConsoleMode& mode) const;
+    bool xinputOnWindows(bool &enabled) const;
+    bool ps4OrPs5Mode(bool &enabled) const;
     bool claimed() const { return m_claimed; }
 private:
     bool m_claimed = false;

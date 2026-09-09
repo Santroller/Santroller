@@ -120,23 +120,39 @@ void PSXController::end() {
     gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
     cancel_alarm(timeout_alarm_id);
 }
-void PSXController::load_state(PSXController* state) {
-    type = state->type;
-    valid = state->valid;
-    hasTapBar = state->hasTapBar;
-    missing = state->missing;
-    last = state->last;
-    lastInit = state->lastInit;
-    invalidCount = state->invalidCount;
-    memcpy(ps2Data, state->ps2Data, sizeof(ps2Data));
-    memcpy(lastInputs, state->lastInputs, sizeof(lastInputs));
-    ps2DataOut = state->ps2DataOut;
-    ps2Idx = state->ps2Idx;
-    ps2Len = state->ps2Len;
-    ps2DataLen = state->ps2DataLen;
-    done = state->done;
-    packet_delay = state->packet_delay;
+void PSXController::load_state(const DeviceReloadState *state) {
+    type = state->ps2_type;
+    valid = state->ps2_valid;
+    hasTapBar = state->ps2_hasTapBar;
+    missing = state->ps2_missing;
+    last = state->ps2_last;
+    lastInit = state->ps2_lastInit;
+    invalidCount = state->ps2_invalidCount;
+    memcpy(ps2Data, state->ps2_data, sizeof(ps2Data));
+    memcpy(lastInputs, state->ps2_lastInputs, sizeof(lastInputs));
+    ps2Idx = state->ps2_idx;
+    ps2Len = state->ps2_len;
+    ps2DataLen = state->ps2_dataLen;
+    done = state->ps2_done;
+    packet_delay = state->ps2_packetDelay;
 }
+void PSXController::save_state(DeviceReloadState& state) const  {
+    state.ps2_type = type;
+    state.ps2_valid = valid;
+    state.ps2_hasTapBar = hasTapBar;
+    state.ps2_missing = missing;
+    state.ps2_last = last;
+    state.ps2_lastInit = lastInit;
+    state.ps2_invalidCount = invalidCount;
+    memcpy(state.ps2_data, ps2Data, sizeof(ps2Data));
+    memcpy(state.ps2_lastInputs, lastInputs, sizeof(lastInputs));
+    state.ps2_idx = ps2Idx;
+    state.ps2_len = ps2Len;
+    state.ps2_dataLen = ps2DataLen;
+    state.ps2_done = done;
+    state.ps2_packetDelay = packet_delay;
+}
+
 PSXController::~PSXController() {
     printf("~PSXController\r\n");
 }

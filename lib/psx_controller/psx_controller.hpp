@@ -6,6 +6,7 @@
 #include "input_enums.pb.h"
 #include "pico/time.h"
 #include <hardware/gpio.h>
+#include "devices/base.hpp"
 
 /** \brief Size of internal communication buffer
  *
@@ -66,7 +67,8 @@ public:
     ~PSXController();
     void begin();
     void end();
-    void load_state(PSXController* state);
+    void load_state(const DeviceReloadState *state);
+    void save_state(DeviceReloadState& state) const ;
     void tick();
     PS2ControllerType type = PS2ControllerTypeUnknown;
     uint16_t read_axis(PS2AxisType type);

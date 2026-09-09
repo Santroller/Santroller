@@ -4,6 +4,29 @@
 #include "commands.pb.h"
 #include <stdio.h>
 
+typedef enum {
+    WII_INIT_FINISH_ENC,
+    WII_INIT_FB_0,
+    WII_INIT_READ_ID_WRITE_PTR,
+    WII_INIT_READ_ID_READ,
+    WII_INIT_DRAWSOME,
+    WII_INIT_CLASSIC_0,
+    WII_INIT_CLASSIC_1,
+    WII_INIT_CLASSIC_2,
+    WII_INIT_CLASSIC_READ_ID_WRITE_PTR,
+    WII_INIT_CLASSIC_READ_ID_READ,
+    WII_INIT_READ_DATA_WRITE_PTR,
+    WII_INIT_READ_DATA_READ,
+    WII_INIT_ENABLE_ENC_0,
+    WII_INIT_ENABLE_ENC_1,
+    WII_INIT_ENABLE_ENC_2,
+    WII_INIT_ENABLE_ENC_3,
+    WII_INIT_ENC_READ_ID_WRITE_PTR,
+    WII_INIT_ENC_READ_ID_READ,
+    WII_INPUTS_WRITE_PTR,
+    WII_INPUTS_READ,
+    WII_INPUTS_UPDATE_LED
+} wii_status_e;
 struct DeviceReloadState
 {
     bool valid = false;
@@ -13,6 +36,34 @@ struct DeviceReloadState
     bool toggle_value = false;
     WiiExtType wii_extension = WiiExtType::WiiNoExtension;
     PS2ControllerType ps2_controller = PS2ControllerType::PS2ControllerTypeUnknown;
+    // PS2 State
+    PS2ControllerType ps2_type = PS2ControllerType::PS2ControllerTypeUnknown;
+    bool ps2_valid = false;
+    bool ps2_hasTapBar = false;
+    bool ps2_missing = false;
+    uint32_t ps2_last = 0;
+    uint32_t ps2_lastInit = 0;
+    uint32_t ps2_invalidCount = 0;
+    uint8_t ps2_data[18] = {};
+    uint8_t ps2_lastInputs[18] = {};
+    uint8_t ps2_dataOut[18] = {};
+    uint8_t ps2_idx = 0;
+    uint8_t ps2_len = 0;
+    uint8_t ps2_dataLen = 0;
+    bool ps2_done = false;
+    uint32_t ps2_packetDelay = 0;
+    // Wii State
+    bool wii_mFound = false;
+    WiiExtType wii_mType = WiiExtType::WiiNoExtension;
+    bool wii_hiRes = false;
+    uint32_t wii_packetIssueCount = 0;
+    uint8_t wii_mBufferIndex = 0;
+    uint32_t wii_lastTick = 0;
+    uint8_t wii_wiiBytes = 0;
+    uint8_t wii_wiiPointer = 0;
+    uint8_t wii_s_box = 0;
+    uint8_t wii_m_block = 0;
+    wii_status_e wii_status = WII_INIT_FINISH_ENC;
 };
 
 class Device

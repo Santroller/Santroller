@@ -11,6 +11,7 @@ WiiDevice::WiiDevice(const DeviceReloadState* state, proto_WiiDevice device, uin
     {
         m_lastExtType = state->wii_extension;
         m_last_value = state->last_value;
+        m_extension.load_state(state);
     }
 }
 

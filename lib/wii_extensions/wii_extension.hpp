@@ -4,6 +4,7 @@
 #include "enums.pb.h"
 #include "input_enums.pb.h"
 #include "devices/midi.hpp"
+#include "devices/base.hpp"
 #define WII_ADDR 0x52
 #define WII_READ_ID 0xFA
 #define WII_ENCRYPTION_STATE_ID 0xF0
@@ -20,29 +21,6 @@
 #define FIRST_PARTY_SBOX 0x97
 #define THIRD_PARTY_SBOX 0x4D
 
-typedef enum {
-    WII_INIT_FINISH_ENC,
-    WII_INIT_FB_0,
-    WII_INIT_READ_ID_WRITE_PTR,
-    WII_INIT_READ_ID_READ,
-    WII_INIT_DRAWSOME,
-    WII_INIT_CLASSIC_0,
-    WII_INIT_CLASSIC_1,
-    WII_INIT_CLASSIC_2,
-    WII_INIT_CLASSIC_READ_ID_WRITE_PTR,
-    WII_INIT_CLASSIC_READ_ID_READ,
-    WII_INIT_READ_DATA_WRITE_PTR,
-    WII_INIT_READ_DATA_READ,
-    WII_INIT_ENABLE_ENC_0,
-    WII_INIT_ENABLE_ENC_1,
-    WII_INIT_ENABLE_ENC_2,
-    WII_INIT_ENABLE_ENC_3,
-    WII_INIT_ENC_READ_ID_WRITE_PTR,
-    WII_INIT_ENC_READ_ID_READ,
-    WII_INPUTS_WRITE_PTR,
-    WII_INPUTS_READ,
-    WII_INPUTS_UPDATE_LED
-} wii_status_e;
 class WiiExtension: public I2CDMAInterface
 {
 
@@ -51,7 +29,8 @@ public:
     ~WiiExtension();
     void begin();
     void end();
-    void load_state(WiiExtension* state);
+    void load_state(const DeviceReloadState *state);
+    void save_state(DeviceReloadState& state) const ;
     void tick();
     void process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
     WiiExtType mType = WiiExtType::WiiNoExtension;

@@ -351,21 +351,36 @@ void WiiExtension::begin()
     mInterface.dmaInit(WII_ADDR, this);
     process_data(WII_ADDR, false, false, false, false);
 }
-void WiiExtension::load_state(WiiExtension *state)
+void WiiExtension::load_state(const DeviceReloadState *state)
 {
     printf("WiiExtension::load_state\r\n");
     // load state from previous instance
-    mFound = state->mFound;
-    mType = state->mType;
-    hiRes = state->hiRes;
-    packetIssueCount = state->packetIssueCount;
-    mBufferIndex = state->mBufferIndex;
-    lastTick = state->lastTick;
-    wiiBytes = state->wiiBytes;
-    wiiPointer = state->wiiPointer;
-    s_box = state->s_box;
-    m_block = state->m_block;
-    status = state->status;
+    mFound = state->wii_mFound;
+    mType = state->wii_mType;
+    hiRes = state->wii_hiRes;
+    packetIssueCount = state->wii_packetIssueCount;
+    mBufferIndex = state->wii_mBufferIndex;
+    lastTick = state->wii_lastTick;
+    wiiBytes = state->wii_wiiBytes;
+    wiiPointer = state->wii_wiiPointer;
+    s_box = state->wii_s_box;
+    m_block = state->wii_m_block;
+    status = state->wii_status;
+}
+void WiiExtension::save_state(DeviceReloadState& state) const 
+{
+    printf("WiiExtension::save_state\r\n");
+    state.wii_mFound = mFound;
+    state.wii_mType = mType;
+    state.wii_hiRes = hiRes;
+    state.wii_packetIssueCount = packetIssueCount;
+    state.wii_mBufferIndex = mBufferIndex;
+    state.wii_lastTick = lastTick;
+    state.wii_wiiBytes = wiiBytes;
+    state.wii_wiiPointer = wiiPointer;
+    state.wii_s_box = s_box;
+    state.wii_m_block = m_block;
+    state.wii_status = status;
 }
 WiiExtension::~WiiExtension()
 {

@@ -44,9 +44,11 @@ namespace
     }
 }
 
-bool ConfigStorage::read_cached(ConfigImage &image) const
+bool ConfigStorage::read_flash(ConfigImage &image, bool cached) const
 {
-    const uint8_t *start = reinterpret_cast<const uint8_t *>(EEPROM.writeCache);
+    const uint8_t *start = cached
+                               ? reinterpret_cast<const uint8_t *>(EEPROM.writeCache)
+                               : reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START);
     return read_image(start + EEPROM_SIZE_BYTES, image);
 }
 
@@ -62,12 +64,6 @@ bool ConfigStorage::initialize_empty() const
     footer->currentProfile = 0;
     EEPROM.commit();
     return true;
-}
-
-bool ConfigStorage::read_flash(ConfigImage &image) const
-{
-    const uint8_t *start = reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START);
-    return read_image(start + EEPROM_SIZE_BYTES, image);
 }
 
 ConfigMetadata ConfigStorage::read_metadata(bool cached) const

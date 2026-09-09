@@ -34,8 +34,7 @@ public:
     };
 
     bool initialize_empty() const;
-    bool read_cached(ConfigImage &image) const;
-    bool read_flash(ConfigImage &image) const;
+    bool read_flash(ConfigImage &image, bool cached) const;
     void commit_after_write();
     ConfigMetadata read_metadata(bool cached) const;
     bool write_info(const uint8_t *buffer, uint16_t bufsize) const;

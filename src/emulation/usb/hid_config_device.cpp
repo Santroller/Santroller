@@ -507,7 +507,7 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
   {
     buffer[0] = report_id;
     buffer++;
-    uint32_t ret = copy_config(buffer, start);
+    uint32_t ret = copy_config(buffer, start, cached);
     start += ret;
     return ret + 1;
   }
@@ -535,10 +535,17 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
     return 64;
   }
   case ReportId::ReportIdConfigInfo:
+    cached = true;
     buffer[0] = report_id;
     buffer++;
     start = 0;
-    return copy_config_info(buffer) + 1;
+    return copy_config_info(buffer, cached) + 1;
+  case ReportId::ReportIdConfigInfoSaved:
+    cached = false;
+    buffer[0] = report_id;
+    buffer++;
+    start = 0;
+    return copy_config_info(buffer, cached) + 1;
   }
   return 0;
 }

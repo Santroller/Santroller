@@ -81,6 +81,7 @@ private:
   uint32_t detect_done = 0;
   uint32_t lastKeepAlive = 0;
   bool debug_enabled = false;
+  bool cached = false;
   uint32_t start = 0;
   uint32_t selected_profile = 0;
   uint32_t selected_instance = 0;

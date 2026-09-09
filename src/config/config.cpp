@@ -670,9 +670,9 @@ bool encode_auxiliary(uint8_t *buffer, uint32_t capacity, uint32_t &written, voi
     return true;
 }
 
-uint32_t copy_config_info(uint8_t *buffer)
+uint32_t copy_config_info(uint8_t *buffer, bool cached)
 {
-    ConfigMetadata metadata = config_storage.read_metadata(true);
+    ConfigMetadata metadata = config_storage.read_metadata(cached);
     proto_ConfigInfo info proto_ConfigInfo_init_zero;
     info.dataCrc = metadata.data_crc;
     info.dataSize = metadata.data_size;
@@ -749,10 +749,10 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     return true;
 }
 
-uint32_t copy_config(uint8_t *buffer, uint32_t start)
+uint32_t copy_config(uint8_t *buffer, uint32_t start, bool cached)
 {
     ConfigImage image;
-    if (!config_storage.read_cached(image))
+    if (!config_storage.read_flash(image, cached))
     {
         return 0;
     }
@@ -764,7 +764,7 @@ uint32_t copy_config(uint8_t *buffer, uint32_t start)
 bool load()
 {
     ConfigImage image;
-    if (!config_storage.read_cached(image))
+    if (!config_storage.read_flash(image, true))
     {
         return false;
     }

@@ -672,7 +672,7 @@ bool encode_auxiliary(uint8_t *buffer, uint32_t capacity, uint32_t &written, voi
 
 uint32_t copy_config_info(uint8_t *buffer)
 {
-    ConfigMetadata metadata = config_storage.read_metadata(false);
+    ConfigMetadata metadata = config_storage.read_metadata(true);
     proto_ConfigInfo info proto_ConfigInfo_init_zero;
     info.dataCrc = metadata.data_crc;
     info.dataSize = metadata.data_size;
@@ -752,7 +752,7 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
 uint32_t copy_config(uint8_t *buffer, uint32_t start)
 {
     ConfigImage image;
-    if (!config_storage.read_flash(image))
+    if (!config_storage.read_cached(image))
     {
         return 0;
     }

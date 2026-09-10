@@ -52,7 +52,7 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
             return;
         }
     }
-    if (stop_detected)
+    if (stop_detected && !abort_detected)
     {
         if (!abort_detected)
         {
@@ -354,7 +354,7 @@ void WiiExtension::begin()
 }
 void WiiExtension::load_state(const DeviceReloadState *state)
 {
-    printf("WiiExtension::load_state\r\n");
+    printf("WiiExtension::load_state %d\r\n", state->wii_status);
     // load state from previous instance
     mFound = state->wii_mFound;
     mType = state->wii_mType;

@@ -400,6 +400,13 @@ void I2CMasterInterface::dmaDeinit(uint8_t addr)
         i2c_dma->stop_detected = false;
         i2c_dma->abort_detected = false;
         i2c_dma->event_pending = false;
+        i2c_dma->running = false;
+        i2c_dma->processing = false;
+        i2c_dma->timeout = false;
+        i2c_dma->next_transfer_addr = 0;
+        i2c_dma->hasWaitingTransfer[addr] = false;
+        i2c_dma->waitingTransfers[addr] = {};
+
     }
 }
 void I2CMasterInterface::dmaWriteRead(uint8_t addr,

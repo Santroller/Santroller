@@ -348,6 +348,7 @@ WiiExtension::WiiExtension(MidiDevice *midiDevice, uint8_t block, uint8_t sda, u
 void WiiExtension::begin()
 {
     printf("WiiExtension::begin\r\n");
+    memset(bufferRx, 0, sizeof(bufferRx));
     mInterface.dmaInit(WII_ADDR, this);
     process_data(WII_ADDR, false, false, false, false);
 }

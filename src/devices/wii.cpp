@@ -18,6 +18,7 @@ WiiDevice::WiiDevice(const DeviceReloadState* state, proto_WiiDevice device, uin
 void WiiDevice::save_reload_state(DeviceReloadState& state) const
 {
     MidiDevice::save_reload_state(state);
+    m_extension.save_state(state);
     state.wii_extension = m_lastExtType;
     state.last_value = m_last_value;
 }

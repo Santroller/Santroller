@@ -54,10 +54,7 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
     }
     if (stop_detected && !abort_detected)
     {
-        if (!abort_detected)
-        {
-            failCount = 0;
-        }
+        failCount = 0;
         switch (status)
         {
         case WII_INIT_FINISH_ENC:
@@ -252,7 +249,7 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
         break;
     case WII_INIT_READ_ID_WRITE_PTR:
         bufferTx[0] = WII_READ_ID;
-        mInterface.dmaWriteRead(WII_ADDR, bufferTx, 2, nullptr, 0);
+        mInterface.dmaWriteRead(WII_ADDR, bufferTx, 1, nullptr, 0);
         break;
     case WII_INIT_READ_ID_READ:
         mInterface.dmaWriteRead(WII_ADDR, nullptr, 0, bufferRx, WII_ID_LEN);
@@ -279,14 +276,14 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
         break;
     case WII_INIT_CLASSIC_READ_ID_WRITE_PTR:
         bufferTx[0] = WII_READ_ID;
-        mInterface.dmaWriteRead(WII_ADDR, bufferTx, 2, nullptr, 0);
+        mInterface.dmaWriteRead(WII_ADDR, bufferTx, 1, nullptr, 0);
         break;
     case WII_INIT_CLASSIC_READ_ID_READ:
         mInterface.dmaWriteRead(WII_ADDR, nullptr, 0, bufferRx, WII_ID_LEN);
         break;
     case WII_INIT_READ_DATA_WRITE_PTR:
         bufferTx[0] = wiiPointer;
-        mInterface.dmaWriteRead(WII_ADDR, bufferTx, 2, nullptr, 0);
+        mInterface.dmaWriteRead(WII_ADDR, bufferTx, 1, nullptr, 0);
         break;
     case WII_INIT_READ_DATA_READ:
         mInterface.dmaWriteRead(WII_ADDR, nullptr, 0, bufferRx, wiiBytes);
@@ -313,14 +310,14 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
         break;
     case WII_INIT_ENC_READ_ID_WRITE_PTR:
         bufferTx[0] = WII_READ_ID;
-        mInterface.dmaWriteRead(WII_ADDR, bufferTx, 2, nullptr, 0);
+        mInterface.dmaWriteRead(WII_ADDR, bufferTx, 1, nullptr, 0);
         break;
     case WII_INIT_ENC_READ_ID_READ:
         mInterface.dmaWriteRead(WII_ADDR, nullptr, 0, bufferRx, WII_ID_LEN);
         break;
     case WII_INPUTS_WRITE_PTR:
         bufferTx[0] = wiiPointer;
-        mInterface.dmaWriteRead(WII_ADDR, bufferTx, 2, nullptr, 0);
+        mInterface.dmaWriteRead(WII_ADDR, bufferTx, 1, nullptr, 0);
         break;
     case WII_INPUTS_READ:
         mInterface.dmaWriteRead(WII_ADDR, nullptr, 0, bufferRx, wiiBytes);
@@ -368,7 +365,7 @@ void WiiExtension::load_state(const DeviceReloadState *state)
     m_block = state->wii_m_block;
     status = state->wii_status;
 }
-void WiiExtension::save_state(DeviceReloadState& state) const 
+void WiiExtension::save_state(DeviceReloadState &state) const
 {
     printf("WiiExtension::save_state\r\n");
     state.wii_mFound = mFound;

@@ -48,7 +48,6 @@ typedef struct i2c_dma_s
     volatile bool timeout;
     volatile bool running;
     volatile bool processing;
-    volatile bool event_pending;
     alarm_id_t timeout_alarm_id;
 
     uint16_t data_cmds[I2C_MAX_TRANSFER_SIZE];

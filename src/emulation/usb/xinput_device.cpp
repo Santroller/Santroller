@@ -35,7 +35,6 @@ static const uint8_t xbox_players[] = {
 };
 XInputGamepadDevice::XInputGamepadDevice()
 {
-    lastIntf = 0;
     memset(xinputInterfaces, 0xFF, sizeof(xinputInterfaces));
     for (const auto &profile : profiles)
     {
@@ -355,6 +354,7 @@ size_t XInputGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t 
 
 size_t XInputGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
+    lastIntf = 0;
     uint8_t desc[] = {TUD_XINPUT_GAMEPAD_DESCRIPTOR(interface_id, m_epin, m_epout, get_xinput_subtype(subtype))};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));

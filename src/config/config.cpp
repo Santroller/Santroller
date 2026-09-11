@@ -197,6 +197,8 @@ bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **a
 {
     auto *context = static_cast<ConfigDecodeContext *>(*arg);
     proto_Input input;
+    input.cb_input.funcs.decode = &load_input_dev;
+    input.cb_input.arg = *arg;
     if (!pb_decode(stream, proto_Input_fields, &input))
     {
         // printf("couldnt decode shortcut input?\r\n");

@@ -317,16 +317,15 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     // On an actual 360, the console always uses wIndex 0x00. This is the security interface so redirect the request to the right place
     if (wIndex == 0x00 && request->wValue == INPUT_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
     {
-      wIndex = XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntf];
-      if (wIndex == 0xFF)
-      {
-        XInputGamepadDevice::lastIntf = 0;
-        wIndex = XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntf];
-      }
+      wIndex = XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntfInput];
       // caps read, on to the next set for the next read
       if (stage == CONTROL_STAGE_ACK)
       {
-        XInputGamepadDevice::lastIntf++;
+        XInputGamepadDevice::lastIntfInput++;
+        if (XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntfInput] == 0xFF || XInputGamepadDevice::lastIntfInput >= TU_ARRAY_SIZE(XInputGamepadDevice::xinputInterfaces))
+        {
+          XInputGamepadDevice::lastIntfInput = 0;
+        }
       }
     }
     if (wIndex == 0x00 && request->wValue == VIBRATION_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)

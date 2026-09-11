@@ -354,7 +354,7 @@ size_t XInputGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t 
 
 size_t XInputGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-    lastIntf = 0;
+    lastIntfInput = 0;
     uint8_t desc[] = {TUD_XINPUT_GAMEPAD_DESCRIPTOR(interface_id, m_epin, m_epout, get_xinput_subtype(subtype))};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
@@ -558,4 +558,4 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
 }
 
 uint8_t XInputGamepadDevice::xinputInterfaces[] = {};
-uint8_t XInputGamepadDevice::lastIntf = 0;
+uint8_t XInputGamepadDevice::lastIntfInput = 0;

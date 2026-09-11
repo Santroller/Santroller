@@ -1018,21 +1018,21 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
     XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)buf;
     if (m_profile->drum_state.yellow_cymbal && !m_profile->drum_state.yellow_pad)
     {
-        report->yellowVelocity = -((m_profile->drum_state.yellow_cymbal >> 1) - 32768);
+        report->yellowVelocity = -(32768 - (m_profile->drum_state.yellow_cymbal >> 1));
         report->y = true;
         report->cymbalFlag = true;
         report->dpadUp = true;
     }
     if (m_profile->drum_state.yellow_pad && !m_profile->drum_state.yellow_cymbal)
     {
-        report->yellowVelocity = -((m_profile->drum_state.yellow_pad >> 1) - 32768);
+        report->yellowVelocity = -(32768 - (m_profile->drum_state.yellow_pad >> 1));
         report->y = true;
         report->padFlag = true;
     }
     if (m_profile->drum_state.yellow_pad && m_profile->drum_state.yellow_cymbal && !m_profile->drum_state.red_pad)
     {
-        report->redVelocity = (m_profile->drum_state.yellow_cymbal >> 1) - 32768;
-        report->yellowVelocity = -((m_profile->drum_state.yellow_cymbal >> 1) - 32768);
+        report->redVelocity = (32768 - (m_profile->drum_state.yellow_cymbal >> 1));
+        report->yellowVelocity = -(32768 - (m_profile->drum_state.yellow_cymbal >> 1));
         report->y = true;
         report->padFlag = true;
         report->cymbalFlag = true;
@@ -1040,21 +1040,21 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
     }
     if (m_profile->drum_state.blue_cymbal && !m_profile->drum_state.blue_pad)
     {
-        report->blueVelocity = (m_profile->drum_state.blue_cymbal >> 1) - 32768;
+        report->blueVelocity = (32768 - (m_profile->drum_state.blue_cymbal >> 1));
         report->x = true;
         report->cymbalFlag = true;
         report->dpadDown = true;
     }
     if (m_profile->drum_state.blue_pad && !m_profile->drum_state.blue_cymbal)
     {
-        report->blueVelocity = (m_profile->drum_state.blue_pad >> 1) - 32768;
+        report->blueVelocity = (32768 - (m_profile->drum_state.blue_pad >> 1));
         report->x = true;
         report->padFlag = true;
     }
     if (m_profile->drum_state.blue_pad && m_profile->drum_state.blue_cymbal && !m_profile->drum_state.red_pad)
     {
-        report->redVelocity = (m_profile->drum_state.blue_cymbal >> 1) - 32768;
-        report->blueVelocity = (m_profile->drum_state.blue_pad >> 1) - 32768;
+        report->redVelocity = (32768 - (m_profile->drum_state.blue_cymbal >> 1));
+        report->blueVelocity = (32768 - (m_profile->drum_state.blue_pad >> 1));
         report->x = true;
         report->padFlag = true;
         report->cymbalFlag = true;
@@ -1062,27 +1062,27 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
     }
     if (m_profile->drum_state.green_cymbal && !m_profile->drum_state.green_pad)
     {
-        report->greenVelocity = -((m_profile->drum_state.green_cymbal >> 1) - 32768);
+        report->greenVelocity = -(32768 - (m_profile->drum_state.green_cymbal >> 1));
         report->a = true;
         report->cymbalFlag = true;
     }
     if (m_profile->drum_state.green_pad && !m_profile->drum_state.green_cymbal)
     {
-        report->greenVelocity = -((m_profile->drum_state.green_pad >> 1) - 32768);
+        report->greenVelocity = -(32768 - (m_profile->drum_state.green_pad >> 1));
         report->a = true;
         report->padFlag = true;
     }
     if (m_profile->drum_state.green_pad && m_profile->drum_state.green_cymbal && !m_profile->drum_state.red_pad)
     {
-        report->redVelocity = (m_profile->drum_state.green_cymbal >> 1) - 32768;
-        report->greenVelocity = -((m_profile->drum_state.green_pad >> 1) - 32768);
+        report->redVelocity = (32768 - (m_profile->drum_state.green_cymbal >> 1));
+        report->greenVelocity = -(32768 - (m_profile->drum_state.green_pad >> 1));
         report->a = true;
         report->padFlag = true;
         report->cymbalFlag = true;
     }
     if (m_profile->drum_state.red_pad)
     {
-        report->redVelocity = (m_profile->drum_state.red_pad >> 1) - 32768;
+        report->redVelocity = (32768 - (m_profile->drum_state.red_pad >> 1));
         report->b = true;
         report->padFlag = true;
     }

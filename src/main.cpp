@@ -95,7 +95,7 @@ public:
             return;
         }
         size_t packets_sent = 0;
-        while (packets_sent < max_packets_per_flush && !ring_buffer_is_empty(&m_buffer) && can_send())
+        while (packets_sent < max_packets_per_flush && !ring_buffer_is_empty_unsafe(&m_buffer) && can_send())
         {
             tu_memclr(m_event.event.console.data, sizeof(m_event.event.console.data));
             ring_buffer_pop(&m_buffer, m_event.event.console.data, sizeof(m_event.event.console.data) - 1);

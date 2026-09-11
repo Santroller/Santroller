@@ -568,25 +568,17 @@ bool HIDConfigDevice::send_event(proto_Event event, bool now)
     return false;
   }
   dev->processing = true;
-  // flush queue if overflowing or event is important
-  while ((dev->list.event_count >= TU_ARRAY_SIZE(dev->list.event) || (dev->list.event_count && now)) && !tool_closed())
+  // flush queue if event is important
+  while (((dev->list.event_count && now)) && !tool_closed())
   {
     dev->process_events();
     tud_task();
   }
-  // tool_closed() can flip true mid-loop above (it depends on the processing flag we just
-  // set), leaving the queue still full - drop the event instead of writing past the array
   bool sent = false;
   if (dev->list.event_count < TU_ARRAY_SIZE(dev->list.event))
   {
     dev->list.event[dev->list.event_count++] = event;
     sent = true;
-  }
-  // flush queue if event is important
-  while (now && dev->list.event_count && !tool_closed())
-  {
-    dev->process_events();
-    tud_task();
   }
   dev->lastKeepAlive = millis();
   dev->processing = false;

@@ -39,18 +39,6 @@ inline void process_dma(i2c_dma_t *i2c_dma)
     i2c_dma->abort_detected = false;
     i2c_dma->stop_detected = false;
 
-    for (size_t offset = 0; offset < I2C_MAX_ADDR; offset++)
-    {
-        size_t i = (i2c_dma->next_transfer_addr + offset) % I2C_MAX_ADDR;
-        if (i2c_dma->hasWaitingTransfer[i])
-        {
-            i2c_dma->hasWaitingTransfer[i] = false;
-            auto &transfer = i2c_dma->waitingTransfers[i];
-            i2c_dma->next_transfer_addr = (i + 1) % I2C_MAX_ADDR;
-            i2c_dma_write_read_internal(i2c_dma, transfer.addr, transfer.wbuf, transfer.wbuf_len, transfer.rbuf, transfer.rbuf_len);
-            return;
-        }
-    }
     i2c_dma->processing = false;
 }
 
@@ -300,6 +288,19 @@ void I2CMasterInterface::tick()
     {
         return;
     }
+    for (size_t offset = 0; offset < I2C_MAX_ADDR; offset++)
+    {
+        size_t i = (i2c_dma->next_transfer_addr + offset) % I2C_MAX_ADDR;
+        if (i2c_dma->hasWaitingTransfer[i])
+        {
+            i2c_dma->hasWaitingTransfer[i] = false;
+            auto &transfer = i2c_dma->waitingTransfers[i];
+            i2c_dma->next_transfer_addr = (i + 1) % I2C_MAX_ADDR;
+            i2c_dma_write_read_internal(i2c_dma, transfer.addr, transfer.wbuf, transfer.wbuf_len, transfer.rbuf, transfer.rbuf_len);
+            return;
+        }
+    }
+    
 }
 
 void I2CMasterInterface::dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface)
@@ -416,11 +417,6 @@ void I2CMasterInterface::dmaWriteRead(uint8_t addr,
     // else
     // {
     // printf("dmaWriteRead waiting %02x %d %d %d\r\n", addr, wbuf_len, rbuf_len, i2c_dma->device_count);
-    if (!i2c_dma->running && !i2c_dma->processing)
-    {
-        i2c_dma_write_read_internal(i2c_dma, addr, wbuf, wbuf_len, rbuf, rbuf_len);
-        return;
-    } 
     i2c_dma->waitingTransfers[addr].addr = addr;
     i2c_dma->waitingTransfers[addr].wbuf_len = wbuf_len;
     i2c_dma->waitingTransfers[addr].rbuf_len = rbuf_len;

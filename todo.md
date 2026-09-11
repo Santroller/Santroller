@@ -1,8 +1,5 @@
 # Things to work on
 
-## Tool features
-- [ ] Add an assignment for when the controller times out / goes to sleep, then people can choose what leds stay on
-
 ## Firmware features
 - [ ] bluetooth timeout
 - [ ] input to put controller to sleep
@@ -11,9 +8,6 @@
 - [ ] When a bt receivers USB is suspended, we should give users the option to suspend BT itself as well.
 
 ## Emulation
-- [ ] Emulation of PS2 controllers
-- [ ] Emulation of Wii extensions
-- [ ] Emulation of Wii remotes
 - [ ] Emulation of N64 controllers
 - [ ] Emulation of gamecube controllers
 - [ ] Emulation of SNES controllers
@@ -23,7 +17,6 @@
 - [ ] Emulation of fight sticks
 - [ ] Emulation of flight sticks
 - [ ] Emulation of wheels
-- [ ] Emulation of keyboard / mouse
 - [ ] Emulation of microphones
 - [ ] Emulation of GCN adapters
 
@@ -37,7 +30,6 @@
 - [ ] Inputs from switch controllers over usb host
 
 ## Mapping features
-- [ ] Defaults for inputs, such as loading all the wii extension inputs for you with one click
 - [ ] Defaults for outputs, like clicking a button that gives you all the keyboard inputs youd need for festival
 - [ ] Reverse debounce - https://github.com/Santroller/Santroller/issues/101
 - [ ] Copy profiles
@@ -64,4 +56,6 @@
 
 
 ## UI
-Assignments are complicated. we need to make them more obvious. it feels like theres a solution here where the ui tells you what you need to configure instead of it just having a bunch of add buttons
+- [ ] When you add a new profile, make it so that you are dropped in a new profile ui that asks you what devices you want so it can set up a sane assignment + the default mappings ( as an option ), do give people a button to skip if they want to do everything themselves though
+- [ ] Make it so you can have multiple sources on a single assignment without advanced mode
+- [ ] Make it so that things like console mode bindings are more obvious too

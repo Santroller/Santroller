@@ -574,6 +574,34 @@ bool HIDConfigDevice::send_event(proto_Event event, bool now)
     dev->process_events();
     tud_task();
   }
+  // Check if the event is an axis event and update the existing event in the list if it exists.
+  if (event.which_event == proto_Event_axis_tag) {
+    for (size_t i = 0; i < dev->list.event_count; i++)
+    {
+      if (dev->list.event[i].which_event == proto_Event_axis_tag)
+      {
+        if (dev->list.event[i].event.axis.id == event.event.axis.id)
+        {
+          dev->list.event[i] = event;
+          return true;
+        }
+      }
+    }
+  }
+  // Check if the event is a button event and update the existing event in the list if it exists.
+  if (event.which_event == proto_Event_button_tag) {
+    for (size_t i = 0; i < dev->list.event_count; i++)
+    {
+      if (dev->list.event[i].which_event == proto_Event_button_tag)
+      {
+        if (dev->list.event[i].event.button.id == event.event.button.id)
+        {
+          dev->list.event[i] = event;
+          return true;
+        }
+      }
+    }
+  }
   bool sent = false;
   if (dev->list.event_count < TU_ARRAY_SIZE(dev->list.event))
   {

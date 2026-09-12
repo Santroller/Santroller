@@ -38,4 +38,5 @@ private:
     alarm_id_t restart_alarm_id;
     int failCount = 0;
     uint8_t numPackets;
+    uint32_t lastPoll = 0;
 };

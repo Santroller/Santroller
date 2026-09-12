@@ -54,11 +54,14 @@ void Accelerometer::end()
 void Accelerometer::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     // printf("process_data %02x %d %d %d %d %d\r\n", addr, status, running, timeout, abort_detected, stop_detected);
+    
     // If we have started init, ignore i2c data from the other accelerometers
     if (status != ACCEL_INIT && addr && addr != address)
     {
         return;
     }
+    lastPoll = to_ms_since_boot(get_absolute_time());
+    // printf("%d %d %d %d", status, timeout, abort_detected, stop_detected);
     cancel_alarm(restart_alarm_id);
     if (timeout || abort_detected)
     {
@@ -71,6 +74,16 @@ void Accelerometer::process_data(uint8_t addr, bool running, bool timeout, bool 
         {
             status = ACCEL_INIT;
             type = AccelerometerType::None;
+            if (failCount > 10)
+            {
+                seen_response_lis3dh_1 = true;
+                seen_response_lis3dh_2 = true;
+                seen_response_mpu6050_1 = true;
+                seen_response_mpu6050_2 = true;
+                seen_response_adxl345_1 = true;
+                seen_response_adxl345_2 = true;
+                failCount = 0;
+            }
         }
         restart_alarm_id = add_alarm_in_ms(500, restart_handler, this, true);
         return;
@@ -119,9 +132,9 @@ void Accelerometer::process_data(uint8_t addr, bool running, bool timeout, bool 
                 lis3dhAdc[0] = bufferRx[1] << 8 | bufferRx[0];
                 lis3dhAdc[1] = bufferRx[3] << 8 | bufferRx[2];
                 lis3dhAdc[2] = bufferRx[5] << 8 | bufferRx[4];
-                restart_alarm_id = schedule_poll(this);
                 status = LIS3DH_POLL;
                 pollReg = LIS3DH_REG_OUT;
+                restart_alarm_id = schedule_poll(this);
                 break;
             case ACCEL_INIT:
                 switch (addr)
@@ -273,7 +286,7 @@ void Accelerometer::process_data(uint8_t addr, bool running, bool timeout, bool 
             }
         }
         // If we dont see any sensors, wait a bit before looking again
-        if (!abort_detected && status == ACCEL_INIT && seen_response_lis3dh_1 && seen_response_lis3dh_2 && seen_response_adxl345_1 && seen_response_adxl345_2 && seen_response_mpu6050_1 && seen_response_mpu6050_2)
+        if (status == ACCEL_INIT && seen_response_lis3dh_1 && seen_response_lis3dh_2 && seen_response_adxl345_1 && seen_response_adxl345_2 && seen_response_mpu6050_1 && seen_response_mpu6050_2)
         {
             restart_alarm_id = schedule_poll(this);
         }
@@ -307,6 +320,8 @@ void Accelerometer::process_data(uint8_t addr, bool running, bool timeout, bool 
         }
         break;
     default:
+        status = ACCEL_INIT;
+        restart_alarm_id = schedule_poll(this);
         break;
     }
 }
@@ -314,4 +329,8 @@ void Accelerometer::process_data(uint8_t addr, bool running, bool timeout, bool 
 void Accelerometer::tick()
 {
     interface.tick();
+    if (lastPoll && to_ms_since_boot(get_absolute_time()) - lastPoll > 500)
+    {
+        process_data(address, false, false, false, false);
+    }
 }

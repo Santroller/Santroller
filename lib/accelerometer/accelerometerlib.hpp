@@ -105,6 +105,7 @@ private:
     uint8_t idResponseMpu1;
     uint8_t idResponseMpu2;
     uint8_t pollReg = 0;
+    uint32_t lastPoll = 0;
     bool seen_response_lis3dh_1 = true;
     bool seen_response_lis3dh_2 = true;
     bool seen_response_adxl345_1 = true;

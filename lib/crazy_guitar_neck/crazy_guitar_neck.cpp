@@ -12,13 +12,17 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 void CrazyGuitarNeck::tick()
 {
     interface.tick();
+    if (lastPoll && to_ms_since_boot(get_absolute_time()) - lastPoll > 500)
+    {
+        process_data(CLONE_ADDR, false, false, false, false);
+    }
 };
 
 void CrazyGuitarNeck::begin()
 {
     interface.dmaInit(CLONE_ADDR, this);
     status = CLONE_NECK_CHECK_STATUS;
-    process_data(0, false, false, false, false);
+    process_data(CLONE_ADDR, false, false, false, false);
 }
 void CrazyGuitarNeck::end()
 {
@@ -27,6 +31,7 @@ void CrazyGuitarNeck::end()
 }
 void CrazyGuitarNeck::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
+    lastPoll = to_ms_since_boot(get_absolute_time());
     cancel_alarm(restart_alarm_id);
     if (timeout || abort_detected)
     {

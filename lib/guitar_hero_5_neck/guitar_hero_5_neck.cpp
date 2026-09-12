@@ -14,13 +14,17 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 void GuitarHero5Neck::tick()
 {
     interface.tick();
+    if (lastPoll && to_ms_since_boot(get_absolute_time()) - lastPoll > 500)
+    {
+        process_data(GH5NECK_ADDR, false, false, false, false);
+    }
 };
 
 void GuitarHero5Neck::begin()
 {
     interface.dmaInit(GH5NECK_ADDR, this);
     status = GH5_NECK_CHECK_STATUS;
-    process_data(0, false, false, false, false);
+    process_data(GH5NECK_ADDR, false, false, false, false);
 }
 void GuitarHero5Neck::end()
 {
@@ -29,6 +33,7 @@ void GuitarHero5Neck::end()
 }
 void GuitarHero5Neck::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
+    lastPoll = to_ms_since_boot(get_absolute_time());
     cancel_alarm(restart_alarm_id);
     if (timeout || abort_detected)
     {

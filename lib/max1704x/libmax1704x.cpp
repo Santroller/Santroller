@@ -16,12 +16,16 @@ bool Max1704X::init()
 void Max1704X::tick()
 {
     interface.tick();
+    if (lastPoll && to_ms_since_boot(get_absolute_time()) - lastPoll > 500)
+    {
+        process_data(MAX710X_I2C_ADDRESS, false, false, false, false);
+    }
 }
 void Max1704X::begin()
 {
     interface.dmaInit(MAX710X_I2C_ADDRESS, this);
     status = MAX710X_RESET;
-    process_data(0, false, false, false, false);
+    process_data(MAX710X_I2C_ADDRESS, false, false, false, false);
 }
 void Max1704X::end()
 {
@@ -30,6 +34,7 @@ void Max1704X::end()
 }
 void Max1704X::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
+    lastPoll = to_ms_since_boot(get_absolute_time());
     cancel_alarm(restart_alarm_id);
     if (timeout || abort_detected)
     {

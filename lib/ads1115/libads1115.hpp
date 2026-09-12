@@ -116,5 +116,6 @@ private:
     uint8_t bufferRxInit[4];
     bool seen[4];
     volatile bool m_ready = false;
+    uint32_t lastPoll = 0;
     // uint8_t config[2];
 };

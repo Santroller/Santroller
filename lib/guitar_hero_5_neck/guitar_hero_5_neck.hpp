@@ -41,4 +41,5 @@ private:
     uint8_t bufferRx[32];
     alarm_id_t restart_alarm_id;
     int failCount = 0;
+    uint32_t lastPoll = 0;
 };

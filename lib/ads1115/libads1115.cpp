@@ -18,6 +18,7 @@ void ADS1115::process_data(uint8_t addr, bool running, bool timeout, bool abort_
     {
         return;
     }
+    lastPoll = to_ms_since_boot(get_absolute_time());
     cancel_alarm(restart_alarm_id);
     if (timeout || abort_detected)
     {
@@ -29,6 +30,11 @@ void ADS1115::process_data(uint8_t addr, bool running, bool timeout, bool abort_
         if (failCount > 10 || status == ADS1115_INIT)
         {
             status = ADS1115_INIT;
+            if (failCount > 10)
+            {
+                memset(seen, true, sizeof(seen));
+                failCount = 0;
+            }
         }
         restart_alarm_id = add_alarm_in_ms(500, restart_handler, this, true);
         return;
@@ -125,7 +131,9 @@ void ADS1115::process_data(uint8_t addr, bool running, bool timeout, bool abort_
         }
         break;
     default:
-        printf("unknown status: %d\r\n", status);
+        status = ADS1115_INIT;
+        memset(seen, true, sizeof(seen));
+        restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
         break;
     }
 }
@@ -198,4 +206,8 @@ void ADS1115::tick()
         process_data(0, false, false, false, false);
     }
     interface.tick();
+    if (lastPoll && to_ms_since_boot(get_absolute_time()) - lastPoll > 500)
+    {
+        process_data(address, false, false, false, false);
+    }
 }

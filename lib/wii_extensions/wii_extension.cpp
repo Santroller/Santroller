@@ -37,6 +37,7 @@ bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
 // state machine to handle polling wii extensions
 void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
+    lastPoll = to_ms_since_boot(get_absolute_time());
     if (timeout || abort_detected)
     {
         if (status != WII_INIT_FINISH_ENC)
@@ -399,6 +400,10 @@ void WiiExtension::setEuphoriaLed(bool state)
 void WiiExtension::tick()
 {
     mInterface.tick();
+    if (lastPoll && to_ms_since_boot(get_absolute_time()) - lastPoll > 500)
+    {
+        process_data(WII_ADDR, false, false, false, false);
+    }
 }
 
 uint16_t atanAxis(uint16_t y, uint16_t x)

@@ -12,6 +12,10 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 void DJHeroTurntable::tick()
 {
     interface.tick();
+    if (lastPoll && to_ms_since_boot(get_absolute_time()) - lastPoll > 500)
+    {
+        process_data(address, false, false, false, false);
+    }
 }
 void DJHeroTurntable::begin() {
     interface.dmaInit(address, this);
@@ -24,6 +28,7 @@ void DJHeroTurntable::end() {
 }
 void DJHeroTurntable::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
+    lastPoll = to_ms_since_boot(get_absolute_time());
     cancel_alarm(restart_alarm_id);
     if (timeout || abort_detected)
     {

@@ -49,6 +49,7 @@ private:
     uint8_t packetIssueCount;
     uint8_t mBufferIndex;
     long lastTick;
+    uint32_t lastPoll = 0;
     uint8_t wiiBytes;
     uint8_t wiiPointer = 0;
     uint8_t s_box = 0;

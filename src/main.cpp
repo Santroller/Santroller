@@ -84,7 +84,7 @@ public:
         {
             return;
         }
-        ring_buffer_push(&m_buffer, buf, len);
+        ring_buffer_push_unsafe(&m_buffer, buf, len);
     }
 
     void flush()
@@ -98,7 +98,7 @@ public:
         while (packets_sent < max_packets_per_flush && !ring_buffer_is_empty_unsafe(&m_buffer) && can_send())
         {
             tu_memclr(m_event.event.console.data, sizeof(m_event.event.console.data));
-            ring_buffer_pop(&m_buffer, m_event.event.console.data, sizeof(m_event.event.console.data) - 1);
+            ring_buffer_pop_unsafe(&m_buffer, m_event.event.console.data, sizeof(m_event.event.console.data) - 1);
             HIDConfigDevice::send_event(m_event, true);
             packets_sent++;
         }
@@ -242,7 +242,7 @@ void core1()
 
 int main()
  {
-    if (pfb_is_after_firmware_update())
+     if (pfb_is_after_firmware_update())
     {
         // handle new firmare info if needed
     }

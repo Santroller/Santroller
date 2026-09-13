@@ -67,6 +67,15 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
         );
     }
     else if (assignment_mask & ProfileAssignMask_AssignUsb) {
+        if (usb_mode == ModeXboxOne) {
+            auto existing_dev = profile_mgr.get_emulated_device(ModeXboxOne);
+            if (existing_dev) {
+                existing_dev->profiles.push_back(profile);
+                profile_mgr.register_instance(existing_dev, profile);
+                printf("Attaching profile to existing Xbox One instance, total profiles: %zu\n", existing_dev->profiles.size());
+                return existing_dev;
+            }
+        }
         instance = std::static_pointer_cast<Instance>(
             create_usb_instance(usb_mode, profile->subtype));
     }

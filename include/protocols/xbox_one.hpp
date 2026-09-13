@@ -397,3 +397,38 @@ typedef struct
     uint8_t delay;    // in deciseconds?
     uint8_t repeat;   // in deciseconds?
 } __attribute__((packed)) GipRumble_t;
+
+enum class GipLegacyWirelessDeviceType : uint8_t
+{
+    Guitar = 0x01,
+    Drums = 0x02,
+};
+
+typedef struct
+{
+    uint16_t buttons;
+    uint8_t user_index;
+    uint8_t device_type;
+    union
+    {
+        uint8_t guitar_data[10];
+        uint8_t drums_data[10];
+        uint8_t raw[10];
+    };
+} __attribute__((packed)) GipLegacyWirelessReport_t;
+
+typedef struct
+{
+    uint8_t user_index;
+    uint8_t device_type;
+    uint16_t vendor_id; // big-endian
+    uint8_t unk;        // 0x00
+    uint8_t xinput_subtype;
+    uint16_t name[7];   // wide string: L"guitar" or L"drums"
+} __attribute__((packed)) GipLegacyWirelessDeviceInfo_t;
+
+typedef struct
+{
+    uint8_t user_index;
+} __attribute__((packed)) GipLegacyWirelessDisconnect_t;
+

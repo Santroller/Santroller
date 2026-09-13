@@ -4,6 +4,7 @@
 #include "device/usbd.h"
 #include "devices/usb/host/xone_host.h"
 #include "device.hpp"
+#include "protocols/xbox_one.hpp"
 
 #ifndef CFG_TUD_XONE_EPSIZE
 #define CFG_TUD_XONE_EPSIZE 64
@@ -43,6 +44,7 @@ public:
     void send_report_from_controller(XGIPProtocol* report);
     uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
     void set_ack_wait();
+    bool is_legacy_adapter() const { return profiles.size() > 1; }
     uint8_t m_epin;
     uint8_t m_epout;
 
@@ -73,10 +75,22 @@ private:
     // Check report queue every 35 milliseconds
     uint32_t m_last_report_queue = 0;
 
-    static constexpr size_t REPORT_QUEUE_CAPACITY = 4;
+    static constexpr size_t REPORT_QUEUE_CAPACITY = 8;
     report_queue_t report_queue[REPORT_QUEUE_CAPACITY];
     uint8_t report_queue_head = 0;
     uint8_t report_queue_count = 0;
+
+    static constexpr size_t MAX_LEGACY_PLAYERS = 4;
+    uint8_t legacy_last_report[MAX_LEGACY_PLAYERS][14] = {};
+    uint8_t legacy_report_counter[MAX_LEGACY_PLAYERS] = {};
+    bool legacy_connected[MAX_LEGACY_PLAYERS] = {};
+    bool legacy_guide_pressed[MAX_LEGACY_PLAYERS] = {};
+    bool legacy_info_sent = false;
+    size_t legacy_poll_start_player = 0;
+
+    void send_legacy_device_info(uint8_t user_index, GipLegacyWirelessDeviceType dev_type);
+    void send_legacy_disconnection(uint8_t user_index);
+    void process_legacy_adapter(bool full_poll, bool send_events);
 
     XboxOneDriverState xboneDriverState = EMU_NOT_READY;
 };

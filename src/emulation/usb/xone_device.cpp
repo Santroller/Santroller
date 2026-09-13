@@ -23,6 +23,35 @@ static uint8_t xb1_keep_alive[] = {0x80, 0x00, 0x00, 0x00};
 // Check if Auth is completed (start is 0x01, 0x01, and invalid is 0x01, 0x07)
 const uint8_t authReady[] = {0x01, 0x00};
 
+static bool is_drum_subtype(SubType subtype)
+{
+    return subtype == GuitarHeroDrums || subtype == RockBandDrums || subtype == PowerGigDrum;
+}
+
+const uint8_t announce_legacy_adapter[] = {
+    0x7e, 0xed, 0x81, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x38, 0x07, 0x64, 0x41,
+    0x01, 0x00, 0x00, 0x00, 0x6f, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
+const uint8_t xb1_descriptor_legacy_adapter[] = {
+    0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x25, 0x01,
+    0xA1, 0x00, 0x16, 0x00, 0x1B, 0x00, 0x1C, 0x00, 0x23, 0x00, 0x29, 0x00, 0x70, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x06, 0x01, 0x02, 0x03,
+    0x04, 0x06, 0x07, 0x05, 0x01, 0x04, 0x05, 0x06, 0x0A, 0x02, 0x1B, 0x00, 0x4D, 0x61, 0x64, 0x43,
+    0x61, 0x74, 0x7A, 0x2E, 0x58, 0x62, 0x6F, 0x78, 0x2E, 0x4D, 0x6F, 0x64, 0x75, 0x6C, 0x65, 0x2E,
+    0x42, 0x72, 0x61, 0x6E, 0x67, 0x75, 0x73, 0x27, 0x00, 0x57, 0x69, 0x6E, 0x64, 0x6F, 0x77, 0x73,
+    0x2E, 0x58, 0x62, 0x6F, 0x78, 0x2E, 0x49, 0x6E, 0x70, 0x75, 0x74, 0x2E, 0x4E, 0x61, 0x76, 0x69,
+    0x67, 0x61, 0x74, 0x69, 0x6F, 0x6E, 0x43, 0x6F, 0x6E, 0x74, 0x72, 0x6F, 0x6C, 0x6C, 0x65, 0x72,
+    0x03, 0x0F, 0x9D, 0x25, 0xAF, 0xB0, 0x76, 0xDB, 0x4C, 0xBF, 0xD1, 0xCE, 0xA8, 0xC0, 0xA8, 0xF5,
+    0xEE, 0xE7, 0x1F, 0xF3, 0xB8, 0x86, 0x73, 0xE9, 0x40, 0xA9, 0xF8, 0x2F, 0x21, 0x26, 0x3A, 0xCF,
+    0xB7, 0x56, 0xFF, 0x76, 0x97, 0xFD, 0x9B, 0x81, 0x45, 0xAD, 0x45, 0xB6, 0x45, 0xBB, 0xA5, 0x26,
+    0xD6, 0x05, 0x17, 0x00, 0x20, 0x36, 0x00, 0x01, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17, 0x00, 0x21, 0x06, 0x00, 0x01, 0x00,
+    0x0C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x17, 0x00, 0x22, 0x02, 0x01, 0x01, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17, 0x00, 0x23, 0x05, 0x00, 0x01, 0x00, 0x14, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x17, 0x00,
+    0x24, 0x04, 0x00, 0x01, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00};
+
 const uint8_t announce_guitar[] = {
     0x7e, 0xed, 0x81, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x6f, 0x0e, 0x48, 0x02,
     0x01, 0x00, 0x00, 0x00, 0xe5, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
@@ -229,60 +258,68 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
 
             const uint8_t *xboxOneDescriptor = nullptr;
             uint16_t len = 0;
-            switch (subtype)
+            if (is_legacy_adapter())
             {
-            case KeyboardMouse:
-            case Gamepad:
-            case Dancepad:
-            case DjHeroTurntable:
-            case ProKeys:
-            case Taiko:
-            case StageKit:
-            case Wheel:
-            case FlightStick:
-            case FightStick:
-            case PopNMusic:
-            case DJMax:
-            case ProjectDiva:
-                xboxOneDescriptor = xb1_descriptor_gamepad;
-                len = sizeof(xb1_descriptor_gamepad);
-                break;
-            case GuitarHeroGuitar:
-            case RockBandGuitar:
-            case ProGuitarMustang:
-            case ProGuitarSquire:
-            case GuitarFreaks:
-            case PowerGigGuitar:
-            case RockRevolutionGuitar:
-                xboxOneDescriptor = xb1_descriptor_guitar;
-                len = sizeof(xb1_descriptor_guitar);
-                break;
-            case GuitarHeroDrums:
-            case RockBandDrums:
-            case PowerGigDrum:
-                xboxOneDescriptor = xb1_descriptor_drum;
-                len = sizeof(xb1_descriptor_drum);
-                break;
-            case LiveGuitar:
-                xboxOneDescriptor = xb1_descriptor_ghl;
-                len = sizeof(xb1_descriptor_ghl);
-                break;
-            case Skylanders:
-                xboxOneDescriptor = xb1_descriptor_skylanders;
-                len = sizeof(xb1_descriptor_skylanders);
-                break;
-            case DisneyInfinity:
-                xboxOneDescriptor = xb1_descriptor_infinity;
-                len = sizeof(xb1_descriptor_infinity);
-                break;
-            case LegoDimensions:
-                xboxOneDescriptor = xb1_descriptor_ld;
-                len = sizeof(xb1_descriptor_ld);
-                break;
-            default:
-                xboxOneDescriptor = xb1_descriptor_gamepad;
-                len = sizeof(xb1_descriptor_gamepad);
-                break;
+                xboxOneDescriptor = xb1_descriptor_legacy_adapter;
+                len = sizeof(xb1_descriptor_legacy_adapter);
+            }
+            else
+            {
+                switch (subtype)
+                {
+                case KeyboardMouse:
+                case Gamepad:
+                case Dancepad:
+                case DjHeroTurntable:
+                case ProKeys:
+                case Taiko:
+                case StageKit:
+                case Wheel:
+                case FlightStick:
+                case FightStick:
+                case PopNMusic:
+                case DJMax:
+                case ProjectDiva:
+                    xboxOneDescriptor = xb1_descriptor_gamepad;
+                    len = sizeof(xb1_descriptor_gamepad);
+                    break;
+                case GuitarHeroGuitar:
+                case RockBandGuitar:
+                case ProGuitarMustang:
+                case ProGuitarSquire:
+                case GuitarFreaks:
+                case PowerGigGuitar:
+                case RockRevolutionGuitar:
+                    xboxOneDescriptor = xb1_descriptor_guitar;
+                    len = sizeof(xb1_descriptor_guitar);
+                    break;
+                case GuitarHeroDrums:
+                case RockBandDrums:
+                case PowerGigDrum:
+                    xboxOneDescriptor = xb1_descriptor_drum;
+                    len = sizeof(xb1_descriptor_drum);
+                    break;
+                case LiveGuitar:
+                    xboxOneDescriptor = xb1_descriptor_ghl;
+                    len = sizeof(xb1_descriptor_ghl);
+                    break;
+                case Skylanders:
+                    xboxOneDescriptor = xb1_descriptor_skylanders;
+                    len = sizeof(xb1_descriptor_skylanders);
+                    break;
+                case DisneyInfinity:
+                    xboxOneDescriptor = xb1_descriptor_infinity;
+                    len = sizeof(xb1_descriptor_infinity);
+                    break;
+                case LegoDimensions:
+                    xboxOneDescriptor = xb1_descriptor_ld;
+                    len = sizeof(xb1_descriptor_ld);
+                    break;
+                default:
+                    xboxOneDescriptor = xb1_descriptor_gamepad;
+                    len = sizeof(xb1_descriptor_gamepad);
+                    break;
+                }
             }
             // setup descriptor packet
             outgoingXGIP.reset(); // reset if anything was in there
@@ -316,6 +353,8 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 outgoingXGIP.reset();
                 report_queue_head = 0;
                 report_queue_count = 0;
+                legacy_info_sent = false;
+                memset(legacy_last_report, 0, sizeof(legacy_last_report));
                 timer_wait_for_announce = to_ms_since_boot(get_absolute_time());
                 break;
             default:
@@ -345,6 +384,18 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             // Forward auth packet to registered host device via broker
             auth_broker.forward_auth(ModeXboxOne, &incomingXGIP);
             incomingXGIP.reset();
+        }
+        else if (command == GIP_LEGACY_REQUEST_DEVICE_INFO)
+        {
+            for (size_t i = 0; i < profiles.size() && i < MAX_LEGACY_PLAYERS; i++)
+            {
+                auto dev_type = is_drum_subtype(profiles[i]->subtype) ? GipLegacyWirelessDeviceType::Drums : GipLegacyWirelessDeviceType::Guitar;
+                send_legacy_device_info(i, dev_type);
+            }
+        }
+        else if (command == GIP_LEGACY_AUTO_CALIBRATE)
+        {
+            // Auto-calibration sensor command (Guitar Stratocaster)
         }
     }
 
@@ -482,58 +533,66 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
         if (now - timer_wait_for_announce > 500)
         {
             const uint8_t *announcePacket = nullptr;
-            switch (subtype)
+            if (is_legacy_adapter())
             {
+                announcePacket = announce_legacy_adapter;
+                input_report_length = sizeof(GipLegacyWirelessReport_t);
+            }
+            else
+            {
+                switch (subtype)
+                {
 
-            case KeyboardMouse:
-            case Gamepad:
-            case Dancepad:
-            case DjHeroTurntable:
-            case ProKeys:
-            case Taiko:
-            case StageKit:
-            case Wheel:
-            case FlightStick:
-            case FightStick:
-            case PopNMusic:
-            case DJMax:
-            case ProjectDiva:
-                announcePacket = announce_gamepad;
-                input_report_length = sizeof(XboxOneGamepad_Data_t);
-                break;
-            case GuitarHeroGuitar:
-            case RockBandGuitar:
-            case ProGuitarMustang:
-            case ProGuitarSquire:
-            case GuitarFreaks:
-            case PowerGigGuitar:
-            case RockRevolutionGuitar:
-                announcePacket = announce_guitar;
-                input_report_length = sizeof(XboxOneRockBandGuitar_Data_t);
-                break;
-            case GuitarHeroDrums:
-            case RockBandDrums:
-            case PowerGigDrum:
-                announcePacket = announce_drum;
-                input_report_length = sizeof(XboxOneRockBandDrums_Data_t);
-                break;
-            case LiveGuitar:
-                announcePacket = announce_ghl;
-                input_report_length = sizeof(XboxOneGHLGuitar_Data_t);
-                break;
-            case Skylanders:
-                announcePacket = announce_skylanders;
-                break;
-            case DisneyInfinity:
-                announcePacket = announce_infinity;
-                break;
-            case LegoDimensions:
-                announcePacket = announce_ld;
-                break;
-            default:
-                announcePacket = announce_gamepad;
-                input_report_length = sizeof(XboxOneGamepad_Data_t);
-                break;
+                case KeyboardMouse:
+                case Gamepad:
+                case Dancepad:
+                case DjHeroTurntable:
+                case ProKeys:
+                case Taiko:
+                case StageKit:
+                case Wheel:
+                case FlightStick:
+                case FightStick:
+                case PopNMusic:
+                case DJMax:
+                case ProjectDiva:
+                    announcePacket = announce_gamepad;
+                    input_report_length = sizeof(XboxOneGamepad_Data_t);
+                    break;
+                case GuitarHeroGuitar:
+                case RockBandGuitar:
+                case ProGuitarMustang:
+                case ProGuitarSquire:
+                case GuitarFreaks:
+                case PowerGigGuitar:
+                case RockRevolutionGuitar:
+                    announcePacket = announce_guitar;
+                    input_report_length = sizeof(XboxOneRockBandGuitar_Data_t);
+                    break;
+                case GuitarHeroDrums:
+                case RockBandDrums:
+                case PowerGigDrum:
+                    announcePacket = announce_drum;
+                    input_report_length = sizeof(XboxOneRockBandDrums_Data_t);
+                    break;
+                case LiveGuitar:
+                    announcePacket = announce_ghl;
+                    input_report_length = sizeof(XboxOneGHLGuitar_Data_t);
+                    break;
+                case Skylanders:
+                    announcePacket = announce_skylanders;
+                    break;
+                case DisneyInfinity:
+                    announcePacket = announce_infinity;
+                    break;
+                case LegoDimensions:
+                    announcePacket = announce_ld;
+                    break;
+                default:
+                    announcePacket = announce_gamepad;
+                    input_report_length = sizeof(XboxOneGamepad_Data_t);
+                    break;
+                }
             }
             outgoingXGIP.reset();
             outgoingXGIP.setAttributes(GIP_ANNOUNCE, 1, 1, 0, 0);
@@ -558,6 +617,22 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
     // No input until auth is ready
     if (auth_completed == false)
     {
+        return;
+    }
+
+    if (is_legacy_adapter())
+    {
+        if (!legacy_info_sent)
+        {
+            legacy_info_sent = true;
+            for (size_t i = 0; i < profiles.size() && i < MAX_LEGACY_PLAYERS; i++)
+            {
+                auto dev_type = is_drum_subtype(profiles[i]->subtype) ? GipLegacyWirelessDeviceType::Drums : GipLegacyWirelessDeviceType::Guitar;
+                send_legacy_device_info(i, dev_type);
+                legacy_connected[i] = true;
+            }
+        }
+        process_legacy_adapter(full_poll, send_events);
         return;
     }
 
@@ -658,7 +733,12 @@ size_t XboxOneGamepadDevice::device_name(uint8_t idx, char *desc)
 
 void XboxOneGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
-    if (subtype == Gamepad)
+    if (is_legacy_adapter())
+    {
+        desc->idVendor = MAD_CATZ_VID;
+        desc->idProduct = XBOX_ONE_RB_LEGACY_ADAPTER_PID;
+    }
+    else if (subtype == Gamepad)
     {
         desc->idVendor = XBOX_ONE_CONTROLLER_VID;
         desc->idProduct = XBOX_ONE_CONTROLLER_PID;
@@ -671,4 +751,179 @@ void XboxOneGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
     desc->bDeviceClass = 0xff;
     desc->bDeviceSubClass = 0x47;
     desc->bDeviceProtocol = 0xd0;
+}
+
+void XboxOneGamepadDevice::send_legacy_device_info(uint8_t user_index, GipLegacyWirelessDeviceType dev_type)
+{
+    GipLegacyWirelessDeviceInfo_t info = {};
+    info.user_index = user_index;
+    info.device_type = static_cast<uint8_t>(dev_type);
+    info.vendor_id = 0x3807; // 0x0738 big-endian
+    info.unk = 0x00;
+
+    uint16_t data_len = 0;
+    if (dev_type == GipLegacyWirelessDeviceType::Guitar)
+    {
+        info.xinput_subtype = 0x87;
+        const uint16_t name[] = {'g', 'u', 'i', 't', 'a', 'r', 0};
+        memcpy(info.name, name, sizeof(name));
+        data_len = 20; // 6 header bytes + 14 name bytes
+    }
+    else
+    {
+        info.xinput_subtype = 0x88;
+        const uint16_t name[] = {'d', 'r', 'u', 'm', 's', 0};
+        memcpy(info.name, name, sizeof(name));
+        data_len = 18; // 6 header bytes + 12 name bytes
+    }
+
+    global_sequence++;
+    if (global_sequence == 0)
+        global_sequence = 1;
+
+    uint8_t packet[sizeof(GipHeader_t) + sizeof(GipLegacyWirelessDeviceInfo_t)];
+    GipHeader_t *hdr = (GipHeader_t *)packet;
+    hdr->command = GIP_LEGACY_DEVICE_INFO;
+    hdr->client = 0;
+    hdr->needsAck = 0;
+    hdr->internal = 0;
+    hdr->chunkStart = 0;
+    hdr->chunked = 0;
+    hdr->sequence = global_sequence;
+    hdr->length = (uint8_t)data_len;
+    memcpy(packet + sizeof(GipHeader_t), &info, data_len);
+
+    queue_xbone_report(packet, sizeof(GipHeader_t) + data_len);
+}
+
+void XboxOneGamepadDevice::send_legacy_disconnection(uint8_t user_index)
+{
+    global_sequence++;
+    if (global_sequence == 0)
+        global_sequence = 1;
+
+    uint8_t packet[sizeof(GipHeader_t) + sizeof(GipLegacyWirelessDisconnect_t)];
+    GipHeader_t *hdr = (GipHeader_t *)packet;
+    hdr->command = GIP_LEGACY_DISCONNECT;
+    hdr->client = 0;
+    hdr->needsAck = 0;
+    hdr->internal = 0;
+    hdr->chunkStart = 0;
+    hdr->chunked = 0;
+    hdr->sequence = global_sequence;
+    hdr->length = sizeof(GipLegacyWirelessDisconnect_t);
+    packet[sizeof(GipHeader_t)] = user_index;
+
+    queue_xbone_report(packet, sizeof(packet));
+}
+
+void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_events)
+{
+    uint32_t now = to_ms_since_boot(get_absolute_time());
+
+    // Send Keep-Alive every 15 seconds
+    if ((now - keep_alive_timer) > XBONE_KEEPALIVE_TIMER)
+    {
+        outgoingXGIP.reset();
+        outgoingXGIP.setAttributes(GIP_KEEPALIVE, global_sequence, 1, 0, 0);
+        outgoingXGIP.setData(xb1_keep_alive, sizeof(xb1_keep_alive));
+        queue_xbone_report(outgoingXGIP.generatePacket(), outgoingXGIP.getPacketLength());
+        keep_alive_timer = now;
+        global_sequence++;
+        if (global_sequence == 0)
+            global_sequence = 1;
+        return;
+    }
+
+    size_t num_profiles = profiles.size();
+    if (num_profiles > MAX_LEGACY_PLAYERS)
+    {
+        num_profiles = MAX_LEGACY_PLAYERS;
+    }
+    if (num_profiles == 0)
+    {
+        return;
+    }
+
+    // Round-robin starting player for fair bandwidth across players
+    legacy_poll_start_player = (legacy_poll_start_player + 1) % num_profiles;
+
+    for (size_t p = 0; p < num_profiles; p++)
+    {
+        size_t i = (legacy_poll_start_player + p) % num_profiles;
+        const auto &profile = profiles[i];
+        bool is_drums = is_drum_subtype(profile->subtype);
+
+        // Buffer to accumulate mapping outputs for this profile
+        uint8_t profile_buf[sizeof(XboxOneRockBandGuitar_Data_t)] = {};
+
+        for (const auto &mapping : profile->mappings)
+        {
+            mapping->update(full_poll, send_events);
+            mapping->update_xboxone(profile_buf);
+        }
+        for (const auto &led : profile->leds)
+        {
+            led->update(full_poll, send_events);
+        }
+
+        XboxOneGamepad_Data_t *gp = (XboxOneGamepad_Data_t *)profile_buf;
+
+        // Virtual Keycode Triggered (Pressed or Released)
+        if (legacy_guide_pressed[i] != gp->guide)
+        {
+            legacy_guide_pressed[i] = gp->guide;
+            global_sequence++;
+            if (global_sequence == 0)
+                global_sequence = 1;
+            outgoingXGIP.reset();
+            outgoingXGIP.setAttributes(GIP_VIRTUAL_KEYCODE, global_sequence, 1, 0, 0);
+            if (legacy_guide_pressed[i])
+            {
+                outgoingXGIP.setData(xb1_guide_on, sizeof(xb1_guide_on));
+            }
+            else
+            {
+                outgoingXGIP.setData(xb1_guide_off, sizeof(xb1_guide_off));
+            }
+            queue_xbone_report(outgoingXGIP.generatePacket(), outgoingXGIP.getPacketLength());
+        }
+        gp->guide = 0; // Clear guide bit from buttons
+
+        // Build 14-byte legacy wireless report
+        GipLegacyWirelessReport_t legacy_report = {};
+        uint16_t buttons = *(uint16_t *)profile_buf;
+        legacy_report.buttons = buttons;
+        legacy_report.user_index = (uint8_t)i;
+        legacy_report.device_type = is_drums ? static_cast<uint8_t>(GipLegacyWirelessDeviceType::Drums) : static_cast<uint8_t>(GipLegacyWirelessDeviceType::Guitar);
+
+        if (is_drums)
+        {
+            *(uint16_t *)(&legacy_report.drums_data[0]) = buttons;
+            memcpy(&legacy_report.drums_data[2], &profile_buf[2], 4);
+        }
+        else
+        {
+            *(uint16_t *)(&legacy_report.guitar_data[0]) = buttons;
+            memcpy(&legacy_report.guitar_data[2], &profile_buf[2], 5);
+        }
+
+        // Send report if inputs changed
+        if (memcmp(legacy_last_report[i], &legacy_report, sizeof(legacy_report)) != 0)
+        {
+            outgoingXGIP.reset();
+            outgoingXGIP.setAttributes(GIP_INPUT_REPORT, legacy_report_counter[i], 0, 0, 0);
+            outgoingXGIP.setData((const uint8_t *)&legacy_report, sizeof(legacy_report));
+            uint8_t *packet = outgoingXGIP.generatePacket();
+            if (send_xbone_usb(packet, outgoingXGIP.getPacketLength()))
+            {
+                memcpy(legacy_last_report[i], &legacy_report, sizeof(legacy_report));
+                legacy_report_counter[i]++;
+                if (legacy_report_counter[i] == 0)
+                    legacy_report_counter[i] = 1;
+                // Endpoint is busy for this USB frame, break to next poll
+                break;
+            }
+        }
+    }
 }

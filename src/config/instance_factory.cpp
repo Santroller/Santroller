@@ -75,6 +75,14 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
                 printf("Attaching profile to existing Xbox One instance, total profiles: %zu\n", existing_dev->profiles.size());
                 return existing_dev;
             }
+            auto preserved = profile_mgr.take_preserved_xone();
+            if (preserved) {
+                profile_mgr.restore_preserved_xone(preserved);
+                preserved->profiles.push_back(profile);
+                profile_mgr.register_instance(preserved, profile);
+                printf("Restored preserved Xbox One legacy adapter, total profiles: %zu\n", preserved->profiles.size());
+                return preserved;
+            }
         }
         instance = std::static_pointer_cast<Instance>(
             create_usb_instance(usb_mode, profile->subtype));

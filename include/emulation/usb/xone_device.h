@@ -44,7 +44,9 @@ public:
     void send_report_from_controller(XGIPProtocol* report);
     uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
     void set_ack_wait();
-    bool is_legacy_adapter() const { return profiles.size() > 1; }
+    bool is_legacy_adapter() const { return m_is_legacy_adapter || profiles.size() > 1; }
+    void set_legacy_adapter(bool enable) { m_is_legacy_adapter = enable; }
+    bool m_is_legacy_adapter = false;
     uint8_t m_epin;
     uint8_t m_epout;
 
@@ -84,8 +86,8 @@ private:
     uint8_t legacy_last_report[MAX_LEGACY_PLAYERS][14] = {};
     uint8_t legacy_report_counter[MAX_LEGACY_PLAYERS] = {};
     bool legacy_connected[MAX_LEGACY_PLAYERS] = {};
+    GipLegacyWirelessDeviceType legacy_device_types[MAX_LEGACY_PLAYERS] = {};
     bool legacy_guide_pressed[MAX_LEGACY_PLAYERS] = {};
-    bool legacy_info_sent = false;
     size_t legacy_poll_start_player = 0;
 
     void send_legacy_device_info(uint8_t user_index, GipLegacyWirelessDeviceType dev_type);

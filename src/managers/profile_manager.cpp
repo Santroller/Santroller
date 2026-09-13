@@ -7,6 +7,7 @@
 #include "mappings/mapping.hpp"
 #include "leds/led_mappings.hpp"
 #include "triggers/activation_trigger.hpp"
+#include "emulation/usb/xone_device.h"
 #include <algorithm>
 
 namespace
@@ -27,6 +28,16 @@ namespace
 }
 bool ProfileManager::changed_types()
 {
+    auto dev = get_emulated_device(ModeXboxOne);
+    if (m_was_legacy_adapter && dev)
+    {
+        auto xone = std::static_pointer_cast<XboxOneGamepadDevice>(dev);
+        if (xone && xone->is_legacy_adapter())
+        {
+            printf("ProfileManager::changed_types(): preserving legacy adapter emulation without USB reset\n");
+            return false;
+        }
+    }
     printf("ProfileManager::changed_types() called with m_subtypes_changed=%d, m_current_subtypes.size()=%zu, m_last_subtypes.size()=%zu\n", m_subtypes_changed, m_current_subtypes.size(), m_last_subtypes.size());
     return m_subtypes_changed || (m_current_subtypes.size() < m_last_subtypes.size());
 }
@@ -89,7 +100,10 @@ void ProfileManager::register_instance(std::shared_ptr<Instance> instance, std::
     {
         m_subtypes_changed = true;
     }
-    m_active_instances.push_back(instance);
+    if (std::find(m_active_instances.begin(), m_active_instances.end(), instance) == m_active_instances.end())
+    {
+        m_active_instances.push_back(instance);
+    }
     m_profile_to_instance[profile->profile_id].push_back(instance);
 }
 
@@ -256,6 +270,22 @@ void ProfileManager::prepare_for_config_reload()
     m_last_subtypes = m_current_subtypes;
     m_current_subtypes.clear();
     m_subtypes_changed = false;
+
+    // Check if we have an active Xbox One device emulating the legacy adapter
+    m_was_legacy_adapter = false;
+    m_preserved_xone = nullptr;
+    auto xone_it = m_emulated_devices.find(ModeXboxOne);
+    if (xone_it != m_emulated_devices.end() && xone_it->second)
+    {
+        auto xone = std::static_pointer_cast<XboxOneGamepadDevice>(xone_it->second);
+        if (xone->is_legacy_adapter())
+        {
+            m_preserved_xone = xone;
+            m_preserved_xone->profiles.clear();
+            m_was_legacy_adapter = true;
+        }
+    }
+
     m_instances.clear();
     m_active_instances.clear();
     release_profile_contents(m_profiles);
@@ -403,4 +433,30 @@ std::shared_ptr<UsbDevice> ProfileManager::get_emulated_device(ConsoleMode mode)
 void ProfileManager::set_emulated_device(ConsoleMode mode, std::shared_ptr<UsbDevice> device)
 {
     m_emulated_devices[mode] = device;
+}
+
+std::shared_ptr<XboxOneGamepadDevice> ProfileManager::take_preserved_xone()
+{
+    auto dev = m_preserved_xone;
+    m_preserved_xone = nullptr;
+    return dev;
+}
+
+void ProfileManager::restore_preserved_xone(std::shared_ptr<XboxOneGamepadDevice> device)
+{
+    m_emulated_devices[ModeXboxOne] = device;
+    m_instances.push_back(device);
+    m_usb_instances[device->interface_id] = device;
+    map_usb_instance_epin(device->m_epin, device->interface_id);
+    map_usb_instance_epout(device->m_epout, device->interface_id);
+}
+
+void ProfileManager::discard_preserved_devices()
+{
+    if (m_preserved_xone)
+    {
+        printf("Discarding unneeded preserved Xbox One device\n");
+        m_preserved_xone = nullptr;
+        m_was_legacy_adapter = false;
+    }
 }

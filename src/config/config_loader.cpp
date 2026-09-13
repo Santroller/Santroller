@@ -52,6 +52,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     block.bluetoothStates.funcs.decode = decode_bluetooth_states;
     pb_decode(&auxInputStream, proto_AuxConfigBlock_fields, &block);
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
+    profile_mgr.discard_preserved_devices();
 
     const ConsoleMode resolved_mode = config_mgr.get_requested_mode();
     printf("resolved_mode: %d, current_mode: %d\r\n", resolved_mode, current_mode);

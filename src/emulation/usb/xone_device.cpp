@@ -353,7 +353,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 outgoingXGIP.reset();
                 report_queue_head = 0;
                 report_queue_count = 0;
-                legacy_info_sent = false;
+                memset(legacy_connected, 0, sizeof(legacy_connected));
                 memset(legacy_last_report, 0, sizeof(legacy_last_report));
                 timer_wait_for_announce = to_ms_since_boot(get_absolute_time());
                 break;
@@ -390,6 +390,8 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             for (size_t i = 0; i < profiles.size() && i < MAX_LEGACY_PLAYERS; i++)
             {
                 auto dev_type = is_drum_subtype(profiles[i]->subtype) ? GipLegacyWirelessDeviceType::Drums : GipLegacyWirelessDeviceType::Guitar;
+                legacy_connected[i] = true;
+                legacy_device_types[i] = dev_type;
                 send_legacy_device_info(i, dev_type);
             }
         }
@@ -622,14 +624,32 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
 
     if (is_legacy_adapter())
     {
-        if (!legacy_info_sent)
+        m_is_legacy_adapter = true;
+        for (size_t i = 0; i < MAX_LEGACY_PLAYERS; i++)
         {
-            legacy_info_sent = true;
-            for (size_t i = 0; i < profiles.size() && i < MAX_LEGACY_PLAYERS; i++)
+            bool should_be_connected = (i < profiles.size());
+            if (should_be_connected)
             {
                 auto dev_type = is_drum_subtype(profiles[i]->subtype) ? GipLegacyWirelessDeviceType::Drums : GipLegacyWirelessDeviceType::Guitar;
-                send_legacy_device_info(i, dev_type);
-                legacy_connected[i] = true;
+                if (!legacy_connected[i])
+                {
+                    legacy_connected[i] = true;
+                    legacy_device_types[i] = dev_type;
+                    send_legacy_device_info((uint8_t)i, dev_type);
+                }
+                else if (legacy_device_types[i] != dev_type)
+                {
+                    send_legacy_disconnection((uint8_t)i);
+                    legacy_device_types[i] = dev_type;
+                    memset(legacy_last_report[i], 0, sizeof(legacy_last_report[i]));
+                    send_legacy_device_info((uint8_t)i, dev_type);
+                }
+            }
+            else if (legacy_connected[i])
+            {
+                legacy_connected[i] = false;
+                send_legacy_disconnection((uint8_t)i);
+                memset(legacy_last_report[i], 0, sizeof(legacy_last_report[i]));
             }
         }
         process_legacy_adapter(full_poll, send_events);

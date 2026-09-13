@@ -12,6 +12,7 @@
 
 class Device;
 class UsbDevice;
+class XboxOneGamepadDevice;
 struct EmulationDeviceConfig;
 
 class ProfileManager
@@ -104,7 +105,9 @@ public:
     void map_usb_instance_epout(uint8_t ep, uint8_t interface_id);
     std::shared_ptr<UsbDevice> get_emulated_device(ConsoleMode mode);
     void set_emulated_device(ConsoleMode mode, std::shared_ptr<UsbDevice> device);
-    
+    std::shared_ptr<XboxOneGamepadDevice> take_preserved_xone();
+    void restore_preserved_xone(std::shared_ptr<XboxOneGamepadDevice> device);
+    void discard_preserved_devices();
 
 private:
     ProfileManager() = default;
@@ -117,6 +120,8 @@ private:
     std::vector<SubType> m_last_subtypes;
     std::vector<SubType> m_current_subtypes;
     bool m_subtypes_changed = false;
+    bool m_was_legacy_adapter = false;
+    std::shared_ptr<XboxOneGamepadDevice> m_preserved_xone = nullptr;
     std::unordered_map<uint32_t, std::vector<std::shared_ptr<Instance>>> m_profile_to_instance;
     
     std::vector<std::shared_ptr<Instance>> m_instances;

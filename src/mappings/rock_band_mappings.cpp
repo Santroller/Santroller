@@ -838,7 +838,7 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
     if (m_profile->drum_state.yellow_pad && m_profile->drum_state.yellow_cymbal && !m_profile->drum_state.red_pad)
     {
         report->redVelocity = 0xFF - (m_profile->drum_state.yellow_cymbal >> 8);
-        report->yellowVelocity = 0xFF - (m_profile->drum_state.yellow_cymbal >> 8);
+        report->yellowVelocity = 0xFF - (m_profile->drum_state.yellow_pad >> 8);
         report->y = true;
         report->padFlag = true;
         report->cymbalFlag = true;
@@ -1033,7 +1033,7 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
     if (m_profile->drum_state.yellow_pad && m_profile->drum_state.yellow_cymbal && !m_profile->drum_state.red_pad)
     {
         report->redVelocity = (32768 - (m_profile->drum_state.yellow_cymbal >> 1));
-        report->yellowVelocity = -(32768 - (m_profile->drum_state.yellow_cymbal >> 1));
+        report->yellowVelocity = -(32768 - (m_profile->drum_state.yellow_pad >> 1));
         report->y = true;
         report->padFlag = true;
         report->cymbalFlag = true;

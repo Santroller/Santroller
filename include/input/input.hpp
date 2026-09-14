@@ -39,8 +39,8 @@ public:
 
 class DrumState {
 public:
-    RockBandDrumsAxisType last_drum = RockBandDrums_RedPad;
-    RockBandDrumsAxisType buffered_cymbal = RockBandDrums_RedPad;
+    RockBandDrumsAxisType last_drum = (RockBandDrumsAxisType)0;
+    RockBandDrumsAxisType buffered_cymbal = (RockBandDrumsAxisType)0;
     uint32_t red_pad = 0;
     uint32_t yellow_cymbal = 0;
     uint32_t yellow_pad = 0;

@@ -6,14 +6,12 @@
 #include "emulation/usb/usb_descriptors.h"
 #include "emulation/usb/hid_device.h"
 #include "input/midi.hpp"
-#include <algorithm>
 #include <pb_encode.h>
 #include <stdint.h>
 #include <utils.h>
 
 RockBandGuitarButtonMapping::RockBandGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
-    
 }
 
 void RockBandGuitarButtonMapping::update_hid(uint8_t *buf)
@@ -23,7 +21,7 @@ void RockBandGuitarButtonMapping::update_hid(uint8_t *buf)
 }
 void RockBandGuitarButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
-   // not a thing, was hid
+    // not a thing, was hid
 }
 void RockBandGuitarButtonMapping::update_switch(uint8_t *buf)
 {
@@ -687,7 +685,7 @@ void RockBandDrumsButtonMapping::update_ogxbox(uint8_t *buf)
 }
 void RockBandDrumsButtonMapping::update_xboxone(uint8_t *buf)
 {
-    
+
     XboxOneRockBandDrums_Data_t *report = (XboxOneRockBandDrums_Data_t *)buf;
     switch (m_mapping.mapping.mapping.rbDrumButton)
     {
@@ -709,23 +707,55 @@ static bool is_rock_band_drum_cymbal(RockBandDrumsAxisType axis)
     return axis == RockBandDrums_YellowCymbal || axis == RockBandDrums_BlueCymbal || axis == RockBandDrums_GreenCymbal;
 }
 
+static bool is_conflict_capable_drum(RockBandDrumsAxisType axis)
+{
+    return is_rock_band_drum_cymbal(axis) || axis == RockBandDrums_GreenPad;
+}
+
+static bool drums_conflict(RockBandDrumsAxisType a, RockBandDrumsAxisType b)
+{
+    if (a == b || a == 0 || b == 0)
+    {
+        return false;
+    }
+
+    bool a_cymbal = is_rock_band_drum_cymbal(a);
+    bool b_cymbal = is_rock_band_drum_cymbal(b);
+
+    // Any two cymbals conflict (Rock Band cymbal glitch)
+    if (a_cymbal && b_cymbal)
+    {
+        return true;
+    }
+
+    // Green Pad + Green Cymbal conflict (Rock band Lefty Glitch).
+    if ((a == RockBandDrums_GreenPad && b == RockBandDrums_GreenCymbal) ||
+        (a == RockBandDrums_GreenCymbal && b == RockBandDrums_GreenPad))
+    {
+        return true;
+    }
+
+    return false;
+}
+
 bool RockBandDrumsAxisMapping::should_emit_cymbal_hit(RockBandDrumsAxisType axis, uint32_t &calibrated_value)
 {
-    if (!m_profile->cymbal_glitch_fix || !m_mapping.has_debounce || !is_rock_band_drum_cymbal(axis))
+    if (!m_profile->cymbal_glitch_fix || !is_conflict_capable_drum(axis))
     {
         return true;
     }
 
     auto &drum_state = m_profile->drum_state;
     auto now = millis();
-    auto can_emit_next = now - drum_state.last_global_poll > m_mapping.debounce;
+    uint32_t debounce = m_mapping.has_debounce ? m_mapping.debounce : 25;
+    auto can_emit_next = (now - drum_state.last_global_poll) > debounce;
 
     if (drum_state.buffered_cymbal == axis && drum_state.last_drum != axis)
     {
         if (can_emit_next)
         {
             calibrated_value = drum_state.buffered_cymbal_value;
-            drum_state.buffered_cymbal = RockBandDrums_RedPad;
+            drum_state.buffered_cymbal = (RockBandDrumsAxisType)0;
             drum_state.buffered_cymbal_value = 0;
             drum_state.last_global_poll = now;
             drum_state.last_drum = axis;
@@ -739,13 +769,21 @@ bool RockBandDrumsAxisMapping::should_emit_cymbal_hit(RockBandDrumsAxisType axis
         return false;
     }
 
-    if (drum_state.last_drum == RockBandDrums_RedPad || can_emit_next)
+    if (drum_state.buffered_cymbal != 0 && drum_state.buffered_cymbal != axis)
     {
-        if (drum_state.buffered_cymbal != RockBandDrums_RedPad && drum_state.buffered_cymbal != axis)
+        if (drums_conflict(axis, drum_state.buffered_cymbal) || drums_conflict(axis, drum_state.last_drum))
         {
+            if (can_emit_next)
+            {
+                m_calibrated_value = m_mapping.center;
+                m_centered = true;
+            }
             return false;
         }
+    }
 
+    if (drum_state.last_drum == 0 || can_emit_next || !drums_conflict(axis, drum_state.last_drum))
+    {
         drum_state.last_global_poll = now;
         drum_state.last_drum = axis;
         return true;
@@ -891,6 +929,18 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
         report->redVelocity = 0xFF - (m_profile->drum_state.red_pad >> 8);
         report->b = true;
         report->padFlag = true;
+    }
+
+    if (report->dpadUp && report->dpadDown)
+    {
+        if (m_profile->drum_state.yellow_cymbal >= m_profile->drum_state.blue_cymbal)
+        {
+            report->dpadDown = false;
+        }
+        else
+        {
+            report->dpadUp = false;
+        }
     }
 }
 
@@ -1314,7 +1364,7 @@ void ProGuitarButtonMapping::update_ps5(uint8_t *buf)
 void ProGuitarButtonMapping::update_xinput(uint8_t *buf)
 {
     XInputRockBandProGuitar_Data_t *report = (XInputRockBandProGuitar_Data_t *)buf;
-    
+
     switch (m_mapping.mapping.mapping.proButton)
     {
     case ProGuitar_Green:
@@ -1362,7 +1412,7 @@ void ProGuitarButtonMapping::update_xinput(uint8_t *buf)
 void ProGuitarButtonMapping::update_ogxbox(uint8_t *buf)
 {
     OGXboxRockBandProGuitar_Data_t *report = (OGXboxRockBandProGuitar_Data_t *)buf;
-    
+
     switch (m_mapping.mapping.mapping.proButton)
     {
     case ProGuitar_Green:

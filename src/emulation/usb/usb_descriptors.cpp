@@ -252,6 +252,7 @@ void tud_reset(uint8_t rhport)
 {
   // printf("reset\r\n");
   UsbDevice::reset_ep();
+  XInputGamepadDevice::reset();
 }
 
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
@@ -317,15 +318,41 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     // On an actual 360, the console always uses wIndex 0x00. This is the security interface so redirect the request to the right place
     if (wIndex == 0x00 && request->wValue == INPUT_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
     {
-      wIndex = XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntfInput];
-      // caps read, on to the next set for the next read
-      if (stage == CONTROL_STAGE_ACK)
+      if (XInputGamepadDevice::xinputInterfaces[1] == 0xFF)
       {
-        XInputGamepadDevice::lastIntfInput++;
-        if (XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntfInput] == 0xFF || XInputGamepadDevice::lastIntfInput >= TU_ARRAY_SIZE(XInputGamepadDevice::xinputInterfaces))
+        wIndex = XInputGamepadDevice::xinputInterfaces[0];
+      }
+      else
+      {
+        uint32_t now = to_ms_since_boot(get_absolute_time());
+        if (now - XInputGamepadDevice::last_caps_query_time > 500)
         {
           XInputGamepadDevice::lastIntfInput = 0;
         }
+        XInputGamepadDevice::last_caps_query_time = now;
+
+        if (XInputGamepadDevice::lastIntfInput >= TU_ARRAY_SIZE(XInputGamepadDevice::xinputInterfaces) ||
+            XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntfInput] == 0xFF)
+        {
+          XInputGamepadDevice::lastIntfInput = 0;
+        }
+
+        wIndex = XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntfInput];
+        // caps read, on to the next set for the next read
+        if (stage == CONTROL_STAGE_ACK)
+        {
+          XInputGamepadDevice::lastIntfInput++;
+          if (XInputGamepadDevice::lastIntfInput >= TU_ARRAY_SIZE(XInputGamepadDevice::xinputInterfaces) ||
+              XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntfInput] == 0xFF)
+          {
+            XInputGamepadDevice::lastIntfInput = 0;
+          }
+        }
+      }
+
+      if (wIndex == 0xFF)
+      {
+        wIndex = XInputGamepadDevice::xinputInterfaces[0];
       }
     }
     if (wIndex == 0x00 && request->wValue == VIBRATION_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)

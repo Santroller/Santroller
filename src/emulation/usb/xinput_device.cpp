@@ -33,9 +33,15 @@ static const uint8_t xbox_players[] = {
     0, // 0x0C	 Slow blinking*
     0, // 0x0D	 Alternating (e.g. 1+4-2+3), then back to previous*
 };
-XInputGamepadDevice::XInputGamepadDevice()
+void XInputGamepadDevice::reset()
 {
     memset(xinputInterfaces, 0xFF, sizeof(xinputInterfaces));
+    lastIntfInput = 0;
+    last_caps_query_time = 0;
+}
+XInputGamepadDevice::XInputGamepadDevice()
+{
+    reset();
     for (const auto &profile : profiles)
     {
         m_has_slider |= profile->supports_slider;
@@ -131,13 +137,25 @@ uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16
                 TU_BREAKPOINT();
             }
         }
+        bool already_added = false;
         for (size_t i = 0; i < sizeof(xinputInterfaces); i++)
         {
-            if (xinputInterfaces[i] == 0xFF)
+            if (xinputInterfaces[i] == itf_desc->bInterfaceNumber)
             {
-                xinputInterfaces[i] = itf_desc->bInterfaceNumber;
-                printf("assigned: %02x, %02x\r\n", i, itf_desc->bInterfaceNumber);
+                already_added = true;
                 break;
+            }
+        }
+        if (!already_added)
+        {
+            for (size_t i = 0; i < sizeof(xinputInterfaces); i++)
+            {
+                if (xinputInterfaces[i] == 0xFF)
+                {
+                    xinputInterfaces[i] = itf_desc->bInterfaceNumber;
+                    printf("assigned: %02x, %02x\r\n", i, itf_desc->bInterfaceNumber);
+                    break;
+                }
             }
         }
         return drv_len;
@@ -349,6 +367,7 @@ size_t XInputGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t 
 size_t XInputGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
     lastIntfInput = 0;
+    last_caps_query_time = 0;
     uint8_t desc[] = {TUD_XINPUT_GAMEPAD_DESCRIPTOR(interface_id, m_epin, m_epout, get_xinput_subtype(subtype))};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
@@ -551,5 +570,6 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
     return false;
 }
 
-uint8_t XInputGamepadDevice::xinputInterfaces[] = {};
+uint8_t XInputGamepadDevice::xinputInterfaces[4] = {0xFF, 0xFF, 0xFF, 0xFF};
 uint8_t XInputGamepadDevice::lastIntfInput = 0;
+uint32_t XInputGamepadDevice::last_caps_query_time = 0;

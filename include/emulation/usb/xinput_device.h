@@ -48,8 +48,10 @@ public:
     CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
     CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
 
+    static void reset();
     static uint8_t xinputInterfaces[4];
     static uint8_t lastIntfInput;
+    static uint32_t last_caps_query_time;
 
 private:
     XInputGamepad_Data_t m_initial_report;

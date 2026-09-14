@@ -15,6 +15,7 @@
 #include "devices/bt/bluetooth_stack.hpp"
 #include "btstack.h"
 #include "utils.h"
+#include "enums.pb.h"
 #define SIZE_OF_BD_ADDRESS 18
 // static btstack_timer_source_t heartbeat;
 static btstack_packet_callback_registration_t hci_event_callback_registration;
@@ -22,7 +23,10 @@ static btstack_packet_callback_registration_t sm_event_callback_registration;
 static uint8_t battery = 100;
 static hci_con_handle_t con_handle = HCI_CON_HANDLE_INVALID;
 static uint8_t protocol_mode = 1;
+static BTGamepadDevice *s_instance = nullptr;
+static hids_device_report_t report_storage[6];
 static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
+static void get_report_callback(hci_con_handle_t con_hdl, hid_report_type_t report_type, uint16_t report_id, uint16_t max_report_size, uint8_t * out_report);
 // Appearance HID - Keyboard (Category 15, Sub-Category 1)
 #define APPEARANCE_KEYBOARD 0xC1
 // Appearance HID - Gamepad (Category 15, Sub-Category 4)
@@ -105,8 +109,28 @@ void send_report(uint8_t size, uint8_t *report)
 {
     if (con_handle != HCI_CON_HANDLE_INVALID)
     {
-        hids_device_send_input_report(con_handle, report + 1, size - 1);
+        if (size > 0 && report[0] == ReportIdSantrollerCapabilities)
+        {
+            hids_device_send_input_report_for_id(con_handle, ReportIdSantrollerCapabilities, report + 1, size - 1);
+        }
+        else
+        {
+            hids_device_send_input_report(con_handle, report + 1, size - 1);
+        }
         // hids_device_request_can_send_now_event(con_handle);
+    }
+}
+static void get_report_callback(hci_con_handle_t con_hdl, hid_report_type_t report_type, uint16_t report_id, uint16_t max_report_size, uint8_t * out_report)
+{
+    UNUSED(con_hdl);
+    UNUSED(report_type);
+    if (report_id == ReportIdSantrollerCapabilities && s_instance)
+    {
+        if (max_report_size >= 2)
+        {
+            out_report[0] = s_instance->subtype;
+            out_report[1] = s_instance->capabilities;
+        }
     }
 }
 const uint8_t adv_data_len = sizeof(adv_data_gamepad);
@@ -124,6 +148,8 @@ BTGamepadDevice::~BTGamepadDevice()
     {
         return;
     }
+    s_instance = nullptr;
+    hids_device_register_get_report_callback(nullptr);
     hids_device_register_packet_handler(nullptr);
     gap_advertisements_enable(0);
     gap_advertisements_set_data(0, nullptr);
@@ -140,6 +166,7 @@ void BTGamepadDevice::initialize()
     {
         return;
     }
+    s_instance = this;
     sm_set_io_capabilities(IO_CAPABILITY_NO_INPUT_NO_OUTPUT);
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_MITM_PROTECTION | SM_AUTHREQ_BONDING);
 
@@ -155,18 +182,21 @@ void BTGamepadDevice::initialize()
     char id[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2];
     pico_get_unique_board_id_string(id, sizeof(id));
     device_information_service_server_set_serial_number(id);
+    memset(report_storage, 0, sizeof(report_storage));
+    uint16_t num_reports = sizeof(report_storage) / sizeof(report_storage[0]);
     switch (subtype)
     {
     case SubType_KeyboardMouse:
-        hids_device_init(0, desc_hid_report_keyboard, sizeof(desc_hid_report_keyboard));
+        hids_device_init_with_storage(0, desc_hid_report_keyboard, sizeof(desc_hid_report_keyboard), num_reports, report_storage);
         break;
     case SubType_Dancepad:
-        hids_device_init(0, desc_hid_report_buttons, sizeof(desc_hid_report_buttons));
+        hids_device_init_with_storage(0, desc_hid_report_buttons, sizeof(desc_hid_report_buttons), num_reports, report_storage);
         break;
     default:
-        hids_device_init(0, desc_hid_report_hat, sizeof(desc_hid_report_hat));
+        hids_device_init_with_storage(0, desc_hid_report_hat, sizeof(desc_hid_report_hat), num_reports, report_storage);
         break;
     }
+    hids_device_register_get_report_callback(get_report_callback);
 
     // setup advertisements
     uint16_t adv_int_min = 0x0030;
@@ -376,7 +406,27 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
         case HIDS_SUBEVENT_SET_REPORT:
         {
-            printf("set report!\r\n");
+            uint8_t report_id = hids_subevent_set_report_get_report_id(packet);
+            uint8_t report_type = hids_subevent_set_report_get_report_type(packet);
+            uint8_t report_len = hids_subevent_set_report_get_report_length(packet);
+            const uint8_t *report_data = hids_subevent_set_report_get_report_data(packet);
+
+            printf("set report id=%d, type=%d, len=%d\r\n", report_id, report_type, report_len);
+
+            if (report_type == HID_REPORT_TYPE_OUTPUT)
+            {
+                if (report_id == ReportIdSantrollerCapabilities || (report_len > 0 && report_data[0] == ReportIdSantrollerCapabilities))
+                {
+                    if (s_instance)
+                    {
+                        uint8_t epin_buf[3];
+                        epin_buf[0] = ReportIdSantrollerCapabilities;
+                        epin_buf[1] = s_instance->subtype;
+                        epin_buf[2] = s_instance->capabilities;
+                        send_report(sizeof(epin_buf), epin_buf);
+                    }
+                }
+            }
             break;
         }
         case HIDS_SUBEVENT_CAN_SEND_NOW:

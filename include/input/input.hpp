@@ -39,7 +39,6 @@ public:
 
 class DrumState {
 public:
-    bool cymbal_glitch_fix = false;
     RockBandDrumsAxisType last_drum = RockBandDrums_RedPad;
     RockBandDrumsAxisType buffered_cymbal = RockBandDrums_RedPad;
     uint32_t red_pad = 0;
@@ -51,6 +50,22 @@ public:
     uint32_t green_pad = 0;
     uint32_t buffered_cymbal_value = 0;
     uint64_t last_global_poll = 0;
+
+    void reset()
+    {
+        blue_cymbal = 0;
+        blue_pad = 0;
+        yellow_cymbal = 0;
+        yellow_pad = 0;
+        green_cymbal = 0;
+        green_pad = 0;
+        red_pad = 0;
+    }
+
+    bool has_hits() const
+    {
+        return red_pad || yellow_cymbal || yellow_pad || blue_cymbal || blue_pad || green_cymbal || green_pad;
+    }
 };
 
 class KeyboardState {

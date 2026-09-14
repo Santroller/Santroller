@@ -17,6 +17,7 @@ class Profile
 public:
     virtual ~Profile();
     void resolve_shortcuts();
+    void reset_drum_state() { drum_state.reset(); }
     char name[32];
     SubType subtype;
     bool xinput_on_windows;

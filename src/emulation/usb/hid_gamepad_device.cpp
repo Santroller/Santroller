@@ -127,13 +127,7 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
 
   for (const auto &profile : profiles)
   {
-    profile->drum_state.blue_cymbal = 0;
-    profile->drum_state.blue_pad = 0;
-    profile->drum_state.yellow_cymbal = 0;
-    profile->drum_state.yellow_pad = 0;
-    profile->drum_state.green_cymbal = 0;
-    profile->drum_state.green_pad = 0;
-    profile->drum_state.red_pad = 0;
+    profile->reset_drum_state();
     for (const auto &mapping : profile->mappings)
     {
       mapping->update(full_poll, send_events);

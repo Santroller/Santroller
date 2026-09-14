@@ -6,6 +6,7 @@
 #include "emulation/usb/usb_descriptors.h"
 #include "emulation/usb/hid_device.h"
 #include "input/midi.hpp"
+#include <algorithm>
 #include <pb_encode.h>
 #include <stdint.h>
 #include <utils.h>
@@ -710,7 +711,7 @@ static bool is_rock_band_drum_cymbal(RockBandDrumsAxisType axis)
 
 bool RockBandDrumsAxisMapping::should_emit_cymbal_hit(RockBandDrumsAxisType axis, uint32_t &calibrated_value)
 {
-    if (!m_profile->drum_state.cymbal_glitch_fix || !m_mapping.has_debounce || !is_rock_band_drum_cymbal(axis))
+    if (!m_profile->cymbal_glitch_fix || !m_mapping.has_debounce || !is_rock_band_drum_cymbal(axis))
     {
         return true;
     }
@@ -786,7 +787,7 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
 {
     auto axis = m_mapping.mapping.mapping.rbDrumAxis;
     auto calibrated_value = m_calibrated_value;
-    if (m_centered && (!m_profile->drum_state.cymbal_glitch_fix || m_profile->drum_state.buffered_cymbal != axis))
+    if (m_centered && (!m_profile->cymbal_glitch_fix || m_profile->drum_state.buffered_cymbal != axis))
     {
         return;
     }
@@ -981,7 +982,7 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
 {
     auto axis = m_mapping.mapping.mapping.rbDrumAxis;
     auto calibrated_value = m_calibrated_value;
-    if (m_centered && (!m_profile->drum_state.cymbal_glitch_fix || m_profile->drum_state.buffered_cymbal != axis))
+    if (m_centered && (!m_profile->cymbal_glitch_fix || m_profile->drum_state.buffered_cymbal != axis))
     {
         return;
     }

@@ -245,6 +245,7 @@ void BTGamepadDevice::process(bool full_poll, bool send_events)
 
         for (const auto &profile : profiles)
         {
+            profile->reset_drum_state();
             for (const auto &mapping : profile->mappings)
             {
                 mapping->update(full_poll, send_events);

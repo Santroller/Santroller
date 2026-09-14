@@ -6,7 +6,10 @@
 #include "emulation/usb/hid_device.h"
 #include "config/config.hpp"
 #include "utils.h"
-WiiDevice::WiiDevice(const DeviceReloadState *state, proto_WiiDevice device, uint16_t id) : MidiDevice(state, id, false), m_extension(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
+WiiDevice::WiiDevice(const DeviceReloadState *state, proto_WiiDevice device, uint16_t id) :
+    MidiDevice(state, id, false, m_midi_buffers.config()),
+    m_extension(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock),
+    m_device(device)
 {
     if (state)
     {

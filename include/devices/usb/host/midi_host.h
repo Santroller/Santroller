@@ -21,4 +21,5 @@ private:
   uint8_t m_ep_out_size;
   uint8_t rx_cable_count; // IN endpoint CS descriptor bNumEmbMIDIJack value
   uint8_t tx_cable_count; // OUT endpoint CS descriptor bNumEmbMIDIJack value
+  MidiStaticBuffers<512, 512, TUH_EPSIZE_BULK_MAX, 16> m_host_buffers;
 };

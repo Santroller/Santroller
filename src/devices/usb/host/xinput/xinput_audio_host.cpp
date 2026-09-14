@@ -7,6 +7,13 @@
 
 std::shared_ptr<UsbHostInterface> XInputAudioHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
+    // Audio is not yet supported; skip opening to save RAM and endpoint resources.
+    return nullptr;
+}
+
+#if 0
+std::shared_ptr<UsbHostInterface> XInputAudioHost::open_unused(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
+{
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass && desc_itf->bInterfaceSubClass == 0x5D && desc_itf->bInterfaceProtocol == 0x03, nullptr);
     uint8_t dev_addr = list->dev_addr();
 
@@ -17,3 +24,4 @@ std::shared_ptr<UsbHostInterface> XInputAudioHost::open(std::shared_ptr<UsbHostD
     // TODO: this
     return std::make_shared<XInputAudioHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);
 }
+#endif

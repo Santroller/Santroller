@@ -78,6 +78,13 @@ void gip_request_device_descriptor(gip_device_t *device);
  */
 void gip_send_auth_complete(gip_device_t *device);
 
+/**
+ * Send GHL magic keep-alive poke packet
+ * 
+ * @param device GIP device
+ */
+void gip_send_ghl_poke(gip_device_t *device);
+
 #ifdef __cplusplus
 }
 #endif

@@ -10,6 +10,13 @@
 
 std::shared_ptr<UsbHostInterface> XInputWirelessAudioHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
+    // Audio is not yet supported; skip opening to save RAM and endpoint resources.
+    return nullptr;
+}
+
+#if 0
+std::shared_ptr<UsbHostInterface> XInputWirelessAudioHost::open_unused(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
+{
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass && desc_itf->bInterfaceSubClass == 0x5D && desc_itf->bInterfaceProtocol == 0x82, nullptr);
     uint8_t dev_addr = list->dev_addr();
 
@@ -54,6 +61,7 @@ std::shared_ptr<UsbHostInterface> XInputWirelessAudioHost::open(std::shared_ptr<
     // TODO: audio
     return intf;
 }
+#endif
 
 bool XInputWirelessAudioHost::set_config()
 {

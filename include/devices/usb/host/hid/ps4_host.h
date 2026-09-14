@@ -25,5 +25,6 @@ private:
     bool m_touchpad_supported;
     bool m_third_party;
     bool m_auth_registered = false;
+    uint32_t m_last_ghl_poke = 0;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
 };

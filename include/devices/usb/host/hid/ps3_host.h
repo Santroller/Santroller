@@ -1,11 +1,12 @@
 #pragma once
 #include "devices/usb/host/hid/hid_host.h"
+#include "utils.h"
 
 class Ps3Host : public HidHost
 {
 public:
     ~Ps3Host() {}
-    Ps3Host(uint8_t dev_addr, uint8_t interface, uint16_t id, bool third_party, bool rb2, bool ion, SubType subtype) : HidHost(dev_addr, interface, id), m_rb2(rb2), m_ion(ion), m_third_party(third_party)
+    Ps3Host(uint8_t dev_addr, uint8_t interface, uint16_t id, bool third_party, bool rb2, bool ion, bool wt, SubType subtype) : HidHost(dev_addr, interface, id), m_rb2(rb2), m_ion(ion), m_wt(wt), m_third_party(third_party), m_init_time(millis())
     {
         m_subtype = subtype;
     }
@@ -21,6 +22,8 @@ private:
     bool m_ion;
     bool m_wt;
     bool m_third_party;
+    uint32_t m_init_time = 0;
+    uint32_t m_last_ghl_poke = 0;
     uint8_t m_ep_in = 0;
     uint8_t m_ep_out = 0;
     uint8_t m_ep_in_size;

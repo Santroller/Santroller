@@ -115,7 +115,16 @@ bool gip_device_process_incoming(
         }
 
         // Store input report data directly in raw_input buffer
-        if (device->incoming_xgip->getCommand() == GIP_INPUT_REPORT) {
+        if (device->subtype == LiveGuitar) {
+            if (device->incoming_xgip->getCommand() == GIP_HID_REPORT) {
+                const uint8_t *input_data = device->incoming_xgip->getData();
+                uint16_t input_len = device->incoming_xgip->getDataLength();
+                if (input_len <= sizeof(device->raw_input)) {
+                    memcpy(device->raw_input, input_data, input_len);
+                }
+            }
+        }
+        else if (device->incoming_xgip->getCommand() == GIP_INPUT_REPORT) {
             const uint8_t *input_data = device->incoming_xgip->getData();
             uint16_t input_len = device->incoming_xgip->getDataLength();
             if (input_len <= sizeof(device->raw_input)) {
@@ -230,6 +239,16 @@ void gip_device_update(
     // Check ACK timeout
     if (gip_device_ack_timeout(device, current_time, ack_timeout_ms)) {
         gip_device_clear_ack_wait(device);
+    }
+    
+    // Guitar Hero Live guitar magic keep-alive poke (every 8 seconds)
+    if (device->subtype == LiveGuitar) {
+        if (device->last_ghl_poke == 0) {
+            device->last_ghl_poke = current_time;
+        } else if ((current_time - device->last_ghl_poke) >= 8000) {
+            device->last_ghl_poke = current_time;
+            gip_send_ghl_poke(device);
+        }
     }
     
     // MS-GIPUSB "Reliable Message Acknowledgement": while a chunked transfer is

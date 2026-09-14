@@ -25,4 +25,5 @@ private:
     uint32_t m_last_value = 0;
     WiiExtType m_lastExtType = WiiExtType::WiiNoExtension;
     bool m_has_scanned = false;
+    MidiStaticBuffers<32, 0, 32, 1> m_midi_buffers;
 };

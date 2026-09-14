@@ -13,7 +13,8 @@ class UsbHostInterface : public MidiDevice
 public:
     virtual ~UsbHostInterface() { printf("~UsbHostInterface()\r\n"); };
 
-    UsbHostInterface(uint8_t d_addr, uint8_t interface, uint16_t id) : MidiDevice(nullptr, id, true), m_dev_addr(d_addr), m_interface(interface)
+    UsbHostInterface(uint8_t d_addr, uint8_t interface, uint16_t id) :
+        MidiDevice(nullptr, id, true, m_midi_buffers.config()), m_dev_addr(d_addr), m_interface(interface)
     {
         memset(m_name, 0, sizeof(m_name));
     }
@@ -79,6 +80,7 @@ protected:
     CFG_TUSB_MEM_ALIGN char m_name[128] = {0};
     uint32_t send_ctrl_xfer(tusb_control_request_t setup, void *buffer, bool *status);
     bool send_intr_xfer(uint8_t endpoint, const void *buffer, uint8_t len);
+    MidiStaticBuffers<64, 0, 64, 1> m_midi_buffers;
 };
 
 void usb_host_add_assignable_interface(std::shared_ptr<UsbHostInterface> device);

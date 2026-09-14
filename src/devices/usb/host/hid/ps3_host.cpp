@@ -7,6 +7,8 @@
 #include "config/config.hpp"
 #include "managers/device_manager.hpp"
 #include "hidparser.h"
+#include "protocols/ps3.hpp"
+#include "devices/usb/host/gh_slider_helpers.h"
 
 std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
@@ -25,92 +27,169 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
         {
         case SONY_DS3_PID:
             isValid = true;
+            isThirdParty = false;
             break;
         }
         break;
     case REDOCTANE_VID:
+        isThirdParty = true;
         switch (pid)
         {
         case PS3_GH_GUITAR_PID:
             subtype = GuitarHeroGuitar;
+            isValid = true;
             break;
         case PS3_GH_DRUM_PID:
             subtype = GuitarHeroDrums;
+            isValid = true;
             break;
         case PS3_RB_GUITAR_PID:
             subtype = RockBandGuitar;
+            isValid = true;
             break;
         case PS3_MPA_DRUM_PID:
             rb2 = true;
             subtype = RockBandDrums;
+            isValid = true;
             break;
         case PS3_RB_DRUM_PID:
             rb2 = revision != 0x1000;
             subtype = RockBandDrums;
+            isValid = true;
             break;
         case PS3_DJ_TURNTABLE_PID:
             subtype = DjHeroTurntable;
+            isValid = true;
             break;
         case PS3WIIU_GHLIVE_DONGLE_PID:
             subtype = LiveGuitar;
+            isValid = true;
             break;
         case PS3_MPA_KEYBOARD_PID:
         case PS3_KEYBOARD_PID:
             subtype = ProKeys;
+            isValid = true;
             break;
         case PS3_MUSTANG_PID:
         case PS3_MUSTANG_MPA_PID:
             subtype = ProGuitarMustang;
+            isValid = true;
             break;
         case PS3_SQUIRE_PID:
         case PS3_SQUIRE_MPA_PID:
             subtype = ProGuitarSquire;
+            isValid = true;
             break;
         }
         break;
 
     case HARMONIX_VID:
         // Polled the same as PS3, so treat them as PS3 instruments
+        isThirdParty = true;
         switch (pid)
         {
         case WII_RB_GUITAR_PID:
         case WII_RB_GUITAR_2_PID:
             subtype = RockBandGuitar;
+            isValid = true;
             break;
 
         case WII_RB_DRUM_PID:
             rb2 = false;
             subtype = RockBandDrums;
+            isValid = true;
             break;
         case WII_RB_DRUM_2_PID:
         case WII_MPA_DRUMS_PID:
             rb2 = true;
             subtype = RockBandDrums;
+            isValid = true;
             break;
         case WII_KEYBOARD_PID:
         case WII_MPA_KEYBOARD_PID:
             subtype = ProKeys;
+            isValid = true;
             break;
         case WII_MUSTANG_PID:
         case WII_MUSTANG_MPA_PID:
             subtype = ProGuitarMustang;
+            isValid = true;
             break;
         case WII_SQUIRE_PID:
         case WII_SQUIRE_MPA_PID:
             subtype = ProGuitarSquire;
+            isValid = true;
             break;
         case XBOX_360_ION_ROCKER_VID:
             rb2 = true;
             ion = true;
             subtype = RockBandDrums;
+            isValid = true;
             break;
         }
 
         break;
     }
+    bool wt = false;
+    if (subtype == GuitarHeroGuitar)
+    {
+        CFG_TUSB_MEM_ALIGN uint8_t str_buf[256];
+        if (tuh_descriptor_get_product_string_sync(dev_addr, 0, str_buf, sizeof(str_buf)) == XFER_RESULT_SUCCESS)
+        {
+            uint16_t wtProduct[] = {'G', 'u', 'i', 't', 'a', 'r', ' ', 'H', 'e', 'r', 'o', '4'};
+            if (memcmp(wtProduct, str_buf, sizeof(wtProduct)) == 0 ||
+                memcmp(wtProduct, str_buf + 1, sizeof(wtProduct)) == 0 ||
+                memcmp(wtProduct, (uint16_t *)str_buf + 1, sizeof(wtProduct)) == 0)
+            {
+                wt = true;
+            }
+        }
+    }
     if (isValid)
     {
-        auto intf = std::make_shared<Ps3Host>(dev_addr, itf_desc->bInterfaceNumber, list->m_id, isThirdParty, rb2, ion, subtype);
+        auto intf = std::make_shared<Ps3Host>(dev_addr, itf_desc->bInterfaceNumber, list->m_id, isThirdParty, rb2, ion, wt, subtype);
+
+        if (!isThirdParty && vid == SONY_VID && pid == SONY_DS3_PID)
+        {
+            // Enable PS3 reports
+            uint8_t hid_command_enable[] = {0x42, 0x0c, 0x00, 0x00};
+            intf->set_report(0xF4, HID_REPORT_TYPE_FEATURE, hid_command_enable, sizeof(hid_command_enable));
+
+            ps3_output_report report = {};
+            report.rumble.padding = 0x01;
+            report.rumble.right_duration = 0xFF;
+            report.rumble.left_duration = 0xFF;
+            report.leds_bitmap = 0x02; // LED 1
+            for (int i = 0; i < 4; i++)
+            {
+                report.led[i].time_enabled = 0xFF;
+                report.led[i].duty_length = 0x27;
+                report.led[i].enabled = 0x10;
+                report.led[i].duty_off = 0x00;
+                report.led[i].duty_on = 0x32;
+            }
+            intf->set_report(0x01, HID_REPORT_TYPE_OUTPUT, (uint8_t *)&report, sizeof(report));
+        }
+
+        if (subtype == ProKeys || subtype == ProGuitarMustang || subtype == ProGuitarSquire)
+        {
+            uint8_t hid_command_enable[40] = {
+                0xE9, 0x00, 0x89, 0x1B, 0x00, 0x00, 0x00, 0x02,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00,
+                0x00, 0x00, 0x89, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0xE9, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+            intf->set_report(0x00, HID_REPORT_TYPE_FEATURE, hid_command_enable, sizeof(hid_command_enable));
+        }
+
+        if (subtype == LiveGuitar)
+        {
+            uint8_t ghl_ps3wiiu_magic_data[] = {0x02, 0x08, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00};
+            intf->set_report(0x01, HID_REPORT_TYPE_OUTPUT, ghl_ps3wiiu_magic_data, sizeof(ghl_ps3wiiu_magic_data));
+            intf->set_report(0x02, HID_REPORT_TYPE_OUTPUT, ghl_ps3wiiu_magic_data, sizeof(ghl_ps3wiiu_magic_data));
+            intf->m_last_ghl_poke = millis();
+        }
+
         uint8_t endpoints = itf_desc->bNumEndpoints;
         p_desc = tu_desc_next(p_desc);
         tusb_hid_descriptor_hid_t *x_desc =
@@ -161,6 +240,29 @@ bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
 {
     if (ep_addr & 0x80)
     {
+        if ((millis() - m_init_time) < 5000)
+        {
+            if (m_subtype == ProKeys || m_subtype == ProGuitarMustang || m_subtype == ProGuitarSquire)
+            {
+                uint8_t hid_command_enable[40] = {
+                    0xE9, 0x00, 0x89, 0x1B, 0x00, 0x00, 0x00, 0x02,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00,
+                    0x00, 0x00, 0x89, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0xE9, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+                set_report(0x00, HID_REPORT_TYPE_FEATURE, hid_command_enable, sizeof(hid_command_enable));
+            }
+        }
+        if (m_subtype == LiveGuitar)
+        {
+            if ((millis() - m_last_ghl_poke) >= 8000)
+            {
+                m_last_ghl_poke = millis();
+                uint8_t ghl_ps3wiiu_magic_data[] = {0x02, 0x08, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00};
+                set_report(0x01, HID_REPORT_TYPE_OUTPUT, ghl_ps3wiiu_magic_data, sizeof(ghl_ps3wiiu_magic_data));
+                set_report(0x02, HID_REPORT_TYPE_OUTPUT, ghl_ps3wiiu_magic_data, sizeof(ghl_ps3wiiu_magic_data));
+            }
+        }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;
@@ -265,6 +367,7 @@ bool Ps3Host::tick_digital(proto_Output &type)
         if (type.which_mapping == proto_Output_ghButton_tag)
         {
             auto data = (PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf;
+            uint8_t frets = m_wt ? decode_ghwt_slider(data->slider) : decode_gh5_slider(data->slider);
             switch (type.mapping.ghButton)
             {
             case GuitarHeroGuitar_Green:
@@ -277,21 +380,18 @@ bool Ps3Host::tick_digital(proto_Output &type)
                 return data->x;
             case GuitarHeroGuitar_Orange:
                 return data->leftShoulder;
+            case GuitarHeroGuitar_Pedal:
+                return data->rightShoulder;
             case GuitarHeroGuitar_TapGreen:
-                // TODO: this
-                return false;
+                return frets & 0b00001;
             case GuitarHeroGuitar_TapRed:
-                // TODO: this
-                return false;
+                return frets & 0b00010;
             case GuitarHeroGuitar_TapYellow:
-                // TODO: this
-                return false;
+                return frets & 0b00100;
             case GuitarHeroGuitar_TapBlue:
-                // TODO: this
-                return false;
+                return frets & 0b01000;
             case GuitarHeroGuitar_TapOrange:
-                // TODO: this
-                return false;
+                return frets & 0b10000;
             default:
                 return false;
             }
@@ -350,6 +450,8 @@ bool Ps3Host::tick_digital(proto_Output &type)
                 return data->strumBar == 0x00;
             case GuitarHeroLiveGuitar_StrumDown:
                 return data->strumBar == 0xFF;
+            case GuitarHeroLiveGuitar_GHTV:
+                return data->leftThumbClick;
             default:
                 return false;
             }
@@ -453,7 +555,7 @@ uint16_t Ps3Host::tick_analog(proto_Output &type)
             case RockBandGuitar_Tilt:
                 return data->tilt << 8;
             case RockBandGuitar_Pickup:
-                return data->tilt << 8;
+                return data->pickup << 8;
             default:
                 return 0;
             }

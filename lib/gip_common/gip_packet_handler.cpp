@@ -101,6 +101,7 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device)
         return true;
 
     case GIP_INPUT_REPORT:
+    case GIP_HID_REPORT:
         // Input data is already stored in device->raw_input by gip_device_process_incoming
         // No callback needed - consumers read from raw_input directly
         return true;
@@ -238,6 +239,12 @@ void gip_send_power_on_sequence(gip_device_t *device)
         return;
     }
 
+    if (device->subtype == LiveGuitar)
+    {
+        gip_send_ghl_poke(device);
+        return;
+    }
+
     // Standard gamepad power on sequence
     uint8_t seq1 = gip_sequence_pool_next(&device->tx_sequence_pools, GIP_POWER_MODE_DEVICE_CONFIG);
     xgip->reset();
@@ -292,4 +299,21 @@ void gip_send_auth_complete(gip_device_t *device)
     device->interface->queue_packet(device->user_context, xgip->generatePacket(), xgip->getPacketLength());
 
     // printf("GIP: Sent auth complete packet\n");
+}
+
+void gip_send_ghl_poke(gip_device_t *device)
+{
+    if (!device || !device->outgoing_xgip || !device->interface || !device->interface->queue_packet)
+    {
+        return;
+    }
+
+    static const uint8_t ghl_poke[] = {0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
+    XGIPProtocol *xgip = device->outgoing_xgip;
+    uint8_t seq = gip_sequence_pool_next(&device->tx_sequence_pools, GHL_HID_OUTPUT);
+
+    xgip->reset();
+    xgip->setAttributes(GHL_HID_OUTPUT, seq, 0, 0, 0);
+    xgip->setData(ghl_poke, sizeof(ghl_poke));
+    device->interface->queue_packet(device->user_context, xgip->generatePacket(), xgip->getPacketLength());
 }

@@ -2,6 +2,7 @@
 #include "base.hpp"
 #include "device.pb.h"
 #include "world_tour_drum.hpp"
+#include "midi.hpp"
 class WorldTourDrumDevice : public MidiDevice
 {
 public:
@@ -16,4 +17,5 @@ private:
     WorldTourDrum m_world_tour_drum;
     proto_WorldTourDrumDevice m_device;
     uint32_t m_last_value = 0;
+    MidiStaticBuffers<32, 0, 32, 1> m_midi_buffers;
 };

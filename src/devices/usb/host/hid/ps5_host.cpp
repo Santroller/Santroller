@@ -330,7 +330,7 @@ uint16_t Ps5Host::tick_analog(proto_Output& type)
 {
     if (type.which_mapping == proto_Output_gamepadAxis_tag)
     {
-        auto data = (PS4Gamepad_Data_t *)m_ep_in_buf;
+        auto data = (PS5Gamepad_Data_t *)m_ep_in_buf;
         switch (type.mapping.gamepadAxis)
         {
         case Gamepad_LeftTrigger:
@@ -354,7 +354,7 @@ uint16_t Ps5Host::tick_analog(proto_Output& type)
     case LiveGuitar:
         if (type.which_mapping == proto_Output_ghlAxis_tag)
         {
-            auto data = (PS4GHLGuitar_Data_t *)m_ep_in_buf;
+            auto data = (PS5GHLGuitar_Data_t *)m_ep_in_buf;
             switch (type.mapping.ghlAxis)
             {
             case GuitarHeroLiveGuitar_Whammy:
@@ -369,7 +369,7 @@ uint16_t Ps5Host::tick_analog(proto_Output& type)
     case RockBandGuitar:
         if (type.which_mapping == proto_Output_rbAxis_tag)
         {
-            auto data = (PS4RockBandGuitar_Data_t *)m_ep_in_buf;
+            auto data = (PS5RockBandGuitar_Data_t *)m_ep_in_buf;
             switch (type.mapping.rbAxis)
             {
             case RockBandGuitar_Whammy:
@@ -377,7 +377,7 @@ uint16_t Ps5Host::tick_analog(proto_Output& type)
             case RockBandGuitar_Tilt:
                 return data->tilt << 8;
             case RockBandGuitar_Pickup:
-                return data->tilt << 8;
+                return data->pickup << 8;
             default:
                 return 0;
             }

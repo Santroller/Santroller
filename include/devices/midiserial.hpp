@@ -16,4 +16,5 @@ public:
 
 private:
     proto_SerialMidiDevice m_device;
+    MidiStaticBuffers<32, 0, 32, 1> m_midi_buffers;
 };

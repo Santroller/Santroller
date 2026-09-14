@@ -147,7 +147,7 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                     printf("Found capabilities: %02x %02x\r\n", m_dev_addr, m_interface);
                     if (caps->leftStickX == 0xFFC0 && caps->rightStickX == 0xFFC0)
                     {
-                        // usb_host_devices[i].type.sub_type = XINPUT_GUITAR_WT;
+                        m_wt = true;
                         printf("Found wt\r\n");
                     }
                     m_check_caps = 0;
@@ -171,7 +171,7 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
 
 bool XInputWirelessGamepadHost::tick_digital(proto_Output &type)
 {
-    return xinput_tick_digital_impl(m_report_buf, m_subtype, type);
+    return xinput_tick_digital_impl(m_report_buf, m_subtype, type, m_wt);
 }
 uint16_t XInputWirelessGamepadHost::tick_analog(proto_Output &type)
 {

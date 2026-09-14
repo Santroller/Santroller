@@ -11,6 +11,57 @@ bool gip_tick_digital(const void *input_data, uint8_t subtype, proto_Output *typ
     // Handle gamepad buttons (common to all device types)
     if (type->which_mapping == proto_Output_gamepadButton_tag)
     {
+        if (subtype == SubType_LiveGuitar)
+        {
+            auto ghl = (const XboxOneGHLGuitar_Data_t *)input_data;
+            const uint8_t *raw = (const uint8_t *)input_data;
+            uint8_t dpad_val = raw[2] & 0x0F;
+            static const uint8_t dpad_bindings_reverse[] = {
+                (1 << 0),                 // 0: Up
+                (1 << 0) | (1 << 3),      // 1: Up-Right
+                (1 << 3),                 // 2: Right
+                (1 << 1) | (1 << 3),      // 3: Down-Right
+                (1 << 1),                 // 4: Down
+                (1 << 1) | (1 << 2),      // 5: Down-Left
+                (1 << 2),                 // 6: Left
+                (1 << 0) | (1 << 2),      // 7: Up-Left
+            };
+            uint8_t dpad = (dpad_val < 8) ? dpad_bindings_reverse[dpad_val] : 0;
+            switch (type->mapping.gamepadButton)
+            {
+            case Gamepad_A:
+                return ghl->report.a;
+            case Gamepad_B:
+                return ghl->report.b;
+            case Gamepad_X:
+                return ghl->report.x;
+            case Gamepad_Y:
+                return ghl->report.y;
+            case Gamepad_LeftShoulder:
+                return ghl->report.leftShoulder;
+            case Gamepad_RightShoulder:
+                return ghl->report.rightShoulder;
+            case Gamepad_Back:
+                return ghl->report.back;
+            case Gamepad_Start:
+                return ghl->report.start;
+            case Gamepad_LeftThumbClick:
+                return ghl->report.leftThumbClick;
+            case Gamepad_Guide:
+                return ghl->report.guide;
+            case Gamepad_DpadUp:
+                return (dpad & (1 << 0)) != 0;
+            case Gamepad_DpadDown:
+                return (dpad & (1 << 1)) != 0;
+            case Gamepad_DpadLeft:
+                return (dpad & (1 << 2)) != 0;
+            case Gamepad_DpadRight:
+                return (dpad & (1 << 3)) != 0;
+            default:
+                return false;
+            }
+        }
+
         auto data = (const XboxOneGamepad_Data_t *)input_data;
         switch (type->mapping.gamepadButton)
         {
@@ -122,6 +173,8 @@ bool gip_tick_digital(const void *input_data, uint8_t subtype, proto_Output *typ
                 return data->report.strumBar == 0x00;
             case GuitarHeroLiveGuitar_StrumDown:
                 return data->report.strumBar == 0xFF;
+            case GuitarHeroLiveGuitar_GHTV:
+                return data->report.leftThumbClick;
             default:
                 return false;
             }

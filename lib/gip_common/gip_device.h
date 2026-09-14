@@ -28,6 +28,7 @@ typedef struct gip_device_t {
     uint8_t incoming_chunk_heartbeat_acks; // Heartbeat ACKs sent since the last received fragment
     bool has_virtual_key_guide;           // Controller reports guide button via GIP_VIRTUAL_KEYCODE
     uint8_t virtual_key_guide;            // Current guide button state from virtual key (0 or 1)
+    uint32_t last_ghl_poke;               // Timestamp of last GHL magic poke sent
     void *user_context;           // User context (e.g., pointer to owning controller instance)
     const gip_device_interface_t *interface;  // Interface for callbacks
 } gip_device_t;

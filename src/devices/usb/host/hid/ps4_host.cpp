@@ -7,6 +7,7 @@
 #include "config/config.hpp"
 #include "managers/device_manager.hpp"
 #include "hidparser.h"
+#include "utils.h"
 
 Ps4Host::~Ps4Host()
 {
@@ -67,7 +68,14 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
                     intf->m_subtype = Gamepad;
                     break;
                 case 0x01:
-                    intf->m_subtype = RockBandGuitar;
+                    if (vid == XBOX_REDOCTANE_VID && pid == PS4_GHLIVE_DONGLE_PID)
+                    {
+                        intf->m_subtype = LiveGuitar;
+                    }
+                    else
+                    {
+                        intf->m_subtype = RockBandGuitar;
+                    }
                     break;
                 case 0x02:
                     intf->m_subtype = RockBandDrums;
@@ -159,6 +167,13 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
             auth_broker.register_auth_device(ModePs4, intf);
             intf->m_auth_registered = true;
         }
+        if (intf->m_subtype == LiveGuitar)
+        {
+            uint8_t ghl_ps4_magic_data[] = {0x30, 0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
+            intf->set_report(0x01, HID_REPORT_TYPE_OUTPUT, ghl_ps4_magic_data, sizeof(ghl_ps4_magic_data));
+            intf->set_report(0x30, HID_REPORT_TYPE_OUTPUT, ghl_ps4_magic_data, sizeof(ghl_ps4_magic_data));
+            intf->m_last_ghl_poke = millis();
+        }
         usb_host_add_assignable_interface(intf);
         USB_FreeReportInfo(info);
         return intf;
@@ -176,6 +191,16 @@ bool Ps4Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
 {
     if (ep_addr & 0x80)
     {
+        if (m_subtype == LiveGuitar)
+        {
+            if ((millis() - m_last_ghl_poke) >= 8000)
+            {
+                m_last_ghl_poke = millis();
+                uint8_t ghl_ps4_magic_data[] = {0x30, 0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
+                set_report(0x01, HID_REPORT_TYPE_OUTPUT, ghl_ps4_magic_data, sizeof(ghl_ps4_magic_data));
+                set_report(0x30, HID_REPORT_TYPE_OUTPUT, ghl_ps4_magic_data, sizeof(ghl_ps4_magic_data));
+            }
+        }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;
@@ -283,6 +308,8 @@ bool Ps4Host::tick_digital(proto_Output &type)
                 return data->strumBar == 0x00;
             case GuitarHeroLiveGuitar_StrumDown:
                 return data->strumBar == 0xFF;
+            case GuitarHeroLiveGuitar_GHTV:
+                return data->leftThumbClick;
             default:
                 return false;
             }
@@ -345,7 +372,7 @@ uint16_t Ps4Host::tick_analog(proto_Output &type)
             case RockBandGuitar_Tilt:
                 return data->tilt << 8;
             case RockBandGuitar_Pickup:
-                return data->tilt << 8;
+                return data->pickup << 8;
             default:
                 return 0;
             }

@@ -2,6 +2,7 @@
 #include "base.hpp"
 #include "device.pb.h"
 #include "band_hero_drum.hpp"
+#include "midi.hpp"
 class BandHeroDrumDevice : public MidiDevice
 {
 public:
@@ -16,4 +17,5 @@ private:
     BandHeroDrum m_band_hero_drum;
     proto_BandHeroDrumDevice m_device;
     uint32_t m_last_value = 0;
+    MidiStaticBuffers<32, 0, 32, 1> m_midi_buffers;
 };

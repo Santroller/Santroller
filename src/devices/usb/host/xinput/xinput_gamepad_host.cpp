@@ -118,6 +118,10 @@ bool XInputGamepadHost::set_config()
         {
             m_subtype = GuitarHeroDrums;
         }
+        if (m_subtype == GuitarHeroGuitar && caps.leftThumbX == 0xFFC0 && caps.rightThumbX == 0xFFC0)
+        {
+            m_wt = true;
+        }
         // Pro guitars we have to identify by vid+pid
         if (caps.leftThumbX == HARMONIX_VID)
         {
@@ -133,6 +137,13 @@ bool XInputGamepadHost::set_config()
                 break;
             }
         }
+    }
+    uint16_t vid = 0;
+    uint16_t pid = 0;
+    tuh_vid_pid_get(m_dev_addr, &vid, &pid);
+    if (vid == XBOX_REDOCTANE_VID && pid == XBOX_360_WT_KIOSK_PID)
+    {
+        m_wt = true;
     }
     // request vibration caps since some devices expect it
     send_ctrl_xfer(setup_vibration_caps, &caps_vibr, nullptr);
@@ -150,7 +161,7 @@ bool XInputGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t 
 
 bool XInputGamepadHost::tick_digital(proto_Output &type)
 {
-    return xinput_tick_digital_impl(m_ep_in_buf, m_subtype, type);
+    return xinput_tick_digital_impl(m_ep_in_buf, m_subtype, type, m_wt);
 }
 uint16_t XInputGamepadHost::tick_analog(proto_Output &type)
 {

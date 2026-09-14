@@ -2,11 +2,12 @@
 
 #include "protocols/xinput.hpp"
 #include "config/config.hpp"
+#include "devices/usb/host/gh_slider_helpers.h"
 
 // Shared tick_digital and tick_analog implementations for XInput devices
 // These functions take the buffer and subtype as parameters
 
-inline bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_Output &type)
+inline bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_Output &type, bool is_wt = false)
 {
     if (type.which_mapping == proto_Output_gamepadButton_tag)
     {
@@ -53,6 +54,8 @@ inline bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, 
         if (type.which_mapping == proto_Output_ghButton_tag)
         {
             auto data = (XInputGuitarHeroGuitar_Data_t *)ep_in_buf;
+            uint8_t slider = (((uint16_t)data->slider + 0x80) >> 8) ^ 0x80;
+            uint8_t frets = is_wt ? decode_ghwt_slider(slider) : decode_gh5_slider(slider);
             switch (type.mapping.ghButton)
             {
             case GuitarHeroGuitar_Green:
@@ -65,16 +68,18 @@ inline bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, 
                 return data->x;
             case GuitarHeroGuitar_Orange:
                 return data->leftShoulder;
+            case GuitarHeroGuitar_Pedal:
+                return data->rightShoulder;
             case GuitarHeroGuitar_TapGreen:
-                return false;
+                return frets & 0b00001;
             case GuitarHeroGuitar_TapRed:
-                return false;
+                return frets & 0b00010;
             case GuitarHeroGuitar_TapYellow:
-                return false;
+                return frets & 0b00100;
             case GuitarHeroGuitar_TapBlue:
-                return false;
+                return frets & 0b01000;
             case GuitarHeroGuitar_TapOrange:
-                return false;
+                return frets & 0b10000;
             default:
                 return false;
             }
@@ -130,9 +135,9 @@ inline bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, 
             case GuitarHeroLiveGuitar_White3:
                 return data->rightShoulder;
             case GuitarHeroLiveGuitar_StrumUp:
-                return data->strumBar == 0x00;
+                return data->strumBar > 0;
             case GuitarHeroLiveGuitar_StrumDown:
-                return data->strumBar == 0xFF;
+                return data->strumBar < 0;
             default:
                 return false;
             }
@@ -157,13 +162,13 @@ inline uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtyp
         case Gamepad_RightTrigger:
             return data->rightTrigger << 8;
         case Gamepad_LeftStickX:
-            return data->leftStickX + INT16_MAX;
+            return (uint16_t)data->leftStickX ^ 0x8000;
         case Gamepad_LeftStickY:
-            return data->leftStickY + INT16_MAX;
+            return (uint16_t)data->leftStickY ^ 0x8000;
         case Gamepad_RightStickX:
-            return data->rightStickX + INT16_MAX;
+            return (uint16_t)data->rightStickX ^ 0x8000;
         case Gamepad_RightStickY:
-            return data->rightStickY + INT16_MAX;
+            return (uint16_t)data->rightStickY ^ 0x8000;
         default:
             return 0;
         }
@@ -177,9 +182,9 @@ inline uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtyp
             switch (type.mapping.ghAxis)
             {
             case GuitarHeroGuitar_Whammy:
-                return data->whammy + INT16_MAX;
+                return (uint16_t)data->whammy ^ 0x8000;
             case GuitarHeroGuitar_Tilt:
-                return data->tilt + INT16_MAX;
+                return (uint16_t)data->tilt ^ 0x8000;
             default:
                 return 0;
             }
@@ -192,9 +197,9 @@ inline uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtyp
             switch (type.mapping.ghlAxis)
             {
             case GuitarHeroLiveGuitar_Whammy:
-                return data->whammy + INT16_MAX;
+                return (uint16_t)data->whammy ^ 0x8000;
             case GuitarHeroLiveGuitar_Tilt:
-                return data->tilt + INT16_MAX;
+                return (uint16_t)data->tilt ^ 0x8000;
             default:
                 return 0;
             }
@@ -207,11 +212,11 @@ inline uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtyp
             switch (type.mapping.rbAxis)
             {
             case RockBandGuitar_Whammy:
-                return data->whammy + INT16_MAX;
+                return (uint16_t)data->whammy ^ 0x8000;
             case RockBandGuitar_Tilt:
-                return data->tilt + INT16_MAX;
+                return (uint16_t)data->tilt ^ 0x8000;
             case RockBandGuitar_Pickup:
-                return data->pickup + INT16_MAX;
+                return data->pickup << 8;
             default:
                 return 0;
             }

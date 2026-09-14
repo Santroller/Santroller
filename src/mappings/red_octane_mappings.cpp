@@ -1138,6 +1138,39 @@ void LiveGuitarButtonMapping::update_ogxbox(uint8_t *buf)
 }
 void LiveGuitarButtonMapping::update_xboxone(uint8_t *buf)
 {
+    XboxOneGHLGuitar_Data_t *ghl = (XboxOneGHLGuitar_Data_t *)buf;
+    PS3GHLGuitar_Data_t *report = &ghl->report;
+    switch (m_mapping.mapping.mapping.ghlButton)
+    {
+    case GuitarHeroLiveGuitar_White1:
+        report->x |= m_last_value;
+        break;
+    case GuitarHeroLiveGuitar_White2:
+        report->leftShoulder |= m_last_value;
+        break;
+    case GuitarHeroLiveGuitar_White3:
+        report->rightShoulder |= m_last_value;
+        break;
+    case GuitarHeroLiveGuitar_Black1:
+        report->a |= m_last_value;
+        break;
+    case GuitarHeroLiveGuitar_Black2:
+        report->b |= m_last_value;
+        break;
+    case GuitarHeroLiveGuitar_Black3:
+        report->y |= m_last_value;
+        break;
+    case GuitarHeroLiveGuitar_StrumUp:
+        report->dpadUp |= m_last_value;
+        report->strumBar = 0;
+        break;
+    case GuitarHeroLiveGuitar_StrumDown:
+        report->dpadDown |= m_last_value;
+        report->strumBar = 0xFF;
+        break;
+    default:
+        break;
+    }
 }
 
 LiveGuitarAxisMapping::LiveGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghlAxis == GuitarHeroLiveGuitar_Whammy)
@@ -1257,6 +1290,23 @@ void LiveGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 }
 void LiveGuitarAxisMapping::update_xboxone(uint8_t *buf)
 {
+    if (m_centered)
+    {
+        return;
+    }
+    XboxOneGHLGuitar_Data_t *ghl = (XboxOneGHLGuitar_Data_t *)buf;
+    PS3GHLGuitar_Data_t *report = &ghl->report;
+    switch (m_mapping.mapping.mapping.ghlAxis)
+    {
+    case GuitarHeroLiveGuitar_Whammy:
+        report->whammy = m_last_value >> 8;
+        break;
+    case GuitarHeroLiveGuitar_Tilt:
+        report->tilt = m_last_value >> 2;
+        break;
+    default:
+        break;
+    }
 }
 
 DJHTurntableButtonMapping::DJHTurntableButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)

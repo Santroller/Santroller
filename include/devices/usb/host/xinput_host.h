@@ -19,6 +19,7 @@ private:
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[sizeof(XInputGamepad_Data_t)];
+    bool m_wt = false;
 };
 class XInputAudioHost : public UsbHostInterface
 {
@@ -93,6 +94,7 @@ private:
     bool m_found = false;
     uint32_t m_check_caps = 0;
     uint32_t m_check_link = 0;
+    bool m_wt = false;
 };
 class XInputWirelessAudioHost : public UsbHostInterface
 {

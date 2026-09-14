@@ -29,6 +29,7 @@ MidiHost::~MidiHost()
 MidiHost::MidiHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id)
 {
   m_subtype = SubType_Midi;
+  init_buffers(m_host_buffers.config());
   TU_LOG_DRV("MIDI Host Interface created\r\n");
 }
 

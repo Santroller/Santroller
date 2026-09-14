@@ -25,13 +25,48 @@ typedef struct
     uint8_t data[32];
     bool sysex_in_progress;
 } cable_state_t;
+
+struct MidiBufferConfig
+{
+    uint8_t *rx_ff_buf = nullptr;
+    uint16_t rx_ff_bufsize = 0;
+    uint8_t *m_ep_in_buf = nullptr;
+    uint8_t *tx_ff_buf = nullptr;
+    uint16_t tx_ff_bufsize = 0;
+    uint8_t *m_ep_out_buf = nullptr;
+    uint8_t max_cables = 1;
+};
+
+template <uint16_t RX_SIZE = 64, uint16_t TX_SIZE = 0, uint16_t EP_SIZE = 64, uint8_t MAX_CABLES = 1>
+struct MidiStaticBuffers
+{
+    uint8_t rx_ff_buf[RX_SIZE > 0 ? RX_SIZE : 1];
+    CFG_TUSB_MEM_ALIGN uint8_t ep_in_buf[EP_SIZE > 0 ? EP_SIZE : 1];
+    uint8_t tx_ff_buf[TX_SIZE > 0 ? TX_SIZE : 1];
+    CFG_TUSB_MEM_ALIGN uint8_t ep_out_buf[TX_SIZE > 0 ? EP_SIZE : 1];
+
+    MidiBufferConfig config()
+    {
+        MidiBufferConfig cfg;
+        cfg.rx_ff_buf = RX_SIZE > 0 ? rx_ff_buf : nullptr;
+        cfg.rx_ff_bufsize = RX_SIZE;
+        cfg.m_ep_in_buf = RX_SIZE > 0 ? ep_in_buf : nullptr;
+        cfg.tx_ff_buf = TX_SIZE > 0 ? tx_ff_buf : nullptr;
+        cfg.tx_ff_bufsize = TX_SIZE;
+        cfg.m_ep_out_buf = TX_SIZE > 0 ? ep_out_buf : nullptr;
+        cfg.max_cables = MAX_CABLES;
+        return cfg;
+    }
+};
+
 class MidiDevice : public Device
 {
     friend class MidiHost;
 
 public:
-    MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased);
+    MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased, const MidiBufferConfig &buffer_config);
     virtual ~MidiDevice();
+    void init_buffers(const MidiBufferConfig &buffer_config);
     void process_midi_data(uint8_t *data, uint16_t len);
     virtual void update(bool full_poll, bool send_events);
     void rescan(bool first);
@@ -52,12 +87,8 @@ private:
     {
         tu_edpt_stream_t tx;
         tu_edpt_stream_t rx;
-
-        uint8_t rx_ff_buf[512];
-        uint8_t tx_ff_buf[512];
     } ep_stream;
-    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[TUH_EPSIZE_BULK_MAX];
-    CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[TUH_EPSIZE_BULK_MAX];
+
     static constexpr size_t MIDI_NOTE_EVENT_CAPACITY = 32;
     struct MidiNoteEvent
     {
@@ -71,14 +102,15 @@ private:
     uint8_t midiNoteEventCount = 0;
     uint16_t midiNoteEventSequence = 0;
     int16_t midiPitchWheel[16];
-    uint8_t midiControlChanges[16][128];
-    uint8_t midiNoteVelocity[16][128];
+    uint8_t *midiControlChanges[16] = {};
+    uint8_t *midiNoteVelocity[16] = {};
     uint8_t midiFrets[6];
     uint8_t midiStringVelocities[6];
     bool seenChannels[18];
     ProGuitar_Sysex_Buttons_t midiButtons;
     bool usbBased;
-    cable_state_t cable_status[16];
+    cable_state_t *cable_status = nullptr;
+    uint8_t m_max_cables = 1;
     uint8_t usb_pos = 0;
 
     void push_midi_note_event(uint8_t channel, uint8_t note, uint8_t velocity);

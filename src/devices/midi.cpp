@@ -7,14 +7,32 @@
 #include "devices/usb/host/hid/hid_host.h"
 #include "main.hpp"
 #include "config/config.hpp"
-MidiDevice::MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased) : Device(id), usbBased(usbBased)
+void MidiDevice::init_buffers(const MidiBufferConfig &buffer_config)
 {
+    tu_edpt_stream_deinit(&ep_stream.rx);
+    tu_edpt_stream_deinit(&ep_stream.tx);
     tu_memclr(&ep_stream, sizeof(ep_stream));
-    tu_edpt_stream_init(&ep_stream.rx, true, false, false,
-                        ep_stream.rx_ff_buf, 512, m_ep_in_buf);
-    tu_edpt_stream_init(&ep_stream.tx, true, true, false,
-                        ep_stream.tx_ff_buf, 512, m_ep_out_buf);
-    memset(cable_status, 0, sizeof(cable_status));
+    if (buffer_config.rx_ff_buf && buffer_config.rx_ff_bufsize && buffer_config.m_ep_in_buf)
+    {
+        tu_edpt_stream_init(&ep_stream.rx, true, false, false,
+                            buffer_config.rx_ff_buf, buffer_config.rx_ff_bufsize, buffer_config.m_ep_in_buf);
+    }
+    if (buffer_config.tx_ff_buf && buffer_config.tx_ff_bufsize && buffer_config.m_ep_out_buf)
+    {
+        tu_edpt_stream_init(&ep_stream.tx, true, true, false,
+                            buffer_config.tx_ff_buf, buffer_config.tx_ff_bufsize, buffer_config.m_ep_out_buf);
+    }
+    if (cable_status)
+    {
+        delete[] cable_status;
+    }
+    m_max_cables = buffer_config.max_cables ? buffer_config.max_cables : 1;
+    cable_status = new cable_state_t[m_max_cables]();
+}
+
+MidiDevice::MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased, const MidiBufferConfig &buffer_config) : Device(id), usbBased(usbBased)
+{
+    init_buffers(buffer_config);
     memset(midiNoteEvents, 0, sizeof(midiNoteEvents));
     memset(midiPitchWheel, 0, sizeof(midiPitchWheel));
     memset(midiControlChanges, 0, sizeof(midiControlChanges));
@@ -35,6 +53,15 @@ MidiDevice::~MidiDevice()
     printf("MIDI Device destroyed\r\n");
     tu_edpt_stream_deinit(&ep_stream.rx);
     tu_edpt_stream_deinit(&ep_stream.tx);
+    delete[] cable_status;
+    cable_status = nullptr;
+    for (int i = 0; i < 16; i++)
+    {
+        delete[] midiControlChanges[i];
+        midiControlChanges[i] = nullptr;
+        delete[] midiNoteVelocity[i];
+        midiNoteVelocity[i] = nullptr;
+    }
 }
 
 void MidiDevice::save_reload_state(DeviceReloadState& state) const
@@ -93,9 +120,10 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 continue;
             }
             // read cable number
-            uint8_t p_cable_num;
+            uint8_t p_cable_num = 0;
             tu_edpt_stream_read(&ep_stream.rx, &p_cable_num, 1);
-            cable_state = &cable_status[(p_cable_num >> 4) & 0x0f];
+            uint8_t cable_num = (p_cable_num >> 4) & 0x0f;
+            cable_state = (cable_num < m_max_cables) ? &cable_status[cable_num] : &cable_status[0];
             usb_pos++;
             continue;
         }
@@ -238,20 +266,34 @@ void MidiDevice::update(bool full_poll, bool send_events)
             switch (status)
             {
             case MIDI_CIN_NOTE_OFF:
-                midiNoteVelocity[channel][cable_state->data[1]] = 0;
+                if (midiNoteVelocity[channel])
+                {
+                    midiNoteVelocity[channel][cable_state->data[1]] = 0;
+                }
                 break;
             case MIDI_CIN_NOTE_ON:
                 if (cable_state->data[2] != 0)
                 {
+                    if (!midiNoteVelocity[channel])
+                    {
+                        midiNoteVelocity[channel] = new uint8_t[128]();
+                    }
                     midiNoteVelocity[channel][cable_state->data[1]] = cable_state->data[2];
                     push_midi_note_event(channel, cable_state->data[1], cable_state->data[2]);
                 }
                 else
                 {
-                    midiNoteVelocity[channel][cable_state->data[1]] = 0;
+                    if (midiNoteVelocity[channel])
+                    {
+                        midiNoteVelocity[channel][cable_state->data[1]] = 0;
+                    }
                 }
                 break;
             case MIDI_CIN_CONTROL_CHANGE:
+                if (!midiControlChanges[channel])
+                {
+                    midiControlChanges[channel] = new uint8_t[128]();
+                }
                 midiControlChanges[channel][cable_state->data[1]] = cable_state->data[2];
                 break;
             case MIDI_CIN_PITCH_BEND_CHANGE:
@@ -389,11 +431,15 @@ bool MidiDevice::consume_midi_note_event(uint8_t channel, uint8_t note, uint16_t
 
 uint16_t MidiDevice::read_midi_control_change(uint8_t channel, uint8_t cc)
 {
+    if (channel >= 16 || !midiControlChanges[channel] || cc >= 128)
+    {
+        return 0;
+    }
     return midiControlChanges[channel][cc] << 9;
 }
 uint8_t MidiDevice::read_midi_note(uint8_t channel, uint8_t note) const
 {
-    if (channel >= 16 || note >= 128)
+    if (channel >= 16 || note >= 128 || !midiNoteVelocity[channel])
     {
         return 0;
     }
@@ -552,7 +598,7 @@ bool MidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
     }
     case ProGuitar_Pedal:
         // pro guitar just sends sustain pedal cc on chan 1
-        return midiControlChanges[0][MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL] > 40;
+        return midiControlChanges[0] ? (midiControlChanges[0][MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL] > 40) : false;
     }
     return 0;
 }

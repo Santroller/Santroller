@@ -1,11 +1,15 @@
 #pragma once
 #include "devices/usb/host/hid/hid_host.h"
+#include "protocols/raphnet.hpp"
 
 class RaphnetHost : public HidHost
 {
 public:
     ~RaphnetHost() {}
-    RaphnetHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : HidHost(dev_addr, interface, id) {}
+    RaphnetHost(uint8_t dev_addr, uint8_t interface, uint16_t id, SubType subtype = Gamepad) : HidHost(dev_addr, interface, id)
+    {
+        m_subtype = subtype;
+    }
 
     bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);

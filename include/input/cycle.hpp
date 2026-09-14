@@ -12,6 +12,7 @@ public:
     bool tick_digital();
     uint16_t tick_analog();
     void setup();
+    uint64_t hardware_id() const override { return m_input ? m_input->hardware_id() : 0; }
 
 private:
     std::unique_ptr<Input> m_input;

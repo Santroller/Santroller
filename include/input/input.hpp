@@ -2,6 +2,24 @@
 #include <stdint.h>
 #include "input_enums.pb.h"
 class MidiNoteInput;
+class ShortcutInput;
+
+enum InputHardwareType : uint8_t {
+    InputHw_None = 0,
+    InputHw_GPIO = 1,
+    InputHw_WiiButton = 2,
+    InputHw_PS2Button = 3,
+    InputHw_Matrix = 4,
+    InputHw_MPR121 = 5,
+    InputHw_USBButton = 6,
+    InputHw_KeyboardKey = 7,
+    InputHw_Crkd = 8,
+    InputHw_VTechExpander = 9,
+    InputHw_Gh5Neck = 10,
+    InputHw_ProtarNeck = 11,
+    InputHw_MidiNote = 12,
+    InputHw_Multiplexer = 13,
+};
 
 class Input
 {
@@ -14,6 +32,8 @@ public:
     virtual bool consumes_events() const { return false; }
     virtual bool consume_event(uint16_t &value) { (void)value; return false; }
     virtual MidiNoteInput* as_midi_note() { return nullptr; }
+    virtual ShortcutInput* as_shortcut() { return nullptr; }
+    virtual uint64_t hardware_id() const { return 0; }
 };
 
 

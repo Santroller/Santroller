@@ -16,6 +16,7 @@ public:
     uint8_t channel() const { return m_input.channel; }
     uint8_t note() const { return m_input.note; }
     std::shared_ptr<MidiDevice> device() const { return m_device; }
+    uint64_t hardware_id() const override { return (static_cast<uint64_t>(InputHw_MidiNote) << 56) | (static_cast<uint64_t>(m_device ? m_device->m_id : 0) << 16) | (static_cast<uint64_t>(m_input.channel) << 8) | static_cast<uint64_t>(m_input.note); }
 
 private:
     void setup();

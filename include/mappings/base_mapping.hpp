@@ -31,6 +31,20 @@ public:
     virtual void update_xboxone(uint8_t *report) { (void)report; }
     void update_digital(bool full_poll);
     uint16_t calibrate(float val, float max, float min, float deadzone, float center, bool trigger);
+    uint16_t id() const { return m_id; }
+    Input* get_input() const { return m_input.get(); }
+    void add_masked_mapping(Mapping* mapping) {
+        for (auto *m : m_masked_mappings) {
+            if (m == mapping) return;
+        }
+        m_masked_mappings.push_back(mapping);
+    }
+    void clear_masked_mappings() { m_masked_mappings.clear(); }
+    void mask_by_shortcut() {
+        m_suppressed = true;
+        m_waiting_for_release = true;
+    }
+    bool is_suppressed() const { return m_suppressed || m_waiting_for_release; }
 
 protected:
     proto_Mapping m_mapping;
@@ -41,6 +55,9 @@ protected:
     uint32_t m_last_sent_calibrated_value = 0;
     uint32_t m_last_send = 0;
     std::unique_ptr<Input> m_input;
+    std::vector<Mapping*> m_masked_mappings;
+    bool m_suppressed = false;
+    bool m_waiting_for_release = false;
 };
 
 class ButtonMapping : public Mapping

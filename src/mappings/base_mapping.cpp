@@ -7,6 +7,7 @@
 #include <utils.h>
 #include <stdint.h>
 #include "emulation/usb/hid_device.h"
+#include "input/shortcut.hpp"
 uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, float center, bool trigger)
 {
     if (trigger)
@@ -117,6 +118,48 @@ void ButtonMapping::update(bool full_poll, bool send_events)
         if (!event_driven && m_mapping.inverted) {
             calcVal = !calcVal;
         }
+    }
+
+    bool physical_pressed = calcVal;
+
+    // Release latching: if previously suppressed by a shortcut, remain suppressed
+    // until the physical input is released.
+    if (m_waiting_for_release)
+    {
+        if (!physical_pressed)
+        {
+            m_waiting_for_release = false;
+        }
+    }
+
+    // If this mapping is a shortcut that masks other mappings:
+    if (!m_masked_mappings.empty())
+    {
+        auto *shortcut = m_input ? m_input->as_shortcut() : nullptr;
+        bool chord_active = shortcut ? shortcut->tick_digital() : physical_pressed;
+        if (chord_active)
+        {
+            for (auto *masked : m_masked_mappings)
+            {
+                masked->mask_by_shortcut();
+            }
+        }
+    }
+
+    if (m_suppressed || m_waiting_for_release)
+    {
+        calcVal = false;
+        m_last_value = false;
+    }
+
+    m_suppressed = false;
+
+    if (m_mapping.has_trigger)
+    {
+        uint16_t event_value;
+        bool event_driven = m_input->consumes_events();
+        bool event_received = event_driven && m_input->consume_event(event_value);
+        auto val = event_driven ? (event_received ? event_value : 0) : m_input->tick_analog();
         if (send_events && (val != m_last_sent_value || full_poll))
         {
             proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, (uint32_t)val, calcVal ? (uint32_t)65535 : (uint32_t)0}}};
@@ -166,6 +209,23 @@ void AxisMapping::update(bool full_poll, bool send_events)
     {
         val = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
     }
+
+    bool physical_pressed = (val != (uint32_t)m_mapping.center);
+    if (m_waiting_for_release)
+    {
+        if (!physical_pressed)
+        {
+            m_waiting_for_release = false;
+        }
+    }
+
+    if (m_suppressed || m_waiting_for_release)
+    {
+        val = m_mapping.center;
+        m_calibrated_value = m_mapping.center;
+    }
+    m_suppressed = false;
+
     if (val != (uint32_t)m_mapping.center)
     {
         m_last_poll = millis();

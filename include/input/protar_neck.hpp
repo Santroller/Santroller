@@ -21,6 +21,11 @@ public:
     ProtarNeckButtonInput(proto_ProtarNeckButtonInput input, std::shared_ptr<ProtarNeckDevice> device);
     bool tick_digital();
     uint16_t tick_analog();
+    uint64_t hardware_id() const override {
+        return (static_cast<uint64_t>(InputHw_ProtarNeck) << 56) |
+               (static_cast<uint64_t>(m_device ? m_device->m_id : 0) << 16) |
+               static_cast<uint64_t>(m_input.button);
+    }
 
 private:
     void setup();

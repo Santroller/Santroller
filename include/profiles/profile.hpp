@@ -16,6 +16,7 @@ class Profile
 {
 public:
     virtual ~Profile();
+    void resolve_shortcuts();
     char name[32];
     SubType subtype;
     bool xinput_on_windows;

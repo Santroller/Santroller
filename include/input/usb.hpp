@@ -22,6 +22,12 @@ public:
     USBButtonInput(proto_USBButtonInput input, std::shared_ptr<UsbHostInterface> device);
     bool tick_digital();
     uint16_t tick_analog();
+    uint64_t hardware_id() const override {
+        return (static_cast<uint64_t>(InputHw_USBButton) << 56) |
+               (static_cast<uint64_t>(m_input.deviceid) << 32) |
+               (static_cast<uint64_t>(m_input.button.which_mapping) << 16) |
+               static_cast<uint16_t>(m_input.button.mapping.keycode);
+    }
 
 private:
     void setup();
@@ -34,6 +40,7 @@ public:
     KeyboardKeyInput(proto_KeyboardKeyInput input, std::shared_ptr<UsbHostInterface> device);
     bool tick_digital();
     uint16_t tick_analog();
+    uint64_t hardware_id() const override { return (static_cast<uint64_t>(InputHw_KeyboardKey) << 56) | (static_cast<uint64_t>(m_input.deviceid) << 16) | static_cast<uint32_t>(m_input.key); }
 
 private:
     void setup();

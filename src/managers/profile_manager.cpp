@@ -43,6 +43,10 @@ bool ProfileManager::changed_types()
 }
 void ProfileManager::add_profile(uint32_t profile_id, std::shared_ptr<Profile> profile)
 {
+    if (profile)
+    {
+        profile->resolve_shortcuts();
+    }
     m_profiles[profile_id].push_back(profile);
 }
 

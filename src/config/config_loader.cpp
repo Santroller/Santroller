@@ -18,6 +18,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg);
 bool decode_cycle_input_states(pb_istream_t *stream, const pb_field_t *field, void **arg);
 bool decode_toggle_input_states(pb_istream_t *stream, const pb_field_t *field, void **arg);
 bool decode_bluetooth_states(pb_istream_t *stream, const pb_field_t *field, void **arg);
+bool decode_bluetooth_tlv_entries(pb_istream_t *stream, const pb_field_t *field, void **arg);
 
 bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
 {
@@ -50,6 +51,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     block.states.funcs.decode = decode_cycle_input_states;
     block.toggleStates.funcs.decode = decode_toggle_input_states;
     block.bluetoothStates.funcs.decode = decode_bluetooth_states;
+    block.tlvEntries.funcs.decode = decode_bluetooth_tlv_entries;
     pb_decode(&auxInputStream, proto_AuxConfigBlock_fields, &block);
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
     profile_mgr.discard_preserved_devices();

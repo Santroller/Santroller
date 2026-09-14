@@ -7,6 +7,7 @@
 #include "devices/bt/bt_classic_rx.hpp"
 #include "devices/bt/ble_rx.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
+#include "devices/bt/bt_host.hpp"
 BluetoothDevice::BluetoothDevice(proto_BluetoothDevice device, uint16_t id) : Device(id), m_device(device)
 {
 }
@@ -45,6 +46,7 @@ void BluetoothDevice::update(bool full_poll, bool send_events)
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, ConfigManager::instance().has_bluetooth()}}};
         HIDConfigDevice::send_event(event, true);
     }
+    bt_host_update_interfaces(full_poll, send_events);
 }
 
 bool BluetoothDevice::using_pin(uint8_t pin)

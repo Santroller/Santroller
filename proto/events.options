@@ -3,3 +3,4 @@ proto.MidiEvent.data max_size:32
 proto.ConsoleEvent.data max_size:32
 proto.EventList.event max_count:4
 proto.UsbDeviceHotplugEvent.name max_size:32
+proto.BtDeviceHotplugEvent.name max_size:32

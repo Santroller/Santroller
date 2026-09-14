@@ -1,5 +1,6 @@
 #include "config/config.hpp"
 #include <cstring>
+#include "devices/bt/bt_tlv_storage.hpp"
 #include "managers/profile_manager.hpp"
 #include "managers/device_manager.hpp"
 #include "managers/config_manager.hpp"
@@ -621,14 +622,31 @@ bool decode_toggle_input_states(pb_istream_t *stream, const pb_field_t *field, v
 }
 bool decode_bluetooth_states(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    proto_BluetoothPairingState proto_bluetooth;
+    proto_BluetoothPairingState proto_bluetooth = proto_BluetoothPairingState_init_zero;
     auto ret = pb_decode(stream, proto_BluetoothPairingState_fields, &proto_bluetooth);
     if (ret)
     {
-        DeviceFactory::set_bluetooth_pairing_state(proto_bluetooth.id, proto_bluetooth.macAddress, proto_bluetooth.name, proto_bluetooth.ble);
+        SubType subtype = proto_bluetooth.has_subtype ? proto_bluetooth.subtype : SubType_Gamepad;
+        BtControllerType ctrl_type = proto_bluetooth.has_controllerType ? proto_bluetooth.controllerType : BtControllerType_BtControllerTypeGeneric;
+        uint16_t vid = proto_bluetooth.has_vid ? proto_bluetooth.vid : 0;
+        uint16_t pid = proto_bluetooth.has_pid ? proto_bluetooth.pid : 0;
+        const uint8_t *link_key = proto_bluetooth.has_linkKey ? proto_bluetooth.linkKey : nullptr;
+        DeviceFactory::set_bluetooth_pairing_state(proto_bluetooth.id, proto_bluetooth.macAddress, proto_bluetooth.name, proto_bluetooth.ble, subtype, ctrl_type, vid, pid, link_key);
     }
     return ret;
 }
+
+bool decode_bluetooth_tlv_entries(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    proto_BluetoothTlvEntry proto_tlv = proto_BluetoothTlvEntry_init_zero;
+    auto ret = pb_decode(stream, proto_BluetoothTlvEntry_fields, &proto_tlv);
+    if (ret)
+    {
+        BtTlvStorage::instance().set_tag_from_config(proto_tlv.tag, proto_tlv.value.bytes, proto_tlv.value.size);
+    }
+    return ret;
+}
+
 bool encode_toggle_input_states(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
     proto_ToggleInputState proto_toggle;
@@ -643,7 +661,7 @@ bool encode_toggle_input_states(pb_ostream_t *stream, const pb_field_t *field, v
 
 bool encode_bluetooth_states(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
-    proto_BluetoothPairingState proto_bluetooth proto_BluetoothPairingState_init_zero;
+    proto_BluetoothPairingState proto_bluetooth = proto_BluetoothPairingState_init_zero;
     DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state)
                                                    {
         proto_bluetooth.id = id;
@@ -651,8 +669,34 @@ bool encode_bluetooth_states(pb_ostream_t *stream, const pb_field_t *field, void
         strncpy(proto_bluetooth.name, state.name, sizeof(proto_bluetooth.name) - 1);
         proto_bluetooth.name[sizeof(proto_bluetooth.name) - 1] = '\0';
         proto_bluetooth.ble = state.ble;
+        proto_bluetooth.has_subtype = true;
+        proto_bluetooth.subtype = state.subtype;
+        proto_bluetooth.has_controllerType = true;
+        proto_bluetooth.controllerType = state.controller_type;
+        proto_bluetooth.has_vid = true;
+        proto_bluetooth.vid = state.vid;
+        proto_bluetooth.has_pid = true;
+        proto_bluetooth.pid = state.pid;
+        if (state.has_link_key)
+        {
+            proto_bluetooth.has_linkKey = true;
+            memcpy(proto_bluetooth.linkKey, state.link_key, sizeof(proto_bluetooth.linkKey));
+        }
         pb_encode_tag_for_field(stream, field);
         pb_encode_submessage(stream, proto_BluetoothPairingState_fields, &proto_bluetooth); });
+    return true;
+}
+
+bool encode_bluetooth_tlv_entries(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
+{
+    proto_BluetoothTlvEntry proto_tlv = proto_BluetoothTlvEntry_init_zero;
+    BtTlvStorage::instance().foreach_entry([&](uint32_t tag, const uint8_t *data, uint8_t length)
+                                           {
+        proto_tlv.tag = tag;
+        proto_tlv.value.size = length;
+        memcpy(proto_tlv.value.bytes, data, length);
+        pb_encode_tag_for_field(stream, field);
+        pb_encode_submessage(stream, proto_BluetoothTlvEntry_fields, &proto_tlv); });
     return true;
 }
 
@@ -662,6 +706,7 @@ bool encode_auxiliary(uint8_t *buffer, uint32_t capacity, uint32_t &written, voi
     block.states.funcs.encode = encode_cycle_input_states;
     block.toggleStates.funcs.encode = encode_toggle_input_states;
     block.bluetoothStates.funcs.encode = encode_bluetooth_states;
+    block.tlvEntries.funcs.encode = encode_bluetooth_tlv_entries;
 
     pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, capacity);
     if (!pb_encode(&outputStream, proto_AuxConfigBlock_fields, &block))
@@ -716,13 +761,25 @@ void update_aux_toggle(uint32_t id, bool state)
     config_storage.update_auxiliary(encode_auxiliary);
 }
 
-void update_aux_bluetooth_pairing(uint32_t id, const uint8_t mac[6], const char *name, bool ble)
+void update_aux_bluetooth_pairing(uint32_t id, const uint8_t mac[6], const char *name, bool ble,
+                                  SubType subtype, BtControllerType controller_type,
+                                  uint16_t vid, uint16_t pid,
+                                  const uint8_t *link_key)
 {
     if (config_mgr.get_reinit_time())
     {
         return;
     }
-    DeviceFactory::set_bluetooth_pairing_state(id, mac, name, ble);
+    DeviceFactory::set_bluetooth_pairing_state(id, mac, name, ble, subtype, controller_type, vid, pid, link_key);
+    config_storage.update_auxiliary(encode_auxiliary);
+}
+
+void update_aux_tlv()
+{
+    if (config_mgr.get_reinit_time())
+    {
+        return;
+    }
     config_storage.update_auxiliary(encode_auxiliary);
 }
 

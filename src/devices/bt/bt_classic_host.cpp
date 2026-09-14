@@ -1,0 +1,934 @@
+#include "devices/bt/bt_classic_host.hpp"
+#include "devices/bt/bt_host.hpp"
+#include "managers/device_manager.hpp"
+#include "hidparser.h"
+#include "btstack.h"
+#include "btstack_config.h"
+#include "protocols/ps3.hpp"
+#include "protocols/ps4.hpp"
+#include "protocols/switch.hpp"
+#include "utils.h"
+
+void reload();
+
+// Include USB host headers for shared tick free functions.
+// These headers pull in TinyUSB but they come AFTER btstack.h here.
+// Since btstack defines HID_REPORT_TYPE_* as an enum and tinyusb
+// defines them as a conflicting enum, we avoid including both.
+// The USB host headers only need to be included for the function DECLARATIONS;
+// the actual implementations live in the USB host .cpp files.
+// Include order matters: btstack.h first, then we need a trick:
+// We define TUSB_CONFIG_FILE to suppress tusb_option.h from being loaded.
+// Actually the simplest fix: just declare the shared functions ourselves.
+bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool wt = false);
+uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+bool ps4_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, uint32_t *last_ghl_poke);
+uint16_t ps4_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+bool ps5_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+uint16_t ps5_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+bool ps4_parse_capabilities(const uint8_t *data, uint16_t len, uint16_t vid, uint16_t pid,
+                            SubType &subtype, bool &sensors, bool &lightbar, bool &vibration, bool &touchpad);
+bool ps5_parse_capabilities(const uint8_t *data, uint16_t len,
+                            SubType &subtype, bool &sensors, bool &lightbar, bool &vibration, bool &touchpad);
+
+extern "C" {
+#include "gip_device.h"
+#include "gip_report_queue.h"
+#include "gip_button_mapping.h"
+#include "gip_device_mappings.h"
+}
+
+#include <memory>
+
+// VID/PID constants reused from the USB host headers
+#define SONY_VID             0x054C
+#define SONY_DS3_PID         0x0268
+#define SONY_DS4_PID_1       0x05C4
+#define SONY_DS4_PID_2       0x09CC
+#define SONY_DS4_PID_3       0x0BA0
+#define SONY_DS5_PID         0x0CE6
+#define SONY_DS5_EDGE_PID    0x0DF2
+#define NINTENDO_VID         0x057E
+#define SWITCH_PRO_PID       0x2009
+#define WII_REMOTE_PID       0x0306
+#define WII_U_PRO_PID        0x0330
+#define XBOX_VID             0x045E
+
+// ============================================================================
+// BtDs3Host
+// ============================================================================
+
+void BtDs3Host::on_connected()
+{
+    // Enable DS3 HID reports — the same command sent for USB DS3
+    uint8_t enable[] = {0x42, 0x0c, 0x00, 0x00};
+    hid_host_send_set_report(m_cid, HID_REPORT_TYPE_FEATURE, 0xF4, enable, sizeof(enable));
+
+    // Set player LED 1
+    ps3_output_report report = {};
+    report.report_id    = 0x01;
+    report.rumble.padding = 0x01;
+    report.rumble.right_duration = 0xFF;
+    report.rumble.left_duration  = 0xFF;
+    report.leds_bitmap = 0x02;
+    for (int i = 0; i < 4; i++)
+    {
+        report.led[i].time_enabled = 0xFF;
+        report.led[i].duty_length  = 0x27;
+        report.led[i].enabled      = 0x10;
+        report.led[i].duty_off     = 0x00;
+        report.led[i].duty_on      = 0x32;
+    }
+    hid_host_send_set_report(m_cid, HID_REPORT_TYPE_OUTPUT, 0x01,
+                             (const uint8_t *)&report, sizeof(report));
+}
+
+bool BtDs3Host::tick_digital(proto_Output &type)
+{
+    return ps3_tick_digital(m_report_buf, m_subtype, false, type);
+}
+
+uint16_t BtDs3Host::tick_analog(proto_Output &type)
+{
+    return ps3_tick_analog(m_report_buf, m_subtype, false, type);
+}
+
+// ============================================================================
+// BtDs4Host
+// ============================================================================
+
+// BT Classic DS4 uses report 0x11:
+//   byte 0: 0xa1 (HID input report prefix)
+//   byte 1: 0x11 (report id)
+//   bytes 2–3: unknown
+//   bytes 4+: same as USB 0x01 report (leftStickX, leftStickY, …)
+//   last 4 bytes: CRC32
+// We normalise it so m_report_buf looks like a USB 0x01 report
+// (report_id=0x01, leftStickX, …) so we can reuse PS4 tick logic unchanged.
+void BtDs4Host::handle_report(const uint8_t *data, uint16_t len)
+{
+    if (len < 2) return;
+
+    // Detect BT-specific framing: first byte is 0x11 when BTstack strips the
+    // leading 0xa1, otherwise it arrives as plain report already.
+    if (data[0] == 0x11 && len >= 12)
+    {
+        // Strip 3-byte BT header, copy as report_id=0x01 + payload, drop 4-byte CRC tail
+        uint16_t raw_payload_len = (len >= 7) ? (len - 7) : 0;
+        uint16_t payload_len = raw_payload_len < (sizeof(m_report_buf) - 1)
+                                   ? raw_payload_len
+                                   : (sizeof(m_report_buf) - 1);
+        m_report_buf[0] = 0x01;
+        memcpy(m_report_buf + 1, data + 3, payload_len);
+    }
+    else
+    {
+        // Already in USB format (or unknown; just copy verbatim)
+        BluetoothHostInterface::handle_report(data, len);
+    }
+}
+
+void BtDs4Host::on_connected()
+{
+    BluetoothHostInterface::on_connected();
+    if (m_third_party && m_cid)
+    {
+        hid_host_send_get_report(m_cid, HID_REPORT_TYPE_FEATURE, 0x03);
+    }
+}
+
+void BtDs4Host::handle_feature_report(const uint8_t *data, uint16_t len)
+{
+    if (m_third_party)
+    {
+        SubType sub = m_subtype;
+        bool sens = m_sensors_supported;
+        bool light = m_lightbar_supported;
+        bool vib = m_vibration_supported;
+        bool touch = m_touchpad_supported;
+        if (ps4_parse_capabilities(data, len, m_vid, m_pid, sub, sens, light, vib, touch))
+        {
+            m_subtype = sub;
+            m_sensors_supported = sens;
+            m_lightbar_supported = light;
+            m_vibration_supported = vib;
+            m_touchpad_supported = touch;
+            printf("PS4 3rd-party capabilities: subtype=%d, sensors=%d, light=%d, vib=%d, touch=%d\r\n",
+                   (int)m_subtype, (int)m_sensors_supported, (int)m_lightbar_supported,
+                   (int)m_vibration_supported, (int)m_touchpad_supported);
+        }
+        else
+        {
+            printf("PS4 3rd-party capabilities: parse failed, defaulting to subtype=%d\r\n", (int)m_subtype);
+        }
+        m_ready = true;
+    }
+}
+
+void BtDs4Host::handle_feature_report_failed()
+{
+    m_ready = true;
+}
+
+bool BtDs4Host::tick_digital(proto_Output &type)
+{
+    return ps4_tick_digital(m_report_buf, m_subtype, m_third_party, type, nullptr);
+}
+
+uint16_t BtDs4Host::tick_analog(proto_Output &type)
+{
+    return ps4_tick_analog(m_report_buf, m_subtype, m_third_party, type);
+}
+
+// ============================================================================
+// BtDs5Host (DualSense over BT Classic)
+// ============================================================================
+
+void BtDs5Host::handle_report(const uint8_t *data, uint16_t len)
+{
+    if (len < 2) return;
+
+    if (data[0] == 0x31 && len >= 11)
+    {
+        uint16_t raw_payload_len = (len >= 2) ? (len - 2) : 0;
+        uint16_t payload_len = raw_payload_len < (sizeof(m_report_buf) - 1)
+                                   ? raw_payload_len
+                                   : (sizeof(m_report_buf) - 1);
+        m_report_buf[0] = 0x01;
+        memcpy(m_report_buf + 1, data + 2, payload_len);
+    }
+    else
+    {
+        BluetoothHostInterface::handle_report(data, len);
+    }
+}
+
+void BtDs5Host::on_connected()
+{
+    BluetoothHostInterface::on_connected();
+    if (m_third_party && m_cid)
+    {
+        hid_host_send_get_report(m_cid, HID_REPORT_TYPE_FEATURE, 0x03);
+    }
+}
+
+void BtDs5Host::handle_feature_report(const uint8_t *data, uint16_t len)
+{
+    if (m_third_party)
+    {
+        SubType sub = m_subtype;
+        bool sens = m_sensors_supported;
+        bool light = m_lightbar_supported;
+        bool vib = m_vibration_supported;
+        bool touch = m_touchpad_supported;
+        if (ps5_parse_capabilities(data, len, sub, sens, light, vib, touch))
+        {
+            m_subtype = sub;
+            m_sensors_supported = sens;
+            m_lightbar_supported = light;
+            m_vibration_supported = vib;
+            m_touchpad_supported = touch;
+            printf("PS5 3rd-party capabilities: subtype=%d, sensors=%d, light=%d, vib=%d, touch=%d\r\n",
+                   (int)m_subtype, (int)m_sensors_supported, (int)m_lightbar_supported,
+                   (int)m_vibration_supported, (int)m_touchpad_supported);
+        }
+        else
+        {
+            printf("PS5 3rd-party capabilities: parse failed, defaulting to subtype=%d\r\n", (int)m_subtype);
+        }
+        m_ready = true;
+    }
+}
+
+void BtDs5Host::handle_feature_report_failed()
+{
+    m_ready = true;
+}
+
+bool BtDs5Host::tick_digital(proto_Output &type)
+{
+    return ps5_tick_digital(m_report_buf, m_subtype, m_third_party, type);
+}
+
+uint16_t BtDs5Host::tick_analog(proto_Output &type)
+{
+    return ps5_tick_analog(m_report_buf, m_subtype, m_third_party, type);
+}
+
+// ============================================================================
+// BtSwitchHost
+// ============================================================================
+
+void BtSwitchHost::on_connected()
+{
+    // Switch Pro: send USB mode command so it sends full 0x30 reports
+    // CMD 0x03 sets the input report mode; 0x30 = full controller state
+    uint8_t cmd[] = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x30};
+    hid_host_send_set_report(m_cid, HID_REPORT_TYPE_OUTPUT, cmd[0], cmd + 1, sizeof(cmd) - 1);
+}
+
+bool BtSwitchHost::tick_digital(proto_Output &type)
+{
+    // 0x30 reports: byte 0 = report id (0x30), byte 1 = timer, byte 2+ = SwitchInputReport
+    if (m_report_buf[0] != SWITCH_PRO_CON_FULL_REPORT_ID)
+        return false;
+
+    auto *data = (SwitchProGamepad_Data_t *)m_report_buf;
+    auto &in = data->inputs;
+
+    if (type.which_mapping == proto_Output_gamepadButton_tag)
+    {
+        switch (type.mapping.gamepadButton)
+        {
+        case Gamepad_A:               return in.a;
+        case Gamepad_B:               return in.b;
+        case Gamepad_X:               return in.x;
+        case Gamepad_Y:               return in.y;
+        case Gamepad_LeftShoulder:    return in.leftShoulder;
+        case Gamepad_RightShoulder:   return in.rightShoulder;
+        case Gamepad_Back:            return in.back;
+        case Gamepad_Start:           return in.start;
+        case Gamepad_LeftThumbClick:  return in.leftThumbClick;
+        case Gamepad_RightThumbClick: return in.rightThumbClick;
+        case Gamepad_Guide:           return in.guide;
+        case Gamepad_DpadUp:          return in.dpadUp;
+        case Gamepad_DpadDown:        return in.dpadDown;
+        case Gamepad_DpadLeft:        return in.dpadLeft;
+        case Gamepad_DpadRight:       return in.dpadRight;
+        default:                      return false;
+        }
+    }
+    return false;
+}
+
+uint16_t BtSwitchHost::tick_analog(proto_Output &type)
+{
+    if (m_report_buf[0] != SWITCH_PRO_CON_FULL_REPORT_ID)
+        return 0;
+
+    auto *data = (SwitchProGamepad_Data_t *)m_report_buf;
+    auto &in = data->inputs;
+
+    if (type.which_mapping == proto_Output_gamepadAxis_tag)
+    {
+        switch (type.mapping.gamepadAxis)
+        {
+        // Switch sticks are 12-bit, centre ~2048; scale to 0-65535
+        case Gamepad_LeftStickX:  return (uint16_t)(in.leftStickX  << 4);
+        case Gamepad_LeftStickY:  return (uint16_t)(in.leftStickY  << 4);
+        case Gamepad_RightStickX: return (uint16_t)(in.rightStickX << 4);
+        case Gamepad_RightStickY: return (uint16_t)(in.rightStickY << 4);
+        // Switch treats L/R trigger as digital; expose as 0 or 0xFFFF
+        case Gamepad_LeftTrigger:  return in.leftTrigger  ? 0xFFFF : 0;
+        case Gamepad_RightTrigger: return in.rightTrigger ? 0xFFFF : 0;
+        default:                   return 0;
+        }
+    }
+    return 0;
+}
+
+// ============================================================================
+// BtXboxOneHost (GIP over BT Classic)
+// ============================================================================
+
+static void btxone_on_device_descriptor(void *ctx, SubType subtype);
+static void btxone_on_arrival(void *ctx);
+static void btxone_queue_packet(void *ctx, const uint8_t *data, uint16_t len);
+static void btxone_send_ack(void *ctx, const uint8_t *data, uint16_t len);
+
+static const gip_device_interface_t btxone_gip_interface = {
+    .on_device_descriptor = btxone_on_device_descriptor,
+    .on_arrival           = btxone_on_arrival,
+    .queue_packet         = btxone_queue_packet,
+    .send_ack             = btxone_send_ack,
+};
+
+BtXboxOneHost::BtXboxOneHost(uint16_t id) : BluetoothHostInterface(id)
+{
+    m_subtype = SubType_Gamepad;
+    gip_device_init(&m_gip_device);
+    m_gip_device.user_context = this;
+    m_gip_device.interface    = &btxone_gip_interface;
+    m_report_queue            = gip_report_queue_create();
+}
+
+BtXboxOneHost::~BtXboxOneHost()
+{
+    gip_device_cleanup(&m_gip_device);
+    gip_report_queue_destroy(m_report_queue);
+}
+
+void BtXboxOneHost::on_connected()
+{
+    gip_default_arrival_callback(&m_gip_device, btxone_queue_packet);
+}
+
+void BtXboxOneHost::on_disconnected()
+{
+    gip_device_cleanup(&m_gip_device);
+    BluetoothHostInterface::on_disconnected();
+}
+
+void BtXboxOneHost::handle_report(const uint8_t *data, uint16_t len)
+{
+    gip_device_process_incoming(&m_gip_device, data, len);
+}
+
+void BtXboxOneHost::update(bool full_poll, bool send_events)
+{
+    BluetoothHostInterface::update(full_poll, send_events);
+    uint32_t now = to_ms_since_boot(get_absolute_time());
+
+    // Drain the outgoing GIP packet queue via HID set-report
+    if (!gip_report_queue_empty(m_report_queue))
+    {
+        const gip_report_queue_item_t *item = gip_report_queue_front(m_report_queue);
+        if (item)
+        {
+            send_hid_output(item->report, item->len);
+            gip_report_queue_pop(m_report_queue);
+        }
+    }
+    gip_device_update_with_queue(&m_gip_device, now, XGIP_ACK_WAIT_TIMEOUT, m_report_queue);
+}
+
+void BtXboxOneHost::send_hid_output(const uint8_t *data, uint16_t len)
+{
+    if (m_cid && len > 0)
+    {
+        hid_host_send_set_report(m_cid, HID_REPORT_TYPE_OUTPUT, data[0],
+                                 data + 1, len - 1);
+    }
+}
+
+bool BtXboxOneHost::tick_digital(proto_Output &type)
+{
+    return gip_tick_digital(m_gip_device.raw_input, m_subtype, &type);
+}
+
+uint16_t BtXboxOneHost::tick_analog(proto_Output &type)
+{
+    return gip_tick_analog(m_gip_device.raw_input, m_subtype, &type);
+}
+
+static void btxone_on_device_descriptor(void *ctx, SubType subtype)
+{
+    auto *host = (BtXboxOneHost *)ctx;
+    if (subtype != Unknown)
+    {
+        host->m_subtype             = subtype;
+        host->m_gip_device.subtype  = subtype;
+        gip_send_power_on_sequence(&host->m_gip_device);
+    }
+}
+
+static void btxone_on_arrival(void *ctx)
+{
+    auto *host = (BtXboxOneHost *)ctx;
+    gip_default_arrival_callback(&host->m_gip_device, btxone_queue_packet);
+}
+
+static void btxone_queue_packet(void *ctx, const uint8_t *data, uint16_t len)
+{
+    auto *host = (BtXboxOneHost *)ctx;
+    gip_report_queue_push(host->m_report_queue, data, len);
+}
+
+static void btxone_send_ack(void *ctx, const uint8_t *data, uint16_t len)
+{
+    auto *host = (BtXboxOneHost *)ctx;
+    gip_report_queue_push_front(host->m_report_queue, data, len);
+}
+
+// ============================================================================
+// BtGenericHost
+// ============================================================================
+
+BtGenericHost::~BtGenericHost()
+{
+    if (m_info)
+    {
+        USB_FreeReportInfo(m_info);
+        m_info = nullptr;
+    }
+}
+
+void BtGenericHost::handle_report(const uint8_t *data, uint16_t len)
+{
+    BluetoothHostInterface::handle_report(data, len);
+    m_data = {};
+    fill_generic_report(m_info, m_report_buf, &m_data);
+}
+
+bool BtGenericHost::tick_digital(proto_Output &type)
+{
+    if (type.which_mapping == proto_Output_gamepadButton_tag)
+    {
+        switch (type.mapping.gamepadButton)
+        {
+        case Gamepad_A:               return (m_data.genericButtons & (1 << 0)) != 0;
+        case Gamepad_B:               return (m_data.genericButtons & (1 << 1)) != 0;
+        case Gamepad_X:               return (m_data.genericButtons & (1 << 2)) != 0;
+        case Gamepad_Y:               return (m_data.genericButtons & (1 << 3)) != 0;
+        case Gamepad_LeftShoulder:    return (m_data.genericButtons & (1 << 4)) != 0;
+        case Gamepad_RightShoulder:   return (m_data.genericButtons & (1 << 5)) != 0;
+        case Gamepad_Back:            return (m_data.genericButtons & (1 << 6)) != 0;
+        case Gamepad_Start:           return (m_data.genericButtons & (1 << 7)) != 0;
+        case Gamepad_LeftThumbClick:  return (m_data.genericButtons & (1 << 8)) != 0;
+        case Gamepad_RightThumbClick: return (m_data.genericButtons & (1 << 9)) != 0;
+        case Gamepad_Guide:           return (m_data.genericButtons & (1 << 10)) != 0;
+        case Gamepad_Capture:         return (m_data.genericButtons & (1 << 11)) != 0;
+        case Gamepad_DpadUp:          return m_data.dpadUp != 0;
+        case Gamepad_DpadDown:        return m_data.dpadDown != 0;
+        case Gamepad_DpadLeft:        return m_data.dpadLeft != 0;
+        case Gamepad_DpadRight:       return m_data.dpadRight != 0;
+        default:                      return false;
+        }
+    }
+    return false;
+}
+
+uint16_t BtGenericHost::tick_analog(proto_Output &type)
+{
+    if (type.which_mapping == proto_Output_gamepadAxis_tag)
+    {
+        switch (type.mapping.gamepadAxis)
+        {
+        case Gamepad_LeftStickX:   return m_data.genericAxisX;
+        case Gamepad_LeftStickY:   return m_data.genericAxisY;
+        case Gamepad_RightStickX:  return m_data.genericAxisRx;
+        case Gamepad_RightStickY:  return m_data.genericAxisRy;
+        case Gamepad_LeftTrigger:  return m_data.genericAxisZ;
+        case Gamepad_RightTrigger: return m_data.genericAxisRz;
+        default:                   return 0;
+        }
+    }
+    return 0;
+}
+
+// ============================================================================
+// BtWiiHost (Nintendo Wii Remote & Wii U Pro Controller)
+// ============================================================================
+
+#define WIIPROTO_REQ_LED     0x11
+#define WIIPROTO_REQ_DRM     0x12
+#define WIIPROTO_REQ_SREQ    0x15
+#define WIIPROTO_REQ_WMEM    0x16
+#define WIIPROTO_REQ_RMEM    0x17
+#define WIIPROTO_REQ_STATUS  0x20
+#define WIIPROTO_REQ_DATA    0x21
+#define WIIPROTO_REQ_RETURN  0x22
+
+enum {
+    WII_FSM_IDLE = 0,
+    WII_FSM_W4_STATUS,
+    WII_FSM_W4_INIT_ACK,
+    WII_FSM_W4_ENC_ACK,
+    WII_FSM_W4_EXT_ID,
+    WII_FSM_READY
+};
+
+BtWiiHost::BtWiiHost(uint16_t id, bool is_pro_controller)
+    : BluetoothHostInterface(id), m_is_pro(is_pro_controller)
+{
+    m_subtype = SubType_Gamepad;
+    if (!m_is_pro)
+    {
+        m_ready = false;
+    }
+}
+
+void BtWiiHost::send_status_request()
+{
+    uint8_t payload = 0x00;
+    hid_host_send_report(m_cid, WIIPROTO_REQ_SREQ, &payload, 1);
+}
+
+void BtWiiHost::send_init_extension()
+{
+    uint8_t payload[21] = {0x04, 0xa4, 0x00, 0xf0, 0x01, 0x55};
+    hid_host_send_report(m_cid, WIIPROTO_REQ_WMEM, payload, sizeof(payload));
+}
+
+void BtWiiHost::send_disable_encryption()
+{
+    uint8_t payload[21] = {0x04, 0xa4, 0x00, 0xfb, 0x01, 0x00};
+    hid_host_send_report(m_cid, WIIPROTO_REQ_WMEM, payload, sizeof(payload));
+}
+
+void BtWiiHost::send_read_extension_id()
+{
+    uint8_t payload[6] = {0x04, 0xa4, 0x00, 0xfa, 0x00, 0x06};
+    hid_host_send_report(m_cid, WIIPROTO_REQ_RMEM, payload, sizeof(payload));
+}
+
+void BtWiiHost::send_report_mode(uint8_t mode)
+{
+    uint8_t payload[2] = {0x00, mode};
+    hid_host_send_report(m_cid, WIIPROTO_REQ_DRM, payload, sizeof(payload));
+}
+
+void BtWiiHost::send_player_led(uint8_t led)
+{
+    hid_host_send_report(m_cid, WIIPROTO_REQ_LED, &led, 1);
+}
+
+void BtWiiHost::on_connected()
+{
+    BluetoothHostInterface::on_connected();
+    if (m_is_pro)
+    {
+        send_report_mode(0x34);
+        send_player_led(0x10);
+        m_subtype = SubType_Gamepad;
+        set_ready(true);
+        m_fsm_state = WII_FSM_READY;
+    }
+    else
+    {
+        m_fsm_state = WII_FSM_W4_STATUS;
+        send_status_request();
+    }
+}
+
+void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
+{
+    if (len < 1) return;
+
+    uint8_t report_id = data[0];
+
+    switch (report_id)
+    {
+    case WIIPROTO_REQ_STATUS: // 0x20
+    {
+        if (len < 4) return;
+        uint8_t flags = data[3] & 0x0F;
+        bool ext_connected = (flags & 0x02) != 0;
+
+        if (ext_connected)
+        {
+            m_has_ext = true;
+            m_fsm_state = WII_FSM_W4_INIT_ACK;
+            send_init_extension();
+        }
+        else
+        {
+            m_has_ext = false;
+            m_decoder.reset();
+            m_subtype = SubType_Gamepad;
+            send_report_mode(0x30);
+            send_player_led(0x10);
+            if (!m_ready)
+            {
+                set_ready(true);
+            }
+            else
+            {
+                notify_subtype_changed();
+                reload();
+            }
+            m_fsm_state = WII_FSM_READY;
+        }
+        break;
+    }
+
+    case WIIPROTO_REQ_RETURN: // 0x22
+    {
+        if (m_fsm_state == WII_FSM_W4_INIT_ACK)
+        {
+            m_fsm_state = WII_FSM_W4_ENC_ACK;
+            send_disable_encryption();
+        }
+        else if (m_fsm_state == WII_FSM_W4_ENC_ACK)
+        {
+            m_fsm_state = WII_FSM_W4_EXT_ID;
+            send_read_extension_id();
+        }
+        break;
+    }
+
+    case WIIPROTO_REQ_DATA: // 0x21
+    {
+        if (len >= 12 && m_fsm_state == WII_FSM_W4_EXT_ID)
+        {
+            m_decoder.decode_id(data + 6);
+            if (data[10] == 0x01 && data[11] == 0x20)
+            {
+                m_is_pro = true;
+                m_subtype = SubType_Gamepad;
+                send_report_mode(0x34);
+            }
+            else
+            {
+                m_subtype = m_decoder.get_subtype();
+                send_report_mode(0x32);
+            }
+            send_player_led(0x10);
+            if (!m_ready)
+            {
+                set_ready(true);
+            }
+            else
+            {
+                notify_subtype_changed();
+                reload();
+            }
+            m_fsm_state = WII_FSM_READY;
+        }
+        break;
+    }
+
+    case 0x30:
+    {
+        if (len >= 3)
+        {
+            m_wii_buttons[0] = data[1];
+            m_wii_buttons[1] = data[2];
+        }
+        break;
+    }
+
+    case 0x32:
+    {
+        if (len >= 3)
+        {
+            m_wii_buttons[0] = data[1];
+            m_wii_buttons[1] = data[2];
+        }
+        if (len >= 11)
+        {
+            m_decoder.update_data(data + 3, 8, this);
+        }
+        break;
+    }
+
+    case 0x34:
+    {
+        BluetoothHostInterface::handle_report(data, len);
+        if (len >= 3)
+        {
+            m_wii_buttons[0] = data[1];
+            m_wii_buttons[1] = data[2];
+        }
+        break;
+    }
+
+    default:
+        break;
+    }
+}
+
+bool BtWiiHost::tick_digital(proto_Output &type)
+{
+    if (m_is_pro && m_report_buf[0] == 0x34)
+    {
+        const uint8_t *d = m_report_buf + 3;
+        if (type.which_mapping == proto_Output_gamepadButton_tag)
+        {
+            switch (type.mapping.gamepadButton)
+            {
+            case Gamepad_A:               return !(d[9] & 0x10);
+            case Gamepad_B:               return !(d[9] & 0x40);
+            case Gamepad_X:               return !(d[9] & 0x08);
+            case Gamepad_Y:               return !(d[9] & 0x20);
+            case Gamepad_DpadRight:       return !(d[8] & 0x80);
+            case Gamepad_DpadDown:        return !(d[8] & 0x40);
+            case Gamepad_DpadLeft:        return !(d[9] & 0x02);
+            case Gamepad_DpadUp:          return !(d[9] & 0x01);
+            case Gamepad_LeftShoulder:    return !(d[8] & 0x20);
+            case Gamepad_RightShoulder:   return !(d[8] & 0x02);
+            case Gamepad_LeftThumbClick:  return !(d[10] & 0x02);
+            case Gamepad_RightThumbClick: return !(d[10] & 0x01);
+            case Gamepad_Start:           return !(d[8] & 0x04);
+            case Gamepad_Back:            return !(d[8] & 0x10);
+            case Gamepad_Guide:           return !(d[8] & 0x08);
+            default:                      return false;
+            }
+        }
+        return false;
+    }
+
+    if (m_decoder.mType != WiiExtType::WiiNoExtension)
+    {
+        if (m_decoder.tick_digital(type))
+            return true;
+    }
+
+    if (type.which_mapping == proto_Output_gamepadButton_tag)
+    {
+        uint8_t b0 = m_wii_buttons[0];
+        uint8_t b1 = m_wii_buttons[1];
+        switch (type.mapping.gamepadButton)
+        {
+        case Gamepad_DpadLeft:      return (b0 & 0x01) != 0;
+        case Gamepad_DpadRight:     return (b0 & 0x02) != 0;
+        case Gamepad_DpadDown:      return (b0 & 0x04) != 0;
+        case Gamepad_DpadUp:        return (b0 & 0x08) != 0;
+        case Gamepad_Start:         return (b0 & 0x10) != 0;
+        case Gamepad_A:             return (b1 & 0x08) != 0;
+        case Gamepad_B:             return (b1 & 0x04) != 0;
+        case Gamepad_X:             return (b1 & 0x02) != 0;
+        case Gamepad_Y:             return (b1 & 0x01) != 0;
+        case Gamepad_Back:          return (b1 & 0x10) != 0;
+        case Gamepad_Guide:         return (b1 & 0x80) != 0;
+        default:                    return false;
+        }
+    }
+
+    return false;
+}
+
+uint16_t BtWiiHost::tick_analog(proto_Output &type)
+{
+    if (m_is_pro && m_report_buf[0] == 0x34)
+    {
+        const uint8_t *d = m_report_buf + 3;
+        if (type.which_mapping == proto_Output_gamepadAxis_tag)
+        {
+            switch (type.mapping.gamepadAxis)
+            {
+            case Gamepad_LeftStickX:
+            {
+                uint16_t val = d[0] | ((d[1] & 0x0F) << 8);
+                return val << 4;
+            }
+            case Gamepad_LeftStickY:
+            {
+                uint16_t val = d[4] | ((d[5] & 0x0F) << 8);
+                return 65535 - (val << 4);
+            }
+            case Gamepad_RightStickX:
+            {
+                uint16_t val = d[2] | ((d[3] & 0x0F) << 8);
+                return val << 4;
+            }
+            case Gamepad_RightStickY:
+            {
+                uint16_t val = d[6] | ((d[7] & 0x0F) << 8);
+                return 65535 - (val << 4);
+            }
+            case Gamepad_LeftTrigger:
+                return !(d[9] & 0x80) ? 65535 : 0;
+            case Gamepad_RightTrigger:
+                return !(d[9] & 0x04) ? 65535 : 0;
+            default:
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    if (m_decoder.mType != WiiExtType::WiiNoExtension)
+    {
+        return m_decoder.tick_analog(type);
+    }
+
+    return 0;
+}
+
+// ============================================================================
+// Factory
+// ============================================================================
+
+std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uint16_t pid,
+                                                                uint16_t version,
+                                                                uint16_t device_id,
+                                                                HID_ReportInfo_t *info,
+                                                                SubType known_subtype,
+                                                                bool known_ready)
+{
+    std::shared_ptr<BluetoothHostInterface> host = nullptr;
+
+    // DS3 / DualShock 3
+    if (vid == SONY_VID && pid == SONY_DS3_PID)
+    {
+        if (info) USB_FreeReportInfo(info);
+        host = std::make_shared<BtDs3Host>(device_id);
+    }
+    // DS4 / DualShock 4 — first-party
+    else if (vid == SONY_VID && (pid == SONY_DS4_PID_1 || pid == SONY_DS4_PID_2 || pid == SONY_DS4_PID_3))
+    {
+        if (info) USB_FreeReportInfo(info);
+        host = std::make_shared<BtDs4Host>(device_id, SubType_Gamepad,
+                                           false, true, true, true, true,
+                                           vid, pid);
+    }
+    // DS4 3rd-party (PS4 usage page detected by hidparser, or known subtype)
+    else if ((info && info->foundPS4Usage) || (known_subtype != SubType_Unknown && (vid == SONY_VID || (info && info->foundPS4Usage))))
+    {
+        SubType sub = (known_subtype != SubType_Unknown) ? known_subtype : SubType_Gamepad;
+        auto ds4 = std::make_shared<BtDs4Host>(device_id, sub,
+                                               true, false, false, false, false,
+                                               vid, pid);
+        if (known_ready)
+        {
+            ds4->set_ready(true);
+        }
+        if (info) USB_FreeReportInfo(info);
+        host = ds4;
+    }
+    // DS5 / DualSense — first-party
+    else if (vid == SONY_VID && (pid == SONY_DS5_PID || pid == SONY_DS5_EDGE_PID))
+    {
+        if (info) USB_FreeReportInfo(info);
+        host = std::make_shared<BtDs5Host>(device_id, SubType_Gamepad,
+                                           false, true, true, true, true,
+                                           vid, pid);
+    }
+    // DS5 3rd-party (PS5 usage page detected by hidparser)
+    else if (info && info->foundPS5Usage)
+    {
+        SubType sub = (known_subtype != SubType_Unknown) ? known_subtype : SubType_Gamepad;
+        auto ds5 = std::make_shared<BtDs5Host>(device_id, sub,
+                                               true, false, false, false, false,
+                                               vid, pid);
+        if (known_ready)
+        {
+            ds5->set_ready(true);
+        }
+        if (info) USB_FreeReportInfo(info);
+        host = ds5;
+    }
+    // Switch Pro Controller
+    else if (vid == NINTENDO_VID && pid == SWITCH_PRO_PID)
+    {
+        if (info) USB_FreeReportInfo(info);
+        host = std::make_shared<BtSwitchHost>(device_id);
+    }
+    // Nintendo Wii Remote
+    else if (vid == NINTENDO_VID && pid == WII_REMOTE_PID)
+    {
+        if (info) USB_FreeReportInfo(info);
+        host = std::make_shared<BtWiiHost>(device_id, false);
+    }
+    // Nintendo Wii U Pro Controller
+    else if (vid == NINTENDO_VID && pid == WII_U_PRO_PID)
+    {
+        if (info) USB_FreeReportInfo(info);
+        host = std::make_shared<BtWiiHost>(device_id, true);
+    }
+    // Xbox One / GIP (detected by interface subclass 0x47 / protocol 0xD0
+    // — but over BT we identify by VID 0x045E and any Xbox One PID)
+    else if (vid == XBOX_VID)
+    {
+        if (info) USB_FreeReportInfo(info);
+        host = std::make_shared<BtXboxOneHost>(device_id);
+    }
+    else
+    {
+        // Generic HID fallback
+        auto generic_host = std::make_shared<BtGenericHost>(device_id, info);
+        if (known_subtype != SubType_Unknown)
+        {
+            generic_host->m_subtype = known_subtype;
+        }
+        host = generic_host;
+    }
+
+    if (host)
+    {
+        host->m_vid = vid;
+        host->m_pid = pid;
+    }
+    return host;
+}

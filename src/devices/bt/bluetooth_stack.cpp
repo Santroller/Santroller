@@ -5,6 +5,9 @@
 #include "btstack.h"
 #include "devices/bt/bt_classic_rx.hpp"
 #include "devices/bt/ble_rx.hpp"
+#include "devices/bt/bt_tlv_storage.hpp"
+#include "classic/btstack_link_key_db_tlv.h"
+#include "ble/le_device_db_tlv.h"
 extern "C"
 {
 #include "wiimote_btstack.h"
@@ -40,6 +43,15 @@ bool BluetoothStack::begin()
     }
 
     l2cap_init();
+
+    // Setup persistent TLV storage for BTstack bonding
+    const btstack_tlv_t *tlv_impl = BtTlvStorage::instance().btstack_tlv();
+    void *tlv_context = &BtTlvStorage::instance();
+    btstack_tlv_set_instance(tlv_impl, tlv_context);
+    const btstack_link_key_db_t *link_key_db = btstack_link_key_db_tlv_get_instance(tlv_impl, tlv_context);
+    hci_set_link_key_db(link_key_db);
+    le_device_db_tlv_configure(tlv_impl, tlv_context);
+
     ble_main();
     btstack_classic_main(true);
 

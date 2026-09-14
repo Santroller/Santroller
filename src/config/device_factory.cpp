@@ -1,5 +1,6 @@
 #include "config/device_factory.hpp"
 #include <cstring>
+#include "devices/bt/bt_tlv_storage.hpp"
 #include "devices/accelerometer.hpp"
 #include "devices/crkd.hpp"
 #include "devices/crkd_drum.hpp"
@@ -82,12 +83,38 @@ void DeviceFactory::foreach_toggle_state(std::function<void(int32_t id, bool sta
 }
 
 // Bluetooth pairing state management
-void DeviceFactory::set_bluetooth_pairing_state(int32_t id, const uint8_t mac[6], const char *name, bool ble) {
+void DeviceFactory::set_bluetooth_pairing_state(int32_t id, const uint8_t mac[6], const char *name, bool ble,
+                                                SubType subtype, BtControllerType controller_type,
+                                                uint16_t vid, uint16_t pid,
+                                                const uint8_t *link_key) {
     BluetoothPairingStateData &state = s_bluetooth_pairing_states[id];
     memcpy(state.mac, mac, sizeof(state.mac));
-    strncpy(state.name, name, sizeof(state.name) - 1);
-    state.name[sizeof(state.name) - 1] = '\0';
+    if (name) {
+        strncpy(state.name, name, sizeof(state.name) - 1);
+        state.name[sizeof(state.name) - 1] = '\0';
+    } else {
+        state.name[0] = '\0';
+    }
     state.ble = ble;
+    state.subtype = subtype;
+    state.controller_type = controller_type;
+    state.vid = vid;
+    state.pid = pid;
+    if (link_key) {
+        state.has_link_key = true;
+        memcpy(state.link_key, link_key, sizeof(state.link_key));
+    } else if (!state.has_link_key) {
+        state.has_link_key = false;
+        memset(state.link_key, 0, sizeof(state.link_key));
+    }
+}
+
+void DeviceFactory::set_bluetooth_pairing_link_key(int32_t id, const uint8_t key[16]) {
+    auto it = s_bluetooth_pairing_states.find(id);
+    if (it != s_bluetooth_pairing_states.end()) {
+        it->second.has_link_key = true;
+        memcpy(it->second.link_key, key, 16);
+    }
 }
 
 bool DeviceFactory::get_bluetooth_pairing_state(int32_t id, BluetoothPairingStateData &out) {
@@ -99,8 +126,42 @@ bool DeviceFactory::get_bluetooth_pairing_state(int32_t id, BluetoothPairingStat
     return true;
 }
 
+int32_t DeviceFactory::find_bluetooth_pairing_id_by_mac(const uint8_t mac[6]) {
+    for (const auto &pair : s_bluetooth_pairing_states) {
+        if (memcmp(pair.second.mac, mac, 6) == 0) {
+            return pair.first;
+        }
+    }
+    return -1;
+}
+
+bool DeviceFactory::find_bluetooth_pairing_state_by_mac(const uint8_t mac[6], BluetoothPairingStateData &out) {
+    int32_t id = find_bluetooth_pairing_id_by_mac(mac);
+    if (id < 0) {
+        return false;
+    }
+    return get_bluetooth_pairing_state(id, out);
+}
+
+int32_t DeviceFactory::allocate_bluetooth_pairing_id() {
+    int32_t next_id = 0;
+    while (s_bluetooth_pairing_states.find(next_id) != s_bluetooth_pairing_states.end()) {
+        next_id++;
+    }
+    return next_id;
+}
+
+void DeviceFactory::remove_bluetooth_pairing_state(int32_t id) {
+    auto it = s_bluetooth_pairing_states.find(id);
+    if (it != s_bluetooth_pairing_states.end()) {
+        BtTlvStorage::instance().delete_tags_for_mac(it->second.mac);
+        s_bluetooth_pairing_states.erase(it);
+    }
+}
+
 void DeviceFactory::clear_bluetooth_pairing_states() {
     s_bluetooth_pairing_states.clear();
+    BtTlvStorage::instance().clear();
 }
 
 void DeviceFactory::foreach_bluetooth_pairing_state(std::function<void(int32_t id, const BluetoothPairingStateData &state)> callback) {

@@ -2,6 +2,10 @@
 #include "devices/usb/host/hid/hid_host.h"
 #include "utils.h"
 
+// Shared tick implementations — callable from both USB and BT hosts
+bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool wt = false);
+uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+
 class Ps3Host : public HidHost
 {
 public:

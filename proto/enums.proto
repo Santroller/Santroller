@@ -143,6 +143,18 @@ enum UsbDeviceType {
   UsbDeviceTypeMouse = 19;
 }
 
+enum BtControllerType {
+  BtControllerTypeGeneric = 1;
+  BtControllerTypePS3 = 2;
+  BtControllerTypePS4 = 3;
+  BtControllerTypePS5 = 4;
+  BtControllerTypeSwitch = 5;
+  BtControllerTypeXboxOne = 6;
+  BtControllerTypeGhlIos = 7;
+  BtControllerTypeWii = 8;
+  BtControllerTypeWiiUPro = 9;
+}
+
 
 enum PS2ControllerType {
   PS2ControllerTypeUnknown = 1;

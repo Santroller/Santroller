@@ -19,6 +19,8 @@ enum InputHardwareType : uint8_t {
     InputHw_ProtarNeck = 11,
     InputHw_MidiNote = 12,
     InputHw_Multiplexer = 13,
+    InputHw_BTButton = 14,
+    InputHw_BTAxis = 15,
 };
 
 class Input

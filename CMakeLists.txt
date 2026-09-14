@@ -279,6 +279,11 @@ add_executable(
   src/devices/bt/ble_rx.cpp
   src/devices/bt/bt_classic_rx.cpp
   src/devices/bt/bluetooth_stack.cpp
+  src/devices/bt/bt_host.cpp
+  src/devices/bt/bt_classic_host.cpp
+  src/devices/bt/bt_ble_host.cpp
+  src/devices/bt/bt_tlv_storage.cpp
+  src/input/bt.cpp
   src/devices/usb.cpp
   src/usb/auth_broker.cpp
   src/devices/wii.cpp

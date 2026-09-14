@@ -16,6 +16,7 @@
 #include "input/midi.hpp"
 #include "input/protar_neck.hpp"
 #include "input/usb.hpp"
+#include "input/bt.hpp"
 
 template<typename InputType, typename DeviceType, typename ConfigType>
 static std::unique_ptr<Input> create_device_input(std::shared_ptr<Profile> profile, uint32_t device_id, const ConfigType &config)
@@ -126,6 +127,12 @@ std::unique_ptr<Input> InputFactory::create_input(
             
     case proto_Input_usbAxis_tag:
         return create_device_input<USBAxisInput, UsbHostInterface>(profile, proto_input.input.usbAxis.deviceid, proto_input.input.usbAxis);
+            
+    case proto_Input_btButton_tag:
+        return create_device_input<BTButtonInput, BluetoothHostInterface>(profile, proto_input.input.btButton.deviceid, proto_input.input.btButton);
+            
+    case proto_Input_btAxis_tag:
+        return create_device_input<BTAxisInput, BluetoothHostInterface>(profile, proto_input.input.btAxis.deviceid, proto_input.input.btAxis);
             
     // Special inputs (held, cycle, toggle, shortcut) are handled by callbacks
     case proto_Input_held_tag:

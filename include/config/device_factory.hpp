@@ -5,6 +5,7 @@
 #include <functional>
 #include "devices/base.hpp"
 #include "device.pb.h"
+#include "enums.pb.h"
 
 class DeviceFactory {
 public:
@@ -33,9 +34,24 @@ public:
         uint8_t mac[6];
         char name[32];
         bool ble;
+        SubType subtype;
+        BtControllerType controller_type;
+        uint16_t vid;
+        uint16_t pid;
+        bool has_link_key;
+        uint8_t link_key[16];
     };
-    static void set_bluetooth_pairing_state(int32_t id, const uint8_t mac[6], const char *name, bool ble);
+    static void set_bluetooth_pairing_state(int32_t id, const uint8_t mac[6], const char *name, bool ble,
+                                            SubType subtype = SubType_Gamepad,
+                                            BtControllerType controller_type = BtControllerType_BtControllerTypeGeneric,
+                                            uint16_t vid = 0, uint16_t pid = 0,
+                                            const uint8_t *link_key = nullptr);
+    static void set_bluetooth_pairing_link_key(int32_t id, const uint8_t key[16]);
     static bool get_bluetooth_pairing_state(int32_t id, BluetoothPairingStateData &out);
+    static int32_t find_bluetooth_pairing_id_by_mac(const uint8_t mac[6]);
+    static bool find_bluetooth_pairing_state_by_mac(const uint8_t mac[6], BluetoothPairingStateData &out);
+    static int32_t allocate_bluetooth_pairing_id();
+    static void remove_bluetooth_pairing_state(int32_t id);
     static void clear_bluetooth_pairing_states();
     static void foreach_bluetooth_pairing_state(std::function<void(int32_t id, const BluetoothPairingStateData &state)> callback);
 

@@ -4,4 +4,4 @@ target_link_libraries(wii_extensions INTERFACE
     peripherals
     wm_crypto
 )
-target_sources(wii_extensions INTERFACE wii_extension.cpp)
+target_sources(wii_extensions INTERFACE wii_extension.cpp wii_extension_decoder.cpp)

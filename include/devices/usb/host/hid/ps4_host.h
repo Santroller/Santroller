@@ -1,6 +1,12 @@
 #pragma once
 #include "devices/usb/host/hid/hid_host.h"
 
+// Shared tick implementations — callable from both USB and BT hosts
+bool ps4_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, uint32_t *last_ghl_poke);
+uint16_t ps4_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+bool ps4_parse_capabilities(const uint8_t *data, uint16_t len, uint16_t vid, uint16_t pid,
+                            SubType &subtype, bool &sensors, bool &lightbar, bool &vibration, bool &touchpad);
+
 class Ps4Host : public HidHost
 {
 public:

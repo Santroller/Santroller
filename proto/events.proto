@@ -129,7 +129,16 @@ message Event {
         CrkdCalibrationDataEvent crkdDrum = 16;
         ReloadEvent reload = 17;
         ActivationListEvent activationList = 18;
+        BtDeviceHotplugEvent bt = 19;
     };
+}
+
+message BtDeviceHotplugEvent {
+    required int32 id = 1;
+    required SubType subtype = 2;
+    required bool connected = 3;
+    required string name = 4;
+    optional uint32 sourceId = 5;
 }
 
 message EventList {

@@ -119,6 +119,16 @@ message USBAxisInput {
   required Output axis = 2;
 }
 
+message BTButtonInput {
+  required int32 deviceid = 1;
+  required Output button = 2;
+}
+
+message BTAxisInput {
+  required int32 deviceid = 1;
+  required Output axis = 2;
+}
+
 message MidiNoteInput { 
   required int32 note = 2; 
   required int32 channel = 3; 
@@ -188,6 +198,8 @@ message Input {
     CrkdDrumAxisInput crkdDrum = 31;
     CycleInput cycle = 32;
     ToggleInput toggle = 33;
+    BTButtonInput btButton = 34;
+    BTAxisInput btAxis = 35;
   }
 }
 message InputActivationTrigger {

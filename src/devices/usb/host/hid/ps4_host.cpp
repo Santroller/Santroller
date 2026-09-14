@@ -31,6 +31,81 @@ void Ps4Host::disconnect()
     UsbHostInterface::disconnect();
 }
 
+bool ps4_parse_capabilities(const uint8_t *data, uint16_t len, uint16_t vid, uint16_t pid,
+                            SubType &subtype, bool &sensors, bool &lightbar, bool &vibration, bool &touchpad)
+{
+    const uint8_t *caps = nullptr;
+    if (len >= 6 && data[2] == 0x27)
+    {
+        caps = &data[2];
+    }
+    else if (len >= 4 && data[0] == 0x27)
+    {
+        caps = &data[0];
+    }
+    else if (len >= 5 && data[1] == 0x27)
+    {
+        caps = &data[1];
+    }
+
+    if (!caps)
+        return false;
+
+    uint8_t capabilities = caps[2];
+    uint8_t device_type = caps[3];
+    switch (device_type)
+    {
+    case 0x00:
+        subtype = Gamepad;
+        break;
+    case 0x01:
+        if (vid == XBOX_REDOCTANE_VID && pid == PS4_GHLIVE_DONGLE_PID)
+        {
+            subtype = LiveGuitar;
+        }
+        else
+        {
+            subtype = RockBandGuitar;
+        }
+        break;
+    case 0x02:
+        subtype = RockBandDrums;
+        break;
+    case 0x04:
+        subtype = Dancepad;
+        break;
+    case 0x06:
+        subtype = Wheel;
+        break;
+    case 0x07:
+        subtype = FightStick;
+        break;
+    case 0x08:
+        subtype = FlightStick;
+        break;
+    default:
+        subtype = Gamepad;
+        break;
+    }
+    if (capabilities & 0x02)
+    {
+        sensors = true;
+    }
+    if (capabilities & 0x04)
+    {
+        lightbar = true;
+    }
+    if (capabilities & 0x08)
+    {
+        vibration = true;
+    }
+    if (capabilities & 0x40)
+    {
+        touchpad = true;
+    }
+    return true;
+}
+
 std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
     uint8_t dev_addr = list->dev_addr();
@@ -58,61 +133,10 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
         {
             // request capabilities for 3rd party gamepad
             intf->send_ctrl_xfer(setup_input_caps, data, nullptr);
-            if (data[2] == 0x27)
-            {
-                uint8_t capabilities = data[4];
-                uint8_t device_type = data[5];
-                switch (device_type)
-                {
-                case 0x00:
-                    intf->m_subtype = Gamepad;
-                    break;
-                case 0x01:
-                    if (vid == XBOX_REDOCTANE_VID && pid == PS4_GHLIVE_DONGLE_PID)
-                    {
-                        intf->m_subtype = LiveGuitar;
-                    }
-                    else
-                    {
-                        intf->m_subtype = RockBandGuitar;
-                    }
-                    break;
-                case 0x02:
-                    intf->m_subtype = RockBandDrums;
-                    break;
-                case 0x04:
-                    intf->m_subtype = Dancepad;
-                    break;
-                case 0x06:
-                    intf->m_subtype = Wheel;
-                    break;
-                case 0x07:
-                    intf->m_subtype = FightStick;
-                    break;
-                case 0x08:
-                    intf->m_subtype = FlightStick;
-                    break;
-                default:
-                    intf->m_subtype = Gamepad;
-                    break;
-                }
-                if (capabilities & 0x02)
-                {
-                    intf->m_sensors_supported = true;
-                }
-                if (capabilities & 0x04)
-                {
-                    intf->m_lightbar_supported = true;
-                }
-                if (capabilities & 0x08)
-                {
-                    intf->m_vibration_supported = true;
-                }
-                if (capabilities & 0x40)
-                {
-                    intf->m_touchpad_supported = true;
-                }
-            }
+            ps4_parse_capabilities(data, sizeof(data), vid, pid,
+                                   intf->m_subtype, intf->m_sensors_supported,
+                                   intf->m_lightbar_supported, intf->m_vibration_supported,
+                                   intf->m_touchpad_supported);
         }
         else
         {
@@ -206,17 +230,17 @@ bool Ps4Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
     return true;
 }
 
-bool Ps4Host::tick_digital(proto_Output &type)
+bool ps4_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, uint32_t *last_ghl_poke)
 {
-    PS4Dpad_Data_t *report = (PS4Dpad_Data_t *)m_ep_in_buf;
-    uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
+    PS4Dpad_Data_t *report = (PS4Dpad_Data_t *)buf;
+    uint8_t dpad = report->dpad >= 0x08 ? 0 : HidHost::dpad_bindings_reverse[report->dpad];
     bool up = dpad & UP;
     bool left = dpad & LEFT;
     bool down = dpad & DOWN;
     bool right = dpad & RIGHT;
     if (type.which_mapping == proto_Output_gamepadButton_tag)
     {
-        auto data = (PS4Gamepad_Data_t *)m_ep_in_buf;
+        auto data = (PS4Gamepad_Data_t *)buf;
         switch (type.mapping.gamepadButton)
         {
         case Gamepad_A:
@@ -253,12 +277,12 @@ bool Ps4Host::tick_digital(proto_Output &type)
             return false;
         }
     }
-    switch (m_subtype)
+    switch (subtype)
     {
     case RockBandGuitar:
         if (type.which_mapping == proto_Output_rbButton_tag)
         {
-            auto data = (PS4RockBandGuitar_Data_t *)m_ep_in_buf;
+            auto data = (PS4RockBandGuitar_Data_t *)buf;
             switch (type.mapping.rbButton)
             {
             case RockBandGuitar_Green:
@@ -289,7 +313,7 @@ bool Ps4Host::tick_digital(proto_Output &type)
     case LiveGuitar:
         if (type.which_mapping == proto_Output_ghlButton_tag)
         {
-            auto data = (PS4GHLGuitar_Data_t *)m_ep_in_buf;
+            auto data = (PS4GHLGuitar_Data_t *)buf;
             switch (type.mapping.ghlButton)
             {
             case GuitarHeroLiveGuitar_Black1:
@@ -321,11 +345,12 @@ bool Ps4Host::tick_digital(proto_Output &type)
 
     return false;
 }
-uint16_t Ps4Host::tick_analog(proto_Output &type)
+
+uint16_t ps4_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type)
 {
     if (type.which_mapping == proto_Output_gamepadAxis_tag)
     {
-        auto data = (PS4Gamepad_Data_t *)m_ep_in_buf;
+        auto data = (PS4Gamepad_Data_t *)buf;
         switch (type.mapping.gamepadAxis)
         {
         case Gamepad_LeftTrigger:
@@ -344,12 +369,12 @@ uint16_t Ps4Host::tick_analog(proto_Output &type)
             return 0;
         }
     }
-    switch (m_subtype)
+    switch (subtype)
     {
     case LiveGuitar:
         if (type.which_mapping == proto_Output_ghlAxis_tag)
         {
-            auto data = (PS4GHLGuitar_Data_t *)m_ep_in_buf;
+            auto data = (PS4GHLGuitar_Data_t *)buf;
             switch (type.mapping.ghlAxis)
             {
             case GuitarHeroLiveGuitar_Whammy:
@@ -364,7 +389,7 @@ uint16_t Ps4Host::tick_analog(proto_Output &type)
     case RockBandGuitar:
         if (type.which_mapping == proto_Output_rbAxis_tag)
         {
-            auto data = (PS4RockBandGuitar_Data_t *)m_ep_in_buf;
+            auto data = (PS4RockBandGuitar_Data_t *)buf;
             switch (type.mapping.rbAxis)
             {
             case RockBandGuitar_Whammy:
@@ -382,4 +407,14 @@ uint16_t Ps4Host::tick_analog(proto_Output &type)
     }
 
     return 0;
+}
+
+bool Ps4Host::tick_digital(proto_Output &type)
+{
+    return ps4_tick_digital(m_ep_in_buf, m_subtype, m_third_party, type, &m_last_ghl_poke);
+}
+
+uint16_t Ps4Host::tick_analog(proto_Output &type)
+{
+    return ps4_tick_analog(m_ep_in_buf, m_subtype, m_third_party, type);
 }

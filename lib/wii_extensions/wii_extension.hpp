@@ -5,6 +5,7 @@
 #include "input_enums.pb.h"
 #include "devices/midi.hpp"
 #include "devices/base.hpp"
+#include "wii_extension_decoder.hpp"
 #define WII_ADDR 0x52
 #define WII_READ_ID 0xFA
 #define WII_ENCRYPTION_STATE_ID 0xF0
@@ -21,7 +22,7 @@
 #define FIRST_PARTY_SBOX 0x97
 #define THIRD_PARTY_SBOX 0x4D
 
-class WiiExtension: public I2CDMAInterface
+class WiiExtension: public I2CDMAInterface, public WiiExtensionDecoder
 {
 
 public:
@@ -33,10 +34,6 @@ public:
     void save_state(DeviceReloadState& state) const ;
     void tick();
     void process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
-    WiiExtType mType = WiiExtType::WiiNoExtension;
-    uint16_t read_axis(proto_WiiAxisType type);
-    bool read_button(proto_WiiButtonType type);
-    uint8_t mBuffer[8];
 
 private:
     bool verifyData(const uint8_t *dataIn, uint8_t dataSize);
@@ -52,16 +49,12 @@ private:
     uint32_t lastPoll = 0;
     uint8_t wiiBytes;
     uint8_t wiiPointer = 0;
-    uint8_t s_box = 0;
     uint8_t m_block = 0;
     MidiDevice *m_device;
     alarm_id_t restart_alarm_id;
     int failCount = 0;
 
     bool started = false;
-
-    bool hiRes = false;
-    bool hasTapBar = false;
 
     wii_status_e status = WII_INIT_FINISH_ENC;
     uint8_t bufferTx[32];

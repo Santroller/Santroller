@@ -268,9 +268,10 @@ bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
     return true;
 }
 
-bool Ps3Host::tick_digital(proto_Output &type)
+bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool wt)
 {
-    if (!m_third_party)
+    const uint8_t *m_ep_in_buf = buf;
+    if (!third_party)
     {
         // first party was only ever gamepads
         if (type.which_mapping == proto_Output_gamepadButton_tag)
@@ -315,7 +316,7 @@ bool Ps3Host::tick_digital(proto_Output &type)
         return false;
     }
     PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)m_ep_in_buf;
-    uint8_t dpad = report->dpad >= 0x08 ? 0 : dpad_bindings_reverse[report->dpad];
+    uint8_t dpad = report->dpad >= 0x08 ? 0 : HidHost::dpad_bindings_reverse[report->dpad];
     asm volatile("" ::
                      : "memory");
     bool up = dpad & UP;
@@ -361,13 +362,13 @@ bool Ps3Host::tick_digital(proto_Output &type)
             return false;
         }
     }
-    switch (m_subtype)
+    switch (subtype)
     {
     case GuitarHeroGuitar:
         if (type.which_mapping == proto_Output_ghButton_tag)
         {
             auto data = (PS3GuitarHeroGuitar_Data_t *)m_ep_in_buf;
-            uint8_t frets = m_wt ? decode_ghwt_slider(data->slider) : decode_gh5_slider(data->slider);
+            uint8_t frets = wt ? decode_ghwt_slider(data->slider) : decode_gh5_slider(data->slider);
             switch (type.mapping.ghButton)
             {
             case GuitarHeroGuitar_Green:
@@ -463,9 +464,10 @@ bool Ps3Host::tick_digital(proto_Output &type)
 
     return false;
 }
-uint16_t Ps3Host::tick_analog(proto_Output &type)
+uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type)
 {
-    if (!m_third_party)
+    const uint8_t *m_ep_in_buf = buf;
+    if (!third_party)
     {
         // first party was only ever gamepads
         if (type.which_mapping == proto_Output_gamepadAxis_tag)
@@ -512,7 +514,7 @@ uint16_t Ps3Host::tick_analog(proto_Output &type)
             return 0;
         }
     }
-    switch (m_subtype)
+    switch (subtype)
     {
     case GuitarHeroGuitar:
         if (type.which_mapping == proto_Output_ghAxis_tag)
@@ -565,4 +567,14 @@ uint16_t Ps3Host::tick_analog(proto_Output &type)
     }
 
     return 0;
+}
+
+bool Ps3Host::tick_digital(proto_Output &type)
+{
+    return ps3_tick_digital(m_ep_in_buf, m_subtype, m_third_party, type, m_wt);
+}
+
+uint16_t Ps3Host::tick_analog(proto_Output &type)
+{
+    return ps3_tick_analog(m_ep_in_buf, m_subtype, m_third_party, type);
 }

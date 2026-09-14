@@ -212,10 +212,21 @@ message BluetoothPairingState {
   required bytes macAddress = 2;
   required string name = 3;
   required bool ble = 4;
+  optional SubType subtype = 5;
+  optional BtControllerType controllerType = 6;
+  optional uint32 vid = 7;
+  optional uint32 pid = 8;
+  optional bytes linkKey = 9;
+}
+
+message BluetoothTlvEntry {
+  required uint32 tag = 1;
+  required bytes value = 2;
 }
 
 message AuxConfigBlock {
   repeated CyclingInputState states = 1;
   repeated ToggleInputState toggleStates = 2;
   repeated BluetoothPairingState bluetoothStates = 3;
+  repeated BluetoothTlvEntry tlvEntries = 4;
 }

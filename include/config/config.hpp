@@ -12,6 +12,7 @@
 #include "devices/base.hpp"
 
 #include "config.pb.h"
+#include "enums.pb.h"
 #include "pico/stdlib.h"
 #include "FlashPROM.h"
 #include "CRC32.h"
@@ -27,4 +28,9 @@ void update();
 void reload();
 void update_aux_cycle(uint32_t id, uint32_t state);
 void update_aux_toggle(uint32_t id, bool state);
-void update_aux_bluetooth_pairing(uint32_t id, const uint8_t mac[6], const char *name, bool ble);
+void update_aux_bluetooth_pairing(uint32_t id, const uint8_t mac[6], const char *name, bool ble,
+                                  SubType subtype = SubType_Gamepad,
+                                  BtControllerType controller_type = BtControllerType_BtControllerTypeGeneric,
+                                  uint16_t vid = 0, uint16_t pid = 0,
+                                  const uint8_t *link_key = nullptr);
+void update_aux_tlv();

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "protocols/xinput.hpp"
-#include "config/config.hpp"
+#include "config.pb.h"
 #include "devices/usb/host/gh_slider_helpers.h"
 
 // Shared tick_digital and tick_analog implementations for XInput devices

@@ -316,7 +316,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
                 USB_ProcessHIDReport(desc, desc_len, &info);
 
             uint16_t device_id = pending.device_id ? pending.device_id : next_ble_device_id++;
-            auto host = ble_create_host(pending.vid, pending.pid, pending.version, device_id, info, pending.known_subtype);
+            auto host = ble_create_host(pending.vid, pending.pid, pending.version, device_id, info, desc, desc_len, pending.known_subtype);
 
             memcpy(host->m_addr, remote_device.addr, 6);
             host->m_addr_type = remote_device.addr_type;
@@ -341,6 +341,11 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
             it->second->handle_report(
                 gattservice_subevent_hid_report_get_report(packet),
                 gattservice_subevent_hid_report_get_report_len(packet));
+            if (!it->second->is_registered() && it->second->is_ready())
+            {
+                bt_host_promote_if_ready(it->second);
+                bt_host_save_pairing(it->second, true);
+            }
         }
         break;
     }

@@ -153,6 +153,7 @@ enum BtControllerType {
   BtControllerTypeGhlIos = 7;
   BtControllerTypeWii = 8;
   BtControllerTypeWiiUPro = 9;
+  BtControllerTypeSantroller = 10;
 }
 
 

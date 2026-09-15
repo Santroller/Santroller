@@ -3,7 +3,7 @@
 #include "tusb.h"
 #include "utils.h"
 
-uint8_t FlashPROM::writeCache[EEPROM_SIZE_BYTES];
+alignas(uint32_t) uint8_t FlashPROM::writeCache[EEPROM_SIZE_BYTES];
 
 int64_t writeToFlash(alarm_id_t id, void *flashCache)
 {

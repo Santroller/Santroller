@@ -31,6 +31,7 @@ void bt_host_add_interface(std::shared_ptr<BluetoothHostInterface> device)
             bt_assignable_interfaces.push_back(device);
             DeviceManager::instance().add_assignable_device(device);
             device->notify_connected();
+            bt_host_save_pairing(device, device->is_ble());
         }
     }
     else
@@ -54,6 +55,7 @@ void bt_host_promote_if_ready(std::shared_ptr<BluetoothHostInterface> device)
     bt_assignable_interfaces.push_back(device);
     DeviceManager::instance().add_assignable_device(device);
     device->notify_connected();
+    bt_host_save_pairing(device, device->is_ble());
 }
 
 void bt_host_remove_assignable_interface(BluetoothHostInterface *device)
@@ -90,6 +92,7 @@ void bt_host_update_interfaces(bool full_poll, bool send_events)
             bt_assignable_interfaces.push_back(device);
             DeviceManager::instance().add_assignable_device(device);
             device->notify_connected();
+            bt_host_save_pairing(device, device->is_ble());
         }
         else if (millis() - device->connected_at() > 2000)
         {
@@ -101,6 +104,7 @@ void bt_host_update_interfaces(bool full_poll, bool send_events)
             bt_assignable_interfaces.push_back(device);
             DeviceManager::instance().add_assignable_device(device);
             device->notify_connected();
+            bt_host_save_pairing(device, device->is_ble());
         }
         else
         {
@@ -118,6 +122,8 @@ void bt_host_notify_devices_changed()
 {
 }
 
+#include "gap.h"
+
 void bt_host_save_pairing(const std::shared_ptr<BluetoothHostInterface> &device, bool is_ble)
 {
     if (!device)
@@ -133,6 +139,12 @@ void bt_host_save_pairing(const std::shared_ptr<BluetoothHostInterface> &device,
     if (DeviceFactory::find_bluetooth_pairing_state_by_mac(device->m_addr, existing) && existing.has_link_key)
     {
         link_key = existing.link_key;
+    }
+    link_key_t fetched_key;
+    link_key_type_t key_type = INVALID_LINK_KEY;
+    if (!link_key && !is_ble && gap_get_link_key_for_bd_addr(const_cast<uint8_t *>(device->m_addr), fetched_key, &key_type))
+    {
+        link_key = fetched_key;
     }
     update_aux_bluetooth_pairing(id, device->m_addr, device->m_name, is_ble,
                                  device->subtype(), device->controller_type(),

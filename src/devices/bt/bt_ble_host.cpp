@@ -214,7 +214,7 @@ void BleSantrollerHost::on_connected()
         {
             // Query Santroller capabilities (Report 0x10) over GATT
             hids_host_send_get_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_INPUT);
-            const uint8_t cmd[2] = {ReportIdSantrollerCapabilities, 0};
+            static const uint8_t cmd[2] = {ReportIdSantrollerCapabilities, 0};
             hids_host_send_write_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_OUTPUT, cmd, sizeof(cmd));
         }
     }
@@ -264,7 +264,7 @@ void BleSantrollerHost::handle_report_v2(const uint8_t *data, uint16_t len)
         if (++m_query_attempts % 30 == 1)
         {
             hids_host_send_get_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_INPUT);
-            const uint8_t cmd[2] = {ReportIdSantrollerCapabilities, 0};
+            static const uint8_t cmd[2] = {ReportIdSantrollerCapabilities, 0};
             hids_host_send_write_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_OUTPUT, cmd, sizeof(cmd));
         }
         return;

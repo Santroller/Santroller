@@ -114,6 +114,18 @@ int BtTlvStorage::store_tag(uint32_t tag, const uint8_t *data, uint32_t data_siz
         }
     }
 
+    constexpr uint32_t BTD_PREFIX = ('B' << 24) | ('T' << 16) | ('D' << 8);
+    if ((tag & 0xFFFFFF00) == BTD_PREFIX && data_size >= 46)
+    {
+        const uint8_t *mac = data + 8;
+        const uint8_t *key = data + 30;
+        int32_t pairing_id = DeviceFactory::find_bluetooth_pairing_id_by_mac(mac);
+        if (pairing_id >= 0)
+        {
+            DeviceFactory::set_bluetooth_pairing_link_key(pairing_id, key);
+        }
+    }
+
     update_aux_tlv();
     return 0;
 }

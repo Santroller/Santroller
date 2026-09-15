@@ -15,3 +15,7 @@ public:
 private:
     proto_BluetoothDevice m_device;
 };
+
+void bt_discovery_stop();
+void bt_discovery_on_device_found();
+void bt_classic_on_inquiry_complete_empty();

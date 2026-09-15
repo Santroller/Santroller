@@ -179,6 +179,7 @@ public:
 
 private:
     void send_hid_output(const uint8_t *data, uint16_t len);
+    uint8_t m_out_buf[64] = {};
 };
 
 // ---------------------------------------------------------------------------
@@ -247,6 +248,8 @@ private:
     uint8_t m_wii_buttons[2] = {};
     uint8_t m_fsm_state = 0;
     bool m_has_ext = false;
+    bool m_led_sent = false;
+    uint8_t m_cmd_buf[24] = {};
 };
 
 // ---------------------------------------------------------------------------

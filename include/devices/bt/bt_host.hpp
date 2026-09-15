@@ -99,6 +99,8 @@ public:
     virtual BtControllerType controller_type() const { return BtControllerType_BtControllerTypeGeneric; }
     uint16_t vid() const { return m_vid; }
     uint16_t pid() const { return m_pid; }
+    bool is_ble() const { return m_is_ble; }
+    void set_ble(bool ble = true) { m_is_ble = ble; }
 
     // Human-readable source ID for events  (id in high 16 bits, addr in low 16)
     uint32_t source_id() const override
@@ -119,6 +121,7 @@ public:
     // These are public so bt_classic_rx.cpp/ble_rx.cpp can populate them after creation
     SubType m_subtype = SubType_Gamepad;
     char m_name[100] = {};
+    bool m_is_ble = false;
 
 protected:
     bool m_ready = true;

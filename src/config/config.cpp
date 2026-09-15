@@ -662,9 +662,9 @@ bool encode_toggle_input_states(pb_ostream_t *stream, const pb_field_t *field, v
 
 bool encode_bluetooth_states(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
-    proto_BluetoothPairingState proto_bluetooth = proto_BluetoothPairingState_init_zero;
     DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state)
                                                    {
+        proto_BluetoothPairingState proto_bluetooth = proto_BluetoothPairingState_init_zero;
         proto_bluetooth.id = id;
         memcpy(proto_bluetooth.macAddress, state.mac, sizeof(proto_bluetooth.macAddress));
         strncpy(proto_bluetooth.name, state.name, sizeof(proto_bluetooth.name) - 1);

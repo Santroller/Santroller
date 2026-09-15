@@ -28,7 +28,7 @@ public:
 	void tick();
 	void commit_now();
 
-	static uint8_t writeCache[EEPROM_SIZE_BYTES];
+	alignas(uint32_t) static uint8_t writeCache[EEPROM_SIZE_BYTES];
 	volatile uint32_t should_commit_at = 0;
 
 };

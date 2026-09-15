@@ -61,26 +61,8 @@ extern "C" {
 void BtDs3Host::on_connected()
 {
     // Enable DS3 HID reports — the same command sent for USB DS3
-    uint8_t enable[] = {0x42, 0x0c, 0x00, 0x00};
+    static const uint8_t enable[] = {0x42, 0x0c, 0x00, 0x00};
     hid_host_send_set_report(m_cid, HID_REPORT_TYPE_FEATURE, 0xF4, enable, sizeof(enable));
-
-    // Set player LED 1
-    ps3_output_report report = {};
-    report.report_id    = 0x01;
-    report.rumble.padding = 0x01;
-    report.rumble.right_duration = 0xFF;
-    report.rumble.left_duration  = 0xFF;
-    report.leds_bitmap = 0x02;
-    for (int i = 0; i < 4; i++)
-    {
-        report.led[i].time_enabled = 0xFF;
-        report.led[i].duty_length  = 0x27;
-        report.led[i].enabled      = 0x10;
-        report.led[i].duty_off     = 0x00;
-        report.led[i].duty_on      = 0x32;
-    }
-    hid_host_send_set_report(m_cid, HID_REPORT_TYPE_OUTPUT, 0x01,
-                             (const uint8_t *)&report, sizeof(report));
 }
 
 bool BtDs3Host::tick_digital(proto_Output &type)
@@ -263,7 +245,7 @@ void BtSwitchHost::on_connected()
 {
     // Switch Pro: send USB mode command so it sends full 0x30 reports
     // CMD 0x03 sets the input report mode; 0x30 = full controller state
-    uint8_t cmd[] = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x30};
+    static const uint8_t cmd[] = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x30};
     hid_host_send_set_report(m_cid, HID_REPORT_TYPE_OUTPUT, cmd[0], cmd + 1, sizeof(cmd) - 1);
 }
 
@@ -394,10 +376,11 @@ void BtXboxOneHost::update(bool full_poll, bool send_events)
 
 void BtXboxOneHost::send_hid_output(const uint8_t *data, uint16_t len)
 {
-    if (m_cid && len > 0)
+    if (m_cid && len > 0 && len <= sizeof(m_out_buf))
     {
-        hid_host_send_set_report(m_cid, HID_REPORT_TYPE_OUTPUT, data[0],
-                                 data + 1, len - 1);
+        memcpy(m_out_buf, data, len);
+        hid_host_send_set_report(m_cid, HID_REPORT_TYPE_OUTPUT, m_out_buf[0],
+                                 m_out_buf + 1, len - 1);
     }
 }
 
@@ -540,46 +523,67 @@ BtWiiHost::BtWiiHost(uint16_t id, bool is_pro_controller)
 
 void BtWiiHost::send_status_request()
 {
-    uint8_t payload = 0x00;
-    hid_host_send_report(m_cid, WIIPROTO_REQ_SREQ, &payload, 1);
+    m_cmd_buf[0] = 0x00;
+    uint8_t res = hid_host_send_report(m_cid, WIIPROTO_REQ_SREQ, m_cmd_buf, 1);
+    printf("Wiimote send_status_request: cid=0x%04x status=0x%02x\r\n", m_cid, res);
 }
 
 void BtWiiHost::send_init_extension()
 {
-    uint8_t payload[21] = {0x04, 0xa4, 0x00, 0xf0, 0x01, 0x55};
-    hid_host_send_report(m_cid, WIIPROTO_REQ_WMEM, payload, sizeof(payload));
+    memset(m_cmd_buf, 0, 21);
+    m_cmd_buf[0] = 0x04;
+    m_cmd_buf[1] = 0xa4;
+    m_cmd_buf[2] = 0x00;
+    m_cmd_buf[3] = 0xf0;
+    m_cmd_buf[4] = 0x01;
+    m_cmd_buf[5] = 0x55;
+    uint8_t res = hid_host_send_report(m_cid, WIIPROTO_REQ_WMEM, m_cmd_buf, 21);
+    printf("Wiimote send_init_extension: status=0x%02x\r\n", res);
 }
 
 void BtWiiHost::send_disable_encryption()
 {
-    uint8_t payload[21] = {0x04, 0xa4, 0x00, 0xfb, 0x01, 0x00};
-    hid_host_send_report(m_cid, WIIPROTO_REQ_WMEM, payload, sizeof(payload));
+    memset(m_cmd_buf, 0, 21);
+    m_cmd_buf[0] = 0x04;
+    m_cmd_buf[1] = 0xa4;
+    m_cmd_buf[2] = 0x00;
+    m_cmd_buf[3] = 0xfb;
+    m_cmd_buf[4] = 0x01;
+    m_cmd_buf[5] = 0x00;
+    uint8_t res = hid_host_send_report(m_cid, WIIPROTO_REQ_WMEM, m_cmd_buf, 21);
+    printf("Wiimote send_disable_encryption: status=0x%02x\r\n", res);
 }
 
 void BtWiiHost::send_read_extension_id()
 {
-    uint8_t payload[6] = {0x04, 0xa4, 0x00, 0xfa, 0x00, 0x06};
-    hid_host_send_report(m_cid, WIIPROTO_REQ_RMEM, payload, sizeof(payload));
+    static const uint8_t req[6] = {0x04, 0xa4, 0x00, 0xfa, 0x00, 0x06};
+    memcpy(m_cmd_buf, req, sizeof(req));
+    uint8_t res = hid_host_send_report(m_cid, WIIPROTO_REQ_RMEM, m_cmd_buf, sizeof(req));
+    printf("Wiimote send_read_extension_id: status=0x%02x\r\n", res);
 }
 
 void BtWiiHost::send_report_mode(uint8_t mode)
 {
-    uint8_t payload[2] = {0x00, mode};
-    hid_host_send_report(m_cid, WIIPROTO_REQ_DRM, payload, sizeof(payload));
+    m_cmd_buf[0] = 0x00;
+    m_cmd_buf[1] = mode;
+    uint8_t res = hid_host_send_report(m_cid, WIIPROTO_REQ_DRM, m_cmd_buf, 2);
+    printf("Wiimote send_report_mode(0x%02x): status=0x%02x\r\n", mode, res);
 }
 
 void BtWiiHost::send_player_led(uint8_t led)
 {
-    hid_host_send_report(m_cid, WIIPROTO_REQ_LED, &led, 1);
+    m_cmd_buf[0] = led;
+    uint8_t res = hid_host_send_report(m_cid, WIIPROTO_REQ_LED, m_cmd_buf, 1);
+    printf("Wiimote send_player_led(0x%02x): status=0x%02x\r\n", led, res);
 }
 
 void BtWiiHost::on_connected()
 {
     BluetoothHostInterface::on_connected();
+    m_led_sent = false;
     if (m_is_pro)
     {
         send_report_mode(0x34);
-        send_player_led(0x10);
         m_subtype = SubType_Gamepad;
         set_ready(true);
         m_fsm_state = WII_FSM_READY;
@@ -593,9 +597,15 @@ void BtWiiHost::on_connected()
 
 void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
 {
+    if (len > 0 && data[0] == 0xa1)
+    {
+        data++;
+        len--;
+    }
     if (len < 1) return;
 
     uint8_t report_id = data[0];
+    printf("Wiimote report: id=0x%02x len=%u fsm=%d\r\n", report_id, len, m_fsm_state);
 
     switch (report_id)
     {
@@ -604,7 +614,9 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
         if (len < 4) return;
         uint8_t flags = data[3] & 0x0F;
         bool ext_connected = (flags & 0x02) != 0;
+        printf("Wiimote status: flags=0x%02x ext=%d\r\n", flags, (int)ext_connected);
 
+        m_led_sent = false;
         if (ext_connected)
         {
             m_has_ext = true;
@@ -617,10 +629,10 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
             m_decoder.reset();
             m_subtype = SubType_Gamepad;
             send_report_mode(0x30);
-            send_player_led(0x10);
             if (!m_ready)
             {
                 set_ready(true);
+                printf("Wiimote ready (standalone), subtype=%d\r\n", (int)m_subtype);
             }
             else
             {
@@ -634,6 +646,7 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
 
     case WIIPROTO_REQ_RETURN: // 0x22
     {
+        printf("Wiimote ack (0x22), fsm=%d\r\n", m_fsm_state);
         if (m_fsm_state == WII_FSM_W4_INIT_ACK)
         {
             m_fsm_state = WII_FSM_W4_ENC_ACK;
@@ -652,6 +665,7 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
         if (len >= 12 && m_fsm_state == WII_FSM_W4_EXT_ID)
         {
             m_decoder.decode_id(data + 6);
+            m_led_sent = false;
             if (data[10] == 0x01 && data[11] == 0x20)
             {
                 m_is_pro = true;
@@ -663,10 +677,10 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
                 m_subtype = m_decoder.get_subtype();
                 send_report_mode(0x32);
             }
-            send_player_led(0x10);
             if (!m_ready)
             {
                 set_ready(true);
+                printf("Wiimote ready (extension), subtype=%d\r\n", (int)m_subtype);
             }
             else
             {
@@ -680,6 +694,11 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
 
     case 0x30:
     {
+        if (!m_led_sent)
+        {
+            m_led_sent = true;
+            send_player_led(0x10);
+        }
         if (len >= 3)
         {
             m_wii_buttons[0] = data[1];
@@ -690,6 +709,11 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
 
     case 0x32:
     {
+        if (!m_led_sent)
+        {
+            m_led_sent = true;
+            send_player_led(0x10);
+        }
         if (len >= 3)
         {
             m_wii_buttons[0] = data[1];
@@ -704,6 +728,11 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
 
     case 0x34:
     {
+        if (!m_led_sent)
+        {
+            m_led_sent = true;
+            send_player_led(0x10);
+        }
         BluetoothHostInterface::handle_report(data, len);
         if (len >= 3)
         {

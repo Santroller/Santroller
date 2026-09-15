@@ -17,6 +17,8 @@
 #include "devices/bt/bt_classic_host.hpp"
 #include "managers/device_manager.hpp"
 #include "config/device_factory.hpp"
+#include "devices/bluetooth.hpp"
+
 
 // ---------------------------------------------------------------------------
 // Global state
@@ -309,6 +311,11 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 printf("Connecting to classic device %s (%s)...\r\n", devices[0].name_buffer, bd_addr_to_str(remote_addr));
                 sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr,
                                         BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
+                bt_discovery_on_device_found();
+            }
+            else
+            {
+                bt_classic_on_inquiry_complete_empty();
             }
             break;
 
@@ -337,6 +344,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     printf("Connecting to classic device %s (%s)...\r\n", devices[index].name_buffer, bd_addr_to_str(remote_addr));
                     sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr,
                                             BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
+                    bt_discovery_on_device_found();
                     break;
                 }
                 else
@@ -346,6 +354,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     has_address = true;
                     sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr,
                                             BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
+                    bt_discovery_on_device_found();
                     break;
                 }
             }
@@ -512,9 +521,14 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 auto it = bt_connections.find(cid);
                 if (it != bt_connections.end())
                 {
-                    it->second->handle_report(
-                        hid_subevent_report_get_report(packet),
-                        hid_subevent_report_get_report_len(packet));
+                    const uint8_t *report = hid_subevent_report_get_report(packet);
+                    uint16_t report_len   = hid_subevent_report_get_report_len(packet);
+                    if (report_len > 0 && report[0] == 0xa1)
+                    {
+                        report++;
+                        report_len--;
+                    }
+                    it->second->handle_report(report, report_len);
                 }
                 else
                 {

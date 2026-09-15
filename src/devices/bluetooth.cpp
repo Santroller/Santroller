@@ -62,49 +62,23 @@ bool BluetoothDevice::using_pin(uint8_t pin)
 #include "btstack_defines.h"
 #include "btstack_run_loop.h"
 
-namespace {
-enum ScanPhase {
-    SCAN_PHASE_IDLE,
-    SCAN_PHASE_BLE,
-    SCAN_PHASE_CLASSIC_GIAC,
-    SCAN_PHASE_CLASSIC_LIAC,
-};
-
-static ScanPhase s_scan_phase = SCAN_PHASE_IDLE;
-static btstack_timer_source_t s_scan_timer;
-
-static void scan_timer_callback(btstack_timer_source_t *ts)
+namespace
 {
-    UNUSED(ts);
-    switch (s_scan_phase)
+    enum ScanPhase
     {
-    case SCAN_PHASE_BLE:
-        if (ble_is_connecting() || ble_has_connected_device())
-        {
-            printf("BLE device is connecting or connected, stopping discovery scan cycle\r\n");
-            bt_discovery_on_device_found();
-            break;
-        }
-        printf("BLE scan period finished, advancing to Classic GIAC inquiry...\r\n");
-        ble_stop_scan();
-        s_scan_phase = SCAN_PHASE_CLASSIC_GIAC;
-        btc_start_scan(GAP_IAC_GENERAL_INQUIRY);
-        // Watchdog timer in case inquiry gets stuck
-        btstack_run_loop_set_timer(&s_scan_timer, 15000);
-        btstack_run_loop_set_timer_handler(&s_scan_timer, scan_timer_callback);
-        btstack_run_loop_add_timer(&s_scan_timer);
-        break;
+        SCAN_PHASE_IDLE,
+        SCAN_PHASE_BLE,
+        SCAN_PHASE_CLASSIC_GIAC,
+        SCAN_PHASE_CLASSIC_LIAC,
+    };
 
-    case SCAN_PHASE_CLASSIC_GIAC:
-    case SCAN_PHASE_CLASSIC_LIAC:
-        printf("Classic inquiry watchdog timeout, ending scan cycle\r\n");
+    static ScanPhase s_scan_phase = SCAN_PHASE_IDLE;
+    static btstack_timer_source_t s_scan_timer;
+
+    static void scan_timer_callback(btstack_timer_source_t *ts)
+    {
         bt_discovery_stop();
-        break;
-
-    default:
-        break;
     }
-}
 }
 
 void bt_discovery_stop()
@@ -117,42 +91,24 @@ void bt_discovery_stop()
 
 void bt_discovery_on_device_found()
 {
-    if (s_scan_phase != SCAN_PHASE_IDLE)
-    {
-        printf("Bluetooth device found/connecting, stopping discovery scan cycle\r\n");
-        btstack_run_loop_remove_timer(&s_scan_timer);
-        s_scan_phase = SCAN_PHASE_IDLE;
-    }
 }
 
 void bt_classic_on_inquiry_complete_empty()
 {
-    if (s_scan_phase == SCAN_PHASE_CLASSIC_GIAC)
-    {
-        printf("Classic GIAC inquiry found 0 devices, advancing to Classic LIAC inquiry (Wii Sync)...\r\n");
-        s_scan_phase = SCAN_PHASE_CLASSIC_LIAC;
-        btc_start_scan(GAP_IAC_LIMITED_INQUIRY);
-        btstack_run_loop_remove_timer(&s_scan_timer);
-        btstack_run_loop_set_timer(&s_scan_timer, 15000);
-        btstack_run_loop_set_timer_handler(&s_scan_timer, scan_timer_callback);
-        btstack_run_loop_add_timer(&s_scan_timer);
-    }
-    else if (s_scan_phase == SCAN_PHASE_CLASSIC_LIAC)
-    {
-        printf("Scan cycle complete\r\n");
-        bt_discovery_stop();
-    }
 }
 
 void BluetoothDevice::handle_command(proto_Command command)
 {
-    if (command.which_command == proto_Command_scan_tag) {
+    if (command.which_command == proto_Command_scan_tag)
+    {
         printf("Starting Bluetooth discovery scan cycle (powered=%d)...\r\n", (int)BluetoothStack::instance().is_powered());
         bt_discovery_stop();
+        btc_start_scan(GAP_IAC_GENERAL_INQUIRY);
+        btc_start_scan(GAP_IAC_LIMITED_INQUIRY);
 
         s_scan_phase = SCAN_PHASE_BLE;
         ble_start_scan();
-        btstack_run_loop_set_timer(&s_scan_timer, 5000);
+        btstack_run_loop_set_timer(&s_scan_timer, 25000);
         btstack_run_loop_set_timer_handler(&s_scan_timer, scan_timer_callback);
         btstack_run_loop_add_timer(&s_scan_timer);
     }

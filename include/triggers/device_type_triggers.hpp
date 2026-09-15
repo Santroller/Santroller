@@ -65,13 +65,13 @@ protected:
 class SpecificBluetoothDeviceActivationTrigger : public ActivationTrigger
 {
 public:
-    SpecificBluetoothDeviceActivationTrigger(proto_SpecificUsbDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
+    SpecificBluetoothDeviceActivationTrigger(proto_SpecificBluetoothDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~SpecificBluetoothDeviceActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
 
 protected:
-    proto_SpecificUsbDevice m_device;
+    proto_SpecificBluetoothDevice m_device;
 };
 
 class MidiChannelActivationTrigger : public ActivationTrigger

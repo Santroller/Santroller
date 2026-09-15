@@ -98,6 +98,10 @@ message UsbDeviceAssignment {
   optional bool xinputOnWindows = 3;
   optional bool ps4OrPs5Mode = 4;
 }
+message SpecificBluetoothDevice {
+  required uint32 vid = 1;
+  required uint32 pid = 2;
+}
 
 message WiimoteAssignment {
 
@@ -120,6 +124,8 @@ message ProfileAssignmentInfo {
     BluetoothMode bluetooth = 14;
     WiimoteAssignment wiiEmulation = 16;
     PSXAssignment ps2Emulation = 17;
+    SpecificBluetoothDevice bluetoothDevice = 15;
+    SubType bluetoothType = 18;
   }
 }
 

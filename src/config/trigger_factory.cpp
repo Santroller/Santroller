@@ -76,6 +76,22 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             list_id
         );
         
+    case proto_ProfileAssignmentInfo_bluetoothType_tag:
+        return std::make_unique<BluetoothTypeActivationTrigger>(
+            proto_assignment.assignment.bluetoothType,
+            profile,
+            trigger_id,
+            list_id
+        );
+        
+    case proto_ProfileAssignmentInfo_bluetoothDevice_tag:
+        return std::make_unique<SpecificBluetoothDeviceActivationTrigger>(
+            proto_assignment.assignment.bluetoothDevice,
+            profile,
+            trigger_id,
+            list_id
+        );
+        
     case proto_ProfileAssignmentInfo_midiChannel_tag:
         return std::make_unique<MidiChannelActivationTrigger>(
             proto_assignment.assignment.midiChannel,

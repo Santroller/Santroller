@@ -11,7 +11,7 @@ bool Device::is_usb_type(SubType type)
 {
     return false;
 }
-bool Device::is_bluetooth_device(proto_SpecificUsbDevice type)
+bool Device::is_bluetooth_device(proto_SpecificBluetoothDevice type)
 {
     return false;
 }

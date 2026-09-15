@@ -329,12 +329,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     const char *name = hci_event_remote_name_request_complete_get_remote_name(packet);
                     int name_len = strlen(name);
                     memcpy(devices[index].name_buffer, name, name_len);
-                    devices[index].name_buffer[name_len] = ' ';
-                    devices[index].name_buffer[name_len + 1] = '(';
-                    memcpy(devices[index].name_buffer + name_len + 2,
-                           bd_addr_to_str(addr), SIZE_OF_BD_ADDRESS);
-                    devices[index].name_buffer[name_len + SIZE_OF_BD_ADDRESS + 1] = ')';
-                    devices[index].name_buffer[name_len + SIZE_OF_BD_ADDRESS + 2] = 0;
+                    devices[index].name_buffer[name_len] = 0;
                     printf("Found device '%s'\r\n", devices[index].name_buffer);
                     devices[index].state = REMOTE_NAME_FETCHED;
 

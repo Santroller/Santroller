@@ -77,7 +77,7 @@ public:
     virtual bool is_wii_extension(WiiExtType type);
     virtual bool is_usb_device(proto_SpecificUsbDevice type);
     virtual bool is_usb_type(SubType type);
-    virtual bool is_bluetooth_device(proto_SpecificUsbDevice type);
+    virtual bool is_bluetooth_device(proto_SpecificBluetoothDevice type);
     virtual bool is_bluetooth_type(SubType type);
     virtual bool is_ps2_device(PS2ControllerType type);
     virtual bool has_midi_channel(uint8_t channel);

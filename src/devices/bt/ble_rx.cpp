@@ -574,6 +574,8 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 {
                     if (bd_addr_cmp(remote_device.addr, scan_devices[i].addr) == 0)
                     {
+                        memcpy(pending.paired_name, scan_devices[i].name_buffer, sizeof(pending.paired_name) - 1);
+                        pending.paired_name[sizeof(pending.paired_name) - 1] = '\0';
                         if (strstr(scan_devices[i].name_buffer, "Ble Guitar") != nullptr)
                         {
                             pending.is_ghl_guitar = true;

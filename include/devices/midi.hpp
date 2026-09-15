@@ -129,7 +129,7 @@ public:
     bool is_wii_extension(WiiExtType type) { return false; }
     bool is_usb_device(proto_SpecificUsbDevice type) { return false; }
     bool is_usb_type(SubType type) { return false; }
-    bool is_bluetooth_device(proto_SpecificUsbDevice type) { return false; }
+    bool is_bluetooth_device(proto_SpecificBluetoothDevice type) { return false; }
     bool is_bluetooth_type(SubType type) { return false; }
     bool is_ps2_device(PS2ControllerType type) { return false; }
     bool has_midi_channel(uint8_t channel) { return MIDI_CHANNEL_PROGUITAR_MUSTANG == channel || MIDI_CHANNEL_PROGUITAR_SQUIER == channel; }

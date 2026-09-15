@@ -9,6 +9,7 @@
 #include "managers/device_manager.hpp"
 #include "managers/profile_manager.hpp"
 #include "managers/config_manager.hpp"
+#include "devices/bt/bluetooth_stack.hpp"
 #include "main.hpp"
 
 #include <memory>
@@ -99,7 +100,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     }
     device_mgr.remove_disconnected_root_devices();
     printf("resolved_mode: %d, current_mode: %d\r\n", resolved_mode, current_mode);
-    if (resolved_mode != current_mode || profile_mgr.changed_types())
+    if (resolved_mode != current_mode || profile_mgr.changed_types() || (ConfigManager::instance().has_bluetooth() && !BluetoothStack::instance().is_powered()))
     {
         reinitialize_device_stack();
     }

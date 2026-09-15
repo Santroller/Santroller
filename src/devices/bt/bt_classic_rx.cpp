@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include "btstack.h"
 #include "btstack_config.h"
@@ -18,6 +19,7 @@
 #include "managers/device_manager.hpp"
 #include "config/device_factory.hpp"
 #include "devices/bluetooth.hpp"
+#include "devices/bt/bluetooth_stack.hpp"
 
 
 // ---------------------------------------------------------------------------
@@ -27,21 +29,10 @@
 // Forward declaration needed by hid_host_setup()
 static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
 
-static bool has_address = false;
-static bd_addr_t remote_addr;
-
 static btstack_packet_callback_registration_t hci_event_callback_registration;
 
 // SDP
-static uint8_t hid_descriptor_storage[500];
-
-// App
-typedef enum {
-    APP_IDLE,
-    APP_CONNECTED,
-} app_state_t;
-
-static app_state_t app_state = APP_IDLE;
+static uint8_t hid_descriptor_storage[2048];
 
 #define MAX_DEVICES 20
 enum DEVICE_STATE { REMOTE_NAME_REQUEST, REMOTE_NAME_INQUIRED, REMOTE_NAME_FETCHED };
@@ -74,12 +65,245 @@ struct PendingConnection {
 };
 static std::unordered_map<uint16_t, PendingConnection> pending_connections;
 
-// Running counter for assigning unique BT device IDs
-static uint16_t next_bt_device_id = 0x4000; // well above USB range
+// PNP SDP query in progress (before HID CID is allocated)
+struct PnpSdpState {
+    bd_addr_t addr = {};
+    bool in_progress = false;
+    uint16_t vid = 0;
+    uint16_t pid = 0;
+    uint16_t version = 0;
+};
+static PnpSdpState s_pnp_sdp;
 
-static uint16_t          hid_host_cid = 0;
-static bool               hid_host_connection_pending = false;
 static hid_protocol_mode_t hid_host_report_mode = HID_PROTOCOL_MODE_REPORT;
+
+static btstack_timer_source_t s_classic_reconnect_timer;
+static bool s_classic_reconnect_timer_active = false;
+static bool s_classic_connect_in_progress = false;
+static size_t s_reconnect_candidate_idx = 0;
+
+// Forward declaration needed by connect_to_discovered_device()
+static void handle_sdp_client_query_result(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
+
+static bool is_already_connected_or_pending(const bd_addr_t addr)
+{
+    for (const auto &pair : bt_connections)
+    {
+        if (pair.second && bd_addr_cmp(pair.second->m_addr, addr) == 0)
+            return true;
+    }
+    for (const auto &pair : pending_connections)
+    {
+        if (bd_addr_cmp(pair.second.addr, addr) == 0)
+            return true;
+    }
+    if (s_pnp_sdp.in_progress && bd_addr_cmp(s_pnp_sdp.addr, addr) == 0)
+        return true;
+    return false;
+}
+
+struct ClassicCandidate {
+    bd_addr_t addr = {};
+    char name[64] = {};
+    uint16_t vid = 0;
+    uint16_t pid = 0;
+    bool has_link_key = false;
+};
+
+static std::vector<ClassicCandidate> btc_get_unconnected_paired_devices()
+{
+    std::vector<ClassicCandidate> candidates;
+
+    // 1. Collect from DeviceFactory
+    DeviceFactory::foreach_bluetooth_pairing_state([&candidates](int32_t id, const DeviceFactory::BluetoothPairingStateData &state) {
+        // Skip Wii remote emulation ID (when Pico acts as a Wiimote to a console)
+        if (static_cast<uint32_t>(id) == 0xFFFFFFFEu) return;
+
+        if (!state.ble && !btstack_is_null_bd_addr(state.mac))
+        {
+            // Seed link key into BTstack link key DB if available and non-null
+            if (state.has_link_key && !btstack_is_null(state.link_key, 16))
+            {
+                link_key_t fetched_key;
+                link_key_type_t key_type = INVALID_LINK_KEY;
+                if (!gap_get_link_key_for_bd_addr(const_cast<uint8_t *>(state.mac), fetched_key, &key_type))
+                {
+                    gap_store_link_key_for_bd_addr(const_cast<uint8_t *>(state.mac),
+                                                   const_cast<uint8_t *>(state.link_key),
+                                                   COMBINATION_KEY);
+                    printf("Classic BT: Seeded stored link key into BTstack for %s\r\n", bd_addr_to_str(const_cast<uint8_t *>(state.mac)));
+                }
+            }
+
+            // Check if already connected
+            for (const auto &pair : bt_connections)
+            {
+                if (pair.second && bd_addr_cmp(pair.second->m_addr, state.mac) == 0)
+                    return;
+            }
+
+            bool exists = false;
+            for (const auto &c : candidates)
+            {
+                if (bd_addr_cmp(c.addr, state.mac) == 0)
+                {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists)
+            {
+                ClassicCandidate cand = {};
+                memcpy(cand.addr, state.mac, 6);
+                strncpy(cand.name, state.name, sizeof(cand.name) - 1);
+                cand.vid = state.vid;
+                cand.pid = state.pid;
+                cand.has_link_key = state.has_link_key;
+
+                // Fallback detection from device name if VID/PID are not stored
+                if (!cand.vid && !cand.pid)
+                {
+                    if (strstr(cand.name, "RVL-CNT-01-UC") != nullptr)
+                    {
+                        cand.vid = 0x057E;
+                        cand.pid = 0x0330;
+                    }
+                    else if (strstr(cand.name, "RVL") != nullptr)
+                    {
+                        cand.vid = 0x057E;
+                        cand.pid = 0x0306;
+                    }
+                }
+
+                candidates.push_back(cand);
+            }
+        }
+    });
+
+    return candidates;
+}
+
+static void classic_reconnect_timer_handler(btstack_timer_source_t *ts);
+
+static void btc_schedule_reconnect(uint32_t delay_ms)
+{
+    if (s_classic_reconnect_timer_active)
+    {
+        btstack_run_loop_remove_timer(&s_classic_reconnect_timer);
+        s_classic_reconnect_timer_active = false;
+    }
+    btstack_run_loop_set_timer(&s_classic_reconnect_timer, delay_ms);
+    btstack_run_loop_set_timer_handler(&s_classic_reconnect_timer, classic_reconnect_timer_handler);
+    btstack_run_loop_add_timer(&s_classic_reconnect_timer);
+    s_classic_reconnect_timer_active = true;
+}
+
+static void btc_sync_reconnect(void)
+{
+    if (s_classic_connect_in_progress)
+    {
+        return;
+    }
+
+    auto candidates = btc_get_unconnected_paired_devices();
+    if (candidates.empty())
+    {
+        if (s_classic_reconnect_timer_active)
+        {
+            btstack_run_loop_remove_timer(&s_classic_reconnect_timer);
+            s_classic_reconnect_timer_active = false;
+        }
+        return;
+    }
+
+    printf("Classic BT: Found %u paired candidate(s) for auto-reconnect\r\n", (unsigned int)candidates.size());
+
+    if (s_reconnect_candidate_idx >= candidates.size())
+    {
+        s_reconnect_candidate_idx = 0;
+    }
+
+    const auto &target = candidates[s_reconnect_candidate_idx];
+    s_reconnect_candidate_idx = (s_reconnect_candidate_idx + 1) % candidates.size();
+
+    if (is_already_connected_or_pending(target.addr))
+    {
+        btc_schedule_reconnect(2000);
+        return;
+    }
+
+    printf("Classic BT: Attempting auto-reconnect to paired device '%s' (%s), has_link_key=%d...\r\n",
+           target.name[0] ? target.name : "Unknown", bd_addr_to_str(const_cast<uint8_t *>(target.addr)),
+           target.has_link_key);
+
+    uint16_t cid = 0;
+    uint8_t status = hid_host_connect(const_cast<uint8_t *>(target.addr), hid_host_report_mode, &cid);
+    if (status == ERROR_CODE_SUCCESS)
+    {
+        s_classic_connect_in_progress = true;
+        PendingConnection &pending = pending_connections[cid];
+        pending.vid = target.vid;
+        pending.pid = target.pid;
+        memcpy(pending.addr, target.addr, 6);
+        pending.device_id = BluetoothStack::instance().device_id();
+    }
+    else
+    {
+        printf("Classic BT: hid_host_connect failed, status 0x%02x\r\n", status);
+        btc_schedule_reconnect(3000);
+    }
+}
+
+static void classic_reconnect_timer_handler(btstack_timer_source_t *ts)
+{
+    UNUSED(ts);
+    s_classic_reconnect_timer_active = false;
+    btc_sync_reconnect();
+}
+
+static void connect_to_discovered_device(const bd_addr_t addr, const char *name)
+{
+    if (is_already_connected_or_pending(addr))
+    {
+        return;
+    }
+
+    printf("Connecting to classic device %s (%s)...\r\n", name ? name : "", bd_addr_to_str(addr));
+
+    if (!s_pnp_sdp.in_progress)
+    {
+        memcpy(s_pnp_sdp.addr, addr, sizeof(bd_addr_t));
+        s_pnp_sdp.in_progress = true;
+        s_pnp_sdp.vid = 0;
+        s_pnp_sdp.pid = 0;
+        s_pnp_sdp.version = 0;
+
+        uint8_t err = sdp_client_query_uuid16(&handle_sdp_client_query_result, const_cast<uint8_t *>(addr),
+                                              BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
+        if (err == ERROR_CODE_SUCCESS)
+        {
+            bt_discovery_on_device_found();
+            return;
+        }
+        printf("SDP query failed to start (0x%02x), connecting directly\r\n", err);
+        s_pnp_sdp.in_progress = false;
+    }
+
+    // Connect directly if SDP query could not be started or is already busy
+    uint16_t cid = 0;
+    uint8_t status = hid_host_connect(const_cast<uint8_t *>(addr), hid_host_report_mode, &cid);
+    if (status == ERROR_CODE_SUCCESS)
+    {
+        PendingConnection &pending = pending_connections[cid];
+        memcpy(pending.addr, addr, 6);
+        pending.device_id = BluetoothStack::instance().device_id();
+        bt_discovery_on_device_found();
+    }
+    else
+    {
+        printf("HID host connect failed, status 0x%02x\r\n", status);
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -107,6 +331,8 @@ static void hid_host_setup(void)
                                          LM_LINK_POLICY_ENABLE_ROLE_SWITCH);
     hci_set_master_slave_policy(HCI_ROLE_MASTER);
 
+    hid_host_set_accept_incoming(true);
+
     hci_event_callback_registration.callback = &packet_handler;
     hci_add_event_handler(&hci_event_callback_registration);
 
@@ -116,6 +342,11 @@ static void hid_host_setup(void)
 void btc_start_scan(uint32_t lap)
 {
     printf("Starting inquiry scan (LAP 0x%06lx)..\r\n", (unsigned long)lap);
+    if (s_classic_reconnect_timer_active)
+    {
+        btstack_run_loop_remove_timer(&s_classic_reconnect_timer);
+        s_classic_reconnect_timer_active = false;
+    }
     deviceCount = 0;
     gap_inquiry_set_lap(lap);
     gap_inquiry_start(INQUIRY_INTERVAL);
@@ -125,6 +356,7 @@ void btc_stop_scan(void)
 {
     printf("Stopping inquiry scan..\r\n");
     gap_inquiry_stop();
+    btc_schedule_reconnect(2000);
 }
 
 static int has_more_remote_name_requests(void)
@@ -168,9 +400,6 @@ static void handle_sdp_client_query_result(uint8_t packet_type, uint16_t channel
     UNUSED(channel);
     UNUSED(size);
 
-    // We use the currently-pending hid_host_cid as the key
-    PendingConnection &pending = pending_connections[hid_host_cid];
-
     switch (hci_event_packet_get_type(packet))
     {
     case SDP_EVENT_QUERY_ATTRIBUTE_VALUE:
@@ -183,11 +412,11 @@ static void handle_sdp_client_query_result(uint8_t packet_type, uint16_t channel
             unsigned int pos = de_get_header_size(attribute_value);
             uint16_t attr_id = sdp_event_query_attribute_byte_get_attribute_id(packet);
             if (attr_id == BLUETOOTH_ATTRIBUTE_VENDOR_ID)
-                pending.vid     = big_endian_read_16(attribute_value, pos);
+                s_pnp_sdp.vid     = big_endian_read_16(attribute_value, pos);
             if (attr_id == BLUETOOTH_ATTRIBUTE_PRODUCT_ID)
-                pending.pid     = big_endian_read_16(attribute_value, pos);
+                s_pnp_sdp.pid     = big_endian_read_16(attribute_value, pos);
             if (attr_id == BLUETOOTH_ATTRIBUTE_VERSION)
-                pending.version = big_endian_read_16(attribute_value, pos);
+                s_pnp_sdp.version = big_endian_read_16(attribute_value, pos);
         }
         break;
 
@@ -198,16 +427,29 @@ static void handle_sdp_client_query_result(uint8_t packet_type, uint16_t channel
         }
         else
         {
-            printf("SDP: VID=0x%04x PID=0x%04x\r\n", pending.vid, pending.pid);
+            printf("SDP: VID=0x%04x PID=0x%04x\r\n", s_pnp_sdp.vid, s_pnp_sdp.pid);
         }
-        pending.device_id = next_bt_device_id++;
-
-        hid_host_connection_pending = true;
         {
-            uint8_t status = hid_host_connect(remote_addr, hid_host_report_mode, &hid_host_cid);
-            if (status != ERROR_CODE_SUCCESS)
+            bd_addr_t target_addr;
+            memcpy(target_addr, s_pnp_sdp.addr, sizeof(bd_addr_t));
+            uint16_t vid = s_pnp_sdp.vid;
+            uint16_t pid = s_pnp_sdp.pid;
+            uint16_t version = s_pnp_sdp.version;
+            s_pnp_sdp.in_progress = false;
+
+            uint16_t allocated_cid = 0;
+            uint8_t status = hid_host_connect(target_addr, hid_host_report_mode, &allocated_cid);
+            if (status == ERROR_CODE_SUCCESS)
             {
-                hid_host_connection_pending = false;
+                PendingConnection &pending = pending_connections[allocated_cid];
+                pending.vid = vid;
+                pending.pid = pid;
+                pending.version = version;
+                memcpy(pending.addr, target_addr, 6);
+                pending.device_id = BluetoothStack::instance().device_id();
+            }
+            else
+            {
                 printf("HID host connect failed, status 0x%02x.\r\n", status);
             }
         }
@@ -245,11 +487,8 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             printf("Classic BTstack state: %d (WORKING=%d)\r\n", st, HCI_STATE_WORKING);
             if (st == HCI_STATE_WORKING)
             {
-                if (has_address)
-                {
-                    sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr,
-                                            BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
-                }
+                gap_connectable_control(1);
+                btc_sync_reconnect();
             }
             break;
         }
@@ -305,13 +544,21 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             }
             else if (deviceCount > 0)
             {
-                // Connect to the first discovered device
-                memcpy(remote_addr, devices[0].address, sizeof(bd_addr_t));
-                has_address = true;
-                printf("Connecting to classic device %s (%s)...\r\n", devices[0].name_buffer, bd_addr_to_str(remote_addr));
-                sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr,
-                                        BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
-                bt_discovery_on_device_found();
+                // Connect to the first discovered un-connected device
+                bool connected_any = false;
+                for (int i = 0; i < deviceCount; i++)
+                {
+                    if (!is_already_connected_or_pending(devices[i].address))
+                    {
+                        connect_to_discovered_device(devices[i].address, devices[i].name_buffer);
+                        connected_any = true;
+                        break;
+                    }
+                }
+                if (!connected_any)
+                {
+                    bt_classic_on_inquiry_complete_empty();
+                }
             }
             else
             {
@@ -333,49 +580,126 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     printf("Found device '%s'\r\n", devices[index].name_buffer);
                     devices[index].state = REMOTE_NAME_FETCHED;
 
-                    // Immediately initiate connection to this discovered device
-                    memcpy(remote_addr, devices[index].address, sizeof(bd_addr_t));
-                    has_address = true;
-                    printf("Connecting to classic device %s (%s)...\r\n", devices[index].name_buffer, bd_addr_to_str(remote_addr));
-                    sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr,
-                                            BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
-                    bt_discovery_on_device_found();
-                    break;
+                    if (!is_already_connected_or_pending(devices[index].address))
+                    {
+                        connect_to_discovered_device(devices[index].address, devices[index].name_buffer);
+                        break;
+                    }
                 }
                 else
                 {
-                    printf("Failed to get name: page timeout, connecting by address\r\n");
-                    memcpy(remote_addr, devices[index].address, sizeof(bd_addr_t));
-                    has_address = true;
-                    sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr,
-                                            BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
-                    bt_discovery_on_device_found();
-                    break;
+                    printf("Failed to get name: page timeout\r\n");
+                    if (!is_already_connected_or_pending(devices[index].address))
+                    {
+                        connect_to_discovered_device(devices[index].address, devices[index].name_buffer);
+                        break;
+                    }
                 }
             }
             continue_remote_names();
             break;
 
+        case HCI_EVENT_CONNECTION_COMPLETE:
+        {
+            status = hci_event_connection_complete_get_status(packet);
+            hci_event_connection_complete_get_bd_addr(packet, event_addr);
+            if (status == ERROR_CODE_SUCCESS)
+            {
+                hci_con_handle_t handle = hci_event_connection_complete_get_connection_handle(packet);
+                printf("Classic ACL connection complete: %s, handle=0x%04x\r\n", bd_addr_to_str(event_addr), handle);
+                gap_request_security_level(handle, LEVEL_2);
+            }
+            else
+            {
+                printf("Classic ACL connection failed: %s, status=0x%02x\r\n", bd_addr_to_str(event_addr), status);
+            }
+            break;
+        }
+
+        case HCI_EVENT_AUTHENTICATION_COMPLETE_EVENT:
+        {
+            status = hci_event_authentication_complete_get_status(packet);
+            hci_con_handle_t handle = hci_event_authentication_complete_get_connection_handle(packet);
+            printf("Classic authentication complete: handle=0x%04x, status=0x%02x\r\n", handle, status);
+            if (status != ERROR_CODE_SUCCESS)
+            {
+                hci_connection_t *conn = hci_connection_for_handle(handle);
+                if (conn)
+                {
+                    printf("Authentication failed, dropping link key for %s\r\n", bd_addr_to_str(conn->address));
+                    gap_drop_link_key_for_bd_addr(conn->address);
+                    int32_t pairing_id = DeviceFactory::find_bluetooth_pairing_id_by_mac(conn->address);
+                    if (pairing_id >= 0)
+                    {
+                        DeviceFactory::set_bluetooth_pairing_link_key(pairing_id, nullptr);
+                    }
+                }
+            }
+            break;
+        }
+
+        case GAP_EVENT_SECURITY_LEVEL:
+        {
+            hci_con_handle_t handle = gap_event_security_level_get_handle(packet);
+            gap_security_level_t sec_level = (gap_security_level_t)gap_event_security_level_get_security_level(packet);
+            status = gap_event_security_level_get_status(packet);
+            printf("GAP security level: handle=0x%04x, level=%d, status=0x%02x\r\n", handle, (int)sec_level, status);
+            break;
+        }
+
         case HCI_EVENT_PIN_CODE_REQUEST:
-            if (!hid_host_connection_pending && hid_host_cid == 0) break;
+        {
             hci_event_pin_code_request_get_bd_addr(packet, event_addr);
             index = getDeviceIndexForAddress(event_addr);
-            if ((index >= 0 && strstr(devices[index].name_buffer, "RVL") != nullptr) ||
-                (pending_connections[hid_host_cid].vid == 0x057E))
+            bool is_wii = false;
+
+            if (index >= 0 && strstr(devices[index].name_buffer, "RVL") != nullptr)
             {
-                printf("Pin code request for Nintendo Wii device - using reversed host BD_ADDR\r\n");
-                bd_addr_t local_addr;
+                is_wii = true;
+            }
+            if (!is_wii && s_pnp_sdp.in_progress && bd_addr_cmp(s_pnp_sdp.addr, event_addr) == 0)
+            {
+                if (s_pnp_sdp.vid == 0x057E) is_wii = true;
+            }
+            if (!is_wii)
+            {
+                for (const auto &pair : pending_connections)
+                {
+                    if (bd_addr_cmp(pair.second.addr, event_addr) == 0 && pair.second.vid == 0x057E)
+                    {
+                        is_wii = true;
+                        break;
+                    }
+                }
+            }
+            if (!is_wii)
+            {
+                DeviceFactory::BluetoothPairingStateData paired_state = {};
+                if (DeviceFactory::find_bluetooth_pairing_state_by_mac(event_addr, paired_state) && !paired_state.ble)
+                {
+                    if (paired_state.vid == 0x057E || strstr(paired_state.name, "RVL") != nullptr)
+                    {
+                        is_wii = true;
+                    }
+                }
+            }
+
+            if (is_wii)
+            {
+                printf("Pin code request for Nintendo Wii device %s - using reversed host BD_ADDR\r\n", bd_addr_to_str(event_addr));
                 static bd_addr_t pin_code;
+                bd_addr_t local_addr;
                 gap_local_bd_addr(local_addr);
                 reverse_bd_addr(local_addr, pin_code);
                 gap_pin_code_response_binary(event_addr, pin_code, sizeof(pin_code));
             }
             else
             {
-                printf("Pin code request - using '0000'\r\n");
+                printf("Pin code request for %s - using '0000'\r\n", bd_addr_to_str(event_addr));
                 gap_pin_code_response(event_addr, "0000");
             }
             break;
+        }
 
         case HCI_EVENT_USER_CONFIRMATION_REQUEST:
             printf("SSP User Confirmation Auto accept\r\n");
@@ -385,26 +709,39 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             switch (hci_event_hid_meta_get_subevent_code(packet))
             {
             case HID_SUBEVENT_INCOMING_CONNECTION:
-                // Accept incoming connections from any peripheral
-                hid_host_accept_connection(
-                    hid_subevent_incoming_connection_get_hid_cid(packet),
-                    hid_host_report_mode);
+            {
+                uint16_t cid = hid_subevent_incoming_connection_get_hid_cid(packet);
+                bd_addr_t in_addr = {};
+                hid_subevent_incoming_connection_get_address(packet, in_addr);
+                printf("Classic BT: Incoming HID connection from %s, cid=0x%04x\r\n", bd_addr_to_str(in_addr), cid);
+                hid_host_accept_connection(cid, hid_host_report_mode);
                 break;
+            }
 
             case HID_SUBEVENT_CONNECTION_OPENED:
             {
                 uint16_t cid = hid_subevent_connection_opened_get_hid_cid(packet);
                 status = hid_subevent_connection_opened_get_status(packet);
+                s_classic_connect_in_progress = false;
                 if (status != ERROR_CODE_SUCCESS)
                 {
-                    printf("Connection failed, status 0x%02x\r\n", status);
+                    bd_addr_t fail_addr = {};
+                    hid_subevent_connection_opened_get_bd_addr(packet, fail_addr);
+                    printf("Connection failed for %s, status 0x%02x\r\n", bd_addr_to_str(fail_addr), status);
+                    if (status == 0x67 || status == 0x66)
+                    {
+                        printf("L2CAP security/resource refusal, dropping stored link key for %s\r\n", bd_addr_to_str(fail_addr));
+                        gap_drop_link_key_for_bd_addr(fail_addr);
+                        int32_t pairing_id = DeviceFactory::find_bluetooth_pairing_id_by_mac(fail_addr);
+                        if (pairing_id >= 0)
+                        {
+                            DeviceFactory::set_bluetooth_pairing_link_key(pairing_id, nullptr);
+                        }
+                    }
                     pending_connections.erase(cid);
-                    hid_host_connection_pending = false;
-                    hid_host_cid = 0;
+                    btc_schedule_reconnect(2000);
                     return;
                 }
-                hid_host_connection_pending = false;
-                app_state = APP_CONNECTED;
                 printf("HID Host connected, cid=0x%04x\r\n", cid);
 
                 bd_addr_t connected_addr = {};
@@ -449,15 +786,21 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 }
 
                 // Fallback detection from device name if SDP didn't populate VID/PID
-                index = getDeviceIndexForAddress(connected_addr);
-                if ((!vid || !pid) && index >= 0)
+                if (!vid || !pid)
                 {
-                    if (strstr(devices[index].name_buffer, "RVL-CNT-01-UC") != nullptr)
+                    const char *dev_name = "";
+                    index = getDeviceIndexForAddress(connected_addr);
+                    if (index >= 0 && devices[index].name_buffer[0])
+                        dev_name = devices[index].name_buffer;
+                    else if (is_paired && paired_state.name[0])
+                        dev_name = paired_state.name;
+
+                    if (strstr(dev_name, "RVL-CNT-01-UC") != nullptr)
                     {
                         vid = 0x057E;
                         pid = 0x0330;
                     }
-                    else if (strstr(devices[index].name_buffer, "RVL") != nullptr)
+                    else if (strstr(dev_name, "RVL") != nullptr)
                     {
                         vid = 0x057E;
                         pid = 0x0306;
@@ -466,8 +809,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
                 auto host = bt_classic_create_host(vid, pid,
                                                    pending.version,
-                                                   pending.device_id ? pending.device_id
-                                                                      : next_bt_device_id++,
+                                                   BluetoothStack::instance().device_id(),
                                                    info,
                                                    known_subtype,
                                                    known_ready);
@@ -492,6 +834,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 }
 
                 pending_connections.erase(cid);
+                btc_schedule_reconnect(1000);
                 break;
             }
 
@@ -544,13 +887,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 }
                 pending_connections.erase(cid);
                 printf("HID Host disconnected, cid=0x%04x\r\n", cid);
-
-                // Reconnect if this was our hard-coded remote address
-                if (has_address)
-                {
-                    sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr,
-                                             BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
-                }
+                btc_schedule_reconnect(1000);
                 break;
             }
 
@@ -611,16 +948,6 @@ int btstack_classic_main(bool enable_hid_host)
     if (enable_hid_host)
         hid_host_setup();
     hci_set_inquiry_mode(INQUIRY_MODE_RSSI_AND_EIR);
-
-#ifdef BT_ADDR
-#ifdef CONFIGURABLE_BLOBS
-    has_address = bt_addr[0];
-#else
-    has_address = true;
-#endif
-    if (has_address)
-        sscanf_bd_addr(remote_addr_string, remote_addr);
-#endif
     return 0;
 }
 

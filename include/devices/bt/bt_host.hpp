@@ -11,6 +11,8 @@
 class BluetoothHostInterface;
 
 // Registry functions (implemented in bt_host.cpp)
+size_t bt_host_assignable_interface_count();
+void bt_host_add_assignable_devices(bool rescan);
 void bt_host_add_interface(std::shared_ptr<BluetoothHostInterface> device);
 void bt_host_add_assignable_interface(std::shared_ptr<BluetoothHostInterface> device);
 void bt_host_promote_if_ready(std::shared_ptr<BluetoothHostInterface> device);

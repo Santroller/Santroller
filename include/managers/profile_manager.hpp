@@ -80,6 +80,8 @@ public:
     bool is_profile_active(uint32_t profile_id) const;
     void clear_all();
     void prepare_for_config_reload();
+    void initialize_device_bluetooth();
+    void deinitialize_device_bluetooth();
     
     void add_instance(std::shared_ptr<Instance> instance);
     size_t instance_count() const;

@@ -112,8 +112,13 @@ void DeviceFactory::set_bluetooth_pairing_state(int32_t id, const uint8_t mac[6]
 void DeviceFactory::set_bluetooth_pairing_link_key(int32_t id, const uint8_t key[16]) {
     auto it = s_bluetooth_pairing_states.find(id);
     if (it != s_bluetooth_pairing_states.end()) {
-        it->second.has_link_key = true;
-        memcpy(it->second.link_key, key, 16);
+        if (key) {
+            it->second.has_link_key = true;
+            memcpy(it->second.link_key, key, 16);
+        } else {
+            it->second.has_link_key = false;
+            memset(it->second.link_key, 0, sizeof(it->second.link_key));
+        }
     }
 }
 

@@ -2,7 +2,7 @@
 
 #include "i2c.hpp"
 #define GH5NECK_ADDR 0x0D
-#define GH5NECK_BUTTONS_PTR 0x11
+#define GH5NECK_BUTTONS_PTR 0x10
 typedef enum
 {
     GH5_NECK_CHECK_STATUS,

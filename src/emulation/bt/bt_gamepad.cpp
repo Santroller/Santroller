@@ -144,19 +144,37 @@ BTGamepadDevice::BTGamepadDevice()
 }
 BTGamepadDevice::~BTGamepadDevice()
 {
-    if (!ConfigManager::instance().has_bluetooth())
+    deinitialize();
+}
+
+void BTGamepadDevice::deinitialize()
+{
+    if (!m_initialized)
     {
         return;
+    }
+    if (con_handle != HCI_CON_HANDLE_INVALID)
+    {
+        gap_disconnect(con_handle);
+        con_handle = HCI_CON_HANDLE_INVALID;
     }
     s_instance = nullptr;
     hids_device_register_get_report_callback(nullptr);
     hids_device_register_packet_handler(nullptr);
     gap_advertisements_enable(0);
     gap_advertisements_set_data(0, nullptr);
+    hci_remove_event_handler(&hci_event_callback_registration);
+    sm_remove_event_handler(&sm_event_callback_registration);
+    m_initialized = false;
     printf("btgamepaddevice deinit\r\n");
 }
+
 void BTGamepadDevice::initialize()
 {
+    if (m_initialized)
+    {
+        return;
+    }
     if (!ConfigManager::instance().has_bluetooth())
     {
         return;
@@ -263,6 +281,7 @@ void BTGamepadDevice::initialize()
     }
     XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)m_initial_report;
     gamepad->rsize = sizeof(XInputGamepad_Data_t);
+    m_initialized = true;
 }
 void BTGamepadDevice::process(bool full_poll, bool send_events)
 {

@@ -16,6 +16,24 @@
 static std::vector<std::shared_ptr<BluetoothHostInterface>> bt_pending_interfaces;
 static std::vector<std::shared_ptr<BluetoothHostInterface>> bt_assignable_interfaces;
 
+static uint32_t m_devices_changed = 0;
+void bt_host_add_assignable_devices(bool rescan)
+{
+    for (const auto &device : bt_assignable_interfaces)
+    {
+        device->still_connected = true;
+        DeviceManager::instance().add_assignable_device(device);
+        if (rescan)
+        {
+            device->rescan(true);
+        }
+    }
+}
+size_t bt_host_assignable_interface_count()
+{
+    return bt_assignable_interfaces.size();
+}
+
 void bt_host_add_assignable_interface(std::shared_ptr<BluetoothHostInterface> device)
 {
     bt_host_add_interface(device);
@@ -29,8 +47,8 @@ void bt_host_add_interface(std::shared_ptr<BluetoothHostInterface> device)
         {
             device->set_registered(true);
             bt_assignable_interfaces.push_back(device);
-            DeviceManager::instance().add_assignable_device(device);
             device->notify_connected();
+            m_devices_changed = millis() + 500;
             bt_host_save_pairing(device, device->is_ble());
         }
     }
@@ -48,13 +66,14 @@ void bt_host_promote_if_ready(std::shared_ptr<BluetoothHostInterface> device)
 
     bt_pending_interfaces.erase(
         std::remove_if(bt_pending_interfaces.begin(), bt_pending_interfaces.end(),
-                       [&device](const auto &d) { return d.get() == device.get(); }),
+                       [&device](const auto &d)
+                       { return d.get() == device.get(); }),
         bt_pending_interfaces.end());
 
     device->set_registered(true);
     bt_assignable_interfaces.push_back(device);
-    DeviceManager::instance().add_assignable_device(device);
     device->notify_connected();
+    m_devices_changed = millis() + 500;
     bt_host_save_pairing(device, device->is_ble());
 }
 
@@ -67,12 +86,14 @@ void bt_host_remove_interface(BluetoothHostInterface *device)
 {
     bt_pending_interfaces.erase(
         std::remove_if(bt_pending_interfaces.begin(), bt_pending_interfaces.end(),
-                       [device](const auto &d) { return d.get() == device; }),
+                       [device](const auto &d)
+                       { return d.get() == device; }),
         bt_pending_interfaces.end());
 
     bt_assignable_interfaces.erase(
         std::remove_if(bt_assignable_interfaces.begin(), bt_assignable_interfaces.end(),
-                       [device](const auto &d) { return d.get() == device; }),
+                       [device](const auto &d)
+                       { return d.get() == device; }),
         bt_assignable_interfaces.end());
 
     DeviceManager::instance().remove_device(device);
@@ -90,8 +111,8 @@ void bt_host_update_interfaces(bool full_poll, bool send_events)
             it = bt_pending_interfaces.erase(it);
             device->set_registered(true);
             bt_assignable_interfaces.push_back(device);
-            DeviceManager::instance().add_assignable_device(device);
             device->notify_connected();
+            m_devices_changed = millis() + 500;
             bt_host_save_pairing(device, device->is_ble());
         }
         else if (millis() - device->connected_at() > 2000)
@@ -102,8 +123,8 @@ void bt_host_update_interfaces(bool full_poll, bool send_events)
             it = bt_pending_interfaces.erase(it);
             device->set_registered(true);
             bt_assignable_interfaces.push_back(device);
-            DeviceManager::instance().add_assignable_device(device);
             device->notify_connected();
+            m_devices_changed = millis() + 500;
             bt_host_save_pairing(device, device->is_ble());
         }
         else
@@ -115,6 +136,11 @@ void bt_host_update_interfaces(bool full_poll, bool send_events)
     for (const auto &device : bt_assignable_interfaces)
     {
         device->update(full_poll, send_events);
+    }
+    if (m_devices_changed && millis() > m_devices_changed)
+    {
+        m_devices_changed = 0;
+        reload();
     }
 }
 
@@ -185,6 +211,11 @@ void BluetoothHostInterface::update(bool full_poll, bool send_events)
     if (send_events && full_poll)
     {
         notify_connected();
+    }
+    if (m_devices_changed && millis() > m_devices_changed)
+    {
+        m_devices_changed = 0;
+        reload();
     }
 }
 

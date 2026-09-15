@@ -25,14 +25,24 @@ WiiRemoteEmulationDeviceInstance::WiiRemoteEmulationDeviceInstance()
 
 WiiRemoteEmulationDeviceInstance::~WiiRemoteEmulationDeviceInstance()
 {
+    deinitialize();
+}
+
+void WiiRemoteEmulationDeviceInstance::deinitialize()
+{
     if (m_initialized)
     {
         BluetoothStack::instance().release_wiimote();
+        m_initialized = false;
     }
 }
 
 void WiiRemoteEmulationDeviceInstance::initialize()
 {
+    if (m_initialized)
+    {
+        return;
+    }
     for (auto &report : m_report_buffers)
     {
         report.mode = CLASSIC_CONTROLLER;

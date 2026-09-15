@@ -109,6 +109,7 @@ void BluetoothStack::release_wiimote()
     {
         wiimote_emulator_shutdown();
         m_wiimote_report = nullptr;
+        btstack_classic_set_accept_incoming(true);
     }
 }
 

@@ -361,6 +361,28 @@ void ProfileManager::clear_all()
     std::fill(std::begin(m_usb_instances_by_epout), std::end(m_usb_instances_by_epout), nullptr);
 }
 
+void ProfileManager::initialize_device_bluetooth()
+{
+    for (const auto &instance : m_instances)
+    {
+        if (instance && instance->is_bluetooth())
+        {
+            instance->initialize();
+        }
+    }
+}
+
+void ProfileManager::deinitialize_device_bluetooth()
+{
+    for (const auto &instance : m_instances)
+    {
+        if (instance && instance->is_bluetooth())
+        {
+            instance->deinitialize();
+        }
+    }
+}
+
 // Instance management methods
 void ProfileManager::add_instance(std::shared_ptr<Instance> instance)
 {

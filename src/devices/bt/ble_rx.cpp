@@ -1,4 +1,3 @@
-
 #include <btstack_tlv.h>
 #include <inttypes.h>
 #include <stdint.h>
@@ -7,14 +6,17 @@
 #include <string.h>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include "ble/gatt-service/battery_service_server.h"
 #include "ble/gatt-service/device_information_service_server.h"
+#include "ble/le_device_db.h"
 #include "btstack.h"
 #include "btstack_config.h"
 #include "gap.h"
 #include "hidparser.h"
 #include "hci_dump_embedded_stdout.h"
+#include "devices/bt/bluetooth_stack.hpp"
 
 #include "devices/bt/bt_host.hpp"
 #include "devices/bt/bt_ble_host.hpp"
@@ -22,35 +24,14 @@
 #include "config/device_factory.hpp"
 #include "devices/bluetooth.hpp"
 
-
 // ---------------------------------------------------------------------------
-// State
+// Per-Connection State
 // ---------------------------------------------------------------------------
-
-typedef struct {
-    bd_addr_t addr;
-    bd_addr_type_t addr_type;
-} le_device_addr_t;
 
 #define SIZE_OF_BD_ADDRESS 18
 #define MAX_DEVICES_TO_SCAN 10
 
-static enum {
-    W4_WORKING,
-    W4_HID_DEVICE_FOUND,
-    W4_CONNECTED,
-    W4_ENCRYPTED,
-    W4_HID_CLIENT_CONNECTED,
-    READY,
-    W4_TIMEOUT_THEN_SCAN,
-    W4_TIMEOUT_THEN_RECONNECT,
-} app_state;
-
-static le_device_addr_t remote_device;
-static hci_con_handle_t connection_handle;
-static uint16_t hids_cid;
 static hid_protocol_mode_t protocol_mode = HID_PROTOCOL_MODE_REPORT;
-
 static uint8_t hid_descriptor_storage[500];
 
 // Guitar Hero Live iOS BLE Guitar characteristic UUID: 533e1524-3abe-f33f-cd00-594e8b0a8ea3
@@ -59,8 +40,11 @@ static const uint8_t ghl_ios_char_uuid[16] = {
     0xCD, 0x00, 0x59, 0x4E, 0x8B, 0x0A, 0x8E, 0xA3
 };
 
-// Per-connection pending PnP info (connection_handle → pending state)
-struct BlePendingConnection {
+struct BleConnectionContext {
+    hci_con_handle_t con_handle = HCI_CON_HANDLE_INVALID;
+    uint16_t hids_cid = 0;
+    bd_addr_t addr = {};
+    bd_addr_type_t addr_type = BD_ADDR_TYPE_LE_PUBLIC;
     uint16_t vid = 0;
     uint16_t pid = 0;
     uint16_t version = 0;
@@ -71,13 +55,13 @@ struct BlePendingConnection {
     char paired_name[32] = {};
     gatt_client_characteristic_t ghl_characteristic = {};
     gatt_client_notification_t ghl_notification = {};
+    std::shared_ptr<BluetoothHostInterface> host = nullptr;
 };
-static std::unordered_map<hci_con_handle_t, BlePendingConnection> ble_pending;
 
-// Active connections: hids_cid → host object
-static std::unordered_map<uint16_t, std::shared_ptr<BluetoothHostInterface>> ble_connections;
-
-static uint16_t next_ble_device_id = 0x5000;
+// Active connections indexed by HCI connection handle
+static std::unordered_map<hci_con_handle_t, std::shared_ptr<BleConnectionContext>> s_connections_by_handle;
+// Active HIDS connections indexed by HIDS CID
+static std::unordered_map<uint16_t, std::shared_ptr<BleConnectionContext>> s_connections_by_cid;
 
 // Scan result tracking
 typedef struct {
@@ -87,12 +71,15 @@ typedef struct {
 } scan_data_t;
 
 static scan_data_t scan_devices[MAX_DEVICES_TO_SCAN];
-static uint8_t devices_found;
+static uint8_t devices_found = 0;
 
-// Timers
-static btstack_timer_source_t connection_timer;
-static btstack_timer_source_t reconnect_timer;
-static btstack_timer_source_t scan_timer;
+// Central coordinator state
+static bool s_ble_scanning = false;
+static bool s_whitelist_active = false;
+static bool s_direct_connect_pending = false;
+
+static btstack_timer_source_t s_scan_timer;
+static btstack_timer_source_t s_direct_connect_timer;
 
 // BTstack event registrations
 static btstack_packet_callback_registration_t hci_event_callback_registration;
@@ -102,144 +89,241 @@ static btstack_packet_callback_registration_t sm_event_callback_registration;
 // Helpers
 // ---------------------------------------------------------------------------
 
-static bool adv_event_contains_hid_service(const uint8_t *packet)
+static bd_addr_type_t ble_resolve_addr_type(const bd_addr_t mac)
 {
-    const uint8_t *ad_data = gap_event_advertising_report_get_data(packet);
-    uint8_t ad_len = gap_event_advertising_report_get_data_length(packet);
-    return ad_data_contains_uuid16(ad_len, ad_data, ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE);
+    int max_entries = le_device_db_max_count();
+    for (int i = 0; i < max_entries; i++)
+    {
+        int db_addr_type = 0;
+        bd_addr_t db_addr = {};
+        le_device_db_info(i, &db_addr_type, db_addr, nullptr);
+        if (bd_addr_cmp(db_addr, mac) == 0)
+        {
+            return (bd_addr_type_t)db_addr_type;
+        }
+    }
+    // In BLE, static random addresses have the two MSBs set: 0b11xxxxxx (0xC0)
+    if ((mac[0] & 0xC0) == 0xC0)
+    {
+        return BD_ADDR_TYPE_LE_RANDOM;
+    }
+    return BD_ADDR_TYPE_LE_PUBLIC;
 }
 
-void ble_stop_scan()
+static bool ble_is_mac_connected(const bd_addr_t mac)
 {
-    btstack_run_loop_remove_timer(&scan_timer);
-    gap_stop_scan();
-    if (app_state == W4_HID_DEVICE_FOUND)
+    for (const auto &pair : s_connections_by_handle)
     {
-        app_state = READY;
+        if (bd_addr_cmp(pair.second->addr, mac) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void ble_sync_reconnect(void);
+
+static void ble_direct_connect_timeout(btstack_timer_source_t *ts)
+{
+    UNUSED(ts);
+    printf("BLE direct connect timed out\r\n");
+    if (s_direct_connect_pending)
+    {
+        s_direct_connect_pending = false;
+        gap_connect_cancel();
+        ble_sync_reconnect();
     }
 }
-
-bool ble_is_connecting()
-{
-    return app_state == W4_CONNECTED ||
-           app_state == W4_ENCRYPTED ||
-           app_state == W4_HID_CLIENT_CONNECTED;
-}
-
-bool ble_has_connected_device()
-{
-    return !ble_connections.empty();
-}
-
 
 static void bt_stop_scan_timer(btstack_timer_source_t *ts)
 {
     UNUSED(ts);
     printf("BLE scan timed out\r\n");
     gap_stop_scan();
-    if (app_state == W4_HID_DEVICE_FOUND)
-    {
-        app_state = READY;
-    }
+    s_ble_scanning = false;
+    ble_sync_reconnect();
+}
+
+void ble_stop_scan()
+{
+    btstack_run_loop_remove_timer(&s_scan_timer);
+    gap_stop_scan();
+    s_ble_scanning = false;
+    ble_sync_reconnect();
 }
 
 void ble_start_scan()
 {
     printf("Scanning for LE HID devices...\r\n");
     devices_found = 0;
-    app_state = W4_HID_DEVICE_FOUND;
-    // Active scanning to request scan response containing device name
+    if (s_direct_connect_pending)
+    {
+        s_direct_connect_pending = false;
+        btstack_run_loop_remove_timer(&s_direct_connect_timer);
+        gap_connect_cancel();
+    }
+    if (s_whitelist_active)
+    {
+        s_whitelist_active = false;
+        gap_connect_cancel();
+    }
+    s_ble_scanning = true;
     gap_set_scan_parameters(1, 48, 48);
     gap_start_scan();
-    btstack_run_loop_set_timer(&scan_timer, 5000);
-    btstack_run_loop_set_timer_handler(&scan_timer, &bt_stop_scan_timer);
-    btstack_run_loop_add_timer(&scan_timer);
+    btstack_run_loop_set_timer(&s_scan_timer, 5000);
+    btstack_run_loop_set_timer_handler(&s_scan_timer, &bt_stop_scan_timer);
+    btstack_run_loop_add_timer(&s_scan_timer);
 }
 
-static void hog_connect(void);
-
-static void hog_reconnect_timeout(btstack_timer_source_t *ts)
+bool ble_is_connecting()
 {
-    UNUSED(ts);
-    hog_connect();
+    if (s_ble_scanning || s_direct_connect_pending)
+        return true;
+    for (const auto &pair : s_connections_by_handle)
+    {
+        if (!pair.second->host)
+            return true;
+    }
+    return false;
 }
 
-static void hog_connection_timeout(btstack_timer_source_t *ts)
+bool ble_has_connected_device()
 {
-    UNUSED(ts);
-    printf("Timeout - abort connection\r\n");
-    gap_connect_cancel();
-    btstack_run_loop_set_timer(&reconnect_timer, 100);
-    btstack_run_loop_set_timer_handler(&reconnect_timer, &hog_reconnect_timeout);
-    btstack_run_loop_add_timer(&reconnect_timer);
+    for (const auto &pair : s_connections_by_handle)
+    {
+        if (pair.second->host && pair.second->host->is_ready())
+            return true;
+    }
+    return false;
 }
 
-static void hog_connect(void)
+static void ble_sync_reconnect(void)
 {
-    btstack_run_loop_set_timer(&connection_timer, 10000);
-    btstack_run_loop_set_timer_handler(&connection_timer, &hog_connection_timeout);
-    btstack_run_loop_add_timer(&connection_timer);
-    app_state = W4_CONNECTED;
-    printf("Connecting to BLE device %s (type %d)...\r\n", bd_addr_to_str(remote_device.addr), remote_device.addr_type);
-    gap_connect(remote_device.addr, remote_device.addr_type);
-}
+    if (s_ble_scanning || s_direct_connect_pending)
+    {
+        return;
+    }
 
-static void hog_start_reconnect_timer()
-{
-    btstack_run_loop_set_timer(&connection_timer, 100);
-    btstack_run_loop_set_timer_handler(&connection_timer, &hog_reconnect_timeout);
-    btstack_run_loop_add_timer(&connection_timer);
-}
+    struct Candidate {
+        bd_addr_t addr;
+        bd_addr_type_t addr_type;
+    };
+    std::vector<Candidate> candidates;
 
-static void hog_start_connect(void)
-{
-    DeviceFactory::foreach_bluetooth_pairing_state([](int32_t id, const DeviceFactory::BluetoothPairingStateData &state) {
+    // 1. Check paired BLE devices from DeviceFactory
+    DeviceFactory::foreach_bluetooth_pairing_state([&candidates](int32_t id, const DeviceFactory::BluetoothPairingStateData &state) {
         UNUSED(id);
-        if (state.ble && state.mac[0] != 0 && remote_device.addr[0] == 0)
+        if (state.ble && !btstack_is_null_bd_addr(state.mac) && !ble_is_mac_connected(state.mac))
         {
-            memcpy(remote_device.addr, state.mac, sizeof(bd_addr_t));
-            remote_device.addr_type = BD_ADDR_TYPE_LE_PUBLIC;
-            printf("Found paired BLE device %s in config, attempting reconnection\r\n", bd_addr_to_str(remote_device.addr));
-            hog_connect();
+            bool exists = false;
+            for (const auto &c : candidates)
+            {
+                if (bd_addr_cmp(c.addr, state.mac) == 0)
+                {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists)
+            {
+                Candidate cand;
+                bd_addr_copy(cand.addr, state.mac);
+                cand.addr_type = ble_resolve_addr_type(state.mac);
+                candidates.push_back(cand);
+            }
         }
     });
+
+    // 2. Check le_device_db as fallback
+    int max_entries = le_device_db_max_count();
+    for (int i = 0; i < max_entries; i++)
+    {
+        int db_addr_type = 0;
+        bd_addr_t db_addr = {};
+        le_device_db_info(i, &db_addr_type, db_addr, nullptr);
+        if (!btstack_is_null_bd_addr(db_addr) && !ble_is_mac_connected(db_addr))
+        {
+            bool exists = false;
+            for (const auto &c : candidates)
+            {
+                if (bd_addr_cmp(c.addr, db_addr) == 0)
+                {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists)
+            {
+                Candidate cand;
+                bd_addr_copy(cand.addr, db_addr);
+                cand.addr_type = (bd_addr_type_t)db_addr_type;
+                candidates.push_back(cand);
+            }
+        }
+    }
+
+    if (candidates.empty())
+    {
+        if (s_whitelist_active)
+        {
+            gap_connect_cancel();
+            s_whitelist_active = false;
+        }
+        return;
+    }
+
+    gap_whitelist_clear();
+    for (const auto &c : candidates)
+    {
+        printf("BLE auto-reconnect candidate: %s (type %d)\r\n", bd_addr_to_str(c.addr), c.addr_type);
+        gap_whitelist_add(c.addr_type, c.addr);
+    }
+
+    if (!s_whitelist_active)
+    {
+        uint8_t status = gap_connect_with_whitelist();
+        printf("gap_connect_with_whitelist status: 0x%02x\r\n", status);
+        if (status == ERROR_CODE_SUCCESS)
+        {
+            s_whitelist_active = true;
+        }
+    }
 }
 
-static void handle_outgoing_connection_error(void)
+static void handle_outgoing_connection_error(hci_con_handle_t con_handle)
 {
-    printf("Error occurred, disconnect and start over\r\n");
-    gap_disconnect(connection_handle);
-    hog_start_reconnect_timer();
+    printf("Error occurred for connection 0x%04x, disconnecting\r\n", con_handle);
+    gap_disconnect(con_handle);
 }
 
-static void ble_register_hids_host(uint16_t cid)
+static void ble_register_hids_host(std::shared_ptr<BleConnectionContext> ctx, uint16_t cid)
 {
-    if (ble_connections.find(cid) != ble_connections.end())
+    if (!ctx || ctx->host)
         return;
 
-    auto &pending = ble_pending[connection_handle];
     HID_ReportInfo_t *info = nullptr;
     const uint8_t *desc = hids_host_descriptor_storage_get_descriptor_data(cid, 0);
     uint16_t desc_len   = hids_host_descriptor_storage_get_descriptor_len(cid, 0);
     if (desc && desc_len > 0)
         USB_ProcessHIDReport(desc, desc_len, &info);
 
-    uint16_t device_id = pending.device_id ? pending.device_id : next_ble_device_id++;
-    auto host = ble_create_host(pending.vid, pending.pid, pending.version, device_id, info, desc, desc_len, pending.known_subtype);
+    uint16_t device_id = BluetoothStack::instance().device_id();
+    auto host = ble_create_host(ctx->vid, ctx->pid, ctx->version, device_id, info, desc, desc_len, ctx->known_subtype);
     host->set_ble(true);
 
-    memcpy(host->m_addr, remote_device.addr, 6);
-    host->m_addr_type = remote_device.addr_type;
+    memcpy(host->m_addr, ctx->addr, 6);
+    host->m_addr_type = ctx->addr_type;
     host->m_cid       = cid;
-    if (pending.paired_name[0] && !host->m_name[0])
-        strncpy(host->m_name, pending.paired_name, sizeof(host->m_name) - 1);
+    if (ctx->paired_name[0] && !host->m_name[0])
+        strncpy(host->m_name, ctx->paired_name, sizeof(host->m_name) - 1);
 
-    ble_connections[cid] = host;
+    ctx->host = host;
     host->on_connected();
     bt_host_add_interface(host);
     bt_host_save_pairing(host, true);
     printf("BLE host registered and interface added: VID=0x%04x PID=0x%04x name='%s'\r\n",
-           pending.vid, pending.pid, host->m_name);
+           ctx->vid, ctx->pid, host->m_name);
 }
 
 // ---------------------------------------------------------------------------
@@ -259,10 +343,10 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
     if (packet_type_code == GATT_EVENT_NOTIFICATION)
     {
         hci_con_handle_t handle = gatt_event_notification_get_handle(packet);
-        auto it = ble_connections.find(handle);
-        if (it != ble_connections.end())
+        auto it = s_connections_by_handle.find(handle);
+        if (it != s_connections_by_handle.end() && it->second->host)
         {
-            it->second->handle_report(
+            it->second->host->handle_report(
                 gatt_event_notification_get_value(packet),
                 gatt_event_notification_get_value_length(packet));
         }
@@ -270,47 +354,55 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
     }
     else if (packet_type_code == GATT_EVENT_CHARACTERISTIC_QUERY_RESULT)
     {
-        auto &pending = ble_pending[connection_handle];
-        gatt_client_characteristic_t characteristic;
-        gatt_event_characteristic_query_result_get_characteristic(packet, &characteristic);
-        pending.ghl_characteristic = characteristic;
-        pending.found_ghl_char = true;
-        printf("GHL iOS Guitar characteristic found, value_handle=0x%04x\r\n", characteristic.value_handle);
+        hci_con_handle_t handle = gatt_event_characteristic_query_result_get_handle(packet);
+        auto it = s_connections_by_handle.find(handle);
+        if (it != s_connections_by_handle.end())
+        {
+            gatt_event_characteristic_query_result_get_characteristic(packet, &it->second->ghl_characteristic);
+            it->second->found_ghl_char = true;
+            printf("GHL iOS Guitar characteristic found for handle 0x%04x, value_handle=0x%04x\r\n",
+                   handle, it->second->ghl_characteristic.value_handle);
+        }
         return;
     }
     else if (packet_type_code == GATT_EVENT_QUERY_COMPLETE)
     {
-        auto &pending = ble_pending[connection_handle];
-        if (pending.found_ghl_char)
+        hci_con_handle_t handle = gatt_event_query_complete_get_handle(packet);
+        auto it = s_connections_by_handle.find(handle);
+        if (it == s_connections_by_handle.end())
+            return;
+        auto ctx = it->second;
+
+        if (ctx->found_ghl_char)
         {
-            printf("GHL iOS query complete, subscribing to notifications\r\n");
+            printf("GHL iOS query complete, subscribing to notifications for handle 0x%04x\r\n", handle);
             gatt_client_listen_for_characteristic_value_updates(
-                &pending.ghl_notification,
+                &ctx->ghl_notification,
                 handle_gatt_client_event,
-                connection_handle,
-                &pending.ghl_characteristic);
+                handle,
+                &ctx->ghl_characteristic);
 
             gatt_client_write_client_characteristic_configuration(
                 handle_gatt_client_event,
-                connection_handle,
-                &pending.ghl_characteristic,
+                handle,
+                &ctx->ghl_characteristic,
                 GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
 
-            uint16_t device_id = pending.device_id ? pending.device_id : next_ble_device_id++;
+            uint16_t device_id = BluetoothStack::instance().device_id();
             auto host = std::make_shared<BleGhlIosHost>(device_id);
-            memcpy(host->m_addr, remote_device.addr, 6);
-            host->m_addr_type = remote_device.addr_type;
-            host->m_cid       = connection_handle;
+            memcpy(host->m_addr, ctx->addr, 6);
+            host->m_addr_type = ctx->addr_type;
+            host->m_cid       = handle;
             strncpy(host->m_name, "GHL iOS Guitar", sizeof(host->m_name) - 1);
 
-            ble_connections[connection_handle] = host;
+            ctx->host = host;
             host->on_connected();
             bt_host_add_interface(host);
             bt_host_save_pairing(host, true);
         }
         else
         {
-            handle_outgoing_connection_error();
+            handle_outgoing_connection_error(handle);
         }
         return;
     }
@@ -324,23 +416,26 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
     {
         status = gattservice_subevent_hid_service_connected_get_status(packet);
         uint16_t cid = gattservice_subevent_hid_service_connected_get_hids_cid(packet);
+        auto it = s_connections_by_cid.find(cid);
+        if (it == s_connections_by_cid.end())
+            break;
+        auto ctx = it->second;
+
         if (status == ERROR_CODE_SUCCESS)
         {
             printf("HID service connected, cid=0x%04x, instances=%d\r\n", cid,
                    gattservice_subevent_hid_service_connected_get_num_instances(packet));
 
-            app_state = READY;
-            ble_register_hids_host(cid);
+            ble_register_hids_host(ctx, cid);
             hids_host_get_hid_information(cid, 0);
         }
         else
         {
             printf("HID service connection failed (err 0x%02x) - trying GHL iOS characteristic query\r\n", status);
-            auto &pending = ble_pending[connection_handle];
-            pending.is_ghl_guitar = true;
+            ctx->is_ghl_guitar = true;
             gatt_client_discover_characteristics_for_handle_range_by_uuid128(
                 handle_gatt_client_event,
-                connection_handle,
+                ctx->con_handle,
                 0x0001,
                 0xffff,
                 ghl_ios_char_uuid);
@@ -356,45 +451,65 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
             printf("PNP ID read failed, ATT Error 0x%02x\n", status);
             break;
         }
-        auto &pending = ble_pending[connection_handle];
-        pending.vid     = gattservice_subevent_device_information_pnp_id_get_vendor_id(packet);
-        pending.pid     = gattservice_subevent_device_information_pnp_id_get_product_id(packet);
-        pending.version = gattservice_subevent_device_information_pnp_id_get_product_version(packet);
-        printf("BLE PnP: VID=0x%04x PID=0x%04x\r\n", pending.vid, pending.pid);
+        hci_con_handle_t handle = gattservice_subevent_device_information_pnp_id_get_con_handle(packet);
+        auto it = s_connections_by_handle.find(handle);
+        if (it != s_connections_by_handle.end())
+        {
+            it->second->vid     = gattservice_subevent_device_information_pnp_id_get_vendor_id(packet);
+            it->second->pid     = gattservice_subevent_device_information_pnp_id_get_product_id(packet);
+            it->second->version = gattservice_subevent_device_information_pnp_id_get_product_version(packet);
+            printf("BLE PnP (handle 0x%04x): VID=0x%04x PID=0x%04x\r\n", handle, it->second->vid, it->second->pid);
+        }
         break;
     }
 
     case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_DONE:
     {
-        printf("Device info done\r\n");
-        uint8_t err = hids_host_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
-        if (err != ERROR_CODE_SUCCESS)
+        hci_con_handle_t handle = gattservice_subevent_device_information_done_get_con_handle(packet);
+        auto it = s_connections_by_handle.find(handle);
+        if (it != s_connections_by_handle.end())
         {
-            printf("hids_host_connect failed, err=0x%02x\r\n", err);
+            printf("Device info done for handle 0x%04x\r\n", handle);
+            uint16_t hids_cid = 0;
+            uint8_t err = hids_host_connect(handle, handle_gatt_client_event, protocol_mode, &hids_cid);
+            if (err != ERROR_CODE_SUCCESS)
+            {
+                printf("hids_host_connect failed, err=0x%02x\r\n", err);
+            }
+            else
+            {
+                it->second->hids_cid = hids_cid;
+                s_connections_by_cid[hids_cid] = it->second;
+            }
         }
         break;
     }
 
     case GATTSERVICE_SUBEVENT_HID_INFORMATION:
     {
-        ble_register_hids_host(hids_cid);
+        uint16_t cid = gattservice_subevent_hid_information_get_hids_cid(packet);
+        auto it = s_connections_by_cid.find(cid);
+        if (it != s_connections_by_cid.end())
+        {
+            ble_register_hids_host(it->second, cid);
+        }
         break;
     }
-
 
     case GATTSERVICE_SUBEVENT_HID_REPORT:
     {
         uint16_t cid = gattservice_subevent_hid_report_get_hids_cid(packet);
-        auto it = ble_connections.find(cid);
-        if (it != ble_connections.end())
+        auto it = s_connections_by_cid.find(cid);
+        if (it != s_connections_by_cid.end() && it->second->host)
         {
-            it->second->handle_report(
+            auto host = it->second->host;
+            host->handle_report(
                 gattservice_subevent_hid_report_get_report(packet),
                 gattservice_subevent_hid_report_get_report_len(packet));
-            if (!it->second->is_registered() && it->second->is_ready())
+            if (!host->is_registered() && host->is_ready())
             {
-                bt_host_promote_if_ready(it->second);
-                bt_host_save_pairing(it->second, true);
+                bt_host_promote_if_ready(host);
+                bt_host_save_pairing(host, true);
             }
         }
         break;
@@ -427,14 +542,13 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             printf("BLE BTstack state: %d (WORKING=%d)\r\n", state, HCI_STATE_WORKING);
             if (state != HCI_STATE_WORKING)
                 break;
-            app_state = READY;
-            hog_start_connect();
+            ble_sync_reconnect();
             break;
         }
 
         case GAP_EVENT_ADVERTISING_REPORT:
         {
-            if (app_state != W4_HID_DEVICE_FOUND) break;
+            if (!s_ble_scanning) break;
 
             bd_addr_t address;
             gap_event_advertising_report_get_address(packet, address);
@@ -498,95 +612,119 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             {
                 printf("Found BLE HID device: '%s' [%s] type %d\r\n", dev_name, bd_addr_to_str(address), addr_type);
                 gap_stop_scan();
-                btstack_run_loop_remove_timer(&scan_timer);
+                btstack_run_loop_remove_timer(&s_scan_timer);
+                s_ble_scanning = false;
                 bt_discovery_on_device_found();
-
-
-                memcpy(remote_device.addr, address, sizeof(bd_addr_t));
-                remote_device.addr_type = addr_type;
 
                 devices_found = 1;
                 memcpy(scan_devices[0].addr, address, sizeof(bd_addr_t));
                 scan_devices[0].addr_type = addr_type;
                 strncpy(scan_devices[0].name_buffer, dev_name[0] ? dev_name : "BLE HID Device", sizeof(scan_devices[0].name_buffer) - 1);
 
-                hog_connect();
+                printf("Connecting to BLE device %s (type %d)...\r\n", bd_addr_to_str(address), addr_type);
+                s_direct_connect_pending = true;
+                btstack_run_loop_set_timer(&s_direct_connect_timer, 10000);
+                btstack_run_loop_set_timer_handler(&s_direct_connect_timer, ble_direct_connect_timeout);
+                btstack_run_loop_add_timer(&s_direct_connect_timer);
+                gap_connect(address, addr_type);
             }
             break;
         }
 
         case HCI_EVENT_DISCONNECTION_COMPLETE:
         {
-            if (app_state != READY) break;
-
             hci_con_handle_t handle = hci_event_disconnection_complete_get_connection_handle(packet);
-            auto it = ble_connections.find(handle);
-            if (it != ble_connections.end())
+            auto it = s_connections_by_handle.find(handle);
+            if (it != s_connections_by_handle.end())
             {
-                it->second->on_disconnected();
-                ble_connections.erase(it);
-            }
-            if (hids_cid != 0)
-            {
-                auto it_hids = ble_connections.find(hids_cid);
-                if (it_hids != ble_connections.end())
+                auto ctx = it->second;
+                printf("BLE device disconnected (handle 0x%04x, addr %s)\r\n", handle, bd_addr_to_str(ctx->addr));
+                if (ctx->host)
                 {
-                    it_hids->second->on_disconnected();
-                    ble_connections.erase(it_hids);
+                    ctx->host->on_disconnected();
                 }
-                hids_host_disconnect(hids_cid);
-                hids_cid = 0;
+                if (ctx->hids_cid != 0)
+                {
+                    hids_host_disconnect(ctx->hids_cid);
+                    s_connections_by_cid.erase(ctx->hids_cid);
+                }
+                s_connections_by_handle.erase(it);
+                ble_sync_reconnect();
             }
-            ble_pending.erase(handle);
-            connection_handle = HCI_CON_HANDLE_INVALID;
-            app_state = W4_TIMEOUT_THEN_RECONNECT;
-            hog_start_reconnect_timer();
             break;
         }
 
         case HCI_EVENT_META_GAP:
             if (hci_event_gap_meta_get_subevent_code(packet) != GAP_SUBEVENT_LE_CONNECTION_COMPLETE)
                 break;
-            if (app_state != W4_CONNECTED) return;
-            btstack_run_loop_remove_timer(&connection_timer);
-            connection_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
+
+            if (s_direct_connect_pending)
             {
-                auto &pending = ble_pending[connection_handle];
-                pending.device_id = next_ble_device_id++;
+                s_direct_connect_pending = false;
+                btstack_run_loop_remove_timer(&s_direct_connect_timer);
+            }
+            if (s_whitelist_active)
+            {
+                s_whitelist_active = false;
+            }
+
+            if (gap_subevent_le_connection_complete_get_status(packet) != ERROR_CODE_SUCCESS)
+            {
+                printf("LE connection failed (status 0x%02x)\r\n",
+                       gap_subevent_le_connection_complete_get_status(packet));
+                ble_sync_reconnect();
+                return;
+            }
+
+            {
+                hci_con_handle_t handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
+                bd_addr_t peer_addr;
+                gap_subevent_le_connection_complete_get_peer_address(packet, peer_addr);
+                bd_addr_type_t peer_addr_type = (bd_addr_type_t)gap_subevent_le_connection_complete_get_peer_address_type(packet);
+
+                auto ctx = std::make_shared<BleConnectionContext>();
+                ctx->con_handle = handle;
+                bd_addr_copy(ctx->addr, peer_addr);
+                ctx->addr_type = peer_addr_type;
+                ctx->device_id = BluetoothStack::instance().device_id();
 
                 DeviceFactory::BluetoothPairingStateData paired_state = {};
-                if (DeviceFactory::find_bluetooth_pairing_state_by_mac(remote_device.addr, paired_state) && paired_state.ble)
+                if (DeviceFactory::find_bluetooth_pairing_state_by_mac(peer_addr, paired_state) && paired_state.ble)
                 {
                     printf("BLE device is already paired: name='%s' type=%d vid=0x%04x pid=0x%04x subtype=%d\r\n",
                            paired_state.name, (int)paired_state.controller_type, paired_state.vid, paired_state.pid, (int)paired_state.subtype);
-                    pending.vid = paired_state.vid;
-                    pending.pid = paired_state.pid;
-                    pending.known_subtype = paired_state.subtype;
-                    strncpy(pending.paired_name, paired_state.name, sizeof(pending.paired_name) - 1);
+                    ctx->vid = paired_state.vid;
+                    ctx->pid = paired_state.pid;
+                    ctx->known_subtype = paired_state.subtype;
+                    strncpy(ctx->paired_name, paired_state.name, sizeof(ctx->paired_name) - 1);
                     if (paired_state.controller_type == BtControllerType_BtControllerTypeGhlIos)
                     {
-                        pending.is_ghl_guitar = true;
+                        ctx->is_ghl_guitar = true;
                     }
                 }
 
                 // Check if the connecting device was scanned as GHL guitar
                 for (int i = 0; i < devices_found; i++)
                 {
-                    if (bd_addr_cmp(remote_device.addr, scan_devices[i].addr) == 0)
+                    if (bd_addr_cmp(peer_addr, scan_devices[i].addr) == 0)
                     {
-                        memcpy(pending.paired_name, scan_devices[i].name_buffer, sizeof(pending.paired_name) - 1);
-                        pending.paired_name[sizeof(pending.paired_name) - 1] = '\0';
+                        memcpy(ctx->paired_name, scan_devices[i].name_buffer, sizeof(ctx->paired_name) - 1);
+                        ctx->paired_name[sizeof(ctx->paired_name) - 1] = '\0';
                         if (strstr(scan_devices[i].name_buffer, "Ble Guitar") != nullptr)
                         {
-                            pending.is_ghl_guitar = true;
+                            ctx->is_ghl_guitar = true;
                             printf("Connecting device identified as GHL BLE Guitar\r\n");
                             break;
                         }
                     }
                 }
+
+                s_connections_by_handle[handle] = ctx;
+                printf("BLE connection complete (handle 0x%04x) for %s (type %d)\r\n",
+                       handle, bd_addr_to_str(peer_addr), peer_addr_type);
+                sm_request_pairing(handle);
+                ble_sync_reconnect();
             }
-            app_state = W4_ENCRYPTED;
-            sm_request_pairing(connection_handle);
             break;
 
         case HCI_EVENT_LE_META:
@@ -643,70 +781,107 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel,
         break;
     case SM_EVENT_PAIRING_COMPLETE:
     {
+        hci_con_handle_t handle = sm_event_pairing_complete_get_handle(packet);
+        auto it = s_connections_by_handle.find(handle);
+        if (it == s_connections_by_handle.end())
+            break;
+        auto ctx = it->second;
+
         uint8_t status = sm_event_pairing_complete_get_status(packet);
         uint8_t reason = sm_event_pairing_complete_get_reason(packet);
-        auto &pending = ble_pending[connection_handle];
-        if (status == ERROR_CODE_SUCCESS || pending.is_ghl_guitar || reason == SM_REASON_PAIRING_NOT_SUPPORTED)
+        if (status == ERROR_CODE_SUCCESS || ctx->is_ghl_guitar || reason == SM_REASON_PAIRING_NOT_SUPPORTED)
         {
-            printf("Pairing complete (status=0x%02x, reason=0x%02x)\r\n", status, reason);
-            app_state = W4_HID_CLIENT_CONNECTED;
-            if (pending.is_ghl_guitar)
+            printf("Pairing complete for handle 0x%04x (status=0x%02x, reason=0x%02x)\r\n", handle, status, reason);
+            if (ctx->is_ghl_guitar)
             {
                 printf("Connecting to iOS GHL guitar GATT characteristic...\r\n");
                 gatt_client_discover_characteristics_for_handle_range_by_uuid128(
                     handle_gatt_client_event,
-                    connection_handle,
+                    handle,
                     0x0001,
                     0xffff,
                     ghl_ios_char_uuid);
             }
-            else if (pending.vid != 0)
+            else if (ctx->vid != 0)
             {
                 printf("Paired BLE device: skipping DIS query, connecting HIDS directly\r\n");
-                uint8_t err = hids_host_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
+                uint16_t hids_cid = 0;
+                uint8_t err = hids_host_connect(handle, handle_gatt_client_event, protocol_mode, &hids_cid);
                 if (err != ERROR_CODE_SUCCESS)
                 {
                     printf("hids_host_connect failed, err=0x%02x\r\n", err);
                 }
+                else
+                {
+                    ctx->hids_cid = hids_cid;
+                    s_connections_by_cid[hids_cid] = ctx;
+                }
             }
             else
             {
-                device_information_service_client_query(connection_handle, handle_gatt_client_event);
+                device_information_service_client_query(handle, handle_gatt_client_event);
             }
         }
         else
         {
-            printf("Pairing failed, status = 0x%02x, reason = 0x%02x\r\n", status, reason);
-            hog_start_reconnect_timer();
+            printf("Pairing failed for handle 0x%04x, status = 0x%02x, reason = 0x%02x\r\n", handle, status, reason);
+            gap_disconnect(handle);
         }
         break;
     }
     case SM_EVENT_REENCRYPTION_COMPLETE:
     {
-        printf("Re-encryption complete\n");
-        app_state = W4_HID_CLIENT_CONNECTED;
-        auto &pending = ble_pending[connection_handle];
-        if (pending.is_ghl_guitar)
+        hci_con_handle_t handle = sm_event_reencryption_complete_get_handle(packet);
+        auto it = s_connections_by_handle.find(handle);
+        if (it == s_connections_by_handle.end())
+            break;
+        auto ctx = it->second;
+
+        uint8_t status = sm_event_reencryption_complete_get_status(packet);
+        if (status != ERROR_CODE_SUCCESS)
+        {
+            printf("Re-encryption failed for handle 0x%04x (status 0x%02x)\r\n", handle, status);
+            if (status == ERROR_CODE_PIN_OR_KEY_MISSING)
+            {
+                printf("Bonding info missing on remote device, requesting new pairing...\r\n");
+                gap_delete_bonding(ctx->addr_type, ctx->addr);
+                sm_request_pairing(handle);
+            }
+            else
+            {
+                gap_disconnect(handle);
+            }
+            break;
+        }
+
+        printf("Re-encryption complete for handle 0x%04x\r\n", handle);
+        if (ctx->is_ghl_guitar)
         {
             gatt_client_discover_characteristics_for_handle_range_by_uuid128(
                 handle_gatt_client_event,
-                connection_handle,
+                handle,
                 0x0001,
                 0xffff,
                 ghl_ios_char_uuid);
         }
-        else if (pending.vid != 0)
+        else if (ctx->vid != 0)
         {
             printf("Paired BLE device: skipping DIS query, connecting HIDS directly\r\n");
-            uint8_t err = hids_host_connect(connection_handle, handle_gatt_client_event, protocol_mode, &hids_cid);
+            uint16_t hids_cid = 0;
+            uint8_t err = hids_host_connect(handle, handle_gatt_client_event, protocol_mode, &hids_cid);
             if (err != ERROR_CODE_SUCCESS)
             {
                 printf("hids_host_connect failed, err=0x%02x\r\n", err);
             }
+            else
+            {
+                ctx->hids_cid = hids_cid;
+                s_connections_by_cid[hids_cid] = ctx;
+            }
         }
         else
         {
-            device_information_service_client_query(connection_handle, handle_gatt_client_event);
+            device_information_service_client_query(handle, handle_gatt_client_event);
         }
         break;
     }
@@ -738,6 +913,5 @@ int ble_main(void)
     sm_event_callback_registration.callback = &sm_packet_handler;
     sm_add_event_handler(&sm_event_callback_registration);
 
-    app_state = W4_WORKING;
     return 0;
 }

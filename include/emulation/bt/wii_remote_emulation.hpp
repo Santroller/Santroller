@@ -14,6 +14,8 @@ public:
     ~WiiRemoteEmulationDeviceInstance();
 
     void initialize() override;
+    void deinitialize() override;
+    bool is_bluetooth() const override { return true; }
     void process(bool full_poll, bool send_events) override;
 
 private:

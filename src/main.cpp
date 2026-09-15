@@ -194,21 +194,13 @@ static void initialize_device_stack()
         .role = TUSB_ROLE_DEVICE,
         .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};
     tud_rhport_init(TUD_OPT_RHPORT, &rh_init);
-    if (ConfigManager::instance().has_bluetooth())
-    {
-        BluetoothStack::instance().power_on();
-        printf("bt init done\r\n");
-    }
+    ProfileManager::instance().initialize_device_bluetooth();
 }
 
 void reinitialize_device_stack()
 {
     printf("Reinitializing device stack\r\n");
-    if (ConfigManager::instance().has_bluetooth())
-    {
-        BluetoothStack::instance().power_off();
-        printf("bt init done\r\n");
-    }
+    ProfileManager::instance().deinitialize_device_bluetooth();
     tud_deinit(TUD_OPT_RHPORT);
     initialize_device_stack();
 }

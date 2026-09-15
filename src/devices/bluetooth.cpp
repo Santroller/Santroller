@@ -13,14 +13,20 @@ BluetoothDevice::BluetoothDevice(proto_BluetoothDevice device, uint16_t id) : De
 }
 void BluetoothDevice::begin()
 {
+    BluetoothStack::instance().set_device_id(m_id);
     // TODO: if we add support for swapping pins, then we gotta deinit here if the pins change
     if (BluetoothStack::instance().initialized())
     {
+        if (!BluetoothStack::instance().is_powered())
+        {
+            BluetoothStack::instance().power_on();
+        }
         return;
     }
     printf("bt device init\r\n");
     if (BluetoothStack::instance().begin())
     {
+        BluetoothStack::instance().power_on();
         ConfigManager::instance().set_bluetooth_available(true);
         printf("bt device init success\r\n");
     }
@@ -28,6 +34,18 @@ void BluetoothDevice::begin()
     {
         printf("bt device init failed\r\n");
         ConfigManager::instance().set_bluetooth_available(false);
+    }
+}
+
+void BluetoothDevice::rescan(bool first)
+{
+    printf("BluetoothDevice rescan\r\n");
+    if (first)
+    {
+        printf("assignable_devices before: %d\r\n", bt_host_assignable_interface_count());
+
+        bt_host_add_assignable_devices(true);
+        printf("assignable_devices after: %d\r\n", bt_host_assignable_interface_count());
     }
 }
 

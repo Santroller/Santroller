@@ -22,12 +22,14 @@ void GuitarHero5Neck::tick()
 
 void GuitarHero5Neck::begin()
 {
+    printf("GuitarHero5Neck begin\n");
     interface.dmaInit(GH5NECK_ADDR, this);
     status = GH5_NECK_CHECK_STATUS;
     process_data(GH5NECK_ADDR, false, false, false, false);
 }
 void GuitarHero5Neck::end()
 {
+    printf("GuitarHero5Neck end\n");
     cancel_alarm(restart_alarm_id);
     interface.dmaDeinit(GH5NECK_ADDR);
 }
@@ -64,8 +66,8 @@ void GuitarHero5Neck::process_data(uint8_t addr, bool running, bool timeout, boo
             status = GH5_NECK_CHECK_STATUS;
             green = bufferRx[0] & 1 << 4;
             red = bufferRx[0] & 1 << 5;
-            yellow = bufferRx[0] & 1 << 6;
-            blue = bufferRx[0] & 1 << 7;
+            yellow = bufferRx[0] & 1 << 7;
+            blue = bufferRx[0] & 1 << 6;
             orange = bufferRx[0] & 1 << 0;
             tapGreen = bufferRx[3] & 1 << 4;
             tapRed = bufferRx[3] & 1 << 3;
@@ -78,14 +80,7 @@ void GuitarHero5Neck::process_data(uint8_t addr, bool running, bool timeout, boo
         restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
         return;
     }
-    switch (status)
-    {
-    case GH5_NECK_CHECK_STATUS:
-        bufferTx[0] = GH5NECK_BUTTONS_PTR;
-        interface.dmaWriteRead(GH5NECK_ADDR, bufferTx, 1, bufferRx, 2);
-        break;
-    default:
-        printf("unknown status: %d\r\n", status);
-        break;
-    }
+    status = GH5_NECK_CHECK_STATUS;
+    bufferTx[0] = GH5NECK_BUTTONS_PTR;
+    interface.dmaWriteRead(GH5NECK_ADDR, bufferTx, 1, bufferRx, 2);
 }

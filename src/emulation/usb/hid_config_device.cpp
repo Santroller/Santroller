@@ -298,6 +298,14 @@ void HIDConfigDevice::handle_command(proto_Command command)
     reset_keepalive();
     return;
   }
+  case proto_Command_scan_tag:
+  {
+    DeviceManager::instance().for_each_active_device([&command](const auto &device)
+    {
+      device->handle_command(command);
+    });
+    break;
+  }
   case proto_Command_crkdDrum_tag:
   {
     std::static_pointer_cast<CrkdDrumDevice>(DeviceManager::instance().get_root_device(command.command.crkdDrum.id))->drum.setParam(command.command.crkdDrum.type, command.command.crkdDrum.axisType, command.command.crkdDrum.val);

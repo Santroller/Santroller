@@ -14,6 +14,7 @@ public:
     void update_wiimote_report(void *report);
     void release_wiimote();
     bool initialized() const;
+    bool is_powered() const { return m_powered; }
 
 private:
     BluetoothStack() = default;

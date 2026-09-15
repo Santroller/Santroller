@@ -33,7 +33,11 @@ void BluetoothDevice::begin()
 
 void BluetoothDevice::end(bool full)
 {
-    BluetoothStack::instance().power_off();
+    if (full)
+    {
+        BluetoothStack::instance().power_off();
+        ConfigManager::instance().set_bluetooth_available(false);
+    }
 }
 BluetoothDevice::~BluetoothDevice()
 {
@@ -54,10 +58,69 @@ bool BluetoothDevice::using_pin(uint8_t pin)
     return pin == 23 || pin == 24 || pin == 25 || pin == 29;
 }
 
+#include "bluetooth.h"
+#include "btstack_defines.h"
+#include "btstack_run_loop.h"
+
+namespace {
+enum ScanPhase {
+    SCAN_PHASE_IDLE,
+    SCAN_PHASE_BLE,
+    SCAN_PHASE_CLASSIC_GIAC,
+    SCAN_PHASE_CLASSIC_LIAC,
+};
+
+static ScanPhase s_scan_phase = SCAN_PHASE_IDLE;
+static btstack_timer_source_t s_scan_timer;
+
+static void scan_timer_callback(btstack_timer_source_t *ts)
+{
+    UNUSED(ts);
+    switch (s_scan_phase)
+    {
+    case SCAN_PHASE_BLE:
+        printf("BLE scan period finished, advancing to Classic GIAC inquiry...\r\n");
+        ble_stop_scan();
+        s_scan_phase = SCAN_PHASE_CLASSIC_GIAC;
+        btc_start_scan(GAP_IAC_GENERAL_INQUIRY);
+        btstack_run_loop_set_timer(&s_scan_timer, 4500);
+        btstack_run_loop_set_timer_handler(&s_scan_timer, scan_timer_callback);
+        btstack_run_loop_add_timer(&s_scan_timer);
+        break;
+
+    case SCAN_PHASE_CLASSIC_GIAC:
+        printf("Classic GIAC inquiry finished, advancing to Classic LIAC inquiry (Wii Sync)...\r\n");
+        btc_stop_scan();
+        s_scan_phase = SCAN_PHASE_CLASSIC_LIAC;
+        btc_start_scan(GAP_IAC_LIMITED_INQUIRY);
+        btstack_run_loop_set_timer(&s_scan_timer, 4500);
+        btstack_run_loop_set_timer_handler(&s_scan_timer, scan_timer_callback);
+        btstack_run_loop_add_timer(&s_scan_timer);
+        break;
+
+    case SCAN_PHASE_CLASSIC_LIAC:
+    default:
+        printf("Scan cycle complete\r\n");
+        btc_stop_scan();
+        ble_stop_scan();
+        s_scan_phase = SCAN_PHASE_IDLE;
+        break;
+    }
+}
+}
+
 void BluetoothDevice::handle_command(proto_Command command)
 {
     if (command.which_command == proto_Command_scan_tag) {
-        btc_start_scan();
+        printf("Starting Bluetooth discovery scan cycle (powered=%d)...\r\n", (int)BluetoothStack::instance().is_powered());
+        btstack_run_loop_remove_timer(&s_scan_timer);
+        btc_stop_scan();
+        ble_stop_scan();
+
+        s_scan_phase = SCAN_PHASE_BLE;
         ble_start_scan();
+        btstack_run_loop_set_timer(&s_scan_timer, 5000);
+        btstack_run_loop_set_timer_handler(&s_scan_timer, scan_timer_callback);
+        btstack_run_loop_add_timer(&s_scan_timer);
     }
 }

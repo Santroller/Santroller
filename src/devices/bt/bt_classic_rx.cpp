@@ -111,9 +111,11 @@ static void hid_host_setup(void)
     setvbuf(stdin, NULL, _IONBF, 0);
 }
 
-void btc_start_scan(void)
+void btc_start_scan(uint32_t lap)
 {
-    printf("Starting inquiry scan..\r\n");
+    printf("Starting inquiry scan (LAP 0x%06lx)..\r\n", (unsigned long)lap);
+    deviceCount = 0;
+    gap_inquiry_set_lap(lap);
     gap_inquiry_start(INQUIRY_INTERVAL);
 }
 
@@ -190,13 +192,12 @@ static void handle_sdp_client_query_result(uint8_t packet_type, uint16_t channel
     case SDP_EVENT_QUERY_COMPLETE:
         if (sdp_event_query_complete_get_status(packet))
         {
-            printf("SDP query failed 0x%02x\r\n", sdp_event_query_complete_get_status(packet));
-            // Retry
-            sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr,
-                                    BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
-            break;
+            printf("SDP query failed 0x%02x, connecting anyway\r\n", sdp_event_query_complete_get_status(packet));
         }
-        printf("SDP: VID=0x%04x PID=0x%04x\r\n", pending.vid, pending.pid);
+        else
+        {
+            printf("SDP: VID=0x%04x PID=0x%04x\r\n", pending.vid, pending.pid);
+        }
         pending.device_id = next_bt_device_id++;
 
         hid_host_connection_pending = true;
@@ -237,7 +238,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         switch (event)
         {
         case BTSTACK_EVENT_STATE:
-            if (btstack_event_state_get_state(packet) == HCI_STATE_WORKING)
+        {
+            uint8_t st = btstack_event_state_get_state(packet);
+            printf("Classic BTstack state: %d (WORKING=%d)\r\n", st, HCI_STATE_WORKING);
+            if (st == HCI_STATE_WORKING)
             {
                 if (has_address)
                 {
@@ -246,6 +250,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 }
             }
             break;
+        }
 
         case GAP_EVENT_INQUIRY_RESULT:
             if (deviceCount >= MAX_DEVICES) break;
@@ -254,8 +259,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             if (index >= 0) break;
             {
                 uint32_t cod = gap_event_inquiry_result_get_class_of_device(packet);
-                if ((cod & PERIPHERAL_COD) != PERIPHERAL_COD) break;
+                // Major device class 0x0500 is Peripheral (or PERIPHERAL_COD)
+                if ((cod & 0x1F00) != 0x0500 && (cod & PERIPHERAL_COD) != PERIPHERAL_COD) break;
 
+                printf("Inquiry found peripheral: %s, COD: 0x%06lx\r\n", bd_addr_to_str(addr), (unsigned long)cod);
                 memcpy(devices[deviceCount].address, addr, 6);
                 devices[deviceCount].pageScanRepetitionMode =
                     gap_event_inquiry_result_get_page_scan_repetition_mode(packet);
@@ -286,10 +293,23 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
 
         case GAP_EVENT_INQUIRY_COMPLETE:
+            printf("Inquiry complete, found %d devices\r\n", deviceCount);
             for (int i = 0; i < deviceCount; i++)
                 if (devices[i].state == REMOTE_NAME_INQUIRED)
                     devices[i].state = REMOTE_NAME_REQUEST;
-            continue_remote_names();
+            if (has_more_remote_name_requests())
+            {
+                continue_remote_names();
+            }
+            else if (deviceCount > 0)
+            {
+                // Connect to the first discovered device
+                memcpy(remote_addr, devices[0].address, sizeof(bd_addr_t));
+                has_address = true;
+                printf("Connecting to classic device %s (%s)...\r\n", devices[0].name_buffer, bd_addr_to_str(remote_addr));
+                sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr,
+                                        BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
+            }
             break;
 
         case HCI_EVENT_REMOTE_NAME_REQUEST_COMPLETE:
@@ -310,10 +330,23 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     devices[index].name_buffer[name_len + SIZE_OF_BD_ADDRESS + 2] = 0;
                     printf("Found device '%s'\r\n", devices[index].name_buffer);
                     devices[index].state = REMOTE_NAME_FETCHED;
+
+                    // Immediately initiate connection to this discovered device
+                    memcpy(remote_addr, devices[index].address, sizeof(bd_addr_t));
+                    has_address = true;
+                    printf("Connecting to classic device %s (%s)...\r\n", devices[index].name_buffer, bd_addr_to_str(remote_addr));
+                    sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr,
+                                            BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
+                    break;
                 }
                 else
                 {
-                    printf("Failed to get name: page timeout\r\n");
+                    printf("Failed to get name: page timeout, connecting by address\r\n");
+                    memcpy(remote_addr, devices[index].address, sizeof(bd_addr_t));
+                    has_address = true;
+                    sdp_client_query_uuid16(&handle_sdp_client_query_result, remote_addr,
+                                            BLUETOOTH_SERVICE_CLASS_PNP_INFORMATION);
+                    break;
                 }
             }
             continue_remote_names();

@@ -79,7 +79,8 @@ static uint16_t next_ble_device_id = 0x5000;
 
 // Scan result tracking
 typedef struct {
-    char addr[SIZE_OF_BD_ADDRESS];
+    bd_addr_t addr;
+    bd_addr_type_t addr_type;
     char name_buffer[100];
 } scan_data_t;
 
@@ -108,22 +109,34 @@ static bool adv_event_contains_hid_service(const uint8_t *packet)
 
 void ble_stop_scan()
 {
+    btstack_run_loop_remove_timer(&scan_timer);
     gap_stop_scan();
+    if (app_state == W4_HID_DEVICE_FOUND)
+    {
+        app_state = READY;
+    }
 }
 
 static void bt_stop_scan_timer(btstack_timer_source_t *ts)
 {
     UNUSED(ts);
+    printf("BLE scan timed out\r\n");
     gap_stop_scan();
+    if (app_state == W4_HID_DEVICE_FOUND)
+    {
+        app_state = READY;
+    }
 }
 
 void ble_start_scan()
 {
     printf("Scanning for LE HID devices...\r\n");
     devices_found = 0;
+    app_state = W4_HID_DEVICE_FOUND;
+    // Active scanning to request scan response containing device name
     gap_set_scan_parameters(1, 48, 48);
     gap_start_scan();
-    btstack_run_loop_set_timer(&scan_timer, 10000);
+    btstack_run_loop_set_timer(&scan_timer, 5000);
     btstack_run_loop_set_timer_handler(&scan_timer, &bt_stop_scan_timer);
     btstack_run_loop_add_timer(&scan_timer);
 }
@@ -152,6 +165,7 @@ static void hog_connect(void)
     btstack_run_loop_set_timer_handler(&connection_timer, &hog_connection_timeout);
     btstack_run_loop_add_timer(&connection_timer);
     app_state = W4_CONNECTED;
+    printf("Connecting to BLE device %s (type %d)...\r\n", bd_addr_to_str(remote_device.addr), remote_device.addr_type);
     gap_connect(remote_device.addr, remote_device.addr_type);
 }
 
@@ -164,7 +178,16 @@ static void hog_start_reconnect_timer()
 
 static void hog_start_connect(void)
 {
-    // If we have a stored address, reconnect; otherwise wait for scan
+    DeviceFactory::foreach_bluetooth_pairing_state([](int32_t id, const DeviceFactory::BluetoothPairingStateData &state) {
+        UNUSED(id);
+        if (state.ble && state.mac[0] != 0 && remote_device.addr[0] == 0)
+        {
+            memcpy(remote_device.addr, state.mac, sizeof(bd_addr_t));
+            remote_device.addr_type = BD_ADDR_TYPE_LE_PUBLIC;
+            printf("Found paired BLE device %s in config, attempting reconnection\r\n", bd_addr_to_str(remote_device.addr));
+            hog_connect();
+        }
+    });
 }
 
 static void handle_outgoing_connection_error(void)
@@ -372,32 +395,30 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         switch (event)
         {
         case BTSTACK_EVENT_STATE:
-            if (btstack_event_state_get_state(packet) != HCI_STATE_WORKING)
+        {
+            uint8_t state = btstack_event_state_get_state(packet);
+            printf("BLE BTstack state: %d (WORKING=%d)\r\n", state, HCI_STATE_WORKING);
+            if (state != HCI_STATE_WORKING)
                 break;
-            btstack_assert(app_state == W4_WORKING);
+            app_state = READY;
             hog_start_connect();
             break;
+        }
 
         case GAP_EVENT_ADVERTISING_REPORT:
         {
+            if (app_state != W4_HID_DEVICE_FOUND) break;
+
             bd_addr_t address;
             gap_event_advertising_report_get_address(packet, address);
+            bd_addr_type_t addr_type = (bd_addr_type_t)gap_event_advertising_report_get_address_type(packet);
             const uint8_t *adv_data = gap_event_advertising_report_get_data(packet);
             uint8_t adv_size = gap_event_advertising_report_get_data_length(packet);
+            printf("BLE ADV: %s (type %d, len %d)\r\n", bd_addr_to_str(address), addr_type, adv_size);
             ad_context_t context;
-            char *address_string = bd_addr_to_str(address);
-            bool found = false;
-            int current_device = devices_found;
 
-            // Check if already in list
-            for (int i = 0; i < devices_found; i++)
-            {
-                if (memcmp(address_string, scan_devices[i].addr, SIZE_OF_BD_ADDRESS) == 0)
-                {
-                    found = true;
-                    current_device = i;
-                }
-            }
+            bool is_hid = false;
+            char dev_name[100] = {};
 
             for (ad_iterator_init(&context, adv_size, adv_data);
                  ad_iterator_has_more(&context); ad_iterator_next(&context))
@@ -405,64 +426,63 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 uint8_t data_type = ad_iterator_get_data_type(&context);
                 uint8_t data_len  = ad_iterator_get_data_len(&context);
                 const uint8_t *data = ad_iterator_get_data(&context);
-                uint8_t i;
 
                 switch (data_type)
                 {
                 case BLUETOOTH_DATA_TYPE_INCOMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS:
                 case BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS:
-                    for (i = 0u; (i + 2u) <= data_len; i += 2u)
+                    for (uint8_t i = 0u; (i + 2u) <= data_len; i += 2u)
                     {
                         uint16_t uuid = (uint16_t)little_endian_read_16(data, (int)i);
-                        if (uuid == ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE && !found && devices_found < MAX_DEVICES_TO_SCAN)
+                        if (uuid == ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE)
                         {
-                            memcpy(scan_devices[devices_found].addr, address_string, SIZE_OF_BD_ADDRESS);
-                            snprintf(scan_devices[devices_found].name_buffer,
-                                     sizeof(scan_devices[devices_found].name_buffer),
-                                     " (%s)", address_string);
-                            found = true;
-                            current_device = devices_found++;
-                            printf("found BLE HID device: %s\n", scan_devices[current_device].name_buffer);
+                            is_hid = true;
                         }
                     }
                     break;
                 case BLUETOOTH_DATA_TYPE_APPEARANCE:
-                    if (little_endian_read_16(data, 0) == 0x03C4 && !found && devices_found < MAX_DEVICES_TO_SCAN)
+                {
+                    uint16_t appearance = little_endian_read_16(data, 0);
+                    if (appearance == 0x03C4 /* Gamepad */ || appearance == 0x03C5 /* Joystick */ || appearance == 0x03C6 /* Simulation */)
                     {
-                        memcpy(scan_devices[devices_found].addr, address_string, SIZE_OF_BD_ADDRESS);
-                        snprintf(scan_devices[devices_found].name_buffer,
-                                 sizeof(scan_devices[devices_found].name_buffer),
-                                 " (%s)", address_string);
-                        found = true;
-                        current_device = devices_found++;
+                        is_hid = true;
                     }
                     break;
+                }
                 case BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME:
                 case BLUETOOTH_DATA_TYPE_SHORTENED_LOCAL_NAME:
                 {
-                    char temp_name[100];
-                    int copy = data_len < (int)sizeof(temp_name) - 1 ? data_len : (int)sizeof(temp_name) - 1;
-                    memcpy(temp_name, data, copy);
-                    temp_name[copy] = '\0';
-
-                    if (strstr(temp_name, "Ble Guitar") != nullptr && !found && devices_found < MAX_DEVICES_TO_SCAN)
+                    int copy = data_len < (int)sizeof(dev_name) - 1 ? data_len : (int)sizeof(dev_name) - 1;
+                    memcpy(dev_name, data, copy);
+                    dev_name[copy] = '\0';
+                    if (strstr(dev_name, "Ble Guitar") != nullptr || strstr(dev_name, "8BitDo") != nullptr ||
+                        strstr(dev_name, "Wireless") != nullptr || strstr(dev_name, "Gamepad") != nullptr ||
+                        strstr(dev_name, "Controller") != nullptr)
                     {
-                        memcpy(scan_devices[devices_found].addr, address_string, SIZE_OF_BD_ADDRESS);
-                        strncpy(scan_devices[devices_found].name_buffer, temp_name, sizeof(scan_devices[devices_found].name_buffer) - 1);
-                        found = true;
-                        current_device = devices_found++;
-                        printf("found BLE Guitar device: %s\n", scan_devices[current_device].name_buffer);
-                    }
-                    else if (found && current_device < MAX_DEVICES_TO_SCAN)
-                    {
-                        strncpy(scan_devices[current_device].name_buffer, temp_name, sizeof(scan_devices[current_device].name_buffer) - 1);
-                        printf("BLE device name '%s'\r\n", scan_devices[current_device].name_buffer);
+                        is_hid = true;
                     }
                     break;
                 }
                 default:
                     break;
                 }
+            }
+
+            if (is_hid)
+            {
+                printf("Found BLE HID device: '%s' [%s] type %d\r\n", dev_name, bd_addr_to_str(address), addr_type);
+                gap_stop_scan();
+                btstack_run_loop_remove_timer(&scan_timer);
+
+                memcpy(remote_device.addr, address, sizeof(bd_addr_t));
+                remote_device.addr_type = addr_type;
+
+                devices_found = 1;
+                memcpy(scan_devices[0].addr, address, sizeof(bd_addr_t));
+                scan_devices[0].addr_type = addr_type;
+                strncpy(scan_devices[0].name_buffer, dev_name[0] ? dev_name : "BLE HID Device", sizeof(scan_devices[0].name_buffer) - 1);
+
+                hog_connect();
             }
             break;
         }
@@ -524,8 +544,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 // Check if the connecting device was scanned as GHL guitar
                 for (int i = 0; i < devices_found; i++)
                 {
-                    char *address_string = bd_addr_to_str(remote_device.addr);
-                    if (memcmp(address_string, scan_devices[i].addr, SIZE_OF_BD_ADDRESS) == 0)
+                    if (bd_addr_cmp(remote_device.addr, scan_devices[i].addr) == 0)
                     {
                         if (strstr(scan_devices[i].name_buffer, "Ble Guitar") != nullptr)
                         {

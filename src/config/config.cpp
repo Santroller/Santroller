@@ -1,5 +1,6 @@
 #include "config/config.hpp"
 #include <cstring>
+#include "xbox_dongle_firmware.h"
 #include "devices/bt/bt_tlv_storage.hpp"
 #include "managers/profile_manager.hpp"
 #include "managers/device_manager.hpp"
@@ -726,6 +727,13 @@ uint32_t copy_config_info(uint8_t *buffer, bool cached)
     info.magic = metadata.magic;
     info.mainSize = metadata.main_size;
     info.auxSize = metadata.aux_size;
+#if defined(ENABLE_XBOX_WIRELESS) && ENABLE_XBOX_WIRELESS
+    bool missing = (xbox_get_static_firmware_header() == NULL);
+    info.has_missingStaticFirmware = true;
+    info.missingStaticFirmware = missing;
+    info.has_needsUf2Update = true;
+    info.needsUf2Update = missing;
+#endif
     pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 64);
     if (!pb_encode(&outputStream, proto_ConfigInfo_fields, &info))
     {

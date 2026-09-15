@@ -178,6 +178,8 @@ message ConfigInfo {
   required int32 mainSize = 3;
   required int32 auxSize = 4;
   required int32 magic = 5;
+  optional bool missingStaticFirmware = 6;
+  optional bool needsUf2Update = 7;
 }
 
 message GetActiveProfiles {

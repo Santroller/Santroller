@@ -100,6 +100,7 @@ set(BLUEPAD32_ROOT ${CMAKE_SOURCE_DIR}/lib/bluepad32)
 set(PFB_WITH_IMAGE_ENCRYPTION OFF)
 set(PFB_WITH_SHA256_HASHING OFF)
 set(PFB_RESERVED_FILESYSTEM_SIZE_KB 8)
+set(PFB_STATIC_FIRMWARE_SIZE_KB 96)
 set(PFB_WITH_BOOTLOADER_LOGS OFF)
 
 if(DEFINED SANTROLLER_SHARED_GENERATED_DIR)
@@ -342,6 +343,7 @@ if(ENABLE_XBOX_WIRELESS)
     # Use Pico SDK's mbedTLS with custom config for Xbox Wireless crypto
     set(HAVE_MBEDTLS TRUE)
     message(STATUS "Using Pico SDK's mbedTLS with Xbox Wireless crypto features")
+    target_compile_definitions(${TARGET} PRIVATE ENABLE_XBOX_WIRELESS=1)
 
     if(NOT DEFINED SANTROLLER_SHARED_GENERATED_DIR)
       # Download and convert firmware once for a normal single-board build.
@@ -357,13 +359,13 @@ if(ENABLE_XBOX_WIRELESS)
         src/devices/usb/host/xbox/gip_crypto.c
         src/devices/usb/host/xbox_wireless_host.cpp
         src/devices/usb/host/xbox_wireless_controller.cpp
-        ${SANTROLLER_GENERATED_DIR}/firmware_data.c
     )
 
     # Add include directories
     target_include_directories(${TARGET} PRIVATE
         include/devices/usb/host/xbox
         ${CMAKE_BINARY_DIR}/generated
+        ${SANTROLLER_GENERATED_DIR}
     )
 
     # Link uzlib for firmware decompression
@@ -475,7 +477,7 @@ add_custom_target(build_combined ALL
 add_custom_command(
         TARGET build_combined
         POST_BUILD
-        COMMAND python ${CMAKE_SOURCE_DIR}/build.py "${GIT_COMMIT}" "${CMAKE_CURRENT_BINARY_DIR}" "${PICO_BOARD}"
+        COMMAND python ${CMAKE_SOURCE_DIR}/build.py "${GIT_COMMIT}" "${CMAKE_CURRENT_BINARY_DIR}" "${PICO_BOARD}" "${SANTROLLER_GENERATED_DIR}"
 )
 
 if(NOT SANTROLLER_VARIANT_BUILD)

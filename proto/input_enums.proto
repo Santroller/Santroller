@@ -512,3 +512,7 @@ enum ProKeyboardAxisType {
 enum ProKeyboardButtonType {
   ProKeyboardOverdrive = 1;
 }
+enum EncoderInputType {
+  EncoderDelta = 1;
+  EncoderPosition = 2;
+}

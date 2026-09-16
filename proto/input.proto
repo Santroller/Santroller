@@ -169,6 +169,11 @@ message MidiInput {
   }
 }
 
+message EncoderInput {
+  required int32 deviceid = 1;
+  required EncoderInputType type = 2;
+}
+
 message Input {
   oneof input {
     GPIOInput gpio = 1;
@@ -200,6 +205,7 @@ message Input {
     ToggleInput toggle = 33;
     BTButtonInput btButton = 34;
     BTAxisInput btAxis = 35;
+    EncoderInput encoder = 36;
   }
 }
 message InputActivationTrigger {

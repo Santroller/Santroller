@@ -292,6 +292,7 @@ add_executable(
   src/devices/ps2_emulation.cpp
   src/devices/wii_emulation.cpp
   src/devices/crkd.cpp
+  src/devices/encoder.cpp
   src/devices/crkd_drum.cpp
   src/devices/ads1115.cpp
   src/devices/device.cpp

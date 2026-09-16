@@ -33,13 +33,23 @@
 // encoder count updated and because of that it supports very high step rates.
 //
 
-QuadratureEncoder::QuadratureEncoder(uint8_t pin): m_pin(pin) {
-
-    pio_add_program(pio, &quadrature_encoder_program);
-    quadrature_encoder_program_init(pio, sm, pin, 0);
+QuadratureEncoder::QuadratureEncoder(uint8_t pin) : m_pin(pin)
+{
 }
-void QuadratureEncoder::tick() {
+void QuadratureEncoder::begin()
+{
+    m_offset = pio_add_program(pio, &quadrature_encoder_program);
+    quadrature_encoder_program_init(pio, sm, m_pin, 0);
+}
+    
+void QuadratureEncoder::end()
+{
+    pio_remove_program_and_unclaim_sm(&quadrature_encoder_program, pio, sm, m_offset);
+}
+void QuadratureEncoder::tick()
+{
     int new_value = quadrature_encoder_get_count(pio, sm);
     delta = new_value - old_value;
     old_value = new_value;
+    position += delta;
 }

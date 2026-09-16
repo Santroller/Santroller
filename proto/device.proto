@@ -118,7 +118,10 @@ message PSXEmulationDevice {
   required int32 acknowledgePin = 5;
 }
 message JoybusEmulationDevice { required int32 dataPin = 1; }
-message EncoderDevice { required int32 dataPin = 1; }
+message EncoderDevice { 
+  required int32 dataPin = 1;
+  optional int32 deltaRate = 2; 
+}
 
 message WS2812Device { 
   required int32 pin = 1; 

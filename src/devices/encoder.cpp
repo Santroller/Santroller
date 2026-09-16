@@ -4,12 +4,13 @@
 #include "emulation/usb/hid_device.h"
 #include "config/config.hpp"
 #include "utils.h"
-EncoderDevice::EncoderDevice(proto_EncoderDevice device, uint16_t id) : Device(id), encoder(device.dataPin), m_device(device), m_deltaRate(device.has_deltaRate ? device.deltaRate : 0)
+EncoderDevice::EncoderDevice(proto_EncoderDevice device, uint16_t id) : Device(id), encoder(device.dataPin), m_device(device), m_deltaRate(device.has_deltaRate && device.deltaRate > 0 ? device.deltaRate : 1)
 {
 }
 
 void EncoderDevice::begin()
 {
+    m_lastPoll = 0;
     encoder.begin();
 }
 void EncoderDevice::end(bool full)
@@ -18,7 +19,7 @@ void EncoderDevice::end(bool full)
 }
 void EncoderDevice::update(bool full_poll, bool send_events)
 {
-    if (m_deltaRate > 0 && (millis() - m_lastPoll) < m_deltaRate)
+    if ((millis() - m_lastPoll) < m_deltaRate)
         return;
     m_lastPoll = millis();
     encoder.tick();

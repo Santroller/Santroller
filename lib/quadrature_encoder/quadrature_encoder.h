@@ -15,7 +15,8 @@ public:
 private:
     uint8_t m_pin;
     PIO pio = pio1;
-    const uint sm = 0;
+    uint sm = 0;
     uint16_t old_value = 0;
-    int m_offset = 0;
+    uint m_offset = 0;
+    bool m_initialized = false;
 };

@@ -33,7 +33,6 @@ std::shared_ptr<UsbHostInterface> SteamHost::open(std::shared_ptr<UsbHostDevice>
             // Interfaces 1..4 are the wireless controller slots (0 is emulated keyboard)
             if (itf_desc->bInterfaceNumber < 1 || itf_desc->bInterfaceNumber > 4)
             {
-                printf("steam_open: skipped itf %d\r\n", itf_desc->bInterfaceNumber);
                 return nullptr;
             }
         }
@@ -42,7 +41,6 @@ std::shared_ptr<UsbHostInterface> SteamHost::open(std::shared_ptr<UsbHostDevice>
             // Interface 2 is the gamepad controller (0 is mouse, 1 is keyboard)
             if (itf_desc->bInterfaceNumber != 2)
             {
-                printf("steam_open: skipped itf %d\r\n", itf_desc->bInterfaceNumber);
                 return nullptr;
             }
         }
@@ -56,17 +54,14 @@ std::shared_ptr<UsbHostInterface> SteamHost::open(std::shared_ptr<UsbHostDevice>
     tusb_hid_descriptor_hid_t *x_desc = (tusb_hid_descriptor_hid_t *)p_desc;
     if (HID_DESC_TYPE_HID != x_desc->bDescriptorType)
     {
-        printf("steam_open: invalid desc type %02x\r\n", x_desc->bDescriptorType);
         return nullptr;
     }
-    printf("steam_open: itf %d endpoints: %d\r\n", itf_desc->bInterfaceNumber, endpoints);
     while (endpoints--)
     {
         p_desc = tu_desc_next(p_desc);
         tusb_desc_endpoint_t const *desc_ep = (tusb_desc_endpoint_t const *)p_desc;
         if (TUSB_DESC_ENDPOINT != desc_ep->bDescriptorType)
         {
-            printf("steam_open: not an endpoint desc %02x\r\n", desc_ep->bDescriptorType);
             return nullptr;
         }
         if (desc_ep->bEndpointAddress & 0x80)
@@ -75,7 +70,6 @@ std::shared_ptr<UsbHostInterface> SteamHost::open(std::shared_ptr<UsbHostDevice>
             intf->m_ep_in_size = desc_ep->wMaxPacketSize;
             if (!tuh_edpt_open(dev_addr, desc_ep))
             {
-                printf("steam_open: tuh_edpt_open IN %02x failed\r\n", desc_ep->bEndpointAddress);
                 return nullptr;
             }
             usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
@@ -86,7 +80,6 @@ std::shared_ptr<UsbHostInterface> SteamHost::open(std::shared_ptr<UsbHostDevice>
             intf->m_ep_out_size = desc_ep->wMaxPacketSize;
             if (!tuh_edpt_open(dev_addr, desc_ep))
             {
-                printf("steam_open: tuh_edpt_open OUT %02x failed\r\n", desc_ep->bEndpointAddress);
                 return nullptr;
             }
         }
@@ -141,7 +134,6 @@ bool SteamHost::set_config()
 
     if (m_pid == VALVE_STEAM_CONTROLLER_DONGLE_PID)
     {
-        printf("steam dongle set_config on itf %d\r\n", m_interface);
         // Query wireless status (0xB4) - do not enable pairing (0xAD) or configure empty slots
         memset(m_ep_out_buf, 0, sizeof(m_ep_out_buf));
         m_ep_out_buf[0] = 0xB4;

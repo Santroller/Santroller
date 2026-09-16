@@ -38,18 +38,22 @@ QuadratureEncoder::QuadratureEncoder(uint8_t pin) : m_pin(pin)
 }
 void QuadratureEncoder::begin()
 {
-    m_offset = pio_add_program(pio, &quadrature_encoder_program);
-    quadrature_encoder_program_init(pio, sm, m_pin, 0);
+    m_initialized = true;
+    pio_claim_free_sm_and_add_program_for_gpio_range(&quadrature_encoder_program, &pio, &sm, &m_offset, m_pin, 2, true);
+    quadrature_encoder_program_init(pio, sm, m_pin, m_offset);
 }
     
 void QuadratureEncoder::end()
 {
+    m_initialized = false;
     pio_remove_program_and_unclaim_sm(&quadrature_encoder_program, pio, sm, m_offset);
 }
 void QuadratureEncoder::tick()
 {
+    if (!m_initialized)
+        return;
     int new_value = quadrature_encoder_get_count(pio, sm);
     delta = new_value - old_value;
     old_value = new_value;
-    position += delta;
+    position = new_value;
 }

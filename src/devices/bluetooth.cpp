@@ -109,10 +109,23 @@ void bt_discovery_stop()
 
 void bt_discovery_on_device_found()
 {
+    bt_discovery_stop();
 }
 
 void bt_classic_on_inquiry_complete_empty()
 {
+    if (s_scan_phase == SCAN_PHASE_CLASSIC_GIAC)
+    {
+        s_scan_phase = SCAN_PHASE_CLASSIC_LIAC;
+        printf("GIAC inquiry complete without new connection, trying LIAC...\r\n");
+        btc_start_scan(GAP_IAC_LIMITED_INQUIRY);
+    }
+    else if (s_scan_phase == SCAN_PHASE_CLASSIC_LIAC)
+    {
+        s_scan_phase = SCAN_PHASE_CLASSIC_GIAC;
+        printf("LIAC inquiry complete without new connection, cycling back to GIAC...\r\n");
+        btc_start_scan(GAP_IAC_GENERAL_INQUIRY);
+    }
 }
 
 void BluetoothDevice::handle_command(proto_Command command)
@@ -121,11 +134,11 @@ void BluetoothDevice::handle_command(proto_Command command)
     {
         printf("Starting Bluetooth discovery scan cycle (powered=%d)...\r\n", (int)BluetoothStack::instance().is_powered());
         bt_discovery_stop();
-        btc_start_scan(GAP_IAC_GENERAL_INQUIRY);
-        btc_start_scan(GAP_IAC_LIMITED_INQUIRY);
 
-        s_scan_phase = SCAN_PHASE_BLE;
+        s_scan_phase = SCAN_PHASE_CLASSIC_GIAC;
+        btc_start_scan(GAP_IAC_GENERAL_INQUIRY);
         ble_start_scan();
+
         btstack_run_loop_set_timer(&s_scan_timer, 25000);
         btstack_run_loop_set_timer_handler(&s_scan_timer, scan_timer_callback);
         btstack_run_loop_add_timer(&s_scan_timer);

@@ -797,25 +797,45 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     pending.info = nullptr;
                 }
 
+                const char *dev_name = "";
+                index = getDeviceIndexForAddress(connected_addr);
+                if (index >= 0 && devices[index].name_buffer[0])
+                    dev_name = devices[index].name_buffer;
+                else if (is_paired && paired_state.name[0])
+                    dev_name = paired_state.name;
+
                 // Fallback detection from device name if SDP didn't populate VID/PID
                 if (!vid || !pid)
                 {
-                    const char *dev_name = "";
-                    index = getDeviceIndexForAddress(connected_addr);
-                    if (index >= 0 && devices[index].name_buffer[0])
-                        dev_name = devices[index].name_buffer;
-                    else if (is_paired && paired_state.name[0])
-                        dev_name = paired_state.name;
-
                     if (strstr(dev_name, "RVL-CNT-01-UC") != nullptr)
                     {
-                        vid = 0x057E;
-                        pid = 0x0330;
+                        vid = NINTENDO_VID;
+                        pid = WII_U_PRO_PID;
                     }
                     else if (strstr(dev_name, "RVL") != nullptr)
                     {
-                        vid = 0x057E;
-                        pid = 0x0306;
+                        vid = NINTENDO_VID;
+                        pid = WII_REMOTE_PID;
+                    }
+                    else if (is_switch_name(dev_name))
+                    {
+                        vid = NINTENDO_VID;
+                        pid = switch_pid_from_name(dev_name);
+                    }
+                    else if (strstr(dev_name, "PLAYSTATION(R)3") != nullptr)
+                    {
+                        vid = SONY_VID;
+                        pid = SONY_DS3_PID;
+                    }
+                    else if (strstr(dev_name, "Navigation Controller") != nullptr)
+                    {
+                        vid = SONY_VID;
+                        pid = SONY_PS3_NAV_PID;
+                    }
+                    else if (strstr(dev_name, "Xbox Wireless Controller") != nullptr)
+                    {
+                        vid = XBOX_VID;
+                        pid = XBOX_BT_PID;
                     }
                 }
 
@@ -824,18 +844,16 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                                                    BluetoothStack::instance().device_id(),
                                                    info,
                                                    known_subtype,
-                                                   known_ready);
+                                                   known_ready,
+                                                   dev_name);
 
                 memcpy(host->m_addr, connected_addr, 6);
                 host->m_addr_type = BD_ADDR_TYPE_ACL;
                 host->m_cid = cid;
 
                 // Copy name from the scan result or paired state if we have it
-                index = getDeviceIndexForAddress(connected_addr);
-                if (index >= 0 && devices[index].name_buffer[0])
-                    strncpy(host->m_name, devices[index].name_buffer, sizeof(host->m_name) - 1);
-                else if (is_paired && paired_state.name[0])
-                    strncpy(host->m_name, paired_state.name, sizeof(host->m_name) - 1);
+                if (dev_name[0])
+                    strncpy(host->m_name, dev_name, sizeof(host->m_name) - 1);
 
                 bt_connections[cid] = host;
                 host->on_connected();

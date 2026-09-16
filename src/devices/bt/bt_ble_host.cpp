@@ -13,6 +13,10 @@
 #include "protocols/hid.hpp"
 #include "protocols/xinput.hpp"
 #include "protocols/santroller_v1.hpp"
+#include "protocols/switch.hpp"
+
+bool switch_tick_digital(const uint8_t *buf, proto_Output &type);
+uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type);
 
 #define XBOX_SERIES_VID  0x045E
 #define XBOX_SERIES_PID  0x0B13   // Xbox Series X/S BLE PID
@@ -636,6 +640,93 @@ uint16_t BleSantrollerHost::tick_analog_v1(proto_Output &type)
 }
 
 // ============================================================================
+// BleSteamHost (Valve Steam Controller BLE)
+// ============================================================================
+
+BleSteamHost::BleSteamHost(uint16_t id) : BluetoothHostInterface(id)
+{
+    m_subtype = SubType_Gamepad;
+}
+
+void BleSteamHost::on_connected()
+{
+    BluetoothHostInterface::on_connected();
+    if (m_cid)
+    {
+        hids_host_send_write_report(m_cid, 0, HID_REPORT_TYPE_FEATURE,
+                                    (uint8_t *)STEAM_CMD_CLEAR_MAPPINGS_BUF, sizeof(STEAM_CMD_CLEAR_MAPPINGS_BUF));
+        hids_host_send_write_report(m_cid, 0, HID_REPORT_TYPE_FEATURE,
+                                    (uint8_t *)STEAM_CMD_DISABLE_LIZARD_BUF, sizeof(STEAM_CMD_DISABLE_LIZARD_BUF));
+    }
+    if (m_con_handle && m_char_handle)
+    {
+        gatt_client_write_value_of_characteristic_without_response(
+            m_con_handle, m_char_handle, sizeof(STEAM_CMD_CLEAR_MAPPINGS_BUF),
+            (uint8_t *)STEAM_CMD_CLEAR_MAPPINGS_BUF);
+        gatt_client_write_value_of_characteristic_without_response(
+            m_con_handle, m_char_handle, sizeof(STEAM_CMD_DISABLE_LIZARD_BUF),
+            (uint8_t *)STEAM_CMD_DISABLE_LIZARD_BUF);
+    }
+    set_ready(true);
+}
+
+void BleSteamHost::handle_report(const uint8_t *data, uint16_t len)
+{
+    if (len == 0) return;
+    uint16_t copy_len = len < sizeof(m_report_buf) ? len : sizeof(m_report_buf);
+    memcpy(m_report_buf, data, copy_len);
+
+    steam_parse_ble_report(data, len, m_state);
+}
+
+bool BleSteamHost::tick_digital(proto_Output &type)
+{
+    return steam_tick_digital(m_state, type);
+}
+
+uint16_t BleSteamHost::tick_analog(proto_Output &type)
+{
+    return steam_tick_analog(m_state, type);
+}
+
+// ============================================================================
+// BleSwitch2Host (Switch 2 BLE Host)
+// ============================================================================
+
+BleSwitch2Host::BleSwitch2Host(uint16_t id) : BluetoothHostInterface(id)
+{
+    m_subtype = SubType_Gamepad;
+    set_ready(true);
+}
+
+void BleSwitch2Host::handle_report(const uint8_t *data, uint16_t len)
+{
+    if (len == 0) return;
+    uint16_t copy_len = len < sizeof(m_report_buf) ? len : sizeof(m_report_buf);
+    memcpy(m_report_buf, data, copy_len);
+
+    switch2_parse_report(data, len, m_state);
+}
+
+bool BleSwitch2Host::tick_digital(proto_Output &type)
+{
+    if (m_report_buf[0] == SWITCH_PRO_CON_FULL_REPORT_ID || m_report_buf[0] == 0x21 || m_report_buf[0] == 0x3F)
+    {
+        return switch_tick_digital(m_report_buf, type);
+    }
+    return switch2_tick_digital(m_state, type);
+}
+
+uint16_t BleSwitch2Host::tick_analog(proto_Output &type)
+{
+    if (m_report_buf[0] == SWITCH_PRO_CON_FULL_REPORT_ID || m_report_buf[0] == 0x21 || m_report_buf[0] == 0x3F)
+    {
+        return switch_tick_analog(m_report_buf, type);
+    }
+    return switch2_tick_analog(m_state, type);
+}
+
+// ============================================================================
 // Factory
 // ============================================================================
 
@@ -671,6 +762,29 @@ std::shared_ptr<BluetoothHostInterface> ble_create_host(uint16_t vid, uint16_t p
         auto host = std::make_shared<BleSantrollerHost>(device_id, has_v2_usage, version, known_subtype);
         host->m_vid = vid ? vid : ARDWIINO_VID;
         host->m_pid = pid ? pid : (has_v2_usage ? ARDWIINO_PID : ARDWIINO_PID_BLE);
+        return host;
+    }
+
+    // Valve Steam Controller / HORI Steam Controller
+    if (vid == VALVE_USB_VID || (vid == HORI_VID && pid == HORI_STEAM_CONTROLLER_PID))
+    {
+        auto host = std::make_shared<BleSteamHost>(device_id);
+        host->m_vid = vid;
+        host->m_pid = pid;
+        if (known_subtype != SubType_Unknown)
+        {
+            host->m_subtype = known_subtype;
+        }
+        return host;
+    }
+
+    // Switch 2 BLE Controllers
+    if (vid == NINTENDO_VID && (pid == SWITCH_2_PRO_PID || pid == SWITCH_2_JOY_L_PID ||
+                                pid == SWITCH_2_JOY_R_PID || pid == SWITCH_2_GC_PID))
+    {
+        auto host = std::make_shared<BleSwitch2Host>(device_id);
+        host->m_vid = vid;
+        host->m_pid = pid;
         return host;
     }
 

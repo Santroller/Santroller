@@ -1,12 +1,43 @@
 #pragma once
+#include <cstring>
+#include "emulation/usb/usb_devices.h"
 #include "devices/bt/bt_host.hpp"
 #include "protocols/ps3.hpp"
 #include "protocols/ps4.hpp"
 #include "protocols/ps5.hpp"
 #include "protocols/switch.hpp"
+#include "protocols/switch2.hpp"
 #include "protocols/xbox_one.hpp"
 #include "wii_extension_decoder.hpp"
 #include "hidparser.h"
+
+static inline bool is_switch_name(const char *name)
+{
+    if (!name || !name[0]) return false;
+    return strstr(name, "Pro Controller") != nullptr ||
+           strstr(name, "Lic Pro Controller") != nullptr ||
+           strstr(name, "Nintendo Wireless Gamepad") != nullptr ||
+           strstr(name, "Wireless Gamepad") != nullptr ||
+           strstr(name, "Joy-Con") != nullptr ||
+           strstr(name, "Switch") != nullptr ||
+           strstr(name, "SNES Controller") != nullptr ||
+           strstr(name, "NES Controller") != nullptr ||
+           strstr(name, "N64 Controller") != nullptr ||
+           strstr(name, "SEGA Controller") != nullptr ||
+           strstr(name, "MD/Gen Control") != nullptr;
+}
+
+static inline uint16_t switch_pid_from_name(const char *name)
+{
+    if (!name) return SWITCH_PRO_PID;
+    if (strstr(name, "Joy-Con (L)")) return SWITCH_JOYCON_L_PID;
+    if (strstr(name, "Joy-Con (R)")) return SWITCH_JOYCON_R_PID;
+    if (strstr(name, "SNES Controller")) return SWITCH_ONLINE_SNES_PID;
+    if (strstr(name, "NES Controller")) return SWITCH_ONLINE_NES_PID;
+    if (strstr(name, "N64 Controller")) return SWITCH_ONLINE_N64_PID;
+    if (strstr(name, "SEGA Controller") || strstr(name, "MD/Gen Control")) return SWITCH_ONLINE_SEGA_PID;
+    return SWITCH_PRO_PID;
+}
 
 extern "C" {
 #include "gip_device.h"
@@ -138,7 +169,8 @@ private:
 class BtSwitchHost : public BluetoothHostInterface
 {
 public:
-    BtSwitchHost(uint16_t id) : BluetoothHostInterface(id)
+    BtSwitchHost(uint16_t id, bool is_switch2 = false)
+        : BluetoothHostInterface(id), m_is_switch2(is_switch2)
     {
         m_subtype = SubType_Gamepad;
     }
@@ -147,9 +179,14 @@ public:
     BtControllerType controller_type() const override { return BtControllerType_BtControllerTypeSwitch; }
 
     void on_connected() override;
+    void handle_report(const uint8_t *data, uint16_t len) override;
 
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
+
+private:
+    bool m_is_switch2 = false;
+    Switch2ControllerState m_switch2_state = {};
 };
 
 // ---------------------------------------------------------------------------
@@ -261,5 +298,6 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
                                                                 uint16_t device_id,
                                                                 HID_ReportInfo_t *info,
                                                                 SubType known_subtype = SubType_Unknown,
-                                                                bool known_ready = false);
+                                                                bool known_ready = false,
+                                                                const char *dev_name = nullptr);
 

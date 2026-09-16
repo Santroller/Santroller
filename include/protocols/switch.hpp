@@ -1,5 +1,7 @@
 #pragma once
 #include <stdint.h>
+#include "emulation/usb/usb_devices.h"
+
 #define SWITCH_PRO_CON_FULL_REPORT_ID 0x30
 typedef struct
 {

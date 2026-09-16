@@ -3,6 +3,7 @@
 #include "devices/usb/host/hid/ps3_host.h"
 #include "devices/usb/host/hid/ps4_host.h"
 #include "devices/usb/host/hid/ps5_host.h"
+#include "devices/usb/host/hid/steam_host.h"
 #include "class/hid/hid.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
@@ -21,6 +22,7 @@ static std::shared_ptr<UsbHostInterface> (*hid_device_types[])(std::shared_ptr<U
     RaphnetHost::open,
     StreamDeckHost::open,
     SwitchHost::open,
+    SteamHost::open,
     StadiaHost::open,
     MouseHost::open,
     GenericHost::open};

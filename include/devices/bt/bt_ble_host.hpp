@@ -1,6 +1,8 @@
 #pragma once
 #include "devices/bt/bt_host.hpp"
 #include "hidparser.h"
+#include "protocols/steam_controller.hpp"
+#include "protocols/switch2.hpp"
 
 // ---------------------------------------------------------------------------
 // Generic HID-over-GATT fallback for BLE devices not matched by PnP VID/PID
@@ -72,6 +74,50 @@ private:
     bool m_is_v2 = false;
     uint8_t m_capabilities = 0;
     uint8_t m_query_attempts = 0;
+};
+
+// ---------------------------------------------------------------------------
+// Valve Steam Controller BLE Host
+// ---------------------------------------------------------------------------
+class BleSteamHost : public BluetoothHostInterface
+{
+public:
+    BleSteamHost(uint16_t id);
+    ~BleSteamHost() override = default;
+
+    BtControllerType controller_type() const override { return BtControllerType_BtControllerTypeGeneric; }
+
+    void on_connected() override;
+    void handle_report(const uint8_t *data, uint16_t len) override;
+
+    bool tick_digital(proto_Output &type) override;
+    uint16_t tick_analog(proto_Output &type) override;
+
+    uint16_t m_char_handle = 0;
+    uint16_t m_con_handle = 0;
+
+private:
+    SteamControllerState m_state = {};
+};
+
+// ---------------------------------------------------------------------------
+// Switch 2 BLE Host
+// ---------------------------------------------------------------------------
+class BleSwitch2Host : public BluetoothHostInterface
+{
+public:
+    BleSwitch2Host(uint16_t id);
+    ~BleSwitch2Host() override = default;
+
+    BtControllerType controller_type() const override { return BtControllerType_BtControllerTypeSwitch; }
+
+    void handle_report(const uint8_t *data, uint16_t len) override;
+
+    bool tick_digital(proto_Output &type) override;
+    uint16_t tick_analog(proto_Output &type) override;
+
+private:
+    Switch2ControllerState m_state = {};
 };
 
 // ---------------------------------------------------------------------------

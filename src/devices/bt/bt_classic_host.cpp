@@ -26,6 +26,8 @@ bool ps4_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
 uint16_t ps4_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
 bool ps5_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
 uint16_t ps5_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+bool switch_tick_digital(const uint8_t *buf, proto_Output &type);
+uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type);
 bool ps4_parse_capabilities(const uint8_t *data, uint16_t len, uint16_t vid, uint16_t pid,
                             SubType &subtype, bool &sensors, bool &lightbar, bool &vibration, bool &touchpad);
 bool ps5_parse_capabilities(const uint8_t *data, uint16_t len,
@@ -39,20 +41,6 @@ extern "C" {
 }
 
 #include <memory>
-
-// VID/PID constants reused from the USB host headers
-#define SONY_VID             0x054C
-#define SONY_DS3_PID         0x0268
-#define SONY_DS4_PID_1       0x05C4
-#define SONY_DS4_PID_2       0x09CC
-#define SONY_DS4_PID_3       0x0BA0
-#define SONY_DS5_PID         0x0CE6
-#define SONY_DS5_EDGE_PID    0x0DF2
-#define NINTENDO_VID         0x057E
-#define SWITCH_PRO_PID       0x2009
-#define WII_REMOTE_PID       0x0306
-#define WII_U_PRO_PID        0x0330
-#define XBOX_VID             0x045E
 
 // ============================================================================
 // BtDs3Host
@@ -249,64 +237,39 @@ void BtSwitchHost::on_connected()
     hid_host_send_set_report(m_cid, HID_REPORT_TYPE_OUTPUT, cmd[0], cmd + 1, sizeof(cmd) - 1);
 }
 
+void BtSwitchHost::handle_report(const uint8_t *data, uint16_t len)
+{
+    BluetoothHostInterface::handle_report(data, len);
+    if (m_is_switch2 && len > 0)
+    {
+        switch2_parse_report(data, len, m_switch2_state);
+    }
+}
+
 bool BtSwitchHost::tick_digital(proto_Output &type)
 {
-    // 0x30 reports: byte 0 = report id (0x30), byte 1 = timer, byte 2+ = SwitchInputReport
-    if (m_report_buf[0] != SWITCH_PRO_CON_FULL_REPORT_ID)
-        return false;
-
-    auto *data = (SwitchProGamepad_Data_t *)m_report_buf;
-    auto &in = data->inputs;
-
-    if (type.which_mapping == proto_Output_gamepadButton_tag)
+    if (m_is_switch2)
     {
-        switch (type.mapping.gamepadButton)
+        if (m_report_buf[0] == SWITCH_PRO_CON_FULL_REPORT_ID || m_report_buf[0] == 0x21 || m_report_buf[0] == 0x3F)
         {
-        case Gamepad_A:               return in.a;
-        case Gamepad_B:               return in.b;
-        case Gamepad_X:               return in.x;
-        case Gamepad_Y:               return in.y;
-        case Gamepad_LeftShoulder:    return in.leftShoulder;
-        case Gamepad_RightShoulder:   return in.rightShoulder;
-        case Gamepad_Back:            return in.back;
-        case Gamepad_Start:           return in.start;
-        case Gamepad_LeftThumbClick:  return in.leftThumbClick;
-        case Gamepad_RightThumbClick: return in.rightThumbClick;
-        case Gamepad_Guide:           return in.guide;
-        case Gamepad_DpadUp:          return in.dpadUp;
-        case Gamepad_DpadDown:        return in.dpadDown;
-        case Gamepad_DpadLeft:        return in.dpadLeft;
-        case Gamepad_DpadRight:       return in.dpadRight;
-        default:                      return false;
+            return switch_tick_digital(m_report_buf, type);
         }
+        return switch2_tick_digital(m_switch2_state, type);
     }
-    return false;
+    return switch_tick_digital(m_report_buf, type);
 }
 
 uint16_t BtSwitchHost::tick_analog(proto_Output &type)
 {
-    if (m_report_buf[0] != SWITCH_PRO_CON_FULL_REPORT_ID)
-        return 0;
-
-    auto *data = (SwitchProGamepad_Data_t *)m_report_buf;
-    auto &in = data->inputs;
-
-    if (type.which_mapping == proto_Output_gamepadAxis_tag)
+    if (m_is_switch2)
     {
-        switch (type.mapping.gamepadAxis)
+        if (m_report_buf[0] == SWITCH_PRO_CON_FULL_REPORT_ID || m_report_buf[0] == 0x21 || m_report_buf[0] == 0x3F)
         {
-        // Switch sticks are 12-bit, centre ~2048; scale to 0-65535
-        case Gamepad_LeftStickX:  return (uint16_t)(in.leftStickX  << 4);
-        case Gamepad_LeftStickY:  return (uint16_t)(in.leftStickY  << 4);
-        case Gamepad_RightStickX: return (uint16_t)(in.rightStickX << 4);
-        case Gamepad_RightStickY: return (uint16_t)(in.rightStickY << 4);
-        // Switch treats L/R trigger as digital; expose as 0 or 0xFFFF
-        case Gamepad_LeftTrigger:  return in.leftTrigger  ? 0xFFFF : 0;
-        case Gamepad_RightTrigger: return in.rightTrigger ? 0xFFFF : 0;
-        default:                   return 0;
+            return switch_tick_analog(m_report_buf, type);
         }
+        return switch2_tick_analog(m_switch2_state, type);
     }
-    return 0;
+    return switch_tick_analog(m_report_buf, type);
 }
 
 // ============================================================================
@@ -864,12 +827,13 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
                                                                 uint16_t device_id,
                                                                 HID_ReportInfo_t *info,
                                                                 SubType known_subtype,
-                                                                bool known_ready)
+                                                                bool known_ready,
+                                                                const char *dev_name)
 {
     std::shared_ptr<BluetoothHostInterface> host = nullptr;
 
-    // DS3 / DualShock 3
-    if (vid == SONY_VID && pid == SONY_DS3_PID)
+    // DS3 / DualShock 3 & Navigation Controller
+    if (vid == SONY_VID && (pid == SONY_DS3_PID || pid == SONY_PS3_NAV_PID))
     {
         if (info) USB_FreeReportInfo(info);
         host = std::make_shared<BtDs3Host>(device_id);
@@ -918,11 +882,28 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
         if (info) USB_FreeReportInfo(info);
         host = ds5;
     }
-    // Switch Pro Controller
-    else if (vid == NINTENDO_VID && pid == SWITCH_PRO_PID)
+    // Switch Pro Controller & Joy-Cons & Switch 2 (matched by VID/PID or name for clones)
+    else if ((vid == NINTENDO_VID && (pid == SWITCH_PRO_PID || pid == SWITCH_JOYCON_L_PID ||
+                                      pid == SWITCH_JOYCON_R_PID || pid == SWITCH_CHARGING_GRIP_PID ||
+                                      pid == SWITCH_ONLINE_NES_PID || pid == SWITCH_ONLINE_SNES_PID ||
+                                      pid == SWITCH_ONLINE_N64_PID || pid == SWITCH_ONLINE_SEGA_PID ||
+                                      (pid >= 0x2000 && pid <= 0x20FF))) ||
+             pid == SWITCH_PRO_PID ||
+             is_switch_name(dev_name))
     {
         if (info) USB_FreeReportInfo(info);
-        host = std::make_shared<BtSwitchHost>(device_id);
+        bool is_switch2 = (vid == NINTENDO_VID && (pid == SWITCH_2_PRO_PID || pid == SWITCH_2_JOY_L_PID ||
+                                                  pid == SWITCH_2_JOY_R_PID || pid == SWITCH_2_GC_PID)) ||
+                          (dev_name && strstr(dev_name, "Switch 2") != nullptr);
+        host = std::make_shared<BtSwitchHost>(device_id, is_switch2);
+    }
+    // HORI Wireless HORIPAD for Steam or Valve devices
+    else if ((vid == HORI_VID && pid == HORI_STEAM_CONTROLLER_PID) ||
+             vid == VALVE_USB_VID)
+    {
+        auto generic_host = std::make_shared<BtGenericHost>(device_id, info);
+        generic_host->m_subtype = SubType_Gamepad;
+        host = generic_host;
     }
     // Nintendo Wii Remote
     else if (vid == NINTENDO_VID && pid == WII_REMOTE_PID)
@@ -936,12 +917,12 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
         if (info) USB_FreeReportInfo(info);
         host = std::make_shared<BtWiiHost>(device_id, true);
     }
-    // Xbox One / GIP (detected by interface subclass 0x47 / protocol 0xD0
-    // — but over BT we identify by VID 0x045E and any Xbox One PID)
+    // Xbox Wireless Controllers over Bluetooth Classic use standard HID reports
     else if (vid == XBOX_VID)
     {
-        if (info) USB_FreeReportInfo(info);
-        host = std::make_shared<BtXboxOneHost>(device_id);
+        auto generic_host = std::make_shared<BtGenericHost>(device_id, info);
+        generic_host->m_subtype = SubType_Gamepad;
+        host = generic_host;
     }
     else
     {
@@ -956,8 +937,16 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
 
     if (host)
     {
-        host->m_vid = vid;
-        host->m_pid = pid;
+        if (!vid && !pid && host->controller_type() == BtControllerType_BtControllerTypeSwitch)
+        {
+            host->m_vid = NINTENDO_VID;
+            host->m_pid = switch_pid_from_name(dev_name);
+        }
+        else
+        {
+            host->m_vid = vid;
+            host->m_pid = pid;
+        }
     }
     return host;
 }

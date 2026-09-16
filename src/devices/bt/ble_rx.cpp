@@ -20,6 +20,7 @@
 
 #include "devices/bt/bt_host.hpp"
 #include "devices/bt/bt_ble_host.hpp"
+#include "emulation/usb/usb_devices.h"
 #include "managers/device_manager.hpp"
 #include "config/device_factory.hpp"
 #include "devices/bluetooth.hpp"
@@ -40,6 +41,12 @@ static const uint8_t ghl_ios_char_uuid[16] = {
     0xCD, 0x00, 0x59, 0x4E, 0x8B, 0x0A, 0x8E, 0xA3
 };
 
+// Valve Steam Controller BLE characteristic UUID: 100f6c34-1735-4313-b402-38567131e5f3
+static const uint8_t steam_ble_char_uuid[16] = {
+    0x10, 0x0F, 0x6C, 0x34, 0x17, 0x35, 0x43, 0x13,
+    0xB4, 0x02, 0x38, 0x56, 0x71, 0x31, 0xE5, 0xF3
+};
+
 struct BleConnectionContext {
     hci_con_handle_t con_handle = HCI_CON_HANDLE_INVALID;
     uint16_t hids_cid = 0;
@@ -51,10 +58,14 @@ struct BleConnectionContext {
     uint16_t device_id = 0;
     bool is_ghl_guitar = false;
     bool found_ghl_char = false;
+    bool is_steam_controller = false;
+    bool found_steam_char = false;
     SubType known_subtype = SubType_Unknown;
     char paired_name[32] = {};
     gatt_client_characteristic_t ghl_characteristic = {};
     gatt_client_notification_t ghl_notification = {};
+    gatt_client_characteristic_t steam_characteristic = {};
+    gatt_client_notification_t steam_notification = {};
     std::shared_ptr<BluetoothHostInterface> host = nullptr;
 };
 
@@ -358,10 +369,20 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
         auto it = s_connections_by_handle.find(handle);
         if (it != s_connections_by_handle.end())
         {
-            gatt_event_characteristic_query_result_get_characteristic(packet, &it->second->ghl_characteristic);
-            it->second->found_ghl_char = true;
-            printf("GHL iOS Guitar characteristic found for handle 0x%04x, value_handle=0x%04x\r\n",
-                   handle, it->second->ghl_characteristic.value_handle);
+            if (it->second->is_steam_controller)
+            {
+                gatt_event_characteristic_query_result_get_characteristic(packet, &it->second->steam_characteristic);
+                it->second->found_steam_char = true;
+                printf("Steam Controller characteristic found for handle 0x%04x, value_handle=0x%04x\r\n",
+                       handle, it->second->steam_characteristic.value_handle);
+            }
+            else
+            {
+                gatt_event_characteristic_query_result_get_characteristic(packet, &it->second->ghl_characteristic);
+                it->second->found_ghl_char = true;
+                printf("GHL iOS Guitar characteristic found for handle 0x%04x, value_handle=0x%04x\r\n",
+                       handle, it->second->ghl_characteristic.value_handle);
+            }
         }
         return;
     }
@@ -373,7 +394,38 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
             return;
         auto ctx = it->second;
 
-        if (ctx->found_ghl_char)
+        if (ctx->found_steam_char)
+        {
+            printf("Steam Controller query complete, subscribing to notifications for handle 0x%04x\r\n", handle);
+            gatt_client_listen_for_characteristic_value_updates(
+                &ctx->steam_notification,
+                handle_gatt_client_event,
+                handle,
+                &ctx->steam_characteristic);
+
+            gatt_client_write_client_characteristic_configuration(
+                handle_gatt_client_event,
+                handle,
+                &ctx->steam_characteristic,
+                GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
+
+            uint16_t device_id = BluetoothStack::instance().device_id();
+            auto host = std::make_shared<BleSteamHost>(device_id);
+            memcpy(host->m_addr, ctx->addr, 6);
+            host->m_addr_type = ctx->addr_type;
+            host->m_cid       = handle;
+            host->m_con_handle = handle;
+            host->m_char_handle = ctx->steam_characteristic.value_handle;
+            host->m_vid       = VALVE_USB_VID;
+            host->m_pid       = VALVE_STEAM_CONTROLLER_BLE_PID;
+            strncpy(host->m_name, "Steam Controller", sizeof(host->m_name) - 1);
+
+            ctx->host = host;
+            host->on_connected();
+            bt_host_add_interface(host);
+            bt_host_save_pairing(host, true);
+        }
+        else if (ctx->found_ghl_char)
         {
             printf("GHL iOS query complete, subscribing to notifications for handle 0x%04x\r\n", handle);
             gatt_client_listen_for_characteristic_value_updates(
@@ -431,14 +483,26 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
         }
         else
         {
-            printf("HID service connection failed (err 0x%02x) - trying GHL iOS characteristic query\r\n", status);
-            ctx->is_ghl_guitar = true;
-            gatt_client_discover_characteristics_for_handle_range_by_uuid128(
-                handle_gatt_client_event,
-                ctx->con_handle,
-                0x0001,
-                0xffff,
-                ghl_ios_char_uuid);
+            printf("HID service connection failed (err 0x%02x) - trying direct characteristic query\r\n", status);
+            if (ctx->is_steam_controller)
+            {
+                gatt_client_discover_characteristics_for_handle_range_by_uuid128(
+                    handle_gatt_client_event,
+                    ctx->con_handle,
+                    0x0001,
+                    0xffff,
+                    steam_ble_char_uuid);
+            }
+            else
+            {
+                ctx->is_ghl_guitar = true;
+                gatt_client_discover_characteristics_for_handle_range_by_uuid128(
+                    handle_gatt_client_event,
+                    ctx->con_handle,
+                    0x0001,
+                    0xffff,
+                    ghl_ios_char_uuid);
+            }
         }
         break;
     }
@@ -580,6 +644,21 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                         }
                     }
                     break;
+                case BLUETOOTH_DATA_TYPE_INCOMPLETE_LIST_OF_128_BIT_SERVICE_CLASS_UUIDS:
+                case BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_128_BIT_SERVICE_CLASS_UUIDS:
+                    for (uint8_t i = 0u; (i + 16u) <= data_len; i += 16u)
+                    {
+                        // Check for Steam Controller BLE service (little-endian wire format)
+                        static const uint8_t steam_srv_le[16] = {
+                            0xF3, 0xE5, 0x31, 0x71, 0x56, 0x38, 0x02, 0xB4,
+                            0x13, 0x43, 0x35, 0x17, 0x32, 0x6C, 0x0F, 0x10
+                        };
+                        if (memcmp(data + i, steam_srv_le, 16) == 0)
+                        {
+                            is_hid = true;
+                        }
+                    }
+                    break;
                 case BLUETOOTH_DATA_TYPE_APPEARANCE:
                 {
                     uint16_t appearance = little_endian_read_16(data, 0);
@@ -597,7 +676,8 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     dev_name[copy] = '\0';
                     if (strstr(dev_name, "Ble Guitar") != nullptr || strstr(dev_name, "8BitDo") != nullptr ||
                         strstr(dev_name, "Wireless") != nullptr || strstr(dev_name, "Gamepad") != nullptr ||
-                        strstr(dev_name, "Controller") != nullptr)
+                        strstr(dev_name, "Controller") != nullptr || strstr(dev_name, "Steam") != nullptr ||
+                        strstr(dev_name, "Switch") != nullptr || strstr(dev_name, "Joy-Con") != nullptr)
                     {
                         is_hid = true;
                     }
@@ -716,6 +796,12 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                             printf("Connecting device identified as GHL BLE Guitar\r\n");
                             break;
                         }
+                        else if (strstr(scan_devices[i].name_buffer, "Steam") != nullptr)
+                        {
+                            ctx->is_steam_controller = true;
+                            printf("Connecting device identified as Steam Controller\r\n");
+                            break;
+                        }
                     }
                 }
 
@@ -789,10 +875,20 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel,
 
         uint8_t status = sm_event_pairing_complete_get_status(packet);
         uint8_t reason = sm_event_pairing_complete_get_reason(packet);
-        if (status == ERROR_CODE_SUCCESS || ctx->is_ghl_guitar || reason == SM_REASON_PAIRING_NOT_SUPPORTED)
+        if (status == ERROR_CODE_SUCCESS || ctx->is_ghl_guitar || ctx->is_steam_controller || reason == SM_REASON_PAIRING_NOT_SUPPORTED)
         {
             printf("Pairing complete for handle 0x%04x (status=0x%02x, reason=0x%02x)\r\n", handle, status, reason);
-            if (ctx->is_ghl_guitar)
+            if (ctx->is_steam_controller)
+            {
+                printf("Connecting to Steam Controller GATT characteristic...\r\n");
+                gatt_client_discover_characteristics_for_handle_range_by_uuid128(
+                    handle_gatt_client_event,
+                    handle,
+                    0x0001,
+                    0xffff,
+                    steam_ble_char_uuid);
+            }
+            else if (ctx->is_ghl_guitar)
             {
                 printf("Connecting to iOS GHL guitar GATT characteristic...\r\n");
                 gatt_client_discover_characteristics_for_handle_range_by_uuid128(
@@ -855,7 +951,17 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel,
         }
 
         printf("Re-encryption complete for handle 0x%04x\r\n", handle);
-        if (ctx->is_ghl_guitar)
+        if (ctx->is_steam_controller)
+        {
+            printf("Connecting to Steam Controller GATT characteristic...\r\n");
+            gatt_client_discover_characteristics_for_handle_range_by_uuid128(
+                handle_gatt_client_event,
+                handle,
+                0x0001,
+                0xffff,
+                steam_ble_char_uuid);
+        }
+        else if (ctx->is_ghl_guitar)
         {
             gatt_client_discover_characteristics_for_handle_range_by_uuid128(
                 handle_gatt_client_event,

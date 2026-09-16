@@ -221,6 +221,7 @@ add_executable(
   src/devices/usb/host/hid/stepmania_host.cpp
   src/devices/usb/host/hid/streamdeck_host.cpp
   src/devices/usb/host/hid/switch_host.cpp
+  src/devices/usb/host/hid/steam_host.cpp
   src/devices/usb/host/xinput/xinput_audio_host.cpp
   src/devices/usb/host/xinput/xinput_gamepad_host.cpp
   src/devices/usb/host/xinput/xinput_wireless_gamepad_host.cpp

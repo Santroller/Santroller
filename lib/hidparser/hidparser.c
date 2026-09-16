@@ -142,6 +142,36 @@ void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host
                             case HID_USAGE_DESKTOP_DPAD_LEFT:
                                 out->dpadLeft = 1;
                                 break;
+                            case HID_USAGE_DESKTOP_SYSTEM_MAIN_MENU:
+                                if (item->Value) {
+                                    out->genericButtons |= (1 << 10);
+                                }
+                                break;
+                        }
+                        break;
+                    case HID_USAGE_PAGE_SIMULATE:
+                        switch (item->Attributes.Usage.Usage) {
+                            case HID_USAGE_SIMULATION_CONTROLS_ACCELERATOR:
+                                out->genericAxisRz = GetAxis(item);
+                                break;
+                            case HID_USAGE_SIMULATION_CONTROLS_BRAKE:
+                                out->genericAxisZ = GetAxis(item);
+                                break;
+                        }
+                        break;
+                    case HID_USAGE_PAGE_CONSUMER:
+                        switch (item->Attributes.Usage.Usage) {
+                            case HID_USAGE_CONSUMER_AC_HOME:
+                            case HID_USAGE_CONSUMER_AC_BACK:
+                                if (item->Value) {
+                                    out->genericButtons |= (1 << 10);
+                                }
+                                break;
+                            case HID_USAGE_CONSUMER_RECORD:
+                                if (item->Value) {
+                                    out->genericButtons |= (1 << 11);
+                                }
+                                break;
                         }
                         break;
                     case HID_USAGE_PAGE_BUTTON: {
@@ -172,12 +202,33 @@ bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem)
 		case HID_USAGE_DESKTOP_X:
 		case HID_USAGE_DESKTOP_Y:
 		case HID_USAGE_DESKTOP_Z:
+		case HID_USAGE_DESKTOP_RX:
+		case HID_USAGE_DESKTOP_RY:
 		case HID_USAGE_DESKTOP_RZ:
+		case HID_USAGE_DESKTOP_SLIDER:
 		case HID_USAGE_DESKTOP_HAT_SWITCH:
 		case HID_USAGE_DESKTOP_DPAD_UP:
 		case HID_USAGE_DESKTOP_DPAD_DOWN:
 		case HID_USAGE_DESKTOP_DPAD_LEFT:
 		case HID_USAGE_DESKTOP_DPAD_RIGHT:
+		case HID_USAGE_DESKTOP_SYSTEM_MAIN_MENU:
+			return true;
+		}
+		return false;
+	case HID_USAGE_PAGE_SIMULATE:
+		switch (CurrentItem->Attributes.Usage.Usage)
+		{
+		case HID_USAGE_SIMULATION_CONTROLS_ACCELERATOR:
+		case HID_USAGE_SIMULATION_CONTROLS_BRAKE:
+			return true;
+		}
+		return false;
+	case HID_USAGE_PAGE_CONSUMER:
+		switch (CurrentItem->Attributes.Usage.Usage)
+		{
+		case HID_USAGE_CONSUMER_AC_HOME:
+		case HID_USAGE_CONSUMER_AC_BACK:
+		case HID_USAGE_CONSUMER_RECORD:
 			return true;
 		}
 		return false;

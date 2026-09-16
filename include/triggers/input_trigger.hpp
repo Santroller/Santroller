@@ -17,4 +17,6 @@ protected:
     proto_InputActivationTrigger m_activation_trigger;
     std::unique_ptr<Input> m_input;
     bool m_any_time;
+private:
+    bool calc_val();
 };

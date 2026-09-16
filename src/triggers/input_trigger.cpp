@@ -8,19 +8,16 @@
 
 InputActivationTrigger::InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_activation_trigger(activation_trigger), m_input(std::move(input)), m_any_time(any_time)
 {
+    m_last_val = calc_val();
+    m_last_analog_val = m_input->tick_analog();
 }
 
-bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+bool InputActivationTrigger::calc_val()
 {
     auto val = m_input->tick_digital();
 
-    if (m_activation_trigger.inverted)
-    {
-        val = !val;
-    }
     if (m_activation_trigger.has_trigger)
     {
-        auto analog_val = m_input->tick_analog();
         if (m_activation_trigger.trigger == AnalogToDigitalTriggerType_JoyHigh)
         {
             val = m_input->tick_analog() > m_activation_trigger.triggerValue;
@@ -37,10 +34,21 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
         {
             val = m_input->tick_analog() > m_activation_trigger.triggerValue && m_input->tick_analog() < m_activation_trigger.maxTriggerValue;
         }
-        if (m_activation_trigger.inverted)
-        {
-            val = !val;
-        }
+    }
+    if (m_activation_trigger.inverted)
+    {
+        val = !val;
+    }
+    return val;
+}
+
+bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+{
+    auto val = calc_val();
+
+    if (m_activation_trigger.has_trigger)
+    {
+        auto analog_val = m_input->tick_analog();
         if (send_events && (analog_val != m_last_analog_val || full_poll))
         {
             m_last_analog_val = analog_val;

@@ -13,7 +13,7 @@ std::shared_ptr<UsbHostInterface> GenericHost::open(std::shared_ptr<UsbHostDevic
     uint8_t dev_addr = list->dev_addr();
 
     uint8_t const *p_desc = (uint8_t const *)itf_desc;
-    if (itf_desc->bInterfaceProtocol != HID_ITF_PROTOCOL_NONE)
+    if (itf_desc->bInterfaceProtocol != HID_ITF_PROTOCOL_NONE || !info)
     {
         return nullptr;
     }

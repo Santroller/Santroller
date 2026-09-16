@@ -35,15 +35,15 @@ bool ps4_parse_capabilities(const uint8_t *data, uint16_t len, uint16_t vid, uin
                             SubType &subtype, bool &sensors, bool &lightbar, bool &vibration, bool &touchpad)
 {
     const uint8_t *caps = nullptr;
-    if (len >= 6 && data[2] == 0x27)
+    if (len >= 6 && (data[2] == 0x27 || data[2] == 0xA7))
     {
         caps = &data[2];
     }
-    else if (len >= 4 && data[0] == 0x27)
+    else if (len >= 4 && (data[0] == 0x27 || data[0] == 0xA7))
     {
         caps = &data[0];
     }
-    else if (len >= 5 && data[1] == 0x27)
+    else if (len >= 5 && (data[1] == 0x27 || data[1] == 0xA7))
     {
         caps = &data[1];
     }
@@ -111,7 +111,7 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
     uint8_t dev_addr = list->dev_addr();
 
     uint8_t const *p_desc = (uint8_t const *)itf_desc;
-    bool isThirdParty = info->foundPS4Usage;
+    bool isThirdParty = info ? info->foundPS4Usage : false;
     bool isFirstParty = vid == SONY_VID && (pid == PS4_DS_PID_1 || pid == PS4_DS_PID_2 || pid == PS4_DS_PID_3);
     uint8_t data[48];
     tusb_control_request_t setup_input_caps = {

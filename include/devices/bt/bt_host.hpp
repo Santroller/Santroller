@@ -58,6 +58,7 @@ public:
     // Called when a feature report response arrives (e.g. PS4/PS5 capabilities)
     virtual void handle_feature_report(const uint8_t *data, uint16_t len) {}
     virtual void handle_feature_report_failed() { m_ready = true; }
+    virtual void request_capabilities() {}
 
     // Readiness: whether this host can be registered as an assignable device immediately.
     // 3rd-party PS4/PS5 controllers hold off until feature report 0x03 provides their true subtype.

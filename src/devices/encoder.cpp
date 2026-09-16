@@ -26,5 +26,5 @@ void EncoderDevice::update(bool full_poll, bool send_events)
 
 bool EncoderDevice::using_pin(uint8_t pin)
 {
-    return pin == m_device.dataPin;
+    return pin == m_device.dataPin || pin == (m_device.dataPin + 1);
 }

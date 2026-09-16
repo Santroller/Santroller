@@ -30,6 +30,7 @@
 #include "devices/cycle.hpp"
 #include "devices/toggle.hpp"
 #include "devices/dmx.hpp"
+#include "devices/encoder.hpp"
 
 // Static storage for emulation devices and state
 static std::map<int32_t, int32_t> s_cycle_states;
@@ -336,6 +337,10 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         
     case proto_Device_dmx_tag:
         device = std::make_shared<DMXDevice>(proto_device.device.dmx, device_id);
+        break;
+
+    case proto_Device_encoder_tag:
+        device = std::make_shared<EncoderDevice>(proto_device.device.encoder, device_id);
         break;
     }
     

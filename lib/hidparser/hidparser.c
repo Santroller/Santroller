@@ -523,11 +523,11 @@ uint8_t USB_ProcessHIDReport(const uint8_t *ReportData,
 
 				if (NewReportItem.ItemType == HID_REPORT_ITEM_Feature && NewReportItem.Attributes.Usage.Page == HID_USAGE_PAGE_VENDOR)
 				{
-					if (NewReportItem.Attributes.Usage.Usage == 0x2821)
+					if (NewReportItem.Attributes.Usage.Usage == 0x2821 || NewReportItem.Attributes.Usage.Usage == 0xA883)
 					{
 						ParserData->foundPS5Usage = true;
 					}
-					if (NewReportItem.Attributes.Usage.Usage == 0x2721)
+					if (NewReportItem.Attributes.Usage.Usage == 0x2721 || NewReportItem.Attributes.Usage.Usage == 0xA783)
 					{
 						ParserData->foundPS4Usage = true;
 					}

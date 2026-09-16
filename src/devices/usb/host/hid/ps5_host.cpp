@@ -103,7 +103,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
     uint8_t dev_addr = list->dev_addr();
 
     uint8_t const *p_desc = (uint8_t const *)itf_desc;
-    bool isThirdParty = info->foundPS5Usage;
+    bool isThirdParty = info ? info->foundPS5Usage : false;
     bool isFirstParty = vid == SONY_VID && (pid == PS5_DS_PID || pid == PS5_DS_EDGE_PID);
     uint8_t data[48];
     tusb_control_request_t setup_input_caps = {

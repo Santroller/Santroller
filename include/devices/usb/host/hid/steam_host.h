@@ -1,6 +1,7 @@
 #pragma once
 #include "devices/usb/host/hid/hid_host.h"
 #include "protocols/steam_controller.hpp"
+#include "emulation/usb/usb_devices.h"
 
 class SteamHost : public HidHost
 {
@@ -10,6 +11,10 @@ public:
         : HidHost(dev_addr, interface, id), m_vid(vid), m_pid(pid)
     {
         m_subtype = SubType_Gamepad;
+        if (m_vid == VALVE_USB_VID && m_pid == VALVE_STEAM_CONTROLLER_DONGLE_PID)
+        {
+            m_delayed_init = true;
+        }
     }
 
     bool set_config() override;
@@ -25,7 +30,7 @@ public:
     uint16_t tick_analog(proto_Output &type) override;
 
 private:
-    void send_init_step();
+    void configure_controller();
 
     uint16_t m_vid = 0;
     uint16_t m_pid = 0;
@@ -37,5 +42,6 @@ private:
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64] = {};
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[64] = {};
     SteamControllerState m_state = {};
+    bool m_connected = false;
 };
 

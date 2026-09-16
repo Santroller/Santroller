@@ -123,8 +123,8 @@ void bt_classic_on_inquiry_complete_empty()
     else if (s_scan_phase == SCAN_PHASE_CLASSIC_LIAC)
     {
         s_scan_phase = SCAN_PHASE_CLASSIC_GIAC;
-        printf("LIAC inquiry complete without new connection, cycling back to GIAC...\r\n");
-        btc_start_scan(GAP_IAC_GENERAL_INQUIRY);
+        printf("LIAC inquiry complete without new connection, stopping\r\n");
+        bt_discovery_stop();
     }
 }
 

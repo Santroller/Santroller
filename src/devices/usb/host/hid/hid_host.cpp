@@ -43,10 +43,11 @@ std::shared_ptr<UsbHostInterface> HidHost::open(std::shared_ptr<UsbHostDevice> l
 
     uint16_t vid, pid;
     tuh_vid_pid_get(dev_addr, &vid, &pid);
-    printf("vid_pid: %04x_%04x\r\n", vid, pid);
+    printf("vid_pid: %04x_%04x itf: %d len: %d\r\n", vid, pid, desc_itf->bInterfaceNumber, x_desc->wReportLength);
     tuh_descriptor_get_hid_report_sync(dev_addr, desc_itf->bInterfaceNumber, x_desc->bReportType, 0, temp_buf, x_desc->wReportLength);
-    HID_ReportInfo_t *info;
-    if (USB_ProcessHIDReport(temp_buf, x_desc->wReportLength, &info) == HID_PARSE_Successful)
+    HID_ReportInfo_t *info = nullptr;
+    auto parse_res = USB_ProcessHIDReport(temp_buf, x_desc->wReportLength, &info);
+    if (parse_res == HID_PARSE_Successful || parse_res == HID_PARSE_NoUnfilteredReportItems)
     {
         tusb_desc_device_t desc;
         tuh_descriptor_get_device_sync(dev_addr, &desc, sizeof(tusb_desc_device_t));
@@ -59,7 +60,10 @@ std::shared_ptr<UsbHostInterface> HidHost::open(std::shared_ptr<UsbHostDevice> l
                 return ret;
             }
         }
-        USB_FreeReportInfo(info);
+        if (info)
+        {
+            USB_FreeReportInfo(info);
+        }
     }
     return nullptr;
 }

@@ -101,9 +101,18 @@ void BtDs4Host::handle_report(const uint8_t *data, uint16_t len)
 void BtDs4Host::on_connected()
 {
     BluetoothHostInterface::on_connected();
-    if (m_third_party && m_cid)
+}
+
+void BtDs4Host::request_capabilities()
+{
+    if (m_third_party && m_cid && !m_ready && !m_capabilities_requested)
     {
-        hid_host_send_get_report(m_cid, HID_REPORT_TYPE_FEATURE, 0x03);
+        uint8_t ret = hid_host_send_get_report_with_size(m_cid, HID_REPORT_TYPE_FEATURE, 0x03, 48);
+        printf("Requesting PS4 3rd-party feature report: ret: %d\r\n", ret);
+        if (ret == ERROR_CODE_SUCCESS)
+        {
+            m_capabilities_requested = true;
+        }
     }
 }
 
@@ -111,6 +120,11 @@ void BtDs4Host::handle_feature_report(const uint8_t *data, uint16_t len)
 {
     if (m_third_party)
     {
+        printf("PS4 Feature Report received (len=%d): ", len);
+        for (int i = 0; i < len; i++)
+            printf("%02x ", data[i]);
+        printf("\r\n");
+
         SubType sub = m_subtype;
         bool sens = m_sensors_supported;
         bool light = m_lightbar_supported;
@@ -176,9 +190,18 @@ void BtDs5Host::handle_report(const uint8_t *data, uint16_t len)
 void BtDs5Host::on_connected()
 {
     BluetoothHostInterface::on_connected();
-    if (m_third_party && m_cid)
+}
+
+void BtDs5Host::request_capabilities()
+{
+    if (m_third_party && m_cid && !m_ready && !m_capabilities_requested)
     {
-        hid_host_send_get_report(m_cid, HID_REPORT_TYPE_FEATURE, 0x03);
+        uint8_t ret = hid_host_send_get_report_with_size(m_cid, HID_REPORT_TYPE_FEATURE, 0x03, 48);
+        printf("Requesting PS5 3rd-party feature report: ret: %d\r\n", ret);
+        if (ret == ERROR_CODE_SUCCESS)
+        {
+            m_capabilities_requested = true;
+        }
     }
 }
 
@@ -828,7 +851,8 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
                                                                 HID_ReportInfo_t *info,
                                                                 SubType known_subtype,
                                                                 bool known_ready,
-                                                                const char *dev_name)
+                                                                const char *dev_name,
+                                                                BtControllerType known_controller_type)
 {
     std::shared_ptr<BluetoothHostInterface> host = nullptr;
 
@@ -846,8 +870,10 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
                                            false, true, true, true, true,
                                            vid, pid);
     }
-    // DS4 3rd-party (PS4 usage page detected by hidparser, or known subtype)
-    else if ((info && info->foundPS4Usage) || (known_subtype != SubType_Unknown && (vid == SONY_VID || (info && info->foundPS4Usage))))
+    // DS4 3rd-party (PS4 usage page detected by hidparser, or known controller_type / subtype)
+    else if ((info && info->foundPS4Usage) ||
+             known_controller_type == BtControllerType_BtControllerTypePS4 ||
+             (known_subtype != SubType_Unknown && (vid == SONY_VID || (info && info->foundPS4Usage))))
     {
         SubType sub = (known_subtype != SubType_Unknown) ? known_subtype : SubType_Gamepad;
         auto ds4 = std::make_shared<BtDs4Host>(device_id, sub,
@@ -868,8 +894,8 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
                                            false, true, true, true, true,
                                            vid, pid);
     }
-    // DS5 3rd-party (PS5 usage page detected by hidparser)
-    else if (info && info->foundPS5Usage)
+    // DS5 3rd-party (PS5 usage page detected by hidparser or known controller_type)
+    else if ((info && info->foundPS5Usage) || known_controller_type == BtControllerType_BtControllerTypePS5)
     {
         SubType sub = (known_subtype != SubType_Unknown) ? known_subtype : SubType_Gamepad;
         auto ds5 = std::make_shared<BtDs5Host>(device_id, sub,
@@ -889,7 +915,8 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
                                       pid == SWITCH_ONLINE_N64_PID || pid == SWITCH_ONLINE_SEGA_PID ||
                                       (pid >= 0x2000 && pid <= 0x20FF))) ||
              pid == SWITCH_PRO_PID ||
-             is_switch_name(dev_name))
+             is_switch_name(dev_name) ||
+             known_controller_type == BtControllerType_BtControllerTypeSwitch)
     {
         if (info) USB_FreeReportInfo(info);
         bool is_switch2 = (vid == NINTENDO_VID && (pid == SWITCH_2_PRO_PID || pid == SWITCH_2_JOY_L_PID ||

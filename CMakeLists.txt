@@ -251,6 +251,7 @@ add_executable(
   src/input/fixed.cpp
   src/input/ads1115.cpp
   src/input/multiplexer.cpp
+  src/input/encoder.cpp
   src/leds/led_devices.cpp
   src/leds/led_mappings.cpp
   src/triggers/activation_trigger_list.cpp

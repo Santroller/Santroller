@@ -101,6 +101,7 @@ public:
     void handle_report(const uint8_t *data, uint16_t len) override;
     void handle_feature_report(const uint8_t *data, uint16_t len) override;
     void handle_feature_report_failed() override;
+    void request_capabilities() override;
     void on_connected() override;
 
     bool tick_digital(proto_Output &type) override;
@@ -108,6 +109,7 @@ public:
 
 private:
     bool m_third_party;
+    bool m_capabilities_requested = false;
     bool m_sensors_supported;
     bool m_lightbar_supported;
     bool m_vibration_supported;
@@ -149,6 +151,7 @@ public:
     void handle_report(const uint8_t *data, uint16_t len) override;
     void handle_feature_report(const uint8_t *data, uint16_t len) override;
     void handle_feature_report_failed() override;
+    void request_capabilities() override;
     void on_connected() override;
 
     bool tick_digital(proto_Output &type) override;
@@ -156,6 +159,7 @@ public:
 
 private:
     bool m_third_party;
+    bool m_capabilities_requested = false;
     bool m_sensors_supported;
     bool m_lightbar_supported;
     bool m_vibration_supported;
@@ -229,10 +233,27 @@ public:
         : BluetoothHostInterface(id), m_info(info)
     {
         m_subtype = SubType_Gamepad;
+        if (!m_info)
+        {
+            m_ready = false;
+        }
     }
     ~BtGenericHost();
 
     BtControllerType controller_type() const override { return BtControllerType_BtControllerTypeGeneric; }
+
+    void set_report_info(HID_ReportInfo_t *info)
+    {
+        if (m_info && m_info != info)
+        {
+            USB_FreeReportInfo(m_info);
+        }
+        m_info = info;
+        if (m_info)
+        {
+            m_ready = true;
+        }
+    }
 
     void handle_report(const uint8_t *data, uint16_t len) override;
 
@@ -299,5 +320,6 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
                                                                 HID_ReportInfo_t *info,
                                                                 SubType known_subtype = SubType_Unknown,
                                                                 bool known_ready = false,
-                                                                const char *dev_name = nullptr);
+                                                                const char *dev_name = nullptr,
+                                                                BtControllerType known_controller_type = BtControllerType_BtControllerTypeGeneric);
 

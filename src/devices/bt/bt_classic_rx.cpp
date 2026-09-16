@@ -21,7 +21,6 @@
 #include "devices/bluetooth.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
 
-
 // ---------------------------------------------------------------------------
 // Global state
 // ---------------------------------------------------------------------------
@@ -35,8 +34,14 @@ static btstack_packet_callback_registration_t hci_event_callback_registration;
 static uint8_t hid_descriptor_storage[2048];
 
 #define MAX_DEVICES 20
-enum DEVICE_STATE { REMOTE_NAME_REQUEST, REMOTE_NAME_INQUIRED, REMOTE_NAME_FETCHED };
-struct device {
+enum DEVICE_STATE
+{
+    REMOTE_NAME_REQUEST,
+    REMOTE_NAME_INQUIRED,
+    REMOTE_NAME_FETCHED
+};
+struct device
+{
     bd_addr_t address;
     uint8_t pageScanRepetitionMode;
     uint16_t clockOffset;
@@ -52,12 +57,13 @@ static int deviceCount = 0;
 static std::unordered_map<uint16_t, std::shared_ptr<BluetoothHostInterface>> bt_connections;
 
 // Per-connection pending state (before the host object is created)
-struct PendingConnection {
+struct PendingConnection
+{
     uint16_t vid = 0;
     uint16_t pid = 0;
     uint16_t version = 0;
-    bool     descriptor_available = false;
-    bool     hid_descriptor_parsed = false;
+    bool descriptor_available = false;
+    bool hid_descriptor_parsed = false;
     HID_ReportInfo_t *info = nullptr;
     bd_addr_t addr = {};
     // device_id assigned when SDP query completes (before HID connect)
@@ -66,7 +72,8 @@ struct PendingConnection {
 static std::unordered_map<uint16_t, PendingConnection> pending_connections;
 
 // PNP SDP query in progress (before HID CID is allocated)
-struct PnpSdpState {
+struct PnpSdpState
+{
     bd_addr_t addr = {};
     bool in_progress = false;
     uint16_t vid = 0;
@@ -102,7 +109,8 @@ static bool is_already_connected_or_pending(const bd_addr_t addr)
     return false;
 }
 
-struct ClassicCandidate {
+struct ClassicCandidate
+{
     bd_addr_t addr = {};
     char name[64] = {};
     uint16_t vid = 0;
@@ -115,7 +123,8 @@ static std::vector<ClassicCandidate> btc_get_unconnected_paired_devices()
     std::vector<ClassicCandidate> candidates;
 
     // 1. Collect from DeviceFactory
-    DeviceFactory::foreach_bluetooth_pairing_state([&candidates](int32_t id, const DeviceFactory::BluetoothPairingStateData &state) {
+    DeviceFactory::foreach_bluetooth_pairing_state([&candidates](int32_t id, const DeviceFactory::BluetoothPairingStateData &state)
+                                                   {
         // Skip Wii remote emulation ID (when Pico acts as a Wiimote to a console)
         if (static_cast<uint32_t>(id) == 0xFFFFFFFEu) return;
 
@@ -177,8 +186,7 @@ static std::vector<ClassicCandidate> btc_get_unconnected_paired_devices()
 
                 candidates.push_back(cand);
             }
-        }
-    });
+        } });
 
     return candidates;
 }
@@ -392,7 +400,8 @@ void btc_stop_scan(void)
 static int has_more_remote_name_requests(void)
 {
     for (int i = 0; i < deviceCount; i++)
-        if (devices[i].state == REMOTE_NAME_REQUEST) return 1;
+        if (devices[i].state == REMOTE_NAME_REQUEST)
+            return 1;
     return 0;
 }
 
@@ -442,9 +451,9 @@ static void handle_sdp_client_query_result(uint8_t packet_type, uint16_t channel
             unsigned int pos = de_get_header_size(attribute_value);
             uint16_t attr_id = sdp_event_query_attribute_byte_get_attribute_id(packet);
             if (attr_id == BLUETOOTH_ATTRIBUTE_VENDOR_ID)
-                s_pnp_sdp.vid     = big_endian_read_16(attribute_value, pos);
+                s_pnp_sdp.vid = big_endian_read_16(attribute_value, pos);
             if (attr_id == BLUETOOTH_ATTRIBUTE_PRODUCT_ID)
-                s_pnp_sdp.pid     = big_endian_read_16(attribute_value, pos);
+                s_pnp_sdp.pid = big_endian_read_16(attribute_value, pos);
             if (attr_id == BLUETOOTH_ATTRIBUTE_VERSION)
                 s_pnp_sdp.version = big_endian_read_16(attribute_value, pos);
         }
@@ -490,6 +499,74 @@ static void handle_sdp_client_query_result(uint8_t packet_type, uint16_t channel
     }
 }
 
+static bool upgrade_to_ps4(uint16_t cid, std::shared_ptr<BluetoothHostInterface> old_host)
+{
+    printf("Upgrading BT Classic host on cid=0x%04x to BtDs4Host\r\n", cid);
+    uint16_t vid = old_host->m_vid ? old_host->m_vid : SONY_VID;
+    uint16_t pid = old_host->m_pid ? old_host->m_pid : SONY_DS4_PID_1;
+    SubType sub = (old_host->subtype() != SubType_Gamepad && old_host->subtype() != SubType_Unknown)
+                      ? old_host->subtype()
+                      : SubType_Gamepad;
+    auto new_host = std::make_shared<BtDs4Host>(
+        BluetoothStack::instance().device_id(),
+        sub,
+        true,  // third_party
+        false, // sensors
+        false, // lightbar
+        false, // vibration
+        false, // touchpad
+        vid,
+        pid);
+    memcpy(new_host->m_addr, old_host->m_addr, 6);
+    new_host->m_addr_type = old_host->m_addr_type;
+    new_host->m_cid = cid;
+    if (old_host->m_name[0])
+    {
+        strncpy(new_host->m_name, old_host->m_name, sizeof(new_host->m_name) - 1);
+    }
+
+    bt_host_remove_interface(old_host.get());
+    bt_connections[cid] = new_host;
+    new_host->on_connected();
+    bt_host_add_interface(new_host);
+    new_host->request_capabilities();
+    return true;
+}
+
+static bool upgrade_to_ps5(uint16_t cid, std::shared_ptr<BluetoothHostInterface> old_host)
+{
+    printf("Upgrading BT Classic host on cid=0x%04x to BtDs5Host\r\n", cid);
+    uint16_t vid = old_host->m_vid ? old_host->m_vid : SONY_VID;
+    uint16_t pid = old_host->m_pid ? old_host->m_pid : SONY_DS5_PID;
+    SubType sub = (old_host->subtype() != SubType_Gamepad && old_host->subtype() != SubType_Unknown)
+                      ? old_host->subtype()
+                      : SubType_Gamepad;
+    auto new_host = std::make_shared<BtDs5Host>(
+        BluetoothStack::instance().device_id(),
+        sub,
+        true,  // third_party
+        false, // sensors
+        false, // lightbar
+        false, // vibration
+        false, // touchpad
+        vid,
+        pid);
+    memcpy(new_host->m_addr, old_host->m_addr, 6);
+    new_host->m_addr_type = old_host->m_addr_type;
+    new_host->m_cid = cid;
+    if (old_host->m_name[0])
+    {
+        strncpy(new_host->m_name, old_host->m_name, sizeof(new_host->m_name) - 1);
+    }
+
+    bt_host_remove_interface(old_host.get());
+    bt_connections[cid] = new_host;
+    new_host->on_connected();
+    bt_host_add_interface(new_host);
+    new_host->request_capabilities();
+    return true;
+}
+
 // ---------------------------------------------------------------------------
 // Packet handler
 // ---------------------------------------------------------------------------
@@ -524,14 +601,17 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         }
 
         case GAP_EVENT_INQUIRY_RESULT:
-            if (deviceCount >= MAX_DEVICES) break;
+            if (deviceCount >= MAX_DEVICES)
+                break;
             gap_event_inquiry_result_get_bd_addr(packet, addr);
             index = getDeviceIndexForAddress(addr);
-            if (index >= 0) break;
+            if (index >= 0)
+                break;
             {
                 uint32_t cod = gap_event_inquiry_result_get_class_of_device(packet);
                 // Major device class 0x0500 is Peripheral (or PERIPHERAL_COD)
-                if ((cod & 0x1F00) != 0x0500 && (cod & PERIPHERAL_COD) != PERIPHERAL_COD) break;
+                if ((cod & 0x1F00) != 0x0500 && (cod & PERIPHERAL_COD) != PERIPHERAL_COD)
+                    break;
 
                 printf("Inquiry found peripheral: %s, COD: 0x%06lx\r\n", bd_addr_to_str(addr), (unsigned long)cod);
                 memcpy(devices[deviceCount].address, addr, 6);
@@ -770,22 +850,24 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 uint16_t pid = pending.pid;
                 SubType known_subtype = SubType_Unknown;
                 bool known_ready = false;
+                BtControllerType known_controller_type = BtControllerType_BtControllerTypeGeneric;
 
                 if (is_paired)
                 {
-                    printf("Device is already paired: VID=0x%04x PID=0x%04x SubType=%d\r\n",
-                           paired_state.vid, paired_state.pid, (int)paired_state.subtype);
+                    printf("Device is already paired: VID=0x%04x PID=0x%04x SubType=%d Type=%d\r\n",
+                           paired_state.vid, paired_state.pid, (int)paired_state.subtype, (int)paired_state.controller_type);
                     if (!vid && paired_state.vid)
                         vid = paired_state.vid;
                     if (!pid && paired_state.pid)
                         pid = paired_state.pid;
                     known_subtype = paired_state.subtype;
                     known_ready = true;
+                    known_controller_type = paired_state.controller_type;
                 }
 
                 // Parse HID descriptor if available in storage (SDP populated this during hid_host_connect)
                 const uint8_t *desc = hid_descriptor_storage_get_descriptor_data(cid);
-                uint16_t desc_len   = hid_descriptor_storage_get_descriptor_len(cid);
+                uint16_t desc_len = hid_descriptor_storage_get_descriptor_len(cid);
                 HID_ReportInfo_t *info = nullptr;
                 if (desc && desc_len > 0)
                 {
@@ -837,6 +919,18 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                         vid = XBOX_VID;
                         pid = XBOX_BT_PID;
                     }
+                    else if (strstr(dev_name, "DualSense") != nullptr)
+                    {
+                        vid = SONY_VID;
+                        pid = SONY_DS5_PID;
+                    }
+                    else if (strstr(dev_name, "DualShock 4") != nullptr ||
+                             strstr(dev_name, "DUALSHOCK 4") != nullptr ||
+                             strstr(dev_name, "Wireless Controller") != nullptr)
+                    {
+                        vid = SONY_VID;
+                        pid = SONY_DS4_PID_1;
+                    }
                 }
 
                 auto host = bt_classic_create_host(vid, pid,
@@ -845,7 +939,8 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                                                    info,
                                                    known_subtype,
                                                    known_ready,
-                                                   dev_name);
+                                                   dev_name,
+                                                   known_controller_type);
 
                 memcpy(host->m_addr, connected_addr, 6);
                 host->m_addr_type = BD_ADDR_TYPE_ACL;
@@ -858,10 +953,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 bt_connections[cid] = host;
                 host->on_connected();
                 bt_host_add_interface(host);
-                if (host->is_ready())
-                {
-                    bt_host_save_pairing(host, false);
-                }
 
                 pending_connections.erase(cid);
                 btc_schedule_reconnect(1000);
@@ -875,6 +966,46 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 if (status == ERROR_CODE_SUCCESS)
                 {
                     printf("HID Descriptor available for cid=0x%04x\r\n", cid);
+                    const uint8_t *desc = hid_descriptor_storage_get_descriptor_data(cid);
+                    uint16_t desc_len = hid_descriptor_storage_get_descriptor_len(cid);
+                    if (desc && desc_len > 0)
+                    {
+                        HID_ReportInfo_t *info = nullptr;
+                        USB_ProcessHIDReport(desc, desc_len, &info);
+                        if (info)
+                        {
+                            auto it = bt_connections.find(cid);
+                            if (it != bt_connections.end() && it->second)
+                            {
+                                if (it->second->controller_type() == BtControllerType_BtControllerTypeGeneric)
+                                {
+                                    if (info->foundPS4Usage)
+                                    {
+                                        upgrade_to_ps4(cid, it->second);
+                                        USB_FreeReportInfo(info);
+                                    }
+                                    else if (info->foundPS5Usage)
+                                    {
+                                        upgrade_to_ps5(cid, it->second);
+                                        USB_FreeReportInfo(info);
+                                    }
+                                    else
+                                    {
+                                        static_cast<BtGenericHost *>(it->second.get())->set_report_info(info);
+                                        bt_host_promote_if_ready(it->second);
+                                    }
+                                }
+                                else
+                                {
+                                    USB_FreeReportInfo(info);
+                                }
+                            }
+                            else
+                            {
+                                USB_FreeReportInfo(info);
+                            }
+                        }
+                    }
                 }
                 else
                 {
@@ -885,18 +1016,51 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
             case HID_SUBEVENT_REPORT:
             {
-                uint16_t cid     = hid_subevent_report_get_hid_cid(packet);
+                uint16_t cid = hid_subevent_report_get_hid_cid(packet);
                 auto it = bt_connections.find(cid);
                 if (it != bt_connections.end())
                 {
                     const uint8_t *report = hid_subevent_report_get_report(packet);
-                    uint16_t report_len   = hid_subevent_report_get_report_len(packet);
+                    uint16_t report_len = hid_subevent_report_get_report_len(packet);
                     if (report_len > 0 && report[0] == 0xa1)
                     {
                         report++;
                         report_len--;
                     }
-                    it->second->handle_report(report, report_len);
+                    if (it->second->controller_type() == BtControllerType_BtControllerTypeGeneric)
+                    {
+                        if (report_len >= 48 && report[0] == 0x11)
+                        {
+                            upgrade_to_ps4(cid, it->second);
+                            it = bt_connections.find(cid);
+                        }
+                        else if (report_len >= 48 && report[0] == 0x31)
+                        {
+                            upgrade_to_ps5(cid, it->second);
+                            it = bt_connections.find(cid);
+                        }
+                        else if (report_len == 64 && report[0] == 0x01 && (report[5] & 0x0F) <= 8)
+                        {
+                            const char *name = it->second->m_name;
+                            if (strstr(name, "DualSense") || strstr(name, "PS5"))
+                            {
+                                upgrade_to_ps5(cid, it->second);
+                                it = bt_connections.find(cid);
+                            }
+                            else if (strstr(name, "Wireless Controller") || strstr(name, "DualShock") ||
+                                     strstr(name, "DUALSHOCK") || strstr(name, "PS4") ||
+                                     it->second->m_vid == SONY_VID)
+                            {
+                                upgrade_to_ps4(cid, it->second);
+                                it = bt_connections.find(cid);
+                            }
+                        }
+                    }
+                    if (it != bt_connections.end() && it->second)
+                    {
+                        it->second->request_capabilities();
+                        it->second->handle_report(report, report_len);
+                    }
                 }
                 else
                 {
@@ -949,10 +1113,19 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             }
 
             case HID_SUBEVENT_SET_PROTOCOL_RESPONSE:
+            {
+                uint16_t cid = hid_subevent_set_protocol_response_get_hid_cid(packet);
                 status = hid_subevent_set_protocol_response_get_handshake_status(packet);
+                printf("HID Set Protocol Response for cid=0x%04x, status=0x%02x\r\n", cid, status);
                 if (status != HID_HANDSHAKE_PARAM_TYPE_SUCCESSFUL)
                     printf("Error set protocol, status 0x%02x\r\n", status);
+                auto it = bt_connections.find(cid);
+                if (it != bt_connections.end() && it->second)
+                {
+                    it->second->request_capabilities();
+                }
                 break;
+            }
 
             default:
                 break;

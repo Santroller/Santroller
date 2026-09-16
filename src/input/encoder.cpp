@@ -13,7 +13,7 @@ bool EncoderInput::tick_digital()
 uint16_t EncoderInput::tick_analog()
 {
     if (m_input.type == proto_EncoderInputType_EncoderDelta)
-        return m_device->encoder.delta;
+        return m_device->encoder.delta + INT16_MAX;
     if (m_input.type == proto_EncoderInputType_EncoderPosition)
         return m_device->encoder.position;
     return 0;

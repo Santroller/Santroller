@@ -319,6 +319,35 @@ static int getDeviceIndexForAddress(bd_addr_t addr)
     return -1;
 }
 
+static bool is_wii_device(const bd_addr_t addr)
+{
+    int index = getDeviceIndexForAddress(const_cast<uint8_t *>(addr));
+    if (index >= 0 && strstr(devices[index].name_buffer, "RVL") != nullptr)
+    {
+        return true;
+    }
+    if (s_pnp_sdp.in_progress && bd_addr_cmp(s_pnp_sdp.addr, addr) == 0 && s_pnp_sdp.vid == 0x057E)
+    {
+        return true;
+    }
+    for (const auto &pair : pending_connections)
+    {
+        if (bd_addr_cmp(pair.second.addr, addr) == 0 && pair.second.vid == 0x057E)
+        {
+            return true;
+        }
+    }
+    DeviceFactory::BluetoothPairingStateData paired_state = {};
+    if (DeviceFactory::find_bluetooth_pairing_state_by_mac(addr, paired_state) && !paired_state.ble)
+    {
+        if (paired_state.vid == 0x057E || strstr(paired_state.name, "RVL") != nullptr)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 static void hid_host_setup(void)
 {
 #ifdef ENABLE_BLE
@@ -330,6 +359,7 @@ static void hid_host_setup(void)
     gap_set_default_link_policy_settings(LM_LINK_POLICY_ENABLE_SNIFF_MODE |
                                          LM_LINK_POLICY_ENABLE_ROLE_SWITCH);
     hci_set_master_slave_policy(HCI_ROLE_MASTER);
+    gap_ssp_set_io_capability(SSP_IO_CAPABILITY_DISPLAY_YES_NO);
 
     hid_host_set_accept_incoming(true);
 
@@ -607,7 +637,11 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             {
                 hci_con_handle_t handle = hci_event_connection_complete_get_connection_handle(packet);
                 printf("Classic ACL connection complete: %s, handle=0x%04x\r\n", bd_addr_to_str(event_addr), handle);
-                gap_request_security_level(handle, LEVEL_2);
+                if (is_wii_device(event_addr))
+                {
+                    printf("Requesting security LEVEL_2 for Wii device %s\r\n", bd_addr_to_str(event_addr));
+                    gap_request_security_level(handle, LEVEL_2);
+                }
             }
             else
             {
@@ -621,12 +655,12 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             status = hci_event_authentication_complete_get_status(packet);
             hci_con_handle_t handle = hci_event_authentication_complete_get_connection_handle(packet);
             printf("Classic authentication complete: handle=0x%04x, status=0x%02x\r\n", handle, status);
-            if (status != ERROR_CODE_SUCCESS)
+            if (status == ERROR_CODE_AUTHENTICATION_FAILURE || status == ERROR_CODE_PIN_OR_KEY_MISSING)
             {
                 hci_connection_t *conn = hci_connection_for_handle(handle);
                 if (conn)
                 {
-                    printf("Authentication failed, dropping link key for %s\r\n", bd_addr_to_str(conn->address));
+                    printf("Authentication failed (bad pin/key), dropping link key for %s\r\n", bd_addr_to_str(conn->address));
                     gap_drop_link_key_for_bd_addr(conn->address);
                     int32_t pairing_id = DeviceFactory::find_bluetooth_pairing_id_by_mac(conn->address);
                     if (pairing_id >= 0)
@@ -650,41 +684,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         case HCI_EVENT_PIN_CODE_REQUEST:
         {
             hci_event_pin_code_request_get_bd_addr(packet, event_addr);
-            index = getDeviceIndexForAddress(event_addr);
-            bool is_wii = false;
-
-            if (index >= 0 && strstr(devices[index].name_buffer, "RVL") != nullptr)
-            {
-                is_wii = true;
-            }
-            if (!is_wii && s_pnp_sdp.in_progress && bd_addr_cmp(s_pnp_sdp.addr, event_addr) == 0)
-            {
-                if (s_pnp_sdp.vid == 0x057E) is_wii = true;
-            }
-            if (!is_wii)
-            {
-                for (const auto &pair : pending_connections)
-                {
-                    if (bd_addr_cmp(pair.second.addr, event_addr) == 0 && pair.second.vid == 0x057E)
-                    {
-                        is_wii = true;
-                        break;
-                    }
-                }
-            }
-            if (!is_wii)
-            {
-                DeviceFactory::BluetoothPairingStateData paired_state = {};
-                if (DeviceFactory::find_bluetooth_pairing_state_by_mac(event_addr, paired_state) && !paired_state.ble)
-                {
-                    if (paired_state.vid == 0x057E || strstr(paired_state.name, "RVL") != nullptr)
-                    {
-                        is_wii = true;
-                    }
-                }
-            }
-
-            if (is_wii)
+            if (is_wii_device(event_addr))
             {
                 printf("Pin code request for Nintendo Wii device %s - using reversed host BD_ADDR\r\n", bd_addr_to_str(event_addr));
                 static bd_addr_t pin_code;
@@ -702,8 +702,20 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         }
 
         case HCI_EVENT_USER_CONFIRMATION_REQUEST:
-            printf("SSP User Confirmation Auto accept\r\n");
+        {
+            hci_event_user_confirmation_request_get_bd_addr(packet, event_addr);
+            printf("SSP User Confirmation Auto accept for %s\r\n", bd_addr_to_str(event_addr));
+            gap_ssp_confirmation_response(event_addr);
             break;
+        }
+
+        case HCI_EVENT_SIMPLE_PAIRING_COMPLETE:
+        {
+            status = hci_event_simple_pairing_complete_get_status(packet);
+            hci_event_simple_pairing_complete_get_bd_addr(packet, event_addr);
+            printf("Classic SSP pairing complete: %s, status=0x%02x\r\n", bd_addr_to_str(event_addr), status);
+            break;
+        }
 
         case HCI_EVENT_HID_META:
             switch (hci_event_hid_meta_get_subevent_code(packet))
@@ -728,9 +740,9 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     bd_addr_t fail_addr = {};
                     hid_subevent_connection_opened_get_bd_addr(packet, fail_addr);
                     printf("Connection failed for %s, status 0x%02x\r\n", bd_addr_to_str(fail_addr), status);
-                    if (status == 0x67 || status == 0x66)
+                    if ((status == 0x67 || status == 0x66) && is_wii_device(fail_addr))
                     {
-                        printf("L2CAP security/resource refusal, dropping stored link key for %s\r\n", bd_addr_to_str(fail_addr));
+                        printf("L2CAP security/resource refusal, dropping stored link key for Wii %s\r\n", bd_addr_to_str(fail_addr));
                         gap_drop_link_key_for_bd_addr(fail_addr);
                         int32_t pairing_id = DeviceFactory::find_bluetooth_pairing_id_by_mac(fail_addr);
                         if (pairing_id >= 0)

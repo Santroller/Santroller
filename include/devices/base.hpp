@@ -4,7 +4,8 @@
 #include "commands.pb.h"
 #include <stdio.h>
 
-typedef enum {
+typedef enum
+{
     WII_INIT_FINISH_ENC,
     WII_INIT_FB_0,
     WII_INIT_READ_ID_WRITE_PTR,
@@ -70,7 +71,8 @@ class Device
 {
 public:
     Device(uint16_t id) : m_id(id) {}
-    virtual ~Device() {  }
+    virtual ~Device() {}
+    virtual bool valid() { return true; }
     virtual void begin() = 0;
     virtual void end(bool full) = 0;
     virtual void update(bool full_poll, bool send_events) = 0;
@@ -86,7 +88,7 @@ public:
     virtual uint32_t source_id() const { return m_id; }
     virtual void rescan(bool first);
     virtual void handle_command(proto_Command command) {};
-    virtual void save_reload_state(DeviceReloadState& state) const { state.valid = true; }
+    virtual void save_reload_state(DeviceReloadState &state) const { state.valid = true; }
     uint16_t m_id;
     bool still_connected = false;
 
@@ -105,8 +107,8 @@ public:
     bool supports_brightness() { return m_supportsBrightness; }
 
 protected:
-    uint32_t* led_state;
-    uint32_t* prev_led_state;
+    uint32_t *led_state;
+    uint32_t *prev_led_state;
     bool m_supportsColour;
     bool m_supportsBrightness;
 };

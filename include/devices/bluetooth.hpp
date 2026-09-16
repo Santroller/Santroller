@@ -12,6 +12,10 @@ public:
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
     void handle_command(proto_Command command);
+    bool valid()
+    {
+        return false;
+    }
 
 private:
     proto_BluetoothDevice m_device;

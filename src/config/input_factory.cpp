@@ -22,7 +22,7 @@ template<typename InputType, typename DeviceType, typename ConfigType>
 static std::unique_ptr<Input> create_device_input(std::shared_ptr<Profile> profile, uint32_t device_id, const ConfigType &config)
 {
     auto device = InputFactory::get_device<DeviceType>(profile, device_id);
-    return device ? std::make_unique<InputType>(config, device) : nullptr;
+    return device && device->valid() ? std::make_unique<InputType>(config, device) : nullptr;
 }
 
 template<typename InputType, typename ConfigType>

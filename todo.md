@@ -25,7 +25,6 @@
 - [ ] Input from gamecube controllers
 - [ ] Input from SNES controllers
 - [ ] Input from NES controllers
-- [ ] Input from bluetooth controllers (via bluepad?)
 - [ ] Inputs from NKRO keyboards over usb host
 - [ ] Inputs from switch controllers over usb host
 
@@ -38,7 +37,6 @@
 - [ ] Rapid Trigger - https://github.com/minipadKB/minipad-firmware/blob/master/src/handlers/key_handler.cpp
 - [ ] Other analog filters - Low pass, high pass, zero point crossing
 - [ ] Filters needed for hall effect
-- [ ] Shortcut input masking - aka if you have start + select to home, it shouldnt keep pressing start and select
 
 ## Led / rumble features
 - [ ] Gamepad rumble, including passthrough with usb host

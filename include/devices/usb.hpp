@@ -12,6 +12,7 @@ class USBHostHardwareDevice : public UsbHostInterface
 public:
     ~USBHostHardwareDevice();
     USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id);
+    bool valid() { return false; }
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);

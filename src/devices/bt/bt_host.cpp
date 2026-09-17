@@ -98,10 +98,7 @@ void bt_host_remove_interface(BluetoothHostInterface *device)
 
     DeviceManager::instance().remove_device(device);
 
-    if (bt_assignable_interfaces.empty())
-    {
-        m_devices_changed = 0;
-    }
+    m_devices_changed = millis() + 500;
 }
 
 void bt_host_update_interfaces(bool full_poll, bool send_events)

@@ -26,6 +26,7 @@ public:
     void tick();
     void sendData(uint8_t len, uint8_t *data);
     PsxReportFormat_t getReportFormat();
+    void get_rumble(uint8_t &small, uint8_t &large);
 
 private:
     volatile bool sent = true;

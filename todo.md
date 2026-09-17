@@ -39,7 +39,7 @@
 - [ ] Filters needed for hall effect
 
 ## Led / rumble features
-- [ ] Gamepad rumble, including passthrough with usb host
+- [x] Gamepad rumble, including passthrough with usb host
 - [ ] Allow mapping stage kit led count to brightness
 - [ ] Support Spice2X serial API for games that run on that
 - [ ] Support directoutput (if we want to start supporting pinball cabs)

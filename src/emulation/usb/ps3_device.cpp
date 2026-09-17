@@ -610,9 +610,11 @@ void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
         uint8_t id = buffer[0];
         if (id == PS3_LED_ID)
         {
-            player_led = handle_player_leds_ds3(buffer[9]);
-            rumble_left = buffer[0x04];
-            rumble_right = buffer[0x02] ? 0xff : 0;
+            uint8_t led = handle_player_leds_ds3(buffer[9]);
+            uint8_t r_left = buffer[0x04];
+            uint8_t r_right = buffer[0x02] ? 0xff : 0;
+            set_player_led(led);
+            set_rumble(r_left, r_right);
         }
         else if (id == PS3_RUMBLE_ID)
         {
@@ -620,19 +622,21 @@ void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
             if (bufsize >= 8)
             {
                 uint8_t player = buffer[3];
-                player_led = handle_player_leds_ps3(player);
+                uint8_t led = handle_player_leds_ps3(player);
+                set_player_led(led);
             }
             else
             {
                 // and DS3s receive rumble, and the packet length is shorter
-                rumble_left = buffer[0x05];
-                rumble_right = buffer[0x03] ? 0xff : 0;
+                uint8_t r_left = buffer[0x05];
+                uint8_t r_right = buffer[0x03] ? 0xff : 0;
+                set_rumble(r_left, r_right);
             }
         }
         else if (id == DJ_LED_ID)
         {
-            uint8_t euphoria_on = buffer[2] * 0xFF;
-            euphoria_led = euphoria_on;
+            uint8_t euphoria_on = buffer[2] ? 0xFF : 0;
+            set_euphoria_led(euphoria_on);
         }
         else if (id == SANTROLLER_LED_ID)
         {

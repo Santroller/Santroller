@@ -167,3 +167,37 @@ uint16_t XInputGamepadHost::tick_analog(proto_Output &type)
 {
     return xinput_tick_analog_impl(m_ep_in_buf, m_subtype, type);
 }
+
+void XInputGamepadHost::set_rumble(uint8_t left, uint8_t right)
+{
+    m_rumble_left = left;
+    m_rumble_right = right;
+    if (!m_ep_out) return;
+    XInputRumbleReport_t report = {0x00, 0x08, 0x00, m_rumble_left, m_rumble_right, {0, 0, 0}};
+    if (m_subtype == DjHeroTurntable)
+    {
+        report.leftRumble = m_euphoria ? 0xFF : 0x00;
+    }
+    send_intr_xfer(m_ep_out, &report, sizeof(report));
+}
+
+void XInputGamepadHost::set_player_led(uint8_t player)
+{
+    if (!m_ep_out) return;
+    uint8_t led = 0;
+    if (player == 1) led = 0x02;
+    else if (player == 2) led = 0x03;
+    else if (player == 3) led = 0x04;
+    else if (player == 4) led = 0x05;
+    XInputLEDReport_t report = {0x01, 0x03, led};
+    send_intr_xfer(m_ep_out, &report, sizeof(report));
+}
+
+void XInputGamepadHost::set_euphoria_led(bool state)
+{
+    m_euphoria = state;
+    if (m_subtype == DjHeroTurntable)
+    {
+        set_rumble(m_rumble_left, m_rumble_right);
+    }
+}

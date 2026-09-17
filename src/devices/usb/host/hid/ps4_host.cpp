@@ -1,5 +1,6 @@
 #include "tusb_option.h"
 #include "devices/usb/host/hid/ps4_host.h"
+#include "protocols/ps4.hpp"
 #include "usb/auth_broker.h"
 #include "class/hid/hid.h"
 #include "devices/usb.hpp"
@@ -417,4 +418,45 @@ bool Ps4Host::tick_digital(proto_Output &type)
 uint16_t Ps4Host::tick_analog(proto_Output &type)
 {
     return ps4_tick_analog(m_ep_in_buf, m_subtype, m_third_party, type);
+}
+
+bool Ps4Host::send_ps4_output()
+{
+    ps4_output_report rep = {};
+    rep.report_id = 0x05;
+    rep.valid_flag0 = 0x07;
+    rep.motor_left = m_rumble_left;
+    rep.motor_right = m_rumble_right;
+    rep.lightbar_red = m_lightbar_r;
+    rep.lightbar_green = m_lightbar_g;
+    rep.lightbar_blue = m_lightbar_b;
+
+    if (m_ep_out)
+    {
+        return send_intr_xfer(m_ep_out, &rep, sizeof(rep));
+    }
+    return set_report(rep.report_id, HID_REPORT_TYPE_OUTPUT, (uint8_t *)&rep, sizeof(rep));
+}
+
+void Ps4Host::set_rumble(uint8_t left, uint8_t right)
+{
+    m_rumble_left = left;
+    m_rumble_right = right;
+    send_ps4_output();
+}
+
+void Ps4Host::set_lightbar(uint8_t r, uint8_t g, uint8_t b)
+{
+    m_lightbar_r = r;
+    m_lightbar_g = g;
+    m_lightbar_b = b;
+    send_ps4_output();
+}
+
+void Ps4Host::set_player_led(uint8_t player)
+{
+    if (player >= 1 && player <= 4)
+    {
+        set_lightbar(ps4_colors[player - 1][0], ps4_colors[player - 1][1], ps4_colors[player - 1][2]);
+    }
 }

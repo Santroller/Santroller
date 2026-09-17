@@ -37,4 +37,11 @@ public:
     uint8_t stagekit_param = 0;
     uint8_t capabilities = 0;
     bool side = 0;
+
+    void set_rumble(uint8_t left, uint8_t right);
+    void set_player_led(uint8_t player);
+    void set_lightbar(uint8_t r, uint8_t g, uint8_t b);
+    void set_euphoria_led(uint8_t val);
+    void update_feedback(bool force = false);
+    void update_capabilities();
 };

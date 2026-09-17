@@ -78,6 +78,15 @@ public:
     void update_profile_components(uint32_t profile_id, size_t instance_id, bool profile_changed, bool send_events);
     
     bool is_profile_active(uint32_t profile_id) const;
+    std::vector<std::shared_ptr<Instance>> get_instances_for_profile(uint32_t profile_id) const
+    {
+        auto it = m_profile_to_instance.find(profile_id);
+        if (it != m_profile_to_instance.end())
+        {
+            return it->second;
+        }
+        return {};
+    }
     void clear_all();
     void prepare_for_config_reload();
     void initialize_device_bluetooth();

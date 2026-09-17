@@ -12,12 +12,7 @@ class UsbHostInterface;
 #include "emulation/usb/usb_devices.h"
 #include "devices/usb/host/hid/hid_host.h"
 
-static const int ps4_colors[4][3] = {
-    {0x00, 0x00, 0x40}, /* Blue */
-    {0x40, 0x00, 0x00}, /* Red */
-    {0x00, 0x40, 0x00}, /* Green */
-    {0x20, 0x00, 0x20}  /* Pink */
-};
+
 uint8_t ps4_feature_config[] = {
     0x03, 0x21, 0x27, 0x04, 0x91, /*type*/ 0x00, 0x2c, 0x56,
     0xa0, 0x0f, 0x3d, 0x00, 0x00, 0x04, 0x01, 0x00,
@@ -244,16 +239,13 @@ void PS4GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
     case HID_REPORT_TYPE_OUTPUT:
     {
         ps4_output_report *report = (ps4_output_report *)buffer;
-        lightbar_red = report->lightbar_red;
-        lightbar_green = report->lightbar_green;
-        lightbar_blue = report->lightbar_blue;
-        rumble_left = report->motor_left;
-        rumble_right = report->motor_right;
+        set_rumble(report->motor_left, report->motor_right);
+        set_lightbar(report->lightbar_red, report->lightbar_green, report->lightbar_blue);
         for (int i = 0; i < 4; i++)
         {
             if (report->lightbar_red == ps4_colors[i][0] && report->lightbar_green == ps4_colors[i][1] && report->lightbar_blue == ps4_colors[i][2])
             {
-                player_led = i + 1;
+                set_player_led(i + 1);
             }
         }
         break;

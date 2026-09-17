@@ -192,6 +192,7 @@ FILE(WRITE ${CMAKE_BINARY_DIR}/commit.hash.in
 add_executable(
   ${TARGET}
   src/main.cpp
+  src/instance.cpp
   src/emulation/usb/usb_descriptors.cpp
   src/emulation/usb/xinput_device.cpp
   src/emulation/usb/xone_device.cpp

@@ -20,6 +20,10 @@ public:
     uint16_t tick_analog(proto_Output& type);
     void update(bool full_poll, bool send_events);
     void send_report_from_host(XGIPProtocol* report);
+    void set_rumble(uint8_t left, uint8_t right) override;
+    void set_player_led(uint8_t player) override;
+    bool has_rumble() const override { return true; }
+    bool has_player_led() const override { return true; }
     
     gip_device_t m_gip_device;  // Shared GIP device state (public for callbacks)
     gip_report_queue_t* m_report_queue;  // Shared report queue (public for callbacks)

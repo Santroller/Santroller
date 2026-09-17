@@ -36,6 +36,8 @@ typedef struct pio_spi_t {
     bool analog;
     volatile bool configMode;
     bool locked;
+    volatile uint8_t rumble_small;
+    volatile uint8_t rumble_large;
     volatile uint8_t dma_buf[32];
 } pio_spi_t;
 

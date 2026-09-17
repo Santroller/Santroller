@@ -19,12 +19,24 @@ public:
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info);
     bool tick_digital(proto_Output& type);
     uint16_t tick_analog(proto_Output& type);
+    void set_rumble(uint8_t left, uint8_t right) override;
+    void set_player_led(uint8_t player) override;
+    void set_lightbar(uint8_t r, uint8_t g, uint8_t b) override;
+    bool has_rumble() const override { return true; }
+    bool has_player_led() const override { return true; }
+    bool has_lightbar() const override { return true; }
 
 private:
+    bool send_ps4_output();
     uint8_t m_ep_in = 0;
     uint8_t m_ep_out = 0;
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
+    uint8_t m_rumble_left = 0;
+    uint8_t m_rumble_right = 0;
+    uint8_t m_lightbar_r = 0;
+    uint8_t m_lightbar_g = 0;
+    uint8_t m_lightbar_b = 0;
     bool m_sensors_supported;
     bool m_lightbar_supported;
     bool m_vibration_supported;

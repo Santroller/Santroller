@@ -434,6 +434,19 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
             if (report_type == HID_REPORT_TYPE_OUTPUT)
             {
+                if (report_id == ReportIdGamepad && s_instance)
+                {
+                    if (report_len >= 5)
+                    {
+                        uint8_t left = report_data[4] ? report_data[4] : report_data[1];
+                        uint8_t right = report_data[2];
+                        s_instance->set_rumble(left, right);
+                    }
+                    else if (report_len >= 3)
+                    {
+                        s_instance->set_rumble(report_data[1], report_data[2]);
+                    }
+                }
                 if (report_id == ReportIdSantrollerCapabilities || (report_len > 0 && report_data[0] == ReportIdSantrollerCapabilities))
                 {
                     if (s_instance)

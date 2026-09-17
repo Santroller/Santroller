@@ -208,34 +208,20 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
 
 uint8_t handle_player_leds_ps5(uint8_t player_mask)
 {
-    if (player_mask == 1)
-    {
-        return 1;
-    }
-    if (player_mask == 2)
-    {
-        return 2;
-    }
-    if (player_mask == 4)
-    {
-        return 3;
-    }
-    if (player_mask == 8)
-    {
-        return 4;
-    }
-    if (player_mask == 9)
-    {
-        return 5;
-    }
-    if (player_mask == 10)
-    {
-        return 6;
-    }
-    if (player_mask == 12)
-    {
-        return 7;
-    }
+    // DualSense hardware player indicator patterns
+    if (player_mask == 0x04) return 1; // Center LED
+    if (player_mask == 0x0A) return 2; // Inner LEDs
+    if (player_mask == 0x15) return 3; // Center + outer LEDs
+    if (player_mask == 0x1B) return 4; // Inner + outer LEDs
+
+    // Fallback simple bitmasks
+    if (player_mask == 1) return 1;
+    if (player_mask == 2) return 2;
+    if (player_mask == 4) return 3;
+    if (player_mask == 8) return 4;
+    if (player_mask == 9) return 5;
+    if (player_mask == 10) return 6;
+    if (player_mask == 12) return 7;
     return 0;
 }
 
@@ -270,18 +256,15 @@ void PS5GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
         ps5_output_report *report = (ps5_output_report *)buffer;
         if (report->light_bar_flag)
         {
-            lightbar_red = report->lightbar_red;
-            lightbar_green = report->lightbar_green;
-            lightbar_blue = report->lightbar_blue;
+            set_lightbar(report->lightbar_red, report->lightbar_green, report->lightbar_blue);
         }
         if (report->vibration_flag)
         {
-            rumble_left = report->motor_left;
-            rumble_right = report->motor_right;
+            set_rumble(report->motor_left, report->motor_right);
         }
         if (report->player_indicator_flag)
         {
-            player_led = handle_player_leds_ps5(report->player_indicator);
+            set_player_led(handle_player_leds_ps5(report->player_indicator));
         }
 
         break;

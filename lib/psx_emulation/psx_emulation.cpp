@@ -58,3 +58,16 @@ bool PSXEmulation::ready()
 {
     return sent;
 }
+void PSXEmulation::get_rumble(uint8_t &small, uint8_t &large)
+{
+    if (spi)
+    {
+        small = spi->rumble_small;
+        large = spi->rumble_large;
+    }
+    else
+    {
+        small = 0;
+        large = 0;
+    }
+}

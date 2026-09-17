@@ -248,14 +248,14 @@ bool XInputGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, 
             uint8_t player = xbox_players[ledReport->led];
             if (player)
             {
-                player_led = player;
+                set_player_led(player);
             }
         }
         else if (rumbleReport->rid == XBOX_RUMBLE_ID)
         {
             if (subtype == DjHeroTurntable)
             {
-                euphoria_led = rumbleReport->leftRumble;
+                set_euphoria_led(rumbleReport->leftRumble);
             }
             else if (subtype == StageKit)
             {
@@ -264,8 +264,7 @@ bool XInputGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, 
             }
             else
             {
-                rumble_left = rumbleReport->leftRumble;
-                rumble_right = rumbleReport->rightRumble;
+                set_rumble(rumbleReport->leftRumble, rumbleReport->rightRumble);
             }
         }
         TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x20, false));

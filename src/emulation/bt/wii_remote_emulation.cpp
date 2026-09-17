@@ -88,10 +88,9 @@ void WiiRemoteEmulationDeviceInstance::process(bool full_poll, bool send_events)
         initialize_wii_extension_report(subtype, m_extension_format, m_extension_initial_report, &m_extension_size,
                                         &m_buttons_low_idx, &m_buttons_high_idx);
     }
-    euphoria_led = current.euphoria_led;
-    player_led = current.player_led;
-    rumble_left = current.rumble ? 0xff : 0;
-    rumble_right = rumble_left;
+    set_euphoria_led(current.euphoria_led ? 255 : 0);
+    set_player_led(current.player_led);
+    set_rumble(current.rumble ? 0xff : 0, current.rumble ? 0xff : 0);
 
     // Carry forward the fields the BT stack owns/writes, so they aren't lost on swap.
     next.mode = current.mode;

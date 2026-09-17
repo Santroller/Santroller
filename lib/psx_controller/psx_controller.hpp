@@ -53,6 +53,7 @@ typedef enum
     FIRST_INPUTS,
     ENTER_CONFIG,
     ENABLE_ANALOG_MODE,
+    ENABLE_RUMBLE,
     ENABLE_PRESSURES,
     ENABLE_PRESSURES_2,
     EXIT_CONFIG,
@@ -70,6 +71,7 @@ public:
     void load_state(const DeviceReloadState *state);
     void save_state(DeviceReloadState& state) const ;
     void tick();
+    void set_rumble(uint8_t left, uint8_t right);
     PS2ControllerType type = PS2ControllerTypeUnknown;
     uint16_t read_axis(PS2AxisType type);
     bool read_button(PS2ButtonType type);
@@ -83,6 +85,9 @@ private:
     SPIMasterInterface interface;
     uint8_t m_attPin;
     uint8_t m_ackPin;
+    uint8_t m_rumble_small = 0;
+    uint8_t m_rumble_large = 0;
+    uint8_t m_poll_cmd[5] = {0x01, 0x42, 0x00, 0x00, 0x00};
     int missing = 0;
     bool valid = false;
     bool hasTapBar = false;

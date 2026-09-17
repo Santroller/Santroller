@@ -16,6 +16,10 @@ public:
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) override;
     bool set_config() override;
     void disconnect() override;
+    void set_rumble(uint8_t left, uint8_t right) override;
+    void set_player_led(uint8_t player) override;
+    bool has_rumble() const override { return true; }
+    bool has_player_led() const override { return true; }
     
     uint8_t get_controller_index() const { return m_controller_idx; }
     

@@ -34,6 +34,6 @@ void WiiExtensionEmulationDeviceInstance::process(bool full_poll, bool send_even
     update_wii_extension_input(profiles, full_poll, send_events,
                                m_controller.wii_data_format(), m_buffer);
     finalize_wii_extension_report(m_buffer, m_buttons_low_idx, m_buttons_high_idx);
-    euphoria_led = m_controller.get_djh_euphoria_led_state();
+    set_euphoria_led(m_controller.get_djh_euphoria_led_state() ? 255 : 0);
     m_controller.set_inputs(m_buffer, m_report_size);
 }

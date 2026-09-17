@@ -12,6 +12,12 @@ public:
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
     bool tick_digital(proto_Output &type);
     uint16_t tick_analog(proto_Output &type);
+    void set_rumble(uint8_t left, uint8_t right) override;
+    void set_player_led(uint8_t player) override;
+    void set_euphoria_led(bool state) override;
+    bool has_rumble() const override { return true; }
+    bool has_player_led() const override { return true; }
+    bool has_euphoria_led() const override { return m_subtype == DjHeroTurntable; }
 
 private:
     uint8_t m_ep_in;
@@ -19,6 +25,10 @@ private:
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[sizeof(XInputGamepad_Data_t)];
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[32];
+    uint8_t m_rumble_left = 0;
+    uint8_t m_rumble_right = 0;
+    bool m_euphoria = false;
     bool m_wt = false;
 };
 class XInputAudioHost : public UsbHostInterface
@@ -83,6 +93,10 @@ public:
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
     bool tick_digital(proto_Output &type);
     uint16_t tick_analog(proto_Output &type);
+    void set_rumble(uint8_t left, uint8_t right) override;
+    void set_player_led(uint8_t player) override;
+    bool has_rumble() const override { return true; }
+    bool has_player_led() const override { return true; }
 
 private:
     uint8_t m_ep_in;

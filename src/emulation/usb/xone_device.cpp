@@ -367,10 +367,25 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             // Set all player LEDs to on
             report_led_mode = incomingXGIP.getData()[1];       // 1 - turn LEDs on
             report_led_brightness = incomingXGIP.getData()[2]; // 2 - brightness (ignored for now)
+            set_player_led(report_led_mode ? 1 : 0);
         }
         else if (command == GIP_CMD_RUMBLE)
         {
-            // TODO: rumble
+            if (incomingXGIP.getDataLength() >= sizeof(GipRumble_t))
+            {
+                const GipRumble_t *rumble = (const GipRumble_t *)incomingXGIP.getData();
+                uint8_t left = 0;
+                uint8_t right = 0;
+                if (rumble->flags & 0x08)
+                {
+                    left = (rumble->leftMotor <= 100) ? (rumble->leftMotor * 255 / 100) : rumble->leftMotor;
+                }
+                if (rumble->flags & 0x04)
+                {
+                    right = (rumble->rightMotor <= 100) ? (rumble->rightMotor * 255 / 100) : rumble->rightMotor;
+                }
+                set_rumble(left, right);
+            }
         }
         else if ((command == GIP_AUTH || command == GIP_FINAL_AUTH))
         {

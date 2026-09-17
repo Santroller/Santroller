@@ -231,6 +231,19 @@ void HIDGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
   // printf("set report %d %d %d\r\n", report_id, report_type, bufsize);
   if (report_type == HID_REPORT_TYPE_OUTPUT)
   {
+    if (report_id == ReportIdGamepad)
+    {
+      if (bufsize >= 5)
+      {
+        uint8_t left = buffer[4] ? buffer[4] : buffer[1];
+        uint8_t right = buffer[2];
+        set_rumble(left, right);
+      }
+      else if (bufsize >= 3)
+      {
+        set_rumble(buffer[1], buffer[2]);
+      }
+    }
     // if the host is asking for capabilities, send them
     if (report_id == ReportIdSantrollerCapabilities)
     {

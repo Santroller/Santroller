@@ -563,6 +563,29 @@ void BtWiiHost::send_player_led(uint8_t led)
     printf("Wiimote send_player_led(0x%02x): status=0x%02x\r\n", led, res);
 }
 
+void BtWiiHost::send_feedback()
+{
+    uint8_t val = (m_rumble ? 0x01 : 0x00);
+    if (m_player == 1) val |= 0x10;
+    else if (m_player == 2) val |= 0x20;
+    else if (m_player == 3) val |= 0x40;
+    else if (m_player == 4) val |= 0x80;
+    m_cmd_buf[0] = val;
+    hid_host_send_report(m_cid, WIIPROTO_REQ_LED, m_cmd_buf, 1);
+}
+
+void BtWiiHost::set_rumble(uint8_t left, uint8_t right)
+{
+    m_rumble = (left > 0 || right > 0);
+    send_feedback();
+}
+
+void BtWiiHost::set_player_led(uint8_t player)
+{
+    m_player = player;
+    send_feedback();
+}
+
 void BtWiiHost::on_connected()
 {
     BluetoothHostInterface::on_connected();

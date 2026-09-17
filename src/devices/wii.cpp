@@ -79,3 +79,13 @@ bool WiiDevice::using_pin(uint8_t pin)
 {
     return pin == m_device.i2c.scl || pin == m_device.i2c.sda;
 }
+
+void WiiDevice::set_euphoria_led(bool state)
+{
+    m_extension.setEuphoriaLed(state);
+}
+
+bool WiiDevice::has_euphoria_led() const
+{
+    return m_extension.mType == WiiDjHeroTurntable;
+}

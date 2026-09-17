@@ -22,6 +22,8 @@ public:
     void rescan(bool first);
     bool using_pin(uint8_t pin);
     void save_reload_state(DeviceReloadState& state) const override;
+    void set_rumble(uint8_t left, uint8_t right) override;
+    bool has_rumble() const override;
 
 private:
     PSXController m_controller;

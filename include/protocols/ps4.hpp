@@ -1,6 +1,13 @@
 #pragma once
 #include <stdint.h>
 
+static const uint8_t ps4_colors[4][3] = {
+    {0x00, 0x00, 0x40}, /* Blue */
+    {0x40, 0x00, 0x00}, /* Red */
+    {0x00, 0x40, 0x00}, /* Green */
+    {0x20, 0x00, 0x20}  /* Pink */
+};
+
 typedef struct {
     uint8_t report_id; /* 0x5 */
     uint8_t valid_flag0;

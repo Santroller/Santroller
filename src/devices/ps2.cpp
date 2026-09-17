@@ -72,3 +72,13 @@ bool PS2Device::is_ps2_device(PS2ControllerType type)
 {
     return m_lastControllerType == type;
 }
+
+void PS2Device::set_rumble(uint8_t left, uint8_t right)
+{
+    m_controller.set_rumble(left, right);
+}
+
+bool PS2Device::has_rumble() const
+{
+    return m_controller.type == PS2ControllerTypeDualshock || m_controller.type == PS2ControllerTypeDualshock2;
+}

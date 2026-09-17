@@ -177,3 +177,22 @@ uint16_t XInputWirelessGamepadHost::tick_analog(proto_Output &type)
 {
     return xinput_tick_analog_impl(m_report_buf, m_subtype, type);
 }
+
+void XInputWirelessGamepadHost::set_rumble(uint8_t left, uint8_t right)
+{
+    if (!m_ep_out || !m_found) return;
+    uint8_t buf[12] = {0x00, 0x01, 0x0f, 0xc0, 0x00, left, right, 0x00, 0x00, 0x00, 0x00, 0x00};
+    send_intr_xfer(m_ep_out, buf, sizeof(buf));
+}
+
+void XInputWirelessGamepadHost::set_player_led(uint8_t player)
+{
+    if (!m_ep_out || !m_found) return;
+    uint8_t led_code = 0;
+    if (player == 1) led_code = 2;
+    else if (player == 2) led_code = 3;
+    else if (player == 3) led_code = 4;
+    else if (player == 4) led_code = 5;
+    uint8_t buf[12] = {0x00, 0x00, 0x08, (uint8_t)(0x40 + led_code), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    send_intr_xfer(m_ep_out, buf, sizeof(buf));
+}

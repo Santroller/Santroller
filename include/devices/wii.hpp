@@ -18,6 +18,8 @@ public:
     bool is_wii_extension(WiiExtType type);
     bool using_pin(uint8_t pin);
     void save_reload_state(DeviceReloadState& state) const override;
+    void set_euphoria_led(bool state) override;
+    bool has_euphoria_led() const override;
 
 private:
     WiiExtension m_extension;

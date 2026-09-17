@@ -55,7 +55,7 @@ static const uint8_t commandEnterConfig[] = {0x01, 0x43, 0x00, 0x01, 0x5A,
                                              0x5A, 0x5A, 0x5A, 0x5A};
 static const uint8_t commandExitConfig[] = {0x01, 0x43, 0x00, 0x00, 0x5A,
                                             0x5A, 0x5A, 0x5A, 0x5A};
-static const uint8_t commandEnableRumble[] = {0x01, 0x4d, 0x00, 0x01, 0xff,
+static const uint8_t commandEnableRumble[] = {0x01, 0x4d, 0x00, 0x00, 0x01,
                                               0xff, 0xff, 0xff, 0xff};
 static const uint8_t commandGetStatus[] = {0x01, 0x45, 0x00, 0x00, 0x5A,
                                            0x5A, 0x5A, 0x5A, 0x5A};
@@ -229,6 +229,10 @@ void PSXController::process_data(bool ack, bool timeout)
             auto_shift_data(commandPollInput, sizeof(commandPollInput));
             return;
         case ENABLE_ANALOG_MODE:
+            status = ENABLE_RUMBLE;
+            auto_shift_data(commandEnableRumble, sizeof(commandEnableRumble));
+            return;
+        case ENABLE_RUMBLE:
             status = ENABLE_PRESSURES;
             auto_shift_data(commandSetPressures, sizeof(commandSetPressures));
             return;
@@ -330,7 +334,12 @@ void PSXController::process_data(bool ack, bool timeout)
             }
             break;
         }
-        auto_shift_data(commandPollInput, sizeof(commandPollInput));
+        m_poll_cmd[0] = 0x01;
+        m_poll_cmd[1] = 0x42;
+        m_poll_cmd[2] = 0x00;
+        m_poll_cmd[3] = m_rumble_small ? 0x01 : 0x00;
+        m_poll_cmd[4] = m_rumble_large;
+        auto_shift_data(m_poll_cmd, sizeof(m_poll_cmd));
         return;
     }
 
@@ -629,4 +638,9 @@ bool PSXController::controller_valid()
 }
 void PSXController::tick()
 {
+}
+void PSXController::set_rumble(uint8_t left, uint8_t right)
+{
+    m_rumble_large = left;
+    m_rumble_small = right ? 1 : 0;
 }

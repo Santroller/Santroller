@@ -21,8 +21,15 @@ public:
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info);
     bool tick_digital(proto_Output& type);
     uint16_t tick_analog(proto_Output& type);
+    void set_rumble(uint8_t left, uint8_t right) override;
+    void set_player_led(uint8_t player) override;
+    bool has_rumble() const override { return true; }
+    bool has_player_led() const override { return true; }
 
 private:
+    uint8_t m_rumble_left = 0;
+    uint8_t m_rumble_right = 0;
+    uint8_t m_packet_counter = 0;
     void send_handshake_step();
 
     bool m_is_switch2 = false;

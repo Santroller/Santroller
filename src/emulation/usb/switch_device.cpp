@@ -233,6 +233,25 @@ uint16_t SwitchGamepadDevice::get_report(uint8_t report_id, hid_report_type_t re
     return 0;
 }
 
+static inline uint8_t decode_switch_rumble(const uint8_t *data)
+{
+    if (data[0] == 0x00 && data[1] == 0x01 && data[2] == 0x40 && data[3] == 0x40)
+    {
+        return 0;
+    }
+    uint8_t hf_amp = data[1] & 0xFE;
+    uint8_t lf_amp = 0;
+    if (data[2] & 0x80)
+    {
+        lf_amp = 128 + ((data[3] & 0x7F) >> 1);
+    }
+    else if (data[3] > 0x40)
+    {
+        lf_amp = (data[3] - 0x40) * 2;
+    }
+    return (hf_amp > lf_amp) ? hf_amp : lf_amp;
+}
+
 void SwitchGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
     if (report_type != HID_REPORT_TYPE_OUTPUT)
@@ -246,8 +265,23 @@ void SwitchGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report
     if (switchReportID == SwitchReportID::REPORT_OUTPUT_00)
     {
     }
+    else if (switchReportID == SwitchReportID::REPORT_OUTPUT_10)
+    {
+        if (bufsize >= 10)
+        {
+            uint8_t left = decode_switch_rumble(buffer + 2);
+            uint8_t right = decode_switch_rumble(buffer + 6);
+            set_rumble(left, right);
+        }
+    }
     else if (switchReportID == SwitchReportID::REPORT_FEATURE)
     {
+        if (bufsize >= 10)
+        {
+            uint8_t left = decode_switch_rumble(buffer + 2);
+            uint8_t right = decode_switch_rumble(buffer + 6);
+            set_rumble(left, right);
+        }
         queuedReportID = report_id;
         handleFeatureReport(switchReportID, switchReportSubID, buffer, bufsize);
     }
@@ -414,6 +448,16 @@ void SwitchGamepadDevice::handleFeatureReport(uint8_t switchReportID, uint8_t sw
         break;
     case SwitchCommands::SET_PLAYER_LIGHTS:
         playerID = reportData[11];
+        {
+            uint8_t p = 0;
+            uint8_t mask = playerID & 0x0F;
+            if (mask == 0x01) p = 1;
+            else if (mask == 0x02 || mask == 0x03) p = 2;
+            else if (mask == 0x04 || mask == 0x07) p = 3;
+            else if (mask == 0x08 || mask == 0x0F) p = 4;
+            else if (mask > 0) p = 1;
+            set_player_led(p);
+        }
         report[13] = 0x80;
         report[14] = commandID;
         canSend = true;

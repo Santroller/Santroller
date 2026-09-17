@@ -578,3 +578,66 @@ uint16_t Ps3Host::tick_analog(proto_Output &type)
 {
     return ps3_tick_analog(m_ep_in_buf, m_subtype, m_third_party, type);
 }
+
+bool Ps3Host::send_ps3_output()
+{
+    if (m_subtype == DjHeroTurntable)
+    {
+        ps3_turntable_output_report_t rep = {};
+        rep.outputType = 0x91;
+        rep.enable = m_euphoria ? 1 : 0;
+        if (m_ep_out)
+        {
+            return send_intr_xfer(m_ep_out, &rep, sizeof(rep));
+        }
+        return set_report(rep.outputType, HID_REPORT_TYPE_OUTPUT, (uint8_t *)&rep, sizeof(rep));
+    }
+
+    ps3_output_report rep = {};
+    rep.report_id = 0x01;
+    rep.rumble.right_duration = 0xFF;
+    rep.rumble.right_motor_on = m_rumble_right ? 1 : 0;
+    rep.rumble.left_duration = 0xFF;
+    rep.rumble.left_motor_force = m_rumble_left;
+
+    if (m_player >= 1 && m_player <= 4)
+    {
+        rep.leds_bitmap = (1 << m_player); // LED 1 = 0x02, LED 2 = 0x04, LED 3 = 0x08, LED 4 = 0x10
+    }
+    for (int i = 0; i < 4; i++)
+    {
+        rep.led[i].time_enabled = 0xFF;
+        rep.led[i].duty_length = 0;
+        rep.led[i].enabled = 1;
+        rep.led[i].duty_off = 0;
+        rep.led[i].duty_on = 0xFF;
+    }
+
+    if (m_ep_out)
+    {
+        return send_intr_xfer(m_ep_out, &rep, sizeof(rep));
+    }
+    return set_report(rep.report_id, HID_REPORT_TYPE_OUTPUT, (uint8_t *)&rep, sizeof(rep));
+}
+
+void Ps3Host::set_rumble(uint8_t left, uint8_t right)
+{
+    m_rumble_left = left;
+    m_rumble_right = right;
+    send_ps3_output();
+}
+
+void Ps3Host::set_player_led(uint8_t player)
+{
+    m_player = player;
+    send_ps3_output();
+}
+
+void Ps3Host::set_euphoria_led(bool state)
+{
+    m_euphoria = state;
+    if (m_subtype == DjHeroTurntable)
+    {
+        send_ps3_output();
+    }
+}

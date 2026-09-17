@@ -313,3 +313,72 @@ uint16_t SwitchHost::tick_analog(proto_Output& type)
     }
     return switch_tick_analog(m_ep_in_buf, type);
 }
+
+static inline void encode_switch_rumble_data(uint8_t amp, uint8_t *data)
+{
+    if (amp == 0)
+    {
+        data[0] = 0x00;
+        data[1] = 0x01;
+        data[2] = 0x40;
+        data[3] = 0x40;
+        return;
+    }
+    uint8_t hf_amp = amp;
+    data[0] = 0x00;
+    data[1] = (hf_amp & 0xFE) | 0x01;
+    data[2] = 0x40;
+    data[3] = 0x40 + (amp >> 1);
+}
+
+void SwitchHost::set_rumble(uint8_t left, uint8_t right)
+{
+    m_rumble_left = left;
+    m_rumble_right = right;
+    if (!m_ep_out) return;
+
+    uint8_t buf[10] = {};
+    buf[0] = 0x10;
+    buf[1] = m_packet_counter++ & 0x0F;
+    encode_switch_rumble_data(left, buf + 2);
+    encode_switch_rumble_data(right, buf + 6);
+
+    if (usbh_edpt_claim(m_dev_addr, m_ep_out))
+    {
+        memcpy(m_ep_out_buf, buf, sizeof(buf));
+        if (!usbh_edpt_xfer(m_dev_addr, m_ep_out, m_ep_out_buf, sizeof(buf)))
+        {
+            usbh_edpt_release(m_dev_addr, m_ep_out);
+            return;
+        }
+    }
+}
+
+void SwitchHost::set_player_led(uint8_t player)
+{
+    if (!m_ep_out) return;
+
+    uint8_t mask = 0;
+    if (player == 1) mask = 0x01;
+    else if (player == 2) mask = 0x03;
+    else if (player == 3) mask = 0x07;
+    else if (player == 4) mask = 0x0F;
+
+    uint8_t buf[12] = {};
+    buf[0] = 0x01;
+    buf[1] = m_packet_counter++ & 0x0F;
+    encode_switch_rumble_data(m_rumble_left, buf + 2);
+    encode_switch_rumble_data(m_rumble_right, buf + 6);
+    buf[10] = 0x30;
+    buf[11] = mask;
+
+    if (usbh_edpt_claim(m_dev_addr, m_ep_out))
+    {
+        memcpy(m_ep_out_buf, buf, sizeof(buf));
+        if (!usbh_edpt_xfer(m_dev_addr, m_ep_out, m_ep_out_buf, sizeof(buf)))
+        {
+            usbh_edpt_release(m_dev_addr, m_ep_out);
+            return;
+        }
+    }
+}

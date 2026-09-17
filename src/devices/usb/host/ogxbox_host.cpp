@@ -134,3 +134,10 @@ uint16_t OGXboxHost::tick_analog(proto_Output& type)
 
     return 0;
 }
+
+void OGXboxHost::set_rumble(uint8_t left, uint8_t right)
+{
+    if (!m_ep_out) return;
+    OGXboxOutput_Report_t rep = {0x00, 0x06, (uint16_t)(left << 8 | left), (uint16_t)(right << 8 | right)};
+    send_intr_xfer(m_ep_out, &rep, sizeof(rep));
+}

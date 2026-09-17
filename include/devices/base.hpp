@@ -89,6 +89,14 @@ public:
     virtual void rescan(bool first);
     virtual void handle_command(proto_Command command) {};
     virtual void save_reload_state(DeviceReloadState &state) const { state.valid = true; }
+    virtual void set_rumble(uint8_t left, uint8_t right) {}
+    virtual void set_player_led(uint8_t player) {}
+    virtual void set_lightbar(uint8_t r, uint8_t g, uint8_t b) {}
+    virtual void set_euphoria_led(bool state) {}
+    virtual bool has_rumble() const { return false; }
+    virtual bool has_player_led() const { return false; }
+    virtual bool has_euphoria_led() const { return false; }
+    virtual bool has_lightbar() const { return false; }
     uint16_t m_id;
     bool still_connected = false;
 

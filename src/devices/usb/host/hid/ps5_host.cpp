@@ -423,3 +423,46 @@ uint16_t Ps5Host::tick_analog(proto_Output& type)
 {
     return ps5_tick_analog(m_ep_in_buf, m_subtype, false, type);
 }
+
+bool Ps5Host::send_ps5_output()
+{
+    ps5_output_report rep = {};
+    rep.report_id = 0x02;
+    rep.vibration_flag = 1;
+    rep.light_bar_flag = 1;
+    rep.player_indicator_flag = 1;
+    rep.motor_left = m_rumble_left;
+    rep.motor_right = m_rumble_right;
+    rep.lightbar_red = m_lightbar_r;
+    rep.lightbar_green = m_lightbar_g;
+    rep.lightbar_blue = m_lightbar_b;
+    rep.player_indicator = m_player_indicator;
+
+    if (m_ep_out)
+    {
+        return send_intr_report(&rep, sizeof(rep));
+    }
+    return set_report(rep.report_id, HID_REPORT_TYPE_OUTPUT, (uint8_t *)&rep, sizeof(rep));
+}
+
+void Ps5Host::set_rumble(uint8_t left, uint8_t right)
+{
+    m_rumble_left = left;
+    m_rumble_right = right;
+    send_ps5_output();
+}
+
+void Ps5Host::set_lightbar(uint8_t r, uint8_t g, uint8_t b)
+{
+    m_lightbar_r = r;
+    m_lightbar_g = g;
+    m_lightbar_b = b;
+    send_ps5_output();
+}
+
+void Ps5Host::set_player_led(uint8_t player)
+{
+    static const uint8_t ps5_leds[] = {0x00, 0x04, 0x0A, 0x15, 0x1B};
+    m_player_indicator = (player <= 4) ? ps5_leds[player] : 0;
+    send_ps5_output();
+}

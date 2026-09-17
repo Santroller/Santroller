@@ -292,6 +292,11 @@ public:
         return m_decoder.mType == type;
     }
 
+    void set_rumble(uint8_t left, uint8_t right) override;
+    void set_player_led(uint8_t player) override;
+    bool has_rumble() const override { return true; }
+    bool has_player_led() const override { return true; }
+
     WiiExtensionDecoder m_decoder;
 
 private:
@@ -301,8 +306,11 @@ private:
     void send_read_extension_id();
     void send_report_mode(uint8_t mode);
     void send_player_led(uint8_t led);
+    void send_feedback();
 
     bool m_is_pro;
+    uint8_t m_player = 0;
+    bool m_rumble = false;
     uint8_t m_wii_buttons[2] = {};
     uint8_t m_fsm_state = 0;
     bool m_has_ext = false;

@@ -254,3 +254,36 @@ void XboxWirelessController::process_gip_data(const uint8_t *data, uint16_t len)
     gip_device_process_incoming(&controller->gip_device, data, len);
 }
 
+void XboxWirelessController::set_rumble(uint8_t left, uint8_t right)
+{
+    xbox_controller_t *controller = get_controller_data();
+    if (!controller || controller->status != XBOX_CONTROLLER_READY)
+    {
+        return;
+    }
+    GipRumble_t rumble = {};
+    rumble.flags = 0x0C;
+    rumble.leftMotor = (uint16_t)left * 100 / 255;
+    rumble.rightMotor = (uint16_t)right * 100 / 255;
+    rumble.duration = (left || right) ? 0xFF : 0;
+
+    controller->gip_device.outgoing_xgip->reset();
+    controller->gip_device.outgoing_xgip->setCommand(GIP_CMD_RUMBLE);
+    controller->gip_device.outgoing_xgip->setData((uint8_t *)&rumble, sizeof(rumble));
+    send_report_from_host(controller->gip_device.outgoing_xgip);
+}
+
+void XboxWirelessController::set_player_led(uint8_t player)
+{
+    xbox_controller_t *controller = get_controller_data();
+    if (!controller || controller->status != XBOX_CONTROLLER_READY)
+    {
+        return;
+    }
+    uint8_t data[3] = {0x00, (uint8_t)(player ? 0x01 : 0x00), 0x14};
+    controller->gip_device.outgoing_xgip->reset();
+    controller->gip_device.outgoing_xgip->setCommand(GIP_CMD_LED_ON);
+    controller->gip_device.outgoing_xgip->setData(data, sizeof(data));
+    send_report_from_host(controller->gip_device.outgoing_xgip);
+}
+

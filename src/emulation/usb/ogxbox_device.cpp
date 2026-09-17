@@ -90,8 +90,11 @@ bool OGXboxGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, 
     // Output report
     if (XFER_RESULT_SUCCESS == result)
     {
-        // TODO: rumble
-        // return dev->interrupt_received(xferred_bytes);
+        if (xferred_bytes >= sizeof(OGXboxOutput_Report_t))
+        {
+            auto const *report = (OGXboxOutput_Report_t const *)epout_buf;
+            set_rumble(report->left >> 8, report->right >> 8);
+        }
     }
 
     // prepare for new transfer

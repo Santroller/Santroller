@@ -241,6 +241,13 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
     {
         switch (spi->dma_buf[1])
         {
+        case 0x42:
+            if (!spi->configMode)
+            {
+                spi->rumble_small = spi->dma_buf[3];
+                spi->rumble_large = spi->dma_buf[4];
+            }
+            break;
         case 0x43:
             spi->c46_state = 0;
             spi->c4c_state = 0;

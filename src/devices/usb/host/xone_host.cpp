@@ -1,5 +1,6 @@
 #include "tusb_option.h"
 #include "devices/usb/host/xone_host.h"
+#include "xgip_protocol.h"
 #include "usb/auth_broker.h"
 #include "class/hid/hid.h"
 #include "host/usbh.h"
@@ -285,4 +286,27 @@ uint16_t XboxOneHost::tick_analog(proto_Output &type)
 {
     // Use shared GIP axis mapping with shared device raw input
     return gip_tick_analog(m_gip_device.raw_input, m_subtype, &type);
+}
+
+void XboxOneHost::set_rumble(uint8_t left, uint8_t right)
+{
+    GipRumble_t rumble = {};
+    rumble.flags = 0x0C;
+    rumble.leftMotor = (uint16_t)left * 100 / 255;
+    rumble.rightMotor = (uint16_t)right * 100 / 255;
+    rumble.duration = (left || right) ? 0xFF : 0;
+
+    m_gip_device.outgoing_xgip->reset();
+    m_gip_device.outgoing_xgip->setCommand(GIP_CMD_RUMBLE);
+    m_gip_device.outgoing_xgip->setData((uint8_t *)&rumble, sizeof(rumble));
+    send_report_from_host(m_gip_device.outgoing_xgip);
+}
+
+void XboxOneHost::set_player_led(uint8_t player)
+{
+    uint8_t data[3] = {0x00, (uint8_t)(player ? 0x01 : 0x00), 0x14};
+    m_gip_device.outgoing_xgip->reset();
+    m_gip_device.outgoing_xgip->setCommand(GIP_CMD_LED_ON);
+    m_gip_device.outgoing_xgip->setData(data, sizeof(data));
+    send_report_from_host(m_gip_device.outgoing_xgip);
 }

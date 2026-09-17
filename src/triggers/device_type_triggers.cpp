@@ -1,5 +1,6 @@
 #include "triggers/device_type_triggers.hpp"
 #include "managers/device_manager.hpp"
+#include "managers/profile_manager.hpp"
 
 #include "tusb.h"
 #include "emulation/usb/usb_descriptors.h"
@@ -13,6 +14,18 @@ static void claim_profile_device(Profile *profile, const std::shared_ptr<Device>
 {
     printf("Claiming profile device: profile=%d (%p) device=%d (%p)\n", profile->profile_id, profile, device->m_id, device.get());
     profile->devices[device->m_id] = device;
+    auto instances = ProfileManager::instance().get_instances_for_profile(profile->profile_id);
+    for (const auto &inst : instances)
+    {
+        if (inst)
+        {
+            device->set_player_led(inst->player_led);
+            device->set_rumble(inst->rumble_left, inst->rumble_right);
+            device->set_lightbar(inst->lightbar_red, inst->lightbar_green, inst->lightbar_blue);
+            device->set_euphoria_led(inst->euphoria_led > 0);
+            inst->update_capabilities();
+        }
+    }
 }
 
 template <typename Predicate>

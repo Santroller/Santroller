@@ -54,6 +54,7 @@ public:
     void copyAttributes(XGIPProtocol *packet);                                                           // Copy attributes from incoming packet
     void incrementSequence();                                                                            // Add 1 to sequence
     void setSequence(uint8_t seq);                                                                       // Set sequence directly
+    void setCommand(uint8_t cmd) { header.command = cmd; }
     bool setData(const uint8_t *data, uint16_t len);                                                     // Set data (buf and length)
     uint8_t *generatePacket();                                                                           // Generate output packet (chunk will generate on-going packet)
     uint8_t *generateAckPacket();                                                                        // Generate an ack for the last received packet

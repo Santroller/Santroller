@@ -34,10 +34,10 @@ public:
     void save_state(DeviceReloadState& state) const ;
     void tick();
     void process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
+    void setEuphoriaLed(bool state);
 
 private:
     bool verifyData(const uint8_t *dataIn, uint8_t dataSize);
-    void setEuphoriaLed(bool state);
     I2CMasterInterface mInterface;
     bool mFound;
     bool nextEuphoriaLedState = false;

@@ -117,9 +117,9 @@ void bt_host_update_interfaces(bool full_poll, bool send_events)
             m_devices_changed = millis() + 500;
             bt_host_save_pairing(device, device->is_ble());
         }
-        else if (millis() - device->connected_at() > 2000)
+        else if (millis() - device->connected_at() > 3000)
         {
-            printf("BT device %lu timed out waiting for capabilities, defaulting to subtype=%d\r\n",
+            printf("BT device %lu timed out waiting for descriptor/readiness, defaulting to subtype=%d\r\n",
                    (unsigned long)device->source_id(), (int)device->subtype());
             device->handle_feature_report_failed();
             it = bt_pending_interfaces.erase(it);

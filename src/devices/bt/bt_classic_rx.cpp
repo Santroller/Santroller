@@ -20,6 +20,7 @@
 #include "config/device_factory.hpp"
 #include "devices/bluetooth.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
+#include "emulation/usb/usb_devices.h"
 
 // ---------------------------------------------------------------------------
 // Global state
@@ -504,17 +505,26 @@ static bool upgrade_to_ps4(uint16_t cid, std::shared_ptr<BluetoothHostInterface>
     printf("Upgrading BT Classic host on cid=0x%04x to BtDs4Host\r\n", cid);
     uint16_t vid = old_host->m_vid ? old_host->m_vid : SONY_VID;
     uint16_t pid = old_host->m_pid ? old_host->m_pid : SONY_DS4_PID_1;
-    SubType sub = (old_host->subtype() != SubType_Gamepad && old_host->subtype() != SubType_Unknown)
-                      ? old_host->subtype()
-                      : SubType_Gamepad;
+    bool is_inst = (vid == MADCATZ_VID && (pid == PS4_STRAT_PID || pid == PS4_MADCATZ_DRUM_PID)) ||
+                   (vid == PDP_VID && pid == PS4_JAG_PID);
+    SubType sub = SubType_Gamepad;
+    if (is_inst)
+    {
+        sub = (vid == MADCATZ_VID && pid == PS4_MADCATZ_DRUM_PID) ? RockBandDrums : RockBandGuitar;
+    }
+    else if (old_host->subtype() != SubType_Gamepad && old_host->subtype() != SubType_Unknown)
+    {
+        sub = old_host->subtype();
+    }
+
     auto new_host = std::make_shared<BtDs4Host>(
         BluetoothStack::instance().device_id(),
         sub,
-        true,  // third_party
-        false, // sensors
-        false, // lightbar
-        false, // vibration
-        false, // touchpad
+        is_inst,  // third_party
+        !is_inst, // sensors
+        !is_inst, // lightbar
+        !is_inst, // vibration
+        !is_inst, // touchpad
         vid,
         pid);
     memcpy(new_host->m_addr, old_host->m_addr, 6);
@@ -529,7 +539,6 @@ static bool upgrade_to_ps4(uint16_t cid, std::shared_ptr<BluetoothHostInterface>
     bt_connections[cid] = new_host;
     new_host->on_connected();
     bt_host_add_interface(new_host);
-    new_host->request_capabilities();
     return true;
 }
 
@@ -541,14 +550,15 @@ static bool upgrade_to_ps5(uint16_t cid, std::shared_ptr<BluetoothHostInterface>
     SubType sub = (old_host->subtype() != SubType_Gamepad && old_host->subtype() != SubType_Unknown)
                       ? old_host->subtype()
                       : SubType_Gamepad;
+
     auto new_host = std::make_shared<BtDs5Host>(
         BluetoothStack::instance().device_id(),
         sub,
-        true,  // third_party
-        false, // sensors
-        false, // lightbar
-        false, // vibration
-        false, // touchpad
+        false, // third_party
+        true,  // sensors
+        true,  // lightbar
+        true,  // vibration
+        true,  // touchpad
         vid,
         pid);
     memcpy(new_host->m_addr, old_host->m_addr, 6);
@@ -563,7 +573,6 @@ static bool upgrade_to_ps5(uint16_t cid, std::shared_ptr<BluetoothHostInterface>
     bt_connections[cid] = new_host;
     new_host->on_connected();
     bt_host_add_interface(new_host);
-    new_host->request_capabilities();
     return true;
 }
 

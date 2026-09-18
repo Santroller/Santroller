@@ -89,10 +89,7 @@ public:
         m_vid = vid;
         m_pid = pid;
         m_subtype = subtype;
-        if (m_third_party)
-        {
-            m_ready = false;
-        }
+        m_ready = true;
     }
     ~BtDs4Host() {}
 
@@ -139,10 +136,7 @@ public:
         m_vid = vid;
         m_pid = pid;
         m_subtype = subtype;
-        if (m_third_party)
-        {
-            m_ready = false;
-        }
+        m_ready = true;
     }
     ~BtDs5Host() {}
 

@@ -121,6 +121,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
     {
         USB_FreeReportInfo(info);
         auto intf = std::make_shared<Ps5Host>(dev_addr, itf_desc->bInterfaceNumber, list->m_id);
+        bool auth_only = vid == 0x2b81 && pid == 0x0101;
         intf->m_third_party = isThirdParty;
         if (isThirdParty)
         {
@@ -178,7 +179,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
         printf("ps5 host found!\r\n");
         
         // Register as auth provider for official PS5 controller
-        if (!auth_broker.has_handler(ModePs5) && vid == 0x2b81 && pid == 0x0101)
+        if (!auth_broker.has_handler(ModePs5) && auth_only)
         {
             auth_broker.register_handler(ModePs5, [intf](XGIPProtocol* packet) {
                 // PS5 doesn't use XGIP, this is just for interface compatibility
@@ -186,6 +187,11 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
             // Also register the device itself for HID feature report auth
             auth_broker.register_auth_device(ModePs5, intf);
             intf->m_auth_registered = true;
+        }
+
+        if (auth_only)
+        {
+            usb_host_add_enumerating_interface(intf);
         }
         else
         {

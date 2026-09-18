@@ -8,6 +8,7 @@
 #include "protocols/ps4.hpp"
 #include "protocols/switch.hpp"
 #include "utils.h"
+#include "emulation/usb/usb_devices.h"
 
 void reload();
 
@@ -105,15 +106,6 @@ void BtDs4Host::on_connected()
 
 void BtDs4Host::request_capabilities()
 {
-    if (m_third_party && m_cid && !m_ready && !m_capabilities_requested)
-    {
-        uint8_t ret = hid_host_send_get_report_with_size(m_cid, HID_REPORT_TYPE_FEATURE, 0x03, 48);
-        printf("Requesting PS4 3rd-party feature report: ret: %d\r\n", ret);
-        if (ret == ERROR_CODE_SUCCESS)
-        {
-            m_capabilities_requested = true;
-        }
-    }
 }
 
 void BtDs4Host::handle_feature_report(const uint8_t *data, uint16_t len)
@@ -143,7 +135,7 @@ void BtDs4Host::handle_feature_report(const uint8_t *data, uint16_t len)
         }
         else
         {
-            printf("PS4 3rd-party capabilities: parse failed, defaulting to subtype=%d\r\n", (int)m_subtype);
+            printf("PS4 3rd-party capabilities: parse failed, keeping subtype=%d\r\n", (int)m_subtype);
         }
         m_ready = true;
     }
@@ -194,15 +186,6 @@ void BtDs5Host::on_connected()
 
 void BtDs5Host::request_capabilities()
 {
-    if (m_third_party && m_cid && !m_ready && !m_capabilities_requested)
-    {
-        uint8_t ret = hid_host_send_get_report_with_size(m_cid, HID_REPORT_TYPE_FEATURE, 0x03, 48);
-        printf("Requesting PS5 3rd-party feature report: ret: %d\r\n", ret);
-        if (ret == ERROR_CODE_SUCCESS)
-        {
-            m_capabilities_requested = true;
-        }
-    }
 }
 
 void BtDs5Host::handle_feature_report(const uint8_t *data, uint16_t len)
@@ -885,51 +868,37 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
         if (info) USB_FreeReportInfo(info);
         host = std::make_shared<BtDs3Host>(device_id);
     }
-    // DS4 / DualShock 4 — first-party
-    else if (vid == SONY_VID && (pid == SONY_DS4_PID_1 || pid == SONY_DS4_PID_2 || pid == SONY_DS4_PID_3))
+    // DS4 instruments
+    else if ((vid == MADCATZ_VID && (pid == PS4_STRAT_PID || pid == PS4_MADCATZ_DRUM_PID)) ||
+             (vid == PDP_VID && pid == PS4_JAG_PID))
     {
+        SubType sub = (vid == MADCATZ_VID && pid == PS4_MADCATZ_DRUM_PID) ? RockBandDrums : RockBandGuitar;
         if (info) USB_FreeReportInfo(info);
-        host = std::make_shared<BtDs4Host>(device_id, SubType_Gamepad,
-                                           false, true, true, true, true,
+        host = std::make_shared<BtDs4Host>(device_id, sub,
+                                           true, false, false, false, false,
                                            vid, pid);
     }
-    // DS4 3rd-party (PS4 usage page detected by hidparser, or known controller_type / subtype)
-    else if ((info && info->foundPS4Usage) ||
+    // DS4 / DualShock 4 gamepads (first-party or clones/generic DS4)
+    else if ((vid == SONY_VID && (pid == SONY_DS4_PID_1 || pid == SONY_DS4_PID_2 || pid == SONY_DS4_PID_3)) ||
+             (info && info->foundPS4Usage) ||
              known_controller_type == BtControllerType_BtControllerTypePS4 ||
              (known_subtype != SubType_Unknown && (vid == SONY_VID || (info && info->foundPS4Usage))))
     {
         SubType sub = (known_subtype != SubType_Unknown) ? known_subtype : SubType_Gamepad;
-        auto ds4 = std::make_shared<BtDs4Host>(device_id, sub,
-                                               true, false, false, false, false,
-                                               vid, pid);
-        if (known_ready)
-        {
-            ds4->set_ready(true);
-        }
         if (info) USB_FreeReportInfo(info);
-        host = ds4;
-    }
-    // DS5 / DualSense — first-party
-    else if (vid == SONY_VID && (pid == SONY_DS5_PID || pid == SONY_DS5_EDGE_PID))
-    {
-        if (info) USB_FreeReportInfo(info);
-        host = std::make_shared<BtDs5Host>(device_id, SubType_Gamepad,
+        host = std::make_shared<BtDs4Host>(device_id, sub,
                                            false, true, true, true, true,
                                            vid, pid);
     }
-    // DS5 3rd-party (PS5 usage page detected by hidparser or known controller_type)
-    else if ((info && info->foundPS5Usage) || known_controller_type == BtControllerType_BtControllerTypePS5)
+    // DS5 / DualSense gamepads
+    else if ((vid == SONY_VID && (pid == SONY_DS5_PID || pid == SONY_DS5_EDGE_PID)) ||
+             (info && info->foundPS5Usage) || known_controller_type == BtControllerType_BtControllerTypePS5)
     {
         SubType sub = (known_subtype != SubType_Unknown) ? known_subtype : SubType_Gamepad;
-        auto ds5 = std::make_shared<BtDs5Host>(device_id, sub,
-                                               true, false, false, false, false,
-                                               vid, pid);
-        if (known_ready)
-        {
-            ds5->set_ready(true);
-        }
         if (info) USB_FreeReportInfo(info);
-        host = ds5;
+        host = std::make_shared<BtDs5Host>(device_id, sub,
+                                           false, true, true, true, true,
+                                           vid, pid);
     }
     // Switch Pro Controller & Joy-Cons & Switch 2 (matched by VID/PID or name for clones)
     else if ((vid == NINTENDO_VID && (pid == SWITCH_PRO_PID || pid == SWITCH_JOYCON_L_PID ||

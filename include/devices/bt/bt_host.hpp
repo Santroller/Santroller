@@ -55,7 +55,7 @@ public:
         memcpy(m_report_buf, data, copy_len);
     }
 
-    // Called when a feature report response arrives (e.g. PS4/PS5 capabilities)
+    // Called when a feature report response arrives
     virtual void handle_feature_report(const uint8_t *data, uint16_t len) {}
     virtual void handle_feature_report_failed() { m_ready = true; }
     virtual void request_capabilities() {}

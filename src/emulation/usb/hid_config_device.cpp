@@ -25,7 +25,8 @@
 static const char version[] = GIT_HASH;
 static const char type[] = PICO_BOARD;
 static constexpr uint16_t firmware_upload_report_size = 63;
-static constexpr uint32_t firmware_write_block_size = 256;
+static constexpr uint32_t firmware_write_alignment = 256;
+static constexpr uint32_t firmware_write_block_size = 4096;
 uint8_t const desc_hid_report_config[] =
     {
 
@@ -40,7 +41,7 @@ uint8_t const desc_hid_report_config[] =
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(1, HID_REPORT_ID(ReportIdBootloader)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(63, HID_REPORT_ID(ReportIdGetActiveProfiles)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(63, HID_REPORT_ID(ReportIdUpdateFirmware)),
-        TUD_HID_REPORT_DESC_GENERIC_FEATURE(firmware_upload_report_size, HID_REPORT_ID(ReportIdUploadFirmware)),
+        TUD_HID_REPORT_DESC_GENERIC_OUTPUT(firmware_upload_report_size, HID_REPORT_ID(ReportIdUploadFirmware)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(version) + 1, HID_REPORT_ID(ReportIdGetVersion)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(type) + 1, HID_REPORT_ID(ReportIdGetType)),
         HID_COLLECTION_END};
@@ -51,6 +52,7 @@ HIDConfigDevice::HIDConfigDevice()
 void HIDConfigDevice::initialize()
 {
   m_epin = next_epin();
+  m_epout = next_epout();
 }
 void HIDConfigDevice::process(bool full_poll, bool send_events)
 {
@@ -246,7 +248,7 @@ size_t HIDConfigDevice::compatible_section_descriptor(uint8_t *dest, size_t rema
 
 size_t HIDConfigDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-  uint8_t desc[] = {TUD_HID_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_config), m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+  uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_config), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
   assert(sizeof(desc) <= remaining);
   memcpy(dest, desc, sizeof(desc));
   return sizeof(desc);
@@ -378,7 +380,8 @@ void HIDConfigDevice::handle_command(proto_Command command)
 
 void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
-  if (report_type == HID_REPORT_TYPE_FEATURE)
+  if (report_type == HID_REPORT_TYPE_FEATURE ||
+      (report_type == HID_REPORT_TYPE_OUTPUT && report_id == ReportId::ReportIdUploadFirmware))
   {
     // skip over report id
     buffer++;
@@ -432,10 +435,14 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       {
         uint32_t uploaded = firmware_offset + chunk_offset;
         multicore_lockout_start_blocking();
+        uint32_t write_size =
+            uploaded >= firmware_size
+                ? ((chunk_offset + firmware_write_alignment - 1) / firmware_write_alignment) * firmware_write_alignment
+                : firmware_write_block_size;
         bool write_failed = pfb_write_to_flash_aligned_256_bytes(
             fw_update_tmp,
             firmware_offset,
-            firmware_write_block_size);
+            write_size);
         if (write_failed)
         {
           printf("failed to write update! %02x\r\n", firmware_offset);

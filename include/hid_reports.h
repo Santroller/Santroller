@@ -101,6 +101,15 @@
         HID_REPORT_COUNT(report_size),                        \
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE)
 
+#define TUD_HID_REPORT_DESC_GENERIC_OUTPUT(report_size, ...) \
+    __VA_ARGS__ /* Report ID if any */                       \
+        HID_USAGE(0x04),                                     \
+        HID_LOGICAL_MIN(0x00),                               \
+        HID_LOGICAL_MAX_N(0xff, 2),                          \
+        HID_REPORT_SIZE(8),                                  \
+        HID_REPORT_COUNT(report_size),                       \
+        HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE)
+
 #define TUD_HID_REPORT_DESC_GUITAR_HERO_ARCADE()                                 \
     HID_USAGE_PAGE_N(HID_USAGE_PAGE_DESKTOP, 2),                                 \
         HID_USAGE(HID_USAGE_DESKTOP_JOYSTICK),                                   \

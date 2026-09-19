@@ -94,7 +94,7 @@ private:
   bool profile_changed = false;
   uint16_t last_adc_vals[NUM_ADC_CHANNELS];
   bool last_digital_vals[NUM_BANK0_GPIOS];
-  uint8_t fw_update_tmp[256];
+  uint8_t fw_update_tmp[4096];
   proto_FirmwareUpdate update_state;
 };
 class HIDGamepadDevice : public HIDDevice

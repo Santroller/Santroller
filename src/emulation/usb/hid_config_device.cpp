@@ -20,9 +20,12 @@
 #include "hardware/adc.h"
 #include "math.h"
 #include <pico_fota_bootloader/core.h>
+#include <algorithm>
 
 static const char version[] = GIT_HASH;
 static const char type[] = PICO_BOARD;
+static constexpr uint16_t firmware_upload_report_size = 63;
+static constexpr uint32_t firmware_write_block_size = 256;
 uint8_t const desc_hid_report_config[] =
     {
 
@@ -37,7 +40,7 @@ uint8_t const desc_hid_report_config[] =
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(1, HID_REPORT_ID(ReportIdBootloader)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(63, HID_REPORT_ID(ReportIdGetActiveProfiles)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(63, HID_REPORT_ID(ReportIdUpdateFirmware)),
-        TUD_HID_REPORT_DESC_GENERIC_FEATURE(33, HID_REPORT_ID(ReportIdUploadFirmware)),
+        TUD_HID_REPORT_DESC_GENERIC_FEATURE(firmware_upload_report_size, HID_REPORT_ID(ReportIdUploadFirmware)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(version) + 1, HID_REPORT_ID(ReportIdGetVersion)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(type) + 1, HID_REPORT_ID(ReportIdGetType)),
         HID_COLLECTION_END};
@@ -389,20 +392,58 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       start += bufsize;
       break;
     case ReportId::ReportIdUploadFirmware:
+    {
       tool_seen = true;
-      memcpy(fw_update_tmp + update_state.chunkOffset, buffer + 1, 32);
-      update_state.chunkOffset += 32;
-      if (update_state.chunkOffset == 256)
+      if (update_state.firmwareSize <= 0 ||
+          update_state.offset < 0 ||
+          update_state.chunkOffset < 0 ||
+          update_state.chunkSize <= 0)
       {
+        printf("invalid fw update state\r\n");
+        break;
+      }
+      uint32_t firmware_size = static_cast<uint32_t>(update_state.firmwareSize);
+      uint32_t firmware_offset = static_cast<uint32_t>(update_state.offset);
+      uint32_t chunk_offset = static_cast<uint32_t>(update_state.chunkOffset);
+      if (chunk_offset >= firmware_write_block_size)
+      {
+        printf("invalid fw update chunk offset\r\n");
+        break;
+      }
+      uint32_t uploaded_before = firmware_offset + chunk_offset;
+      if (uploaded_before >= firmware_size)
+      {
+        printf("fw update received data past end\r\n");
+        break;
+      }
+      uint32_t remaining_firmware = firmware_size - uploaded_before;
+      uint32_t remaining_block = firmware_write_block_size - chunk_offset;
+      uint32_t to_copy = std::min<uint32_t>({
+          bufsize,
+          static_cast<uint32_t>(update_state.chunkSize),
+          remaining_block,
+          remaining_firmware,
+      });
+      memcpy(fw_update_tmp + chunk_offset, buffer, to_copy);
+      chunk_offset += to_copy;
+      update_state.chunkOffset = chunk_offset;
+      if (chunk_offset == firmware_write_block_size ||
+          (firmware_offset + chunk_offset) >= firmware_size)
+      {
+        uint32_t uploaded = firmware_offset + chunk_offset;
         multicore_lockout_start_blocking();
-        if (pfb_write_to_flash_aligned_256_bytes(fw_update_tmp, update_state.offset, 256))
+        bool write_failed = pfb_write_to_flash_aligned_256_bytes(
+            fw_update_tmp,
+            firmware_offset,
+            firmware_write_block_size);
+        if (write_failed)
         {
-          printf("failed to write update! %02x\r\n", update_state.offset);
+          printf("failed to write update! %02x\r\n", firmware_offset);
         }
-        if ((update_state.offset + update_state.chunkOffset) >= update_state.firmwareSize)
+        if (!write_failed && uploaded >= firmware_size)
         {
           printf("fw uploaded! checking\r\n");
-          if (pfb_firmware_sha256_check(update_state.firmwareSize))
+          if (pfb_firmware_sha256_check(firmware_size))
           {
             printf("sha failed!\r\n");
           }
@@ -412,12 +453,19 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
             pfb_perform_update();
           }
         }
+        else if (!write_failed)
+        {
+          update_state.offset = uploaded;
+          update_state.chunkOffset = 0;
+          memset(fw_update_tmp, 0, sizeof(fw_update_tmp));
+        }
         multicore_lockout_end_blocking();
       }
       break;
+    }
     case ReportId::ReportIdUpdateFirmware:
     {
-      pb_istream_t inputStream = pb_istream_from_buffer(buffer + 1, bufsize - 1);
+      pb_istream_t inputStream = pb_istream_from_buffer(buffer, bufsize);
       if (!pb_decode_delimited(&inputStream, proto_FirmwareUpdate_fields, &update_state))
       {
         printf("Didn't decode fw update?\r\n");
@@ -427,6 +475,8 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       tool_seen = true;
       if (update_state.offset == 0)
       {
+        update_state.chunkOffset = 0;
+        memset(fw_update_tmp, 0, sizeof(fw_update_tmp));
         multicore_lockout_start_blocking();
         pfb_initialize_download_slot();
         multicore_lockout_end_blocking();

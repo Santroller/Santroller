@@ -27,6 +27,7 @@ static const char type[] = PICO_BOARD;
 static constexpr uint16_t firmware_upload_report_size = 63;
 static constexpr uint32_t firmware_write_alignment = 256;
 static constexpr uint32_t firmware_write_block_size = 4096;
+static bool decode_firmware_update(const uint8_t *buffer, uint16_t bufsize, proto_FirmwareUpdate *update);
 uint8_t const desc_hid_report_config[] =
     {
 
@@ -41,6 +42,7 @@ uint8_t const desc_hid_report_config[] =
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(1, HID_REPORT_ID(ReportIdBootloader)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(63, HID_REPORT_ID(ReportIdGetActiveProfiles)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(63, HID_REPORT_ID(ReportIdUpdateFirmware)),
+        TUD_HID_REPORT_DESC_GENERIC_FEATURE(firmware_upload_report_size, HID_REPORT_ID(ReportIdUploadFirmware)),
         TUD_HID_REPORT_DESC_GENERIC_OUTPUT(firmware_upload_report_size, HID_REPORT_ID(ReportIdUploadFirmware)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(version) + 1, HID_REPORT_ID(ReportIdGetVersion)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(type) + 1, HID_REPORT_ID(ReportIdGetType)),
@@ -397,6 +399,11 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
     case ReportId::ReportIdUploadFirmware:
     {
       tool_seen = true;
+      if (!fw_update_active)
+      {
+        printf("fw update data before metadata\r\n");
+        break;
+      }
       if (update_state.firmwareSize <= 0 ||
           update_state.offset < 0 ||
           update_state.chunkOffset < 0 ||
@@ -472,14 +479,15 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
     }
     case ReportId::ReportIdUpdateFirmware:
     {
-      pb_istream_t inputStream = pb_istream_from_buffer(buffer, bufsize);
-      if (!pb_decode_delimited(&inputStream, proto_FirmwareUpdate_fields, &update_state))
+      if (!decode_firmware_update(buffer, bufsize, &update_state))
       {
         printf("Didn't decode fw update?\r\n");
+        fw_update_active = false;
         break;
       }
       // printf("fw update offset: %02x\r\n", update_state.offset);
       tool_seen = true;
+      fw_update_active = true;
       if (update_state.offset == 0)
       {
         update_state.chunkOffset = 0;
@@ -553,6 +561,21 @@ bool encode_active_profiles(pb_ostream_t *stream, const pb_field_t *field, void 
       ok = false;
     } });
   return ok;
+}
+
+bool decode_firmware_update(const uint8_t *buffer, uint16_t bufsize, proto_FirmwareUpdate *update)
+{
+  for (uint16_t offset = 0; offset < 2 && offset < bufsize; offset++)
+  {
+    proto_FirmwareUpdate decoded = proto_FirmwareUpdate_init_zero;
+    pb_istream_t inputStream = pb_istream_from_buffer(buffer + offset, bufsize - offset);
+    if (pb_decode_delimited(&inputStream, proto_FirmwareUpdate_fields, &decoded))
+    {
+      *update = decoded;
+      return true;
+    }
+  }
+  return false;
 }
 
 uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)

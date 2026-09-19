@@ -92,6 +92,7 @@ private:
   bool just_loaded = false;
   bool profile_selected = false;
   bool profile_changed = false;
+  bool fw_update_active = false;
   uint16_t last_adc_vals[NUM_ADC_CHANNELS];
   bool last_digital_vals[NUM_BANK0_GPIOS];
   uint8_t fw_update_tmp[4096];

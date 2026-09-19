@@ -21,7 +21,7 @@ void gip_default_ack_callback(void *context)
 void gip_default_auth_callback(void *context, const uint8_t *data, uint16_t len)
 {
     gip_device_t *device = (gip_device_t *)context;
-    if (device)
+    if (device && !device->auth_complete_sent)
     {
         gip_send_auth_complete(device);
     }
@@ -39,10 +39,9 @@ void gip_default_arrival_callback(void *context, void (*queue_packet)(void *, co
 }
 
 // Power-on sequence data
-static const uint8_t XBOXONE_POWER_ON[] = {0x06, 0x62, 0x45, 0xb8, 0x77, 0x26, 0x2c, 0x55,
-                                           0x53, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f};
+static const uint8_t XBOXONE_POWER_ON[] = {0x00};
 static const uint8_t XBOXONE_POWER_ON_SINGLE[] = {0x00};
-static const uint8_t XBOXONE_RUMBLE_ON[] = {0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0xeb};
+static const uint8_t XBOXONE_RUMBLE_STOP[] = {0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0xeb};
 static const uint8_t XBOXONE_LED_ON[] = {0x00, 0x01, 0x14}; // 0x01 - LED on, 0x14 - Brightness
 
 static uint16_t read_le16(const uint8_t *data)
@@ -245,23 +244,24 @@ void gip_send_power_on_sequence(gip_device_t *device)
         return;
     }
 
-    // Standard gamepad power on sequence
+    // Standard gamepad power on sequence. Mirrors the generic xpad Xbox One
+    // init packets that keep newer third-party pads in GIP mode.
     uint8_t seq1 = gip_sequence_pool_next(&device->tx_sequence_pools, GIP_POWER_MODE_DEVICE_CONFIG);
     xgip->reset();
     xgip->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, seq1, 1, 0, 0);
     xgip->setData(XBOXONE_POWER_ON, sizeof(XBOXONE_POWER_ON));
     queue(context, xgip->generatePacket(), xgip->getPacketLength());
 
-    uint8_t seq2 = gip_sequence_pool_next(&device->tx_sequence_pools, GIP_POWER_MODE_DEVICE_CONFIG);
+    uint8_t seq2 = gip_sequence_pool_next(&device->tx_sequence_pools, GIP_CMD_LED_ON);
     xgip->reset();
-    xgip->setAttributes(GIP_POWER_MODE_DEVICE_CONFIG, seq2, 1, 0, 0);
-    xgip->setData(XBOXONE_POWER_ON_SINGLE, sizeof(XBOXONE_POWER_ON_SINGLE));
+    xgip->setAttributes(GIP_CMD_LED_ON, seq2, 1, 0, 0);
+    xgip->setData(XBOXONE_LED_ON, sizeof(XBOXONE_LED_ON));
     queue(context, xgip->generatePacket(), xgip->getPacketLength());
 
-    uint8_t seq3 = gip_sequence_pool_next(&device->tx_sequence_pools, GIP_CMD_LED_ON);
+    uint8_t seq3 = gip_sequence_pool_next(&device->tx_sequence_pools, GIP_CMD_RUMBLE);
     xgip->reset();
-    xgip->setAttributes(GIP_CMD_LED_ON, seq3, 1, 0, 0);
-    xgip->setData(XBOXONE_LED_ON, sizeof(XBOXONE_LED_ON));
+    xgip->setAttributes(GIP_CMD_RUMBLE, seq3, 0, 0, 0);
+    xgip->setData(XBOXONE_RUMBLE_STOP, sizeof(XBOXONE_RUMBLE_STOP));
     queue(context, xgip->generatePacket(), xgip->getPacketLength());
 }
 
@@ -282,7 +282,7 @@ void gip_request_device_descriptor(gip_device_t *device)
 
 void gip_send_auth_complete(gip_device_t *device)
 {
-    if (!device || !device->outgoing_xgip || !device->interface || !device->interface->queue_packet)
+    if (!device || device->auth_complete_sent || !device->outgoing_xgip || !device->interface || !device->interface->queue_packet)
     {
         return;
     }
@@ -297,6 +297,7 @@ void gip_send_auth_complete(gip_device_t *device)
     xgip->setAttributes(GIP_AUTH, seq, 1, false, 0);
     xgip->setData(auth_complete, sizeof(auth_complete));
     device->interface->queue_packet(device->user_context, xgip->generatePacket(), xgip->getPacketLength());
+    device->auth_complete_sent = true;
 
     // printf("GIP: Sent auth complete packet\n");
 }

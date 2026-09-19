@@ -103,6 +103,17 @@ void XboxOneHost::send_report_from_host(XGIPProtocol *report)
                           m_gip_device.outgoing_xgip->getPacketLength());
 }
 
+void XboxOneHost::send_power_on_sequence()
+{
+    if (m_power_on_sent)
+    {
+        return;
+    }
+
+    gip_send_power_on_sequence(&m_gip_device);
+    m_power_on_sent = true;
+}
+
 std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
     uint32_t size = desc_itf->bLength;
@@ -180,18 +191,20 @@ static void xone_on_device_descriptor_wrapper(void *context, SubType subtype)
 {
     XboxOneHost *host = (XboxOneHost *)context;
     
-    if (subtype != Unknown) {
-        host->set_subtype(subtype);
-        host->m_gip_device.subtype = subtype;
-        
-        // Move from enumerating to assignable
-        usb_host_remove_enumerating_interface(host);
-        usb_host_add_assignable_interface(host_devices[host->dev_addr()]->host_devices_by_itf[host->interface()]);
-        
-        // Send power-on sequence using device interface
-        gip_send_power_on_sequence(&host->m_gip_device);
-        process_delayed_init();
+    if (subtype == Unknown) {
+        subtype = Gamepad;
     }
+
+    host->set_subtype(subtype);
+    host->m_gip_device.subtype = subtype;
+
+    // Move from enumerating to assignable
+    usb_host_remove_enumerating_interface(host);
+    usb_host_add_assignable_interface(host_devices[host->dev_addr()]->host_devices_by_itf[host->interface()]);
+
+    // Send power-on sequence using device interface
+    host->send_power_on_sequence();
+    process_delayed_init();
 }
 
 // Arrival callback

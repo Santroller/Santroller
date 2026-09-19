@@ -20,6 +20,7 @@ public:
     uint16_t tick_analog(proto_Output& type);
     void update(bool full_poll, bool send_events);
     void send_report_from_host(XGIPProtocol* report);
+    void send_power_on_sequence();
     void set_rumble(uint8_t left, uint8_t right) override;
     void set_player_led(uint8_t player) override;
     bool has_rumble() const override { return true; }
@@ -34,6 +35,7 @@ private:
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
     bool m_auth_registered = false;
+    bool m_power_on_sent = false;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
     uint8_t m_last_inputs[64];
 };

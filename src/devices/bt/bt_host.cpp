@@ -163,8 +163,9 @@ void bt_host_save_pairing(const std::shared_ptr<BluetoothHostInterface> &device,
         id = DeviceFactory::allocate_bluetooth_pairing_id();
     }
     DeviceFactory::BluetoothPairingStateData existing;
+    bool have_existing = DeviceFactory::find_bluetooth_pairing_state_by_mac(device->m_addr, existing);
     const uint8_t *link_key = nullptr;
-    if (DeviceFactory::find_bluetooth_pairing_state_by_mac(device->m_addr, existing) && existing.has_link_key)
+    if (have_existing && existing.has_link_key)
     {
         link_key = existing.link_key;
     }
@@ -174,14 +175,39 @@ void bt_host_save_pairing(const std::shared_ptr<BluetoothHostInterface> &device,
     {
         link_key = fetched_key;
     }
-    update_aux_bluetooth_pairing(id, device->m_addr, device->m_name, is_ble,
-                                 device->subtype(), device->controller_type(),
-                                 device->vid(), device->pid(), link_key);
+
+    // Never let unknown values (SDP not run yet, name not resolved) clobber
+    // details we already learned during a previous connection.
+    uint16_t vid = device->vid();
+    uint16_t pid = device->pid();
+    const char *name = device->m_name;
+    BtControllerType controller_type = device->controller_type();
+    if (have_existing)
+    {
+        if (!vid && !pid)
+        {
+            vid = existing.vid;
+            pid = existing.pid;
+        }
+        if (!name[0])
+        {
+            name = existing.name;
+        }
+        if (controller_type == BtControllerType_BtControllerTypeGeneric &&
+            existing.controller_type != BtControllerType_BtControllerTypeGeneric)
+        {
+            controller_type = existing.controller_type;
+        }
+    }
+
+    update_aux_bluetooth_pairing(id, device->m_addr, name, is_ble,
+                                 device->subtype(), controller_type,
+                                 vid, pid, link_key);
     printf("BT pairing saved: id=%ld, MAC=%02x:%02x:%02x:%02x:%02x:%02x, name='%s', ble=%d, subtype=%d, type=%d, vid=0x%04x, pid=0x%04x\r\n",
            (long)id, device->m_addr[0], device->m_addr[1], device->m_addr[2],
            device->m_addr[3], device->m_addr[4], device->m_addr[5],
-           device->m_name, (int)is_ble, (int)device->subtype(), (int)device->controller_type(),
-           device->vid(), device->pid());
+           name, (int)is_ble, (int)device->subtype(), (int)controller_type,
+           vid, pid);
 }
 
 // ------------------------------------------------------------------

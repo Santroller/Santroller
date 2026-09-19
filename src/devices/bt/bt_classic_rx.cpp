@@ -809,6 +809,19 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 bd_addr_t in_addr = {};
                 hid_subevent_incoming_connection_get_address(packet, in_addr);
                 printf("Classic BT: Incoming HID connection from %s, cid=0x%04x\r\n", bd_addr_to_str(in_addr), cid);
+                // Track the address so reconnect logic doesn't race this connection,
+                // and so VID/PID from a previous pairing can be matched later.
+                {
+                    PendingConnection &pending = pending_connections[cid];
+                    memcpy(pending.addr, in_addr, 6);
+                    pending.device_id = BluetoothStack::instance().device_id();
+                    DeviceFactory::BluetoothPairingStateData paired_state = {};
+                    if (DeviceFactory::find_bluetooth_pairing_state_by_mac(in_addr, paired_state) && !paired_state.ble)
+                    {
+                        pending.vid = paired_state.vid;
+                        pending.pid = paired_state.pid;
+                    }
+                }
                 hid_host_accept_connection(cid, hid_host_report_mode);
                 break;
             }

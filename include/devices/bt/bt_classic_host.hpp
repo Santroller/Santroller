@@ -111,8 +111,6 @@ private:
     bool m_lightbar_supported;
     bool m_vibration_supported;
     bool m_touchpad_supported;
-    uint16_t m_vid;
-    uint16_t m_pid;
 };
 
 // ---------------------------------------------------------------------------

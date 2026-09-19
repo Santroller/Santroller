@@ -34,7 +34,6 @@ std::shared_ptr<UsbHostInterface> GenericHost::open(std::shared_ptr<UsbHostDevic
             intf->m_ep_in = desc_ep->bEndpointAddress;
             intf->m_ep_in_size = desc_ep->wMaxPacketSize;
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-            usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
         }
         else
         {
@@ -57,7 +56,20 @@ std::shared_ptr<UsbHostInterface> GenericHost::open(std::shared_ptr<UsbHostDevic
 
 GenericHost::~GenericHost()
 {
-    USB_FreeReportInfo(m_info);
+    if (m_info)
+    {
+        USB_FreeReportInfo(m_info);
+    }
+}
+
+void GenericHost::disconnect()
+{
+    if (m_info)
+    {
+        USB_FreeReportInfo(m_info);
+        m_info = nullptr;
+    }
+    HidHost::disconnect();
 }
 
 bool GenericHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
@@ -73,6 +85,10 @@ bool GenericHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
 bool GenericHost::set_config()
 {
     UsbHostInterface::set_config();
+    if (m_ep_in)
+    {
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+    }
     return true;
 }
 bool GenericHost::tick_digital(proto_Output& type)

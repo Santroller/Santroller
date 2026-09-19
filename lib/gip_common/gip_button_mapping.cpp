@@ -259,9 +259,9 @@ uint16_t gip_tick_analog(const void *input_data, uint8_t subtype, proto_Output *
             switch (type->mapping.gamepadAxis)
             {
             case Gamepad_LeftStickX:
-                return data->joystickX + INT16_MAX;
+                return static_cast<uint16_t>(data->joystickX) ^ 0x8000;
             case Gamepad_LeftStickY:
-                return data->joystickY + INT16_MAX;
+                return static_cast<uint16_t>(data->joystickY) ^ 0x8000;
             default:
                 return 0;
             }
@@ -280,13 +280,13 @@ uint16_t gip_tick_analog(const void *input_data, uint8_t subtype, proto_Output *
             case Gamepad_RightTrigger:
                 return data->rightTrigger << 8;
             case Gamepad_LeftStickX:
-                return data->leftStickX + INT16_MAX;
+                return static_cast<uint16_t>(data->leftStickX) ^ 0x8000;
             case Gamepad_LeftStickY:
-                return data->leftStickY + INT16_MAX;
+                return static_cast<uint16_t>(data->leftStickY) ^ 0x8000;
             case Gamepad_RightStickX:
-                return data->rightStickX + INT16_MAX;
+                return static_cast<uint16_t>(data->rightStickX) ^ 0x8000;
             case Gamepad_RightStickY:
-                return data->rightStickY + INT16_MAX;
+                return static_cast<uint16_t>(data->rightStickY) ^ 0x8000;
             default:
                 return 0;
             }

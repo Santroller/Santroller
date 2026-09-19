@@ -28,7 +28,6 @@ std::shared_ptr<UsbHostInterface> XInputBigButtonHost::open(std::shared_ptr<UsbH
             intf->m_ep_in = desc_ep->bEndpointAddress;
             intf->m_ep_in_size = desc_ep->wMaxPacketSize;
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-            usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
         }
         else
         {
@@ -58,4 +57,13 @@ bool XInputBigButtonHost::tick_digital(proto_Output& type)
 uint16_t XInputBigButtonHost::tick_analog(proto_Output& type)
 {
     return 0;
+}
+bool XInputBigButtonHost::set_config()
+{
+    UsbHostInterface::set_config();
+    if (m_ep_in)
+    {
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+    }
+    return true;
 }

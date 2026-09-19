@@ -307,8 +307,8 @@ void BTGamepadDevice::process(bool full_poll, bool send_events)
         }
         if (invert_y_axis_hid && subtype == Gamepad)
         {
-            report->leftStickY = -report->leftStickY;
-            report->rightStickY = -report->rightStickY;
+            report->leftStickY = static_cast<int16_t>(~static_cast<uint16_t>(report->leftStickY));
+            report->rightStickY = static_cast<int16_t>(~static_cast<uint16_t>(report->rightStickY));
         }
         // dance pads need to report the dpad as buttons, so skip the conversion to hat
         if (subtype != Dancepad)

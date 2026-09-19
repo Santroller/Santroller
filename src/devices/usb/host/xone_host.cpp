@@ -140,7 +140,6 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
             intf->m_ep_in = desc_ep->bEndpointAddress;
             intf->m_ep_in_size = desc_ep->wMaxPacketSize;
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-            usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
         }
         else
         {
@@ -179,10 +178,15 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
 
 bool XboxOneHost::set_config()
 {
-    printf("set config\r\n");
     memset(m_last_inputs, 0, sizeof(m_last_inputs));
     
     UsbHostInterface::set_config();
+
+    if (m_ep_in)
+    {
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+    }
+
     return true;
 }
 
@@ -244,27 +248,22 @@ bool XboxOneHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
 #if GIP_TRACE_ENABLED
     printf("XboxOneHost::xfer_cb: ep=0x%02X result=%d bytes=%u\n", ep_addr, result, xferred_bytes);
 #endif
-    if (ep_addr & 0x80 && result != XFER_RESULT_FAILED)
+    if (ep_addr & 0x80)
     {
-        if (xferred_bytes == 0)
+        if (result == XFER_RESULT_SUCCESS)
         {
+            if (xferred_bytes > 0)
+            {
+                dump_gip_packet("received", m_ep_in_buf, xferred_bytes);
+                gip_device_process_incoming(&m_gip_device, m_ep_in_buf, xferred_bytes);
+            }
+
             if (!usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size))
             {
 #if GIP_TRACE_ENABLED
-                printf("XboxOneHost::xfer_cb: re-arm failed (empty xfer)\n");
+                printf("XboxOneHost::xfer_cb: re-arm failed\n");
 #endif
             }
-            return true;
-        }
-        
-        dump_gip_packet("received", m_ep_in_buf, xferred_bytes);
-        gip_device_process_incoming(&m_gip_device, m_ep_in_buf, xferred_bytes);
-
-        if (!usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size))
-        {
-#if GIP_TRACE_ENABLED
-            printf("XboxOneHost::xfer_cb: re-arm failed after processing packet\n");
-#endif
         }
     }
     return true;

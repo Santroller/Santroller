@@ -114,9 +114,9 @@ static inline uint16_t steam_tick_analog(const SteamControllerState &s, proto_Ou
         switch (type.mapping.gamepadAxis)
         {
         case Gamepad_LeftStickX:   return (uint16_t)(s.stick_x + 32768);
-        case Gamepad_LeftStickY:   return (uint16_t)(-s.stick_y + 32768);
+        case Gamepad_LeftStickY:   return (uint16_t)s.stick_y ^ 0x8000;
         case Gamepad_RightStickX:  return (uint16_t)(s.pad_x + 32768);
-        case Gamepad_RightStickY:  return (uint16_t)(-s.pad_y + 32768);
+        case Gamepad_RightStickY:  return (uint16_t)s.pad_y ^ 0x8000;
         case Gamepad_LeftTrigger:  return (uint16_t)s.trigger_l * 0x101;
         case Gamepad_RightTrigger: return (uint16_t)s.trigger_r * 0x101;
         default:                   return 0;

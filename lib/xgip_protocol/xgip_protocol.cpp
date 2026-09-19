@@ -60,7 +60,7 @@ void XGIPProtocol::reset()
     packetLength = 0;                  // Set packet length to 0
     parsedWireLength = 0;              // Set parsed wire length to 0
     lastChunkLength = 0;
-    isWaitingToSend = true;
+    isWaitingToSend = false;
 }
 
 // Parse incoming packet

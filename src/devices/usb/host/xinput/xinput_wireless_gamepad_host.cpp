@@ -44,7 +44,6 @@ std::shared_ptr<UsbHostInterface> XInputWirelessGamepadHost::open(std::shared_pt
             intf->m_ep_in = desc_ep->bEndpointAddress;
             intf->m_ep_in_size = desc_ep->wMaxPacketSize;
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-            usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
         }
         else
         {
@@ -78,6 +77,10 @@ bool XInputWirelessGamepadHost::set_config()
     }
     m_name[(sizeof(xinput_wireless_gamepad_disconnected_name) - 1) * 2] = '1' + (m_ep_out / 2);
     UsbHostInterface::set_config();
+    if (m_ep_in)
+    {
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+    }
     send_intr_xfer(m_ep_out, xbox360w_prescence, sizeof(xbox360w_prescence));
     send_intr_xfer(m_ep_out, xbox360w_prescence, sizeof(xbox360w_prescence));
     return true;

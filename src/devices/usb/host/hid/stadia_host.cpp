@@ -35,7 +35,6 @@ std::shared_ptr<UsbHostInterface> StadiaHost::open(std::shared_ptr<UsbHostDevice
             intf->m_ep_in = desc_ep->bEndpointAddress;
             intf->m_ep_in_size = desc_ep->wMaxPacketSize;
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-            usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
         }
         else
         {
@@ -73,6 +72,10 @@ bool StadiaHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred
 bool StadiaHost::set_config()
 {
     UsbHostInterface::set_config();
+    if (m_ep_in)
+    {
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+    }
     return true;
 }
 bool StadiaHost::tick_digital(proto_Output &type)
@@ -139,11 +142,11 @@ uint16_t StadiaHost::tick_analog(proto_Output &type)
         case Gamepad_LeftStickX:
             return data->leftStickX << 8;
         case Gamepad_LeftStickY:
-            return data->leftStickY << 8;
+            return (UINT8_MAX - data->leftStickY) * 0x101u;
         case Gamepad_RightStickX:
             return data->rightStickX << 8;
         case Gamepad_RightStickY:
-            return data->rightStickY << 8;
+            return (UINT8_MAX - data->rightStickY) * 0x101u;
         default:
             return 0;
         }

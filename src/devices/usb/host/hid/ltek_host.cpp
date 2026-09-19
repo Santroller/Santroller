@@ -38,7 +38,6 @@ std::shared_ptr<UsbHostInterface> LTekHost::open(std::shared_ptr<UsbHostDevice> 
             intf->m_ep_in = desc_ep->bEndpointAddress;
             intf->m_ep_in_size = desc_ep->wMaxPacketSize;
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-            usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
         }
         else
         {
@@ -73,6 +72,10 @@ bool LTekHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_b
 bool LTekHost::set_config()
 {
     UsbHostInterface::set_config();
+    if (m_ep_in)
+    {
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+    }
     return true;
 }
 bool LTekHost::tick_digital(proto_Output& type)

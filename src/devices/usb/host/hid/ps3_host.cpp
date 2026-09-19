@@ -206,7 +206,6 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
                 intf->m_ep_in = desc_ep->bEndpointAddress;
                 intf->m_ep_in_size = desc_ep->wMaxPacketSize;
                 TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-                usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
             }
             else
             {
@@ -233,6 +232,10 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
 bool Ps3Host::set_config()
 {
     UsbHostInterface::set_config();
+    if (m_ep_in)
+    {
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+    }
     return true;
 }
 
@@ -482,11 +485,11 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             case Gamepad_LeftStickX:
                 return data->leftStickX << 8;
             case Gamepad_LeftStickY:
-                return data->leftStickY << 8;
+                return (UINT8_MAX - data->leftStickY) * 0x101u;
             case Gamepad_RightStickX:
                 return data->rightStickX << 8;
             case Gamepad_RightStickY:
-                return data->rightStickY << 8;
+                return (UINT8_MAX - data->rightStickY) * 0x101u;
             default:
                 return 0;
             }
@@ -505,11 +508,11 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
         case Gamepad_LeftStickX:
             return data->leftStickX << 8;
         case Gamepad_LeftStickY:
-            return data->leftStickY << 8;
+            return (UINT8_MAX - data->leftStickY) * 0x101u;
         case Gamepad_RightStickX:
             return data->rightStickX << 8;
         case Gamepad_RightStickY:
-            return data->rightStickY << 8;
+            return (UINT8_MAX - data->rightStickY) * 0x101u;
         default:
             return 0;
         }

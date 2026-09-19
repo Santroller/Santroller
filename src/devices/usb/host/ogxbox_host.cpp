@@ -29,7 +29,6 @@ std::shared_ptr<UsbHostInterface> OGXboxHost::open(std::shared_ptr<UsbHostDevice
             intf->m_ep_in = desc_ep->bEndpointAddress;
             intf->m_ep_in_size = desc_ep->wMaxPacketSize;
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-            usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
         }
         else
         {
@@ -54,6 +53,10 @@ std::shared_ptr<UsbHostInterface> OGXboxHost::open(std::shared_ptr<UsbHostDevice
 bool OGXboxHost::set_config()
 {
     UsbHostInterface::set_config();
+    if (m_ep_in)
+    {
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+    }
     return true;
 }
 
@@ -120,13 +123,13 @@ uint16_t OGXboxHost::tick_analog(proto_Output& type)
         case Gamepad_RightTrigger:
             return data->rightTrigger << 8;
         case Gamepad_LeftStickX:
-            return data->leftStickX + INT16_MAX;
+            return static_cast<uint16_t>(data->leftStickX) ^ 0x8000;
         case Gamepad_LeftStickY:
-            return data->leftStickY + INT16_MAX;
+            return static_cast<uint16_t>(data->leftStickY) ^ 0x8000;
         case Gamepad_RightStickX:
-            return data->rightStickX + INT16_MAX;
+            return static_cast<uint16_t>(data->rightStickX) ^ 0x8000;
         case Gamepad_RightStickY:
-            return data->rightStickY + INT16_MAX;
+            return static_cast<uint16_t>(data->rightStickY) ^ 0x8000;
         default:
             return 0;
         }

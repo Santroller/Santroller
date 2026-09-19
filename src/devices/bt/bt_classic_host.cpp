@@ -816,7 +816,7 @@ uint16_t BtWiiHost::tick_analog(proto_Output &type)
             case Gamepad_LeftStickY:
             {
                 uint16_t val = d[4] | ((d[5] & 0x0F) << 8);
-                return 65535 - (val << 4);
+                return val << 4;
             }
             case Gamepad_RightStickX:
             {
@@ -826,7 +826,7 @@ uint16_t BtWiiHost::tick_analog(proto_Output &type)
             case Gamepad_RightStickY:
             {
                 uint16_t val = d[6] | ((d[7] & 0x0F) << 8);
-                return 65535 - (val << 4);
+                return val << 4;
             }
             case Gamepad_LeftTrigger:
                 return !(d[9] & 0x80) ? 65535 : 0;

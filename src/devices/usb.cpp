@@ -19,11 +19,33 @@
 #include <algorithm>
 #include <vector>
 #include "utils.h"
+
+static constexpr uint16_t GAMESIR_VID = 0x3537;
+static constexpr uint16_t GAMESIR_G7_PRO_HID_PID = 0x1022;
+static constexpr uint16_t GAMESIR_G7_PRO_HID_CONFIG_LENGTH = 73;
+static constexpr uint32_t GAMESIR_RESET_DELAY_MS = 100;
+static constexpr uint32_t USB_RESET_DURATION_MS = 50;
+static constexpr uint32_t USB_RESET_RECOVERY_MS = 10;
+
 static uint8_t usb_host_id;
 static bool m_initialized = false;
 static int8_t m_last_first_pin = -1;
 static bool m_last_dp_first = false;
 static volatile uint32_t m_devices_changed = 0;
+enum class GameSirResetStage : uint8_t
+{
+    Idle,
+    Scheduled,
+    ResetAsserted,
+    VerifyPending,
+    HubResetPending
+};
+static GameSirResetStage gamesir_reset_stage = GameSirResetStage::Idle;
+static tuh_bus_info_t gamesir_bus_info = {};
+static uint8_t gamesir_reset_dev_addr = 0;
+static uint32_t gamesir_reset_at = 0;
+static bool gamesir_hub_retry_used = false;
+static std::array<bool, 127> gamesir_reset_attempted = {};
 std::array<std::shared_ptr<UsbHostDevice>, 127> host_devices;
 
 static std::vector<std::shared_ptr<UsbHostInterface>> usb_assignable_interfaces;
@@ -188,6 +210,20 @@ void USBHostHardwareDevice::end(bool full)
 {
     if (full)
     {
+        if (gamesir_reset_stage == GameSirResetStage::ResetAsserted)
+        {
+            tuh_rhport_reset_bus(gamesir_bus_info.rhport, false);
+        }
+        if (gamesir_reset_stage == GameSirResetStage::ResetAsserted ||
+            gamesir_reset_stage == GameSirResetStage::VerifyPending ||
+            gamesir_reset_stage == GameSirResetStage::HubResetPending)
+        {
+            usbh_cancel_reenumeration(gamesir_reset_dev_addr);
+        }
+        gamesir_reset_stage = GameSirResetStage::Idle;
+        gamesir_reset_dev_addr = 0;
+        gamesir_hub_retry_used = false;
+
         printf("usbhost deinit\r\n");
         for (uint8_t dev_addr = 1; dev_addr < 127; dev_addr++)
         {
@@ -204,6 +240,97 @@ void USBHostHardwareDevice::end(bool full)
 
 void USBHostHardwareDevice::update(bool full_poll, bool send_events)
 {
+    if (gamesir_reset_stage != GameSirResetStage::Idle &&
+        (int32_t)(millis() - gamesir_reset_at) >= 0)
+    {
+        switch (gamesir_reset_stage)
+        {
+        case GameSirResetStage::Scheduled:
+            if (!tuh_bus_info_get(gamesir_reset_dev_addr, &gamesir_bus_info))
+            {
+                printf("Failed to get GameSir USB bus information\r\n");
+                gamesir_reset_stage = GameSirResetStage::Idle;
+                break;
+            }
+            if (gamesir_bus_info.hub_addr)
+            {
+                if (!usbh_prepare_reenumeration(
+                        gamesir_reset_dev_addr, GAMESIR_G7_PRO_HID_CONFIG_LENGTH))
+                {
+                    gamesir_reset_at = millis() + USB_RESET_RECOVERY_MS;
+                    break;
+                }
+                if (!usbh_reenumerate_via_hub_reset(gamesir_reset_dev_addr))
+                {
+                    usbh_cancel_reenumeration(gamesir_reset_dev_addr);
+                    printf("Failed to reset GameSir USB hub port\r\n");
+                    gamesir_reset_stage = GameSirResetStage::Idle;
+                    break;
+                }
+                gamesir_reset_stage = GameSirResetStage::HubResetPending;
+                gamesir_reset_at = millis() + USB_RESET_RECOVERY_MS;
+                break;
+            }
+            if (!usbh_prepare_reenumeration(
+                    gamesir_reset_dev_addr, GAMESIR_G7_PRO_HID_CONFIG_LENGTH))
+            {
+                gamesir_reset_at = millis() + USB_RESET_RECOVERY_MS;
+                break;
+            }
+            if (!tuh_rhport_reset_bus(gamesir_bus_info.rhport, true))
+            {
+                usbh_cancel_reenumeration(gamesir_reset_dev_addr);
+                printf("Failed to reset GameSir USB root port\r\n");
+                gamesir_reset_stage = GameSirResetStage::Idle;
+                break;
+            }
+            gamesir_reset_stage = GameSirResetStage::ResetAsserted;
+            gamesir_reset_at = millis() + USB_RESET_DURATION_MS;
+            break;
+        case GameSirResetStage::ResetAsserted:
+            if (!tuh_rhport_reset_bus(gamesir_bus_info.rhport, false))
+            {
+                usbh_cancel_reenumeration(gamesir_reset_dev_addr);
+                printf("Failed to release GameSir USB root port reset\r\n");
+                gamesir_reset_stage = GameSirResetStage::Idle;
+                break;
+            }
+            gamesir_reset_stage = GameSirResetStage::VerifyPending;
+            gamesir_reset_at = millis() + USB_RESET_RECOVERY_MS;
+            break;
+        case GameSirResetStage::VerifyPending:
+        {
+            bool started = usbh_reenumerate_after_reset(gamesir_reset_dev_addr);
+            if (!started)
+            {
+                usbh_cancel_reenumeration(gamesir_reset_dev_addr);
+                printf("Failed to verify GameSir after USB reset\r\n");
+            }
+            gamesir_reset_stage = GameSirResetStage::Idle;
+            gamesir_reset_dev_addr = 0;
+            break;
+        }
+        case GameSirResetStage::HubResetPending:
+            if (usbh_reenumeration_active(gamesir_reset_dev_addr))
+            {
+                gamesir_reset_at = millis() + USB_RESET_RECOVERY_MS;
+                break;
+            }
+            if (!gamesir_hub_retry_used)
+            {
+                gamesir_hub_retry_used = true;
+                gamesir_reset_attempted[gamesir_reset_dev_addr] = false;
+            }
+            gamesir_reset_stage = GameSirResetStage::Idle;
+            gamesir_reset_dev_addr = 0;
+            break;
+        case GameSirResetStage::Idle:
+            break;
+        }
+        m_devices_changed = 0;
+        return;
+    }
+
     if (m_devices_changed && millis() > m_devices_changed)
     {
         printf("devices changed! count: %d\r\n", usb_host_assignable_interface_count());
@@ -350,18 +477,23 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
     {
         host_devices[dev_addr] = std::make_shared<UsbHostDevice>(dev_addr, usb_host_id);
     }
+    auto device_container = host_devices[dev_addr];
     if (TUSB_CLASS_HUB == desc_itf->bInterfaceClass)
     {
         return 0;
     }
     printf("trying to open\r\n");
-    for (auto &host_device : host_device_types)
+    for (auto &open_device : host_device_types)
     {
         uint16_t out_len;
-        auto dev = host_device(host_devices[dev_addr], desc_itf, max_len, &out_len);
+        auto dev = open_device(device_container, desc_itf, max_len, &out_len);
+        if (host_devices[dev_addr] != device_container)
+        {
+            return 0;
+        }
         if (dev)
         {
-            host_devices[dev_addr]->host_devices_by_itf[desc_itf->bInterfaceNumber] = dev;
+            device_container->host_devices_by_itf[desc_itf->bInterfaceNumber] = dev;
             printf("done\r\n");
             return out_len;
         }
@@ -375,7 +507,34 @@ bool usbh_set_config(uint8_t dev_addr, uint8_t itf_num)
     {
         return false;
     }
-    return host_devices[dev_addr]->host_devices_by_itf[itf_num]->set_config();
+    bool reenumerating_after_reset = usbh_reenumeration_active(dev_addr);
+    bool configured = host_devices[dev_addr]->host_devices_by_itf[itf_num]->set_config();
+
+    if (configured && itf_num == 0)
+    {
+        uint16_t vid;
+        uint16_t pid;
+        if (tuh_vid_pid_get(dev_addr, &vid, &pid) &&
+            vid == GAMESIR_VID && pid == GAMESIR_G7_PRO_HID_PID &&
+            gamesir_reset_stage == GameSirResetStage::Idle)
+        {
+            if (!reenumerating_after_reset)
+            {
+                gamesir_reset_attempted[dev_addr] = false;
+                gamesir_hub_retry_used = false;
+            }
+            if (!gamesir_reset_attempted[dev_addr])
+            {
+                gamesir_reset_attempted[dev_addr] = true;
+                gamesir_reset_dev_addr = dev_addr;
+                gamesir_reset_at = millis() + GAMESIR_RESET_DELAY_MS;
+                gamesir_reset_stage = GameSirResetStage::Scheduled;
+                m_devices_changed = 0;
+            }
+        }
+    }
+
+    return configured;
 }
 
 bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
@@ -402,7 +561,26 @@ bool usbh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint3
 
 void usbh_close(uint8_t dev_addr)
 {
-    printf("usbh close %d %d\r\n", dev_addr);
+    printf("usbh close %d\r\n", dev_addr);
+    if (!usbh_reenumeration_active(dev_addr))
+    {
+        if (dev_addr == gamesir_reset_dev_addr)
+        {
+            if (gamesir_reset_stage == GameSirResetStage::ResetAsserted)
+            {
+                tuh_rhport_reset_bus(gamesir_bus_info.rhport, false);
+            }
+            if (gamesir_reset_stage == GameSirResetStage::ResetAsserted ||
+                gamesir_reset_stage == GameSirResetStage::VerifyPending ||
+                gamesir_reset_stage == GameSirResetStage::HubResetPending)
+            {
+                usbh_cancel_reenumeration(dev_addr);
+            }
+            gamesir_reset_stage = GameSirResetStage::Idle;
+            gamesir_reset_dev_addr = 0;
+        }
+        gamesir_reset_attempted[dev_addr] = false;
+    }
     if (host_devices[dev_addr])
     {
         host_devices[dev_addr]->disconnect();

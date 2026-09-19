@@ -72,7 +72,6 @@ std::shared_ptr<UsbHostInterface> SteamHost::open(std::shared_ptr<UsbHostDevice>
             {
                 return nullptr;
             }
-            usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
         }
         else
         {
@@ -130,6 +129,10 @@ void SteamHost::configure_controller()
 bool SteamHost::set_config()
 {
     UsbHostInterface::set_config();
+    if (m_ep_in)
+    {
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+    }
     if (m_vid != VALVE_USB_VID) return true;
 
     if (m_pid == VALVE_STEAM_CONTROLLER_DONGLE_PID)

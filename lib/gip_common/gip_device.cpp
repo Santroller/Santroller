@@ -10,8 +10,6 @@
 #define GIP_RELIABLE_MESSAGE_TIMEOUT_MS 1000
 #define GIP_RELIABLE_MESSAGE_ACK_INTERVAL_MS 100
 
-// Fires on every parsed packet; printf blocks on real UART hardware drain (confirmed via gdb),
-// so keep this off outside active tracing sessions.
 #define GIP_TRACE_ENABLED 0
 #define GIP_RELIABLE_MESSAGE_MAX_HEARTBEAT_ACKS 8
 

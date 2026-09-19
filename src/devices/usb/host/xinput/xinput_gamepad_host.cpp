@@ -40,7 +40,6 @@ std::shared_ptr<UsbHostInterface> XInputGamepadHost::open(std::shared_ptr<UsbHos
             intf->m_ep_in = desc_ep->bEndpointAddress;
             intf->m_ep_in_size = desc_ep->wMaxPacketSize;
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-            usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
         }
         else
         {
@@ -66,6 +65,10 @@ std::shared_ptr<UsbHostInterface> XInputGamepadHost::open(std::shared_ptr<UsbHos
 bool XInputGamepadHost::set_config()
 {
     UsbHostInterface::set_config();
+    if (m_ep_in)
+    {
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+    }
     XInputInputCapabilities_t caps;
     XInputVibrationCapabilities_t caps_vibr;
     uint32_t serial;

@@ -56,7 +56,6 @@ std::shared_ptr<UsbHostInterface> SwitchHost::open(std::shared_ptr<UsbHostDevice
             intf->m_ep_in = desc_ep->bEndpointAddress;
             intf->m_ep_in_size = desc_ep->wMaxPacketSize;
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
-            usbh_edpt_xfer(dev_addr, intf->m_ep_in, intf->m_ep_in_buf, intf->m_ep_in_size);
         }
         else
         {
@@ -166,6 +165,10 @@ bool SwitchHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred
 bool SwitchHost::set_config()
 {
     UsbHostInterface::set_config();
+    if (m_ep_in)
+    {
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+    }
     m_handshake_step = 0;
     send_handshake_step();
     return true;
@@ -274,9 +277,9 @@ uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type)
             switch (type.mapping.gamepadAxis)
             {
             case Gamepad_LeftStickX:   return (uint16_t)buf[4] * 0x101;
-            case Gamepad_LeftStickY:   return (uint16_t)buf[5] * 0x101;
+            case Gamepad_LeftStickY:   return (uint16_t)(UINT8_MAX - buf[5]) * 0x101;
             case Gamepad_RightStickX:  return (uint16_t)buf[6] * 0x101;
-            case Gamepad_RightStickY:  return (uint16_t)buf[7] * 0x101;
+            case Gamepad_RightStickY:  return (uint16_t)(UINT8_MAX - buf[7]) * 0x101;
             case Gamepad_LeftTrigger:  return (buf[3] & 0x80) ? 0xFFFF : 0;
             case Gamepad_RightTrigger: return (buf[1] & 0x80) ? 0xFFFF : 0;
             default:                   return 0;

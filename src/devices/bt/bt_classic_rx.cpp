@@ -225,8 +225,6 @@ static void btc_sync_reconnect(void)
         return;
     }
 
-    printf("Classic BT: Found %u paired candidate(s) for auto-reconnect\r\n", (unsigned int)candidates.size());
-
     if (s_reconnect_candidate_idx >= candidates.size())
     {
         s_reconnect_candidate_idx = 0;
@@ -240,10 +238,6 @@ static void btc_sync_reconnect(void)
         btc_schedule_reconnect(2000);
         return;
     }
-
-    printf("Classic BT: Attempting auto-reconnect to paired device '%s' (%s), has_link_key=%d...\r\n",
-           target.name[0] ? target.name : "Unknown", bd_addr_to_str(const_cast<uint8_t *>(target.addr)),
-           target.has_link_key);
 
     uint16_t cid = 0;
     uint8_t status = hid_host_connect(const_cast<uint8_t *>(target.addr), hid_host_report_mode, &cid);
@@ -732,7 +726,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     gap_request_security_level(handle, LEVEL_2);
                 }
             }
-            else
+            else if (status != ERROR_CODE_PAGE_TIMEOUT)
             {
                 printf("Classic ACL connection failed: %s, status=0x%02x\r\n", bd_addr_to_str(event_addr), status);
             }
@@ -828,7 +822,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 {
                     bd_addr_t fail_addr = {};
                     hid_subevent_connection_opened_get_bd_addr(packet, fail_addr);
-                    printf("Connection failed for %s, status 0x%02x\r\n", bd_addr_to_str(fail_addr), status);
+                    if (status != ERROR_CODE_PAGE_TIMEOUT)
+                    {
+                        printf("Connection failed for %s, status 0x%02x\r\n", bd_addr_to_str(fail_addr), status);
+                    }
                     if ((status == 0x67 || status == 0x66) && is_wii_device(fail_addr))
                     {
                         printf("L2CAP security/resource refusal, dropping stored link key for Wii %s\r\n", bd_addr_to_str(fail_addr));

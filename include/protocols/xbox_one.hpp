@@ -400,6 +400,7 @@ typedef struct
 
 enum class GipLegacyWirelessDeviceType : uint8_t
 {
+    Gamepad = 0x00,
     Guitar = 0x01,
     Drums = 0x02,
 };

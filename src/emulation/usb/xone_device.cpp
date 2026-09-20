@@ -860,12 +860,19 @@ void XboxOneGamepadDevice::send_legacy_device_info(uint8_t user_index, GipLegacy
         memcpy(info.name, name, sizeof(name));
         data_len = 18; // 6 header bytes + 12 name bytes
     }
-    else
+    else if (dev_type == GipLegacyWirelessDeviceType::Drums)
     {
         info.xinput_subtype = 0x88;
         const uint16_t name[] = {'d', 'r', 'u', 'm', 's'};
         memcpy(info.name, name, sizeof(name));
         data_len = 16; // 6 header bytes + 10 name bytes
+    }
+    else if (dev_type == GipLegacyWirelessDeviceType::Gamepad)
+    {
+        info.xinput_subtype = 0x81;
+        const uint16_t name[] = {'g', 'a', 'm', 'e', 'p', 'a', 'd'};
+        memcpy(info.name, name, sizeof(name));
+        data_len = 20; // 6 header bytes + 14 name bytes
     }
 
     global_sequence++;
@@ -885,12 +892,6 @@ void XboxOneGamepadDevice::send_legacy_device_info(uint8_t user_index, GipLegacy
     memcpy(packet + sizeof(GipHeader_t), &info, data_len);
 
     queue_xbone_report(packet, sizeof(GipHeader_t) + data_len);
-    printf("Sent legacy device info for user_index %d, device_type %d\n", user_index, static_cast<uint8_t>(dev_type));
-    for (size_t i = 0; i < data_len; i++)
-    {
-        printf("%02x ", ((uint8_t *)&info)[i]);
-    }
-    printf("\r\n");
 }
 
 void XboxOneGamepadDevice::send_legacy_disconnection(uint8_t user_index)
@@ -951,6 +952,7 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
         size_t i = (legacy_poll_start_player + p) % num_profiles;
         const auto &profile = profiles[i];
         bool is_drums = is_drum_subtype(profile->subtype);
+        bool is_gamepad = profile->subtype == Gamepad;
 
         // Buffer to accumulate mapping outputs for this profile
         uint8_t profile_buf[sizeof(XboxOneRockBandGuitar_Data_t)] = {};
@@ -993,11 +995,15 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
         uint16_t buttons = *(uint16_t *)profile_buf;
         legacy_report.buttons = buttons;
         legacy_report.user_index = (uint8_t)i;
-        legacy_report.device_type = is_drums ? static_cast<uint8_t>(GipLegacyWirelessDeviceType::Drums) : static_cast<uint8_t>(GipLegacyWirelessDeviceType::Guitar);
+        legacy_report.device_type = is_gamepad ? static_cast<uint8_t>(GipLegacyWirelessDeviceType::Gamepad) : is_drums ? static_cast<uint8_t>(GipLegacyWirelessDeviceType::Drums) : static_cast<uint8_t>(GipLegacyWirelessDeviceType::Guitar);
 
         if (is_drums)
         {
             memcpy(legacy_report.drums_data, profile_buf, sizeof(legacy_report.drums_data));
+        }
+        else if (is_gamepad)
+        {
+            memcpy(legacy_report.raw, profile_buf, sizeof(legacy_report.raw));
         }
         else
         {
@@ -1007,12 +1013,6 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
         // Send report if inputs changed
         if (memcmp(legacy_last_report[i], &legacy_report, sizeof(legacy_report)) != 0)
         {
-            printf("Legacy report changed for controller %d\n", i);
-            for (int j = 0; j < sizeof(legacy_report); j++)
-            {
-                printf("%02X ", ((uint8_t *)&legacy_report)[j]);
-            }
-            printf("\n");
             outgoingXGIP.reset();
             outgoingXGIP.setAttributes(GIP_INPUT_REPORT, legacy_report_counter[i], 0, 0, 0);
             outgoingXGIP.setData((const uint8_t *)&legacy_report, sizeof(legacy_report));

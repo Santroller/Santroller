@@ -63,7 +63,7 @@ enum StageKitLedType {
   StageKitBlue = 3;
   StageKitGreen = 4;
   StageKitYellow = 5;
-  Red = 6;
+  StageKitRed = 6;
 }
 
 enum MappingMode {

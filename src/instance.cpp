@@ -124,8 +124,8 @@ void Instance::process_stagekit_command(uint8_t command, uint8_t param)
             // case RUMBLE_SANTROLLER_NOTE_HIT:
             //     stage_kit_report.report.noteHitRaw = rumble_left;
             //     break;
-            // case RUMBLE_SANTROLLER_EUPHORIA_LED:
-            //     stage_kit_report.report.euphoriaBrightness = rumble_left;
+            case RUMBLE_SANTROLLER_EUPHORIA_LED:
+                euphoria_led = rumble_left;
             break;
         }
     }

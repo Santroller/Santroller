@@ -64,6 +64,16 @@ void Instance::update_feedback(bool force)
                 dev_pair.second->set_euphoria_led(euphoria_led > 0);
             }
         }
+        for (const auto &led_pair : profile->leds)
+        {
+            if (led_pair)
+            {
+                led_pair->set_rumble(rumble_left, rumble_right);
+                led_pair->set_player_led(player_led);
+                led_pair->set_lightbar(lightbar_red, lightbar_green, lightbar_blue);
+                led_pair->set_euphoria_led(euphoria_led);
+            }
+        }
     }
 }
 

@@ -37,6 +37,22 @@ message PatternLedMapping {
 message StaticLedMapping {
 
 }
+message RumbleLedMapping {
+  required LedRumbleType type = 1;
+}
+message EuphoriaLedMapping {
+
+}
+message StageKitLedMapping {
+  required StageKitLedType type = 1;
+  optional uint32 index = 2; // For colours, index lets you drive specific leds, but not setting this leaves it automatically assigned
+}
+message PlaystationLedMapping {
+
+}
+message PlayerLedMapping {
+  required int32 playerId = 1;
+}
 message RGBLedDevice {
   required int32 deviceId = 1;
   required int32 startR = 2;
@@ -80,6 +96,11 @@ message LedMapping {
     InputLedMapping inputMapping = 1;
     PatternLedMapping patternMapping = 2;
     StaticLedMapping staticMapping = 3;
+    RumbleLedMapping rumbleMapping = 4;
+    EuphoriaLedMapping euphoriaMapping = 5;
+    StageKitLedMapping stageKitMapping = 6;
+    PlaystationLedMapping playstationMapping = 7;
+    PlayerLedMapping playerMapping = 8;
   }
 }
 message Led {

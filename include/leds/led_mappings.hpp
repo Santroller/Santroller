@@ -15,13 +15,71 @@ public:
     void off();
     virtual void update(bool full_poll, bool send_events) = 0;
     virtual void reload() = 0;
+    virtual void set_rumble(uint8_t left, uint8_t right) {};
+    virtual void set_player_led(uint8_t player) {};
+    virtual void set_lightbar(uint8_t r, uint8_t g, uint8_t b) {};
+    virtual void set_euphoria_led(uint8_t val) {};
 
 protected:
     std::unique_ptr<LedMappingDevice> m_device;
     uint32_t m_id;
     Profile *m_profile;
 };
+class RumbleLedMapping : public LedMapping
+{
+public:
+    RumbleLedMapping(std::unique_ptr<LedMappingDevice> device, proto_RumbleLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id);
+    void update(bool full_poll, bool send_events);
+    void reload();
+    void set_rumble(uint8_t left, uint8_t right) override;
 
+protected:
+    proto_RumbleLedMapping m_mapping;
+};
+class StageKitLedMapping : public LedMapping
+{
+public:
+    StageKitLedMapping(std::unique_ptr<LedMappingDevice> device, proto_StageKitLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id);
+    void update(bool full_poll, bool send_events);
+    void reload();
+
+protected:
+    proto_StageKitLedMapping m_mapping;
+};
+
+class PlaystationLedMapping : public LedMapping
+{
+public:
+    PlaystationLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PlaystationLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id);
+    void update(bool full_poll, bool send_events);
+    void reload();
+    void set_lightbar(uint8_t r, uint8_t g, uint8_t b) override;
+
+protected:
+    proto_PlaystationLedMapping m_mapping;
+};
+class EuphoriaLedMapping : public LedMapping
+{
+public:
+    EuphoriaLedMapping(std::unique_ptr<LedMappingDevice> device, proto_EuphoriaLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id);
+    void update(bool full_poll, bool send_events);
+    void reload();
+    void set_euphoria_led(uint8_t val) override;
+
+protected:
+    proto_EuphoriaLedMapping m_mapping;
+};
+class PlayerLedMapping : public LedMapping
+{
+public:
+    PlayerLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PlayerLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id);
+    void update(bool full_poll, bool send_events);
+    void reload();
+    void set_player_led(uint8_t player) override;
+
+protected:
+    proto_PlayerLedMapping m_mapping;
+};
 class InputLedMapping : public LedMapping
 {
 public:

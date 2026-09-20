@@ -52,6 +52,20 @@ enum ReportId {
   ReportSwitchOutput82 = 0x82;
 }
 
+enum LedRumbleType {
+  RumbleLeft = 1;
+  RumbleRight = 2;
+}
+
+enum StageKitLedType {
+  StageKitFog = 1;
+  StageKitStrobe = 2;
+  StageKitBlue = 3;
+  StageKitGreen = 4;
+  StageKitYellow = 5;
+  Red = 6;
+}
+
 enum MappingMode {
   PerInput = 1; /* Have one set of mappings that covers all extensions */
   PerExtension = 2; /* Have individual mappings for each input in each extension */
@@ -75,7 +89,7 @@ enum WiiExtType {
     WiiMotionPlus = 0x0005;
     WiiNoExtension = 0x180b;
     WiiNotInitialised = 0xFFFF;
-} ;
+};
 
 enum SubType {
   Gamepad = 1;

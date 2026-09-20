@@ -4,6 +4,68 @@
 #include "hardware/pwm.h"
 #include <stdio.h>
 #include "emulation/usb/hid_device.h"
+#include "enums.pb.h"
+void RumbleLedMapping::update(bool full_poll, bool send_events)
+{
+}
+void RumbleLedMapping::set_rumble(uint8_t left, uint8_t right)  
+{
+    if (m_mapping.type == RumbleLeft)
+    {
+        m_device->set_val(left);
+    }
+    else if (m_mapping.type == RumbleRight)
+    {
+        m_device->set_val(right);
+    }
+}
+
+void RumbleLedMapping::reload()
+{
+}
+void StageKitLedMapping::update(bool full_poll, bool send_events)
+{
+}
+
+void StageKitLedMapping::reload()
+{
+}
+void PlaystationLedMapping::update(bool full_poll, bool send_events)
+{
+}
+
+void PlaystationLedMapping::reload()
+{
+}
+void PlaystationLedMapping::set_lightbar(uint8_t r, uint8_t g, uint8_t b)
+{
+    m_device->set_val_raw(0, r, g, b, 255);
+}
+void EuphoriaLedMapping::update(bool full_poll, bool send_events)
+{
+}
+
+void EuphoriaLedMapping::reload()
+{
+}
+void EuphoriaLedMapping::set_euphoria_led(uint8_t val)
+{
+    m_device->set_val(val);
+}
+void PlayerLedMapping::update(bool full_poll, bool send_events)
+{
+}
+void PlayerLedMapping::set_player_led(uint8_t player)
+{
+    if (player == m_mapping.playerId)
+    {
+        m_device->set_val(0xFF);
+    }
+}
+
+void PlayerLedMapping::reload()
+{
+}
 void InputLedMapping::update(bool full_poll, bool send_events)
 {
     uint16_t raw = m_input->tick_analog();

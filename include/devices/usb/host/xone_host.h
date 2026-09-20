@@ -21,6 +21,7 @@ public:
     void update(bool full_poll, bool send_events);
     void send_report_from_host(XGIPProtocol* report);
     void send_power_on_sequence();
+    void register_auth_handler(std::shared_ptr<XboxOneHost> self);
     void set_rumble(uint8_t left, uint8_t right) override;
     void set_player_led(uint8_t player) override;
     bool has_rumble() const override { return true; }

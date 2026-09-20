@@ -378,7 +378,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
     auto *context = static_cast<ConfigDecodeContext *>(*arg);
     auto profile = context->profile;
     auto &list = profile->triggers.back();
-    proto_ProfileAssignmentInfo proto_assignment;
+    proto_ProfileAssignmentInfo proto_assignment = proto_ProfileAssignmentInfo_init_zero;
     proto_assignment.cb_assignment.funcs.decode = load_assignment_dev;
     proto_assignment.cb_assignment.arg = *arg;
     pb_decode(stream, proto_ProfileAssignmentInfo_fields, &proto_assignment);
@@ -416,7 +416,7 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     auto list = new ActivationTriggerList();
     list->list_id = profile->triggers.size();
     profile->triggers.emplace_back(list);
-    proto_ProfileAssignment proto_assignment;
+    proto_ProfileAssignment proto_assignment = proto_ProfileAssignment_init_zero;
     proto_assignment.assignments.funcs.decode = &load_assignment_info;
     proto_assignment.assignments.arg = *arg;
     pb_decode(stream, proto_ProfileAssignment_fields, &proto_assignment);

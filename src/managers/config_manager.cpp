@@ -22,6 +22,7 @@ void ConfigManager::finish_reinit(uint32_t now)
     m_time_since_mode = now;
     m_reloading = false;
     m_full_reload = false;
+    m_reinitialize_device_stack = false;
 }
 
 void ConfigManager::clear_all()
@@ -33,6 +34,7 @@ void ConfigManager::clear_all()
     m_loaded_any = false;
     m_has_bluetooth = false;
     m_reloading = false;
+    m_reinitialize_device_stack = false;
     m_reinit_time = 0;
     m_time_since_mode = 0;
     m_seen_masks = 0;

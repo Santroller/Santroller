@@ -12,6 +12,7 @@
 #include "usb/auth_broker.h"
 #include "devices/usb.hpp"
 #include "config/config.hpp"
+#include "managers/config_manager.hpp"
 #include "utils.h"
 #include "emulation/usb/usb_devices.h"
 #include "xgip_protocol.h"
@@ -186,6 +187,7 @@ const uint8_t xb1_descriptor_gamepad[] = {
     0x00, 0x00, 0x00, 0x17, 0x00, 0x09, 0x3C, 0x00, 0x01, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 XboxOneGamepadDevice::~XboxOneGamepadDevice() {
+    auth_broker.unregister_response_handler(ModeXboxOne);
 }
 XboxOneGamepadDevice::XboxOneGamepadDevice()
 {
@@ -195,6 +197,10 @@ XboxOneGamepadDevice::XboxOneGamepadDevice()
     last_report_counter = 0;
 
     xbone_led_mode = 0;
+    auth_handler_connected = auth_broker.has_handler(ModeXboxOne);
+    auth_broker.register_response_handler(ModeXboxOne, [this](XGIPProtocol *report) {
+        send_report_from_controller(report);
+    });
 }
 
 uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16_t max_len)
@@ -220,6 +226,12 @@ uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint1
         }
     }
     xboneDriverState = XboxOneDriverState::EMU_READY_ANNOUNCE;
+    auth_completed = false;
+    waiting_ack = false;
+    xbox_one_powered_on = false;
+    auth_handler_connected = auth_broker.has_handler(ModeXboxOne);
+    report_queue_head = 0;
+    report_queue_count = 0;
     incomingXGIP.reset();
     outgoingXGIP.reset();
     timer_wait_for_announce = to_ms_since_boot(get_absolute_time());
@@ -235,20 +247,24 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
     if (XFER_RESULT_SUCCESS == result)
     {
         // Parse incoming packet and verify its valid
-        bool complete = incomingXGIP.parse(epout_buf, xferred_bytes);
+        bool parsed = incomingXGIP.parse(epout_buf, xferred_bytes);
 
         uint8_t command = incomingXGIP.getCommand();
         // Setup an ack before we change anything about the incoming packet
-        if (incomingXGIP.ackRequired() == true)
+        if (parsed && incomingXGIP.ackRequired() == true)
         {
             queue_xbone_report((uint8_t *)incomingXGIP.generateAckPacket(), incomingXGIP.getPacketLength());
         }
+        // A chunked packet is only fully reassembled once we've received its
+        // end-of-chunk marker; intermediate fragments parse successfully but
+        // must not be dispatched as a complete command yet.
+        bool complete = parsed && (!incomingXGIP.getChunked() || incomingXGIP.endOfChunk());
         if (!complete)
         {
             TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE, false));
             return true;
         }
-        // printf("got cmd: %02x\r\n", command);
+        printf("got cmd: %02x\r\n", command);
         if (command == GIP_ACK_RESPONSE)
         {
             waiting_ack = false;
@@ -389,6 +405,11 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         }
         else if ((command == GIP_AUTH || command == GIP_FINAL_AUTH))
         {
+            for (size_t i = 0; i < incomingXGIP.getDataLength(); i++)
+            {
+                printf("%02x ", incomingXGIP.getData()[i]);
+            }
+            printf("\r\n");
             if (incomingXGIP.getDataLength() == 2 && memcmp(incomingXGIP.getData(), authReady, sizeof(authReady)) == 0)
             {
                 printf("auth done\r\n");
@@ -424,7 +445,12 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
 
 void XboxOneGamepadDevice::send_report_from_controller(XGIPProtocol *report)
 {
+    // Relay a real auth response received from the host-side controller back
+    // to the console. The response uses the sequence number the console used
+    // for its original auth request (preserved via copyAttributes), so no
+    // sequence renumbering is needed here.
     outgoingXGIP.copyAttributes(report);
+    queue_xbone_report(outgoingXGIP.generatePacket(), outgoingXGIP.getPacketLength());
 }
 bool XboxOneGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
 {
@@ -478,6 +504,34 @@ void XboxOneGamepadDevice::process_report_queue(uint32_t now)
         }
     }
 }
+
+void XboxOneGamepadDevice::process_auth_device_connection(uint32_t now)
+{
+    const bool handler_connected = auth_broker.has_handler(ModeXboxOne);
+    if (!handler_connected)
+    {
+        auth_handler_connected = false;
+        return;
+    }
+    if (auth_handler_connected)
+    {
+        return;
+    }
+
+    auth_handler_connected = true;
+    auto &config_mgr = ConfigManager::instance();
+    if (!xbox_one_powered_on ||
+        config_mgr.get_reinit_time() ||
+        (config_mgr.get_current_mode() != ModeXboxOne && config_mgr.get_requested_mode() != ModeXboxOne))
+    {
+        return;
+    }
+
+    printf("Xbox One auth device connected; scheduling USB re-enumeration\r\n");
+    config_mgr.request_device_stack_reinit();
+    config_mgr.schedule_reinit(now);
+}
+
 void XboxOneGamepadDevice::initialize()
 {
     m_epin = next_epin();
@@ -518,6 +572,8 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
 
     // Perform update
     uint32_t now = to_ms_since_boot(get_absolute_time());
+
+    process_auth_device_connection(now);
 
     // Process our report queue
     process_report_queue(now);
@@ -793,23 +849,23 @@ void XboxOneGamepadDevice::send_legacy_device_info(uint8_t user_index, GipLegacy
     GipLegacyWirelessDeviceInfo_t info = {};
     info.user_index = user_index;
     info.device_type = static_cast<uint8_t>(dev_type);
-    info.vendor_id = 0x3807; // 0x0738 big-endian
+    info.vendor_id = 0x3014; // 0x1430 big-endian
     info.unk = 0x00;
 
     uint16_t data_len = 0;
     if (dev_type == GipLegacyWirelessDeviceType::Guitar)
     {
         info.xinput_subtype = 0x87;
-        const uint16_t name[] = {'g', 'u', 'i', 't', 'a', 'r', 0};
+        const uint16_t name[] = {'g', 'u', 'i', 't', 'a', 'r'};
         memcpy(info.name, name, sizeof(name));
-        data_len = 20; // 6 header bytes + 14 name bytes
+        data_len = 18; // 6 header bytes + 12 name bytes
     }
     else
     {
         info.xinput_subtype = 0x88;
-        const uint16_t name[] = {'d', 'r', 'u', 'm', 's', 0};
+        const uint16_t name[] = {'d', 'r', 'u', 'm', 's'};
         memcpy(info.name, name, sizeof(name));
-        data_len = 18; // 6 header bytes + 12 name bytes
+        data_len = 16; // 6 header bytes + 10 name bytes
     }
 
     global_sequence++;
@@ -829,6 +885,12 @@ void XboxOneGamepadDevice::send_legacy_device_info(uint8_t user_index, GipLegacy
     memcpy(packet + sizeof(GipHeader_t), &info, data_len);
 
     queue_xbone_report(packet, sizeof(GipHeader_t) + data_len);
+    printf("Sent legacy device info for user_index %d, device_type %d\n", user_index, static_cast<uint8_t>(dev_type));
+    for (size_t i = 0; i < data_len; i++)
+    {
+        printf("%02x ", ((uint8_t *)&info)[i]);
+    }
+    printf("\r\n");
 }
 
 void XboxOneGamepadDevice::send_legacy_disconnection(uint8_t user_index)
@@ -850,6 +912,7 @@ void XboxOneGamepadDevice::send_legacy_disconnection(uint8_t user_index)
     packet[sizeof(GipHeader_t)] = user_index;
 
     queue_xbone_report(packet, sizeof(packet));
+    printf("Sent legacy disconnection for user_index %d\n", user_index);
 }
 
 void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_events)
@@ -934,18 +997,22 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
 
         if (is_drums)
         {
-            *(uint16_t *)(&legacy_report.drums_data[0]) = buttons;
-            memcpy(&legacy_report.drums_data[2], &profile_buf[2], 4);
+            memcpy(legacy_report.drums_data, profile_buf, sizeof(legacy_report.drums_data));
         }
         else
         {
-            *(uint16_t *)(&legacy_report.guitar_data[0]) = buttons;
-            memcpy(&legacy_report.guitar_data[2], &profile_buf[2], 5);
+            memcpy(legacy_report.guitar_data, profile_buf, sizeof(legacy_report.guitar_data));
         }
 
         // Send report if inputs changed
         if (memcmp(legacy_last_report[i], &legacy_report, sizeof(legacy_report)) != 0)
         {
+            printf("Legacy report changed for controller %d\n", i);
+            for (int j = 0; j < sizeof(legacy_report); j++)
+            {
+                printf("%02X ", ((uint8_t *)&legacy_report)[j]);
+            }
+            printf("\n");
             outgoingXGIP.reset();
             outgoingXGIP.setAttributes(GIP_INPUT_REPORT, legacy_report_counter[i], 0, 0, 0);
             outgoingXGIP.setData((const uint8_t *)&legacy_report, sizeof(legacy_report));

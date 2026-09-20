@@ -67,7 +67,8 @@ private:
     bool waiting_ack = false;
     uint32_t waiting_ack_timeout = 0;
     uint32_t timer_wait_for_announce;
-    bool xbox_one_powered_on;
+    bool xbox_one_powered_on = false;
+    bool auth_handler_connected = false;
     uint8_t report_led_mode;
     uint8_t report_led_brightness;
     uint16_t input_report_length = 0;
@@ -93,6 +94,7 @@ private:
     void send_legacy_device_info(uint8_t user_index, GipLegacyWirelessDeviceType dev_type);
     void send_legacy_disconnection(uint8_t user_index);
     void process_legacy_adapter(bool full_poll, bool send_events);
+    void process_auth_device_connection(uint32_t now);
 
     XboxOneDriverState xboneDriverState = EMU_NOT_READY;
 };

@@ -412,7 +412,7 @@ typedef struct
     union
     {
         uint8_t guitar_data[10];
-        uint8_t drums_data[10];
+        uint8_t drums_data[6];
         uint8_t raw[10];
     };
 } __attribute__((packed)) GipLegacyWirelessReport_t;

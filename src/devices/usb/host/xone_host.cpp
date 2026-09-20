@@ -8,6 +8,7 @@
 #include "emulation/usb/usb_devices.h"
 #include "devices/usb.hpp"
 #include "config/config.hpp"
+#include "managers/config_manager.hpp"
 #include "managers/device_manager.hpp"
 #include "utils.h"
 
@@ -114,6 +115,19 @@ void XboxOneHost::send_power_on_sequence()
     m_power_on_sent = true;
 }
 
+void XboxOneHost::register_auth_handler(std::shared_ptr<XboxOneHost> self)
+{
+    if (m_auth_registered || auth_broker.has_handler(ModeXboxOne))
+    {
+        return;
+    }
+
+    auth_broker.register_handler(ModeXboxOne, [self](XGIPProtocol* packet) {
+        self->send_report_from_host(packet);
+    });
+    m_auth_registered = true;
+}
+
 std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
     uint32_t size = desc_itf->bLength;
@@ -159,17 +173,6 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
     if (desc_itf->bInterfaceNumber == 0)
     {
         usb_host_add_enumerating_interface(intf);
-        
-        // Register as auth provider if not already registered
-        if (!auth_broker.has_handler(ModeXboxOne))
-        {
-            auth_broker.register_handler(ModeXboxOne, [intf](XGIPProtocol* packet) {
-                intf->send_report_from_host(packet);
-            });
-            intf->m_auth_registered = true;
-        }
-        
-        // Auth registration handled by auth_broker above
     }
     printf("size: %d\r\n", size);
     *out_len = size;
@@ -204,7 +207,11 @@ static void xone_on_device_descriptor_wrapper(void *context, SubType subtype)
 
     // Move from enumerating to assignable
     usb_host_remove_enumerating_interface(host);
-    usb_host_add_assignable_interface(host_devices[host->dev_addr()]->host_devices_by_itf[host->interface()]);
+    auto host_interface = host_devices[host->dev_addr()]->host_devices_by_itf[host->interface()];
+    usb_host_add_assignable_interface(host_interface);
+    host->register_auth_handler(std::static_pointer_cast<XboxOneHost>(host_interface));
+    printf("Xbox One auth device descriptor read; forcing USB device re-enumeration\r\n");
+    ConfigManager::instance().request_device_stack_reinit();
 
     // Send power-on sequence using device interface
     host->send_power_on_sequence();

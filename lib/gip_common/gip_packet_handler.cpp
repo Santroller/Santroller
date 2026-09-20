@@ -80,8 +80,8 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device)
             // Pass detected subtype to callback
             interface->on_device_descriptor(context, (SubType)subtype);
 
-            // not emulating xb1, so skip auth
-            if (!auth_broker.get_auth_device(ModeXboxOne))
+            // not emulating xb1 (no registered auth passthrough handler), so skip auth
+            if (!auth_broker.has_handler(ModeXboxOne))
             {
                 gip_default_auth_callback(
                     device,
@@ -92,11 +92,21 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device)
         return true;
 
     case GIP_AUTH:
-        // Always use default auth handler (sends auth complete)
-        gip_default_auth_callback(
-            device,
-            xgip->getData(),
-            xgip->getDataLength());
+        // If an emulated (console-facing) device is passthrough-forwarding
+        // auth for this mode, relay the real controller's auth response back
+        // to it instead of faking an auth-complete here.
+        if (auth_broker.has_response_handler(ModeXboxOne))
+        {
+            auth_broker.forward_auth_response(ModeXboxOne, xgip);
+        }
+        else
+        {
+            // Not passing through auth, so use default auth handler (sends auth complete)
+            gip_default_auth_callback(
+                device,
+                xgip->getData(),
+                xgip->getDataLength());
+        }
         return true;
 
     case GIP_INPUT_REPORT:

@@ -348,6 +348,9 @@ uint8_t *XGIPProtocol::generatePacket()
             packetLength = lebPacket - packet + dataToSend;
             totalDataSent += dataToSend; // Total Data Sent in bytes
             numberOfChunksSent++;        // Number of Chunks sent so far
+            // More chunks are pending: if this was the last data chunk, the
+            // final end-of-chunk marker packet still needs to be generated/sent
+            isWaitingToSend = true;
         }
     }
     return packet;

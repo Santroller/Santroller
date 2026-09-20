@@ -83,7 +83,6 @@ bool HIDDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t x
 }
 bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
 {
-  // printf("control_transfer stage %d request %d type %d windex: %04x wValue: %04x\r\n ", stage, request->bRequest, request->bmRequestType_bit.type, request->wIndex, request->wValue);
   if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_ENDPOINT && request->bRequest == TUSB_REQ_CLEAR_FEATURE)
   {
     clearedIn |= tu_edpt_dir(request->wIndex) == TUSB_DIR_IN;
@@ -121,7 +120,7 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
       {
         TU_VERIFY(tud_control_xfer(TUD_OPT_RHPORT, request, (void *)(uintptr_t)report_descriptor(), report_desc_len()));
         auto& detection = UsbDetectionState::instance();
-        if (mode == ModeHid && detection.seen_windows_xb1())
+        if (ConfigManager::instance().get_current_mode() == ModeHid && detection.seen_windows_xb1())
         {
           if (detection.seen_windows_string())
           {

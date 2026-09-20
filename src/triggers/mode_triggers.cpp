@@ -73,6 +73,25 @@ bool UsbModeActivationTrigger::forcedConsoleMode(ConsoleMode& mode) const
     {
         return false;
     }
+
+    switch (m_config.forcedType)
+    {
+    case ModeHid:
+    case ModeOgXbox:
+    case ModeXbox360:
+    case ModeXboxOne:
+    case ModePs3:
+    case ModePs4:
+    case ModePs5:
+    case ModeWiiRb:
+    case ModeSwitch:
+    case ModeGuitarHeroArcade:
+        break;
+    default:
+        printf("Ignoring invalid forced console mode: %d\r\n", m_config.forcedType);
+        return false;
+    }
+
     mode = m_config.forcedType;
     return true;
 }

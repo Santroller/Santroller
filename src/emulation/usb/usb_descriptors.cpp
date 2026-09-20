@@ -291,8 +291,8 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
               {
                 count++;
               }
-              UsbDetectionState::instance().mark_windows_xb1_seen();
             });
+            UsbDetectionState::instance().mark_windows_xb1_seen();
             compatible_descriptor->TotalSections = count;
             compatible_descriptor->TotalLength = current;
             tud_control_xfer(rhport, request, descriptor_buffer, current);

@@ -59,10 +59,37 @@ public:
      * Unregister auth device for a console mode
      */
     void unregister_auth_device(ConsoleMode mode);
-    
+
+    /**
+     * Register a response handler for a specific console mode
+     * Called by the emulated (console-facing) USB device to receive real
+     * auth responses from the host device, so they can be relayed back to
+     * the console instead of the host faking an auth-complete locally.
+     */
+    void register_response_handler(ConsoleMode mode, AuthHandler handler);
+
+    /**
+     * Unregister the response handler for a console mode
+     * Called by the emulated USB device on disconnect/teardown
+     */
+    void unregister_response_handler(ConsoleMode mode);
+
+    /**
+     * Forward a real auth response packet from the host device to the
+     * registered emulated (console-facing) device.
+     * Returns true if a handler was found and called.
+     */
+    bool forward_auth_response(ConsoleMode mode, XGIPProtocol* packet);
+
+    /**
+     * Check if a response handler is registered for a mode
+     */
+    bool has_response_handler(ConsoleMode mode) const;
+
 private:
     std::map<ConsoleMode, AuthHandler> handlers;
     std::map<ConsoleMode, std::shared_ptr<UsbHostInterface>> auth_devices;
+    std::map<ConsoleMode, AuthHandler> response_handlers;
 };
 
 // Global auth broker instance

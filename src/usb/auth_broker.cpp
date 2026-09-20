@@ -39,3 +39,24 @@ std::shared_ptr<UsbHostInterface> AuthBroker::get_auth_device(ConsoleMode mode) 
 void AuthBroker::unregister_auth_device(ConsoleMode mode) {
     auth_devices.erase(mode);
 }
+
+void AuthBroker::register_response_handler(ConsoleMode mode, AuthHandler handler) {
+    response_handlers[mode] = handler;
+}
+
+void AuthBroker::unregister_response_handler(ConsoleMode mode) {
+    response_handlers.erase(mode);
+}
+
+bool AuthBroker::forward_auth_response(ConsoleMode mode, XGIPProtocol* packet) {
+    auto it = response_handlers.find(mode);
+    if (it != response_handlers.end() && it->second) {
+        it->second(packet);
+        return true;
+    }
+    return false;
+}
+
+bool AuthBroker::has_response_handler(ConsoleMode mode) const {
+    return response_handlers.find(mode) != response_handlers.end();
+}

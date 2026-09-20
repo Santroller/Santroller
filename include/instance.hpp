@@ -33,8 +33,16 @@ public:
     uint8_t lightbar_red = 0;
     uint8_t lightbar_green = 0;
     uint8_t lightbar_blue = 0;
-    uint8_t stagekit_command = 0;
     uint8_t stagekit_param = 0;
+    uint8_t stagekit_command = 0;
+    uint8_t stagekit_fog = 0;
+    uint8_t stagekit_strobe_speed = 0;
+    uint8_t stagekit_strobe = 0;
+    uint8_t stagekit_blue = 0;
+    uint8_t stagekit_green = 0;
+    uint8_t stagekit_yellow = 0;
+    uint8_t stagekit_red = 0;
+    uint8_t stagekit_last_strobe = 0;
     uint8_t capabilities = 0;
     bool side = 0;
 
@@ -42,6 +50,8 @@ public:
     void set_player_led(uint8_t player);
     void set_lightbar(uint8_t r, uint8_t g, uint8_t b);
     void set_euphoria_led(uint8_t val);
+    void process_stagekit_command(uint8_t command, uint8_t param);
+    void update_stagekit();
     void update_feedback(bool force = false);
     void update_capabilities();
 };

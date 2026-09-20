@@ -5,12 +5,6 @@
 
 #include "tusb.h"
 
-#define PS3_RUMBLE_ID 0x01
-#define PS3_LED_ID 0x00
-#define DJ_LED_ID 0x91
-#define SANTROLLER_LED_ID 0x5A
-#define SANTROLLER_LED_EXPANDED_ID 0x5B
-
 
 class PS3GamepadDevice : public HIDDevice
 {

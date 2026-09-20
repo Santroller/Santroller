@@ -198,6 +198,7 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
     }
     if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
+    update_stagekit();
     memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)epin_buf;
     for (const auto &profile : profiles)
@@ -253,14 +254,13 @@ bool XInputGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, 
         }
         else if (rumbleReport->rid == XBOX_RUMBLE_ID)
         {
-            if (subtype == DjHeroTurntable)
+            if (subtype == DjHeroTurntable && rumbleReport->leftRumble == rumbleReport->rightRumble)
             {
                 set_euphoria_led(rumbleReport->leftRumble);
             }
-            else if (subtype == StageKit)
+            else if (subtype_supports_stagekit(subtype))
             {
-                stagekit_command = rumbleReport->rightRumble;
-                stagekit_param = rumbleReport->leftRumble;
+                process_stagekit_command(rumbleReport->rightRumble, rumbleReport->leftRumble);
             }
             else
             {

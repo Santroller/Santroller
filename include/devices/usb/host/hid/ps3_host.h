@@ -26,6 +26,8 @@ public:
     bool has_rumble() const override { return true; }
     bool has_player_led() const override { return true; }
     bool has_euphoria_led() const override { return m_subtype == DjHeroTurntable; }
+    bool has_stagekit_led() const override { return subtype_supports_stagekit(m_subtype); }
+    void set_stagekit_led(uint8_t param, uint8_t command) override;
 
 private:
     bool send_ps3_output();

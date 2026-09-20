@@ -272,6 +272,7 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
         return;
     }
     memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
+    update_stagekit();
     for (const auto &profile : profiles)
     {
         profile->reset_drum_state();
@@ -618,8 +619,12 @@ void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
         }
         else if (id == PS3_RUMBLE_ID)
         {
+            if (buffer[1] == SANTROLLER_LED_ID)
+            {
+                process_stagekit_command(buffer[3], buffer[2]);
+            }
             // instruments receive player leds over this report id with one format
-            if (bufsize >= 8)
+            else if (bufsize >= 8)
             {
                 uint8_t player = buffer[3];
                 uint8_t led = handle_player_leds_ps3(player);
@@ -637,11 +642,6 @@ void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
         {
             uint8_t euphoria_on = buffer[2] ? 0xFF : 0;
             set_euphoria_led(euphoria_on);
-        }
-        else if (id == SANTROLLER_LED_ID)
-        {
-            stagekit_command = buffer[3];
-            stagekit_param = buffer[2];
         }
         break;
     }

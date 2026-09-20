@@ -45,7 +45,8 @@ message EuphoriaLedMapping {
 }
 message StageKitLedMapping {
   required StageKitLedType type = 1;
-  optional uint32 index = 2; // For colours, index lets you drive specific leds, but not setting this leaves it automatically assigned
+  required uint32 index = 2;
+  required StageKitIndexMappingMode indexMappingMode = 3;
 }
 message PlaystationLedMapping {
 

@@ -56,7 +56,10 @@ enum LedRumbleType {
   RumbleLeft = 1;
   RumbleRight = 2;
 }
-
+enum StageKitIndexMappingMode {
+  StageKitIndexSequential = 1;
+  StageKitIndexIntensity = 2;
+}
 enum StageKitLedType {
   StageKitFog = 1;
   StageKitStrobe = 2;
@@ -64,6 +67,7 @@ enum StageKitLedType {
   StageKitGreen = 4;
   StageKitYellow = 5;
   StageKitRed = 6;
+  StageKitRGBY = 7;
 }
 
 enum MappingMode {

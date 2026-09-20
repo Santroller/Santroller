@@ -62,6 +62,10 @@ std::shared_ptr<UsbHostInterface> XInputGamepadHost::open(std::shared_ptr<UsbHos
     return intf;
 }
 
+void XInputGamepadHost::set_stagekit_led(uint8_t param, uint8_t command)
+{
+    set_rumble(command, param);
+}
 bool XInputGamepadHost::set_config()
 {
     UsbHostInterface::set_config();

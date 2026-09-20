@@ -19,6 +19,7 @@ public:
     virtual void set_player_led(uint8_t player) {};
     virtual void set_lightbar(uint8_t r, uint8_t g, uint8_t b) {};
     virtual void set_euphoria_led(uint8_t val) {};
+    virtual void set_stagekit_led(uint8_t fog, uint8_t strobe, uint8_t blue, uint8_t green, uint8_t yellow, uint8_t red) {};
 
 protected:
     std::unique_ptr<LedMappingDevice> m_device;
@@ -42,6 +43,7 @@ public:
     StageKitLedMapping(std::unique_ptr<LedMappingDevice> device, proto_StageKitLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id);
     void update(bool full_poll, bool send_events);
     void reload();
+    void set_stagekit_led(uint8_t fog, uint8_t strobe, uint8_t blue, uint8_t green, uint8_t yellow, uint8_t red) override;
 
 protected:
     proto_StageKitLedMapping m_mapping;

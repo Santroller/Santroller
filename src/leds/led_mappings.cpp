@@ -8,7 +8,7 @@
 void RumbleLedMapping::update(bool full_poll, bool send_events)
 {
 }
-void RumbleLedMapping::set_rumble(uint8_t left, uint8_t right)  
+void RumbleLedMapping::set_rumble(uint8_t left, uint8_t right)
 {
     if (m_mapping.type == RumbleLeft)
     {
@@ -29,6 +29,71 @@ void StageKitLedMapping::update(bool full_poll, bool send_events)
 
 void StageKitLedMapping::reload()
 {
+}
+void StageKitLedMapping::set_stagekit_led(uint8_t fog, uint8_t strobe, uint8_t blue, uint8_t green, uint8_t yellow, uint8_t red)
+{
+    switch (m_mapping.type)
+    {
+    case StageKitFog:
+        m_device->set_val(fog);
+        break;
+    case StageKitStrobe:
+        m_device->set_val(strobe);
+        break;
+    default:
+        // Sequential mapping - when a user picks leds they are mapped directly to the device's LED indices
+        if (m_mapping.indexMappingMode == StageKitIndexSequential)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                switch (m_mapping.type)
+                {
+                case StageKitBlue:
+                    m_device->set_val_raw(i, 0, 0, blue & (1 << i) ? 0xFF : 0, 255);
+                    break;
+                case StageKitGreen:
+                    m_device->set_val_raw(i, 0, green & (1 << i) ? 0xFF : 0, 0, 255);
+                    break;
+                case StageKitYellow:
+                    m_device->set_val_raw(i, yellow & (1 << i) ? 0xFF : 0, yellow & (1 << i) ? 0xFF : 0, 0, 255);
+                    break;
+                case StageKitRed:
+                    m_device->set_val_raw(i, red & (1 << i) ? 0xFF : 0, 0, 0, 255);
+                    break;
+                case StageKitRGBY:
+                    m_device->set_val_raw(i, (red & (1 << i) || yellow & (1 << i)) ? 0xFF : 0, (green & (1 << i) || yellow & (1 << i)) ? 0xFF : 0, blue & (1 << i) ? 0xFF : 0, 255);
+                    break;
+                default:
+                    break;
+                }
+            }
+            break;
+        }
+        // Intensity mapping - the LED brightness is determined by the index
+        if (m_mapping.indexMappingMode == StageKitIndexIntensity)
+        {
+            for (int i = 0; i < m_device->led_count(); i++)
+            {
+                switch (m_mapping.type)
+                {
+                case StageKitBlue:
+                    m_device->set_val_raw(i, 0, 0, blue << 5, 255);
+                    break;
+                case StageKitGreen:
+                    m_device->set_val_raw(i, 0, green << 5, 0, 255);
+                    break;
+                case StageKitYellow:
+                    m_device->set_val_raw(i, yellow << 5, yellow << 5, 0, 255);
+                    break;
+                case StageKitRed:
+                    m_device->set_val_raw(i, red << 5, 0, 0, 255);
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
 }
 void PlaystationLedMapping::update(bool full_poll, bool send_events)
 {

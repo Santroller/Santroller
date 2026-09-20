@@ -228,7 +228,11 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
     }
     return nullptr;
 }
-
+void Ps3Host::set_stagekit_led(uint8_t param, uint8_t command)
+{
+    uint8_t packet[] = {PS3_RUMBLE_ID, SANTROLLER_LED_ID, param, command, 0x00};
+    set_report(PS3_RUMBLE_ID, HID_REPORT_TYPE_OUTPUT, packet, sizeof(packet));
+}
 bool Ps3Host::set_config()
 {
     UsbHostInterface::set_config();

@@ -8,6 +8,10 @@
 #include <memory>
 #include <array>
 
+static bool subtype_supports_stagekit(SubType subtype)
+{
+    return subtype == StageKit || subtype == GuitarHeroDrums || subtype == RockBandDrums || subtype == GuitarHeroGuitar || subtype == RockBandGuitar;
+}
 class UsbHostInterface : public MidiDevice
 {
 public:

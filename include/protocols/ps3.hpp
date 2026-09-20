@@ -12,6 +12,12 @@
 #define POWERGIG_DRUM_RB_COMPAT_MODE 0x0600
 #define POWERGIG_DRUM_PG_MODE 0x0700
 
+#define PS3_RUMBLE_ID 0x01
+#define PS3_LED_ID 0x00
+#define DJ_LED_ID 0x91
+#define SANTROLLER_LED_ID 0x5A
+#define SANTROLLER_LED_EXPANDED_ID 0x5B
+
 typedef struct
 {
     uint8_t padding;

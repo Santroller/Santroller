@@ -93,10 +93,12 @@ public:
     virtual void set_player_led(uint8_t player) {}
     virtual void set_lightbar(uint8_t r, uint8_t g, uint8_t b) {}
     virtual void set_euphoria_led(bool state) {}
+    virtual void set_stagekit_led(uint8_t param, uint8_t command) {}
     virtual bool has_rumble() const { return false; }
     virtual bool has_player_led() const { return false; }
     virtual bool has_euphoria_led() const { return false; }
     virtual bool has_lightbar() const { return false; }
+    virtual bool has_stagekit_led() const { return false; }
     uint16_t m_id;
     bool still_connected = false;
 

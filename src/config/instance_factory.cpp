@@ -84,6 +84,27 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
                 return preserved;
             }
         }
+        if (usb_mode == ModePs5) {
+            auto existing_dev = profile_mgr.get_emulated_device(ModePs5);
+            if (existing_dev) {
+                printf("Multiple PS5 controllers on one pico is not supported\r\n");
+                return nullptr;
+            }
+        }
+        if (usb_mode == ModePs4) {
+            auto existing_dev = profile_mgr.get_emulated_device(ModePs4);
+            if (existing_dev) {
+                printf("Multiple PS4 controllers on one pico is not supported\r\n");
+                return nullptr;
+            }
+        }
+        if (usb_mode == ModePs3) {
+            auto existing_dev = profile_mgr.get_emulated_device(ModePs3);
+            if (existing_dev) {
+                printf("Multiple PS3 controllers on one pico is not supported\r\n");
+                return nullptr;
+            }
+        }
         instance = std::static_pointer_cast<Instance>(
             create_usb_instance(usb_mode, profile->subtype));
     }
@@ -129,9 +150,6 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
         
     case ModeXboxOne:
         instance = std::make_shared<XboxOneGamepadDevice>();
-        if (!profile_mgr.get_emulated_device(mode)) {
-            profile_mgr.set_emulated_device(mode, instance);
-        }
         break;
         
     case ModeWiiRb:
@@ -160,6 +178,9 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
         
     default:
         return nullptr;
+    }
+    if (!profile_mgr.get_emulated_device(mode)) {
+        profile_mgr.set_emulated_device(mode, instance);
     }
     
     if (instance) {

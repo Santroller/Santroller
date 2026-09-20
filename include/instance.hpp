@@ -36,13 +36,13 @@ public:
     uint8_t stagekit_param = 0;
     uint8_t stagekit_command = 0;
     uint8_t stagekit_fog = 0;
-    uint8_t stagekit_strobe_speed = 0;
+    uint16_t stagekit_strobe_speed = 0;
     uint8_t stagekit_strobe = 0;
     uint8_t stagekit_blue = 0;
     uint8_t stagekit_green = 0;
     uint8_t stagekit_yellow = 0;
     uint8_t stagekit_red = 0;
-    uint8_t stagekit_last_strobe = 0;
+    uint32_t stagekit_last_strobe = 0;
     uint8_t capabilities = 0;
     bool side = 0;
 

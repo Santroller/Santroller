@@ -12,7 +12,8 @@
 #include "managers/device_manager.hpp"
 #include "utils.h"
 
-extern "C" {
+extern "C"
+{
 #include "gip_packet_handler.h"
 #include "gip_device.h"
 #include "gip_button_mapping.h"
@@ -57,8 +58,7 @@ static const gip_device_interface_t xone_gip_interface = {
     .on_device_descriptor = xone_on_device_descriptor_wrapper,
     .on_arrival = xone_on_arrival_wrapper,
     .queue_packet = xone_queue_packet_wrapper,
-    .send_ack = xone_send_ack_wrapper
-};
+    .send_ack = xone_send_ack_wrapper};
 
 XboxOneHost::XboxOneHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id)
 {
@@ -95,12 +95,13 @@ void XboxOneHost::disconnect()
 void XboxOneHost::send_report_from_host(XGIPProtocol *report)
 {
     m_gip_device.outgoing_xgip->copyAttributes(report);
-    if (m_gip_device.outgoing_xgip->getSequence() == 0) {
+    if (m_gip_device.outgoing_xgip->getSequence() == 0)
+    {
         uint8_t seq = gip_sequence_pool_next(&m_gip_device.tx_sequence_pools, m_gip_device.outgoing_xgip->getCommand());
         m_gip_device.outgoing_xgip->setSequence(seq);
     }
-    gip_report_queue_push(m_report_queue, 
-                          m_gip_device.outgoing_xgip->generatePacket(), 
+    gip_report_queue_push(m_report_queue,
+                          m_gip_device.outgoing_xgip->generatePacket(),
                           m_gip_device.outgoing_xgip->getPacketLength());
 }
 
@@ -122,9 +123,8 @@ void XboxOneHost::register_auth_handler(std::shared_ptr<XboxOneHost> self)
         return;
     }
 
-    auth_broker.register_handler(ModeXboxOne, [self](XGIPProtocol* packet) {
-        self->send_report_from_host(packet);
-    });
+    auth_broker.register_handler(ModeXboxOne, [self](XGIPProtocol *packet)
+                                 { self->send_report_from_host(packet); });
     m_auth_registered = true;
 }
 
@@ -182,7 +182,7 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
 bool XboxOneHost::set_config()
 {
     memset(m_last_inputs, 0, sizeof(m_last_inputs));
-    
+
     UsbHostInterface::set_config();
 
     if (m_ep_in)
@@ -197,8 +197,9 @@ bool XboxOneHost::set_config()
 static void xone_on_device_descriptor_wrapper(void *context, SubType subtype)
 {
     XboxOneHost *host = (XboxOneHost *)context;
-    
-    if (subtype == Unknown) {
+
+    if (subtype == Unknown)
+    {
         subtype = Gamepad;
     }
 
@@ -210,8 +211,11 @@ static void xone_on_device_descriptor_wrapper(void *context, SubType subtype)
     auto host_interface = host_devices[host->dev_addr()]->host_devices_by_itf[host->interface()];
     usb_host_add_assignable_interface(host_interface);
     host->register_auth_handler(std::static_pointer_cast<XboxOneHost>(host_interface));
-    printf("Xbox One auth device descriptor read; forcing USB device re-enumeration\r\n");
-    ConfigManager::instance().request_device_stack_reinit();
+    if (ConfigManager::instance().get_current_mode() == ConsoleMode::ModeXboxOne)
+    {
+        printf("Xbox One auth device descriptor read; forcing USB device re-enumeration\r\n");
+        ConfigManager::instance().request_device_stack_reinit();
+    }
 
     // Send power-on sequence using device interface
     host->send_power_on_sequence();
@@ -222,7 +226,8 @@ static void xone_on_device_descriptor_wrapper(void *context, SubType subtype)
 static void xone_on_arrival_wrapper(void *context)
 {
     XboxOneHost *host = (XboxOneHost *)context;
-    if (host) {
+    if (host)
+    {
         gip_default_arrival_callback(&host->m_gip_device, xone_queue_packet_wrapper);
     }
 }
@@ -284,14 +289,14 @@ void XboxOneHost::update(bool full_poll, bool send_events)
     // Send queued reports
     if (!gip_report_queue_empty(m_report_queue))
     {
-        const gip_report_queue_item_t* item = gip_report_queue_front(m_report_queue);
+        const gip_report_queue_item_t *item = gip_report_queue_front(m_report_queue);
         if (item && send_intr_xfer(m_ep_out, item->report, item->len))
         {
             dump_gip_packet("sent", item->report, item->len);
             gip_report_queue_pop(m_report_queue);
         }
     }
-    
+
     // Update GIP device - handles ACK timeout and outgoing packets
     gip_device_update_with_queue(&m_gip_device, now, XGIP_ACK_WAIT_TIMEOUT, m_report_queue);
 }

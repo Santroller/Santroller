@@ -177,7 +177,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
         }
         printf("ps5 host found!\r\n");
         
-        // Register as auth provider for official PS5 controller
+        // Register as auth provider for P5 general
         if (!auth_broker.has_handler(ModePs5) && auth_only)
         {
             auth_broker.register_handler(ModePs5, [intf](XGIPProtocol* packet) {

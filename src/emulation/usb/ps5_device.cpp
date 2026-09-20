@@ -88,6 +88,11 @@ void PS5GamepadDevice::process(bool full_poll, bool send_events)
         }
     }
     PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)epin_buf;
+    if (!m_sent_first_report)
+    {
+        m_sent_first_report = true;
+        gamepad->guide = true;
+    }
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
     std::shared_ptr<HidHost> host_device;

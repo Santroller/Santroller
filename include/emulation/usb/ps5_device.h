@@ -29,4 +29,5 @@ private:
     bool m_report_ready = true;
     uint8_t report_sequence_number = 1;
     bool got_feature = false;
+    bool m_sent_first_report = false;
 };

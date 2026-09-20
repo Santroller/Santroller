@@ -10,7 +10,7 @@
 
 static bool subtype_supports_stagekit(SubType subtype)
 {
-    return subtype == StageKit || subtype == GuitarHeroDrums || subtype == RockBandDrums || subtype == GuitarHeroGuitar || subtype == RockBandGuitar;
+    return subtype == StageKit || subtype == GuitarHeroDrums || subtype == RockBandDrums || subtype == GuitarHeroGuitar || subtype == RockBandGuitar || subtype == DjHeroTurntable;
 }
 class UsbHostInterface : public MidiDevice
 {

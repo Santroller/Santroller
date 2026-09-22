@@ -8,6 +8,7 @@
 #include <pb_encode.h>
 #include <stdint.h>
 #include <utils.h>
+#include "math.h"
 
 GuitarHeroGuitarButtonMapping::GuitarHeroGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
@@ -559,7 +560,7 @@ void GuitarHeroGuitarAxisMapping::update_ps4(uint8_t *buf)
         report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->tilt = abs(int32_t(m_calibrated_value - 32768)) >> 9;
         break;
     default:
         break;
@@ -578,7 +579,7 @@ void GuitarHeroGuitarAxisMapping::update_ps5(uint8_t *buf)
         report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->tilt = abs(int32_t(m_calibrated_value - 32768)) >> 9;
         break;
     default:
         break;

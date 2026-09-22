@@ -12,6 +12,20 @@ class UsbHostInterface;
 #include "emulation/usb/usb_devices.h"
 #include "devices/usb/host/hid/hid_host.h"
 
+#define PS5_FEATURE_PRESSURE 1 << 0
+#define PS5_FEATURE_MOTION 1 << 1
+#define PS5_FEATURE_LIGHTBAR 1 << 2
+#define PS5_FEATURE_VIBRATION 1 << 3
+#define PS5_FEATURE_EXTENDED 1 << 4
+#define PS5_FEATURE_SPEAKER 1 << 5
+#define PS5_FEATURE_TOUCH_PAD 1 << 6
+#define PS5_FEATURE_AUDIO_JACK 1 << 7
+
+#define PS5_FEATURE_WIRELESS 1 << 0
+#define PS5_FEATURE_BATTERY 1 << 2
+#define PS5_FEATURE_VENDOR_INT 1 << 6
+#define PS5_FEATURE_PLAYER_INDICATOR 1 << 7
+
 static const int ps5_colors[4][3] = {
     {0x00, 0x00, 0x40}, /* Blue */
     {0x40, 0x00, 0x00}, /* Red */
@@ -20,7 +34,7 @@ static const int ps5_colors[4][3] = {
 };
 
 uint8_t ps5_feature_config[] = {
-    0x03, 0x21, 0x28, 0x03, 0xC3, 0x00 /*type*/, 0x2C, 0x56,
+    0x03, 0x21, 0x28, 0x03, 0x91, 0x00 /*type*/, 0x2C, 0x56,
     0x01, 0x00, 0xD0, 0x07, 0x00, 0x80, 0x04, 0x00,
     0x00, 0x80, 0x0D, 0x0D, 0x84, 0x00, 0x00, 0x00,
     0x00 /*extended type*/, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -51,7 +65,8 @@ void PS5GamepadDevice::initialize()
 }
 void PS5GamepadDevice::process(bool full_poll, bool send_events)
 {
-    if (tud_suspended()) {
+    if (tud_suspended())
+    {
         for (const auto &profile : profiles)
         {
             for (const auto &led : profile->leds)
@@ -127,7 +142,7 @@ size_t PS5GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     return sizeof(desc);
 }
 
-size_t PS5GamepadDevice::device_name(uint8_t idx, char *desc) 
+size_t PS5GamepadDevice::device_name(uint8_t idx, char *desc)
 {
     return 0;
 }
@@ -174,26 +189,32 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         {
         case Gamepad:
             buffer[5] = PS5_GAMEPAD;
+            buffer[4] = PS5_FEATURE_LIGHTBAR | PS5_FEATURE_VIBRATION | PS5_FEATURE_TOUCH_PAD;
             break;
         case GuitarHeroGuitar:
         case LiveGuitar:
             buffer[5] = PS5_GUITAR;
+            buffer[4] = PS5_FEATURE_LIGHTBAR | PS5_FEATURE_EXTENDED;
             buffer[24] = 0x06;
             break;
         case RockBandGuitar:
             buffer[5] = PS5_GUITAR;
+            buffer[4] = PS5_FEATURE_LIGHTBAR | PS5_FEATURE_EXTENDED;
             buffer[24] = 0x07;
             break;
         case GuitarHeroDrums:
             buffer[5] = PS5_DRUMS;
+            buffer[4] = PS5_FEATURE_LIGHTBAR | PS5_FEATURE_EXTENDED;
             buffer[24] = 0x1f;
             break;
         case RockBandDrums:
             buffer[5] = PS5_DRUMS;
+            buffer[4] = PS5_FEATURE_LIGHTBAR | PS5_FEATURE_EXTENDED;
             buffer[24] = 0x1f;
             break;
         case FightStick:
             buffer[5] = PS5_FIGHTSTICK;
+            buffer[4] = PS5_FEATURE_LIGHTBAR | PS5_FEATURE_VIBRATION | PS5_FEATURE_TOUCH_PAD;
             break;
         default:
             break;
@@ -214,19 +235,30 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
 uint8_t handle_player_leds_ps5(uint8_t player_mask)
 {
     // DualSense hardware player indicator patterns
-    if (player_mask == 0x04) return 1; // Center LED
-    if (player_mask == 0x0A) return 2; // Inner LEDs
-    if (player_mask == 0x15) return 3; // Center + outer LEDs
-    if (player_mask == 0x1B) return 4; // Inner + outer LEDs
+    if (player_mask == 0x04)
+        return 1; // Center LED
+    if (player_mask == 0x0A)
+        return 2; // Inner LEDs
+    if (player_mask == 0x15)
+        return 3; // Center + outer LEDs
+    if (player_mask == 0x1B)
+        return 4; // Inner + outer LEDs
 
     // Fallback simple bitmasks
-    if (player_mask == 1) return 1;
-    if (player_mask == 2) return 2;
-    if (player_mask == 4) return 3;
-    if (player_mask == 8) return 4;
-    if (player_mask == 9) return 5;
-    if (player_mask == 10) return 6;
-    if (player_mask == 12) return 7;
+    if (player_mask == 1)
+        return 1;
+    if (player_mask == 2)
+        return 2;
+    if (player_mask == 4)
+        return 3;
+    if (player_mask == 8)
+        return 4;
+    if (player_mask == 9)
+        return 5;
+    if (player_mask == 10)
+        return 6;
+    if (player_mask == 12)
+        return 7;
     return 0;
 }
 

@@ -12,6 +12,17 @@ class UsbHostInterface;
 #include "emulation/usb/usb_devices.h"
 #include "devices/usb/host/hid/hid_host.h"
 
+#define PS4_FEATURE_PRESSURE 1<<0
+#define PS4_FEATURE_MOTION 1<<1
+#define PS4_FEATURE_LIGHTBAR 1<<2
+#define PS4_FEATURE_VIBRATION 1<<3
+#define PS4_FEATURE_EXTENDED 1<<4
+#define PS4_FEATURE_SPEAKER 1<<5
+#define PS4_FEATURE_TOUCH_PAD 1<<6
+#define PS4_FEATURE_AUDIO_JACK 1<<7
+
+#define PS5_FEATURE_WIRELESS 1<<0
+#define PS5_FEATURE_VENDOR_INT 1<<6
 
 uint8_t ps4_feature_config[] = {
     0x03, 0x21, 0x27, 0x04, 0x91, /*type*/ 0x00, 0x2c, 0x56,
@@ -164,22 +175,27 @@ uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         {
         case Gamepad:
             buffer[5] = PS4_GAMEPAD;
-            break;
-        case RockBandGuitar:
-            buffer[5] = PS4_GUITAR;
-            buffer[24] = 0x07;
+            buffer[4] = PS4_FEATURE_LIGHTBAR | PS4_FEATURE_VIBRATION | PS4_FEATURE_TOUCH_PAD;
             break;
         case GuitarHeroGuitar:
         case LiveGuitar:
             buffer[5] = PS4_GUITAR;
+            buffer[4] = PS4_FEATURE_LIGHTBAR | PS4_FEATURE_EXTENDED;
             buffer[24] = 0x06;
+            break;
+        case RockBandGuitar:
+            buffer[5] = PS4_GUITAR;
+            buffer[4] = PS4_FEATURE_LIGHTBAR | PS4_FEATURE_EXTENDED;
+            buffer[24] = 0x07;
             break;
         case GuitarHeroDrums:
             buffer[5] = PS4_DRUMS;
+            buffer[4] = PS4_FEATURE_LIGHTBAR | PS4_FEATURE_EXTENDED;
             buffer[24] = 0x1f;
             break;
         case RockBandDrums:
             buffer[5] = PS4_DRUMS;
+            buffer[4] = PS4_FEATURE_LIGHTBAR | PS4_FEATURE_EXTENDED;
             buffer[24] = 0x1f;
             break;
         case FightStick:

@@ -47,7 +47,7 @@ extern "C" {
 // BtDs3Host
 // ============================================================================
 
-void BtDs3Host::on_connected()
+void BtDs3Host::request_capabilities()
 {
     // Enable DS3 HID reports — the same command sent for USB DS3
     static const uint8_t enable[] = {0x42, 0x0c, 0x00, 0x00};
@@ -572,6 +572,10 @@ void BtWiiHost::set_player_led(uint8_t player)
 void BtWiiHost::on_connected()
 {
     BluetoothHostInterface::on_connected();
+}
+void BtWiiHost::request_capabilities()
+{
+    BluetoothHostInterface::request_capabilities();
     m_led_sent = false;
     if (m_is_pro)
     {
@@ -597,7 +601,6 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
     if (len < 1) return;
 
     uint8_t report_id = data[0];
-    printf("Wiimote report: id=0x%02x len=%u fsm=%d\r\n", report_id, len, m_fsm_state);
 
     switch (report_id)
     {
@@ -606,7 +609,6 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
         if (len < 4) return;
         uint8_t flags = data[3] & 0x0F;
         bool ext_connected = (flags & 0x02) != 0;
-        printf("Wiimote status: flags=0x%02x ext=%d\r\n", flags, (int)ext_connected);
 
         m_led_sent = false;
         if (ext_connected)
@@ -638,7 +640,6 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
 
     case WIIPROTO_REQ_RETURN: // 0x22
     {
-        printf("Wiimote ack (0x22), fsm=%d\r\n", m_fsm_state);
         if (m_fsm_state == WII_FSM_W4_INIT_ACK)
         {
             m_fsm_state = WII_FSM_W4_ENC_ACK;
@@ -685,6 +686,21 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
     }
 
     case 0x30:
+    {
+        if (!m_led_sent)
+        {
+            m_led_sent = true;
+            send_player_led(0x10);
+        }
+        if (len >= 3)
+        {
+            m_wii_buttons[0] = data[1];
+            m_wii_buttons[1] = data[2];
+        }
+        break;
+    }
+
+    case 0x31:
     {
         if (!m_led_sent)
         {

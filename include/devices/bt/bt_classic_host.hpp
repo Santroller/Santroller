@@ -61,7 +61,7 @@ public:
     BtControllerType controller_type() const override { return BtControllerType_BtControllerTypePS3; }
 
     // on_connected() sends the DS3 enable sequence via HID set-report
-    void on_connected() override;
+    void request_capabilities() override;
 
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
@@ -274,6 +274,7 @@ public:
     }
 
     void on_connected() override;
+    void request_capabilities() override;
     void handle_report(const uint8_t *data, uint16_t len) override;
 
     bool tick_digital(proto_Output &type) override;

@@ -532,7 +532,16 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             case GuitarHeroGuitar_Whammy:
                 return data->whammy << 8;
             case GuitarHeroGuitar_Tilt:
-                return data->tilt << 2;
+                // tilt is inverted on the PS3, so we need to invert it here 
+                if (data->tilt < 0x180)
+                {
+                    return 0xFFFF;
+                }
+                if (data->tilt > 0x280)
+                {
+                    return 0;
+                }
+                return 65535 - ((data->tilt - 0x180) << 8);
             default:
                 return 0;
             }
@@ -547,7 +556,7 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             case GuitarHeroLiveGuitar_Whammy:
                 return data->whammy << 8;
             case GuitarHeroLiveGuitar_Tilt:
-                return data->tilt << 2;
+                return data->tilt << 8;
             default:
                 return 0;
             }

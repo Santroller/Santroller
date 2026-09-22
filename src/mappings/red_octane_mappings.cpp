@@ -532,7 +532,7 @@ void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
         return;
     }
     // tilt is flipped
-    int tilt = m_calibrated_value - 32768;
+    int tilt = 65535 - m_calibrated_value;
     // tilt centers at 512 but isnt actually full range
     tilt = 512 - (tilt >> 8);
     PS3GuitarHeroGuitar_Data_t *report = (PS3GuitarHeroGuitar_Data_t *)buf;

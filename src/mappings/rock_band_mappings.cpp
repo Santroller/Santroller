@@ -9,6 +9,7 @@
 #include <pb_encode.h>
 #include <stdint.h>
 #include <utils.h>
+#include <math.h>
 
 RockBandGuitarButtonMapping::RockBandGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
@@ -448,7 +449,7 @@ void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
         report->whammy = m_calibrated_value >> 8;
         break;
     case RockBandGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->tilt = abs(int32_t(m_calibrated_value - 32768)) >> 9;
         break;
     case RockBandGuitar_Pickup:
         report->pickup = m_calibrated_value;
@@ -471,7 +472,7 @@ void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
         report->whammy = m_calibrated_value >> 8;
         break;
     case RockBandGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->tilt = abs(int32_t(m_calibrated_value - 32768)) >> 9;
         break;
     case RockBandGuitar_Pickup:
         report->pickup = m_calibrated_value;

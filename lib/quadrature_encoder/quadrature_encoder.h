@@ -9,8 +9,8 @@ public:
     void tick();
     void begin();
     void end();
-    int delta;
-    int position;
+    int delta = 0;
+    int position = 0;
 
 private:
     uint8_t m_pin;

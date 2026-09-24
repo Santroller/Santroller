@@ -91,6 +91,7 @@ increment_cont:
 
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
+#include "hardware/pio.h"
 
 // max_step_rate is used to lower the clock of the state machine to save power
 // if the application doesn't require a very high sampling rate. Passing zero
@@ -124,6 +125,7 @@ static inline void quadrature_encoder_program_init(PIO pio, uint sm, uint pin, i
     }
 
     pio_sm_init(pio, sm, 0, &c);
+    pio_sm_exec(pio, sm, pio_encode_mov(pio_y, pio_null));
     pio_sm_set_enabled(pio, sm, true);
 }
 

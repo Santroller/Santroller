@@ -33,9 +33,10 @@
 // encoder count updated and because of that it supports very high step rates.
 //
 
-QuadratureEncoder::QuadratureEncoder(uint8_t pin) : delta(0), position(0), m_pin(pin)
+QuadratureEncoder::QuadratureEncoder(uint8_t pin, uint8_t divisor) : delta(0), position(0), m_pin(pin), m_divisor(divisor > 0 ? divisor : 1), m_sub_count(0)
 {
 }
+
 void QuadratureEncoder::begin()
 {
     if (m_initialized)
@@ -46,7 +47,8 @@ void QuadratureEncoder::begin()
         quadrature_encoder_program_init(pio, sm, m_pin, 0);
         old_value = quadrature_encoder_get_count(pio, sm);
         delta = 0;
-        position = old_value;
+        position = 0;
+        m_sub_count = 0;
     }
 }
     
@@ -63,7 +65,20 @@ void QuadratureEncoder::tick()
     if (!m_initialized)
         return;
     int new_value = quadrature_encoder_get_count(pio, sm);
-    delta = new_value - old_value;
+    int raw_delta = new_value - old_value;
     old_value = new_value;
-    position = new_value;
+
+    if (m_divisor <= 1)
+    {
+        delta = raw_delta;
+        position += raw_delta;
+    }
+    else
+    {
+        m_sub_count += raw_delta;
+        int step = m_sub_count / m_divisor;
+        m_sub_count %= m_divisor;
+        delta = step;
+        position += step;
+    }
 }

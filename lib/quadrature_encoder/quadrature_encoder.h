@@ -5,7 +5,7 @@ int quad_tick();
 class QuadratureEncoder
 {
 public:
-    QuadratureEncoder(uint8_t pin);
+    QuadratureEncoder(uint8_t pin, uint8_t divisor = 1);
     void tick();
     void begin();
     void end();
@@ -14,6 +14,8 @@ public:
 
 private:
     uint8_t m_pin;
+    uint8_t m_divisor = 1;
+    int m_sub_count = 0;
     PIO pio = pio1;
     uint sm = 0;
     int old_value = 0;

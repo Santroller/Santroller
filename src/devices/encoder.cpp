@@ -4,7 +4,7 @@
 #include "emulation/usb/hid_device.h"
 #include "config/config.hpp"
 #include "utils.h"
-EncoderDevice::EncoderDevice(proto_EncoderDevice device, uint16_t id) : Device(id), encoder(device.dataPin), m_device(device), m_deltaRate(device.has_deltaRate && device.deltaRate > 0 ? device.deltaRate : 1)
+EncoderDevice::EncoderDevice(proto_EncoderDevice device, uint16_t id) : Device(id), encoder(device.dataPin, device.has_divisor && device.divisor > 0 ? device.divisor : 1), m_device(device), m_deltaRate(device.has_deltaRate && device.deltaRate > 0 ? device.deltaRate : 1)
 {
 }
 

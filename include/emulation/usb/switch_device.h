@@ -242,6 +242,7 @@ private:
     uint8_t report[CFG_TUD_HID_EP_BUFSIZE] = { };
     uint8_t last_report[CFG_TUD_HID_EP_BUFSIZE] = { };
     SwitchProGamepad_Data_t switchReport;
+    SwitchProGamepad_Data_t m_initial_report;
     uint8_t last_report_counter;
     uint32_t last_report_timer;
     bool isReady = false;

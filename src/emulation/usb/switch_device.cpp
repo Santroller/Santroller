@@ -74,6 +74,8 @@ SwitchGamepadDevice::SwitchGamepadDevice()
         .imuData = {0x00},
         .padding = {0x00}};
 
+    m_initial_report = switchReport;
+
     last_report_timer = to_ms_since_boot(get_absolute_time());
 
     factoryConfig->leftStickCalibration.get_real_min(leftMinX, leftMinY);
@@ -93,13 +95,16 @@ void SwitchGamepadDevice::initialize()
 bool SwitchGamepadDevice::sendReport(uint8_t reportID, void const *reportData, uint16_t reportLength)
 {
     bool response = send_report(reportLength, 0, reportData);
-    if (last_report_counter < 255)
+    if (response)
     {
-        last_report_counter++;
-    }
-    else
-    {
-        last_report_counter = 0;
+        if (last_report_counter < 255)
+        {
+            last_report_counter++;
+        }
+        else
+        {
+            last_report_counter = 0;
+        }
     }
     return response;
 }
@@ -130,20 +135,17 @@ void SwitchGamepadDevice::process(bool full_poll, bool send_events)
     reportSent = false;
     if (isReportQueued)
     {
-        if ((now - last_report_timer) > SWITCH_PRO_KEEPALIVE_TIMER)
+        if (ready() && sendReport(queuedReportID, report, 64))
         {
-            if (ready())
-            {
-                sendReport(queuedReportID, report, 64);
-            }
             isReportQueued = false;
             last_report_timer = now;
+            reportSent = true;
         }
-        reportSent = true;
     }
 
     if (isReady && !reportSent)
     {
+        switchReport.inputs = m_initial_report.inputs;
         for (const auto &profile : profiles)
         {
             for (const auto &mapping : profile->mappings)
@@ -156,20 +158,15 @@ void SwitchGamepadDevice::process(bool full_poll, bool send_events)
                 led->update(full_poll, send_events);
             }
         }
-        if ((now - last_report_timer) > SWITCH_PRO_KEEPALIVE_TIMER)
+        if ((now - last_report_timer) >= SWITCH_PRO_KEEPALIVE_TIMER)
         {
             switchReport.timestamp = last_report_counter;
             void *inputReport = &switchReport;
             uint16_t report_size = sizeof(switchReport);
-            if (memcmp(last_report, inputReport, report_size) != 0)
+            if (ready() && sendReport(0, inputReport, report_size))
             {
-                // HID ready + report sent, copy previous report
-                if (ready() && sendReport(0, inputReport, report_size) == true)
-                {
-                    memcpy(last_report, inputReport, report_size);
-                    reportSent = true;
-                }
-
+                memcpy(last_report, inputReport, report_size);
+                reportSent = true;
                 last_report_timer = now;
             }
         }
@@ -257,7 +254,7 @@ void SwitchGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report
     if (report_type != HID_REPORT_TYPE_OUTPUT)
         return;
 
-    memset(report, 0x00, bufsize);
+    memset(report, 0x00, sizeof(report));
 
     uint8_t switchReportID = buffer[0];
     uint8_t switchReportSubID = buffer[1];
@@ -330,18 +327,18 @@ void SwitchGamepadDevice::handleConfigReport(uint8_t switchReportID, uint8_t swi
         canSend = true;
         break;
     case SwitchOutputSubtypes::DISABLE_USB_TIMEOUT:
-        report[0] = SwitchReportID::REPORT_OUTPUT_30;
+        report[0] = SwitchReportID::REPORT_USB_INPUT_81;
         report[1] = switchReportSubID;
         isReady = true;
         canSend = true;
         break;
     case SwitchOutputSubtypes::ENABLE_USB_TIMEOUT:
-        report[0] = SwitchReportID::REPORT_OUTPUT_30;
+        report[0] = SwitchReportID::REPORT_USB_INPUT_81;
         report[1] = switchReportSubID;
         canSend = true;
         break;
     default:
-        report[0] = SwitchReportID::REPORT_OUTPUT_30;
+        report[0] = SwitchReportID::REPORT_USB_INPUT_81;
         report[1] = switchReportSubID;
         canSend = true;
         break;
@@ -388,6 +385,7 @@ void SwitchGamepadDevice::handleFeatureReport(uint8_t switchReportID, uint8_t sw
         report[13] = 0x80;
         report[14] = 0x03;
         report[15] = inputMode;
+        isReady = true;
         canSend = true;
         switch (inputMode)
         {
@@ -527,19 +525,23 @@ void SwitchGamepadDevice::handleFeatureReport(uint8_t switchReportID, uint8_t sw
 }
 void SwitchGamepadDevice::readSPIFlash(uint8_t *dest, uint32_t address, uint8_t size)
 {
-    uint32_t addressBank = address & 0xFFFFFF00;
-    uint32_t addressOffset = address & 0x000000FF;
-    std::map<uint32_t, const uint8_t *>::iterator it = spiFlashData.find(addressBank);
-
-    if (it != spiFlashData.end())
+    if (address >= 0x6000 && address < 0x6000 + sizeof(factoryConfigData))
     {
-        // address found
-        const uint8_t *data = it->second;
-        memcpy(dest, data + addressOffset, size);
+        uint32_t offset = address - 0x6000;
+        if (offset + size <= sizeof(factoryConfigData))
+        {
+            memcpy(dest, factoryConfigData + offset, size);
+            return;
+        }
     }
-    else
+    else if (address >= 0x8000 && address < 0x8000 + sizeof(userCalibrationData))
     {
-        // could not find defined address
-        memset(dest, 0xFF, size);
+        uint32_t offset = address - 0x8000;
+        if (offset + size <= sizeof(userCalibrationData))
+        {
+            memcpy(dest, userCalibrationData + offset, size);
+            return;
+        }
     }
+    memset(dest, 0xFF, size);
 }

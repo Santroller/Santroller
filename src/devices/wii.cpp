@@ -5,6 +5,7 @@
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
 #include "config/config.hpp"
+#include "managers/config_manager.hpp"
 #include "utils.h"
 WiiDevice::WiiDevice(const DeviceReloadState *state, proto_WiiDevice device, uint16_t id) :
     MidiDevice(state, id, false, m_midi_buffers.config()),
@@ -57,6 +58,7 @@ void WiiDevice::update(bool full_poll, bool send_events)
         HIDConfigDevice::send_event(event, true);
         if (changed)
         {
+            ConfigManager::instance().mark_mode_change_time(millis());
             reload();
         }
     }

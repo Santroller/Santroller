@@ -69,18 +69,22 @@ void usb_host_add_enumerating_interface(std::shared_ptr<UsbHostInterface> device
 
 void usb_host_remove_assignable_interface(UsbHostInterface *device)
 {
-    erase_usb_interfaces_if(usb_assignable_interfaces, [device](const auto &candidate) { return candidate.get() == device; });
+    erase_usb_interfaces_if(usb_assignable_interfaces, [device](const auto &candidate)
+                            { return candidate.get() == device; });
 }
 
 void usb_host_remove_enumerating_interface(UsbHostInterface *device)
 {
-    erase_usb_interfaces_if(usb_enumerating_interfaces, [device](const auto &candidate) { return candidate.get() == device; });
+    erase_usb_interfaces_if(usb_enumerating_interfaces, [device](const auto &candidate)
+                            { return candidate.get() == device; });
 }
 
 void usb_host_remove_interfaces_by_address(uint8_t dev_addr)
 {
-    erase_usb_interfaces_if(usb_assignable_interfaces, [dev_addr](const auto &device) { return device->dev_addr() == dev_addr; });
-    erase_usb_interfaces_if(usb_enumerating_interfaces, [dev_addr](const auto &device) { return device->dev_addr() == dev_addr; });
+    erase_usb_interfaces_if(usb_assignable_interfaces, [dev_addr](const auto &device)
+                            { return device->dev_addr() == dev_addr; });
+    erase_usb_interfaces_if(usb_enumerating_interfaces, [dev_addr](const auto &device)
+                            { return device->dev_addr() == dev_addr; });
 }
 
 size_t usb_host_assignable_interface_count()
@@ -335,6 +339,7 @@ void USBHostHardwareDevice::update(bool full_poll, bool send_events)
     {
         printf("devices changed! count: %d\r\n", usb_host_assignable_interface_count());
         m_devices_changed = 0;
+        ConfigManager::instance().mark_mode_change_time(millis());
         reload();
     }
     if (full_poll)

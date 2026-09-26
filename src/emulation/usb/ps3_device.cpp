@@ -316,7 +316,7 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
 
 size_t PS3GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
 {
-    if (subtype != GuitarHeroGuitar)
+    if (subtype != GuitarHeroGuitar && subtype != Gamepad)
     {
         OS_COMPATIBLE_SECTION section = {
             FirstInterfaceNumber : interface_id,

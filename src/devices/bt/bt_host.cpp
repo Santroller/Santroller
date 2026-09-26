@@ -4,6 +4,7 @@
 #include "events.pb.h"
 #include "config/config.hpp"
 #include "config/device_factory.hpp"
+#include "managers/config_manager.hpp"
 #include "utils.h"
 
 #include <vector>
@@ -142,6 +143,7 @@ void bt_host_update_interfaces(bool full_poll, bool send_events)
     if (m_devices_changed && millis() > m_devices_changed)
     {
         m_devices_changed = 0;
+        ConfigManager::instance().mark_mode_change_time(millis());
         reload();
     }
 }

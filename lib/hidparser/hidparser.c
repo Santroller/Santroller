@@ -374,7 +374,10 @@ uint8_t USB_ProcessHIDReport(const uint8_t *ReportData,
 
 		case HID_RI_REPORT_ID(0):
 			CurrStateTable->ReportID = ReportItemData;
-
+			if (ReportItemData == ReportIdSantrollerCapabilities)
+			{
+				ParserData->foundSantrollerCapabilitiesReportId = true;
+			}
 			if (ParserData->UsingReportIDs)
 			{
 				CurrReportIDInfo = NULL;
@@ -520,7 +523,10 @@ uint8_t USB_ProcessHIDReport(const uint8_t *ReportData,
 				CurrReportIDInfo->ReportSizeBits[NewReportItem.ItemType] += CurrStateTable->Attributes.BitSize;
 
 				ParserData->LargestReportSizeBits = MAX(ParserData->LargestReportSizeBits, CurrReportIDInfo->ReportSizeBits[NewReportItem.ItemType]);
-
+				if (NewReportItem.ReportID == ReportIdSantrollerCapabilities && NewReportItem.ItemType == HID_REPORT_ITEM_Out && NewReportItem.Attributes.Usage.Page == HID_USAGE_PAGE_VENDOR && NewReportItem.Attributes.Usage.Usage == 0x2882)
+				{
+					ParserData->foundSantrollerV2OutputUsage = true;
+				}
 				if (NewReportItem.ItemType == HID_REPORT_ITEM_Feature && NewReportItem.Attributes.Usage.Page == HID_USAGE_PAGE_VENDOR)
 				{
 					if (NewReportItem.Attributes.Usage.Usage == 0x2821 || NewReportItem.Attributes.Usage.Usage == 0xA883)

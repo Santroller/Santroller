@@ -381,7 +381,7 @@ static void ble_register_hids_host(BleConnectionContext *ctx, uint16_t cid)
         USB_ProcessHIDReport(ctx->desc_copy, ctx->desc_len, &info);
 
     uint16_t device_id = BluetoothStack::instance().device_id();
-    auto host = ble_create_host(ctx->vid, ctx->pid, ctx->version, device_id, info, ctx->desc_copy, ctx->desc_len, ctx->known_subtype);
+    auto host = ble_create_host(ctx->vid, ctx->pid, ctx->version, device_id, info, ctx->known_subtype);
     host->set_ble(true);
 
     memcpy(host->m_addr, ctx->addr, 6);

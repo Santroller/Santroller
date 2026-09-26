@@ -128,7 +128,5 @@ std::shared_ptr<BluetoothHostInterface> ble_create_host(uint16_t vid, uint16_t p
                                                          uint16_t version,
                                                          uint16_t device_id,
                                                          HID_ReportInfo_t *info,
-                                                         const uint8_t *desc = nullptr,
-                                                         uint16_t desc_len = 0,
                                                          SubType known_subtype = SubType_Unknown);
 

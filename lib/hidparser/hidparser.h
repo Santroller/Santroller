@@ -65,6 +65,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "enums.pb.h"
 #include "protocols/controller_reports.hpp"
 /* Enable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
@@ -351,6 +352,8 @@ extern "C"
 		bool foundPS3Usage;
 		bool foundPS4Usage;
 		bool foundPS5Usage;
+		bool foundSantrollerV2OutputUsage;
+
 	} HID_ReportInfo_t;
 
 	/* Function Prototypes: */

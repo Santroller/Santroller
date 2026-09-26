@@ -734,34 +734,15 @@ std::shared_ptr<BluetoothHostInterface> ble_create_host(uint16_t vid, uint16_t p
                                                          uint16_t version,
                                                          uint16_t device_id,
                                                          HID_ReportInfo_t *info,
-                                                         const uint8_t *desc,
-                                                         uint16_t desc_len,
                                                          SubType known_subtype)
 {
     bool is_santroller = (vid == ARDWIINO_VID && (pid == ARDWIINO_PID || pid == ARDWIINO_PID_BLE));
-    bool has_v2_usage = false;
-    if (desc && desc_len >= 2)
-    {
-        for (uint16_t i = 0; i < desc_len - 1; i++)
-        {
-            if ((desc[i] == 0x82 && desc[i + 1] == 0x28) ||
-                (desc[i] == 0x85 && desc[i + 1] == ReportIdSantrollerCapabilities))
-            {
-                has_v2_usage = true;
-                break;
-            }
-        }
-    }
-    if (has_v2_usage)
-    {
-        is_santroller = true;
-    }
 
     if (is_santroller)
     {
-        auto host = std::make_shared<BleSantrollerHost>(device_id, has_v2_usage, version, known_subtype);
+        auto host = std::make_shared<BleSantrollerHost>(device_id, info->foundSantrollerV2OutputUsage, version, known_subtype);
         host->m_vid = vid ? vid : ARDWIINO_VID;
-        host->m_pid = pid ? pid : (has_v2_usage ? ARDWIINO_PID : ARDWIINO_PID_BLE);
+        host->m_pid = pid ? pid : (info->foundSantrollerV2OutputUsage ? ARDWIINO_PID : ARDWIINO_PID_BLE);
         return host;
     }
 

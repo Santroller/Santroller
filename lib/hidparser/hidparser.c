@@ -374,10 +374,6 @@ uint8_t USB_ProcessHIDReport(const uint8_t *ReportData,
 
 		case HID_RI_REPORT_ID(0):
 			CurrStateTable->ReportID = ReportItemData;
-			if (ReportItemData == ReportIdSantrollerCapabilities)
-			{
-				ParserData->foundSantrollerCapabilitiesReportId = true;
-			}
 			if (ParserData->UsingReportIDs)
 			{
 				CurrReportIDInfo = NULL;

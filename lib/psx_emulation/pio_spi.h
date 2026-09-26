@@ -2,6 +2,7 @@
 
 #include "hardware/pio.h"
 #include "hardware/dma.h"
+#include "enums.pb.h"
 #include <stdint.h>
 
 // Configuration options for pio spi
@@ -16,6 +17,7 @@ typedef struct pio_spi_config_t {
     int cs_sm;
     int initial_sm;
     int combined_sm;
+    SubType type; // SubType of the device
 } pio_spi_config_t;
 
 // Internal representation of PIO SPI
@@ -28,17 +30,19 @@ typedef struct pio_spi_t {
     uint channel_read;
     uint32_t startstop_mask;
     pio_spi_config_t config;
-    volatile uint8_t c4c_state;
-    volatile uint8_t c46_state;
     uint8_t report_len;
+    uint8_t config_responses[0x10][0x06];
     uint8_t resp_42[32];
-    uint8_t resp_41[6];
-    bool analog;
+    volatile uint8_t last_cmd;
+    volatile bool has_new_cmd;
     volatile bool configMode;
     bool locked;
     volatile uint8_t rumble_small;
     volatile uint8_t rumble_large;
     volatile uint8_t dma_buf[32];
+    volatile uint8_t dma_buf_test[8];
+    uint8_t dma_config_buf[6];
+    SubType type;
 } pio_spi_t;
 
 #ifdef __cplusplus

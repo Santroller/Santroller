@@ -81,7 +81,7 @@ void Ps2EmulationDeviceInstance::process(bool full_poll, bool send_events)
         }
         // PS2 allows specifying what data is sent, so handle that
         uint8_t current = 0;
-        for (int i = 0; i < 24; i++)
+        for (int i = 0; i < 18; i++)
         {
             if (format.config[i / 8] & (1 << (i % 8)))
             {

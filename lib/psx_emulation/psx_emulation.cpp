@@ -19,7 +19,8 @@ void PSXEmulation::begin(SubType type)
         .sck_pin = sck,
         .copi_pin = cmd,
         .cipo_pin = dat,
-        .ack_pin = ackPin};
+        .ack_pin = ackPin,
+        .type = type};
 
     spi = pio_spi_init(&config);
     pio_spi_start(spi);
@@ -47,12 +48,23 @@ PSXEmulation::PSXEmulation(int8_t sck, int8_t cmd, int8_t dat, uint8_t attPin, u
 void PSXEmulation::sendData(uint8_t len, uint8_t *data)
 {
     memcpy(spi->resp_42, data, len);
+    memcpy(spi->config_responses[0x02], data, sizeof(spi->config_responses[0x02]));
     spi->report_len = len;
     sent = false;
 }
+uint8_t last_lastcmd = 0;
 PsxReportFormat_t PSXEmulation::getReportFormat()
 {
-    return {spi->analog, {spi->resp_41[0], spi->resp_41[1], spi->resp_41[2]}};
+    if (spi->has_new_cmd)
+    {
+        spi->has_new_cmd = false;
+        for (int i = 0; i < 8; i++)
+        {
+            printf("%02X ", spi->dma_buf_test[i]);
+        }
+        printf("\r\n");
+    }
+    return {spi->config_responses[0x05][2] == 0x01, {spi->config_responses[0x01][0], spi->config_responses[0x01][1], spi->config_responses[0x01][2]}};
 }
 bool PSXEmulation::ready()
 {

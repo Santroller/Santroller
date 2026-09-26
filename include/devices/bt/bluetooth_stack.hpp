@@ -14,6 +14,7 @@ public:
     void update_wiimote_report(void *report);
     void release_wiimote();
     bool initialized() const;
+    void tick();
     bool is_powered() const { return m_powered; }
     uint16_t device_id() const { return m_device_id; }
     void set_device_id(uint16_t device_id) { m_device_id = device_id; }

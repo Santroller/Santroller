@@ -4,3 +4,4 @@ void ble_stop_scan();
 void ble_start_scan();
 bool ble_is_connecting();
 bool ble_has_connected_device();
+void ble_tick();

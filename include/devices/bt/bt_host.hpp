@@ -58,7 +58,8 @@ public:
     // Called when a feature report response arrives
     virtual void handle_feature_report(const uint8_t *data, uint16_t len) {}
     virtual void handle_feature_report_failed() { m_ready = true; }
-    virtual void request_capabilities() {}
+    virtual void send_init_packets() {m_init_packets_sent = true;}
+    bool init_packets_sent() const { return m_init_packets_sent; }
 
     // Readiness: whether this host can be registered as an assignable device immediately.
     // 3rd-party PS4/PS5 controllers hold off until feature report 0x03 provides their true subtype.
@@ -129,6 +130,7 @@ public:
 protected:
     bool m_ready = true;
     bool m_registered = false;
+    bool m_init_packets_sent = false;
     uint32_t m_connected_at = 0;
     bool m_sent_type = false;
     uint8_t m_report_buf[128] = {};  // large enough for any HID report we handle

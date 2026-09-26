@@ -117,3 +117,10 @@ bool BluetoothStack::initialized() const
 {
     return m_initialized;
 }
+void BluetoothStack::tick() {
+    if (m_initialized)
+    {
+        btc_tick();
+        ble_tick();
+    }
+}

@@ -47,7 +47,7 @@ extern "C" {
 // BtDs3Host
 // ============================================================================
 
-void BtDs3Host::request_capabilities()
+void BtDs3Host::send_init_packets()
 {
     // Enable DS3 HID reports — the same command sent for USB DS3
     static const uint8_t enable[] = {0x42, 0x0c, 0x00, 0x00};
@@ -104,7 +104,7 @@ void BtDs4Host::on_connected()
     BluetoothHostInterface::on_connected();
 }
 
-void BtDs4Host::request_capabilities()
+void BtDs4Host::send_init_packets()
 {
 }
 
@@ -184,7 +184,7 @@ void BtDs5Host::on_connected()
     BluetoothHostInterface::on_connected();
 }
 
-void BtDs5Host::request_capabilities()
+void BtDs5Host::send_init_packets()
 {
 }
 
@@ -573,9 +573,9 @@ void BtWiiHost::on_connected()
 {
     BluetoothHostInterface::on_connected();
 }
-void BtWiiHost::request_capabilities()
+void BtWiiHost::send_init_packets()
 {
-    BluetoothHostInterface::request_capabilities();
+    BluetoothHostInterface::send_init_packets();
     m_led_sent = false;
     if (m_is_pro)
     {

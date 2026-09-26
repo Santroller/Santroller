@@ -266,6 +266,7 @@ int main()
         hid_task();
         HidConsoleBridge::instance().flush();
         EEPROM.tick();
+        BluetoothStack::instance().tick();
     }
     return 0;
 }

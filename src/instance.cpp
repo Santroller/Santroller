@@ -57,77 +57,74 @@ void Instance::process_stagekit_command(uint8_t command, uint8_t param)
     stagekit_command = command;
     switch (command)
     {
-        switch (rumble_right)
-        {
-        case RUMBLE_STAGEKIT_FOG_ON:
-            stagekit_fog = 0xff;
-            break;
-        case RUMBLE_STAGEKIT_FOG_OFF:
-            stagekit_fog = 0x00;
-            break;
-        case RUMBLE_STAGEKIT_SLOW_STROBE:
-            stagekit_strobe_speed = 150;
-            stagekit_last_strobe = millis();
-            break;
-        case RUMBLE_STAGEKIT_MEDIUM_STROBE:
-            stagekit_strobe_speed = 200;
-            stagekit_last_strobe = millis();
-            break;
-        case RUMBLE_STAGEKIT_FAST_STROBE:
-            stagekit_strobe_speed = 300;
-            stagekit_last_strobe = millis();
-            break;
-        case RUMBLE_STAGEKIT_FASTEST_STROBE:
-            stagekit_strobe_speed = 400;
-            stagekit_last_strobe = millis();
-            break;
-        case RUMBLE_STAGEKIT_NO_STROBE:
-            stagekit_strobe_speed = 0;
-            stagekit_last_strobe = 0;
-            break;
-        case RUMBLE_STAGEKIT_ALLOFF:
-            stagekit_fog = 0x00;
-            stagekit_strobe_speed = 0;
-            stagekit_blue = 0x00;
-            stagekit_green = 0x00;
-            stagekit_yellow = 0x00;
-            stagekit_red = 0x00;
-            break;
-        case RUMBLE_STAGEKIT_BLUE:
-            stagekit_blue = rumble_left;
-            break;
-        case RUMBLE_STAGEKIT_GREEN:
-            stagekit_green = rumble_left;
-            break;
-        case RUMBLE_STAGEKIT_YELLOW:
-            stagekit_yellow = rumble_left;
-            break;
-        case RUMBLE_STAGEKIT_RED:
-            stagekit_red = rumble_left;
-            break;
-            // TODO: deal with the extra santroller commands
-            // case RUMBLE_SANTROLLER_NOTE_MISS:
-            //     stage_kit_report.report.noteMiss = rumble_left;
-            //     break;
-            // case RUMBLE_SANTROLLER_MULTIPLIER:
-            //     stage_kit_report.report.multiplier = rumble_left;
-            //     break;
-            // case RUMBLE_SANTROLLER_SOLO:
-            //     stage_kit_report.report.soloActive = rumble_left;
-            //     break;
-            // case RUMBLE_SANTROLLER_STAR_POWER_ACTIVE:
-            //     stage_kit_report.report.starPowerActive = rumble_left;
-            //     break;
-            // case RUMBLE_SANTROLLER_STAR_POWER_FILL:
-            //     stage_kit_report.report.starPowerState = rumble_left;
-            //     break;
-            // case RUMBLE_SANTROLLER_NOTE_HIT:
-            //     stage_kit_report.report.noteHitRaw = rumble_left;
-            //     break;
-            case RUMBLE_SANTROLLER_EUPHORIA_LED:
-                euphoria_led = rumble_left;
-            break;
-        }
+    case RUMBLE_STAGEKIT_FOG_ON:
+        stagekit_fog = 0xff;
+        break;
+    case RUMBLE_STAGEKIT_FOG_OFF:
+        stagekit_fog = 0x00;
+        break;
+    case RUMBLE_STAGEKIT_SLOW_STROBE:
+        stagekit_strobe_speed = 150;
+        stagekit_last_strobe = millis();
+        break;
+    case RUMBLE_STAGEKIT_MEDIUM_STROBE:
+        stagekit_strobe_speed = 200;
+        stagekit_last_strobe = millis();
+        break;
+    case RUMBLE_STAGEKIT_FAST_STROBE:
+        stagekit_strobe_speed = 300;
+        stagekit_last_strobe = millis();
+        break;
+    case RUMBLE_STAGEKIT_FASTEST_STROBE:
+        stagekit_strobe_speed = 400;
+        stagekit_last_strobe = millis();
+        break;
+    case RUMBLE_STAGEKIT_NO_STROBE:
+        stagekit_strobe_speed = 0;
+        stagekit_last_strobe = 0;
+        break;
+    case RUMBLE_STAGEKIT_ALLOFF:
+        stagekit_fog = 0x00;
+        stagekit_strobe_speed = 0;
+        stagekit_blue = 0x00;
+        stagekit_green = 0x00;
+        stagekit_yellow = 0x00;
+        stagekit_red = 0x00;
+        break;
+    case RUMBLE_STAGEKIT_BLUE:
+        stagekit_blue = param;
+        break;
+    case RUMBLE_STAGEKIT_GREEN:
+        stagekit_green = param;
+        break;
+    case RUMBLE_STAGEKIT_YELLOW:
+        stagekit_yellow = param;
+        break;
+    case RUMBLE_STAGEKIT_RED:
+        stagekit_red = param;
+        break;
+    // TODO: deal with the extra santroller commands
+    // case RUMBLE_SANTROLLER_NOTE_MISS:
+    //     stage_kit_report.report.noteMiss = param;
+    //     break;
+    // case RUMBLE_SANTROLLER_MULTIPLIER:
+    //     stage_kit_report.report.multiplier = param;
+    //     break;
+    // case RUMBLE_SANTROLLER_SOLO:
+    //     stage_kit_report.report.soloActive = param;
+    //     break;
+    // case RUMBLE_SANTROLLER_STAR_POWER_ACTIVE:
+    //     stage_kit_report.report.starPowerActive = param;
+    //     break;
+    // case RUMBLE_SANTROLLER_STAR_POWER_FILL:
+    //     stage_kit_report.report.starPowerState = param;
+    //     break;
+    // case RUMBLE_SANTROLLER_NOTE_HIT:
+    //     stage_kit_report.report.noteHitRaw = param;
+    //     break;
+    case RUMBLE_SANTROLLER_EUPHORIA_LED:
+        euphoria_led = param;
+        break;
     }
     update_feedback();
 }

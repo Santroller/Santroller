@@ -3,7 +3,7 @@
 #include "hardware/adc.h"
 #include "stdio.h"
 
-EncoderInput::EncoderInput(proto_EncoderInput input, std::shared_ptr<EncoderDevice> device) : m_input(input), m_device(device)
+EncoderInput::EncoderInput(proto_EncoderInput input, std::shared_ptr<EncoderDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
 bool EncoderInput::tick_digital()

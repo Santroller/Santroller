@@ -32,6 +32,7 @@ public:
     UsbTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~UsbTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
+    void reset() override;
     int assignedDevices() { return 0; }
 
 protected:
@@ -44,6 +45,7 @@ public:
     SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~SpecificUsbDeviceActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
+    void reset() override;
     int assignedDevices() { return 0; }
 
 protected:
@@ -56,6 +58,7 @@ public:
     BluetoothTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~BluetoothTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
+    void reset() override;
     int assignedDevices() { return 0; }
 
 protected:
@@ -68,6 +71,7 @@ public:
     SpecificBluetoothDeviceActivationTrigger(proto_SpecificBluetoothDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~SpecificBluetoothDeviceActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
+    void reset() override;
     int assignedDevices() { return 0; }
 
 protected:
@@ -80,6 +84,7 @@ public:
     MidiChannelActivationTrigger(uint32_t channel, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~MidiChannelActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
+    void reset() override;
     int assignedDevices() { return 0; }
 
 protected:

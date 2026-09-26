@@ -2,11 +2,12 @@
 #include "input.hpp"
 #include "input.pb.h"
 #include "devices/protar_neck.hpp"
+#include "profiles/profile.hpp"
 #include <memory>
 class ProtarNeckAxisInput : public Input
 {
 public:
-    ProtarNeckAxisInput(proto_ProtarNeckAxisInput input, std::shared_ptr<ProtarNeckDevice> device);
+    ProtarNeckAxisInput(proto_ProtarNeckAxisInput input, std::shared_ptr<ProtarNeckDevice> device, Profile* profile);
     bool tick_digital();
     uint16_t tick_analog();
 
@@ -18,7 +19,7 @@ private:
 class ProtarNeckButtonInput : public Input
 {
 public:
-    ProtarNeckButtonInput(proto_ProtarNeckButtonInput input, std::shared_ptr<ProtarNeckDevice> device);
+    ProtarNeckButtonInput(proto_ProtarNeckButtonInput input, std::shared_ptr<ProtarNeckDevice> device, Profile* profile);
     bool tick_digital();
     uint16_t tick_analog();
     uint64_t hardware_id() const override {

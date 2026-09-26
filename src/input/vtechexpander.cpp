@@ -3,7 +3,7 @@
 #include "hardware/adc.h"
 #include "stdio.h"
 
-VTechExpanderInput::VTechExpanderInput(proto_VTechGuitarIOExpanderInput input, std::shared_ptr<VTechGuitarIOExpanderDevice> device) : m_input(input), m_device(device)
+VTechExpanderInput::VTechExpanderInput(proto_VTechGuitarIOExpanderInput input, std::shared_ptr<VTechGuitarIOExpanderDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
 bool VTechExpanderInput::tick_digital()

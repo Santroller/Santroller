@@ -31,6 +31,7 @@ public:
     std::vector<std::unique_ptr<ActivationTriggerList>> triggers;
     std::vector<std::unique_ptr<LedMapping>> leds;
     std::map<uint16_t, std::shared_ptr<Device>> devices;
+    std::map<uint16_t, std::shared_ptr<Device>> temp_devices;
     DrumState drum_state;
     KeyboardState keyboard_state;
 };

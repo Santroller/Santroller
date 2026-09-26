@@ -35,9 +35,17 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
             matched = false;
             if (claim_devices)
             {
-                return false;
+                break;
             }
         }
+    }
+    for (auto &trigger2 : triggers)
+    {
+        trigger2->reset();
+    }
+    if (claim_devices && !matched)
+    {
+        return false;
     }
     if (!claim_devices)
     {

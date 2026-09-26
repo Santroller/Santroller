@@ -3,7 +3,7 @@
 #include "hardware/adc.h"
 #include "stdio.h"
 
-CrkdDrumInput::CrkdDrumInput(proto_CrkdDrumAxisInput input, std::shared_ptr<CrkdDrumDevice> device) : m_input(input), m_device(device)
+CrkdDrumInput::CrkdDrumInput(proto_CrkdDrumAxisInput input, std::shared_ptr<CrkdDrumDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
 bool CrkdDrumInput::tick_digital()

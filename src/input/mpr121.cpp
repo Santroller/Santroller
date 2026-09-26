@@ -3,7 +3,7 @@
 #include "hardware/adc.h"
 #include "stdio.h"
 
-MPR121Input::MPR121Input(proto_MPR121Input input, std::shared_ptr<MPR121Device> device) : m_input(input), m_device(device)
+MPR121Input::MPR121Input(proto_MPR121Input input, std::shared_ptr<MPR121Device> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
 void MPR121Input::setup()

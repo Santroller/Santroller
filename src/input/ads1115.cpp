@@ -3,7 +3,7 @@
 #include "hardware/adc.h"
 #include "stdio.h"
 
-ADS1115Input::ADS1115Input(proto_ADS1115Input input, std::shared_ptr<ADS1115Device> device) : m_channel(input.channel), m_input(input), m_device(device)
+ADS1115Input::ADS1115Input(proto_ADS1115Input input, std::shared_ptr<ADS1115Device> device, Profile* profile) : m_channel(input.channel), m_input(input), m_device(device)
 {
 }
 void ADS1115Input::setup()

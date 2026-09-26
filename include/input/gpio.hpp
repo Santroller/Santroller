@@ -1,5 +1,6 @@
 #include "input.hpp"
 #include "input.pb.h"
+#include "profiles/profile.hpp"
 #pragma once
 class GPIOInput: public Input {
    public:

@@ -37,6 +37,7 @@ public:
     virtual MidiNoteInput* as_midi_note() { return nullptr; }
     virtual ShortcutInput* as_shortcut() { return nullptr; }
     virtual uint64_t hardware_id() const { return 0; }
+    virtual void link_device(bool claim_devices) {}
 };
 
 

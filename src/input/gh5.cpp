@@ -3,7 +3,7 @@
 #include "hardware/adc.h"
 #include "stdio.h"
 
-Gh5ButtonInput::Gh5ButtonInput(proto_Gh5NeckButtonInput input, std::shared_ptr<GH5NeckDevice> device) : m_input(input), m_device(device)
+Gh5ButtonInput::Gh5ButtonInput(proto_Gh5NeckButtonInput input, std::shared_ptr<GH5NeckDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
 bool Gh5ButtonInput::tick_digital()

@@ -27,6 +27,15 @@ static void claim_profile_device(Profile *profile, const std::shared_ptr<Device>
         }
     }
 }
+static void claim_profile_temp_device(Profile *profile, const std::shared_ptr<Device> &device)
+{
+    profile->temp_devices[device->m_id] = device;
+}
+
+static void clear_profile_temp_devices(Profile *profile)
+{
+    profile->temp_devices.clear();
+}
 
 template <typename Predicate>
 static std::shared_ptr<Device> get_assignable_device(Profile *profile, bool claim_device, Predicate predicate)
@@ -58,9 +67,7 @@ WiiExtTypeActivationTrigger::WiiExtTypeActivationTrigger(proto_WiiExtType type, 
 bool WiiExtTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
     auto device = get_assignable_device(m_profile, claim_device, [this](const auto &device)
-    {
-        return device->is_wii_extension(m_type);
-    });
+                                        { return device->is_wii_extension(m_type); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -89,9 +96,7 @@ PS2ControllerTypeActivationTrigger::PS2ControllerTypeActivationTrigger(proto_PS2
 bool PS2ControllerTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
     auto device = get_assignable_device(m_profile, claim_device, [this](const auto &device)
-    {
-        return device->is_ps2_device(m_type);
-    });
+                                        { return device->is_ps2_device(m_type); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -120,9 +125,7 @@ UsbTypeActivationTrigger::UsbTypeActivationTrigger(proto_SubType type, std::shar
 bool UsbTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
     auto device = get_assignable_device(m_profile, claim_device, [this](const auto &device)
-    {
-        return device->is_usb_type(m_type);
-    });
+                                        { return device->is_usb_type(m_type); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -139,9 +142,17 @@ bool UsbTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
         {
             claim_profile_device(m_profile, device);
         }
+        else
+        {
+            claim_profile_temp_device(m_profile, device);
+        }
         return true;
     }
     return false;
+}
+void UsbTypeActivationTrigger::reset()
+{
+    clear_profile_temp_devices(m_profile);
 }
 
 SpecificUsbDeviceActivationTrigger::SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_device(device)
@@ -151,9 +162,7 @@ SpecificUsbDeviceActivationTrigger::SpecificUsbDeviceActivationTrigger(proto_Spe
 bool SpecificUsbDeviceActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
     auto device = get_assignable_device(m_profile, claim_device, [this](const auto &device)
-    {
-        return device->is_usb_device(m_device);
-    });
+                                        { return device->is_usb_device(m_device); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -170,9 +179,17 @@ bool SpecificUsbDeviceActivationTrigger::validate(bool claim_device, bool full_p
         {
             claim_profile_device(m_profile, device);
         }
+        else
+        {
+            claim_profile_temp_device(m_profile, device);
+        }
         return true;
     }
     return false;
+}
+void SpecificUsbDeviceActivationTrigger::reset()
+{
+    clear_profile_temp_devices(m_profile);
 }
 
 BluetoothTypeActivationTrigger::BluetoothTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_type(type)
@@ -182,9 +199,7 @@ BluetoothTypeActivationTrigger::BluetoothTypeActivationTrigger(proto_SubType typ
 bool BluetoothTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
     auto device = get_assignable_device(m_profile, claim_device, [this](const auto &device)
-    {
-        return device->is_bluetooth_type(m_type);
-    });
+                                        { return device->is_bluetooth_type(m_type); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -201,11 +216,19 @@ bool BluetoothTypeActivationTrigger::validate(bool claim_device, bool full_poll,
         {
             claim_profile_device(m_profile, device);
         }
+        else
+        {
+            claim_profile_temp_device(m_profile, device);
+        }
         return true;
     }
     return false;
 }
 
+void BluetoothTypeActivationTrigger::reset()
+{
+    clear_profile_temp_devices(m_profile);
+}
 SpecificBluetoothDeviceActivationTrigger::SpecificBluetoothDeviceActivationTrigger(proto_SpecificBluetoothDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_device(device)
 {
 }
@@ -213,9 +236,7 @@ SpecificBluetoothDeviceActivationTrigger::SpecificBluetoothDeviceActivationTrigg
 bool SpecificBluetoothDeviceActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
     auto device = get_assignable_device(m_profile, claim_device, [this](const auto &device)
-    {
-        return device->is_bluetooth_device(m_device);
-    });
+                                        { return device->is_bluetooth_device(m_device); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -232,9 +253,17 @@ bool SpecificBluetoothDeviceActivationTrigger::validate(bool claim_device, bool 
         {
             claim_profile_device(m_profile, device);
         }
+        else
+        {
+            claim_profile_temp_device(m_profile, device);
+        }
         return true;
     }
     return false;
+}
+void SpecificBluetoothDeviceActivationTrigger::reset()
+{
+    clear_profile_temp_devices(m_profile);
 }
 
 MidiChannelActivationTrigger::MidiChannelActivationTrigger(uint32_t channel, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_channel(channel)
@@ -244,9 +273,7 @@ MidiChannelActivationTrigger::MidiChannelActivationTrigger(uint32_t channel, std
 bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
     auto device = get_assignable_device(m_profile, claim_device, [this](const auto &device)
-    {
-        return device->has_midi_channel(m_channel - 1);
-    });
+                                        { return device->has_midi_channel(m_channel - 1); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -264,7 +291,16 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
             claim_profile_device(m_profile, device);
             printf("Claimed device: %d %p %p\r\n", m_profile, m_profile, device);
         }
+        else
+        {
+            claim_profile_temp_device(m_profile, device);
+        }
         return true;
     }
     return false;
+}
+
+void MidiChannelActivationTrigger::reset()
+{
+    clear_profile_temp_devices(m_profile);
 }

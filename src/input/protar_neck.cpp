@@ -3,7 +3,7 @@
 #include "hardware/adc.h"
 #include "stdio.h"
 
-ProtarNeckAxisInput::ProtarNeckAxisInput(proto_ProtarNeckAxisInput input, std::shared_ptr<ProtarNeckDevice> device) : m_input(input), m_device(device)
+ProtarNeckAxisInput::ProtarNeckAxisInput(proto_ProtarNeckAxisInput input, std::shared_ptr<ProtarNeckDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
 bool ProtarNeckAxisInput::tick_digital()
@@ -18,7 +18,7 @@ void ProtarNeckAxisInput::setup()
 {
 }
 
-ProtarNeckButtonInput::ProtarNeckButtonInput(proto_ProtarNeckButtonInput input, std::shared_ptr<ProtarNeckDevice> device) : m_input(input), m_device(device)
+ProtarNeckButtonInput::ProtarNeckButtonInput(proto_ProtarNeckButtonInput input, std::shared_ptr<ProtarNeckDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
 bool ProtarNeckButtonInput::tick_digital()

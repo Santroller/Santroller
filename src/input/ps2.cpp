@@ -3,7 +3,7 @@
 #include "hardware/adc.h"
 #include "stdio.h"
 
-PS2AxisInput::PS2AxisInput(proto_PS2AxisInput input, std::shared_ptr<PS2Device> device) : m_input(input), m_device(device)
+PS2AxisInput::PS2AxisInput(proto_PS2AxisInput input, std::shared_ptr<PS2Device> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
 bool PS2AxisInput::tick_digital()
@@ -17,7 +17,7 @@ uint16_t PS2AxisInput::tick_analog()
 void PS2AxisInput::setup()
 {
 }
-PS2ButtonInput::PS2ButtonInput(proto_PS2ButtonInput input, std::shared_ptr<PS2Device> device) : m_input(input), m_device(device)
+PS2ButtonInput::PS2ButtonInput(proto_PS2ButtonInput input, std::shared_ptr<PS2Device> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
 bool PS2ButtonInput::tick_digital()

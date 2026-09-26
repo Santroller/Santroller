@@ -1,11 +1,12 @@
 #include "input.hpp"
 #include "input.pb.h"
 #include "devices/multiplexer.hpp"
+#include "profiles/profile.hpp"
 #include <memory>
 #pragma once
 class MultiplexerInput: public Input {
    public:
-    MultiplexerInput(proto_MultiplexerInput input, std::shared_ptr<MultiplexerDevice> device);
+    MultiplexerInput(proto_MultiplexerInput input, std::shared_ptr<MultiplexerDevice> device, Profile* profile);
     bool tick_digital();
     uint16_t tick_analog();
     uint64_t hardware_id() const override {

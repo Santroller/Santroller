@@ -11,6 +11,10 @@ InputActivationTrigger::InputActivationTrigger(bool any_time, proto_InputActivat
     m_last_val = calc_val();
     m_last_analog_val = m_input->tick_analog();
 }
+void InputActivationTrigger::reset()
+{
+    m_input->link_device(false);
+}
 
 bool InputActivationTrigger::calc_val()
 {
@@ -44,8 +48,8 @@ bool InputActivationTrigger::calc_val()
 
 bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
+    m_input->link_device(claim_device);
     auto val = calc_val();
-
     if (m_activation_trigger.has_trigger)
     {
         auto analog_val = m_input->tick_analog();
@@ -66,10 +70,10 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
         m_initialised = true;
         m_last_val = val;
     }
-    if (((m_any_time || mode_recently_changed()) && val != m_last_val))
+    if (((m_any_time || mode_recently_changed()) && val != m_last_val && val))
     {
         reload();
     }
     m_last_val = val;
-    return val;
+    return val && (m_any_time || mode_recently_changed());
 }

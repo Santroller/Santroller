@@ -24,7 +24,7 @@ template<typename InputType, typename DeviceType, typename ConfigType>
 static std::unique_ptr<Input> create_device_input(std::shared_ptr<Profile> profile, uint32_t device_id, const ConfigType &config)
 {
     auto device = InputFactory::get_device<DeviceType>(profile, device_id);
-    return device && device->valid() ? std::make_unique<InputType>(config, device) : nullptr;
+    return std::make_unique<InputType>(config, device && device->valid() ? device : nullptr, profile.get());
 }
 
 template<typename InputType, typename ConfigType>
@@ -96,15 +96,15 @@ std::unique_ptr<Input> InputFactory::create_input(
         switch (proto_input.input.midi.which_input)
         {
         case proto_MidiInput_midiNote_tag:
-            return create_device_input<MidiNoteInput, MidiDevice>(profile, proto_input.input.midi.deviceid, proto_input.input.midi.input.midiNote);
+            return create_device_input<MidiNoteInput, MidiDevice>(profile, proto_input.input.midi.deviceid, proto_input.input.midi);
         case proto_MidiInput_midiControlChange_tag:
-            return create_device_input<MidiControlChangeInput, MidiDevice>(profile, proto_input.input.midi.deviceid, proto_input.input.midi.input.midiControlChange);
+            return create_device_input<MidiControlChangeInput, MidiDevice>(profile, proto_input.input.midi.deviceid, proto_input.input.midi);
         case proto_MidiInput_midiPitchBend_tag:
-            return create_device_input<MidiPitchBendInput, MidiDevice>(profile, proto_input.input.midi.deviceid, proto_input.input.midi.input.midiPitchBend);
+            return create_device_input<MidiPitchBendInput, MidiDevice>(profile, proto_input.input.midi.deviceid, proto_input.input.midi);
         case proto_MidiInput_midiProGuitarButton_tag:
-            return create_device_input<MidiProGuitarButtonInput, ProGuitarMidiDevice>(profile, proto_input.input.midi.deviceid, proto_input.input.midi.input.midiProGuitarButton);
+            return create_device_input<MidiProGuitarButtonInput, ProGuitarMidiDevice>(profile, proto_input.input.midi.deviceid, proto_input.input.midi);
         case proto_MidiInput_midiProGuitarAxis_tag:
-            return create_device_input<MidiProGuitarAxisInput, ProGuitarMidiDevice>(profile, proto_input.input.midi.deviceid, proto_input.input.midi.input.midiProGuitarAxis);
+            return create_device_input<MidiProGuitarAxisInput, ProGuitarMidiDevice>(profile, proto_input.input.midi.deviceid, proto_input.input.midi);
         }
         return nullptr;
     }

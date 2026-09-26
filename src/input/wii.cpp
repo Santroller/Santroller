@@ -3,7 +3,7 @@
 #include "hardware/adc.h"
 #include "stdio.h"
 
-WiiAxisInput::WiiAxisInput(proto_WiiAxisInput input, std::shared_ptr<WiiDevice> device) : m_input(input), m_device(device)
+WiiAxisInput::WiiAxisInput(proto_WiiAxisInput input, std::shared_ptr<WiiDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
 bool WiiAxisInput::tick_digital()
@@ -17,7 +17,7 @@ uint16_t WiiAxisInput::tick_analog()
 void WiiAxisInput::setup()
 {
 }
-WiiButtonInput::WiiButtonInput(proto_WiiButtonInput input, std::shared_ptr<WiiDevice> device) : m_input(input), m_device(device)
+WiiButtonInput::WiiButtonInput(proto_WiiButtonInput input, std::shared_ptr<WiiDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
 bool WiiButtonInput::tick_digital()

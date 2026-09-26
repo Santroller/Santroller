@@ -11,6 +11,7 @@ public:
     InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
     ~InputActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
+    void reset();
     int assignedDevices() { return 0; }
 
 protected:

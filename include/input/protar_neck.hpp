@@ -10,6 +10,7 @@ public:
     ProtarNeckAxisInput(proto_ProtarNeckAxisInput input, std::shared_ptr<ProtarNeckDevice> device, Profile* profile);
     bool tick_digital();
     uint16_t tick_analog();
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
     void setup();
@@ -27,7 +28,7 @@ public:
                (static_cast<uint64_t>(m_device ? m_device->m_id : 0) << 16) |
                static_cast<uint64_t>(m_input.button);
     }
-
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
 private:
     void setup();
     proto_ProtarNeckButtonInput m_input;

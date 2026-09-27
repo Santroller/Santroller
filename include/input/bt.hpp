@@ -15,6 +15,7 @@ public:
     BTButtonInput(proto_BTButtonInput input, std::shared_ptr<BluetoothHostInterface> device, Profile* profile);
     bool tick_digital();
     uint16_t tick_analog();
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
     uint64_t hardware_id() const override
     {
         return (static_cast<uint64_t>(InputHw_BTButton) << 56) |
@@ -47,6 +48,7 @@ public:
     BTAxisInput(proto_BTAxisInput input, std::shared_ptr<BluetoothHostInterface> device, Profile* profile);
     bool tick_digital();
     uint16_t tick_analog();
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
     void link_device(bool claim_devices) override
     {
         if (claim_devices) {

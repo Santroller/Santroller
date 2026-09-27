@@ -19,6 +19,7 @@ public:
             m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->temp_devices[m_input.deviceid]);
         }
     };
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
     void setup();
@@ -47,6 +48,7 @@ public:
             m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->temp_devices[m_input.deviceid]);
         }
     };
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
     void setup();
@@ -69,6 +71,7 @@ public:
             m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->temp_devices[m_input.deviceid]);
         }
     };
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
     void setup();
@@ -90,6 +93,7 @@ public:
             m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->temp_devices[m_input.deviceid]);
         }
     };
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
     void setup();
@@ -111,6 +115,7 @@ public:
             m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->temp_devices[m_input.deviceid]);
         }
     };
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
     void setup();

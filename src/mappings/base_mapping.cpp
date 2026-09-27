@@ -238,7 +238,7 @@ void AxisMapping::update(bool full_poll, bool send_events)
     {
         m_calibrated_value = val;
     }
-    m_centered = m_calibrated_value == (uint32_t)m_mapping.center;
+    m_centered = m_calibrated_value == (uint32_t)m_mapping.center || !m_input->valid();
 
     if (send_events && (uncalibrated != m_last_sent_value || m_calibrated_value != m_last_sent_calibrated_value || full_poll))
     {

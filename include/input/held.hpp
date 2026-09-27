@@ -14,6 +14,7 @@ public:
     ShortcutInput* as_shortcut() override { return m_input ? m_input->as_shortcut() : nullptr; }
     uint64_t hardware_id() const override { return m_input ? m_input->hardware_id() : 0; }
     Input* get_inner_input() const { return m_input.get(); }
+    bool valid() const override { return m_input ? m_input->valid() : false; }
 
 private:
     std::unique_ptr<Input> m_input;

@@ -13,6 +13,7 @@ public:
     uint16_t tick_analog();
     void setup();
     uint64_t hardware_id() const override { return m_input ? m_input->hardware_id() : 0; }
+    bool valid() const override { return m_input ? m_input->valid() : false; }
 
 private:
     std::unique_ptr<Input> m_input;

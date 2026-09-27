@@ -12,4 +12,10 @@ class ShortcutInput: public Input {
     ShortcutInput* as_shortcut() override { return this; }
     const std::vector<std::unique_ptr<Input>>& get_inputs() const { return inputs; }
     std::vector<std::unique_ptr<Input>> inputs;
+    bool valid() const override { 
+        for (const auto& input : inputs) {
+            if (!input->valid()) return false;
+        }
+        return true;
+    }
 };

@@ -14,6 +14,7 @@ class MultiplexerInput: public Input {
                (static_cast<uint64_t>(m_device ? m_device->m_id : 0) << 16) |
                static_cast<uint64_t>(m_channel);
     }
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
    private:
     void setup();
     uint8_t m_channel;

@@ -55,15 +55,6 @@ void PSXEmulation::sendData(uint8_t len, uint8_t *data)
 uint8_t last_lastcmd = 0;
 PsxReportFormat_t PSXEmulation::getReportFormat()
 {
-    if (spi->has_new_cmd)
-    {
-        spi->has_new_cmd = false;
-        for (int i = 0; i < 8; i++)
-        {
-            printf("%02X ", spi->dma_buf_test[i]);
-        }
-        printf("\r\n");
-    }
     return {spi->config_responses[0x05][2] == 0x01, {spi->config_responses[0x01][0], spi->config_responses[0x01][1], spi->config_responses[0x01][2]}};
 }
 bool PSXEmulation::ready()

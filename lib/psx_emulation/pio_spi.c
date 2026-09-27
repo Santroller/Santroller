@@ -12,21 +12,14 @@ const uint8_t resp_43[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 const uint8_t resp_44[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 const uint8_t resp_45_ds2[] = {0x03, 0x02, 0x00, 0x02, 0x01, 0x00};
 const uint8_t resp_45_gh[] = {0x01, 0x02, 0x00, 0x02, 0x01, 0x00};
-const uint8_t resp_46_gh[2][6] = {
+const uint8_t resp_46[2][6] = {
     {0x00, 0x00, 0x01, 0x02, 0x00, 0x0A},
     {0x00, 0x00, 0x01, 0x01, 0x01, 0x14}};
-const uint8_t resp_46_ds2[2][6] = {
-    {0x00, 0x00, 0x00, 0x02, 0x00, 0x0A},
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x14}};
 
-const uint8_t resp_47_gh[] = {0x00, 0x00, 0x02, 0x00, 0x01, 0x00};
-const uint8_t resp_47_ds2[] = {0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
-const uint8_t resp_4c_gh[2][6] = {
+const uint8_t resp_47[] = {0x00, 0x00, 0x02, 0x00, 0x01, 0x00};
+const uint8_t resp_4c[2][6] = {
     {0x00, 0x00, 0x00, 0x04, 0x00, 0x00},
     {0x00, 0x00, 0x00, 0x07, 0x00, 0x00}};
-const uint8_t resp_4c_ds2[2][6] = {
-    {0x00, 0x00, 0x00, 0x04, 0x00, 0x00},
-    {0x00, 0x00, 0x00, 0x06, 0x00, 0x00}};
 const uint8_t resp_4d[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 const uint8_t resp_4f[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x5a};
 uint fixPio(PIO pio, pio_program_t program, int sck_pin)
@@ -249,18 +242,6 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
     }
     if (irqs & (1u << 2))
     {
-        if (spi->configMode || spi->dma_buf[1] == 0x43)
-        {
-            spi->dma_buf_test[0] = spi->dma_buf[0];
-            spi->dma_buf_test[1] = spi->dma_buf[1];
-            spi->dma_buf_test[2] = spi->dma_buf[2];
-            spi->dma_buf_test[3] = spi->dma_buf[3];
-            spi->dma_buf_test[4] = spi->dma_buf[4];
-            spi->dma_buf_test[5] = spi->dma_buf[5];
-            spi->dma_buf_test[6] = spi->dma_buf[6];
-            spi->dma_buf_test[7] = spi->dma_buf[7];
-            spi->has_new_cmd = true;
-        }
         switch (spi->dma_buf[1])
         {
         case 0x42:
@@ -271,16 +252,8 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
             }
             break;
         case 0x43:
-            if (spi->type == SubType_Gamepad)
-            {
-                memcpy(spi->config_responses[0x06], resp_46_ds2[0], sizeof(resp_46_ds2[0]));
-                memcpy(spi->config_responses[0x0c], resp_4c_ds2[0], sizeof(resp_4c_ds2[0]));
-            }
-            else if (spi->type == SubType_GuitarHeroGuitar)
-            {
-                memcpy(spi->config_responses[0x06], resp_46_gh[0], sizeof(resp_46_gh[0]));
-                memcpy(spi->config_responses[0x0c], resp_4c_gh[0], sizeof(resp_4c_gh[0]));
-            }
+            memcpy(spi->config_responses[0x06], resp_46[0], sizeof(resp_46[0]));
+            memcpy(spi->config_responses[0x0c], resp_4c[0], sizeof(resp_4c[0]));
             spi->configMode = spi->dma_buf[3];
             break;
         case 0x44:
@@ -289,30 +262,16 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
             memset(spi->config_responses[0x01], 0, sizeof(spi->config_responses[0x01]));
             if (spi->dma_buf[3])
             {
-                // Analog mode, default is 2 digial bytes + 4 analog bytes
-                spi->config_responses[0x01][0] = 0b111111;
+                spi->config_responses[0x01][0] = 0xFF;
+                spi->config_responses[0x01][1] = 0xFF;
+                spi->config_responses[0x01][2] = 0x03;
             }
             break;
         case 0x4c:
-            if (spi->type == SubType_Gamepad)
-            {
-                memcpy(spi->config_responses[0x0c], resp_4c_ds2[1 - spi->dma_buf[3]], sizeof(resp_4c_ds2[1 - spi->dma_buf[3]]));
-            }
-            else if (spi->type == SubType_GuitarHeroGuitar)
-            {
-                memcpy(spi->config_responses[0x0c], resp_4c_gh[1 - spi->dma_buf[3]], sizeof(resp_4c_gh[1 - spi->dma_buf[3]]));
-            }
+            memcpy(spi->config_responses[0x0c], resp_4c[1 - spi->dma_buf[3]], sizeof(resp_4c[1 - spi->dma_buf[3]]));
             break;
         case 0x46:
-            if (spi->type == SubType_Gamepad)
-            {
-
-                memcpy(spi->config_responses[0x06], resp_46_ds2[1 - spi->dma_buf[3]], sizeof(resp_46_ds2[1 - spi->dma_buf[3]]));
-            }
-            else if (spi->type == SubType_GuitarHeroGuitar)
-            {
-                memcpy(spi->config_responses[0x06], resp_46_gh[1 - spi->dma_buf[3]], sizeof(resp_46_gh[1 - spi->dma_buf[3]]));
-            }
+            memcpy(spi->config_responses[0x06], resp_46[1 - spi->dma_buf[3]], sizeof(resp_46[1 - spi->dma_buf[3]]));
             break;
         case 0x4F:
             if (spi->config_responses[0x05][2])
@@ -379,18 +338,15 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
     memcpy(spi->config_responses[0x03], resp_43, sizeof(resp_43));
     memcpy(spi->config_responses[0x04], resp_44, sizeof(resp_44));
     memcpy(spi->config_responses[0x05], resp_45_ds2, sizeof(resp_45_ds2));
-    memcpy(spi->config_responses[0x06], resp_46_ds2[0], sizeof(resp_46_ds2[0]));
-    memcpy(spi->config_responses[0x07], resp_47_ds2, sizeof(resp_47_ds2));
-    memcpy(spi->config_responses[0x0c], resp_4c_ds2[0], sizeof(resp_4c_ds2[0]));
+    memcpy(spi->config_responses[0x06], resp_46[0], sizeof(resp_46[0]));
+    memcpy(spi->config_responses[0x07], resp_47, sizeof(resp_47));
+    memcpy(spi->config_responses[0x0c], resp_4c[0], sizeof(resp_4c[0]));
     memcpy(spi->config_responses[0x0d], resp_4d, sizeof(resp_4d));
     memcpy(spi->config_responses[0x0f], resp_4f, sizeof(resp_4f));
 
     if (spi->type == SubType_GuitarHeroGuitar)
     {
         memcpy(spi->config_responses[0x05], resp_45_gh, sizeof(resp_45_gh));
-        memcpy(spi->config_responses[0x06], resp_46_gh[0], sizeof(resp_46_gh[0]));
-        memcpy(spi->config_responses[0x07], resp_47_gh, sizeof(resp_47_gh));
-        memcpy(spi->config_responses[0x0c], resp_4c_gh[0], sizeof(resp_4c_gh[0]));
     }
     gpio_init(config->cs_pin);
     gpio_init(config->sck_pin);

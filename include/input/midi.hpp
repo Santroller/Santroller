@@ -26,6 +26,7 @@ public:
             m_device = std::static_pointer_cast<MidiDevice>(m_profile->temp_devices[m_device_id]);
         }
     };
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
     void setup();
@@ -49,6 +50,7 @@ public:
             m_device = std::static_pointer_cast<MidiDevice>(m_profile->temp_devices[m_device_id]);
         }
     };
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
     void setup();
@@ -71,6 +73,7 @@ public:
             m_device = std::static_pointer_cast<MidiDevice>(m_profile->temp_devices[m_device_id]);
         }
     };
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
     void setup();
@@ -93,6 +96,7 @@ public:
             m_device = std::static_pointer_cast<ProGuitarMidiDevice>(m_profile->temp_devices[m_device_id]);
         }
     };
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
     void setup();
@@ -115,6 +119,7 @@ public:
             m_device = std::static_pointer_cast<ProGuitarMidiDevice>(m_profile->temp_devices[m_device_id]);
         }
     };
+    bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
     void setup();

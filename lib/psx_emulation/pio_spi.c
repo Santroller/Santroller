@@ -7,21 +7,123 @@
 #include <stdio.h>
 
 const uint8_t init_resp_42[32] = {0xff, 0xff};
-const uint8_t init_resp_41[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-const uint8_t resp_43[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-const uint8_t resp_44[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-const uint8_t resp_45_ds2[] = {0x03, 0x02, 0x00, 0x02, 0x01, 0x00};
-const uint8_t resp_45_gh[] = {0x01, 0x02, 0x00, 0x02, 0x01, 0x00};
-const uint8_t resp_46[2][6] = {
+// Config Mode - Command 41h "A" Dualshock2: Get Reply Capabilities
+
+//   Send  01h 41h 00h 00h 00h 00h 00h 00h 00h
+//   Reply HiZ F3h 5Ah FFh FFh 03h 00h 00h 00h
+
+// This seems to return a constant bitmask indicating which reply bytes can be enabled/disabled via Command 4Fh (ie. 3FFFFh = 18 bits).
+const uint8_t init_resp_41_digital[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x5A};
+const uint8_t init_resp_41_analog[6] = {0xFF, 0xFF, 0x03, 0x00, 0x00, 0x5A};
+
+const uint8_t init_resp_43[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+// Config Mode - Command 44h "D" - Set LED State (analog mode on/off)
+// Note: This is called PadSetMainMode in official docs.
+
+//   Send  01h 44h 00h Led Key 00h 00h 00h 00h
+//   Reply HiZ F3h 5Ah 00h 00h Err 00h 00h 00h
+
+// The Led byte can be:
+
+//   When Led=00h      --> Digital mode, with LED=Off
+//   When Led=01h      --> Analog mode, with LED=On/red
+//   When Led=02h..FFh --> Ignored (and, in case of dualshock2: set Err=FFh)
+
+// The Key byte can be:
+
+//   When Key=00h..02h --> Unlock (allow user to push Analog button)
+//   When Key=03h      --> Lock (stay in current mode, ignore Analog button)
+//   When Key=04h..FFh --> Acts same as (Key AND 03h)
+
+const uint8_t init_resp_44[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+// Config Mode - Command 45h "E" - Get LED State (and Type/constants)
+
+//   Send  01h 45h 00h 00h 00h 00h 00h 00h 00h
+//   Reply HiZ F3h 5Ah Typ Num Led Act Com 00h
+
+// Returns several interesting bytes:
+
+//   Typ: Controller Type (01h=PSX/Analog Pad, 03h=PS2/Dualshock2)
+//   Num: Number of Modes                  (usually 02h) (for cmd 4Ch)
+//   Led: Current Mode (usually 00h=Digital/LedOff, 01h=Analog/LedRed)
+//   Act: Number of Actuators (aka motors) (usually 02h) (for cmd 46h)
+//   Com: Number of Combiner Lists         (usually 01h) (for cmd 47h)
+
+const uint8_t init_resp_45_ds2[] = {0x03, 0x02, 0x00, 0x02, 0x01, 0x00};
+const uint8_t init_resp_45_gh[] = {0x01, 0x02, 0x00, 0x02, 0x01, 0x00};
+
+// Config Mode - Command 46h "F" - Get Variable Response A ("PadInfoAct")
+
+//   Send  01h 46h 00h ii  00h 00h 00h 00h 00h
+//   Reply HiZ F3h 5Ah 00h 00h Fnc Sub Siz Pwr
+
+// This is called PadInfoAct in official docs, ii is the actuator (aka motor).
+// The meaning of the return values is:
+
+//   Fnc  InfoActFunc  Function type (01h=Continuous-rotation vibration)
+//   Sub  InfoActSub   Sub-type (rotation-speed when Fnc=01h: 1=Low, 2=High)
+//   Siz  InfoActSize  Parameter data length
+//                      (0: 1 bit (ON/OFF only), 1 or greater: number of bytes)
+//   Pwr  InfoActCurr  Maximum current drain (0Ah=Small, 14h=Big)
+
+// Return values are usually:
+
+//   When ii=00h   --> returns Fnc,Sub,Siz,Pwr = 01h,02h,00h,0ah  ;small motor
+//   When ii=01h   --> returns Fnc,Sub,Siz,Pwr = 01h,01h,01h,14h  ;big motor
+//   When ii=Other --> returns Fnc,Sub,Siz,Pwr = all zeroes
+
+const uint8_t init_resp_46[2][6] = {
     {0x00, 0x00, 0x01, 0x02, 0x00, 0x0A},
     {0x00, 0x00, 0x01, 0x01, 0x01, 0x14}};
+// Config Mode - Command 47h "G" - Get whatever values ("PadInfoComb")
 
-const uint8_t resp_47[] = {0x00, 0x00, 0x02, 0x00, 0x01, 0x00};
-const uint8_t resp_4c[2][6] = {
+//   Send  01h 47h 00h ii  00h 00h 00h 00h 00h
+//   Reply HiZ F3h 5Ah 00h 00h 02h 00h 01h 00h
+
+// When ii=00h --> returns 02h 00h 01h 00h as shown above
+
+//    ii  = list number
+//    02h = num entries in selected list?
+//    00h,01h = entries in that list? (combining actuator 00h and 01h is allowed)
+
+const uint8_t init_resp_47[] = {0x00, 0x00, 0x02, 0x00, 0x01, 0x00};
+// Config Mode - Command 4Ch "L" - Get Variable Response B (PadInfoMode)
+// Note: This is called PadInfoMode in official docs. (?)
+
+//   Send  01h 4Ch 00h ii  00h 00h 00h 00h 00h
+//   Reply HiZ F3h 5Ah 00h 00h cc  dd  00h 00h
+
+// When ii=00h --> returns cc,dd=00h,04h ;ExID=4 ;for 5A41h = Digital Pad mode?
+// When ii=01h --> returns cc,dd=00h,07h ;ExID=7 ;for 5A73h = Analog Pad mode?
+// Otherwise --> returns cc,dd=00h,00h.
+const uint8_t init_resp_4c[2][6] = {
     {0x00, 0x00, 0x00, 0x04, 0x00, 0x00},
     {0x00, 0x00, 0x00, 0x07, 0x00, 0x00}};
-const uint8_t resp_4d[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-const uint8_t resp_4f[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x5a};
+// Config Mode - Command 4Dh "M" - Get/Set RumbleProtocol
+// This is called "PadSetActAlign" in official docs.
+
+//   Send  01h 4Dh 00h aa  bb  cc  dd  ee  ff     ;<-- set NEW aa..ff values
+//   Reply HiZ F3h 5Ah aa  bb  cc  dd  ee  ff     ;<-- returns OLD aa..ff values
+
+// Bytes aa,bb,cc,dd,ee,ff control the meaning of the 4th,5th,6th,7th,8th,9th command byte in the controller read command (Command 42h).
+
+//   00h      = Map Right/small Motor (Motor M2) to bit0 of this byte
+//   01h      = Map Left/Large Motor (Motor M1) to bit0-7 of this byte
+//   02h..FEh = Unknown (can be mapped, maybe for extra motors/outputs)
+//   FFh      = Map nothing to this byte
+
+// In practice, one would usually send either one of these command/values:
+
+//   Send  01h 4Dh 00h 00h 01h FFh FFh FFh FFh    ;enable new method (two motors)
+//   Send  01h 4Dh 00h FFh FFh FFh FFh FFh FFh    ;disable motor control
+
+const uint8_t init_resp_4d[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+// Config Mode - Command 4Fh "O" Dualshock2: Set ReplyProtocol
+
+//   Send  01h 41h 00h aa  bb  cc  dd  ee  ff
+//   Reply HiZ F3h 5Ah 00h 00h 00h 00h 00h 00h
+
+const uint8_t init_resp_4f[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 uint fixPio(PIO pio, pio_program_t program, int sck_pin)
 {
     // Santroller 1 let us put clock on any pin
@@ -198,8 +300,14 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
     {
         pio_sm_put(spi->pio, spi->config.combined_sm, 0xF3);
     }
+    else if (spi->config_responses[0x05][2])
+    {
+        // analog style responses start with 0x70
+        pio_sm_put(spi->pio, spi->config.combined_sm, 0x70 | (spi->report_len / 2));
+    }
     else
     {
+        // digital style responses start with 0x40
         pio_sm_put(spi->pio, spi->config.combined_sm, 0x40 | (spi->report_len / 2));
     }
     pio_sm_put(spi->pio, spi->config.combined_sm, 0x5A);
@@ -242,6 +350,18 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
     }
     if (irqs & (1u << 2))
     {
+        if (spi->dma_buf[1] == 0x43 || spi->configMode)
+        {
+            spi->has_new_cmd = true;
+            spi->dma_buf_test[0] = spi->dma_buf[0];
+            spi->dma_buf_test[1] = spi->dma_buf[1];
+            spi->dma_buf_test[2] = spi->dma_buf[2];
+            spi->dma_buf_test[3] = spi->dma_buf[3];
+            spi->dma_buf_test[4] = spi->dma_buf[4];
+            spi->dma_buf_test[5] = spi->dma_buf[5];
+            spi->dma_buf_test[6] = spi->dma_buf[6];
+            spi->dma_buf_test[7] = spi->dma_buf[7];
+        }
         switch (spi->dma_buf[1])
         {
         case 0x42:
@@ -252,33 +372,49 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
             }
             break;
         case 0x43:
-            memcpy(spi->config_responses[0x06], resp_46[0], sizeof(resp_46[0]));
-            memcpy(spi->config_responses[0x0c], resp_4c[0], sizeof(resp_4c[0]));
+            memcpy(spi->config_responses[0x06], init_resp_46[0], sizeof(init_resp_46[0]));
+            memcpy(spi->config_responses[0x0c], init_resp_4c[0], sizeof(init_resp_4c[0]));
             spi->configMode = spi->dma_buf[3];
             break;
         case 0x44:
-            spi->config_responses[0x05][2] = spi->dma_buf[3];
             spi->locked = spi->dma_buf[4];
             memset(spi->config_responses[0x01], 0, sizeof(spi->config_responses[0x01]));
+            memset(spi->pressure_data, 0, sizeof(spi->pressure_data));
             if (spi->dma_buf[3])
             {
-                spi->config_responses[0x01][0] = 0xFF;
-                spi->config_responses[0x01][1] = 0xFF;
-                spi->config_responses[0x01][2] = 0x03;
+                spi->config_responses[0x05][2] = 1;
+                memcpy(spi->config_responses[0x01], init_resp_41_analog, sizeof(init_resp_41_analog));
+                // analog defaults to 0x3F
+                spi->pressure_data[0] = 0x3F;
+            }
+            else
+            {
+                spi->config_responses[0x05][2] = 0;
+                memcpy(spi->config_responses[0x01], init_resp_41_digital, sizeof(init_resp_41_digital));
+                // digital defaults to 0x03
+                spi->pressure_data[0] = 0x03;
             }
             break;
         case 0x4c:
-            memcpy(spi->config_responses[0x0c], resp_4c[1 - spi->dma_buf[3]], sizeof(resp_4c[1 - spi->dma_buf[3]]));
+            // this is fun - we are processing this command after it has ran, so we are just assuming the console sends
+            // it in order
+            memcpy(spi->config_responses[0x0c], init_resp_4c[1 - spi->dma_buf[3]], sizeof(init_resp_4c[1 - spi->dma_buf[3]]));
             break;
         case 0x46:
-            memcpy(spi->config_responses[0x06], resp_46[1 - spi->dma_buf[3]], sizeof(resp_46[1 - spi->dma_buf[3]]));
+            memcpy(spi->config_responses[0x06], init_resp_46[1 - spi->dma_buf[3]], sizeof(init_resp_46[1 - spi->dma_buf[3]]));
             break;
         case 0x4F:
             if (spi->config_responses[0x05][2])
             {
-                spi->config_responses[0x01][0] = spi->dma_buf[3];
-                spi->config_responses[0x01][1] = spi->dma_buf[4];
-                spi->config_responses[0x01][2] = spi->dma_buf[5];
+                spi->pressure_data[0] = spi->dma_buf[3];
+                spi->pressure_data[1] = spi->dma_buf[4];
+                spi->pressure_data[2] = spi->dma_buf[5];
+            }
+            break;
+        case 0x4D:
+            for (int i = 0; i < sizeof(spi->config_responses[0x0d]); i++)
+            {
+                spi->config_responses[0x0d][i] = spi->dma_buf[3 + i];
             }
             break;
         }
@@ -303,8 +439,10 @@ static void __time_critical_func(pio_data_irq_0)(void)
     pio_spi_config_t *cfg = &spi->config;
     pio0->rxf[cfg->initial_sm];
     uint8_t reg = pio0->rxf[cfg->initial_sm] >> 24;
-    if (spi->configMode)
+    if (spi->configMode) {
+        memcpy(spi->dma_buf_test2, spi->config_responses[reg - 0x40], 6);
         pio_spi_provide_write_buffer(spi, spi->config_responses[reg - 0x40], dma_encode_transfer_count(6));
+    }
     hw_set_bits(&pio0->irq, (1u << 0));
 }
 
@@ -314,8 +452,10 @@ static void __time_critical_func(pio_data_irq_1)(void)
     pio_spi_config_t *cfg = &spi->config;
     pio1->rxf[cfg->initial_sm];
     uint8_t reg = pio1->rxf[cfg->initial_sm] >> 24;
-    if (spi->configMode)
+    if (spi->configMode) {
+        memcpy(spi->dma_buf_test2, spi->config_responses[reg - 0x40], 6);
         pio_spi_provide_write_buffer(spi, spi->config_responses[reg - 0x40], dma_encode_transfer_count(6));
+    }
     hw_set_bits(&pio1->irq, (1u << 0));
 }
 
@@ -333,20 +473,21 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
     spi->report_len = 2;
     spi->configMode = false;
     spi->type = config->type;
-    memcpy(spi->config_responses[0x01], init_resp_41, sizeof(init_resp_41));
+    memcpy(spi->config_responses[0x01], init_resp_41_digital, sizeof(init_resp_41_digital));
     memcpy(spi->config_responses[0x02], init_resp_42, sizeof(init_resp_42));
-    memcpy(spi->config_responses[0x03], resp_43, sizeof(resp_43));
-    memcpy(spi->config_responses[0x04], resp_44, sizeof(resp_44));
-    memcpy(spi->config_responses[0x05], resp_45_ds2, sizeof(resp_45_ds2));
-    memcpy(spi->config_responses[0x06], resp_46[0], sizeof(resp_46[0]));
-    memcpy(spi->config_responses[0x07], resp_47, sizeof(resp_47));
-    memcpy(spi->config_responses[0x0c], resp_4c[0], sizeof(resp_4c[0]));
-    memcpy(spi->config_responses[0x0d], resp_4d, sizeof(resp_4d));
-    memcpy(spi->config_responses[0x0f], resp_4f, sizeof(resp_4f));
-
+    memcpy(spi->config_responses[0x03], init_resp_43, sizeof(init_resp_43));
+    memcpy(spi->config_responses[0x04], init_resp_44, sizeof(init_resp_44));
+    memcpy(spi->config_responses[0x05], init_resp_45_ds2, sizeof(init_resp_45_ds2));
+    memcpy(spi->config_responses[0x06], init_resp_46[0], sizeof(init_resp_46[0]));
+    memcpy(spi->config_responses[0x07], init_resp_47, sizeof(init_resp_47));
+    memcpy(spi->config_responses[0x0c], init_resp_4c[0], sizeof(init_resp_4c[0]));
+    memcpy(spi->config_responses[0x0d], init_resp_4d, sizeof(init_resp_4d));
+    memcpy(spi->config_responses[0x0f], init_resp_4f, sizeof(init_resp_4f));
+    memset(spi->pressure_data, 0, sizeof(spi->pressure_data));
+    spi->pressure_data[0] = 0x03; // we default to digital mode
     if (spi->type == SubType_GuitarHeroGuitar)
     {
-        memcpy(spi->config_responses[0x05], resp_45_gh, sizeof(resp_45_gh));
+        memcpy(spi->config_responses[0x05], init_resp_45_gh, sizeof(init_resp_45_gh));
     }
     gpio_init(config->cs_pin);
     gpio_init(config->sck_pin);

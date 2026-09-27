@@ -33,11 +33,16 @@ typedef struct pio_spi_t {
     uint8_t report_len;
     uint8_t config_responses[0x10][0x06];
     uint8_t resp_42[32];
+    uint8_t pressure_data[3];
+    volatile uint8_t last_cmd;
+    volatile bool has_new_cmd;
     volatile bool configMode;
     bool locked;
     volatile uint8_t rumble_small;
     volatile uint8_t rumble_large;
     volatile uint8_t dma_buf[32];
+    volatile uint8_t dma_buf_test[8];
+    uint8_t dma_buf_test2[8];
     uint8_t dma_config_buf[6];
     SubType type;
 } pio_spi_t;

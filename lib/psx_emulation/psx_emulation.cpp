@@ -55,7 +55,34 @@ void PSXEmulation::sendData(uint8_t len, uint8_t *data)
 uint8_t last_lastcmd = 0;
 PsxReportFormat_t PSXEmulation::getReportFormat()
 {
-    return {spi->config_responses[0x05][2] == 0x01, {spi->config_responses[0x01][0], spi->config_responses[0x01][1], spi->config_responses[0x01][2]}};
+    if (spi->has_new_cmd)
+    {
+        spi->has_new_cmd = false;
+        for (int i = 0; i < 8; i++)
+        {
+            printf("%02X ", spi->dma_buf_test[i]);
+        }
+        printf(" - ");
+        for (int i = 0; i < 3; i++)
+        {
+            printf("%02X ", spi->pressure_data[i]);
+        }
+        printf(" - ");
+        for (int i = 0; i < 6; i++)
+        {
+            printf("%02X ", spi->dma_buf_test2[i]);
+        }
+        uint8_t current = 0;
+        for (int i = 0; i < 18; i++)
+        {
+            if (spi->pressure_data[i / 8] & (1 << (i % 8)))
+            {
+                current++;
+            }
+        }
+        printf(" - %d %d\r\n", spi->config_responses[0x05][2] == 0x01, current);
+    }
+    return {spi->config_responses[0x05][2] == 0x01, {spi->pressure_data[0], spi->pressure_data[1], spi->pressure_data[2]}};
 }
 bool PSXEmulation::ready()
 {

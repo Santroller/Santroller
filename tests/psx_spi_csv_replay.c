@@ -6,6 +6,12 @@
 #include <ctype.h>
 
 typedef struct {
+    unsigned capture_id;
+    uint8_t tx;
+    uint8_t rx;
+} captured_byte_t;
+
+typedef struct {
     uint8_t config_responses[0x10][6];
     uint8_t report_mask[3];
     uint8_t button_attr[12];
@@ -78,8 +84,7 @@ static int csv_field(const char *line, unsigned wanted, char *out, size_t out_sz
 }
 
 static int load_wireless_columns(const char *path,
-                                 uint8_t **cmd_out, size_t *cmd_n,
-                                 uint8_t **rx_out, size_t *rx_n)
+                                 captured_byte_t **stream_out, size_t *stream_n)
 {
     FILE *f = fopen(path, "r");
     if (!f) {
@@ -88,12 +93,9 @@ static int load_wireless_columns(const char *path,
     }
 
     size_t cap = 1024, n = 0;
-    uint8_t *cmd = malloc(cap);
-    uint8_t *rx = malloc(cap);
-    if (!cmd || !rx) {
+    captured_byte_t *stream = malloc(cap * sizeof(*stream));
+    if (!stream) {
         fclose(f);
-        free(cmd);
-        free(rx);
         return -1;
     }
 
@@ -102,54 +104,39 @@ static int load_wireless_columns(const char *path,
     while (fgets(line, sizeof(line), f)) {
         char fc[256], fd[256];
         uint8_t cb, db;
+        unsigned idc, idd;
 
-        /*
-         * CSV columns:
-         *   0/1 dual shock
-         *   2/3 blank
-         *   4/5 guitar hero
-         *   6/7 wireless
-         */
         if (!csv_field(line, 6, fc, sizeof(fc)) ||
             !csv_field(line, 7, fd, sizeof(fd)))
             continue;
 
-        if (!hexbyte_after_colon(fc, &cb) ||
+        const char *pc = strchr(fc, ':');
+        const char *pd = strchr(fd, ':');
+        if (!pc || !pd ||
+            sscanf(fc, "%u:", &idc) != 1 ||
+            sscanf(fd, "%u:", &idd) != 1 ||
+            idc != idd ||
+            !hexbyte_after_colon(fc, &cb) ||
             !hexbyte_after_colon(fd, &db))
             continue;
 
         if (n == cap) {
-            size_t new_cap = cap * 2;
-            uint8_t *nc = realloc(cmd, new_cap);
-            if (!nc) {
-                free(cmd);
-                free(rx);
+            cap *= 2;
+            captured_byte_t *ns = realloc(stream, cap * sizeof(*stream));
+            if (!ns) {
+                free(stream);
                 fclose(f);
                 return -1;
             }
-            cmd = nc;
-
-            uint8_t *nr = realloc(rx, new_cap);
-            if (!nr) {
-                free(cmd);
-                free(rx);
-                fclose(f);
-                return -1;
-            }
-            rx = nr;
-            cap = new_cap;
+            stream = ns;
         }
 
-        cmd[n] = cb;
-        rx[n] = db;
-        ++n;
+        stream[n++] = (captured_byte_t){ idc, cb, db };
     }
 
     fclose(f);
-    *cmd_out = cmd;
-    *rx_out = rx;
-    *cmd_n = n;
-    *rx_n = n;
+    *stream_out = stream;
+    *stream_n = n;
     return 0;
 }
 
@@ -179,10 +166,10 @@ int main(int argc, char **argv)
         ? argv[1]
         : "tests/cmd-data on startup_aligned - Sheet1.csv";
 
-    uint8_t *stream_cmd = NULL, *stream_rx = NULL;
-    size_t ncmd = 0, nrx = 0;
+    captured_byte_t *stream = NULL;
+    size_t nstream = 0;
 
-    if (load_wireless_columns(path, &stream_cmd, &ncmd, &stream_rx, &nrx) != 0)
+    if (load_wireless_columns(path, &stream, &nstream) != 0)
         return 1;
 
     psx_test_state_t s;
@@ -209,9 +196,9 @@ int main(int argc, char **argv)
         memcpy(queued_config[r], s.config_responses[r], 6);
 
     size_t i = 0;
-    while (i + 1 < ncmd) {
-        if (stream_cmd[i] != 0x01 ||
-            !is_ps2_command(stream_cmd[i + 1])) {
+    while (i + 1 < nstream) {
+        if (stream[i].tx != 0x01 ||
+            !is_ps2_command(stream[i + 1].tx)) {
             ++i;
             ++skipped;
             continue;
@@ -224,23 +211,32 @@ int main(int argc, char **argv)
          * when the command is 43/40/etc.  Config-mode transactions are 9
          * bytes.
          */
-        if (!s.configMode)
-            tx_len = 3u + s.report_len;
-        else
-            tx_len = 9;
+        /* Find the next capture record beginning a PS2 command. */
+        size_t next = i + 1;
+        while (next < nstream &&
+               !(stream[next].tx == 0x01 &&
+                 next + 1 < nstream &&
+                 is_ps2_command(stream[next + 1].tx)))
+            ++next;
 
-        if (i + tx_len > ncmd || i + tx_len > nrx) {
+        tx_len = next - i;
+        if (tx_len == 0 || tx_len > 21)
+            tx_len = s.configMode ? 9 : (size_t)(3u + s.report_len);
+
+        if (i + tx_len > nstream) {
             fprintf(stderr,
                     "SKIP truncated txn at stream=%zu cmd=%02X len=%zu\\n",
-                    i, stream_cmd[i + 1], tx_len);
+                    i, stream[i + 1].tx, tx_len);
             ++skipped;
             break;
         }
 
         uint8_t tx[21] = {0};
         uint8_t rx[21] = {0};
-        memcpy(tx, stream_cmd + i, tx_len);
-        memcpy(rx, stream_rx + i, tx_len);
+        for (size_t k = 0; k < tx_len; ++k) {
+            tx[k] = stream[i + k].tx;
+            rx[k] = stream[i + k].rx;
+        }
 
         ++transactions;
 
@@ -289,7 +285,7 @@ int main(int argc, char **argv)
     }
 
     printf("Parsed %u Wireless transactions from %zu aligned bytes",
-           transactions, ncmd);
+           transactions, nstream);
     if (skipped)
         printf(" (%u non-command bytes skipped)", skipped);
     putchar('\n');
@@ -300,8 +296,7 @@ int main(int argc, char **argv)
            s.report_len,
            s.report_mask[0], s.report_mask[1], s.report_mask[2]);
 
-    free(stream_cmd);
-    free(stream_rx);
+    free(stream);
 
     if (failures) {
         fprintf(stderr, "%u CSV replay checks failed\n", failures);

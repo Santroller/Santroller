@@ -48,14 +48,60 @@ PSXEmulation::PSXEmulation(int8_t sck, int8_t cmd, int8_t dat, uint8_t attPin, u
 
 void PSXEmulation::sendData(uint8_t len, uint8_t *data)
 {
+    uint8_t ts = spi->timing_send_idx;
+    uint8_t tn = (uint8_t)((ts + 1) & 0x0F);
+    if (tn == spi->timing_prepare_idx)
+    {
+        spi->timing_send_overflow = true;
+    }
+    else
+    {
+        spi->timing_send_us[ts] = time_us_32();
+        spi->timing_send_old_len[ts] = spi->protocol.report_len;
+        spi->timing_send_new_len[ts] = len;
+        spi->timing_send_idx = tn;
+    }
+
     memcpy(spi->protocol.resp_42, data, len);
     memcpy(spi->protocol.config_responses[0x02], data, sizeof(spi->protocol.config_responses[0x02]));
     spi->protocol.report_len = len;
     sent = false;
 }
+static void dump_timing_trace(pio_spi_t *spi)
+{
+    while (spi->timing_send_idx != spi->timing_prepare_idx)
+        break;
+
+    printf("SPI timing trace:");
+    for (uint8_t i = 0; i < spi->timing_prepare_idx; ++i)
+    {
+        printf("\r\n  PREP[%u] t=%lu len=%u hdr=%02X cfg=%u analog=%u",
+               i,
+               (unsigned long)spi->timing_prepare_us[i],
+               spi->timing_prepare_len[i],
+               spi->timing_prepare_header[i],
+               spi->timing_prepare_config[i],
+               spi->timing_prepare_analog[i]);
+    }
+    for (uint8_t i = 0; i < spi->timing_send_idx; ++i)
+    {
+        printf("\r\n  SEND[%u] t=%lu %u->%u",
+               i,
+               (unsigned long)spi->timing_send_us[i],
+               spi->timing_send_old_len[i],
+               spi->timing_send_new_len[i]);
+    }
+    if (spi->timing_prepare_overflow || spi->timing_send_overflow)
+        printf("\r\n  TRACE OVERFLOW");
+    printf("\r\n");
+}
+
 uint8_t last_lastcmd = 0;
 PsxReportFormat_t PSXEmulation::getReportFormat()
 {
+    if (spi->timing_prepare_idx || spi->timing_send_idx)
+        dump_timing_trace(spi);
+
     while (spi->transaction_idx_read != spi->transaction_idx_write)
     {
         uint8_t idx = spi->transaction_idx_read;

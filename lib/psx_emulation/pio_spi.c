@@ -178,20 +178,20 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
     // push the initial 0xFF and header
     pio_sm_put(spi->pio, spi->config.combined_sm, 0xFF);
     // we always send the same data when not in config mode, so theres no need to read the command!
-    irq_set_enabled(PIO_IRQ_NUM(spi->pio, 1), spi->configMode);
-    if (spi->configMode)
+    irq_set_enabled(PIO_IRQ_NUM(spi->pio, 1), spi->protocol.configMode);
+    if (spi->protocol.configMode)
     {
         pio_sm_put(spi->pio, spi->config.combined_sm, 0xF3);
     }
-    else if (spi->config_responses[0x05][2])
+    else if (spi->protocol.config_responses[0x05][2])
     {
         // analog style responses start with 0x70
-        pio_sm_put(spi->pio, spi->config.combined_sm, 0x70 | (spi->report_len / 2));
+        pio_sm_put(spi->pio, spi->config.combined_sm, 0x70 | (spi->protocol.report_len / 2));
     }
     else
     {
         // digital style responses start with 0x40
-        pio_sm_put(spi->pio, spi->config.combined_sm, 0x40 | (spi->report_len / 2));
+        pio_sm_put(spi->pio, spi->config.combined_sm, 0x40 | (spi->protocol.report_len / 2));
     }
     pio_sm_put(spi->pio, spi->config.combined_sm, 0x5A);
     pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_set(pio_y, 7));
@@ -200,7 +200,7 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
     pio_sm_exec_wait_blocking(spi->pio, spi->config.initial_sm, pio_encode_set(pio_y, (8 * 3) - 1));
     pio_sm_exec_wait_blocking(spi->pio, spi->config.initial_sm, pio_encode_jmp(spi->offset_combined));
     // 3 bytes for the header, -1, and then we don't ack the last byte, leaving only the packet size + 1
-    pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_set(pio_x, (spi->report_len) + 1));
+    pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_set(pio_x, (spi->protocol.report_len) + 1));
 
     uint irq_wait = pio_encode_wait_irq(1, false, 7);
     pio_sm_exec(spi->pio, spi->config.combined_sm, irq_wait);
@@ -225,18 +225,18 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
     {
         pio_spi_provide_read_buffer(spi, spi->dma_buf, dma_encode_transfer_count(32));
         // When not in config mode, the response is always the same so we don't need to wait to know the command
-        if (!spi->configMode)
+        if (!spi->protocol.configMode)
         {
-            pio_spi_provide_write_buffer(spi, spi->resp_42, dma_encode_transfer_count(spi->report_len));
+            pio_spi_provide_write_buffer(spi, spi->protocol.resp_42, dma_encode_transfer_count(spi->protocol.report_len));
         }
         pio_interrupt_clear(spi->pio, 1);
     }
     if (irqs & (1u << 2))
     {
-        if (spi->dma_buf[1] == 0x43 || spi->configMode)
+        if (spi->dma_buf[1] == 0x43 || spi->protocol.configMode)
         {
-            spi->has_new_cmd = true;
-            spi->cmd_id++;
+            spi->protocol.has_new_cmd = true;
+            spi->protocol.cmd_id++;
             spi->dma_buf_test[spi->read_idx_write][0] = spi->dma_buf[0];
             spi->dma_buf_test[spi->read_idx_write][1] = spi->dma_buf[1];
             spi->dma_buf_test[spi->read_idx_write][2] = spi->dma_buf[2];
@@ -247,7 +247,7 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
             spi->dma_buf_test[spi->read_idx_write][7] = spi->dma_buf[7];
             spi->read_idx_write = (spi->read_idx_write + 1) & 0x07; // Assuming a buffer size of 8
         }
-        PSX_SPI_PROCESS_COMMAND(spi, spi->dma_buf);
+        PSX_SPI_PROCESS_COMMAND(&spi->protocol, spi->dma_buf);
         prepare_for_next(spi);
         pio_interrupt_clear(spi->pio, 1);
     }
@@ -269,14 +269,14 @@ static void __time_critical_func(pio_data_irq_0)(void)
     pio_spi_config_t *cfg = &spi->config;
     pio0->rxf[cfg->initial_sm];
     uint8_t reg = pio0->rxf[cfg->initial_sm] >> 24;
-    if (spi->configMode)
+    if (spi->protocol.configMode)
     {
         spi->has_new_write = true;
         spi->write_id++;
         spi->dma_buf_test2[spi->write_idx_write][0] = reg;
-        memcpy(spi->dma_buf_test2[spi->write_idx_write]+1, spi->config_responses[reg - 0x40], 6);
+        memcpy(spi->dma_buf_test2[spi->write_idx_write]+1, spi->protocol.config_responses[reg - 0x40], 6);
         spi->write_idx_write = (spi->write_idx_write + 1) & 0x07; // Assuming a buffer size of 8
-        pio_spi_provide_write_buffer(spi, spi->config_responses[reg - 0x40], dma_encode_transfer_count(6));
+        pio_spi_provide_write_buffer(spi, spi->protocol.config_responses[reg - 0x40], dma_encode_transfer_count(6));
     }
     hw_set_bits(&pio0->irq, (1u << 0));
 }
@@ -287,14 +287,14 @@ static void __time_critical_func(pio_data_irq_1)(void)
     pio_spi_config_t *cfg = &spi->config;
     pio1->rxf[cfg->initial_sm];
     uint8_t reg = pio1->rxf[cfg->initial_sm] >> 24;
-    if (spi->configMode)
+    if (spi->protocol.configMode)
     {
         spi->has_new_write = true;
         spi->write_id++;
         spi->dma_buf_test2[spi->write_idx_write][0] = reg;
-        memcpy(spi->dma_buf_test2[spi->write_idx_write]+1, spi->config_responses[reg - 0x40], 6);
+        memcpy(spi->dma_buf_test2[spi->write_idx_write]+1, spi->protocol.config_responses[reg - 0x40], 6);
         spi->write_idx_write = (spi->write_idx_write + 1) & 0x07; // Assuming a buffer size of 8
-        pio_spi_provide_write_buffer(spi, spi->config_responses[reg - 0x40], dma_encode_transfer_count(6));
+        pio_spi_provide_write_buffer(spi, spi->protocol.config_responses[reg - 0x40], dma_encode_transfer_count(6));
     }
     hw_set_bits(&pio1->irq, (1u << 0));
 }
@@ -311,8 +311,8 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
     spi->config = *config;
     spi->pio = config->pio_idx == 0 ? pio0 : pio1;
     spi->type = config->type;
-    PSX_SPI_PROTOCOL_INIT(spi, spi->type == SubType_GuitarHeroGuitar);
-    spi->cmd_id = 0;
+    PSX_SPI_PROTOCOL_INIT(&spi->protocol, spi->type == SubType_GuitarHeroGuitar);
+    spi->protocol.cmd_id = 0;
     spi->write_id = 0;
     spi->read_idx_read = 0;
     spi->read_idx_write = 0;

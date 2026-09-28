@@ -283,7 +283,6 @@ int main(int argc, char **argv)
                 dump_bytes("  expected: ", expected, 6);
                 ++failures;
             }
-            }
         }
 
         PSX_SPI_PROCESS_COMMAND(&s, tx);

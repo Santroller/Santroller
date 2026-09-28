@@ -196,6 +196,18 @@ int main(int argc, char **argv)
      * Command length is determined by the protocol state, not by searching
      * for 0x01: 0x01 can legitimately occur inside a 0x79 report payload.
      */
+    /*
+     * Model the PIO write-buffer pipeline explicitly.  The response seen
+     * during transaction N was selected before the CPU processed command N.
+     * Therefore keep a snapshot for transaction N, validate it first, then
+     * process the command to prepare transaction N+1.
+     */
+    uint8_t queued_header = PSX_SPI_RESPONSE_HEADER(&s);
+    uint8_t queued_config[0x10][6];
+    memset(queued_config, 0, sizeof(queued_config));
+    for (int r = 0; r < 0x10; ++r)
+        memcpy(queued_config[r], s.config_responses[r], 6);
+
     size_t i = 0;
     while (i + 1 < ncmd) {
         if (stream_cmd[i] != 0x01 ||
@@ -210,11 +222,11 @@ int main(int argc, char **argv)
             tx_len = 3u + s.report_len;
         else if (!s.configMode && stream_cmd[i + 1] == 0x43 &&
                  stream_cmd[i + 3] == 0x01)
-            tx_len = 5; /* enter-config 43 is a short normal-mode poll */
+            tx_len = 5;
         else
-            tx_len = 9; /* config commands, including exit-config 43 */
+            tx_len = 9;
 
-        if (i + tx_len > ncmd) {
+        if (i + tx_len > ncmd || i + tx_len > nrx) {
             fprintf(stderr,
                     "SKIP truncated txn at stream=%zu cmd=%02X len=%zu\\n",
                     i, stream_cmd[i + 1], tx_len);
@@ -229,11 +241,10 @@ int main(int argc, char **argv)
 
         ++transactions;
 
-        uint8_t expected_header = PSX_SPI_RESPONSE_HEADER(&s);
-        if (rx[1] != expected_header) {
+        if (rx[1] != queued_header) {
             fprintf(stderr,
                     "FAIL txn %u stream=%zu cmd=%02X: header got %02X want %02X\\n",
-                    transactions, i, tx[1], rx[1], expected_header);
+                    transactions, i, tx[1], rx[1], queued_header);
             dump_bytes("  TX: ", tx, tx_len);
             dump_bytes("  RX: ", rx, tx_len);
             fprintf(stderr,
@@ -245,28 +256,32 @@ int main(int argc, char **argv)
             ++failures;
         }
 
-        /*
-         * Config-mode responses are selected before the command mutates the
-         * response table.  Compare the queued/current slot first, then run
-         * the command parser to prepare the next transaction.
-         */
         if (s.configMode && tx[1] >= 0x40 && tx[1] <= 0x4F &&
             tx_len >= 9) {
             uint8_t reg = (uint8_t)(tx[1] - 0x40);
             if (reg < 0x10 &&
-                memcmp(rx + 3, s.config_responses[reg], 6) != 0) {
+                memcmp(rx + 3, queued_config[reg], 6) != 0) {
                 fprintf(stderr,
                         "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch\\n",
                         transactions, i, tx[1]);
                 dump_bytes("  TX: ", tx, tx_len);
                 dump_bytes("  captured: ", rx + 3, 6);
-                dump_bytes("  expected: ", s.config_responses[reg], 6);
+                dump_bytes("  expected: ", queued_config[reg], 6);
                 ++failures;
             }
         }
 
         PSX_SPI_PROCESS_COMMAND(&s, tx);
         report_len_from_mask(&s);
+
+        /*
+         * CPU-side command processing is now complete.  This is what the
+         * PIO/CPU path can expose on the following SPI transaction.
+         */
+        queued_header = PSX_SPI_RESPONSE_HEADER(&s);
+        for (int r = 0; r < 0x10; ++r)
+            memcpy(queued_config[r], s.config_responses[r], 6);
+
         i += tx_len;
     }
 

@@ -193,11 +193,8 @@ int main(int argc, char **argv)
     unsigned skipped = 0;
 
     /*
-     * The command column is an aligned byte stream.  A transaction starts
-     * with 0x01 followed by a recognised command; its length is therefore
-     * the distance to the next such start marker.  This is important because
-     * 0x42 transactions are 5, 9, or 21 bytes depending on the active report
-     * length, while config transactions are normally 9 bytes.
+     * Command length is determined by the protocol state, not by searching
+     * for 0x01: 0x01 can legitimately occur inside a 0x79 report payload.
      */
     size_t i = 0;
     while (i + 1 < ncmd) {
@@ -208,21 +205,18 @@ int main(int argc, char **argv)
             continue;
         }
 
-        size_t next = i + 1;
-        while (next + 1 < ncmd &&
-               !(stream_cmd[next] == 0x01 &&
-                 is_ps2_command(stream_cmd[next + 1]))) {
-            ++next;
-        }
+        size_t tx_len;
+        if (stream_cmd[i + 1] == 0x42 && !s.configMode)
+            tx_len = 3u + s.report_len;
+        else
+            tx_len = 9;
 
-        size_t tx_len = next - i;
-        if (tx_len < 5 || tx_len > 21) {
+        if (i + tx_len > ncmd) {
             fprintf(stderr,
-                    "SKIP malformed txn at stream=%zu cmd=%02X len=%zu\\n",
+                    "SKIP truncated txn at stream=%zu cmd=%02X len=%zu\\n",
                     i, stream_cmd[i + 1], tx_len);
             ++skipped;
-            i = next;
-            continue;
+            break;
         }
 
         uint8_t tx[21] = {0};
@@ -249,30 +243,28 @@ int main(int argc, char **argv)
         }
 
         /*
-         * The command parser runs before the config-data PIO snapshot is
-         * consumed.  The response header is already prepared for this
-         * transaction, but the six-byte config payload can reflect the
-         * command just received (notably command 40).
+         * Config-mode responses are selected before the command mutates the
+         * response table.  Compare the queued/current slot first, then run
+         * the command parser to prepare the next transaction.
          */
-        PSX_SPI_PROCESS_COMMAND(&s, tx);
-        report_len_from_mask(&s);
-
         if (s.configMode && tx[1] >= 0x40 && tx[1] <= 0x4F &&
             tx_len >= 9) {
             uint8_t reg = (uint8_t)(tx[1] - 0x40);
-            if (reg < 0x10) {
-                if (memcmp(rx + 3, s.config_responses[reg], 6) != 0) {
-                    fprintf(stderr,
-                            "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch\\n",
-                            transactions, i, tx[1]);
-                    dump_bytes("  TX: ", tx, tx_len);
-                    dump_bytes("  captured: ", rx + 3, 6);
-                    dump_bytes("  expected: ", s.config_responses[reg], 6);
-                    ++failures;
-                }
+            if (reg < 0x10 &&
+                memcmp(rx + 3, s.config_responses[reg], 6) != 0) {
+                fprintf(stderr,
+                        "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch\\n",
+                        transactions, i, tx[1]);
+                dump_bytes("  TX: ", tx, tx_len);
+                dump_bytes("  captured: ", rx + 3, 6);
+                dump_bytes("  expected: ", s.config_responses[reg], 6);
+                ++failures;
             }
         }
-        i = next;
+
+        PSX_SPI_PROCESS_COMMAND(&s, tx);
+        report_len_from_mask(&s);
+        i += tx_len;
     }
 
     printf("Parsed %u Wireless transactions from %zu aligned bytes",

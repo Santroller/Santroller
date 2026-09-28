@@ -48,30 +48,26 @@ PSXEmulation::PSXEmulation(int8_t sck, int8_t cmd, int8_t dat, uint8_t attPin, u
 
 void PSXEmulation::sendData(uint8_t len, uint8_t *data)
 {
-    uint8_t ts = spi->timing_send_idx;
-    uint8_t tn = (uint8_t)((ts + 1) & 0x0F);
-    if (tn == spi->timing_prepare_idx)
-    {
-        spi->timing_send_overflow = true;
-    }
-    else
-    {
-        spi->timing_send_us[ts] = time_us_32();
-        spi->timing_send_old_len[ts] = spi->protocol.report_len;
-        spi->timing_send_new_len[ts] = len;
-        spi->timing_send_idx = tn;
-    }
+    // sendData supplies raw controller state only. The PSX response format and
+    // length are selected later, when the next SPI transaction is prepared,
+    // after all command-driven protocol state changes have been applied.
+    if (len > sizeof(spi->protocol.resp_42))
+        len = sizeof(spi->protocol.resp_42);
 
-    memcpy(spi->protocol.resp_42, data, len);
-    memcpy(spi->protocol.config_responses[0x02], data, sizeof(spi->protocol.config_responses[0x02]));
-    spi->protocol.report_len = len;
+    memset((void *)spi->protocol.resp_42, 0, sizeof(spi->protocol.resp_42));
+    memcpy((void *)spi->protocol.resp_42, data, len);
+    memcpy((void *)spi->protocol.config_responses[0x02],
+           (const void *)spi->protocol.resp_42,
+           sizeof(spi->protocol.config_responses[0x02]));
+
+    memcpy((void *)spi->raw_report, (const void *)spi->protocol.resp_42,
+           sizeof(spi->protocol.resp_42));
+    spi->raw_report_len = len;
     sent = false;
 }
+
 static void dump_timing_trace(pio_spi_t *spi)
 {
-    while (spi->timing_send_idx != spi->timing_prepare_idx)
-        break;
-
     printf("SPI timing trace:");
     for (uint8_t i = 0; i < spi->timing_prepare_idx; ++i)
     {

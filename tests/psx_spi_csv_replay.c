@@ -218,11 +218,14 @@ int main(int argc, char **argv)
         }
 
         size_t tx_len;
-        if (!s.configMode && stream_cmd[i + 1] == 0x42)
+        /*
+         * Transfer length belongs to the transaction, not the opcode.
+         * In normal mode the console clocks the current report length even
+         * when the command is 43/40/etc.  Config-mode transactions are 9
+         * bytes.
+         */
+        if (!s.configMode)
             tx_len = 3u + s.report_len;
-        else if (!s.configMode && stream_cmd[i + 1] == 0x43 &&
-                 stream_cmd[i + 3] == 0x01)
-            tx_len = 5;
         else
             tx_len = 9;
 

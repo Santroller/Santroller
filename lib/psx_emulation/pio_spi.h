@@ -45,6 +45,8 @@ typedef struct pio_spi_t
     uint8_t dma_buf_test2[8][8];
     uint8_t dma_config_buf[6];
     SubType type;
+    bool watchdog_active;
+    uint32_t watchdog_last_activity_ms;
     uint8_t rumble_small;
     uint8_t rumble_large;
 } pio_spi_t;
@@ -99,6 +101,8 @@ extern "C"
     void pio_spi_start(const pio_spi_t *spi);
     // Stop the pio spi engine.
     void pio_spi_stop(pio_spi_t *spi);
+    // Service the DualShock watchdog. Call periodically from the main loop.
+    void pio_spi_watchdog_tick(pio_spi_t *spi);
 
 #ifdef __cplusplus
 }

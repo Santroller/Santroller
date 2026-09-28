@@ -99,8 +99,11 @@ static void dump_timing_trace(pio_spi_t *spi)
 uint8_t last_lastcmd = 0;
 PsxReportFormat_t PSXEmulation::getReportFormat()
 {
-    if (spi->timing_prepare_idx || spi->timing_send_idx)
+    if (!spi->timing_dumped && (spi->timing_prepare_idx || spi->timing_send_idx))
+    {
         dump_timing_trace(spi);
+        spi->timing_dumped = true;
+    }
 
     while (spi->transaction_idx_read != spi->transaction_idx_write)
     {

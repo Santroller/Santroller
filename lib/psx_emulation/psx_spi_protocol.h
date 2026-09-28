@@ -117,4 +117,28 @@ typedef struct psx_spi_protocol_state_t
     } \
 } while (0)
 
-#define PSX_SPI_RESPONSE_HEADER(s) ((s)->configMode ? 0xF3 : ((s)->config_responses[0x05][2] ? (uint8_t)(0x70|((s)->report_len/2)) : (uint8_t)(0x40|((s)->report_len/2))))
+static inline uint8_t psx_spi_current_report_len(const psx_spi_protocol_state_t *s)
+{
+    if (s->configMode)
+        return 0;
+
+    if (!s->config_responses[0x05][2])
+        return 2;
+
+    uint8_t len = 0;
+    for (uint8_t i = 0; i < 18; ++i)
+    {
+        if (s->report_mask[i / 8] & (1u << (i % 8)))
+            ++len;
+    }
+    return len;
+}
+
+/*
+ * The header describes the response that will be queued next. In analog
+ * mode its low bits are derived from the current report mask, rather than
+ * the previous transaction's report_len value. Firmware materializes
+ * report_len immediately before arming the response; deriving it here
+ * keeps the replay state machine on the same protocol semantics.
+ */
+#define PSX_SPI_RESPONSE_HEADER(s) ((s)->configMode ? 0xF3 : ((s)->config_responses[0x05][2] ? (uint8_t)(0x70 | (psx_spi_current_report_len(s) / 2)) : (uint8_t)(0x40 | (psx_spi_current_report_len(s) / 2))))

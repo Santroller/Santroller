@@ -56,6 +56,24 @@ void PSXEmulation::sendData(uint8_t len, uint8_t *data)
 uint8_t last_lastcmd = 0;
 PsxReportFormat_t PSXEmulation::getReportFormat()
 {
+    while (spi->transaction_idx_read != spi->transaction_idx_write)
+    {
+        uint8_t idx = spi->transaction_idx_read;
+        printf("SPI transaction: TX ");
+        for (int i = 0; i < 8; i++)
+            printf("%02X ", spi->transaction_test[idx][i]);
+        printf(" RX ");
+        for (int i = 0; i < spi->transaction_test_rx_len[idx]; i++)
+            printf("%02X ", spi->transaction_test_rx[idx][i]);
+        printf(" | state: config=%d analog=%d len=%u mask=%02X %02X %02X\r\n",
+               spi->protocol.configMode,
+               spi->protocol.config_responses[0x05][2],
+               spi->protocol.report_len,
+               spi->protocol.report_mask[0],
+               spi->protocol.report_mask[1],
+               spi->protocol.report_mask[2]);
+        spi->transaction_idx_read = (spi->transaction_idx_read + 1) & 0x07;
+    }
     if (spi->read_idx_read != spi->read_idx_write)
     {
         spi->read_idx_read = (spi->read_idx_read + 1) & 0x07; // Assuming a buffer size of 8

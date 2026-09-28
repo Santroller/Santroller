@@ -1,4 +1,5 @@
 #include "pio_spi.h"
+#include "psx_spi_protocol.h"
 #include "pio_spi.pio.h"
 #include "hardware/pio.h"
 #include "hardware/gpio.h"
@@ -365,83 +366,7 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
             spi->dma_buf_test[spi->read_idx_write][7] = spi->dma_buf[7];
             spi->read_idx_write = (spi->read_idx_write + 1) & 0x07; // Assuming a buffer size of 8
         }
-        switch (spi->dma_buf[1])
-        {
-        case 0x40:
-            spi->config_responses[0x00][2] =
-                spi->button_attr[spi->dma_buf[3]];
-
-            spi->button_attr[spi->dma_buf[3]] =
-                spi->dma_buf[4];
-            break;
-        case 0x42:
-            if (!spi->configMode)
-            {
-                spi->rumble_small = spi->dma_buf[3];
-                spi->rumble_large = spi->dma_buf[4];
-            }
-            break;
-        case 0x43:
-            memcpy(spi->config_responses[0x06], init_resp_46[0], sizeof(init_resp_46[0]));
-            memcpy(spi->config_responses[0x0c], init_resp_4c[0], sizeof(init_resp_4c[0]));
-            spi->configMode = spi->dma_buf[3];
-            break;
-        case 0x44:
-            spi->locked = spi->dma_buf[4];
-            memset(spi->config_responses[0x01], 0, sizeof(spi->config_responses[0x01]));
-            memset(spi->report_mask, 0, sizeof(spi->report_mask));
-            if (spi->dma_buf[3])
-            {
-                spi->config_responses[0x05][2] = 1;
-                memcpy(spi->config_responses[0x01], init_resp_41_analog, sizeof(init_resp_41_analog));
-                // analog defaults to 0x3F
-                spi->report_mask[0] = 0x3F;
-            }
-            else
-            {
-                spi->config_responses[0x05][2] = 0;
-                memcpy(spi->config_responses[0x01], init_resp_41_digital, sizeof(init_resp_41_digital));
-                // digital defaults to 0x03
-                spi->report_mask[0] = 0x03;
-            }
-            break;
-        case 0x4c:
-            // this is fun - we are processing this command after it has ran, so we are just assuming the console sends
-            // it in order
-            if (spi->dma_buf[3] == 0)
-            {
-                memcpy(spi->config_responses[0x0c], init_resp_4c[1], sizeof(init_resp_4c[1]));
-            }
-            if (spi->dma_buf[3] >= 1)
-            {
-                memset(spi->config_responses[0x0c], 0, sizeof(spi->config_responses[0x0c]));
-            }
-            break;
-        case 0x46:
-            if (spi->dma_buf[3] == 0)
-            {
-                memcpy(spi->config_responses[0x06], init_resp_46[1], sizeof(init_resp_46[1]));
-            }
-            if (spi->dma_buf[3] >= 1)
-            {
-                memset(spi->config_responses[0x06], 0, sizeof(spi->config_responses[0x06]));
-            }
-            break;
-        case 0x4F:
-            if (spi->config_responses[0x05][2])
-            {
-                spi->report_mask[0] = spi->dma_buf[3];
-                spi->report_mask[1] = spi->dma_buf[4];
-                spi->report_mask[2] = spi->dma_buf[5];
-            }
-            break;
-        case 0x4D:
-            for (int i = 0; i < sizeof(spi->config_responses[0x0d]); i++)
-            {
-                spi->config_responses[0x0d][i] = spi->dma_buf[3 + i];
-            }
-            break;
-        }
+        PSX_SPI_PROCESS_COMMAND(spi, spi->dma_buf);
         prepare_for_next(spi);
         pio_interrupt_clear(spi->pio, 1);
     }

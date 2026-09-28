@@ -200,6 +200,53 @@ typedef struct pio_spi_read_info_t
     uint num_bits_transacted;
 } pio_spi_read_info_t;
 
+static uint8_t get_current_report_len(pio_spi_t *spi)
+{
+    if (spi->protocol.configMode)
+        return 0;
+
+    if (!spi->protocol.config_responses[0x05][2])
+        return 2;
+
+    uint8_t len = 0;
+    for (uint8_t i = 0; i < 18; ++i)
+    {
+        if (spi->protocol.report_mask[i / 8] & (1u << (i % 8)))
+            ++len;
+    }
+    return len;
+}
+
+static void format_next_response(pio_spi_t *spi)
+{
+    uint8_t payload_len = get_current_report_len();
+
+    spi->protocol.report_len = payload_len;
+    spi->response_buf[0] = PSX_SPI_RESPONSE_HEADER(&spi->protocol);
+    spi->response_buf[1] = 0x5A;
+    spi->response_len = 2;
+
+    if (!spi->protocol.configMode)
+    {
+        if (!spi->protocol.config_responses[0x05][2])
+        {
+            memcpy((void *)&spi->response_buf[2],
+                   (const void *)spi->raw_report,
+                   payload_len);
+        }
+        else
+        {
+            uint8_t current = 0;
+            for (uint8_t i = 0; i < 18; ++i)
+            {
+                if (spi->protocol.report_mask[i / 8] & (1u << (i % 8)))
+                    spi->response_buf[2 + current++] = spi->raw_report[i];
+            }
+        }
+        spi->response_len = payload_len + 2;
+    }
+}
+
 static void __time_critical_func(stop_loops)(pio_spi_t *spi)
 {
     pio_set_sm_mask_enabled(spi->pio, spi->startstop_mask, false); // Stop state machines
@@ -213,6 +260,11 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
     // push the initial 0xFF and header
     pio_sm_put(spi->pio, spi->config.combined_sm, 0xFF);
 
+    // Format the next response only after the just-completed command has
+    // updated the protocol state. The resulting header, length, and payload
+    // form one coherent transaction descriptor.
+    format_next_response(spi);
+
     // Capture the exact protocol state used to arm this transaction. Do not
     // printf() here: this path is timing-critical and the trace must not alter it.
     uint8_t tp = spi->timing_prepare_idx;
@@ -224,14 +276,10 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
     else
     {
         spi->timing_prepare_us[tp] = time_us_32();
-        spi->timing_prepare_len[tp] = spi->protocol.report_len;
+        spi->timing_prepare_len[tp] = spi->response_len - 2;
         spi->timing_prepare_config[tp] = spi->protocol.configMode;
         spi->timing_prepare_analog[tp] = spi->protocol.config_responses[0x05][2];
-        spi->timing_prepare_header[tp] =
-            spi->protocol.configMode ? 0xF3 :
-            (spi->protocol.config_responses[0x05][2]
-                ? (uint8_t)(0x70 | (spi->protocol.report_len / 2))
-                : (uint8_t)(0x40 | (spi->protocol.report_len / 2)));
+        spi->timing_prepare_header[tp] = spi->response_buf[0];
         spi->timing_prepare_idx = tn;
     }
     // we always send the same data when not in config mode, so theres no need to read the command!
@@ -252,28 +300,14 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
     }
     pio_sm_put(spi->pio, spi->config.combined_sm, 0x5A);
 
-    // Snapshot the exact response that is about to be clocked out. The normal
-    // logger can consume this later without printf() work in the timing-critical IRQ.
-    spi->response_buf[0] = spi->protocol.configMode ? 0xF3 :
-                           (spi->protocol.config_responses[0x05][2]
-                                ? (uint8_t)(0x70 | (spi->protocol.report_len / 2))
-                                : (uint8_t)(0x40 | (spi->protocol.report_len / 2)));
-    spi->response_buf[1] = 0x5A;
-    spi->response_len = 2;
-    if (!spi->protocol.configMode)
-    {
-        uint8_t n = spi->protocol.report_len;
-        if (n > sizeof(spi->response_buf) - 2) n = sizeof(spi->response_buf) - 2;
-        memcpy((void *)&spi->response_buf[2], (const void *)spi->protocol.resp_42, n);
-        spi->response_len = n + 2;
-    }
     pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_set(pio_y, 7));
     pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_jmp(spi->offset_combined));
     // 3 bytes for header
     pio_sm_exec_wait_blocking(spi->pio, spi->config.initial_sm, pio_encode_set(pio_y, (8 * 3) - 1));
     pio_sm_exec_wait_blocking(spi->pio, spi->config.initial_sm, pio_encode_jmp(spi->offset_combined));
     // 3 bytes for the header, -1, and then we don't ack the last byte, leaving only the packet size + 1
-    pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_set(pio_x, (spi->protocol.report_len) + 1));
+    pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm,
+        pio_encode_set(pio_x, (spi->response_len - 2) + 1));
 
     uint irq_wait = pio_encode_wait_irq(1, false, 7);
     pio_sm_exec(spi->pio, spi->config.combined_sm, irq_wait);
@@ -299,9 +333,10 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
         psx_spi_watchdog_touch(spi);
         pio_spi_provide_read_buffer(spi, spi->dma_buf, dma_encode_transfer_count(32));
         // When not in config mode, the response is always the same so we don't need to wait to know the command
-        if (!spi->protocol.configMode)
+        if (!spi->protocol.configMode && spi->response_len >= 2)
         {
-            pio_spi_provide_write_buffer(spi, spi->protocol.resp_42, dma_encode_transfer_count(spi->protocol.report_len));
+            pio_spi_provide_write_buffer(spi, &spi->response_buf[2],
+                                          dma_encode_transfer_count(spi->response_len - 2));
         }
         pio_interrupt_clear(spi->pio, 1);
     }

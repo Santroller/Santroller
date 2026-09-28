@@ -299,6 +299,9 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
             spi->dma_buf_test[spi->read_idx_write][7] = spi->dma_buf[7];
             spi->read_idx_write = (spi->read_idx_write + 1) & 0x07; // Assuming a buffer size of 8
         }
+        // Snapshot the completed command immediately; dma_buf is reused for the next DMA transfer.
+        memcpy((void *)spi->transaction_buf, (const void *)spi->dma_buf, sizeof(spi->transaction_buf));
+
         // Save the response that was actually queued for this transaction before
         // processing the command, since command processing changes the state for the next one.
         memcpy((void *)spi->last_response_buf, (const void *)spi->response_buf, sizeof(spi->last_response_buf));

@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 typedef struct {
     uint8_t config_responses[0x10][6];

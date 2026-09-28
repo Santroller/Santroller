@@ -46,6 +46,12 @@ typedef struct pio_spi_t
     volatile uint8_t transaction_test[8][8];
     volatile uint8_t transaction_test_rx[8][32];
     volatile uint8_t transaction_test_rx_len[8];
+    // Snapshot protocol state immediately after each traced command. The live
+    // protocol state may already belong to a later transaction when dumped.
+    volatile uint8_t transaction_test_config[8];
+    volatile uint8_t transaction_test_analog[8];
+    volatile uint8_t transaction_test_len[8];
+    volatile uint8_t transaction_test_mask[8][3];
     volatile bool has_new_write;
     // Captured bytes from the most recent completed SPI transaction.
     volatile bool has_new_transaction;

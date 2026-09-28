@@ -46,7 +46,7 @@ static void report_len_from_mask(psx_test_state_t *s)
 static void init_test_controller(psx_test_state_t *s,
                                  psx_test_controller_t controller)
 {
-    PSX_SPI_PROTOCOL_INIT(s);
+    PSX_SPI_PROTOCOL_INIT(s, controller == PSX_TEST_GUITAR_HERO_GUITAR);
 
     if (controller == PSX_TEST_GUITAR_HERO_GUITAR)
         s->config_responses[0x05][0] = 0x01;

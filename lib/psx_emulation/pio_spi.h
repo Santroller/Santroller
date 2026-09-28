@@ -50,6 +50,10 @@ typedef struct pio_spi_t
     // Captured bytes from the most recent completed SPI transaction.
     volatile bool has_new_transaction;
     volatile uint8_t transaction_buf[32];
+    // Complete controller report supplied by the caller; formatted only when
+    // the next SPI transaction is prepared.
+    volatile uint8_t raw_report[32];
+    volatile uint8_t raw_report_len;
     volatile uint8_t response_buf[32];
     volatile uint8_t response_len;
     volatile uint8_t last_response_buf[32];

@@ -12,7 +12,7 @@
  */
 
 static const uint8_t psx_test_resp_40[6] = {0,0,0,0,0,0x5A};
-static const uint8_t psx_test_resp_41_digital[6] = {0,0,0,0,0,0x5A};
+static const uint8_t psx_test_resp_41_digital[6] = {0,0,0,0,0,0};
 static const uint8_t psx_test_resp_41_analog[6]  = {0xFF,0xFF,0x03,0,0,0x5A};
 static const uint8_t psx_test_resp_46[2][6] = {
     {0,0,1,2,0,0x0A},

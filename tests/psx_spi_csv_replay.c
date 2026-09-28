@@ -285,7 +285,6 @@ static int replay_controller(const char *name,
 
             if (tx[1] == 0x40 && reg == 0) {
                 expected[2] = s.button_attr[tx[3]];
-                expected[5] = 0x5A;
             }
 
             if (reg < 0x10 && memcmp(rx + 3, expected, 6) != 0) {

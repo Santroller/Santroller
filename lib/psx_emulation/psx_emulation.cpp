@@ -117,13 +117,13 @@ PsxReportFormat_t PSXEmulation::getReportFormat()
             printf(" RX ");
             for (int i = 0; i < spi->transaction_test_rx_len[idx]; i++)
                 printf("%02X ", spi->transaction_test_rx[idx][i]);
-            printf(" | state: config=%d analog=%d len=%u mask=%02X %02X %02X\r\n",
-                   spi->protocol.configMode,
-                   spi->protocol.config_responses[0x05][2],
-                   spi->protocol.report_len,
-                   spi->protocol.report_mask[0],
-                   spi->protocol.report_mask[1],
-                   spi->protocol.report_mask[2]);
+            printf(" | state(after cmd): config=%d analog=%d len=%u mask=%02X %02X %02X\r\n",
+                   spi->transaction_test_config[idx],
+                   spi->transaction_test_analog[idx],
+                   spi->transaction_test_len[idx],
+                   spi->transaction_test_mask[idx][0],
+                   spi->transaction_test_mask[idx][1],
+                   spi->transaction_test_mask[idx][2]);
             last_logged_cmd = cmd;
         }
 

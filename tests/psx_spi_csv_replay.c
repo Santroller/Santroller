@@ -248,6 +248,15 @@ int main(int argc, char **argv)
             ++failures;
         }
 
+        /*
+         * The command parser runs before the config-data PIO snapshot is
+         * consumed.  The response header is already prepared for this
+         * transaction, but the six-byte config payload can reflect the
+         * command just received (notably command 40).
+         */
+        PSX_SPI_PROCESS_COMMAND(&s, tx);
+        report_len_from_mask(&s);
+
         if (s.configMode && tx[1] >= 0x40 && tx[1] <= 0x4F &&
             tx_len >= 9) {
             uint8_t reg = (uint8_t)(tx[1] - 0x40);
@@ -263,9 +272,6 @@ int main(int argc, char **argv)
                 }
             }
         }
-
-        PSX_SPI_PROCESS_COMMAND(&s, tx);
-        report_len_from_mask(&s);
         i = next;
     }
 

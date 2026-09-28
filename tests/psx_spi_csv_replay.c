@@ -206,10 +206,13 @@ int main(int argc, char **argv)
         }
 
         size_t tx_len;
-        if (stream_cmd[i + 1] == 0x42 && !s.configMode)
+        if (!s.configMode && stream_cmd[i + 1] == 0x42)
             tx_len = 3u + s.report_len;
+        else if (!s.configMode && stream_cmd[i + 1] == 0x43 &&
+                 stream_cmd[i + 3] == 0x01)
+            tx_len = 5; /* enter-config 43 is a short normal-mode poll */
         else
-            tx_len = 9;
+            tx_len = 9; /* config commands, including exit-config 43 */
 
         if (i + tx_len > ncmd) {
             fprintf(stderr,

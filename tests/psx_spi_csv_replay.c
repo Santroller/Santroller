@@ -193,18 +193,19 @@ int main(int argc, char **argv)
     unsigned skipped = 0;
 
     /*
-     * The capture is byte-aligned, with the response header appearing in
-     * the RX column on the same byte position as the command opcode.
+     * The aligned CSV is a byte-for-byte SPI capture, but transaction length
+     * is variable.  The response ID tells us exactly how many bytes belong
+     * to the transaction:
      *
-     * A normal captured transaction is nine bytes:
-     *   01 CMD ARG0 ARG1 ARG2 ARG3 ARG4 ARG5 ARG6
+     *   0x41 -> 5 bytes
+     *   0x73 -> 9 bytes
+     *   0x79 -> 21 bytes
+     *   0xF3 -> 9 bytes
      *
-     * RX is aligned byte-for-byte with TX:
-     *   FF HDR 5A DATA0 DATA1 DATA2 DATA3 DATA4 DATA5
-     *
-     * The next transaction therefore begins at i + 9.
+     * In other words, don't step a fixed 8/9 bytes.  Use the captured RX
+     * header at byte 1 to determine where the next ATT transaction begins.
      */
-    for (size_t i = 0; i + 8 < ncmd; ) {
+    for (size_t i = 0; i + 1 < ncmd; ) {
         if (stream_cmd[i] != 0x01 ||
             !is_ps2_command(stream_cmd[i + 1])) {
             ++i;
@@ -212,23 +213,38 @@ int main(int argc, char **argv)
             continue;
         }
 
-        uint8_t tx[9];
-        memcpy(tx, stream_cmd + i, sizeof(tx));
+        uint8_t header = stream_rx[i + 1];
+        unsigned words = header & 0x0F;
+        unsigned rx_len = 3u + words * 2u;
 
-        uint8_t rx[9];
-        memcpy(rx, stream_rx + i, sizeof(rx));
+        if (rx_len < 5 || rx_len > 21 || i + rx_len > ncmd) {
+            fprintf(stderr,
+                    "SKIP malformed txn at stream=%zu cmd=%02X rx=%02X len=%u
+",
+                    i, stream_cmd[i + 1], header, rx_len);
+            ++i;
+            ++skipped;
+            continue;
+        }
+
+        uint8_t tx[21] = {0};
+        uint8_t rx[21] = {0};
+        memcpy(tx, stream_cmd + i, rx_len);
+        memcpy(rx, stream_rx + i, rx_len);
 
         ++transactions;
 
         uint8_t expected_header = PSX_SPI_RESPONSE_HEADER(&s);
         if (rx[1] != expected_header) {
             fprintf(stderr,
-                    "FAIL txn %u stream=%zu cmd=%02X: header got %02X want %02X\n",
+                    "FAIL txn %u stream=%zu cmd=%02X: header got %02X want %02X
+",
                     transactions, i, tx[1], rx[1], expected_header);
-            dump_bytes("  TX: ", tx, 9);
-            dump_bytes("  RX: ", rx, 9);
+            dump_bytes("  TX: ", tx, rx_len);
+            dump_bytes("  RX: ", rx, rx_len);
             fprintf(stderr,
-                    "  state before: config=%u analog=%u len=%u mask=%02X %02X %02X\n",
+                    "  state before: config=%u analog=%u len=%u mask=%02X %02X %02X
+",
                     s.configMode,
                     s.config_responses[0x05][2] == 1,
                     s.report_len,
@@ -237,18 +253,19 @@ int main(int argc, char **argv)
         }
 
         /*
-         * Config responses are six bytes following the response header.
-         * RX[0] is the idle byte, RX[1] the header, RX[2] is 0x5A,
-         * and the six-byte config payload is RX[3..8].
+         * In config mode the response slot is selected from the command
+         * opcode, while the header itself is the state that existed when
+         * the transaction started.  The captured payload begins at RX[3].
          */
         if (s.configMode && tx[1] >= 0x40 && tx[1] <= 0x4F) {
             uint8_t reg = (uint8_t)(tx[1] - 0x40);
-            if (reg < 0x10) {
+            if (reg < 0x10 && rx_len >= 9) {
                 if (memcmp(rx + 3, s.config_responses[reg], 6) != 0) {
                     fprintf(stderr,
-                            "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch\n",
+                            "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch
+",
                             transactions, i, tx[1]);
-                    dump_bytes("  TX: ", tx, 8);
+                    dump_bytes("  TX: ", tx, rx_len);
                     dump_bytes("  captured: ", rx + 3, 6);
                     dump_bytes("  expected: ", s.config_responses[reg], 6);
                     ++failures;
@@ -259,12 +276,7 @@ int main(int argc, char **argv)
         PSX_SPI_PROCESS_COMMAND(&s, tx);
         report_len_from_mask(&s);
 
-        /*
-         * Do not advance by a guessed protocol length. The startup capture
-         * is explicitly aligned in rows, and every command record we consume
-         * here is the eight TX-byte record beginning at 01.
-         */
-        i += 8;
+        i += rx_len;
     }
 
     printf("Parsed %u Wireless transactions from %zu aligned bytes",

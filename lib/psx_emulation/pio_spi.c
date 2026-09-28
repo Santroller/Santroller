@@ -267,21 +267,10 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
     }
     // we always send the same data when not in config mode, so theres no need to read the command!
     irq_set_enabled(PIO_IRQ_NUM(spi->pio, 1), spi->protocol.configMode);
-    if (spi->protocol.configMode)
-    {
-        pio_sm_put(spi->pio, spi->config.combined_sm, 0xF3);
-    }
-    else if (spi->protocol.config_responses[0x05][2])
-    {
-        // analog style responses start with 0x70
-        pio_sm_put(spi->pio, spi->config.combined_sm, 0x70 | (spi->protocol.report_len / 2));
-    }
-    else
-    {
-        // digital style responses start with 0x40
-        pio_sm_put(spi->pio, spi->config.combined_sm, 0x40 | (spi->protocol.report_len / 2));
-    }
-    pio_sm_put(spi->pio, spi->config.combined_sm, 0x5A);
+    // The response buffer is the canonical descriptor for the transaction
+    // we are about to arm. Do not rebuild the header here from protocol state.
+    pio_sm_put(spi->pio, spi->config.combined_sm, spi->response_buf[0]);
+    pio_sm_put(spi->pio, spi->config.combined_sm, spi->response_buf[1]);
 
     pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_set(pio_y, 7));
     pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_jmp(spi->offset_combined));

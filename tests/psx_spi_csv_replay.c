@@ -48,11 +48,6 @@ static void init_test_controller(psx_test_state_t *s,
 {
     PSX_SPI_PROTOCOL_INIT(s);
 
-    /*
-     * 0x45 is returned from config_responses[0x05].
-     * DS2 = 03 02 00 02 01 00
-     * GH guitar = 01 02 00 02 01 00
-     */
     if (controller == PSX_TEST_GUITAR_HERO_GUITAR)
         s->config_responses[0x05][0] = 0x01;
 }
@@ -182,6 +177,41 @@ static void dump_bytes(const char *prefix, const uint8_t *p, unsigned n)
     fputc('\n', stderr);
 }
 
+static void print_state_change(const char *name,
+                               unsigned id,
+                               uint8_t cmd,
+                               const psx_test_state_t *before,
+                               const psx_test_state_t *after)
+{
+    if (before->configMode != after->configMode)
+        printf("  %s @%u: 43 -> config %u -> %u\n",
+               name, id, before->configMode, after->configMode);
+
+    if (before->config_responses[0x05][2] != after->config_responses[0x05][2] ||
+        memcmp(before->report_mask, after->report_mask, 3) != 0 ||
+        before->report_len != after->report_len) {
+        printf("  %s @%u: %02X -> analog=%u len=%u mask=%02X %02X %02X\n",
+               name, id, cmd,
+               after->config_responses[0x05][2] == 1,
+               after->report_len,
+               after->report_mask[0],
+               after->report_mask[1],
+               after->report_mask[2]);
+    }
+
+    if (cmd == 0x45 || cmd == 0x41 || cmd == 0x4F ||
+        cmd == 0x44 || cmd == 0x43) {
+        printf("  %s @%u: %02X response/type=%02X %02X %02X %02X %02X %02X\n",
+               name, id, cmd,
+               after->config_responses[0x05][0],
+               after->config_responses[0x05][1],
+               after->config_responses[0x05][2],
+               after->config_responses[0x05][3],
+               after->config_responses[0x05][4],
+               after->config_responses[0x05][5]);
+    }
+}
+
 static int replay_controller(const char *name,
                              captured_byte_t *stream,
                              size_t nstream,
@@ -194,15 +224,20 @@ static int replay_controller(const char *name,
     unsigned failures = 0;
     unsigned skipped = 0;
 
-    /*
-     * Model the PIO write-buffer pipeline explicitly. The response seen
-     * during transaction N was selected before the CPU processed command N.
-     */
     uint8_t queued_header = PSX_SPI_RESPONSE_HEADER(&s);
     uint8_t queued_config[0x10][6];
     memset(queued_config, 0, sizeof(queued_config));
     for (int r = 0; r < 0x10; ++r)
         memcpy(queued_config[r], s.config_responses[r], 6);
+
+    printf("\n=== %s ===\n", name);
+    printf("Initial: type=%s config=%u analog=%u len=%u mask=%02X %02X %02X\n",
+           controller == PSX_TEST_GUITAR_HERO_GUITAR
+               ? "GUITAR_HERO_GUITAR" : "DS2",
+           s.configMode,
+           s.config_responses[0x05][2] == 1,
+           s.report_len,
+           s.report_mask[0], s.report_mask[1], s.report_mask[2]);
 
     size_t i = 0;
     while (i + 1 < nstream) {
@@ -213,10 +248,6 @@ static int replay_controller(const char *name,
             continue;
         }
 
-        /*
-         * Find the next captured command start. This avoids treating 0x01
-         * inside a 0x79 report payload as a new transaction.
-         */
         size_t next = i + 1;
         while (next < nstream &&
                !(stream[next].tx == 0x01 &&
@@ -251,12 +282,6 @@ static int replay_controller(const char *name,
                     name, transactions, i, tx[1], rx[1], queued_header);
             dump_bytes("  TX: ", tx, tx_len);
             dump_bytes("  RX: ", rx, tx_len);
-            fprintf(stderr,
-                    "  state before: config=%u analog=%u len=%u mask=%02X %02X %02X\n",
-                    s.configMode,
-                    s.config_responses[0x05][2] == 1,
-                    s.report_len,
-                    s.report_mask[0], s.report_mask[1], s.report_mask[2]);
             ++failures;
         }
 
@@ -284,8 +309,11 @@ static int replay_controller(const char *name,
             }
         }
 
+        psx_test_state_t before = s;
         PSX_SPI_PROCESS_COMMAND(&s, tx);
         report_len_from_mask(&s);
+
+        print_state_change(name, stream[i].capture_id, tx[1], &before, &s);
 
         queued_header = PSX_SPI_RESPONSE_HEADER(&s);
         for (int r = 0; r < 0x10; ++r)
@@ -294,19 +322,15 @@ static int replay_controller(const char *name,
         i += tx_len;
     }
 
-    printf("Parsed %u %s transactions from %zu aligned bytes",
-           transactions, name, nstream);
-    if (skipped)
-        printf(" (%u non-command bytes skipped)", skipped);
-    putchar('\n');
-
-    printf("Final state: type=%s config=%u analog=%u len=%u mask=%02X %02X %02X\n",
-           controller == PSX_TEST_GUITAR_HERO_GUITAR
-               ? "GUITAR_HERO_GUITAR" : "DS2",
+    printf("Summary: %u transactions, final config=%u analog=%u len=%u mask=%02X %02X %02X",
+           transactions,
            s.configMode,
            s.config_responses[0x05][2] == 1,
            s.report_len,
            s.report_mask[0], s.report_mask[1], s.report_mask[2]);
+    if (skipped)
+        printf(" (%u non-command bytes skipped)", skipped);
+    putchar('\n');
 
     if (failures) {
         fprintf(stderr, "%s: %u CSV replay checks failed\n",
@@ -329,12 +353,6 @@ int main(int argc, char **argv)
     size_t wireless_n = 0;
     size_t guitar_n = 0;
 
-    /*
-     * CSV layout:
-     *   0/1 DualShock
-     *   4/5 Guitar Hero
-     *   6/7 Wireless
-     */
     if (load_capture_columns(path, 4, 5, &guitar, &guitar_n) != 0 ||
         load_capture_columns(path, 6, 7, &wireless, &wireless_n) != 0) {
         free(guitar);

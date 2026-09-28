@@ -193,23 +193,42 @@ int main(int argc, char **argv)
     unsigned skipped = 0;
 
     /*
-     * Each CSV command transaction occupies nine aligned rows.  The RX side
-     * can be longer (0x79 carries 21 bytes), but the command column contains
-     * the nine command bytes for the transaction and then starts the next
-     * transaction.  Earlier versions incorrectly advanced by eight bytes or
-     * by the RX length, which shifted the parser into the middle of packets.
+     * The command column is an aligned byte stream.  A transaction starts
+     * with 0x01 followed by a recognised command; its length is therefore
+     * the distance to the next such start marker.  This is important because
+     * 0x42 transactions are 5, 9, or 21 bytes depending on the active report
+     * length, while config transactions are normally 9 bytes.
      */
-    for (size_t i = 0; i + 8 < ncmd; i += 9) {
+    size_t i = 0;
+    while (i + 1 < ncmd) {
         if (stream_cmd[i] != 0x01 ||
             !is_ps2_command(stream_cmd[i + 1])) {
+            ++i;
             ++skipped;
             continue;
         }
 
-        uint8_t tx[9];
-        uint8_t rx[9];
-        memcpy(tx, stream_cmd + i, sizeof(tx));
-        memcpy(rx, stream_rx + i, sizeof(rx));
+        size_t next = i + 1;
+        while (next + 1 < ncmd &&
+               !(stream_cmd[next] == 0x01 &&
+                 is_ps2_command(stream_cmd[next + 1]))) {
+            ++next;
+        }
+
+        size_t tx_len = next - i;
+        if (tx_len < 5 || tx_len > 21) {
+            fprintf(stderr,
+                    "SKIP malformed txn at stream=%zu cmd=%02X len=%zu\\n",
+                    i, stream_cmd[i + 1], tx_len);
+            ++skipped;
+            i = next;
+            continue;
+        }
+
+        uint8_t tx[21] = {0};
+        uint8_t rx[21] = {0};
+        memcpy(tx, stream_cmd + i, tx_len);
+        memcpy(rx, stream_rx + i, tx_len);
 
         ++transactions;
 
@@ -218,8 +237,8 @@ int main(int argc, char **argv)
             fprintf(stderr,
                     "FAIL txn %u stream=%zu cmd=%02X: header got %02X want %02X\\n",
                     transactions, i, tx[1], rx[1], expected_header);
-            dump_bytes("  TX: ", tx, 9);
-            dump_bytes("  RX: ", rx, 9);
+            dump_bytes("  TX: ", tx, tx_len);
+            dump_bytes("  RX: ", rx, tx_len);
             fprintf(stderr,
                     "  state before: config=%u analog=%u len=%u mask=%02X %02X %02X\\n",
                     s.configMode,
@@ -229,14 +248,15 @@ int main(int argc, char **argv)
             ++failures;
         }
 
-        if (s.configMode && tx[1] >= 0x40 && tx[1] <= 0x4F) {
+        if (s.configMode && tx[1] >= 0x40 && tx[1] <= 0x4F &&
+            tx_len >= 9) {
             uint8_t reg = (uint8_t)(tx[1] - 0x40);
             if (reg < 0x10) {
                 if (memcmp(rx + 3, s.config_responses[reg], 6) != 0) {
                     fprintf(stderr,
                             "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch\\n",
                             transactions, i, tx[1]);
-                    dump_bytes("  TX: ", tx, 9);
+                    dump_bytes("  TX: ", tx, tx_len);
                     dump_bytes("  captured: ", rx + 3, 6);
                     dump_bytes("  expected: ", s.config_responses[reg], 6);
                     ++failures;
@@ -246,6 +266,7 @@ int main(int argc, char **argv)
 
         PSX_SPI_PROCESS_COMMAND(&s, tx);
         report_len_from_mask(&s);
+        i = next;
     }
 
     printf("Parsed %u Wireless transactions from %zu aligned bytes",

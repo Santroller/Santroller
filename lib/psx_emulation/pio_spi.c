@@ -339,6 +339,7 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
         // reads which are intentionally omitted from the legacy command ring.
         uint8_t tw = spi->transaction_idx_write;
         uint8_t tn = (uint8_t)((tw + 1) & 0x07);
+        bool trace_stored = false;
         if (tn == spi->transaction_idx_read)
         {
             spi->transaction_trace_overflow = true;
@@ -349,6 +350,7 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
             memcpy((void *)spi->transaction_test_rx[tw], (const void *)spi->response_buf, 32);
             spi->transaction_test_rx_len[tw] = spi->response_len;
             spi->transaction_idx_write = tn;
+            trace_stored = true;
         }
 
         // Save the response that was actually queued for this transaction before
@@ -358,6 +360,20 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
         spi->has_new_transaction = true;
 
         PSX_SPI_PROCESS_COMMAND(&spi->protocol, spi->dma_buf);
+
+        // Snapshot the state produced by this command into the same trace slot.
+        // Do not read live protocol state when dumping: several later transactions
+        // may have completed by the time getReportFormat() runs.
+        if (trace_stored)
+        {
+            spi->transaction_test_config[tw] = spi->protocol.configMode;
+            spi->transaction_test_analog[tw] = spi->protocol.config_responses[0x05][2];
+            spi->transaction_test_len[tw] = psx_spi_current_report_len(&spi->protocol);
+            spi->transaction_test_mask[tw][0] = spi->protocol.report_mask[0];
+            spi->transaction_test_mask[tw][1] = spi->protocol.report_mask[1];
+            spi->transaction_test_mask[tw][2] = spi->protocol.report_mask[2];
+        }
+
         prepare_for_next(spi);
         pio_interrupt_clear(spi->pio, 1);
     }

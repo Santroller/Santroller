@@ -44,7 +44,6 @@ void Ps2EmulationDeviceInstance::initialize()
     }
 }
 
-uint8_t last_size = 0;
 void Ps2EmulationDeviceInstance::process(bool full_poll, bool send_events)
 {
     // TODO: do we need to limit poll rate with this
@@ -75,27 +74,11 @@ void Ps2EmulationDeviceInstance::process(bool full_poll, bool send_events)
 
     if (subtype == Gamepad)
     {
-        PsxReportFormat_t format = m_controller.getReportFormat();
-        if (!format.analog)
-        {
-            m_controller.sendData(2, m_buffer);
-            return;
-        }
-        // PS2 allows specifying what data is sent, so handle that
-        uint8_t current = 0;
-        for (int i = 0; i < 18; i++)
-        {
-            if (format.config[i / 8] & (1 << (i % 8)))
-            {
-                m_buffer_formatted[current++] = m_buffer[i];
-            }
-        }
-        if (current != last_size)
-        {
-            last_size = current;
-            printf("Current PS2 report size: %d\n", current);
-        }
-        m_controller.sendData(current, m_buffer_formatted);
+        // Always hand the complete 18-byte controller report to the PSX
+        // protocol layer. Formatting is deferred until the next SPI transaction
+        // is armed, so the current command/state machine is authoritative.
+        m_controller.getReportFormat();
+        m_controller.sendData(18, m_buffer);
         return;
     }
     m_controller.sendData(m_size, m_buffer);

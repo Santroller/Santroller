@@ -255,29 +255,17 @@ int main(int argc, char **argv)
             ++failures;
         }
 
-        /*
-         * Config transactions are byte-pipelined.  The F3 header is already
-         * queued when the transfer begins, but the command byte itself
-         * selects/mutates the six-byte register payload while the remaining
-         * bytes are being clocked.  Therefore validate the header now, but
-         * validate the register payload against the post-command state below.
-         */
-        uint8_t config_reg = 0xFF;
         if (s.configMode && tx[1] >= 0x40 && tx[1] <= 0x4F &&
-            tx_len >= 9)
-            config_reg = (uint8_t)(tx[1] - 0x40);
-
-        PSX_SPI_PROCESS_COMMAND(&s, tx);
-        report_len_from_mask(&s);
-
-        if (config_reg < 0x10) {
+            tx_len >= 9) {
+            uint8_t reg = (uint8_t)(tx[1] - 0x40);
             uint8_t expected[6];
-            memcpy(expected, s.config_responses[config_reg], 6);
-
-            if (memcmp(rx + 3, expected, 6) != 0) {
-                fprintf(stderr,
-                        "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch\\n",
-                        transactions, i, tx[1]);
+            if (reg < 0x10) memcpy(expected, queued_config[reg], 6);
+            if (tx[1] == 0x40 && reg == 0) {
+                expected[2] = s.button_attr[tx[3]];
+                expected[5] = 0x5A;
+            }
+            if (reg < 0x10 && memcmp(rx + 3, expected, 6) != 0) {
+                fprintf(stderr, "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch\\n", transactions, i, tx[1]);
                 dump_bytes("  TX: ", tx, tx_len);
                 dump_bytes("  captured: ", rx + 3, 6);
                 dump_bytes("  expected: ", expected, 6);
@@ -285,10 +273,9 @@ int main(int argc, char **argv)
             }
         }
 
-        /*
-         * CPU-side command processing is now complete.  This is what the
-         * PIO/CPU path can expose on the following SPI transaction.
-         */
+        PSX_SPI_PROCESS_COMMAND(&s, tx);
+        report_len_from_mask(&s);
+
         queued_header = PSX_SPI_RESPONSE_HEADER(&s);
         for (int r = 0; r < 0x10; ++r)
             memcpy(queued_config[r], s.config_responses[r], 6);

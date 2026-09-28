@@ -42,6 +42,10 @@ typedef struct pio_spi_t
     // Captured bytes from the most recent completed SPI transaction.
     volatile bool has_new_transaction;
     volatile uint8_t transaction_buf[32];
+    volatile uint8_t response_buf[32];
+    volatile uint8_t response_len;
+    volatile uint8_t last_response_buf[32];
+    volatile uint8_t last_response_len;
     uint8_t write_id;
     uint8_t write_idx_read;
     uint8_t write_idx_write;

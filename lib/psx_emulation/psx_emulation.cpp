@@ -55,34 +55,27 @@ void PSXEmulation::sendData(uint8_t len, uint8_t *data)
 uint8_t last_lastcmd = 0;
 PsxReportFormat_t PSXEmulation::getReportFormat()
 {
-    if (spi->has_new_cmd)
+    if (spi->read_idx_read != spi->read_idx_write)
     {
-        spi->has_new_cmd = false;
+        spi->read_idx_read = (spi->read_idx_read + 1) & 0x07; // Assuming a buffer size of 8
+        printf("New command received: %d: ", spi->cmd_id);
         for (int i = 0; i < 8; i++)
         {
-            printf("%02X ", spi->dma_buf_test[i]);
+            printf("%02X ", spi->dma_buf_test[spi->read_idx_read][i]);
         }
-        printf(" - ");
-        for (int i = 0; i < 3; i++)
-        {
-            printf("%02X ", spi->pressure_data[i]);
-        }
-        printf(" - ");
-        for (int i = 0; i < 6; i++)
-        {
-            printf("%02X ", spi->dma_buf_test2[i]);
-        }
-        uint8_t current = 0;
-        for (int i = 0; i < 18; i++)
-        {
-            if (spi->pressure_data[i / 8] & (1 << (i % 8)))
-            {
-                current++;
-            }
-        }
-        printf(" - %d %d\r\n", spi->config_responses[0x05][2] == 0x01, current);
+        printf("\r\n");
     }
-    return {spi->config_responses[0x05][2] == 0x01, {spi->pressure_data[0], spi->pressure_data[1], spi->pressure_data[2]}};
+    if (spi->write_idx_read != spi->write_idx_write)
+    {
+        spi->write_idx_read = (spi->write_idx_read + 1) & 0x07; // Assuming a buffer size of 8
+        printf("New write queued: %d, cmd: %02X: ", spi->write_id, spi->dma_buf_test2[spi->write_idx_read][0]);
+        for (int i = 1; i < 7; i++)
+        {
+            printf("%02X ", spi->dma_buf_test2[spi->write_idx_read][i]);
+        }
+        printf("\r\n");
+    }
+    return {spi->config_responses[0x05][2] == 0x01, {spi->report_mask[0], spi->report_mask[1], spi->report_mask[2]}};
 }
 bool PSXEmulation::ready()
 {

@@ -43,6 +43,8 @@ void Ps2EmulationDeviceInstance::initialize()
         break;
     }
 }
+
+uint8_t last_size = 0;
 void Ps2EmulationDeviceInstance::process(bool full_poll, bool send_events)
 {
     // TODO: do we need to limit poll rate with this
@@ -87,6 +89,11 @@ void Ps2EmulationDeviceInstance::process(bool full_poll, bool send_events)
             {
                 m_buffer_formatted[current++] = m_buffer[i];
             }
+        }
+        if (current != last_size)
+        {
+            last_size = current;
+            printf("Current PS2 report size: %d\n", current);
         }
         m_controller.sendData(current, m_buffer_formatted);
         return;

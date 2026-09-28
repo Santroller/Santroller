@@ -123,7 +123,8 @@ const uint8_t init_resp_4d[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 //   Send  01h 41h 00h aa  bb  cc  dd  ee  ff
 //   Reply HiZ F3h 5Ah 00h 00h 00h 00h 00h 00h
 
-const uint8_t init_resp_4f[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+const uint8_t init_resp_4f[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x5A};
+const uint8_t init_resp_40[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x5A};
 uint fixPio(PIO pio, pio_program_t program, int sck_pin)
 {
     // Santroller 1 let us put clock on any pin
@@ -353,17 +354,26 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
         if (spi->dma_buf[1] == 0x43 || spi->configMode)
         {
             spi->has_new_cmd = true;
-            spi->dma_buf_test[0] = spi->dma_buf[0];
-            spi->dma_buf_test[1] = spi->dma_buf[1];
-            spi->dma_buf_test[2] = spi->dma_buf[2];
-            spi->dma_buf_test[3] = spi->dma_buf[3];
-            spi->dma_buf_test[4] = spi->dma_buf[4];
-            spi->dma_buf_test[5] = spi->dma_buf[5];
-            spi->dma_buf_test[6] = spi->dma_buf[6];
-            spi->dma_buf_test[7] = spi->dma_buf[7];
+            spi->cmd_id++;
+            spi->dma_buf_test[spi->read_idx_write][0] = spi->dma_buf[0];
+            spi->dma_buf_test[spi->read_idx_write][1] = spi->dma_buf[1];
+            spi->dma_buf_test[spi->read_idx_write][2] = spi->dma_buf[2];
+            spi->dma_buf_test[spi->read_idx_write][3] = spi->dma_buf[3];
+            spi->dma_buf_test[spi->read_idx_write][4] = spi->dma_buf[4];
+            spi->dma_buf_test[spi->read_idx_write][5] = spi->dma_buf[5];
+            spi->dma_buf_test[spi->read_idx_write][6] = spi->dma_buf[6];
+            spi->dma_buf_test[spi->read_idx_write][7] = spi->dma_buf[7];
+            spi->read_idx_write = (spi->read_idx_write + 1) & 0x07; // Assuming a buffer size of 8
         }
         switch (spi->dma_buf[1])
         {
+        case 0x40:
+            spi->config_responses[0x00][2] =
+                spi->button_attr[spi->dma_buf[3]];
+
+            spi->button_attr[spi->dma_buf[3]] =
+                spi->dma_buf[4];
+            break;
         case 0x42:
             if (!spi->configMode)
             {
@@ -379,36 +389,50 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
         case 0x44:
             spi->locked = spi->dma_buf[4];
             memset(spi->config_responses[0x01], 0, sizeof(spi->config_responses[0x01]));
-            memset(spi->pressure_data, 0, sizeof(spi->pressure_data));
+            memset(spi->report_mask, 0, sizeof(spi->report_mask));
             if (spi->dma_buf[3])
             {
                 spi->config_responses[0x05][2] = 1;
                 memcpy(spi->config_responses[0x01], init_resp_41_analog, sizeof(init_resp_41_analog));
                 // analog defaults to 0x3F
-                spi->pressure_data[0] = 0x3F;
+                spi->report_mask[0] = 0x3F;
             }
             else
             {
                 spi->config_responses[0x05][2] = 0;
                 memcpy(spi->config_responses[0x01], init_resp_41_digital, sizeof(init_resp_41_digital));
                 // digital defaults to 0x03
-                spi->pressure_data[0] = 0x03;
+                spi->report_mask[0] = 0x03;
             }
             break;
         case 0x4c:
             // this is fun - we are processing this command after it has ran, so we are just assuming the console sends
             // it in order
-            memcpy(spi->config_responses[0x0c], init_resp_4c[1 - spi->dma_buf[3]], sizeof(init_resp_4c[1 - spi->dma_buf[3]]));
+            if (spi->dma_buf[3] == 0)
+            {
+                memcpy(spi->config_responses[0x0c], init_resp_4c[1], sizeof(init_resp_4c[1]));
+            }
+            if (spi->dma_buf[3] >= 1)
+            {
+                memset(spi->config_responses[0x0c], 0, sizeof(spi->config_responses[0x0c]));
+            }
             break;
         case 0x46:
-            memcpy(spi->config_responses[0x06], init_resp_46[1 - spi->dma_buf[3]], sizeof(init_resp_46[1 - spi->dma_buf[3]]));
+            if (spi->dma_buf[3] == 0)
+            {
+                memcpy(spi->config_responses[0x06], init_resp_46[1], sizeof(init_resp_46[1]));
+            }
+            if (spi->dma_buf[3] >= 1)
+            {
+                memset(spi->config_responses[0x06], 0, sizeof(spi->config_responses[0x06]));
+            }
             break;
         case 0x4F:
             if (spi->config_responses[0x05][2])
             {
-                spi->pressure_data[0] = spi->dma_buf[3];
-                spi->pressure_data[1] = spi->dma_buf[4];
-                spi->pressure_data[2] = spi->dma_buf[5];
+                spi->report_mask[0] = spi->dma_buf[3];
+                spi->report_mask[1] = spi->dma_buf[4];
+                spi->report_mask[2] = spi->dma_buf[5];
             }
             break;
         case 0x4D:
@@ -439,8 +463,13 @@ static void __time_critical_func(pio_data_irq_0)(void)
     pio_spi_config_t *cfg = &spi->config;
     pio0->rxf[cfg->initial_sm];
     uint8_t reg = pio0->rxf[cfg->initial_sm] >> 24;
-    if (spi->configMode) {
-        memcpy(spi->dma_buf_test2, spi->config_responses[reg - 0x40], 6);
+    if (spi->configMode)
+    {
+        spi->has_new_write = true;
+        spi->write_id++;
+        spi->dma_buf_test2[spi->write_idx_write][0] = reg;
+        memcpy(spi->dma_buf_test2[spi->write_idx_write]+1, spi->config_responses[reg - 0x40], 6);
+        spi->write_idx_write = (spi->write_idx_write + 1) & 0x07; // Assuming a buffer size of 8
         pio_spi_provide_write_buffer(spi, spi->config_responses[reg - 0x40], dma_encode_transfer_count(6));
     }
     hw_set_bits(&pio0->irq, (1u << 0));
@@ -452,8 +481,13 @@ static void __time_critical_func(pio_data_irq_1)(void)
     pio_spi_config_t *cfg = &spi->config;
     pio1->rxf[cfg->initial_sm];
     uint8_t reg = pio1->rxf[cfg->initial_sm] >> 24;
-    if (spi->configMode) {
-        memcpy(spi->dma_buf_test2, spi->config_responses[reg - 0x40], 6);
+    if (spi->configMode)
+    {
+        spi->has_new_write = true;
+        spi->write_id++;
+        spi->dma_buf_test2[spi->write_idx_write][0] = reg;
+        memcpy(spi->dma_buf_test2[spi->write_idx_write]+1, spi->config_responses[reg - 0x40], 6);
+        spi->write_idx_write = (spi->write_idx_write + 1) & 0x07; // Assuming a buffer size of 8
         pio_spi_provide_write_buffer(spi, spi->config_responses[reg - 0x40], dma_encode_transfer_count(6));
     }
     hw_set_bits(&pio1->irq, (1u << 0));
@@ -473,6 +507,8 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
     spi->report_len = 2;
     spi->configMode = false;
     spi->type = config->type;
+    memset(spi->button_attr, 0x02, sizeof(spi->button_attr));
+    memcpy(spi->config_responses[0x00], init_resp_40, sizeof(init_resp_40));
     memcpy(spi->config_responses[0x01], init_resp_41_digital, sizeof(init_resp_41_digital));
     memcpy(spi->config_responses[0x02], init_resp_42, sizeof(init_resp_42));
     memcpy(spi->config_responses[0x03], init_resp_43, sizeof(init_resp_43));
@@ -483,8 +519,14 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
     memcpy(spi->config_responses[0x0c], init_resp_4c[0], sizeof(init_resp_4c[0]));
     memcpy(spi->config_responses[0x0d], init_resp_4d, sizeof(init_resp_4d));
     memcpy(spi->config_responses[0x0f], init_resp_4f, sizeof(init_resp_4f));
-    memset(spi->pressure_data, 0, sizeof(spi->pressure_data));
-    spi->pressure_data[0] = 0x03; // we default to digital mode
+    memset(spi->report_mask, 0, sizeof(spi->report_mask));
+    spi->cmd_id = 0;
+    spi->write_id = 0;
+    spi->read_idx_read = 0;
+    spi->read_idx_write = 0;
+    spi->write_idx_read = 0;
+    spi->write_idx_write = 0;
+    spi->report_mask[0] = 0x03; // we default to digital mode
     if (spi->type == SubType_GuitarHeroGuitar)
     {
         memcpy(spi->config_responses[0x05], init_resp_45_gh, sizeof(init_resp_45_gh));

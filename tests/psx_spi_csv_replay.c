@@ -274,7 +274,7 @@ int main(int argc, char **argv)
             }
 
             if (reg < 0x10 &&
-                memcmp(rx + 3, expected, 6) != 0)
+                memcmp(rx + 3, expected, 6) != 0) {
                 fprintf(stderr,
                         "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch\\n",
                         transactions, i, tx[1]);
@@ -282,6 +282,7 @@ int main(int argc, char **argv)
                 dump_bytes("  captured: ", rx + 3, 6);
                 dump_bytes("  expected: ", expected, 6);
                 ++failures;
+            }
             }
         }
 

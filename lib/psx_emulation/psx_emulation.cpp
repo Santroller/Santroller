@@ -86,7 +86,7 @@ PsxReportFormat_t PSXEmulation::getReportFormat()
         printf("  RX: ");
         for (int i = 0; i < spi->response_test_len[spi->read_idx_read]; i++)
             printf("%02X ", spi->response_test[spi->read_idx_read][i]);
-        printf(" | state: config=%d analog=%d len=%u mask=%02X %02X %02X\\r\\n",
+        printf(" | state: config=%d analog=%d len=%u mask=%02X %02X %02X\r\n",
                spi->protocol.configMode,
                spi->protocol.config_responses[0x05][2],
                spi->protocol.report_len,

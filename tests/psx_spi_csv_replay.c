@@ -23,6 +23,11 @@ typedef struct {
 
 #include "../lib/psx_emulation/psx_spi_protocol.h"
 
+typedef enum {
+    PSX_TEST_DS2,
+    PSX_TEST_GUITAR_HERO_GUITAR
+} psx_test_controller_t;
+
 static void report_len_from_mask(psx_test_state_t *s)
 {
     if (!s->config_responses[0x05][2]) {
@@ -36,6 +41,20 @@ static void report_len_from_mask(psx_test_state_t *s)
             ++n;
 
     s->report_len = (uint8_t)n;
+}
+
+static void init_test_controller(psx_test_state_t *s,
+                                 psx_test_controller_t controller)
+{
+    PSX_SPI_PROTOCOL_INIT(s);
+
+    /*
+     * 0x45 is returned from config_responses[0x05].
+     * DS2 = 03 02 00 02 01 00
+     * GH guitar = 01 02 00 02 01 00
+     */
+    if (controller == PSX_TEST_GUITAR_HERO_GUITAR)
+        s->config_responses[0x05][0] = 0x01;
 }
 
 static int hexbyte_after_colon(const char *s, uint8_t *out)
@@ -83,8 +102,11 @@ static int csv_field(const char *line, unsigned wanted, char *out, size_t out_sz
     return 0;
 }
 
-static int load_wireless_columns(const char *path,
-                                 captured_byte_t **stream_out, size_t *stream_n)
+static int load_capture_columns(const char *path,
+                                unsigned cmd_col,
+                                unsigned data_col,
+                                captured_byte_t **stream_out,
+                                size_t *stream_n)
 {
     FILE *f = fopen(path, "r");
     if (!f) {
@@ -106,8 +128,8 @@ static int load_wireless_columns(const char *path,
         uint8_t cb, db;
         unsigned idc, idd;
 
-        if (!csv_field(line, 6, fc, sizeof(fc)) ||
-            !csv_field(line, 7, fd, sizeof(fd)))
+        if (!csv_field(line, cmd_col, fc, sizeof(fc)) ||
+            !csv_field(line, data_col, fd, sizeof(fd)))
             continue;
 
         const char *pc = strchr(fc, ':');
@@ -160,34 +182,21 @@ static void dump_bytes(const char *prefix, const uint8_t *p, unsigned n)
     fputc('\n', stderr);
 }
 
-int main(int argc, char **argv)
+static int replay_controller(const char *name,
+                             captured_byte_t *stream,
+                             size_t nstream,
+                             psx_test_controller_t controller)
 {
-    const char *path = argc > 1
-        ? argv[1]
-        : "tests/cmd-data on startup_aligned - Sheet1.csv";
-
-    captured_byte_t *stream = NULL;
-    size_t nstream = 0;
-
-    if (load_wireless_columns(path, &stream, &nstream) != 0)
-        return 1;
-
     psx_test_state_t s;
-    PSX_SPI_PROTOCOL_INIT(&s);
+    init_test_controller(&s, controller);
 
     unsigned transactions = 0;
     unsigned failures = 0;
     unsigned skipped = 0;
 
     /*
-     * Command length is determined by the protocol state, not by searching
-     * for 0x01: 0x01 can legitimately occur inside a 0x79 report payload.
-     */
-    /*
-     * Model the PIO write-buffer pipeline explicitly.  The response seen
+     * Model the PIO write-buffer pipeline explicitly. The response seen
      * during transaction N was selected before the CPU processed command N.
-     * Therefore keep a snapshot for transaction N, validate it first, then
-     * process the command to prepare transaction N+1.
      */
     uint8_t queued_header = PSX_SPI_RESPONSE_HEADER(&s);
     uint8_t queued_config[0x10][6];
@@ -204,14 +213,10 @@ int main(int argc, char **argv)
             continue;
         }
 
-        size_t tx_len;
         /*
-         * Transfer length belongs to the transaction, not the opcode.
-         * In normal mode the console clocks the current report length even
-         * when the command is 43/40/etc.  Config-mode transactions are 9
-         * bytes.
+         * Find the next captured command start. This avoids treating 0x01
+         * inside a 0x79 report payload as a new transaction.
          */
-        /* Find the next capture record beginning a PS2 command. */
         size_t next = i + 1;
         while (next < nstream &&
                !(stream[next].tx == 0x01 &&
@@ -219,14 +224,14 @@ int main(int argc, char **argv)
                  is_ps2_command(stream[next + 1].tx)))
             ++next;
 
-        tx_len = next - i;
+        size_t tx_len = next - i;
         if (tx_len == 0 || tx_len > 21)
             tx_len = s.configMode ? 9 : (size_t)(3u + s.report_len);
 
         if (i + tx_len > nstream) {
             fprintf(stderr,
-                    "SKIP truncated txn at stream=%zu cmd=%02X len=%zu\\n",
-                    i, stream[i + 1].tx, tx_len);
+                    "%s: SKIP truncated txn at stream=%zu cmd=%02X len=%zu\n",
+                    name, i, stream[i + 1].tx, tx_len);
             ++skipped;
             break;
         }
@@ -242,12 +247,12 @@ int main(int argc, char **argv)
 
         if (rx[1] != queued_header) {
             fprintf(stderr,
-                    "FAIL txn %u stream=%zu cmd=%02X: header got %02X want %02X\\n",
-                    transactions, i, tx[1], rx[1], queued_header);
+                    "%s: FAIL txn %u stream=%zu cmd=%02X: header got %02X want %02X\n",
+                    name, transactions, i, tx[1], rx[1], queued_header);
             dump_bytes("  TX: ", tx, tx_len);
             dump_bytes("  RX: ", rx, tx_len);
             fprintf(stderr,
-                    "  state before: config=%u analog=%u len=%u mask=%02X %02X %02X\\n",
+                    "  state before: config=%u analog=%u len=%u mask=%02X %02X %02X\n",
                     s.configMode,
                     s.config_responses[0x05][2] == 1,
                     s.report_len,
@@ -259,13 +264,19 @@ int main(int argc, char **argv)
             tx_len >= 9) {
             uint8_t reg = (uint8_t)(tx[1] - 0x40);
             uint8_t expected[6];
-            if (reg < 0x10) memcpy(expected, queued_config[reg], 6);
+
+            if (reg < 0x10)
+                memcpy(expected, queued_config[reg], 6);
+
             if (tx[1] == 0x40 && reg == 0) {
                 expected[2] = s.button_attr[tx[3]];
                 expected[5] = 0x5A;
             }
+
             if (reg < 0x10 && memcmp(rx + 3, expected, 6) != 0) {
-                fprintf(stderr, "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch\\n", transactions, i, tx[1]);
+                fprintf(stderr,
+                        "%s: FAIL txn %u stream=%zu cmd=%02X: config payload mismatch\n",
+                        name, transactions, i, tx[1]);
                 dump_bytes("  TX: ", tx, tx_len);
                 dump_bytes("  captured: ", rx + 3, 6);
                 dump_bytes("  expected: ", expected, 6);
@@ -283,25 +294,62 @@ int main(int argc, char **argv)
         i += tx_len;
     }
 
-    printf("Parsed %u Wireless transactions from %zu aligned bytes",
-           transactions, nstream);
+    printf("Parsed %u %s transactions from %zu aligned bytes",
+           transactions, name, nstream);
     if (skipped)
         printf(" (%u non-command bytes skipped)", skipped);
     putchar('\n');
 
-    printf("Final state: config=%u analog=%u len=%u mask=%02X %02X %02X\n",
+    printf("Final state: type=%s config=%u analog=%u len=%u mask=%02X %02X %02X\n",
+           controller == PSX_TEST_GUITAR_HERO_GUITAR
+               ? "GUITAR_HERO_GUITAR" : "DS2",
            s.configMode,
            s.config_responses[0x05][2] == 1,
            s.report_len,
            s.report_mask[0], s.report_mask[1], s.report_mask[2]);
 
-    free(stream);
-
     if (failures) {
-        fprintf(stderr, "%u CSV replay checks failed\n", failures);
+        fprintf(stderr, "%s: %u CSV replay checks failed\n",
+                name, failures);
         return 1;
     }
 
-    puts("PASS: Wireless CSV parser/state replay");
+    printf("PASS: %s parser/state replay\n", name);
     return 0;
+}
+
+int main(int argc, char **argv)
+{
+    const char *path = argc > 1
+        ? argv[1]
+        : "tests/cmd-data on startup_aligned - Sheet1.csv";
+
+    captured_byte_t *wireless = NULL;
+    captured_byte_t *guitar = NULL;
+    size_t wireless_n = 0;
+    size_t guitar_n = 0;
+
+    /*
+     * CSV layout:
+     *   0/1 DualShock
+     *   4/5 Guitar Hero
+     *   6/7 Wireless
+     */
+    if (load_capture_columns(path, 4, 5, &guitar, &guitar_n) != 0 ||
+        load_capture_columns(path, 6, 7, &wireless, &wireless_n) != 0) {
+        free(guitar);
+        free(wireless);
+        return 1;
+    }
+
+    int rc_guitar = replay_controller(
+        "Guitar Hero", guitar, guitar_n, PSX_TEST_GUITAR_HERO_GUITAR);
+
+    int rc_wireless = replay_controller(
+        "Wireless", wireless, wireless_n, PSX_TEST_DS2);
+
+    free(guitar);
+    free(wireless);
+
+    return rc_guitar || rc_wireless;
 }

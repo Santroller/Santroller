@@ -219,7 +219,7 @@ static uint8_t get_current_report_len(pio_spi_t *spi)
 
 static void format_next_response(pio_spi_t *spi)
 {
-    uint8_t payload_len = get_current_report_len();
+    uint8_t payload_len = get_current_report_len(spi);
 
     spi->protocol.report_len = payload_len;
     spi->response_buf[0] = PSX_SPI_RESPONSE_HEADER(&spi->protocol);

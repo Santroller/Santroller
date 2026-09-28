@@ -111,7 +111,10 @@ PsxReportFormat_t PSXEmulation::getReportFormat()
         static uint8_t last_logged_cmd = 0xFF;
         if (cmd != 0x42 || last_logged_cmd != 0x42)
         {
-            printf("SPI transaction: TX ");
+            printf("SPI transaction: t=%lu us (+%lu us) TX ",
+                   (unsigned long)spi->transaction_test_us[idx],
+                   (unsigned long)(idx == 0 ? 0 :
+                       spi->transaction_test_us[idx] - spi->transaction_test_us[(idx - 1) & 0x07]));
             for (int i = 0; i < 8; i++)
                 printf("%02X ", spi->transaction_test[idx][i]);
             printf(" RX ");
@@ -124,6 +127,10 @@ PsxReportFormat_t PSXEmulation::getReportFormat()
                    spi->transaction_test_mask[idx][0],
                    spi->transaction_test_mask[idx][1],
                    spi->transaction_test_mask[idx][2]);
+            if (spi->transaction_test_config_duration_us[idx])
+                printf(" | config_duration=%lu us",
+                       (unsigned long)spi->transaction_test_config_duration_us[idx]);
+            printf("\r\n");
             last_logged_cmd = cmd;
         }
 

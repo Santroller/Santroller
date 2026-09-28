@@ -61,6 +61,7 @@ typedef struct pio_spi_t
     volatile uint8_t timing_send_idx;
     volatile bool timing_prepare_overflow;
     volatile bool timing_send_overflow;
+    volatile bool timing_dumped;
     volatile uint32_t timing_prepare_us[16];
     volatile uint8_t timing_prepare_len[16];
     volatile uint8_t timing_prepare_header[16];

@@ -229,6 +229,22 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
         pio_sm_put(spi->pio, spi->config.combined_sm, 0x40 | (spi->protocol.report_len / 2));
     }
     pio_sm_put(spi->pio, spi->config.combined_sm, 0x5A);
+
+    // Snapshot the exact response that is about to be clocked out. The normal
+    // logger can consume this later without printf() work in the timing-critical IRQ.
+    spi->response_buf[0] = spi->protocol.configMode ? 0xF3 :
+                           (spi->protocol.config_responses[0x05][2]
+                                ? (uint8_t)(0x70 | (spi->protocol.report_len / 2))
+                                : (uint8_t)(0x40 | (spi->protocol.report_len / 2)));
+    spi->response_buf[1] = 0x5A;
+    spi->response_len = 2;
+    if (!spi->protocol.configMode)
+    {
+        uint8_t n = spi->protocol.report_len;
+        if (n > sizeof(spi->response_buf) - 2) n = sizeof(spi->response_buf) - 2;
+        memcpy((void *)&spi->response_buf[2], (const void *)spi->protocol.resp_42, n);
+        spi->response_len = n + 2;
+    }
     pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_set(pio_y, 7));
     pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_jmp(spi->offset_combined));
     // 3 bytes for header

@@ -27,10 +27,28 @@ static const uint8_t init_resp_4c[2][6] = {
 static const uint8_t init_resp_4d[6] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
 static const uint8_t init_resp_4f[6] = {0,0,0,0,0,0x5A};
 
+typedef struct psx_spi_protocol_state_t
+{
+    uint8_t report_len;
+    uint8_t config_responses[0x10][0x06];
+    uint8_t resp_42[32];
+    uint8_t report_mask[3];
+    uint8_t button_attr[12];
+    volatile uint8_t last_cmd;
+    volatile bool has_new_cmd;
+    volatile bool configMode;
+    bool just_left_config;
+    uint8_t cmd_id;
+    bool locked;
+    volatile uint8_t rumble_small;
+    volatile uint8_t rumble_large;
+    volatile uint8_t dma_buf[32];
+    uint8_t dma_config_buf[6];
+} psx_spi_protocol_state_t;
+
 /*
- * This is the protocol/state portion of the real pio_spi_init().
- * Hardware/PIO setup remains in pio_spi_init(), but the protocol state is
- * initialized here so firmware and host replay cannot drift apart.
+ * Canonical protocol initialization.  Both firmware and host replay use
+ * this exact state type and initializer; hardware/PIO state stays outside.
  */
 #define PSX_SPI_PROTOCOL_INIT(s, guitar_hero_guitar) do { \
     memset((s), 0, sizeof(*(s))); \
@@ -47,7 +65,6 @@ static const uint8_t init_resp_4f[6] = {0,0,0,0,0,0x5A};
     memcpy((s)->config_responses[0x0F], init_resp_4f, 6); \
     memset((s)->button_attr, 0x02, sizeof((s)->button_attr)); \
     (s)->report_len = 2; \
-    memset((s)->report_mask, 0, sizeof((s)->report_mask)); \
     (s)->report_mask[0] = 0x03; \
     (s)->configMode = false; \
     if (guitar_hero_guitar) \

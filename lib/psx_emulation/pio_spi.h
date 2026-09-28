@@ -52,6 +52,9 @@ typedef struct pio_spi_t
     volatile uint8_t transaction_test_analog[8];
     volatile uint8_t transaction_test_len[8];
     volatile uint8_t transaction_test_mask[8][3];
+    volatile uint32_t transaction_test_us[8];
+    volatile uint32_t transaction_test_config_duration_us[8];
+    volatile uint32_t config_trace_start_us;
     volatile bool has_new_write;
     // Captured bytes from the most recent completed SPI transaction.
     volatile bool has_new_transaction;

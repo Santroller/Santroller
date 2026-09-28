@@ -200,26 +200,9 @@ typedef struct pio_spi_read_info_t
     uint num_bits_transacted;
 } pio_spi_read_info_t;
 
-static uint8_t get_current_report_len(pio_spi_t *spi)
-{
-    if (spi->protocol.configMode)
-        return 0;
-
-    if (!spi->protocol.config_responses[0x05][2])
-        return 2;
-
-    uint8_t len = 0;
-    for (uint8_t i = 0; i < 18; ++i)
-    {
-        if (spi->protocol.report_mask[i / 8] & (1u << (i % 8)))
-            ++len;
-    }
-    return len;
-}
-
 static void format_next_response(pio_spi_t *spi)
 {
-    uint8_t payload_len = get_current_report_len(spi);
+    uint8_t payload_len = psx_spi_current_report_len(&spi->protocol);
 
     spi->protocol.report_len = payload_len;
     spi->response_buf[0] = PSX_SPI_RESPONSE_HEADER(&spi->protocol);

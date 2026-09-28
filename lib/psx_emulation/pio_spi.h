@@ -3,6 +3,7 @@
 #include "hardware/pio.h"
 #include "hardware/dma.h"
 #include "enums.pb.h"
+#include "psx_spi_protocol.h"
 #include <stdint.h>
 
 // Configuration options for pio spi
@@ -32,19 +33,7 @@ typedef struct pio_spi_t
     uint channel_read;
     uint32_t startstop_mask;
     pio_spi_config_t config;
-    uint8_t report_len;
-    uint8_t config_responses[0x10][0x06];
-    uint8_t resp_42[32];
-    uint8_t report_mask[3];
-    uint8_t button_attr[12];
-    volatile uint8_t last_cmd;
-    volatile bool has_new_cmd;
-    volatile bool configMode;
-    bool just_left_config;
-    uint8_t cmd_id;
-    bool locked;
-    volatile uint8_t rumble_small;
-    volatile uint8_t rumble_large;
+    psx_spi_protocol_state_t protocol;
     volatile uint8_t dma_buf[32];
     uint8_t read_idx_read;
     uint8_t read_idx_write;

@@ -303,6 +303,7 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
         // processing the command, since command processing changes the state for the next one.
         memcpy((void *)spi->last_response_buf, (const void *)spi->response_buf, sizeof(spi->last_response_buf));
         spi->last_response_len = spi->response_len;
+        spi->has_new_transaction = true;
 
         PSX_SPI_PROCESS_COMMAND(&spi->protocol, spi->dma_buf);
         prepare_for_next(spi);

@@ -5,23 +5,15 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+#include "../lib/psx_emulation/psx_spi_protocol.h"
+
 typedef struct {
     unsigned capture_id;
     uint8_t tx;
     uint8_t rx;
 } captured_byte_t;
 
-typedef struct {
-    uint8_t config_responses[0x10][6];
-    uint8_t report_mask[3];
-    uint8_t button_attr[12];
-    uint8_t report_len;
-    uint8_t rumble_small, rumble_large;
-    uint8_t locked;
-    uint8_t configMode;
-} psx_test_state_t;
-
-#include "../lib/psx_emulation/psx_spi_protocol.h"
+typedef psx_spi_protocol_state_t psx_test_state_t;
 
 typedef enum {
     PSX_TEST_DS2,
@@ -48,8 +40,6 @@ static void init_test_controller(psx_test_state_t *s,
 {
     PSX_SPI_PROTOCOL_INIT(s, controller == PSX_TEST_GUITAR_HERO_GUITAR);
 
-    if (controller == PSX_TEST_GUITAR_HERO_GUITAR)
-        s->config_responses[0x05][0] = 0x01;
 }
 
 static int hexbyte_after_colon(const char *s, uint8_t *out)

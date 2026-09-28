@@ -15,7 +15,7 @@ typedef struct pio_spi_config_t
     int sck_pin;  // SCK Pin (Must be 1 pin after COPI)
     int copi_pin; // COPI Pin (Can be any pin)
     int cipo_pin; // CIPO Pin (Can be any pin)
-    int ack_pin;  // ACK Pin (Can be any pin)
+    int ack_pin;  // ACK Pin (Must be 1 pin after COPI)
     int cs_sm;
     int initial_sm;
     int combined_sm;
@@ -54,6 +54,22 @@ typedef struct pio_spi_t
     volatile uint8_t response_len;
     volatile uint8_t last_response_buf[32];
     volatile uint8_t last_response_len;
+
+    // Non-invasive timing trace. These are written only from their respective
+    // producer context (IRQ1 or sendData), then dumped later from getReportFormat().
+    volatile uint8_t timing_prepare_idx;
+    volatile uint8_t timing_send_idx;
+    volatile bool timing_prepare_overflow;
+    volatile bool timing_send_overflow;
+    volatile uint32_t timing_prepare_us[16];
+    volatile uint8_t timing_prepare_len[16];
+    volatile uint8_t timing_prepare_header[16];
+    volatile uint8_t timing_prepare_config[16];
+    volatile uint8_t timing_prepare_analog[16];
+    volatile uint32_t timing_send_us[16];
+    volatile uint8_t timing_send_old_len[16];
+    volatile uint8_t timing_send_new_len[16];
+
     uint8_t write_id;
     uint8_t write_idx_read;
     uint8_t write_idx_write;
@@ -81,7 +97,7 @@ extern "C"
     // but at max once per transaction.
     __force_inline static void pio_spi_provide_read_buffer(pio_spi_t *spi, volatile uint8_t *buf, uint8_t buf_bytes)
     {
-        dma_channel_transfer_to_buffer_now(spi->channel_read, buf, dma_encode_transfer_count(buf_bytes));
+        dma_channel_transfer_to_buffer_now(sppi->channel_read, buf, dma_encode_transfer_count(buf_bytes));
     }
 
     // Provide the write buffer for DMA. Must be called per transaction if write data is requested,

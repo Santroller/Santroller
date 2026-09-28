@@ -212,6 +212,28 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
     pio_sm_clear_fifos(spi->pio, spi->config.initial_sm);
     // push the initial 0xFF and header
     pio_sm_put(spi->pio, spi->config.combined_sm, 0xFF);
+
+    // Capture the exact protocol state used to arm this transaction. Do not
+    // printf() here: this path is timing-critical and the trace must not alter it.
+    uint8_t tp = spi->timing_prepare_idx;
+    uint8_t tn = (uint8_t)((tp + 1) & 0x0F);
+    if (tn == spi->timing_send_idx)
+    {
+        spi->timing_prepare_overflow = true;
+    }
+    else
+    {
+        spi->timing_prepare_us[tp] = time_us_32();
+        spi->timing_prepare_len[tp] = spi->protocol.report_len;
+        spi->timing_prepare_config[tp] = spi->protocol.configMode;
+        spi->timing_prepare_analog[tp] = spi->protocol.config_responses[0x05][2];
+        spi->timing_prepare_header[tp] =
+            spi->protocol.configMode ? 0xF3 :
+            (spi->protocol.config_responses[0x05][2]
+                ? (uint8_t)(0x70 | (spi->protocol.report_len / 2))
+                : (uint8_t)(0x40 | (spi->protocol.report_len / 2)));
+        spi->timing_prepare_idx = tn;
+    }
     // we always send the same data when not in config mode, so theres no need to read the command!
     irq_set_enabled(PIO_IRQ_NUM(spi->pio, 1), spi->protocol.configMode);
     if (spi->protocol.configMode)

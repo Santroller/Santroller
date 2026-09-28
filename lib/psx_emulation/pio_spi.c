@@ -316,7 +316,9 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
         }
         else
         {
-            memcpy((void *)spi->transaction_buf, (const void *)spi->dma_buf, sizeof(spi->transaction_buf));
+            memcpy((void *)spi->transaction_test[tw], (const void *)spi->dma_buf, 8);
+            memcpy((void *)spi->transaction_test_rx[tw], (const void *)spi->response_buf, 32);
+            spi->transaction_test_rx_len[tw] = spi->response_len;
             spi->transaction_idx_write = tn;
         }
 

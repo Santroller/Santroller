@@ -258,14 +258,29 @@ int main(int argc, char **argv)
         if (s.configMode && tx[1] >= 0x40 && tx[1] <= 0x4F &&
             tx_len >= 9) {
             uint8_t reg = (uint8_t)(tx[1] - 0x40);
+            uint8_t expected[6];
+            if (reg < 0x10)
+                memcpy(expected, queued_config[reg], 6);
+
+            /*
+             * 40h is unusual: the command handler writes the previous
+             * button attribute into response slot 00h.  The config-mode
+             * response for the following transfer therefore reflects the
+             * value produced by this command.
+             */
+            if (tx[1] == 0x40 && reg == 0) {
+                expected[2] = s.button_attr[tx[3]];
+                expected[5] = 0x5A;
+            }
+
             if (reg < 0x10 &&
-                memcmp(rx + 3, queued_config[reg], 6) != 0) {
+                memcmp(rx + 3, expected, 6) != 0)
                 fprintf(stderr,
                         "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch\\n",
                         transactions, i, tx[1]);
                 dump_bytes("  TX: ", tx, tx_len);
                 dump_bytes("  captured: ", rx + 3, 6);
-                dump_bytes("  expected: ", queued_config[reg], 6);
+                dump_bytes("  expected: ", expected, 6);
                 ++failures;
             }
         }

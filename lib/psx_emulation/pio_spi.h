@@ -40,6 +40,9 @@ typedef struct pio_spi_t
     volatile uint8_t dma_buf_test[8][8];
     volatile uint8_t response_test[8][32];
     volatile uint8_t response_test_len[8];
+    uint8_t transaction_idx_read;
+    uint8_t transaction_idx_write;
+    volatile bool transaction_trace_overflow;
     volatile bool has_new_write;
     // Captured bytes from the most recent completed SPI transaction.
     volatile bool has_new_transaction;

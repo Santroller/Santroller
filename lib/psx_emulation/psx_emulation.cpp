@@ -38,6 +38,7 @@ void PSXEmulation::load_state(PSXEmulation *state)
 }
 void PSXEmulation::tick()
 {
+    pio_spi_watchdog_tick(spi);
 }
 
 PSXEmulation::PSXEmulation(int8_t sck, int8_t cmd, int8_t dat, uint8_t attPin, uint8_t ackPin) : sck(sck), cmd(cmd), dat(dat), attPin(attPin), ackPin(ackPin)

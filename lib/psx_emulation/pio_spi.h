@@ -15,7 +15,7 @@ typedef struct pio_spi_config_t
     int sck_pin;  // SCK Pin (Must be 1 pin after COPI)
     int copi_pin; // COPI Pin (Can be any pin)
     int cipo_pin; // CIPO Pin (Can be any pin)
-    int ack_pin;  // ACK Pin (Must be 1 pin after COPI)
+    int ack_pin;  // ACK Pin (Can be any pin)
     int cs_sm;
     int initial_sm;
     int combined_sm;
@@ -97,7 +97,7 @@ extern "C"
     // but at max once per transaction.
     __force_inline static void pio_spi_provide_read_buffer(pio_spi_t *spi, volatile uint8_t *buf, uint8_t buf_bytes)
     {
-        dma_channel_transfer_to_buffer_now(sppi->channel_read, buf, dma_encode_transfer_count(buf_bytes));
+        dma_channel_transfer_to_buffer_now(spi->channel_read, buf, dma_encode_transfer_count(buf_bytes));
     }
 
     // Provide the write buffer for DMA. Must be called per transaction if write data is requested,

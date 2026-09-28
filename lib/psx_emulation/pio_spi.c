@@ -6,6 +6,7 @@
 #include "hardware/dma.h"
 #include <string.h>
 #include <stdio.h>
+#include <pico/time.h>
 
 uint fixPio(PIO pio, pio_program_t program, int sck_pin)
 {
@@ -34,6 +35,40 @@ uint fixPio(PIO pio, pio_program_t program, int sck_pin)
 }
 
 pio_spi_t pio_spi[2];
+
+#define PSX_SPI_WATCHDOG_TIMEOUT_MS 1000
+
+static void __time_critical_func(psx_spi_watchdog_touch)(pio_spi_t *spi)
+{
+    spi->watchdog_last_activity_ms = to_ms_since_boot(get_absolute_time());
+    spi->watchdog_active = true;
+}
+
+static void psx_spi_watchdog_reset(pio_spi_t *spi)
+{
+    // A DualShock that stops hearing the host falls back to Digital Mode.
+    spi->protocol.configMode = false;
+    spi->protocol.config_responses[0x05][2] = 0;
+    memcpy(spi->protocol.config_responses[0x01], init_resp_41_digital, 6);
+    spi->protocol.report_mask[0] = 0x03;
+    spi->protocol.report_mask[1] = 0;
+    spi->protocol.report_mask[2] = 0;
+    spi->protocol.report_len = 2;
+    spi->protocol.rumble_small = 0;
+    spi->protocol.rumble_large = 0;
+    spi->protocol.locked = false;
+    spi->watchdog_active = false;
+}
+
+void pio_spi_watchdog_tick(pio_spi_t *spi)
+{
+    if (!spi || !spi->allocated || !spi->watchdog_active)
+        return;
+
+    uint32_t now = to_ms_since_boot(get_absolute_time());
+    if ((uint32_t)(now - spi->watchdog_last_activity_ms) >= PSX_SPI_WATCHDOG_TIMEOUT_MS)
+        psx_spi_watchdog_reset(spi);
+}
 
 static void setup_cs_sm(PIO pio, uint sm, int cipo_pin, int cs_pin, uint *offset)
 {
@@ -223,6 +258,7 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
     io_rw_32 irqs = spi->pio->irq;
     if (irqs & (1u << 1))
     {
+        psx_spi_watchdog_touch(spi);
         pio_spi_provide_read_buffer(spi, spi->dma_buf, dma_encode_transfer_count(32));
         // When not in config mode, the response is always the same so we don't need to wait to know the command
         if (!spi->protocol.configMode)
@@ -313,6 +349,8 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
     spi->type = config->type;
     PSX_SPI_PROTOCOL_INIT(&spi->protocol, spi->type == SubType_GuitarHeroGuitar);
     spi->protocol.cmd_id = 0;
+    spi->watchdog_active = false;
+    spi->watchdog_last_activity_ms = 0;
     spi->write_id = 0;
     spi->read_idx_read = 0;
     spi->read_idx_write = 0;

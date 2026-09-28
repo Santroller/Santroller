@@ -304,7 +304,7 @@ static int replay_controller(const char *name,
            transactions,
            s.configMode,
            s.config_responses[0x05][2] == 1,
-           s.report_len,
+           psx_spi_current_report_len(&s),
            s.report_mask[0], s.report_mask[1], s.report_mask[2]);
     if (skipped)
         printf(" (%u non-command bytes skipped)", skipped);

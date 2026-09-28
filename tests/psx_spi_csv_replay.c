@@ -219,8 +219,7 @@ int main(int argc, char **argv)
 
         if (rx_len < 5 || rx_len > 21 || i + rx_len > ncmd) {
             fprintf(stderr,
-                    "SKIP malformed txn at stream=%zu cmd=%02X rx=%02X len=%u
-",
+                    "SKIP malformed txn at stream=%zu cmd=%02X rx=%02X len=%u\\n",
                     i, stream_cmd[i + 1], header, rx_len);
             ++i;
             ++skipped;
@@ -237,14 +236,12 @@ int main(int argc, char **argv)
         uint8_t expected_header = PSX_SPI_RESPONSE_HEADER(&s);
         if (rx[1] != expected_header) {
             fprintf(stderr,
-                    "FAIL txn %u stream=%zu cmd=%02X: header got %02X want %02X
-",
+                    "FAIL txn %u stream=%zu cmd=%02X: header got %02X want %02X\\n",
                     transactions, i, tx[1], rx[1], expected_header);
             dump_bytes("  TX: ", tx, rx_len);
             dump_bytes("  RX: ", rx, rx_len);
             fprintf(stderr,
-                    "  state before: config=%u analog=%u len=%u mask=%02X %02X %02X
-",
+                    "  state before: config=%u analog=%u len=%u mask=%02X %02X %02X\\n",
                     s.configMode,
                     s.config_responses[0x05][2] == 1,
                     s.report_len,
@@ -262,8 +259,7 @@ int main(int argc, char **argv)
             if (reg < 0x10 && rx_len >= 9) {
                 if (memcmp(rx + 3, s.config_responses[reg], 6) != 0) {
                     fprintf(stderr,
-                            "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch
-",
+                            "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch\\n",
                             transactions, i, tx[1]);
                     dump_bytes("  TX: ", tx, rx_len);
                     dump_bytes("  captured: ", rx + 3, 6);

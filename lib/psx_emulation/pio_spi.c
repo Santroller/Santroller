@@ -366,6 +366,30 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
         // may have completed by the time getReportFormat() runs.
         if (trace_stored)
         {
+            uint32_t trace_us = time_us_32();
+            spi->transaction_test_us[tw] = trace_us;
+
+            // Measure the complete config-mode interval from the command
+            // which enters config mode through the command which exits it.
+            // This is the useful number for determining whether the tester
+            // should visibly remain blank.
+            if (spi->dma_buf[1] == 0x43 && spi->dma_buf[3] == 0x01)
+            {
+                spi->config_trace_start_us = trace_us;
+                spi->transaction_test_config_duration_us[tw] = 0;
+            }
+            else if (spi->dma_buf[1] == 0x43 && spi->dma_buf[3] == 0x00 &&
+                     spi->config_trace_start_us != 0)
+            {
+                spi->transaction_test_config_duration_us[tw] =
+                    trace_us - spi->config_trace_start_us;
+                spi->config_trace_start_us = 0;
+            }
+            else
+            {
+                spi->transaction_test_config_duration_us[tw] = 0;
+            }
+
             spi->transaction_test_config[tw] = spi->protocol.configMode;
             spi->transaction_test_analog[tw] = spi->protocol.config_responses[0x05][2];
             spi->transaction_test_len[tw] = psx_spi_current_report_len(&spi->protocol);

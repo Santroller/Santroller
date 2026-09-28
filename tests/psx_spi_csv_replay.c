@@ -207,7 +207,7 @@ int main(int argc, char **argv)
         memcpy(tx, stream_cmd + i, sizeof(tx));
 
         uint8_t rx[8];
-        memcpy(rx, stream_rx + i + 1, sizeof(rx));
+        memcpy(rx, stream_rx + i, sizeof(rx));
 
         ++transactions;
 

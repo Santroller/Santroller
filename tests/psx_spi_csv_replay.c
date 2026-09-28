@@ -20,21 +20,6 @@ typedef enum {
     PSX_TEST_GUITAR_HERO_GUITAR
 } psx_test_controller_t;
 
-static void report_len_from_mask(psx_test_state_t *s)
-{
-    if (!s->config_responses[0x05][2]) {
-        s->report_len = 2;
-        return;
-    }
-
-    unsigned n = 0;
-    for (unsigned i = 0; i < 18; ++i)
-        if (s->report_mask[i / 8] & (1u << (i % 8)))
-            ++n;
-
-    s->report_len = (uint8_t)n;
-}
-
 static void init_test_controller(psx_test_state_t *s,
                                  psx_test_controller_t controller)
 {
@@ -221,12 +206,11 @@ static int replay_controller(const char *name,
         memcpy(queued_config[r], s.config_responses[r], 6);
 
     printf("\n=== %s ===\n", name);
-    printf("Initial: type=%s config=%u analog=%u len=%u mask=%02X %02X %02X\n",
+    printf("Initial: type=%s config=%u analog=%u mask=%02X %02X %02X\n",
            controller == PSX_TEST_GUITAR_HERO_GUITAR
                ? "GUITAR_HERO_GUITAR" : "DS2",
            s.configMode,
            s.config_responses[0x05][2] == 1,
-           s.report_len,
            s.report_mask[0], s.report_mask[1], s.report_mask[2]);
 
     size_t i = 0;
@@ -246,8 +230,14 @@ static int replay_controller(const char *name,
             ++next;
 
         size_t tx_len = next - i;
-        if (tx_len == 0 || tx_len > 21)
-            tx_len = s.configMode ? 9 : (size_t)(3u + s.report_len);
+        if (tx_len == 0 || tx_len > 21) {
+            fprintf(stderr,
+                    "%s: SKIP invalid txn at stream=%zu cmd=%02X len=%zu\n",
+                    name, i, stream[i + 1].tx, tx_len);
+            ++skipped;
+            i = next;
+            continue;
+        }
 
         if (i + tx_len > nstream) {
             fprintf(stderr,
@@ -300,7 +290,6 @@ static int replay_controller(const char *name,
 
         psx_test_state_t before = s;
         PSX_SPI_PROCESS_COMMAND(&s, tx);
-        report_len_from_mask(&s);
 
         print_state_change(name, stream[i].capture_id, tx[1], &before, &s);
 

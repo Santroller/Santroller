@@ -47,9 +47,9 @@ PSXEmulation::PSXEmulation(int8_t sck, int8_t cmd, int8_t dat, uint8_t attPin, u
 
 void PSXEmulation::sendData(uint8_t len, uint8_t *data)
 {
-    memcpy(spi->resp_42, data, len);
-    memcpy(spi->config_responses[0x02], data, sizeof(spi->config_responses[0x02]));
-    spi->report_len = len;
+    memcpy(spi->protocol.resp_42, data, len);
+    memcpy(spi->protocol.config_responses[0x02], data, sizeof(spi->protocol.config_responses[0x02]));
+    spi->protocol.report_len = len;
     sent = false;
 }
 uint8_t last_lastcmd = 0;
@@ -58,7 +58,7 @@ PsxReportFormat_t PSXEmulation::getReportFormat()
     if (spi->read_idx_read != spi->read_idx_write)
     {
         spi->read_idx_read = (spi->read_idx_read + 1) & 0x07; // Assuming a buffer size of 8
-        printf("New command received: %d: ", spi->cmd_id);
+        printf("New command received: %d: ", spi->protocol.cmd_id);
         for (int i = 0; i < 8; i++)
         {
             printf("%02X ", spi->dma_buf_test[spi->read_idx_read][i]);
@@ -75,7 +75,7 @@ PsxReportFormat_t PSXEmulation::getReportFormat()
         }
         printf("\r\n");
     }
-    return {spi->config_responses[0x05][2] == 0x01, {spi->report_mask[0], spi->report_mask[1], spi->report_mask[2]}};
+    return {spi->protocol.config_responses[0x05][2] == 0x01, {spi->protocol.report_mask[0], spi->protocol.report_mask[1], spi->protocol.report_mask[2]}};
 }
 bool PSXEmulation::ready()
 {

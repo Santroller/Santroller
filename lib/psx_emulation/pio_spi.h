@@ -45,6 +45,8 @@ typedef struct pio_spi_t
     uint8_t dma_buf_test2[8][8];
     uint8_t dma_config_buf[6];
     SubType type;
+    uint8_t rumble_small;
+    uint8_t rumble_large;
 } pio_spi_t;
 
 #ifdef __cplusplus

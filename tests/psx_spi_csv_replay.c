@@ -119,19 +119,25 @@ static int load_wireless_columns(const char *path,
             continue;
 
         if (n == cap) {
-            cap *= 2;
-            uint8_t *nc = realloc(cmd, cap);
-            uint8_t *nr = realloc(rx, cap);
-            if (!nc || !nr) {
-                free(nc);
-                free(nr);
+            size_t new_cap = cap * 2;
+            uint8_t *nc = realloc(cmd, new_cap);
+            if (!nc) {
                 free(cmd);
                 free(rx);
                 fclose(f);
                 return -1;
             }
             cmd = nc;
+
+            uint8_t *nr = realloc(rx, new_cap);
+            if (!nr) {
+                free(cmd);
+                free(rx);
+                fclose(f);
+                return -1;
+            }
             rx = nr;
+            cap = new_cap;
         }
 
         cmd[n] = cb;
@@ -190,10 +196,13 @@ int main(int argc, char **argv)
      * The capture is byte-aligned, with the response header appearing in
      * the RX column on the same byte position as the command opcode.
      *
-     * A normal captured command is eight TX bytes:
-     *   01 CMD ARG0 ARG1 ARG2 ARG3 ARG4 ARG5
+     * A normal captured transaction is nine bytes:
+     *   01 CMD ARG0 ARG1 ARG2 ARG3 ARG4 ARG5 ARG6
      *
-     * Therefore RX for that transaction is stream_rx[i+1 .. i+8].
+     * RX is aligned byte-for-byte with TX:
+     *   FF HDR 5A DATA0 DATA1 DATA2 DATA3 DATA4 DATA5
+     *
+     * The next transaction therefore begins at i + 9.
      */
     for (size_t i = 0; i + 8 < ncmd; ) {
         if (stream_cmd[i] != 0x01 ||
@@ -203,21 +212,21 @@ int main(int argc, char **argv)
             continue;
         }
 
-        uint8_t tx[8];
+        uint8_t tx[9];
         memcpy(tx, stream_cmd + i, sizeof(tx));
 
-        uint8_t rx[8];
+        uint8_t rx[9];
         memcpy(rx, stream_rx + i, sizeof(rx));
 
         ++transactions;
 
         uint8_t expected_header = PSX_SPI_RESPONSE_HEADER(&s);
-        if (rx[0] != expected_header) {
+        if (rx[1] != expected_header) {
             fprintf(stderr,
                     "FAIL txn %u stream=%zu cmd=%02X: header got %02X want %02X\n",
-                    transactions, i, tx[1], rx[0], expected_header);
-            dump_bytes("  TX: ", tx, 8);
-            dump_bytes("  RX: ", rx, 8);
+                    transactions, i, tx[1], rx[1], expected_header);
+            dump_bytes("  TX: ", tx, 9);
+            dump_bytes("  RX: ", rx, 9);
             fprintf(stderr,
                     "  state before: config=%u analog=%u len=%u mask=%02X %02X %02X\n",
                     s.configMode,
@@ -229,17 +238,18 @@ int main(int argc, char **argv)
 
         /*
          * Config responses are six bytes following the response header.
-         * The capture has the same six bytes at RX[1..6].
+         * RX[0] is the idle byte, RX[1] the header, RX[2] is 0x5A,
+         * and the six-byte config payload is RX[3..8].
          */
         if (s.configMode && tx[1] >= 0x40 && tx[1] <= 0x4F) {
             uint8_t reg = (uint8_t)(tx[1] - 0x40);
             if (reg < 0x10) {
-                if (memcmp(rx + 1, s.config_responses[reg], 6) != 0) {
+                if (memcmp(rx + 3, s.config_responses[reg], 6) != 0) {
                     fprintf(stderr,
                             "FAIL txn %u stream=%zu cmd=%02X: config payload mismatch\n",
                             transactions, i, tx[1]);
                     dump_bytes("  TX: ", tx, 8);
-                    dump_bytes("  captured: ", rx + 1, 6);
+                    dump_bytes("  captured: ", rx + 3, 6);
                     dump_bytes("  expected: ", s.config_responses[reg], 6);
                     ++failures;
                 }

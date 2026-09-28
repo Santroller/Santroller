@@ -306,6 +306,20 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
         // Snapshot the completed command immediately; dma_buf is reused for the next DMA transfer.
         memcpy((void *)spi->transaction_buf, (const void *)spi->dma_buf, sizeof(spi->transaction_buf));
 
+        // Dedicated trace ring: capture every SPI command, including normal 0x42
+        // reads which are intentionally omitted from the legacy command ring.
+        uint8_t tw = spi->transaction_idx_write;
+        uint8_t tn = (uint8_t)((tw + 1) & 0x07);
+        if (tn == spi->transaction_idx_read)
+        {
+            spi->transaction_trace_overflow = true;
+        }
+        else
+        {
+            memcpy((void *)spi->transaction_buf, (const void *)spi->dma_buf, sizeof(spi->transaction_buf));
+            spi->transaction_idx_write = tn;
+        }
+
         // Save the response that was actually queued for this transaction before
         // processing the command, since command processing changes the state for the next one.
         memcpy((void *)spi->last_response_buf, (const void *)spi->response_buf, sizeof(spi->last_response_buf));

@@ -297,6 +297,10 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
             spi->dma_buf_test[spi->read_idx_write][5] = spi->dma_buf[5];
             spi->dma_buf_test[spi->read_idx_write][6] = spi->dma_buf[6];
             spi->dma_buf_test[spi->read_idx_write][7] = spi->dma_buf[7];
+            memcpy((void *)spi->response_test[spi->read_idx_write],
+                   (const void *)spi->response_buf,
+                   sizeof(spi->response_test[spi->read_idx_write]));
+            spi->response_test_len[spi->read_idx_write] = spi->response_len;
             spi->read_idx_write = (spi->read_idx_write + 1) & 0x07; // Assuming a buffer size of 8
         }
         // Snapshot the completed command immediately; dma_buf is reused for the next DMA transfer.

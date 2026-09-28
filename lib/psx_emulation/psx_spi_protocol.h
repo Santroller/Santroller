@@ -18,6 +18,8 @@ static const uint8_t psx_test_resp_46[2][6] = {
     {0,0,1,1,1,0x14}
 };
 static const uint8_t psx_test_resp_47[6] = {0,0,2,0,1,0};
+static const uint8_t psx_test_resp_4d[6] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
+static const uint8_t psx_test_resp_4f[6] = {0,0,0,0,0,0x5A};
 static const uint8_t psx_test_resp_4c[2][6] = {
     {0,0,0,4,0,0},
     {0,0,0,7,0,0}
@@ -28,6 +30,8 @@ static const uint8_t psx_test_resp_4c[2][6] = {
     memcpy((s)->config_responses[0x01], psx_test_resp_41_digital, 6); \
     memcpy((s)->config_responses[0x06], psx_test_resp_46[0], 6); \
     memcpy((s)->config_responses[0x07], psx_test_resp_47, 6); \
+    memcpy((s)->config_responses[0x0D], psx_test_resp_4d, 6); \
+    memcpy((s)->config_responses[0x0F], psx_test_resp_4f, 6); \
     memcpy((s)->config_responses[0x0C], psx_test_resp_4c[0], 6); \
     memset((s)->button_attr, 0x02, sizeof((s)->button_attr)); \
     (s)->report_len = 2; \

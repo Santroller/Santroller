@@ -524,8 +524,8 @@ static void __time_critical_func(pio_data_irq_1)(void)
     }
     else
     {
-        uint32_t header_word = pio1->rxf[cfg->initial_sm];
-        reg = header_word >> 24;
+        pio1->rxf[cfg->initial_sm];
+        reg = pio1->rxf[cfg->initial_sm] >> 24;
         if (spi->protocol.configMode)
         {
             if (reg == 0x46 || reg == 0x4C)

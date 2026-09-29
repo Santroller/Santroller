@@ -106,7 +106,7 @@ static void setup_combined_sm(PIO pio, uint sm, int cipo_pin, int copi_pin, int 
     sm_config_set_sideset_pins(&c, ack_pin);
     pio_gpio_init(pio, cipo_pin);
     pio_gpio_init(pio, ack_pin);
-    sm_config_set_clkdiv_int_frac(&c, 70, 0x00);
+    // Timing experiment: slow the PIO SM enough to stretch the existing ACK gap.\n    sm_config_set_clkdiv_int_frac(&c, 90, 0x00);
     pio_sm_set_consecutive_pindirs(pio, sm, ack_pin, 1, false);
 
     pio_sm_put(pio, sm, 0xFF);

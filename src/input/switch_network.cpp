@@ -9,12 +9,10 @@ SwitchNetworkInput::SwitchNetworkInput(proto_SwitchNetworkInput input, std::shar
 
 bool SwitchNetworkInput::tick_digital()
 {
-    if (!m_device || m_input.pin < 0 || m_input.otherPin < 0)
+    if (!m_device || m_input.button < 0)
         return false;
 
-    return m_device->read_switch(
-        static_cast<uint8_t>(m_input.pin),
-        static_cast<uint8_t>(m_input.otherPin));
+    return m_device->read_button(static_cast<uint8_t>(m_input.button));
 }
 
 uint16_t SwitchNetworkInput::tick_analog()

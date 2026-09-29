@@ -66,6 +66,18 @@ void PSXEmulation::sendData(uint8_t len, uint8_t *data)
     sent = false;
 }
 
+static void dump_config_index_trace(pio_spi_t *spi)
+{
+    for (uint8_t i = 0; i < spi->config_index_trace_idx; ++i)
+    {
+        printf("\\r\\n  INDEX[%u] reg=%02X fifo=%08lX value=%02X",
+               i,
+               spi->config_index_trace_reg[i],
+               (unsigned long)spi->config_index_trace_word[i],
+               spi->config_index_trace_value[i]);
+    }
+}
+
 static void dump_timing_trace(pio_spi_t *spi)
 {
     printf("SPI timing trace:");
@@ -98,6 +110,7 @@ PsxReportFormat_t PSXEmulation::getReportFormat()
     if (!spi->timing_dumped && (spi->timing_prepare_idx || spi->timing_send_idx))
     {
         dump_timing_trace(spi);
+        dump_config_index_trace(spi);
         spi->timing_dumped = true;
     }
 

@@ -66,6 +66,7 @@ void PSXEmulation::sendData(uint8_t len, uint8_t *data)
     sent = false;
 }
 
+#if PSX_SPI_DEBUG_LOGGING
 static void dump_config_index_trace(pio_spi_t *spi)
 {
     for (uint8_t i = 0; i < spi->config_index_trace_idx; ++i)
@@ -104,15 +105,19 @@ static void dump_timing_trace(pio_spi_t *spi)
     printf("\r\n");
 }
 
+#endif
+
 uint8_t last_lastcmd = 0;
 PsxReportFormat_t PSXEmulation::getReportFormat()
 {
+    #if PSX_SPI_DEBUG_LOGGING
     if (!spi->timing_dumped && (spi->timing_prepare_idx || spi->timing_send_idx))
     {
         dump_timing_trace(spi);
         dump_config_index_trace(spi);
         spi->timing_dumped = true;
     }
+    #endif
 
     while (spi->transaction_idx_read != spi->transaction_idx_write)
     {

@@ -39,10 +39,6 @@ bool SwitchNetworkDevice::read_switch(uint8_t pin, uint8_t other_pin)
     if (!using_pin(pin) || !using_pin(other_pin) || pin == other_pin)
         return false;
 
-    // One side of the switch is driven low; every other network node is
-    // left as a pulled-up input. A closed switch therefore pulls other_pin
-    // low. Returning all pins to inputs prevents the network from being
-    // actively driven between scans.
     gpio_set_dir_in_masked(m_device.pins);
     gpio_pull_up_mask(m_device.pins);
 
@@ -56,4 +52,15 @@ bool SwitchNetworkDevice::read_switch(uint8_t pin, uint8_t other_pin)
     gpio_pull_up_mask(pin_mask | other_mask);
 
     return pressed;
+}
+
+bool SwitchNetworkDevice::read_button(uint8_t button)
+{
+    if (button >= m_device.buttons_count)
+        return false;
+
+    const auto &button_config = m_device.buttons[button];
+    return read_switch(
+        static_cast<uint8_t>(button_config.pin),
+        static_cast<uint8_t>(button_config.otherPin));
 }

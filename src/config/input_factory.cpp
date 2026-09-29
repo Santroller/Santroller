@@ -18,6 +18,7 @@
 #include "input/usb.hpp"
 #include "input/bt.hpp"
 #include "input/encoder.hpp"
+#include "input/switch_network.hpp"
 #include "devices/encoder.hpp"
 
 template<typename InputType, typename DeviceType, typename ConfigType>
@@ -49,6 +50,9 @@ std::unique_ptr<Input> InputFactory::create_input(
             
     case proto_Input_matrix_tag:
         return create_device_input<MatrixInput, MatrixDevice>(profile, proto_input.input.matrix.deviceid, proto_input.input.matrix);
+            
+    case proto_Input_switchNetwork_tag:
+        return create_device_input<SwitchNetworkInput, SwitchNetworkDevice>(profile, proto_input.input.switchNetwork.deviceid, proto_input.input.switchNetwork);
             
     case proto_Input_wiiButton_tag:
         return create_device_input<WiiButtonInput, WiiDevice>(profile, proto_input.input.wiiButton.deviceid, proto_input.input.wiiButton);

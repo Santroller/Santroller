@@ -437,29 +437,18 @@ static void __time_critical_func(pio_data_irq_0)(void)
     pio_spi_config_t *cfg = &spi->config;
     uint8_t reg;
 
-    if (spi->config_index_pending)
-    {
-        uint32_t index_word = pio0->rxf[cfg->initial_sm];
-        uint8_t index = index_word >> 24;
-        spi->config_index_word = index_word;
-        spi->config_index_value = index;
-        reg = spi->dma_config_buf[0];
-        spi->config_index_pending = false;
-
-
-    }
-    else
-    {
-        pio0->rxf[cfg->initial_sm];
+    pio0->rxf[cfg->initial_sm];
         reg = pio0->rxf[cfg->initial_sm] >> 24;
         if (spi->protocol.configMode)
         {
+#if PSX_SPI_DEBUG_LOGGING
                 spi->has_new_write = true;
                 spi->write_id++;
                 spi->dma_buf_test2[spi->write_idx_write][0] = reg;
                 memcpy(spi->dma_buf_test2[spi->write_idx_write] + 1,
                        spi->protocol.config_responses[reg - 0x40], 6);
                 spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
+#endif
                 memcpy((void *)&spi->response_buf[2],
                        (const void *)spi->protocol.config_responses[reg - 0x40], 6);
                 spi->response_len = 8;
@@ -477,43 +466,24 @@ static void __time_critical_func(pio_data_irq_1)(void)
     pio_spi_config_t *cfg = &spi->config;
     uint8_t reg;
 
-    if (spi->config_index_pending)
-    {
-        uint32_t index_word = pio1->rxf[cfg->initial_sm];
-        uint8_t index = index_word >> 24;
-        spi->config_index_word = index_word;
-        spi->config_index_value = index;
-        reg = spi->dma_config_buf[0];
-        spi->config_index_pending = false;
-
-
-    }
-    else
-    {
-        pio1->rxf[cfg->initial_sm];
+    pio1->rxf[cfg->initial_sm];
         reg = pio1->rxf[cfg->initial_sm] >> 24;
         if (spi->protocol.configMode)
         {
-            if (reg == 0x46 || reg == 0x4C)
-            {
-                spi->dma_config_buf[0] = reg;
-                spi->config_index_pending = true;
-            }
-            else
-            {
+#if PSX_SPI_DEBUG_LOGGING
                 spi->has_new_write = true;
                 spi->write_id++;
                 spi->dma_buf_test2[spi->write_idx_write][0] = reg;
                 memcpy(spi->dma_buf_test2[spi->write_idx_write] + 1,
                        spi->protocol.config_responses[reg - 0x40], 6);
                 spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
+#endif
                 memcpy((void *)&spi->response_buf[2],
                        (const void *)spi->protocol.config_responses[reg - 0x40], 6);
                 spi->response_len = 8;
                 pio_spi_provide_write_buffer(
                     spi, spi->protocol.config_responses[reg - 0x40],
                     dma_encode_transfer_count(6));
-            }
         }
     }
     hw_set_bits(&pio1->irq, (1u << 0));

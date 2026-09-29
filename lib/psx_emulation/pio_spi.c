@@ -185,10 +185,10 @@ inline static int safe_fifo_rx_wait_for_finish(pio_hw_t *pio, uint sm, uint chan
         wooble++;
         if (wooble > 1000)
         {
-            // This happens if too many bytes are written to buffer
-            #if PSX_SPI_DEBUG_LOGGING
+// This happens if too many bytes are written to buffer
+#if PSX_SPI_DEBUG_LOGGING
             printf("DMA Overrun\n");
-            #endif
+#endif
             return 1;
         }
     }
@@ -289,7 +289,7 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
     pio_sm_exec_wait_blocking(spi->pio, spi->config.initial_sm, pio_encode_jmp(spi->offset_combined));
     // 3 bytes for the header, -1, and then we don't ack the last byte, leaving only the packet size + 1
     pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm,
-        pio_encode_set(pio_x, (spi->response_len - 2) + 1));
+                              pio_encode_set(pio_x, (spi->response_len - 2) + 1));
 
     uint irq_wait = pio_encode_wait_irq(1, false, 7);
     pio_sm_exec(spi->pio, spi->config.combined_sm, irq_wait);
@@ -321,7 +321,7 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
         if (!spi->protocol.configMode && spi->response_len >= 2)
         {
             pio_spi_provide_write_buffer(spi, &spi->response_buf[2],
-                                          dma_encode_transfer_count(spi->response_len - 2));
+                                         dma_encode_transfer_count(spi->response_len - 2));
         }
         pio_interrupt_clear(spi->pio, 1);
     }
@@ -438,25 +438,25 @@ static void __time_critical_func(pio_data_irq_0)(void)
     uint8_t reg;
 
     pio0->rxf[cfg->initial_sm];
-        reg = pio0->rxf[cfg->initial_sm] >> 24;
-        if (spi->protocol.configMode)
-        {
+    reg = pio0->rxf[cfg->initial_sm] >> 24;
+    if (spi->protocol.configMode)
+    {
 #if PSX_SPI_DEBUG_LOGGING
-                spi->has_new_write = true;
-                spi->write_id++;
-                spi->dma_buf_test2[spi->write_idx_write][0] = reg;
-                memcpy(spi->dma_buf_test2[spi->write_idx_write] + 1,
-                       spi->protocol.config_responses[reg - 0x40], 6);
-                spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
+        spi->has_new_write = true;
+        spi->write_id++;
+        spi->dma_buf_test2[spi->write_idx_write][0] = reg;
+        memcpy(spi->dma_buf_test2[spi->write_idx_write] + 1,
+               spi->protocol.config_responses[reg - 0x40], 6);
+        spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
 #endif
-                memcpy((void *)&spi->response_buf[2],
-                       (const void *)spi->protocol.config_responses[reg - 0x40], 6);
-                spi->response_len = 8;
-                pio_spi_provide_write_buffer(
-                    spi, spi->protocol.config_responses[reg - 0x40],
-                    dma_encode_transfer_count(6));
-        }
+        memcpy((void *)&spi->response_buf[2],
+               (const void *)spi->protocol.config_responses[reg - 0x40], 6);
+        spi->response_len = 8;
+        pio_spi_provide_write_buffer(
+            spi, spi->protocol.config_responses[reg - 0x40],
+            dma_encode_transfer_count(6));
     }
+
     hw_set_bits(&pio0->irq, (1u << 0));
 }
 
@@ -467,24 +467,23 @@ static void __time_critical_func(pio_data_irq_1)(void)
     uint8_t reg;
 
     pio1->rxf[cfg->initial_sm];
-        reg = pio1->rxf[cfg->initial_sm] >> 24;
-        if (spi->protocol.configMode)
-        {
+    reg = pio1->rxf[cfg->initial_sm] >> 24;
+    if (spi->protocol.configMode)
+    {
 #if PSX_SPI_DEBUG_LOGGING
-                spi->has_new_write = true;
-                spi->write_id++;
-                spi->dma_buf_test2[spi->write_idx_write][0] = reg;
-                memcpy(spi->dma_buf_test2[spi->write_idx_write] + 1,
-                       spi->protocol.config_responses[reg - 0x40], 6);
-                spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
+        spi->has_new_write = true;
+        spi->write_id++;
+        spi->dma_buf_test2[spi->write_idx_write][0] = reg;
+        memcpy(spi->dma_buf_test2[spi->write_idx_write] + 1,
+               spi->protocol.config_responses[reg - 0x40], 6);
+        spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
 #endif
-                memcpy((void *)&spi->response_buf[2],
-                       (const void *)spi->protocol.config_responses[reg - 0x40], 6);
-                spi->response_len = 8;
-                pio_spi_provide_write_buffer(
-                    spi, spi->protocol.config_responses[reg - 0x40],
-                    dma_encode_transfer_count(6));
-        }
+        memcpy((void *)&spi->response_buf[2],
+               (const void *)spi->protocol.config_responses[reg - 0x40], 6);
+        spi->response_len = 8;
+        pio_spi_provide_write_buffer(
+            spi, spi->protocol.config_responses[reg - 0x40],
+            dma_encode_transfer_count(6));
     }
     hw_set_bits(&pio1->irq, (1u << 0));
 }

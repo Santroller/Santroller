@@ -433,6 +433,14 @@ static void __time_critical_func(pio_data_irq_0)(void)
         spi->dma_buf_test2[spi->write_idx_write][0] = reg;
         memcpy(spi->dma_buf_test2[spi->write_idx_write]+1, spi->protocol.config_responses[reg - 0x40], 6);
         spi->write_idx_write = (spi->write_idx_write + 1) & 0x07; // Assuming a buffer size of 8
+
+        // The command byte tells us which config response belongs to this
+        // transaction. Keep the canonical response descriptor in sync with
+        // what is actually sent; format_next_response() cannot know this
+        // until the PIO has supplied the register byte.
+        memcpy((void *)&spi->response_buf[2],
+               (const void *)spi->protocol.config_responses[reg - 0x40], 6);
+        spi->response_len = 8;
         pio_spi_provide_write_buffer(spi, spi->protocol.config_responses[reg - 0x40], dma_encode_transfer_count(6));
     }
     hw_set_bits(&pio0->irq, (1u << 0));
@@ -451,6 +459,14 @@ static void __time_critical_func(pio_data_irq_1)(void)
         spi->dma_buf_test2[spi->write_idx_write][0] = reg;
         memcpy(spi->dma_buf_test2[spi->write_idx_write]+1, spi->protocol.config_responses[reg - 0x40], 6);
         spi->write_idx_write = (spi->write_idx_write + 1) & 0x07; // Assuming a buffer size of 8
+
+        // The command byte tells us which config response belongs to this
+        // transaction. Keep the canonical response descriptor in sync with
+        // what is actually sent; format_next_response() cannot know this
+        // until the PIO has supplied the register byte.
+        memcpy((void *)&spi->response_buf[2],
+               (const void *)spi->protocol.config_responses[reg - 0x40], 6);
+        spi->response_len = 8;
         pio_spi_provide_write_buffer(spi, spi->protocol.config_responses[reg - 0x40], dma_encode_transfer_count(6));
     }
     hw_set_bits(&pio1->irq, (1u << 0));

@@ -455,6 +455,9 @@ static void __time_critical_func(pio_data_irq_0)(void)
 
         if (index < 2 && (reg == 0x46 || reg == 0x4C))
         {
+            uint8_t command[8] = {0x01, reg, 0x00, index, 0x5A, 0x5A, 0x5A, 0x5A};
+            PSX_SPI_PROCESS_COMMAND(&spi->protocol, command);
+
             const uint8_t *response =
                 spi->protocol.config_responses[reg - 0x40];
             spi->has_new_write = true;
@@ -469,7 +472,7 @@ static void __time_critical_func(pio_data_irq_0)(void)
                 spi, response, dma_encode_transfer_count(6));
         }
     }
-    else
+
     {
         uint32_t header_word = pio0->rxf[cfg->initial_sm];
         reg = header_word >> 24;

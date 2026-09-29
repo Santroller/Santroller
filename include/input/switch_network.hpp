@@ -14,8 +14,7 @@ public:
     uint64_t hardware_id() const override {
         return (static_cast<uint64_t>(InputHw_SwitchNetwork) << 56) |
                (static_cast<uint64_t>(m_input.deviceid) << 32) |
-               (static_cast<uint64_t>(m_input.pin) << 16) |
-               static_cast<uint32_t>(m_input.otherPin);
+               static_cast<uint32_t>(m_input.button);
     }
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 

@@ -149,6 +149,16 @@ PsxReportFormat_t PSXEmulation::getReportFormat()
 
         spi->transaction_idx_read = (spi->transaction_idx_read + 1) & 0x07;
     }
+
+    // Selector captures happen asynchronously from the transaction trace, so
+    // dump them after draining the transaction ring rather than at the first
+    // getReportFormat() call.
+    if (spi->config_index_trace_idx)
+    {
+        dump_config_index_trace(spi);
+        spi->config_index_trace_idx = 0;
+    }
+
     return {spi->protocol.config_responses[0x05][2] == 0x01, {spi->protocol.report_mask[0], spi->protocol.report_mask[1], spi->protocol.report_mask[2]}};
 }
 bool PSXEmulation::ready()

@@ -136,36 +136,6 @@ PsxReportFormat_t PSXEmulation::getReportFormat()
 
         spi->transaction_idx_read = (spi->transaction_idx_read + 1) & 0x07;
     }
-    if (spi->read_idx_read != spi->read_idx_write)
-    {
-        spi->read_idx_read = (spi->read_idx_read + 1) & 0x07; // Assuming a buffer size of 8
-        printf("New command received: %d: ", spi->protocol.cmd_id);
-        for (int i = 0; i < 8; i++)
-        {
-            printf("%02X ", spi->dma_buf_test[spi->read_idx_read][i]);
-        }
-        printf("\r\n");
-        printf("  RX: ");
-        for (int i = 0; i < spi->response_test_len[spi->read_idx_read]; i++)
-            printf("%02X ", spi->response_test[spi->read_idx_read][i]);
-        printf(" | state: config=%d analog=%d len=%u mask=%02X %02X %02X\r\n",
-               spi->protocol.configMode,
-               spi->protocol.config_responses[0x05][2],
-               spi->protocol.report_len,
-               spi->protocol.report_mask[0],
-               spi->protocol.report_mask[1],
-               spi->protocol.report_mask[2]);
-    }
-    if (spi->write_idx_read != spi->write_idx_write)
-    {
-        spi->write_idx_read = (spi->write_idx_read + 1) & 0x07; // Assuming a buffer size of 8
-        printf("New write queued: %d, cmd: %02X: ", spi->write_id, spi->dma_buf_test2[spi->write_idx_read][0]);
-        for (int i = 1; i < 7; i++)
-        {
-            printf("%02X ", spi->dma_buf_test2[spi->write_idx_read][i]);
-        }
-        printf("\r\n");
-    }
     return {spi->protocol.config_responses[0x05][2] == 0x01, {spi->protocol.report_mask[0], spi->protocol.report_mask[1], spi->protocol.report_mask[2]}};
 }
 bool PSXEmulation::ready()

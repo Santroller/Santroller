@@ -1,13 +1,13 @@
-.define PUBLIC PIN_SCK 10
+.define PUBLIC PIN_SCK_PLACEHOLDER 10
 
 .program spi_combined_loop
 .side_set 1 opt pindirs
 wait_falling:
-wait 0 gpio PIN_SCK   ; Wait for falling clock edge
+wait 0 gpio PIN_SCK_PLACEHOLDER   ; Wait for falling clock edge
 initial_loop:
 pull ifempty noblock    ; Pull if there is data
 out pins 1      ; Write CIPO
-wait 1 gpio PIN_SCK    ; Wait for rising clock edge
+wait 1 gpio PIN_SCK_PLACEHOLDER    ; Wait for rising clock edge
 in pins 1       ; Read COPI
 push iffull noblock ; Push if we've read 8 bits, but don't block if fifo is full
 .wrap

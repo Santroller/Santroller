@@ -15,8 +15,8 @@ uint fixPio(PIO pio, pio_program_t program, int sck_pin)
     // which is easiest done by just replacing the instructions
     uint16_t data[32];
     memcpy(data, program.instructions, program.length * sizeof(uint16_t));
-    uint16_t prevClk0 = pio_encode_wait_gpio(false, PIN_SCK);
-    uint16_t prevClk1 = pio_encode_wait_gpio(true, PIN_SCK);
+    uint16_t prevClk0 = pio_encode_wait_gpio(false, PIN_SCK_PLACEHOLDER);
+    uint16_t prevClk1 = pio_encode_wait_gpio(true, PIN_SCK_PLACEHOLDER);
     uint16_t newClk0 = pio_encode_wait_gpio(false, sck_pin);
     uint16_t newClk1 = pio_encode_wait_gpio(true, sck_pin);
     for (int i = 0; i < program.length; i++)

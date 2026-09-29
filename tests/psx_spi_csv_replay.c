@@ -324,7 +324,7 @@ int main(int argc, char **argv)
 {
     const char *path = argc > 1
         ? argv[1]
-        : "tests/cmd-data on startup_aligned - Sheet1.csv";
+        : "tests/testing-data.csv";
 
     captured_byte_t *wireless = NULL;
     captured_byte_t *guitar = NULL;

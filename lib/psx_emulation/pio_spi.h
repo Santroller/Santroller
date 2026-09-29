@@ -6,6 +6,9 @@
 #include "psx_spi_protocol.h"
 #include <stdint.h>
 
+// Enable verbose PSX SPI diagnostic logging when debugging the protocol.
+#define PSX_SPI_DEBUG_LOGGING 0
+
 // Configuration options for pio spi
 // All items necessary except for callbacks and callback context
 typedef struct pio_spi_config_t

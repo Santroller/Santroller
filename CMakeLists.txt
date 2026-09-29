@@ -238,6 +238,7 @@ add_executable(
   src/input/gh5.cpp
   src/input/gpio.cpp
   src/input/matrix.cpp
+  src/input/switch_network.cpp
   src/input/wii.cpp
   src/input/shortcut.cpp
   src/input/usb.cpp
@@ -305,6 +306,7 @@ add_executable(
   src/devices/protar_neck.cpp
   src/devices/debug.cpp
   src/devices/matrix.cpp
+  src/devices/switch_network.cpp
   src/devices/vtechexpander.cpp
   src/devices/cycle.cpp
   src/devices/toggle.cpp

@@ -36,8 +36,8 @@ message Max1704xDevice { required I2CDevice i2c = 1; }
 message Mpr121Device {
   required I2CDevice i2c = 1;
   required int32 touchpadCount = 2;
-  required int32 ddrPins = 3;    // pin data direction register
-  required int32 enablePins = 4; // pin enable
+  required int32 ddrPins = 3;
+  required int32 enablePins = 4;
 }
 message ADS1115Device {
   required I2CDevice i2c = 1;
@@ -53,8 +53,8 @@ message CrazyGuitarNeckDevice { required I2CDevice i2c = 1; }
 
 message GuitarHero5NeckDevice { required I2CDevice i2c = 1; }
 
-message DJHeroTurntableDevice { 
-  required I2CDevice i2c = 1; 
+message DJHeroTurntableDevice {
+  required I2CDevice i2c = 1;
   required bool left = 2;
 }
 
@@ -84,7 +84,7 @@ message MultiplexerDevice {
   required int32 s2Pin = 5;
   required int32 s3Pin = 6;
 }
-message WorldTourDrumDevice { 
+message WorldTourDrumDevice {
   required SPIDevice spi = 1;
   required int32 csPin = 2;
 }
@@ -118,38 +118,45 @@ message PSXEmulationDevice {
   required int32 acknowledgePin = 5;
 }
 message JoybusEmulationDevice { required int32 dataPin = 1; }
-message EncoderDevice { 
+message EncoderDevice {
   required int32 dataPin = 1;
-  optional int32 deltaRate = 2; 
+  optional int32 deltaRate = 2;
   optional int32 divisor = 3;
 }
 
-message WS2812Device { 
-  required int32 pin = 1; 
-  required WS2812Type type = 2; 
+message WS2812Device {
+  required int32 pin = 1;
+  required WS2812Type type = 2;
   required int32 count = 3;
 }
-message APA102Device { 
-  required SPIDevice spi = 1; 
-  required APA102Type type = 2; 
+message APA102Device {
+  required SPIDevice spi = 1;
+  required APA102Type type = 2;
   required int32 count = 3;
 }
-message VTechGuitarIOExpanderDevice { 
-  required SPIDevice spi = 1; 
+message VTechGuitarIOExpanderDevice {
+  required SPIDevice spi = 1;
   required int32 attPin = 2;
 }
-message STP16CPCDevice { 
+message STP16CPCDevice {
   required SPIDevice spi = 1;
-  required int32 oe = 2; 
-  required int32 le = 3; 
+  required int32 oe = 2;
+  required int32 le = 3;
   required int32 count = 4;
 }
 message MatrixDevice {
   required uint32 outPins = 1;
   required uint32 inPins = 2;
 }
+
+message SwitchNetworkButton {
+  required uint32 pin = 1;
+  required uint32 otherPin = 2;
+}
+
 message SwitchNetworkDevice {
   required uint32 pins = 1;
+  repeated SwitchNetworkButton buttons = 2;
 }
 
 message CycleDevice {

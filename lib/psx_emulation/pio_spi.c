@@ -156,7 +156,6 @@ static void setup_combined_sm(PIO pio, uint sm, int cipo_pin, int copi_pin, int 
     sm_config_set_sideset_pins(&c, ack_pin);
     pio_gpio_init(pio, cipo_pin);
     pio_gpio_init(pio, ack_pin);
-    // Timing experiment: slow the PIO SM enough to stretch the existing ACK gap.\n    sm_config_set_clkdiv_int_frac(&c, 90, 0x00);
     pio_sm_set_consecutive_pindirs(pio, sm, ack_pin, 1, false);
 
     pio_sm_put(pio, sm, 0xFF);
@@ -385,6 +384,14 @@ static void inline __attribute__((always_inline)) prepare_for_next(pio_spi_t *sp
     dma_channel_abort(spi->channel_read);
     dma_channel_abort(spi->channel_write);
 
+    pio_spi_provide_read_buffer(spi, spi->dma_buf, 32);
+    // In config mode we need to know the command, so we don't arm the write DMA yet.
+    // otherwise we know it and can immediately arm the write DMA.
+    if (!spi->protocol.configMode)
+    {
+        pio_spi_provide_write_buffer(spi, &spi->response_buf[2], spi->response_len - 2);
+    }
+
     pio_enable_sm_mask_in_sync(spi->pio, spi->startstop_mask);
 }
 
@@ -394,14 +401,6 @@ static void inline __attribute__((always_inline)) pio_irq(pio_spi_t *spi)
     if (irqs & (1u << 1))
     {
         psx_spi_watchdog_touch(spi);
-        pio_spi_provide_read_buffer(spi, spi->dma_buf, dma_encode_transfer_count(32));
-        // In config mode we need to know the command, so we don't arm the write DMA yet.
-        // otherwise we know it and can immediately arm the write DMA.
-        if (!spi->protocol.configMode)
-        {
-            pio_spi_provide_write_buffer(spi, &spi->response_buf[2],
-                                         dma_encode_transfer_count(spi->response_len - 2));
-        }
         pio_interrupt_clear(spi->pio, 1);
     }
     if (irqs & (1u << 2))
@@ -640,7 +639,6 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
     spi->startstop_mask = (1u << spi->config.combined_sm) | (1u << spi->config.initial_sm);
 
     prepare_for_next(spi);
-    pio_spi_provide_read_buffer(spi, spi->dma_buf, 32);
 
     return spi;
 }

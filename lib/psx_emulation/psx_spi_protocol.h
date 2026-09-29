@@ -29,7 +29,6 @@ static const uint8_t init_resp_4f[6] = {0,0,0,0,0,0x5A};
 
 typedef struct psx_spi_protocol_state_t
 {
-    uint8_t report_len;
     uint8_t config_responses[0x10][0x06];
     uint8_t resp_42[32];
     uint8_t report_mask[3];
@@ -64,7 +63,6 @@ typedef struct psx_spi_protocol_state_t
     memcpy((s)->config_responses[0x0D], init_resp_4d, 6); \
     memcpy((s)->config_responses[0x0F], init_resp_4f, 6); \
     memset((s)->button_attr, 0x02, sizeof((s)->button_attr)); \
-    (s)->report_len = 2; \
     (s)->report_mask[0] = 0x03; \
     (s)->configMode = false; \
     if (guitar_hero_guitar) \
@@ -141,4 +139,4 @@ static inline uint8_t psx_spi_current_report_len(const psx_spi_protocol_state_t 
  * report_len immediately before arming the response; deriving it here
  * keeps the replay state machine on the same protocol semantics.
  */
-#define PSX_SPI_RESPONSE_HEADER(s) ((s)->configMode ? 0xF3 : ((s)->config_responses[0x05][2] ? (uint8_t)(0x70 | (psx_spi_current_report_len(s) / 2)) : (uint8_t)(0x40 | (psx_spi_current_report_len(s) / 2))))
+#define PSX_SPI_RESPONSE_HEADER(s,len) ((s)->configMode ? 0xF3 : ((s)->config_responses[0x05][2] ? (uint8_t)(0x70 | ((len) / 2)) : (uint8_t)(0x40 | ((len) / 2))))

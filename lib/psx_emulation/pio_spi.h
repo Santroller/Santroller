@@ -65,7 +65,6 @@ typedef struct pio_spi_t
     // Complete controller report supplied by the caller; formatted only when
     // the next SPI transaction is prepared.
     volatile uint8_t raw_report[32];
-    volatile uint8_t raw_report_len;
     volatile uint8_t response_buf[32];
     volatile uint8_t response_len;
     volatile uint8_t last_response_buf[32];
@@ -107,6 +106,10 @@ extern "C"
 {
 #endif
 
+    __force_inline static bool is_analog(pio_spi_t *spi)
+    {
+        return spi->protocol.config_responses[0x05][2];
+    }
     // Initialize a PIO SPI object. Asserts if already allocated.
     // The engine is stopped upon initialization, and must be started.
     pio_spi_t *pio_spi_init(const pio_spi_config_t *config);

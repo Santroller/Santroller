@@ -70,7 +70,6 @@ void PSXEmulation::sendData(uint8_t len, uint8_t *data)
 
     memcpy((void *)spi->raw_report, (const void *)spi->protocol.resp_42,
            sizeof(spi->protocol.resp_42));
-    spi->raw_report_len = len;
     sent = false;
 }
 
@@ -118,63 +117,7 @@ static void dump_timing_trace(pio_spi_t *spi)
 uint8_t last_lastcmd = 0;
 PsxReportFormat_t PSXEmulation::getReportFormat()
 {
-    #if PSX_SPI_DEBUG_LOGGING
-    if (!spi->timing_dumped && (spi->timing_prepare_idx || spi->timing_send_idx))
-    {
-        dump_timing_trace(spi);
-        dump_config_index_trace(spi);
-        spi->timing_dumped = true;
-    }
-    #endif
-
-    while (spi->transaction_idx_read != spi->transaction_idx_write)
-    {
-        uint8_t idx = spi->transaction_idx_read;
-        uint8_t cmd = spi->transaction_test[idx][1];
-
-        // 0x42 is polled continuously. Only print the first 0x42 in a
-        // consecutive run; the next non-0x42 command will be printed normally.
-        static uint8_t last_logged_cmd = 0xFF;
-        if (cmd != 0x42 || last_logged_cmd != 0x42)
-        {
-            printf("SPI transaction: t=%lu us (+%lu us) TX ",
-                   (unsigned long)spi->transaction_test_us[idx],
-                   (unsigned long)(idx == 0 ? 0 :
-                       spi->transaction_test_us[idx] - spi->transaction_test_us[(idx - 1) & 0x07]));
-            for (int i = 0; i < 8; i++)
-                printf("%02X ", spi->transaction_test[idx][i]);
-            printf(" RX ");
-            for (int i = 0; i < spi->transaction_test_rx_len[idx]; i++)
-                printf("%02X ", spi->transaction_test_rx[idx][i]);
-            printf(" | state(after cmd): config=%d analog=%d len=%u mask=%02X %02X %02X\r\n",
-                   spi->transaction_test_config[idx],
-                   spi->transaction_test_analog[idx],
-                   spi->transaction_test_len[idx],
-                   spi->transaction_test_mask[idx][0],
-                   spi->transaction_test_mask[idx][1],
-                   spi->transaction_test_mask[idx][2]);
-            if (spi->transaction_test_config_duration_us[idx])
-                printf(" | config_duration=%lu us",
-                       (unsigned long)spi->transaction_test_config_duration_us[idx]);
-            printf("\r\n");
-            last_logged_cmd = cmd;
-        }
-
-        spi->transaction_idx_read = (spi->transaction_idx_read + 1) & 0x07;
-    }
-
-    #if PSX_SPI_DEBUG_LOGGING
-    // Selector captures happen asynchronously from the transaction trace, so
-    // dump them after draining the transaction ring rather than at the first
-    // getReportFormat() call.
-    if (spi->config_index_trace_idx)
-    {
-        dump_config_index_trace(spi);
-        spi->config_index_trace_idx = 0;
-    }
-    #endif
-
-    return {spi->protocol.config_responses[0x05][2] == 0x01, {spi->protocol.report_mask[0], spi->protocol.report_mask[1], spi->protocol.report_mask[2]}};
+    return {is_analog(spi), {spi->protocol.report_mask[0], spi->protocol.report_mask[1], spi->protocol.report_mask[2]}};
 }
 bool PSXEmulation::ready()
 {

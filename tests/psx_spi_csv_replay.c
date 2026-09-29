@@ -163,12 +163,10 @@ static void print_state_change(const char *name,
                name, id, before->configMode, after->configMode);
 
     if (before->config_responses[0x05][2] != after->config_responses[0x05][2] ||
-        memcmp(before->report_mask, after->report_mask, 3) != 0 ||
-        before->report_len != after->report_len) {
-        printf("  %s @%u: %02X -> analog=%u len=%u mask=%02X %02X %02X\n",
+        memcmp(before->report_mask, after->report_mask, 3) != 0) {
+        printf("  %s @%u: %02X -> analog=%u mask=%02X %02X %02X\n",
                name, id, cmd,
                after->config_responses[0x05][2] == 1,
-               after->report_len,
                after->report_mask[0],
                after->report_mask[1],
                after->report_mask[2]);
@@ -199,7 +197,7 @@ static int replay_controller(const char *name,
     unsigned failures = 0;
     unsigned skipped = 0;
 
-    uint8_t queued_header = PSX_SPI_RESPONSE_HEADER(&s);
+    uint8_t queued_header = PSX_SPI_RESPONSE_HEADER(&s, psx_spi_current_report_len(&s));
     uint8_t queued_config[0x10][6];
     memset(queued_config, 0, sizeof(queued_config));
     for (int r = 0; r < 0x10; ++r)
@@ -293,7 +291,7 @@ static int replay_controller(const char *name,
 
         print_state_change(name, stream[i].capture_id, tx[1], &before, &s);
 
-        queued_header = PSX_SPI_RESPONSE_HEADER(&s);
+        queued_header = PSX_SPI_RESPONSE_HEADER(&s, psx_spi_current_report_len(&s));
         for (int r = 0; r < 0x10; ++r)
             memcpy(queued_config[r], s.config_responses[r], 6);
 

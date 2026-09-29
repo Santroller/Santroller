@@ -38,13 +38,13 @@ pio_spi_t pio_spi[2];
 
 #define PSX_SPI_WATCHDOG_TIMEOUT_MS 1000
 
-static void __time_critical_func(psx_spi_watchdog_touch)(pio_spi_t *spi)
+static void inline __attribute__((always_inline)) psx_spi_watchdog_touch(pio_spi_t *spi)
 {
     spi->watchdog_last_activity_ms = to_ms_since_boot(get_absolute_time());
     spi->watchdog_active = true;
 }
 
-static void psx_spi_watchdog_reset(pio_spi_t *spi)
+static void inline __attribute__((always_inline)) psx_spi_watchdog_reset(pio_spi_t *spi)
 {
     // A DualShock that stops hearing the host falls back to Digital Mode.
     spi->protocol.configMode = false;
@@ -53,7 +53,6 @@ static void psx_spi_watchdog_reset(pio_spi_t *spi)
     spi->protocol.report_mask[0] = 0x03;
     spi->protocol.report_mask[1] = 0;
     spi->protocol.report_mask[2] = 0;
-    spi->protocol.report_len = 2;
     spi->protocol.rumble_small = 0;
     spi->protocol.rumble_large = 0;
     spi->protocol.locked = false;
@@ -68,6 +67,57 @@ void pio_spi_watchdog_tick(pio_spi_t *spi)
     uint32_t now = to_ms_since_boot(get_absolute_time());
     if ((uint32_t)(now - spi->watchdog_last_activity_ms) >= PSX_SPI_WATCHDOG_TIMEOUT_MS)
         psx_spi_watchdog_reset(spi);
+
+#if PSX_SPI_DEBUG_LOGGING
+    if (!spi->timing_dumped && (spi->timing_prepare_idx || spi->timing_send_idx))
+    {
+        dump_timing_trace(spi);
+        dump_config_index_trace(spi);
+        spi->timing_dumped = true;
+    }
+    while (spi->transaction_idx_read != spi->transaction_idx_write)
+    {
+        uint8_t idx = spi->transaction_idx_read;
+        uint8_t cmd = spi->transaction_test[idx][1];
+
+        // 0x42 is polled continuously. Only print the first 0x42 in a
+        // consecutive run; the next non-0x42 command will be printed normally.
+        static uint8_t last_logged_cmd = 0xFF;
+        if (cmd != 0x42 || last_logged_cmd != 0x42)
+        {
+            printf("SPI transaction: t=%lu us (+%lu us) TX ",
+                   (unsigned long)spi->transaction_test_us[idx],
+                   (unsigned long)(idx == 0 ? 0 : spi->transaction_test_us[idx] - spi->transaction_test_us[(idx - 1) & 0x07]));
+            for (int i = 0; i < 8; i++)
+                printf("%02X ", spi->transaction_test[idx][i]);
+            printf(" RX ");
+            for (int i = 0; i < spi->transaction_test_rx_len[idx]; i++)
+                printf("%02X ", spi->transaction_test_rx[idx][i]);
+            printf(" | state(after cmd): config=%d analog=%d len=%u mask=%02X %02X %02X\r\n",
+                   spi->transaction_test_config[idx],
+                   spi->transaction_test_analog[idx],
+                   spi->transaction_test_len[idx],
+                   spi->transaction_test_mask[idx][0],
+                   spi->transaction_test_mask[idx][1],
+                   spi->transaction_test_mask[idx][2]);
+            if (spi->transaction_test_config_duration_us[idx])
+                printf(" | config_duration=%lu us",
+                       (unsigned long)spi->transaction_test_config_duration_us[idx]);
+            printf("\r\n");
+            last_logged_cmd = cmd;
+        }
+
+        spi->transaction_idx_read = (spi->transaction_idx_read + 1) & 0x07;
+    }
+    // Selector captures happen asynchronously from the transaction trace, so
+    // dump them after draining the transaction ring rather than at the first
+    // getReportFormat() call.
+    if (spi->config_index_trace_idx)
+    {
+        dump_config_index_trace(spi);
+        spi->config_index_trace_idx = 0;
+    }
+#endif
 }
 
 static void setup_cs_sm(PIO pio, uint sm, int cipo_pin, int cs_pin, uint *offset)
@@ -202,44 +252,77 @@ typedef struct pio_spi_read_info_t
     uint num_bits_transacted;
 } pio_spi_read_info_t;
 
-static void format_next_response(pio_spi_t *spi)
+static inline __attribute__((always_inline)) void format_next_response(pio_spi_t *spi)
 {
-    uint8_t payload_len = psx_spi_current_report_len(&spi->protocol);
-
-    spi->protocol.report_len = payload_len;
-    spi->response_buf[0] = PSX_SPI_RESPONSE_HEADER(&spi->protocol);
-    spi->response_buf[1] = 0x5A;
+    uint8_t response_len = 2;
 
     if (spi->protocol.configMode)
     {
-        // Configuration transactions always clock a six-byte response.
-        // The protocol payload is only the F3/5A header; remaining bytes
-        // are the controller's 0x5A filler.
-        memset((void *)&spi->response_buf[2], 0x5A, 4);
-        spi->response_len = 6;
+        response_len += 4;
     }
     else
     {
-        if (!spi->protocol.config_responses[0x05][2])
+        if (!is_analog(spi))
         {
             memcpy((void *)&spi->response_buf[2],
                    (const void *)spi->raw_report,
-                   payload_len);
+                   2);
+            response_len += 2;
         }
         else
         {
-            uint8_t current = 0;
-            for (uint8_t i = 0; i < 18; ++i)
-            {
-                if (spi->protocol.report_mask[i / 8] & (1u << (i % 8)))
-                    spi->response_buf[2 + current++] = spi->raw_report[i];
-            }
+            uint8_t mask = spi->protocol.report_mask[0];
+
+            if (mask & 0x01)
+                spi->response_buf[response_len++] = spi->raw_report[0];
+            if (mask & 0x02)
+                spi->response_buf[response_len++] = spi->raw_report[1];
+            if (mask & 0x04)
+                spi->response_buf[response_len++] = spi->raw_report[2];
+            if (mask & 0x08)
+                spi->response_buf[response_len++] = spi->raw_report[3];
+            if (mask & 0x10)
+                spi->response_buf[response_len++] = spi->raw_report[4];
+            if (mask & 0x20)
+                spi->response_buf[response_len++] = spi->raw_report[5];
+            if (mask & 0x40)
+                spi->response_buf[response_len++] = spi->raw_report[6];
+            if (mask & 0x80)
+                spi->response_buf[response_len++] = spi->raw_report[7];
+
+            mask = spi->protocol.report_mask[1];
+
+            if (mask & 0x01)
+                spi->response_buf[response_len++] = spi->raw_report[8];
+            if (mask & 0x02)
+                spi->response_buf[response_len++] = spi->raw_report[9];
+            if (mask & 0x04)
+                spi->response_buf[response_len++] = spi->raw_report[10];
+            if (mask & 0x08)
+                spi->response_buf[response_len++] = spi->raw_report[11];
+            if (mask & 0x10)
+                spi->response_buf[response_len++] = spi->raw_report[12];
+            if (mask & 0x20)
+                spi->response_buf[response_len++] = spi->raw_report[13];
+            if (mask & 0x40)
+                spi->response_buf[response_len++] = spi->raw_report[14];
+            if (mask & 0x80)
+                spi->response_buf[response_len++] = spi->raw_report[15];
+
+            mask = spi->protocol.report_mask[2];
+
+            if (mask & 0x01)
+                spi->response_buf[response_len++] = spi->raw_report[16];
+            if (mask & 0x02)
+                spi->response_buf[response_len++] = spi->raw_report[17];
         }
-        spi->response_len = payload_len + 2;
     }
+    spi->response_buf[0] = PSX_SPI_RESPONSE_HEADER(&spi->protocol, response_len - 2);
+    spi->response_buf[1] = 0x5A;
+    spi->response_len = response_len;
 }
 
-static void __time_critical_func(stop_loops)(pio_spi_t *spi)
+static void inline __attribute__((always_inline)) stop_loops(pio_spi_t *spi)
 {
     pio_set_sm_mask_enabled(spi->pio, spi->startstop_mask, false); // Stop state machines
 
@@ -252,11 +335,8 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
     // push the initial 0xFF and header
     pio_sm_put(spi->pio, spi->config.combined_sm, 0xFF);
 
-    // Format the next response only after the just-completed command has
-    // updated the protocol state. The resulting header, length, and payload
-    // form one coherent transaction descriptor.
     format_next_response(spi);
-
+#if PSX_SPI_DEBUG_LOGGING
     // Capture the exact protocol state used to arm this transaction. Do not
     // printf() here: this path is timing-critical and the trace must not alter it.
     uint8_t tp = spi->timing_prepare_idx;
@@ -270,10 +350,11 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
         spi->timing_prepare_us[tp] = time_us_32();
         spi->timing_prepare_len[tp] = spi->response_len - 2;
         spi->timing_prepare_config[tp] = spi->protocol.configMode;
-        spi->timing_prepare_analog[tp] = spi->protocol.config_responses[0x05][2];
+        spi->timing_prepare_analog[tp] = is_analog(spi);
         spi->timing_prepare_header[tp] = spi->response_buf[0];
         spi->timing_prepare_idx = tn;
     }
+#endif
     // we always send the same data when not in config mode, so theres no need to read the command!
     irq_set_enabled(PIO_IRQ_NUM(spi->pio, 1), spi->protocol.configMode);
     // The response buffer is the canonical descriptor for the transaction
@@ -296,7 +377,7 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
     pio_sm_exec(spi->pio, spi->config.initial_sm, irq_wait);
 }
 
-static void __time_critical_func(prepare_for_next)(pio_spi_t *spi)
+static void inline __attribute__((always_inline)) prepare_for_next(pio_spi_t *spi)
 {
     // Read FIFO count of write buffer
     stop_loops(spi);
@@ -307,18 +388,16 @@ static void __time_critical_func(prepare_for_next)(pio_spi_t *spi)
     pio_enable_sm_mask_in_sync(spi->pio, spi->startstop_mask);
 }
 
-static void __time_critical_func(pio_irq)(pio_spi_t *spi)
+static void inline __attribute__((always_inline)) pio_irq(pio_spi_t *spi)
 {
     io_rw_32 irqs = spi->pio->irq;
     if (irqs & (1u << 1))
     {
         psx_spi_watchdog_touch(spi);
         pio_spi_provide_read_buffer(spi, spi->dma_buf, dma_encode_transfer_count(32));
-        // In config mode the remaining response bytes are selected by the
-        // command (and 0x46/0x4C also by a selector byte later in the
-        // transaction), so don't arm the write DMA yet. The initial-data
-        // IRQ will stage the command's response at the right point.
-        if (!spi->protocol.configMode && spi->response_len >= 2)
+        // In config mode we need to know the command, so we don't arm the write DMA yet.
+        // otherwise we know it and can immediately arm the write DMA.
+        if (!spi->protocol.configMode)
         {
             pio_spi_provide_write_buffer(spi, &spi->response_buf[2],
                                          dma_encode_transfer_count(spi->response_len - 2));
@@ -327,6 +406,7 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
     }
     if (irqs & (1u << 2))
     {
+#if PSX_SPI_DEBUG_LOGGING
         if (spi->dma_buf[1] == 0x43 || spi->protocol.configMode)
         {
             spi->protocol.has_new_cmd = true;
@@ -348,7 +428,6 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
         // Snapshot the completed command immediately; dma_buf is reused for the next DMA transfer.
         memcpy((void *)spi->transaction_buf, (const void *)spi->dma_buf, sizeof(spi->transaction_buf));
 
-#if PSX_SPI_DEBUG_LOGGING
         // Diagnostic trace ring. Keep this entirely out of the normal IRQ path
         // when logging is disabled.
         uint8_t tw = spi->transaction_idx_write;
@@ -366,7 +445,6 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
             spi->transaction_idx_write = tn;
             trace_stored = true;
         }
-#endif
 
         // Save the response that was actually queued for this transaction before
         // processing the command, since command processing changes the state for the next one.
@@ -374,6 +452,7 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
         spi->last_response_len = spi->response_len;
         spi->has_new_transaction = true;
 
+#endif
         PSX_SPI_PROCESS_COMMAND(&spi->protocol, spi->dma_buf);
 
 #if PSX_SPI_DEBUG_LOGGING
@@ -407,7 +486,7 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
             }
 
             spi->transaction_test_config[tw] = spi->protocol.configMode;
-            spi->transaction_test_analog[tw] = spi->protocol.config_responses[0x05][2];
+            spi->transaction_test_analog[tw] = is_analog(spi);
             spi->transaction_test_len[tw] = psx_spi_current_report_len(&spi->protocol);
             spi->transaction_test_mask[tw][0] = spi->protocol.report_mask[0];
             spi->transaction_test_mask[tw][1] = spi->protocol.report_mask[1];
@@ -448,10 +527,10 @@ static void __time_critical_func(pio_data_irq_0)(void)
         memcpy(spi->dma_buf_test2[spi->write_idx_write] + 1,
                spi->protocol.config_responses[reg - 0x40], 6);
         spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
-#endif
         memcpy((void *)&spi->response_buf[2],
                (const void *)spi->protocol.config_responses[reg - 0x40], 6);
         spi->response_len = 8;
+#endif
         pio_spi_provide_write_buffer(
             spi, spi->protocol.config_responses[reg - 0x40],
             dma_encode_transfer_count(6));
@@ -477,10 +556,10 @@ static void __time_critical_func(pio_data_irq_1)(void)
         memcpy(spi->dma_buf_test2[spi->write_idx_write] + 1,
                spi->protocol.config_responses[reg - 0x40], 6);
         spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
-#endif
         memcpy((void *)&spi->response_buf[2],
                (const void *)spi->protocol.config_responses[reg - 0x40], 6);
         spi->response_len = 8;
+#endif
         pio_spi_provide_write_buffer(
             spi, spi->protocol.config_responses[reg - 0x40],
             dma_encode_transfer_count(6));

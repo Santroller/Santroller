@@ -360,8 +360,9 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
         // Snapshot the completed command immediately; dma_buf is reused for the next DMA transfer.
         memcpy((void *)spi->transaction_buf, (const void *)spi->dma_buf, sizeof(spi->transaction_buf));
 
-        // Dedicated trace ring: capture every SPI command, including normal 0x42
-        // reads which are intentionally omitted from the legacy command ring.
+#if PSX_SPI_DEBUG_LOGGING
+        // Diagnostic trace ring. Keep this entirely out of the normal IRQ path
+        // when logging is disabled.
         uint8_t tw = spi->transaction_idx_write;
         uint8_t tn = (uint8_t)((tw + 1) & 0x07);
         bool trace_stored = false;
@@ -377,6 +378,7 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
             spi->transaction_idx_write = tn;
             trace_stored = true;
         }
+#endif
 
         // Save the response that was actually queued for this transaction before
         // processing the command, since command processing changes the state for the next one.
@@ -386,6 +388,7 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
 
         PSX_SPI_PROCESS_COMMAND(&spi->protocol, spi->dma_buf);
 
+#if PSX_SPI_DEBUG_LOGGING
         // Snapshot the state produced by this command into the same trace slot.
         // Do not read live protocol state when dumping: several later transactions
         // may have completed by the time getReportFormat() runs.
@@ -422,6 +425,8 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
             spi->transaction_test_mask[tw][1] = spi->protocol.report_mask[1];
             spi->transaction_test_mask[tw][2] = spi->protocol.report_mask[2];
         }
+
+#endif
 
         prepare_for_next(spi);
         pio_interrupt_clear(spi->pio, 1);

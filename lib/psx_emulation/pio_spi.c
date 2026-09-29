@@ -470,8 +470,8 @@ static void __time_critical_func(pio_data_irq_0)(void)
     }
     else
     {
-        pio0->rxf[cfg->initial_sm];
-        reg = pio0->rxf[cfg->initial_sm] >> 24;
+        uint32_t header_word = pio0->rxf[cfg->initial_sm];
+        reg = header_word >> 24;
         if (spi->protocol.configMode)
         {
             if (reg == 0x46 || reg == 0x4C)

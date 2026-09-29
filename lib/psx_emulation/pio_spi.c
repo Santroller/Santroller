@@ -433,6 +433,16 @@ static void __time_critical_func(pio_data_irq_0)(void)
         uint8_t index = index_word >> 24;
         spi->config_index_word = index_word;
         spi->config_index_value = index;
+        uint8_t ti = spi->config_index_trace_idx;
+        spi->config_index_trace_word[ti] = index_word;
+        spi->config_index_trace_value[ti] = index;
+        spi->config_index_trace_reg[ti] = reg;
+        spi->config_index_trace_idx = (uint8_t)((ti + 1) & 0x0F);
+        uint8_t ti = spi->config_index_trace_idx;
+        spi->config_index_trace_word[ti] = index_word;
+        spi->config_index_trace_value[ti] = index;
+        spi->config_index_trace_reg[ti] = reg;
+        spi->config_index_trace_idx = (uint8_t)((ti + 1) & 0x0F);
         reg = spi->dma_config_buf[0];
         spi->config_index_pending = false;
 

@@ -281,11 +281,9 @@ static void __time_critical_func(stop_loops)(pio_spi_t *spi)
 
     pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_set(pio_y, 7));
     pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm, pio_encode_jmp(spi->offset_combined));
-    // Read four command bytes on the initial SM. With right-shifting input,
-    // byte 2 remains at bits 23:16 and byte 4 lands at bits 31:24, so the
-    // config IRQ gets both the command (0x46/0x4C) and its two-byte-offset
-    // selector without requiring the CPU to inspect dma_buf.
-    pio_sm_exec_wait_blocking(spi->pio, spi->config.initial_sm, pio_encode_set(pio_y, (8 * 4) - 1));
+    // Keep the original three-byte initial capture. For 0x46/0x4C we can
+    // re-arm this SM after the first IRQ to consume the selector byte.
+    pio_sm_exec_wait_blocking(spi->pio, spi->config.initial_sm, pio_encode_set(pio_y, (8 * 3) - 1));
     pio_sm_exec_wait_blocking(spi->pio, spi->config.initial_sm, pio_encode_jmp(spi->offset_combined));
     // 3 bytes for the header, -1, and then we don't ack the last byte, leaving only the packet size + 1
     pio_sm_exec_wait_blocking(spi->pio, spi->config.combined_sm,
@@ -423,31 +421,49 @@ static void __time_critical_func(pio_irq_1)(void)
     pio_irq(&pio_spi[1]);
 }
 
+static void __time_critical_func(rearm_config_index)(pio_spi_t *spi)
+{
+    // The initial SM has already consumed b[0..2]. One additional byte is
+    // therefore enough to capture b[3], which is the selector for 0x46/0x4C.
+    pio_sm_exec_wait_blocking(spi->pio, spi->config.initial_sm,
+        pio_encode_set(pio_y, 7));
+    pio_sm_exec_wait_blocking(spi->pio, spi->config.initial_sm,
+        pio_encode_jmp(spi->offset_combined));
+}
+
 static void __time_critical_func(pio_data_irq_0)(void)
 {
     pio_spi_t *spi = &pio_spi[0];
     pio_spi_config_t *cfg = &spi->config;
     uint32_t command_word = pio0->rxf[cfg->initial_sm];
-    uint8_t reg = (command_word >> 16) & 0xFF;
-    uint8_t index = (command_word >> 24) & 0xFF;
+    uint8_t reg = (command_word >> 24) & 0xFF;
+
     if (spi->protocol.configMode)
     {
-        spi->has_new_write = true;
-        spi->write_id++;
+        // The existing three-byte capture gives us the register byte exactly
+        // as before. For 46/4C, arm one more byte and let the second data IRQ
+        // handle the selector.
+        if (reg == 0x46 || reg == 0x4C)
+        {
+            spi->dma_config_buf[0] = reg;
+            rearm_config_index(spi);
+        }
+        else
+        {
+            spi->has_new_write = true;
+            spi->write_id++;
+            spi->dma_buf_test2[spi->write_idx_write][0] = reg;
+            memcpy(spi->dma_buf_test2[spi->write_idx_write]+1,
+                   spi->protocol.config_responses[reg - 0x40], 6);
+            spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
 
-        const uint8_t *response = spi->protocol.config_responses[reg - 0x40];
-        if (reg == 0x46 && index < 2)
-            response = init_resp_46[index];
-        else if (reg == 0x4C && index < 2)
-            response = init_resp_4c[index];
-
-        spi->dma_buf_test2[spi->write_idx_write][0] = reg;
-        memcpy(spi->dma_buf_test2[spi->write_idx_write]+1, response, 6);
-        spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
-
-        memcpy((void *)&spi->response_buf[2], response, 6);
-        spi->response_len = 8;
-        pio_spi_provide_write_buffer(spi, response, dma_encode_transfer_count(6));
+            memcpy((void *)&spi->response_buf[2],
+                   (const void *)spi->protocol.config_responses[reg - 0x40], 6);
+            spi->response_len = 8;
+            pio_spi_provide_write_buffer(
+                spi, spi->protocol.config_responses[reg - 0x40],
+                dma_encode_transfer_count(6));
+        }
     }
     hw_set_bits(&pio0->irq, (1u << 0));
 }
@@ -457,26 +473,31 @@ static void __time_critical_func(pio_data_irq_1)(void)
     pio_spi_t *spi = &pio_spi[1];
     pio_spi_config_t *cfg = &spi->config;
     uint32_t command_word = pio1->rxf[cfg->initial_sm];
-    uint8_t reg = (command_word >> 16) & 0xFF;
-    uint8_t index = (command_word >> 24) & 0xFF;
+    uint8_t reg = (command_word >> 24) & 0xFF;
+
     if (spi->protocol.configMode)
     {
-        spi->has_new_write = true;
-        spi->write_id++;
+        if (reg == 0x46 || reg == 0x4C)
+        {
+            spi->dma_config_buf[0] = reg;
+            rearm_config_index(spi);
+        }
+        else
+        {
+            spi->has_new_write = true;
+            spi->write_id++;
+            spi->dma_buf_test2[spi->write_idx_write][0] = reg;
+            memcpy(spi->dma_buf_test2[spi->write_idx_write]+1,
+                   spi->protocol.config_responses[reg - 0x40], 6);
+            spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
 
-        const uint8_t *response = spi->protocol.config_responses[reg - 0x40];
-        if (reg == 0x46 && index < 2)
-            response = init_resp_46[index];
-        else if (reg == 0x4C && index < 2)
-            response = init_resp_4c[index];
-
-        spi->dma_buf_test2[spi->write_idx_write][0] = reg;
-        memcpy(spi->dma_buf_test2[spi->write_idx_write]+1, response, 6);
-        spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
-
-        memcpy((void *)&spi->response_buf[2], response, 6);
-        spi->response_len = 8;
-        pio_spi_provide_write_buffer(spi, response, dma_encode_transfer_count(6));
+            memcpy((void *)&spi->response_buf[2],
+                   (const void *)spi->protocol.config_responses[reg - 0x40], 6);
+            spi->response_len = 8;
+            pio_spi_provide_write_buffer(
+                spi, spi->protocol.config_responses[reg - 0x40],
+                dma_encode_transfer_count(6));
+        }
     }
     hw_set_bits(&pio1->irq, (1u << 0));
 }

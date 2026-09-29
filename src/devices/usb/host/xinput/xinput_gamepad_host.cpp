@@ -145,10 +145,7 @@ bool XInputGamepadHost::set_config()
             }
         }
     }
-    uint16_t vid = 0;
-    uint16_t pid = 0;
-    tuh_vid_pid_get(m_dev_addr, &vid, &pid);
-    if (vid == XBOX_REDOCTANE_VID && pid == XBOX_360_WT_KIOSK_PID)
+    if (m_vid == XBOX_REDOCTANE_VID && m_pid == XBOX_360_WT_KIOSK_PID)
     {
         m_wt = true;
     }

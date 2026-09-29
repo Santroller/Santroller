@@ -388,6 +388,8 @@ void process_product_string(tuh_xfer_t *xfer)
 bool UsbHostInterface::set_config()
 {
     still_connected = true;
+
+    tuh_vid_pid_get(m_dev_addr, &m_vid, &m_pid);
     // TODO: get lang id and use it
     // also, deal with devices that dont have product names
     if (m_has_name)

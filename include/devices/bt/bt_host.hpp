@@ -94,7 +94,7 @@ public:
     bool using_pin(uint8_t pin) { return false; }
     bool is_usb_type(SubType type) { return false; }
     bool is_bluetooth_type(SubType type) { return type == m_subtype; }
-    bool is_bluetooth_device(proto_SpecificBluetoothDevice type) { return false; }
+    bool is_bluetooth_device(proto_SpecificBluetoothDevice type) { return m_vid == type.vid && m_pid == type.pid; }
     bool is_usb_device(proto_SpecificUsbDevice type) { return false; }
     bool is_wii_extension(WiiExtType type) { return false; }
     bool is_ps2_device(PS2ControllerType type) { return false; }

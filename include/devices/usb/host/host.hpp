@@ -40,7 +40,7 @@ public:
     }
     bool is_usb_device(proto_SpecificUsbDevice type)
     {
-        return false;
+        return m_vid == type.vid && m_pid == type.pid;
     }
     bool is_usb_type(SubType type)
     {
@@ -81,6 +81,8 @@ protected:
     bool m_sent_type = false;
     bool m_has_name = false;
     bool m_delayed_init = false;
+    uint16_t m_vid = 0;
+    uint16_t m_pid = 0;
     CFG_TUSB_MEM_ALIGN char m_name[128] = {0};
     uint32_t send_ctrl_xfer(tusb_control_request_t setup, void *buffer, bool *status);
     bool send_intr_xfer(uint8_t endpoint, const void *buffer, uint8_t len);

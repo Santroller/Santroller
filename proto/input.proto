@@ -24,8 +24,7 @@ message MatrixInput {
 }
 message SwitchNetworkInput {
   required int32 deviceid = 1;
-  required int32 pin = 2;
-  required int32 otherPin = 3;
+  required int32 button = 2;
 }
 message ADS1115Input {
   required int32 deviceid = 1;
@@ -89,7 +88,7 @@ message MouseButtonInput {
   required int32 deviceid = 1;
   required MouseButtonType button = 2;
 }
- 
+
 message KeyboardKeyInput {
   required int32 deviceid = 1;
   required int32 key = 2;
@@ -134,25 +133,25 @@ message BTAxisInput {
   required Output axis = 2;
 }
 
-message MidiNoteInput { 
-  required int32 note = 2; 
-  required int32 channel = 3; 
-}
-
-message MidiControlChangeInput { 
-  required int32 cc = 2; 
+message MidiNoteInput {
+  required int32 note = 2;
   required int32 channel = 3;
 }
 
-message MidiPitchBendInput { 
-  required int32 channel = 2;
-}
-message MidiProGuitarButtonInput { 
-  required ProGuitarMidiButtonType button = 2; 
+message MidiControlChangeInput {
+  required int32 cc = 2;
+  required int32 channel = 3;
 }
 
-message MidiProGuitarAxisInput { 
-  required ProGuitarAxisType axis = 2; 
+message MidiPitchBendInput {
+  required int32 channel = 2;
+}
+message MidiProGuitarButtonInput {
+  required ProGuitarMidiButtonType button = 2;
+}
+
+message MidiProGuitarAxisInput {
+  required ProGuitarAxisType axis = 2;
 }
 message ProtarNeckAxisInput {
   required int32 deviceid = 1;
@@ -259,7 +258,7 @@ message Mapping {
   required Output mapping = 1;
   required Input input = 50;
   optional bool inverted = 51;
-  optional Input pressureInput = 52; // if there is no pressureInput, then set the pressures to max when the button is pressed
+  optional Input pressureInput = 52;
   optional AnalogToDigitalTriggerType trigger = 53;
   optional int32 pressed = 54;
   optional int32 released = 55;

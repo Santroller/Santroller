@@ -92,6 +92,10 @@ typedef struct pio_spi_t
     volatile bool config_index_pending;
     volatile uint32_t config_index_word;
     volatile uint8_t config_index_value;
+    volatile uint32_t config_index_trace_word[16];
+    volatile uint8_t config_index_trace_value[16];
+    volatile uint8_t config_index_trace_reg[16];
+    volatile uint8_t config_index_trace_idx;
     SubType type;
     bool watchdog_active;
     uint32_t watchdog_last_activity_ms;

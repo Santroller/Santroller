@@ -453,20 +453,7 @@ static void __time_critical_func(pio_data_irq_0)(void)
         spi->config_index_trace_idx = (uint8_t)((ti + 1) & 0x0F);
         spi->config_index_pending = false;
 
-        if (index < 2 && (reg == 0x46 || reg == 0x4C))
-        {
-            const uint8_t *response =
-                (reg == 0x46) ? init_resp_46[index] : init_resp_4c[index];
-            spi->has_new_write = true;
-            spi->write_id++;
-            spi->dma_buf_test2[spi->write_idx_write][0] = reg;
-            spi->dma_buf_test2[spi->write_idx_write][1] = index;
-            memcpy(spi->dma_buf_test2[spi->write_idx_write] + 2, response, 6);
-            spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
-            memcpy((void *)&spi->response_buf[2], response, 6);
-            spi->response_len = 8;
-            pio_spi_provide_write_buffer(spi, response, dma_encode_transfer_count(6));
-        }
+
     }
     else
     {
@@ -516,20 +503,7 @@ static void __time_critical_func(pio_data_irq_1)(void)
         reg = spi->dma_config_buf[0];
         spi->config_index_pending = false;
 
-        if (index < 2 && (reg == 0x46 || reg == 0x4C))
-        {
-            const uint8_t *response =
-                (reg == 0x46) ? init_resp_46[index] : init_resp_4c[index];
-            spi->has_new_write = true;
-            spi->write_id++;
-            spi->dma_buf_test2[spi->write_idx_write][0] = reg;
-            spi->dma_buf_test2[spi->write_idx_write][1] = index;
-            memcpy(spi->dma_buf_test2[spi->write_idx_write] + 2, response, 6);
-            spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
-            memcpy((void *)&spi->response_buf[2], response, 6);
-            spi->response_len = 8;
-            pio_spi_provide_write_buffer(spi, response, dma_encode_transfer_count(6));
-        }
+
     }
     else
     {

@@ -471,10 +471,8 @@ static void __time_critical_func(pio_data_irq_0)(void)
             spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
             memcpy((void *)&spi->response_buf[2], response, 6);
             spi->response_len = 8;
-            // Two selector-independent bytes are already in the combined
-            // SM TX FIFO. DMA supplies only the selector-dependent suffix.
             pio_spi_provide_write_buffer(
-                spi, response + 2, dma_encode_transfer_count(4));
+                spi, response, dma_encode_transfer_count(6));
         }
     }
 
@@ -535,20 +533,6 @@ static void __time_critical_func(pio_data_irq_1)(void)
         {
             if (reg == 0x46 || reg == 0x4C)
             {
-                const uint8_t *response =
-                    spi->protocol.config_responses[reg - 0x40];
-
-                // The first two payload bytes are selector-independent.
-                // Queue them directly while the initial SM is being
-                // re-armed; the selector IRQ will supply the remaining
-                // four bytes through the write DMA.
-                spi->response_buf[2] = response[0];
-                spi->response_buf[3] = response[1];
-                pio_sm_put(spi->pio, spi->config.combined_sm,
-                           spi->response_buf[2]);
-                pio_sm_put(spi->pio, spi->config.combined_sm,
-                           spi->response_buf[3]);
-
                 spi->dma_config_buf[0] = reg;
                 spi->config_index_pending = true;
                 rearm_initial_selector_capture(spi);

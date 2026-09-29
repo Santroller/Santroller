@@ -26,6 +26,5 @@ jmp wait_falling
 .side_set 1 pindirs
 wait 0 pin 0 side 0 ; wait for falling edge of cs pin
 irq set 7 side 1
-irq set 1 side 1 ; trigger falling edge irq
 wait 1 pin 0 side 1 ; wait for rising edge of cs pin
 irq set 2 side 0; trigger rising edge irq

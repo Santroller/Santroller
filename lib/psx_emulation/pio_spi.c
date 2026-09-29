@@ -324,7 +324,10 @@ static void __time_critical_func(pio_irq)(pio_spi_t *spi)
     {
         psx_spi_watchdog_touch(spi);
         pio_spi_provide_read_buffer(spi, spi->dma_buf, dma_encode_transfer_count(32));
-        // When not in config mode, the response is always the same so we don't need to wait to know the command
+        // In config mode the remaining response bytes are selected by the
+        // command (and 0x46/0x4C also by a selector byte later in the
+        // transaction), so don't arm the write DMA yet. The initial-data
+        // IRQ will stage the command's response at the right point.
         if (!spi->protocol.configMode && spi->response_len >= 2)
         {
             pio_spi_provide_write_buffer(spi, &spi->response_buf[2],
@@ -468,8 +471,10 @@ static void __time_critical_func(pio_data_irq_0)(void)
             spi->write_idx_write = (spi->write_idx_write + 1) & 0x07;
             memcpy((void *)&spi->response_buf[2], response, 6);
             spi->response_len = 8;
+            // Two selector-independent bytes are already in the combined
+            // SM TX FIFO. DMA supplies only the selector-dependent suffix.
             pio_spi_provide_write_buffer(
-                spi, response, dma_encode_transfer_count(6));
+                spi, response + 2, dma_encode_transfer_count(4));
         }
     }
 
@@ -530,6 +535,20 @@ static void __time_critical_func(pio_data_irq_1)(void)
         {
             if (reg == 0x46 || reg == 0x4C)
             {
+                const uint8_t *response =
+                    spi->protocol.config_responses[reg - 0x40];
+
+                // The first two payload bytes are selector-independent.
+                // Queue them directly while the initial SM is being
+                // re-armed; the selector IRQ will supply the remaining
+                // four bytes through the write DMA.
+                spi->response_buf[2] = response[0];
+                spi->response_buf[3] = response[1];
+                pio_sm_put(spi->pio, spi->config.combined_sm,
+                           spi->response_buf[2]);
+                pio_sm_put(spi->pio, spi->config.combined_sm,
+                           spi->response_buf[3]);
+
                 spi->dma_config_buf[0] = reg;
                 spi->config_index_pending = true;
                 rearm_initial_selector_capture(spi);

@@ -186,7 +186,9 @@ inline static int safe_fifo_rx_wait_for_finish(pio_hw_t *pio, uint sm, uint chan
         if (wooble > 1000)
         {
             // This happens if too many bytes are written to buffer
+            #if PSX_SPI_DEBUG_LOGGING
             printf("DMA Overrun\n");
+            #endif
             return 1;
         }
     }

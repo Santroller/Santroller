@@ -237,6 +237,18 @@ static void format_next_response(pio_spi_t *spi)
     }
 }
 
+static void __time_critical_func(rearm_initial_selector_capture)(pio_spi_t *spi)
+{
+    // Re-arm the initial SM as a genuinely fresh one-byte capture. SET Y
+    // alone does not reset the input shift state or program counter.
+    pio_sm_clear_fifos(spi->pio, spi->config.initial_sm);
+    pio_sm_restart(spi->pio, spi->config.initial_sm);
+    pio_sm_exec_wait_blocking(
+        spi->pio, spi->config.initial_sm, pio_encode_set(pio_y, 7));
+    pio_sm_exec_wait_blocking(
+        spi->pio, spi->config.initial_sm, pio_encode_jmp(spi->offset_combined));
+}
+
 static void __time_critical_func(stop_loops)(pio_spi_t *spi)
 {
     pio_set_sm_mask_enabled(spi->pio, spi->startstop_mask, false); // Stop state machines
@@ -467,11 +479,7 @@ static void __time_critical_func(pio_data_irq_0)(void)
                 spi->dma_config_buf[0] = reg;
                 spi->config_index_pending = true;
 
-                // The initial SM is already parked at instruction 12
-                // after raising IRQ 0. Change Y in place; do not jump back
-                // through the complete combined SPI loop.
-                pio_sm_exec(spi->pio, spi->config.initial_sm,
-                            pio_encode_set(pio_y, 7));
+                rearm_initial_selector_capture(spi);
             }
             else
             {
@@ -533,8 +541,7 @@ static void __time_critical_func(pio_data_irq_1)(void)
             {
                 spi->dma_config_buf[0] = reg;
                 spi->config_index_pending = true;
-                pio_sm_exec(spi->pio, spi->config.initial_sm,
-                            pio_encode_set(pio_y, 7));
+                rearm_initial_selector_capture(spi);
             }
             else
             {

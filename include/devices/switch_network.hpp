@@ -14,7 +14,7 @@ public:
     void update(bool full_poll, bool send_events);
 
     bool using_pin(uint8_t pin);
-    bool read_switch(uint8_t pin, uint8_t other_pin);
+    bool read_switch(uint8_t pin, uint8_t other_pin);\n    bool read_button(uint8_t button);
 
 private:
     proto_SwitchNetworkDevice m_device;

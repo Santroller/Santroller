@@ -148,6 +148,9 @@ message MatrixDevice {
   required uint32 outPins = 1;
   required uint32 inPins = 2;
 }
+message SwitchNetworkDevice {
+  required uint32 pins = 1;
+}
 
 message CycleDevice {
   required CycleType type = 1;
@@ -195,6 +198,7 @@ message Device {
     VTechGuitarIOExpanderDevice vtechExpander = 31;
     MatrixDevice matrix = 32;
     CrkdDrumDevice crkdDrum = 33;
+    SwitchNetworkDevice switchNetwork = 37;
     CycleDevice cycle = 34;
     ToggleDevice toggle = 35;
     DMXDevice dmx = 36;

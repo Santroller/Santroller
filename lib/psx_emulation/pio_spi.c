@@ -241,7 +241,6 @@ static void __time_critical_func(rearm_initial_selector_capture)(pio_spi_t *spi)
 {
     // Re-arm the initial SM as a genuinely fresh one-byte capture. SET Y
     // alone does not reset the input shift state or program counter.
-    pio_interrupt_clear(spi->pio, 0);
     pio_sm_clear_fifos(spi->pio, spi->config.initial_sm);
     pio_sm_restart(spi->pio, spi->config.initial_sm);
     pio_sm_exec_wait_blocking(
@@ -503,7 +502,7 @@ static void __time_critical_func(pio_data_irq_0)(void)
             }
         }
     }
-    pio_interrupt_clear(pio0, 0);
+    hw_set_bits(&pio0->irq, (1u << 0));
 }
 
 static void __time_critical_func(pio_data_irq_1)(void)
@@ -552,7 +551,7 @@ static void __time_critical_func(pio_data_irq_1)(void)
             }
         }
     }
-    pio_interrupt_clear(pio1, 0);
+    hw_set_bits(&pio1->irq, (1u << 0));
 }
 
 pio_spi_t *pio_spi_init(const pio_spi_config_t *config)

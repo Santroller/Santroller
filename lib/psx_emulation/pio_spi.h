@@ -89,6 +89,7 @@ typedef struct pio_spi_t
     uint8_t write_idx_write;
     uint8_t dma_buf_test2[8][8];
     uint8_t dma_config_buf[6];
+    volatile bool config_index_pending;
     SubType type;
     bool watchdog_active;
     uint32_t watchdog_last_activity_ms;

@@ -207,9 +207,16 @@ static void format_next_response(pio_spi_t *spi)
     spi->protocol.report_len = payload_len;
     spi->response_buf[0] = PSX_SPI_RESPONSE_HEADER(&spi->protocol);
     spi->response_buf[1] = 0x5A;
-    spi->response_len = 2;
 
-    if (!spi->protocol.configMode)
+    if (spi->protocol.configMode)
+    {
+        // Configuration transactions always clock a six-byte response.
+        // The protocol payload is only the F3/5A header; remaining bytes
+        // are the controller's 0x5A filler.
+        memset((void *)&spi->response_buf[2], 0x5A, 4);
+        spi->response_len = 6;
+    }
+    else
     {
         if (!spi->protocol.config_responses[0x05][2])
         {

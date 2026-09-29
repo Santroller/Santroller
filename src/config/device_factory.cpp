@@ -27,6 +27,7 @@
 #include "devices/bluetooth.hpp"
 #include "devices/vtechexpander.hpp"
 #include "devices/matrix.hpp"
+#include "devices/switch_network.hpp"
 #include "devices/cycle.hpp"
 #include "devices/toggle.hpp"
 #include "devices/dmx.hpp"
@@ -313,6 +314,10 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         
     case proto_Device_matrix_tag:
         device = std::make_shared<MatrixDevice>(proto_device.device.matrix, device_id);
+        break;
+        
+    case proto_Device_switchNetwork_tag:
+        device = std::make_shared<SwitchNetworkDevice>(proto_device.device.switchNetwork, device_id);
         break;
         
     case proto_Device_cycle_tag:

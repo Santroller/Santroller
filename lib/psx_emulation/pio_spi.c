@@ -433,7 +433,7 @@ static void __time_critical_func(pio_irq_1)(void)
 
 static void __time_critical_func(pio_data_irq_0)(void)
 {
-    pio_spi_t *spi = &pio_spi[1];
+    pio_spi_t *spi = &pio_spi[0];
     pio_spi_config_t *cfg = &spi->config;
     uint8_t reg;
 
@@ -454,13 +454,6 @@ static void __time_critical_func(pio_data_irq_0)(void)
         reg = pio0->rxf[cfg->initial_sm] >> 24;
         if (spi->protocol.configMode)
         {
-            if (reg == 0x46 || reg == 0x4C)
-            {
-                spi->dma_config_buf[0] = reg;
-                spi->config_index_pending = true;
-            }
-            else
-            {
                 spi->has_new_write = true;
                 spi->write_id++;
                 spi->dma_buf_test2[spi->write_idx_write][0] = reg;
@@ -473,7 +466,6 @@ static void __time_critical_func(pio_data_irq_0)(void)
                 pio_spi_provide_write_buffer(
                     spi, spi->protocol.config_responses[reg - 0x40],
                     dma_encode_transfer_count(6));
-            }
         }
     }
     hw_set_bits(&pio0->irq, (1u << 0));

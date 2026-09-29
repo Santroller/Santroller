@@ -22,6 +22,11 @@ message MatrixInput {
   required int32 pin = 2;
   required int32 outputPin = 3;
 }
+message SwitchNetworkInput {
+  required int32 deviceid = 1;
+  required int32 pin = 2;
+  required int32 otherPin = 3;
+}
 message ADS1115Input {
   required int32 deviceid = 1;
   required int32 channel = 2;
@@ -201,6 +206,7 @@ message Input {
     HeldInput held = 29;
     MatrixInput matrix = 30;
     CrkdDrumAxisInput crkdDrum = 31;
+    SwitchNetworkInput switchNetwork = 37;
     CycleInput cycle = 32;
     ToggleInput toggle = 33;
     BTButtonInput btButton = 34;

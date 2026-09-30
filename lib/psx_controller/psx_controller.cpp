@@ -114,11 +114,12 @@ void attentionInterrupt(uint gpio, uint32_t events)
 
 static void dma_complete_handler()
 {
-    if (controller)
-    {
-        controller->pio_dma_complete();
-    }
+    // Clear the IRQ before touching the controller. This is important when a
+    // transfer was aborted: the DMA channel can still have a pending IRQ,
+    // which must not be mistaken for completion of the next transaction.
     dma_hw->ints1 = 1u << 0;
+    if (controller)
+        controller->pio_dma_complete();
 }
 
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
@@ -326,6 +327,7 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
 
     dma_channel_abort(dma_rx);
     dma_channel_abort(dma_tx);
+    dma_hw->ints1 = 1u << dma_rx;
     dma_channel_set_irq1_enabled(dma_rx, true);
     dma_channel_set_write_addr(dma_rx, ps2Data, false);
     dma_channel_set_trans_count(dma_rx, target_len, false);

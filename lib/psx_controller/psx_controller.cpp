@@ -461,8 +461,15 @@ void PSXController::process_data(bool ack, bool timeout)
 
         if (timeout)
         {
-            printf("[PS2] PIO TIMEOUT state=%d header=%d started=%d\r\n",
-                   status, pio_header, pio_started);
+            printf("[PS2] PIO TIMEOUT state=%d header=%d started=%d pc=%u txlvl=%u rxlvl=%u SCK=%d MOSI=%d DATA=%d ACK=%d rxleft=%u txleft=%u\r\n",
+                   status, pio_header, pio_started,
+                   pio_sm_get_pc(pio, sm),
+                   pio_sm_get_tx_fifo_level(pio, sm),
+                   pio_sm_get_rx_fifo_level(pio, sm),
+                   gpio_get(m_sckPin), gpio_get(m_mosiPin),
+                   gpio_get(m_misoPin), gpio_get(m_ackPin),
+                   dma_channel_get_trans_count(dma_rx),
+                   dma_channel_get_trans_count(dma_tx));
             dma_channel_abort(dma_rx);
             dma_channel_abort(dma_tx);
             dma_hw->ints1 = 1u << dma_rx;

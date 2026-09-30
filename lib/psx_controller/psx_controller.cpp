@@ -468,8 +468,8 @@ void PSXController::process_data(bool ack, bool timeout)
                    pio_sm_get_rx_fifo_level(pio, sm),
                    gpio_get(m_sckPin), gpio_get(m_mosiPin),
                    gpio_get(m_misoPin), gpio_get(m_ackPin),
-                   dma_channel_get_trans_count(dma_rx),
-                   dma_channel_get_trans_count(dma_tx));
+                   dma_hw->ch[dma_rx].transfer_count,
+                   dma_hw->ch[dma_tx].transfer_count);
             dma_channel_abort(dma_rx);
             dma_channel_abort(dma_tx);
             dma_hw->ints1 = 1u << dma_rx;

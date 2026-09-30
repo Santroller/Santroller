@@ -150,9 +150,7 @@ static void setup_read_initial_sm(PIO pio, uint sm, int copi_pin, int ack_pin, u
 static void setup_combined_sm(PIO pio, uint sm, int cipo_pin, int copi_pin, int sck_pin, int ack_pin, uint *offset)
 {
     *offset = fixPio(pio, spi_combined_loop_program, sck_pin);
-    printf("[PS2] PIO combined pio=%u sm=%u length=%u wrap_target=%u wrap=%u offset=%u\r\n",
-           pio_get_index(pio),
-           sm,
+    printf("PSX PIO combined: length=%u wrap_target=%u wrap=%u offset=%u\\r\\n",
            spi_combined_loop_program.length,
            spi_combined_loop_wrap_target,
            spi_combined_loop_wrap,

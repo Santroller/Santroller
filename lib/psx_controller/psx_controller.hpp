@@ -86,6 +86,7 @@ private:
     void signal_attention();
     uint8_t m_attPin;
     uint8_t m_ackPin;
+    int8_t m_misoPin;
     uint8_t m_rumble_small = 0;
     uint8_t m_rumble_large = 0;
     uint8_t m_poll_cmd[5] = {0x01, 0x42, 0x00, 0x00, 0x00};

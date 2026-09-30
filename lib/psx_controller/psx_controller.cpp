@@ -107,10 +107,7 @@ static void dma_complete_handler()
 {
     if (controller)
     {
-        if (controller->pio_header)
-            controller->pio_header_complete();
-        else
-            controller->pio_dma_complete();
+        controller->pio_dma_complete();
     }
     dma_hw->ints1 = 1u << 0;
 }
@@ -391,7 +388,7 @@ void PSXController::pio_header_complete()
     dma_channel_set_irq1_enabled(dma_rx, true);
 
     pio_header = false;
-    dma_channel_start_channel_mask((1u << dma_rx) | (1u << dma_tx));
+    dma_start_channel_mask((1u << dma_rx) | (1u << dma_tx));
     pio_sm_set_enabled(pio, sm, true);
 }
 
@@ -399,6 +396,12 @@ void PSXController::pio_dma_complete()
 {
     if (!pio_active)
         return;
+
+    if (pio_header)
+    {
+        pio_header_complete();
+        return;
+    }
 
     cancel_alarm(timeout_alarm_id);
     dma_channel_set_irq1_enabled(dma_rx, false);
@@ -583,33 +586,9 @@ void PSXController::process_data(bool ack, bool timeout)
         return;
     }
 
-    uint8_t resp = interface.transfer(ps2DataOut != nullptr ? ps2DataOut[ps2Idx] : 0x5A);
-    ps2Data[ps2Idx++] = resp;
-
-    if (ps2Idx > ps2DataLen)
-        ps2DataOut = nullptr;
-
-    if (ps2Idx == 4)
-    {
-        if (isValidReply(ps2Data))
-        {
-            ps2Len = 3 + (ps2Data[1] & 0x0F) * 2;
-        }
-        else
-        {
-            valid = false;
-            no_attention();
-            return;
-        }
-    }
-
-    if (ps2Idx < ps2Len)
-    {
-        timeout_alarm_id = add_alarm_in_us(INTER_CMD_BYTE_DELAY, restart_handler, this, true);
-        return;
-    }
-
-    valid = true;
+    // All transactions now run through PIO/DMA. If we reach this point,
+    // something has completed without the PIO-active state being set.
+    valid = false;
     no_attention();
 }
 uint16_t PSXController::read_axis(PS2AxisType axisType)

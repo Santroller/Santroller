@@ -150,25 +150,37 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
         gpio_set_pulls(miso, true, false);
     }
 
-    // Initialize PIO ACK Pacer
+    // Initialize PIO ACK Pacer (try pio0 first, fallback to pio1)
     pio = pio0;
-    if (pio_can_add_program(pio, &psx_ack_pacer_program))
+    if (pio_can_add_program(pio, &psx_ack_pacer_program) && (sm = pio_claim_unused_sm(pio, false)) != (uint)-1)
     {
         pio_offset = pio_add_program(pio, &psx_ack_pacer_program);
-        sm = pio_claim_unused_sm(pio, false);
-        if (sm != (uint)-1)
+    }
+    else
+    {
+        pio = pio1;
+        if (pio_can_add_program(pio, &psx_ack_pacer_program) && (sm = pio_claim_unused_sm(pio, false)) != (uint)-1)
         {
-            pio_sm_config c = psx_ack_pacer_program_get_default_config(pio_offset);
-            sm_config_set_jmp_pin(&c, ackPin);
-            sm_config_set_in_pins(&c, ackPin);
-
-            float clkdiv = (float)clock_get_hz(clk_sys) / 1771428.0f;
-            sm_config_set_clkdiv(&c, clkdiv);
-
-            pio_sm_init(pio, sm, pio_offset, &c);
-            pio_initialized = true;
-            printf("[PS2] PIO ACK pacer initialized sm=%u offset=%u\r\n", sm, pio_offset);
+            pio_offset = pio_add_program(pio, &psx_ack_pacer_program);
         }
+        else
+        {
+            pio = nullptr;
+        }
+    }
+
+    if (pio != nullptr)
+    {
+        pio_sm_config c = psx_ack_pacer_program_get_default_config(pio_offset);
+        sm_config_set_jmp_pin(&c, ackPin);
+        sm_config_set_in_pins(&c, ackPin);
+
+        float clkdiv = (float)clock_get_hz(clk_sys) / 1771428.0f;
+        sm_config_set_clkdiv(&c, clkdiv);
+
+        pio_sm_init(pio, sm, pio_offset, &c);
+        pio_initialized = true;
+        printf("[PS2] PIO ACK pacer initialized pio=%u sm=%u offset=%u\r\n", pio_get_index(pio), sm, pio_offset);
     }
 
     dma_rx = dma_claim_unused_channel(true);

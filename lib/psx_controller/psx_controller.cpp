@@ -230,6 +230,7 @@ void PSXController::end() {
     {
         dma_channel_abort(dma_rx);
         dma_channel_abort(dma_tx);
+        dma_hw->ints1 = 1u << dma_rx;
         pio_sm_set_enabled(pio, sm, false);
         pio_sm_clear_fifos(pio, sm);
         pio_active = false;
@@ -464,6 +465,7 @@ void PSXController::process_data(bool ack, bool timeout)
                    status, pio_header, pio_started);
             dma_channel_abort(dma_rx);
             dma_channel_abort(dma_tx);
+            dma_hw->ints1 = 1u << dma_rx;
             pio_sm_set_enabled(pio, sm, false);
             pio_sm_clear_fifos(pio, sm);
             pio_active = false;

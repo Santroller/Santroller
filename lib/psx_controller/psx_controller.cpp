@@ -446,7 +446,7 @@ void PSXController::process_data(bool ack, bool timeout)
 
         if (timeout && !pio_started)
         {
-            printf("[PS2] PIO start state=%d header=%d DATA=%d ACK=%d\r\n", status, pio_header, gpio_get(miso), gpio_get(m_ackPin));
+            printf("[PS2] PIO start state=%d header=%d DATA=%d ACK=%d\r\n", status, pio_header, gpio_get(m_misoPin), gpio_get(m_ackPin));
             // ATT has been low for the normal setup interval. Start both DMA
             // directions and then release the transaction entirely to PIO.
             dma_start_channel_mask((1u << dma_rx) | (1u << dma_tx));

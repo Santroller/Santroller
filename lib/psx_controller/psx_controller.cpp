@@ -189,59 +189,72 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
         PS2_PRINT("[PS2] PIO ACK pacer initialized pio=%u sm=%u offset=%u\r\n", pio_get_index(pio), sm, pio_offset);
     }
 
-    dma_rx = dma_claim_unused_channel(true);
-    dma_tx = dma_claim_unused_channel(true);
+    dma_rx = dma_claim_unused_channel(false);
+    dma_tx = dma_claim_unused_channel(false);
 
-    dma_channel_config rx_cfg = dma_channel_get_default_config(dma_rx);
-    channel_config_set_transfer_data_size(&rx_cfg, DMA_SIZE_8);
-    channel_config_set_dreq(&rx_cfg, spi_get_dreq(spi, false));
-    channel_config_set_read_increment(&rx_cfg, false);
-    channel_config_set_write_increment(&rx_cfg, true);
-    dma_channel_configure(
-        dma_rx, &rx_cfg, ps2Data,
-        &spi_get_hw(spi)->dr, BUFFER_SIZE, false);
-
-    if (pio_initialized)
+    if (dma_rx >= 0 && dma_tx >= 0)
     {
-        dma_tx_pacer = dma_claim_unused_channel(true);
-
-        dma_channel_config pacer_cfg = dma_channel_get_default_config(dma_tx_pacer);
-        channel_config_set_transfer_data_size(&pacer_cfg, DMA_SIZE_32);
-        channel_config_set_dreq(&pacer_cfg, pio_get_dreq(pio, sm, false));
-        channel_config_set_read_increment(&pacer_cfg, false);
-        channel_config_set_write_increment(&pacer_cfg, false);
+        dma_channel_config rx_cfg = dma_channel_get_default_config(dma_rx);
+        channel_config_set_transfer_data_size(&rx_cfg, DMA_SIZE_8);
+        channel_config_set_dreq(&rx_cfg, spi_get_dreq(spi, false));
+        channel_config_set_read_increment(&rx_cfg, false);
+        channel_config_set_write_increment(&rx_cfg, true);
         dma_channel_configure(
-            dma_tx_pacer, &pacer_cfg,
-            &dma_hw->ch[dma_tx].al1_transfer_count_trig,
-            &pio->rxf[sm], BUFFER_SIZE, false);
+            dma_rx, &rx_cfg, ps2Data,
+            &spi_get_hw(spi)->dr, BUFFER_SIZE, false);
 
-        dma_channel_config tx_cfg = dma_channel_get_default_config(dma_tx);
-        channel_config_set_transfer_data_size(&tx_cfg, DMA_SIZE_8);
-        channel_config_set_dreq(&tx_cfg, DREQ_FORCE);
-        channel_config_set_read_increment(&tx_cfg, true);
-        channel_config_set_write_increment(&tx_cfg, false);
-        dma_channel_configure(
-            dma_tx, &tx_cfg, &spi_get_hw(spi)->dr, ps2DataOutBuffer, 1, false);
+        if (pio_initialized)
+        {
+            dma_tx_pacer = dma_claim_unused_channel(false);
+            if (dma_tx_pacer >= 0)
+            {
+                dma_channel_config pacer_cfg = dma_channel_get_default_config(dma_tx_pacer);
+                channel_config_set_transfer_data_size(&pacer_cfg, DMA_SIZE_32);
+                channel_config_set_dreq(&pacer_cfg, pio_get_dreq(pio, sm, false));
+                channel_config_set_read_increment(&pacer_cfg, false);
+                channel_config_set_write_increment(&pacer_cfg, false);
+                dma_channel_configure(
+                    dma_tx_pacer, &pacer_cfg,
+                    &dma_hw->ch[dma_tx].al1_transfer_count_trig,
+                    &pio->rxf[sm], BUFFER_SIZE, false);
+
+                dma_channel_config tx_cfg = dma_channel_get_default_config(dma_tx);
+                channel_config_set_transfer_data_size(&tx_cfg, DMA_SIZE_8);
+                channel_config_set_dreq(&tx_cfg, DREQ_FORCE);
+                channel_config_set_read_increment(&tx_cfg, true);
+                channel_config_set_write_increment(&tx_cfg, false);
+                dma_channel_configure(
+                    dma_tx, &tx_cfg, &spi_get_hw(spi)->dr, ps2DataOutBuffer, 1, false);
+            }
+            else
+            {
+                pio_initialized = false;
+            }
+        }
+
+        if (!pio_initialized)
+        {
+            dma_timer = dma_claim_unused_timer(false);
+            if (dma_timer >= 0)
+            {
+                uint16_t denom = (uint16_t)(clock_get_hz(clk_sys) / 28571);
+                dma_timer_set_fraction(dma_timer, 1, denom);
+                uint timer_dreq = dma_get_timer_dreq(dma_timer);
+
+                dma_channel_config tx_cfg = dma_channel_get_default_config(dma_tx);
+                channel_config_set_transfer_data_size(&tx_cfg, DMA_SIZE_8);
+                channel_config_set_dreq(&tx_cfg, timer_dreq);
+                channel_config_set_read_increment(&tx_cfg, true);
+                channel_config_set_write_increment(&tx_cfg, false);
+                dma_channel_configure(
+                    dma_tx, &tx_cfg, &spi_get_hw(spi)->dr, ps2DataOutBuffer, BUFFER_SIZE, false);
+            }
+        }
+
+        dma_channel_set_irq1_enabled(dma_rx, true);
+        irq_set_exclusive_handler(DMA_IRQ_1, dma_complete_handler);
+        irq_set_enabled(DMA_IRQ_1, true);
     }
-    else
-    {
-        dma_timer = dma_claim_unused_timer(true);
-        uint16_t denom = (uint16_t)(clock_get_hz(clk_sys) / 28571);
-        dma_timer_set_fraction(dma_timer, 1, denom);
-        uint timer_dreq = dma_get_timer_dreq(dma_timer);
-
-        dma_channel_config tx_cfg = dma_channel_get_default_config(dma_tx);
-        channel_config_set_transfer_data_size(&tx_cfg, DMA_SIZE_8);
-        channel_config_set_dreq(&tx_cfg, timer_dreq);
-        channel_config_set_read_increment(&tx_cfg, true);
-        channel_config_set_write_increment(&tx_cfg, false);
-        dma_channel_configure(
-            dma_tx, &tx_cfg, &spi_get_hw(spi)->dr, ps2DataOutBuffer, BUFFER_SIZE, false);
-    }
-
-    dma_channel_set_irq1_enabled(dma_rx, true);
-    irq_set_exclusive_handler(DMA_IRQ_1, dma_complete_handler);
-    irq_set_enabled(DMA_IRQ_1, true);
 }
 void PSXController::begin()
 {
@@ -315,6 +328,39 @@ void PSXController::save_state(DeviceReloadState &state) const
 PSXController::~PSXController()
 {
     PS2_PRINT("~PSXController\r\n");
+    end();
+
+    if (dma_rx >= 0)
+    {
+        dma_channel_set_irq1_enabled(dma_rx, false);
+        dma_channel_unclaim(dma_rx);
+        dma_rx = -1;
+    }
+    if (dma_tx >= 0)
+    {
+        dma_channel_unclaim(dma_tx);
+        dma_tx = -1;
+    }
+    if (dma_tx_pacer >= 0)
+    {
+        dma_channel_unclaim(dma_tx_pacer);
+        dma_tx_pacer = -1;
+    }
+    if (dma_timer >= 0)
+    {
+        dma_timer_unclaim(dma_timer);
+        dma_timer = -1;
+    }
+    if (pio_initialized && pio != nullptr)
+    {
+        pio_sm_set_enabled(pio, sm, false);
+        pio_sm_unclaim(pio, sm);
+        pio_remove_program(pio, &psx_ack_pacer_program, pio_offset);
+        pio_initialized = false;
+        pio = nullptr;
+    }
+    if (controller == this)
+        controller = nullptr;
 }
 void PSXController::no_attention(void)
 {

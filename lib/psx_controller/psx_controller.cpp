@@ -425,7 +425,7 @@ void PSXController::process_data(bool ack, bool timeout)
         {
             // ATT has been low for the normal setup interval. Start both DMA
             // directions and then release the transaction entirely to PIO.
-            dma_channel_start_channel_mask((1u << dma_rx) | (1u << dma_tx));
+            dma_start_channel_mask((1u << dma_rx) | (1u << dma_tx));
             pio_started = true;
             timeout_alarm_id = add_alarm_in_us(packet_delay, restart_handler, this, true);
             pio_sm_set_enabled(pio, sm, true);

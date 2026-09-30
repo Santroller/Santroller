@@ -25,5 +25,5 @@ bitloop:
     jmp x-- byte
 
 done:
-    irq 0
+    jmp done
 .wrap

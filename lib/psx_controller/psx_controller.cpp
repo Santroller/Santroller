@@ -15,45 +15,45 @@ static inline bool isValidReply(const uint8_t *status)
 
 static inline bool isFlightStickReply(const uint8_t *status)
 {
-    return (status[1] & 0xF0) == 0x50;
+    return isValidReply(status) && (status[1] & 0xF0) == 0x50;
 }
 
 static inline bool isNegconReply(const uint8_t *status)
 {
-    return status[1] == 0x23;
+    return isValidReply(status) && status[1] == 0x23;
 }
 static inline bool isJogconReply(const uint8_t *status)
 {
-    return (status[1] & 0xF0) == 0xE0;
+    return isValidReply(status) && (status[1] & 0xF0) == 0xE0;
 }
 
 static inline bool isGunconReply(const uint8_t *status)
 {
-    return status[1] == 0x63;
+    return isValidReply(status) && status[1] == 0x63;
 }
 static inline bool isMouseReply(const uint8_t *status)
 {
-    return status[1] == 0x12;
+    return isValidReply(status) && status[1] == 0x12;
 }
 
 static inline bool isDualShockReply(const uint8_t *status)
 {
-    return (status[1] & 0xF0) == 0x70;
+    return isValidReply(status) && (status[1] & 0xF0) == 0x70;
 }
 
 static inline bool isDualShock2Reply(const uint8_t *status)
 {
-    return status[1] == 0x79;
+    return isValidReply(status) && status[1] == 0x79;
 }
 
 static inline bool isDigitalReply(const uint8_t *status)
 {
-    return (status[1] & 0xF0) == 0x40;
+    return isValidReply(status) && (status[1] & 0xF0) == 0x40;
 }
 
 static inline bool isConfigReply(const uint8_t *status)
 {
-    return (status[1] & 0xF0) == 0xF0;
+    return isValidReply(status) && (status[1] & 0xF0) == 0xF0;
 }
 static const uint8_t commandEnterConfig[] = {0x01, 0x43, 0x00, 0x01, 0x5A,
                                              0x5A, 0x5A, 0x5A, 0x5A};
@@ -187,6 +187,17 @@ void PSXController::begin()
     gpio_set_irq_enabled_with_callback(m_ackPin, GPIO_IRQ_EDGE_RISE, true, &attentionInterrupt);
     auto_shift_data(commandPollInput, sizeof(commandPollInput));
 }
+static inline void abort_dma_if_active(int channel)
+{
+    if (channel < 0) return;
+    if (dma_channel_is_busy(channel))
+    {
+        dma_channel_abort(channel);
+        while (dma_hw->abort & (1u << channel))
+            tight_loop_contents();
+    }
+}
+
 void PSXController::end()
 {
     gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
@@ -194,8 +205,8 @@ void PSXController::end()
 
     if (spi_active)
     {
-        dma_channel_abort(dma_rx);
-        dma_channel_abort(dma_tx);
+        abort_dma_if_active(dma_rx);
+        abort_dma_if_active(dma_tx);
         dma_hw->ints1 = 1u << dma_rx;
         spi_active = false;
     }
@@ -262,6 +273,9 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
     ps2DataLen = len;
     ps2DataOut = out;
 
+    if (status == ENUMERATED && (ps2Len < 5 || ps2Len > BUFFER_SIZE))
+        ps2Len = 5;
+
     uint8_t target_len = (status == ENUMERATED) ? ps2Len : 4;
     if (target_len < 4 || target_len > BUFFER_SIZE)
         target_len = 4;
@@ -291,14 +305,16 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
     while (spi_is_readable(spi))
         (void)spi_get_hw(spi)->dr;
 
-    dma_channel_abort(dma_rx);
-    dma_channel_abort(dma_tx);
+    abort_dma_if_active(dma_rx);
+    abort_dma_if_active(dma_tx);
     dma_hw->ints1 = 1u << dma_rx;
     dma_channel_set_irq1_enabled(dma_rx, true);
     dma_channel_set_write_addr(dma_rx, ps2Data, false);
     dma_channel_set_trans_count(dma_rx, target_len, false);
     dma_channel_set_read_addr(dma_tx, ps2DataOutBuffer, false);
     dma_channel_set_trans_count(dma_tx, target_len, false);
+    spi_dma_offset = 0;
+    spi_dma_len = target_len;
     spi_started = false;
 
     timeout_alarm_id = add_alarm_in_us(ATTN_DELAY, restart_handler, this, true);
@@ -327,16 +343,14 @@ void PSXController::spi_header_complete()
 
     ps2Len = response_len;
 
-    dma_channel_abort(dma_rx);
-    dma_channel_abort(dma_tx);
-    dma_hw->ints1 = 1u << dma_rx;
-
     dma_channel_set_write_addr(dma_rx, ps2Data + 4, false);
     dma_channel_set_trans_count(dma_rx, response_len - 4, false);
     dma_channel_set_read_addr(dma_tx, ps2DataOutBuffer + 4, false);
     dma_channel_set_trans_count(dma_tx, response_len - 4, false);
     dma_channel_set_irq1_enabled(dma_rx, true);
 
+    spi_dma_offset = 4;
+    spi_dma_len = response_len - 4;
     spi_header = false;
     dma_start_channel_mask((1u << dma_rx) | (1u << dma_tx));
 }
@@ -349,18 +363,16 @@ void PSXController::spi_dma_complete()
     if (!spi_active)
         return;
 
-    uint8_t target_len = spi_header ? 4 : ps2Len;
-    uint8_t offset = spi_header ? 0 : 4;
-    for (uint8_t i = offset; i < offset + target_len; ++i)
+    for (uint8_t i = spi_dma_offset; i < spi_dma_offset + spi_dma_len && i < BUFFER_SIZE; ++i)
         ps2Data[i] = revbits(ps2Data[i]);
-
-    trace_ps2_packet("complete", ps2Data, ps2Len);
 
     if (spi_header)
     {
         spi_header_complete();
         return;
     }
+
+    trace_ps2_packet("complete", ps2Data, ps2Len);
 
     cancel_alarm(timeout_alarm_id);
     dma_channel_set_irq1_enabled(dma_rx, false);
@@ -382,13 +394,18 @@ void PSXController::process_data(bool ack, bool timeout)
         if (timeout && !spi_started)
         {
             printf("[PS2] SPI start state=%d header=%d DATA=%d ACK=%d\r\n", status, spi_header, gpio_get(m_misoPin), gpio_get(m_ackPin));
+            if (status == ENUMERATED && (ps2Len < 5 || ps2Len > BUFFER_SIZE))
+                ps2Len = 5;
+
             uint8_t target_len = (status == ENUMERATED) ? ps2Len : 4;
             if (target_len < 4 || target_len > BUFFER_SIZE)
                 target_len = 4;
 
+            spi_dma_offset = 0;
+            spi_dma_len = target_len;
             dma_start_channel_mask((1u << dma_rx) | (1u << dma_tx));
             spi_started = true;
-            timeout_alarm_id = add_alarm_in_us(packet_delay, restart_handler, this, true);
+            timeout_alarm_id = add_alarm_in_us(packet_delay < 5000 ? 5000 : packet_delay, restart_handler, this, true);
             return;
         }
 
@@ -400,12 +417,13 @@ void PSXController::process_data(bool ack, bool timeout)
                    gpio_get(m_misoPin), gpio_get(m_ackPin),
                    dma_hw->ch[dma_rx].transfer_count,
                    dma_hw->ch[dma_tx].transfer_count);
-            dma_channel_abort(dma_rx);
-            dma_channel_abort(dma_tx);
+            abort_dma_if_active(dma_rx);
+            abort_dma_if_active(dma_tx);
             dma_hw->ints1 = 1u << dma_rx;
             spi_active = false;
             spi_started = false;
             valid = false;
+            done = true;
             no_attention();
         }
         return;
@@ -420,7 +438,8 @@ void PSXController::process_data(bool ack, bool timeout)
             if (valid)
             {
                 status = CONNECTION_DELAY;
-                timeout_alarm_id = add_alarm_in_ms(100, restart_handler, this, true);
+                packet_delay = 100000;
+                no_attention();
                 return;
             }
             break;
@@ -442,10 +461,15 @@ void PSXController::process_data(bool ack, bool timeout)
             return;
         case ENTER_CONFIG:
             if (valid)
-                status = FIRST_INPUTS;
+            {
+                status = ENABLE_ANALOG_MODE;
+                auto_shift_data(commandSetMode, sizeof(commandSetMode));
+            }
             else
+            {
                 status = SECOND_INPUTS;
-            auto_shift_data(commandPollInput, sizeof(commandPollInput));
+                auto_shift_data(commandPollInput, sizeof(commandPollInput));
+            }
             return;
         case ENABLE_ANALOG_MODE:
             status = ENABLE_RUMBLE;
@@ -542,12 +566,15 @@ void PSXController::process_data(bool ack, bool timeout)
                 ps2Len = response_len;
         }
 
-        auto_shift_data(m_poll_cmd, sizeof(m_poll_cmd));
+        no_attention();
         return;
     }
 
-    valid = false;
-    no_attention();
+    if (status == ENUMERATED)
+        auto_shift_data(m_poll_cmd, sizeof(m_poll_cmd));
+    else
+        auto_shift_data(commandPollInput, sizeof(commandPollInput));
+    return;
 }
 
 uint16_t PSXController::read_axis(PS2AxisType axisType)

@@ -108,6 +108,8 @@ private:
     bool spi_active = false;
     bool spi_started = false;
     bool spi_header = false;
+    uint8_t spi_dma_offset = 0;
+    uint8_t spi_dma_len = 0;
     uint8_t lastInputs[BUFFER_SIZE];
     const uint8_t* ps2DataOut;
     uint8_t ps2Idx;

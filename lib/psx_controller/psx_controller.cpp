@@ -127,7 +127,7 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     inst->process_data(false, true);
     return 0;
 }
-PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin) : m_attPin(attPin), m_ackPin(ackPin)
+PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin) : m_attPin(attPin), m_ackPin(ackPin), m_misoPin(miso)
 {
     printf("[PS2] init sck=%d mosi=%d miso=%d att=%u ack=%u clock=%u\r\n",
            sck, mosi, miso, attPin, ackPin, clock);
@@ -316,7 +316,7 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
     pio_active = true;
     pio_header = (status != ENUMERATED);
     printf("[PS2] PIO armed header=%d target=%u tx=%02X\r\n",
-           pio_header, target_len, out[1], gpio_get(miso), gpio_get(m_ackPin));
+           pio_header, target_len, out[1], gpio_get(m_misoPin), gpio_get(m_ackPin));
 
     pio_sm_set_enabled(pio, sm, false);
     pio_sm_clear_fifos(pio, sm);

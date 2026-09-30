@@ -259,6 +259,8 @@ PSXController::~PSXController() {
 void PSXController::no_attention(void)
 {
     done = true;
+    if (!pio_active)
+        gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, true);
     gpio_put(m_attPin, true);
     timeout_alarm_id = add_alarm_in_us(packet_delay, restart_handler, this, true);
 }
@@ -315,6 +317,7 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
     dma_channel_set_trans_count(dma_rx, ps2Len, false);
     dma_channel_set_read_addr(dma_tx, ps2DataOutBuffer, false);
     dma_channel_set_trans_count(dma_tx, ps2Len, false);
+    pio_started = false;
 
     // Give ATT the same setup time as the old implementation, then let the
     // state machine and DMA run without CPU intervention.
@@ -330,6 +333,7 @@ void PSXController::pio_dma_complete()
     dma_channel_set_irq1_enabled(dma_rx, false);
     pio_sm_set_enabled(pio, sm, false);
     pio_active = false;
+    pio_started = false;
     done = true;
     valid = isValidReply(ps2Data);
 
@@ -343,6 +347,17 @@ void PSXController::process_data(bool ack, bool timeout)
         if (ack)
             return;
 
+        if (timeout && !pio_started)
+        {
+            // ATT has been low for the normal setup interval. Start both DMA
+            // directions and then release the transaction entirely to PIO.
+            dma_channel_start_channel_mask((1u << dma_rx) | (1u << dma_tx));
+            pio_started = true;
+            timeout_alarm_id = add_alarm_in_us(packet_delay, restart_handler, this, true);
+            pio_sm_set_enabled(pio, sm, true);
+            return;
+        }
+
         if (timeout)
         {
             dma_channel_abort(dma_rx);
@@ -350,6 +365,7 @@ void PSXController::process_data(bool ack, bool timeout)
             pio_sm_set_enabled(pio, sm, false);
             pio_sm_clear_fifos(pio, sm);
             pio_active = false;
+            pio_started = false;
             valid = false;
             no_attention();
         }

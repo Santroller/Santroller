@@ -128,7 +128,7 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     inst->process_data(false, true);
     return 0;
 }
-PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin) : m_attPin(attPin), m_ackPin(ackPin), m_misoPin(miso)
+PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin) : m_attPin(attPin), m_ackPin(ackPin), m_sckPin(sck), m_mosiPin(mosi), m_misoPin(miso)
 {
     printf("[PS2] init sck=%d mosi=%d miso=%d att=%u ack=%u clock=%u\r\n",
            sck, mosi, miso, attPin, ackPin, clock);

@@ -77,6 +77,7 @@ public:
     bool read_button(PS2ButtonType type);
     bool controller_valid();
     void process_data(bool ack, bool timeout);
+    void pio_dma_complete();
 
 private:
     bool auto_shift_data(const uint8_t *out, const uint8_t len);
@@ -95,6 +96,13 @@ private:
     long lastInit = 0;
     uint8_t invalidCount = 0;
     uint8_t ps2Data[BUFFER_SIZE];
+    uint8_t ps2DataOutBuffer[BUFFER_SIZE];
+    PIO pio = pio0;
+    uint sm = 0;
+    uint offset = 0;
+    int dma_rx = -1;
+    int dma_tx = -1;
+    bool pio_active = false;
     uint8_t lastInputs[BUFFER_SIZE];
     const uint8_t* ps2DataOut;
     uint8_t ps2Idx;

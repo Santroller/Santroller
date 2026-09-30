@@ -28,6 +28,23 @@ static bool is_drum_subtype(SubType subtype)
 {
     return subtype == GuitarHeroDrums || subtype == RockBandDrums || subtype == PowerGigDrum;
 }
+static bool is_guitar_subtype(SubType subtype)
+{
+    return subtype == GuitarHeroGuitar || subtype == RockBandGuitar || subtype == PowerGigGuitar;
+}
+
+static GipLegacyWirelessDeviceType get_legacy_wireless_device_type(SubType subtype)
+{
+    if (is_drum_subtype(subtype))
+    {
+        return GipLegacyWirelessDeviceType::Drums;
+    }
+    if (is_guitar_subtype(subtype))
+    {
+        return GipLegacyWirelessDeviceType::Guitar;
+    }
+    return GipLegacyWirelessDeviceType::Gamepad;
+}
 
 const uint8_t announce_legacy_adapter[] = {
     0x7e, 0xed, 0x81, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x38, 0x07, 0x64, 0x41,
@@ -186,7 +203,8 @@ const uint8_t xb1_descriptor_gamepad[] = {
     0x00, 0x01, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x17, 0x00, 0x09, 0x3C, 0x00, 0x01, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-XboxOneGamepadDevice::~XboxOneGamepadDevice() {
+XboxOneGamepadDevice::~XboxOneGamepadDevice()
+{
     auth_broker.unregister_response_handler(ModeXboxOne);
 }
 XboxOneGamepadDevice::XboxOneGamepadDevice()
@@ -198,9 +216,8 @@ XboxOneGamepadDevice::XboxOneGamepadDevice()
 
     xbone_led_mode = 0;
     auth_handler_connected = auth_broker.has_handler(ModeXboxOne);
-    auth_broker.register_response_handler(ModeXboxOne, [this](XGIPProtocol *report) {
-        send_report_from_controller(report);
-    });
+    auth_broker.register_response_handler(ModeXboxOne, [this](XGIPProtocol *report)
+                                          { send_report_from_controller(report); });
 }
 
 uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16_t max_len)
@@ -278,6 +295,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             {
                 xboxOneDescriptor = xb1_descriptor_legacy_adapter;
                 len = sizeof(xb1_descriptor_legacy_adapter);
+                printf("Using legacy adapter descriptor\n");
             }
             else
             {
@@ -425,7 +443,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         {
             for (size_t i = 0; i < profiles.size() && i < MAX_LEGACY_PLAYERS; i++)
             {
-                auto dev_type = is_drum_subtype(profiles[i]->subtype) ? GipLegacyWirelessDeviceType::Drums : GipLegacyWirelessDeviceType::Guitar;
+                GipLegacyWirelessDeviceType dev_type = get_legacy_wireless_device_type(profiles[i]->subtype);
                 legacy_connected[i] = true;
                 legacy_device_types[i] = dev_type;
                 send_legacy_device_info(i, dev_type);
@@ -445,10 +463,6 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
 
 void XboxOneGamepadDevice::send_report_from_controller(XGIPProtocol *report)
 {
-    // Relay a real auth response received from the host-side controller back
-    // to the console. The response uses the sequence number the console used
-    // for its original auth request (preserved via copyAttributes), so no
-    // sequence renumbering is needed here.
     outgoingXGIP.copyAttributes(report);
     queue_xbone_report(outgoingXGIP.generatePacket(), outgoingXGIP.getPacketLength());
 }
@@ -462,13 +476,17 @@ void XboxOneGamepadDevice::queue_xbone_report(void *report, uint16_t report_size
     report_queue_t item;
     memcpy(item.report, report, report_size);
     item.len = report_size;
-    if (report_queue_count >= REPORT_QUEUE_CAPACITY) {
+    if (report_queue_count >= REPORT_QUEUE_CAPACITY)
+    {
         return;
     }
     report_queue[(report_queue_head + report_queue_count) % REPORT_QUEUE_CAPACITY] = item;
-    if (report_queue_count < REPORT_QUEUE_CAPACITY) {
+    if (report_queue_count < REPORT_QUEUE_CAPACITY)
+    {
         report_queue_count++;
-    } else {
+    }
+    else
+    {
         report_queue_head = (report_queue_head + 1) % REPORT_QUEUE_CAPACITY;
     }
 }
@@ -519,6 +537,10 @@ void XboxOneGamepadDevice::process_auth_device_connection(uint32_t now)
     }
 
     auth_handler_connected = true;
+    if (auth_completed)
+    {
+        return;
+    }
     auto &config_mgr = ConfigManager::instance();
     if (!xbox_one_powered_on ||
         config_mgr.get_reinit_time() ||
@@ -701,7 +723,7 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
             bool should_be_connected = (i < profiles.size());
             if (should_be_connected)
             {
-                auto dev_type = is_drum_subtype(profiles[i]->subtype) ? GipLegacyWirelessDeviceType::Drums : GipLegacyWirelessDeviceType::Guitar;
+                auto dev_type = get_legacy_wireless_device_type(profiles[i]->subtype);
                 if (!legacy_connected[i])
                 {
                     legacy_connected[i] = true;
@@ -849,7 +871,6 @@ void XboxOneGamepadDevice::send_legacy_device_info(uint8_t user_index, GipLegacy
     GipLegacyWirelessDeviceInfo_t info = {};
     info.user_index = user_index;
     info.device_type = static_cast<uint8_t>(dev_type);
-    info.vendor_id = 0x3014; // 0x1430 big-endian
     info.unk = 0x00;
 
     uint16_t data_len = 0;
@@ -859,6 +880,7 @@ void XboxOneGamepadDevice::send_legacy_device_info(uint8_t user_index, GipLegacy
         const uint16_t name[] = {'g', 'u', 'i', 't', 'a', 'r'};
         memcpy(info.name, name, sizeof(name));
         data_len = 18; // 6 header bytes + 12 name bytes
+        info.vendor_id = __builtin_bswap16(XBOX_REDOCTANE_VID);
     }
     else if (dev_type == GipLegacyWirelessDeviceType::Drums)
     {
@@ -866,6 +888,7 @@ void XboxOneGamepadDevice::send_legacy_device_info(uint8_t user_index, GipLegacy
         const uint16_t name[] = {'d', 'r', 'u', 'm', 's'};
         memcpy(info.name, name, sizeof(name));
         data_len = 16; // 6 header bytes + 10 name bytes
+        info.vendor_id = __builtin_bswap16(HARMONIX_VID);
     }
     else if (dev_type == GipLegacyWirelessDeviceType::Gamepad)
     {
@@ -873,6 +896,7 @@ void XboxOneGamepadDevice::send_legacy_device_info(uint8_t user_index, GipLegacy
         const uint16_t name[] = {'g', 'a', 'm', 'e', 'p', 'a', 'd'};
         memcpy(info.name, name, sizeof(name));
         data_len = 20; // 6 header bytes + 14 name bytes
+        info.vendor_id = __builtin_bswap16(XBOX_VID);
     }
 
     global_sequence++;
@@ -995,7 +1019,7 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
         uint16_t buttons = *(uint16_t *)profile_buf;
         legacy_report.buttons = buttons;
         legacy_report.user_index = (uint8_t)i;
-        legacy_report.device_type = is_gamepad ? static_cast<uint8_t>(GipLegacyWirelessDeviceType::Gamepad) : is_drums ? static_cast<uint8_t>(GipLegacyWirelessDeviceType::Drums) : static_cast<uint8_t>(GipLegacyWirelessDeviceType::Guitar);
+        legacy_report.device_type = static_cast<uint8_t>(get_legacy_wireless_device_type(profile->subtype));
 
         if (is_drums)
         {

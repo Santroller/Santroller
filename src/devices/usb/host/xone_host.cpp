@@ -211,11 +211,6 @@ static void xone_on_device_descriptor_wrapper(void *context, SubType subtype)
     auto host_interface = host_devices[host->dev_addr()]->host_devices_by_itf[host->interface()];
     usb_host_add_assignable_interface(host_interface);
     host->register_auth_handler(std::static_pointer_cast<XboxOneHost>(host_interface));
-    if (ConfigManager::instance().get_current_mode() == ConsoleMode::ModeXboxOne)
-    {
-        printf("Xbox One auth device descriptor read; forcing USB device re-enumeration\r\n");
-        ConfigManager::instance().request_device_stack_reinit();
-    }
 
     // Send power-on sequence using device interface
     host->send_power_on_sequence();

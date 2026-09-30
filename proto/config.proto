@@ -178,6 +178,13 @@ message GuiMatrixDevice {
   required uint32 outputPin = 4;
   optional bool showToCustomer = 5;
 }
+message GuiSwitchNetworkDevice {
+  required string label = 1;
+  required int32 deviceid = 2;
+  required uint32 pin = 3;
+  required uint32 otherPin = 4;
+  optional bool showToCustomer = 5;
+}
 message SellerConfig {
   required bytes logo = 1;
   required string name = 2;
@@ -190,6 +197,7 @@ message GuiConfig {
     GuiLed ledLabel = 4;
     GuiMultiplexerDevice multiplexerLabel = 5;
     GuiMatrixDevice matrixLabel = 6;
+    GuiSwitchNetworkDevice switchNetworkLabel = 7;
   }
 }
 

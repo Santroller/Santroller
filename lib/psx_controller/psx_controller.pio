@@ -1,3 +1,5 @@
+.define PUBLIC PIN_ACK_PLACEHOLDER 0
+
 .program psx_controller_spi
 .side_set 1
 

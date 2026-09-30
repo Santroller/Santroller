@@ -5,7 +5,8 @@
 #include "input_enums.pb.h"
 #include "pico/time.h"
 #include <hardware/gpio.h>
-#include <hardware/pio.h>
+#include <hardware/spi.h>
+#include <hardware/dma.h>
 #include "devices/base.hpp"
 
 /** \brief Size of internal communication buffer
@@ -77,13 +78,14 @@ public:
     bool read_button(PS2ButtonType type);
     bool controller_valid();
     void process_data(bool ack, bool timeout);
-    void pio_dma_complete();
-    void pio_header_complete();
+    void spi_dma_complete();
+    void spi_header_complete();
 
 private:
     bool auto_shift_data(const uint8_t *out, const uint8_t len);
     void no_attention();
     void signal_attention();
+    spi_inst_t *spi = nullptr;
     uint8_t m_attPin;
     uint8_t m_ackPin;
     int8_t m_sckPin;
@@ -100,14 +102,12 @@ private:
     uint8_t invalidCount = 0;
     uint8_t ps2Data[BUFFER_SIZE];
     uint8_t ps2DataOutBuffer[BUFFER_SIZE];
-    PIO pio = pio0;
-    uint sm = 0;
-    uint offset = 0;
     int dma_rx = -1;
     int dma_tx = -1;
-    bool pio_active = false;
-    bool pio_started = false;
-    bool pio_header = false;
+    int dma_timer = -1;
+    bool spi_active = false;
+    bool spi_started = false;
+    bool spi_header = false;
     uint8_t lastInputs[BUFFER_SIZE];
     const uint8_t* ps2DataOut;
     uint8_t ps2Idx;

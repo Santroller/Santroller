@@ -675,6 +675,7 @@ void PSXController::process_data(bool ack, bool timeout)
         }
 
         no_attention();
+        done = false;
         return;
     }
 

@@ -612,48 +612,38 @@ void PSXController::process_data(bool ack, bool timeout)
             break;
         case CONNECTION_DELAY:
             status = FIRST_INPUTS;
-            auto_shift_data(commandPollInput, sizeof(commandPollInput));
-            return;
+            packet_delay = 100;
+            break;
         case FIRST_INPUTS:
             if (isConfigReply(ps2Data))
-            {
                 status = ENABLE_ANALOG_MODE;
-                auto_shift_data(commandSetMode, sizeof(commandSetMode));
-            }
             else
-            {
                 status = ENTER_CONFIG;
-                auto_shift_data(commandEnterConfig, sizeof(commandEnterConfig));
-            }
-            return;
+            packet_delay = 100;
+            break;
         case ENTER_CONFIG:
             if (valid)
-            {
                 status = ENABLE_ANALOG_MODE;
-                auto_shift_data(commandSetMode, sizeof(commandSetMode));
-            }
             else
-            {
                 status = SECOND_INPUTS;
-                auto_shift_data(commandPollInput, sizeof(commandPollInput));
-            }
-            return;
+            packet_delay = 100;
+            break;
         case ENABLE_ANALOG_MODE:
             status = ENABLE_RUMBLE;
-            auto_shift_data(commandEnableRumble, sizeof(commandEnableRumble));
-            return;
+            packet_delay = 100;
+            break;
         case ENABLE_RUMBLE:
             status = ENABLE_PRESSURES;
-            auto_shift_data(commandSetPressures, sizeof(commandSetPressures));
-            return;
+            packet_delay = 100;
+            break;
         case ENABLE_PRESSURES:
             status = ENABLE_PRESSURES_2;
-            auto_shift_data(commandSetPressures, sizeof(commandSetPressures));
-            return;
+            packet_delay = 100;
+            break;
         case ENABLE_PRESSURES_2:
             status = EXIT_CONFIG;
-            auto_shift_data(commandExitConfig, sizeof(commandExitConfig));
-            return;
+            packet_delay = 100;
+            break;
         case EXIT_CONFIG:
             if (!isConfigReply(ps2Data))
                 status = SECOND_INPUTS;
@@ -662,8 +652,8 @@ void PSXController::process_data(bool ack, bool timeout)
                 status = DISCONNECTED;
                 break;
             }
-            auto_shift_data(commandPollInput, sizeof(commandPollInput));
-            return;
+            packet_delay = 100;
+            break;
         case SECOND_INPUTS:
             status = ENUMERATED;
             packet_delay = 5000;
@@ -738,10 +728,31 @@ void PSXController::process_data(bool ack, bool timeout)
         return;
     }
 
-    if (status == ENUMERATED)
+    switch (status)
+    {
+    case ENTER_CONFIG:
+        auto_shift_data(commandEnterConfig, sizeof(commandEnterConfig));
+        break;
+    case ENABLE_ANALOG_MODE:
+        auto_shift_data(commandSetMode, sizeof(commandSetMode));
+        break;
+    case ENABLE_RUMBLE:
+        auto_shift_data(commandEnableRumble, sizeof(commandEnableRumble));
+        break;
+    case ENABLE_PRESSURES:
+    case ENABLE_PRESSURES_2:
+        auto_shift_data(commandSetPressures, sizeof(commandSetPressures));
+        break;
+    case EXIT_CONFIG:
+        auto_shift_data(commandExitConfig, sizeof(commandExitConfig));
+        break;
+    case ENUMERATED:
         auto_shift_data(m_poll_cmd, sizeof(m_poll_cmd));
-    else
+        break;
+    default:
         auto_shift_data(commandPollInput, sizeof(commandPollInput));
+        break;
+    }
     return;
 }
 

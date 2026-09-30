@@ -477,6 +477,9 @@ void PSXController::spi_header_complete()
     spi_dma_len = response_len - 4;
     spi_header = false;
 
+    cancel_alarm(timeout_alarm_id);
+    timeout_alarm_id = add_alarm_in_us(20000, restart_handler, this, true);
+
     if (pio_initialized)
     {
         dma_channel_set_read_addr(dma_tx, ps2DataOutBuffer + 4, false);
@@ -569,7 +572,7 @@ void PSXController::process_data(bool ack, bool timeout)
             }
 
             spi_started = true;
-            timeout_alarm_id = add_alarm_in_us(packet_delay < 5000 ? 5000 : packet_delay, restart_handler, this, true);
+            timeout_alarm_id = add_alarm_in_us(20000, restart_handler, this, true);
             return;
         }
 
@@ -623,7 +626,7 @@ void PSXController::process_data(bool ack, bool timeout)
             break;
         case ENTER_CONFIG:
             if (valid)
-                status = ENABLE_ANALOG_MODE;
+                status = FIRST_INPUTS;
             else
                 status = SECOND_INPUTS;
             packet_delay = 100;

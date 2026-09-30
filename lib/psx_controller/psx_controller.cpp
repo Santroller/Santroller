@@ -1,5 +1,9 @@
 #include "psx_controller.hpp"
 #include <hardware/gpio.h>
+#include <hardware/pio.h>
+#include <hardware/dma.h>
+#include <hardware/clocks.h>
+#include "psx_controller.pio.h"
 #include <pico/time.h>
 #include <stdio.h>
 #include "utils.h"
@@ -92,9 +96,18 @@ static const uint8_t commandSetPressuresMouse[] = {0x01, 0x4F, 0x00, 0b1111, 0x0
 
 static const uint8_t commandPollInput[] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
 static PSXController *controller;
+
 void attentionInterrupt(uint gpio, uint32_t events)
 {
-    controller->process_data(true, false);
+    if (controller)
+        controller->process_data(true, false);
+}
+
+static void dma_complete_handler()
+{
+    if (controller)
+        controller->pio_dma_complete();
+    dma_hw->ints1 = 1u << 0;
 }
 
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
@@ -111,6 +124,84 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
     gpio_init(ackPin);
     gpio_set_dir(ackPin, false);
     controller = this;
+
+    // The PS2 poll path is deterministic once the controller has been
+    // enumerated, so let PIO own the byte-level exchange and DMA own the
+    // packet buffer. The existing GPIO/SPI path is retained for enumeration.
+    pio = pio0;
+    sm = pio_claim_unused_sm(pio, true);
+
+    uint16_t patched[32];
+    memcpy(patched, psx_controller_spi_program.instructions,
+           psx_controller_spi_program.length * sizeof(uint16_t));
+
+    const uint16_t ack_low =
+        pio_encode_wait_gpio(false, PIN_ACK_PLACEHOLDER);
+    const uint16_t ack_high =
+        pio_encode_wait_gpio(true, PIN_ACK_PLACEHOLDER);
+    const uint16_t new_ack_low = pio_encode_wait_gpio(false, ackPin);
+    const uint16_t new_ack_high = pio_encode_wait_gpio(true, ackPin);
+
+    for (uint i = 0; i < psx_controller_spi_program.length; ++i)
+    {
+        if (patched[i] == ack_low)
+            patched[i] = new_ack_low;
+        else if (patched[i] == ack_high)
+            patched[i] = new_ack_high;
+    }
+
+    pio_program_t program = psx_controller_spi_program;
+    program.instructions = patched;
+    offset = pio_add_program(pio, &program);
+
+    pio_sm_config cfg = psx_controller_spi_program_get_default_config(offset);
+    sm_config_set_out_pins(&cfg, mosi, 1);
+    sm_config_set_in_pins(&cfg, miso);
+    sm_config_set_sideset_pins(&cfg, sck);
+    sm_config_set_out_shift(&cfg, true, false, 8);
+    sm_config_set_in_shift(&cfg, true, true, 8);
+
+    // Each bit consumes two PIO instructions, so this produces the requested
+    // PS2 clock rate rather than twice the requested rate.
+    sm_config_set_clkdiv(&cfg,
+                         (float)clock_get_hz(clk_sys) / (2.0f * clock));
+
+    pio_gpio_init(pio, sck);
+    pio_gpio_init(pio, mosi);
+    pio_gpio_init(pio, miso);
+    pio_gpio_init(pio, ackPin);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, sck, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, mosi, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, miso, 1, false);
+    pio_sm_set_consecutive_pindirs(pio, sm, ackPin, 1, false);
+
+    pio_sm_init(pio, sm, offset, &cfg);
+    pio_sm_set_pins(pio, sm, 1u << sck);
+
+    dma_rx = dma_claim_unused_channel(true);
+    dma_tx = dma_claim_unused_channel(true);
+
+    dma_channel_config rx_cfg = dma_channel_get_default_config(dma_rx);
+    channel_config_set_transfer_data_size(&rx_cfg, DMA_SIZE_8);
+    channel_config_set_dreq(&rx_cfg, pio_get_dreq(pio, sm, false));
+    channel_config_set_read_increment(&rx_cfg, false);
+    channel_config_set_write_increment(&rx_cfg, true);
+    dma_channel_configure(
+        dma_rx, &rx_cfg, ps2Data,
+        ((uint8_t *)&pio->rxf[sm]) + 3, BUFFER_SIZE, false);
+
+    dma_channel_config tx_cfg = dma_channel_get_default_config(dma_tx);
+    channel_config_set_transfer_data_size(&tx_cfg, DMA_SIZE_8);
+    channel_config_set_dreq(&tx_cfg, pio_get_dreq(pio, sm, true));
+    channel_config_set_read_increment(&tx_cfg, true);
+    channel_config_set_write_increment(&tx_cfg, false);
+    dma_channel_configure(
+        dma_tx, &tx_cfg, &pio->txf[sm], ps2DataOutBuffer, BUFFER_SIZE, false);
+
+    dma_channel_set_irq1_enabled(dma_rx, true);
+    irq_set_exclusive_handler(DMA_IRQ_1, dma_complete_handler);
+    irq_set_enabled(DMA_IRQ_1, true);
 }
 void PSXController::begin() {
     gpio_set_irq_enabled_with_callback(m_ackPin, GPIO_IRQ_EDGE_RISE, true, &attentionInterrupt);
@@ -119,6 +210,15 @@ void PSXController::begin() {
 void PSXController::end() {
     gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
     cancel_alarm(timeout_alarm_id);
+
+    if (pio_active)
+    {
+        dma_channel_abort(dma_rx);
+        dma_channel_abort(dma_tx);
+        pio_sm_set_enabled(pio, sm, false);
+        pio_sm_clear_fifos(pio, sm);
+        pio_active = false;
+    }
 }
 void PSXController::load_state(const DeviceReloadState *state) {
     type = state->ps2_type;
@@ -170,22 +270,94 @@ void PSXController::signal_attention(void)
 }
 bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
 {
-    uint8_t *ret = nullptr;
     ps2Idx = 0;
-    ps2Len = len;
     ps2DataLen = len;
     ps2DataOut = out;
-    memset(ps2Data, 0, sizeof(ps2Data[0]));
-    signal_attention();
-    return ret;
+
+    // Before enumeration the response length is not known, so retain the
+    // existing ACK-driven path. Once enumerated, 0x42's response length is
+    // already known from the previous header and the whole transaction can
+    // be handed to PIO + DMA.
+    if (status != ENUMERATED)
+    {
+        ps2Len = len;
+        memset(ps2Data, 0, sizeof(ps2Data[0]));
+        signal_attention();
+        return true;
+    }
+
+    if (ps2Len < 5 || ps2Len > BUFFER_SIZE)
+        ps2Len = 5;
+
+    memset(ps2Data, 0, sizeof(ps2Data));
+    memset(ps2DataOutBuffer, 0x5A, sizeof(ps2DataOutBuffer));
+    memcpy(ps2DataOutBuffer, out, len < BUFFER_SIZE ? len : BUFFER_SIZE);
+
+    cancel_alarm(timeout_alarm_id);
+    gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
+    gpio_put(m_attPin, false);
+    done = false;
+    pio_active = true;
+
+    pio_sm_set_enabled(pio, sm, false);
+    pio_sm_clear_fifos(pio, sm);
+    pio_sm_restart(pio, sm);
+
+    // X counts the number of bytes after the current byte. The PIO therefore
+    // knows exactly when to stop and, importantly, does not ACK the last byte.
+    pio_sm_put(pio, sm, pio_encode_set(pio_x, ps2Len - 1));
+
+    dma_channel_abort(dma_rx);
+    dma_channel_abort(dma_tx);
+    dma_channel_set_write_addr(dma_rx, ps2Data, false);
+    dma_channel_set_trans_count(dma_rx, ps2Len, false);
+    dma_channel_set_read_addr(dma_tx, ps2DataOutBuffer, false);
+    dma_channel_set_trans_count(dma_tx, ps2Len, false);
+
+    // Give ATT the same setup time as the old implementation, then let the
+    // state machine and DMA run without CPU intervention.
+    timeout_alarm_id = add_alarm_in_us(ATTN_DELAY, restart_handler, this, true);
+    return true;
 }
+void PSXController::pio_dma_complete()
+{
+    if (!pio_active)
+        return;
+
+    cancel_alarm(timeout_alarm_id);
+    dma_channel_set_irq1_enabled(dma_rx, false);
+    pio_sm_set_enabled(pio, sm, false);
+    pio_active = false;
+    done = true;
+    valid = isValidReply(ps2Data);
+
+    process_data(false, false);
+}
+
 void PSXController::process_data(bool ack, bool timeout)
 {
-    // if the controller sends an ack after we are done, ignore it!
-    if (done && ack)
+    if (pio_active)
     {
+        if (ack)
+            return;
+
+        if (timeout)
+        {
+            dma_channel_abort(dma_rx);
+            dma_channel_abort(dma_tx);
+            pio_sm_set_enabled(pio, sm, false);
+            pio_sm_clear_fifos(pio, sm);
+            pio_active = false;
+            valid = false;
+            no_attention();
+        }
         return;
     }
+
+    // Existing byte-at-a-time path used during enumeration.
+    if (done && ack)
+        return;
+
     cancel_alarm(timeout_alarm_id);
     if (done)
     {
@@ -217,15 +389,9 @@ void PSXController::process_data(bool ack, bool timeout)
             return;
         case ENTER_CONFIG:
             if (valid)
-            {
-                // poll the controller so we know it has entered config mode before we send config commands
                 status = FIRST_INPUTS;
-            }
             else
-            {
-                // config mode not supported
                 status = SECOND_INPUTS;
-            }
             auto_shift_data(commandPollInput, sizeof(commandPollInput));
             return;
         case ENABLE_ANALOG_MODE:
@@ -246,9 +412,7 @@ void PSXController::process_data(bool ack, bool timeout)
             return;
         case EXIT_CONFIG:
             if (!isConfigReply(ps2Data))
-            {
                 status = SECOND_INPUTS;
-            }
             if (!isValidReply(ps2Data))
             {
                 status = DISCONNECTED;
@@ -262,18 +426,11 @@ void PSXController::process_data(bool ack, bool timeout)
             if (isDualShock2Reply(ps2Data))
             {
                 if ((~ps2Data[3]) & (1 << 7) && (~ps2Data[3]) & (1 << 5) && (~ps2Data[3]) & (1 << 6))
-                {
-                    // Check if dpad left right down is held
                     type = PS2ControllerTypePopNMusic;
-                }
                 else if ((~ps2Data[3]) & (1 << 7))
-                {
-                    // Check if dpad left is held
                     type = PS2ControllerTypeGuitar;
-                }
                 else
                 {
-                    // pretty much the only controller that works at 1ms
                     packet_delay = 1000;
                     type = PS2ControllerTypeDualshock2;
                 }
@@ -281,39 +438,22 @@ void PSXController::process_data(bool ack, bool timeout)
             else if (isDualShockReply(ps2Data))
             {
                 if ((~ps2Data[3]) & (1 << 7))
-                {
                     type = PS2ControllerTypeGuitar;
-                }
                 else
-                {
                     type = PS2ControllerTypeDualshock;
-                }
             }
             else if (isFlightStickReply(ps2Data))
-            {
                 type = PS2ControllerTypeFlightStick;
-            }
             else if (isNegconReply(ps2Data))
-            {
                 type = PS2ControllerTypeNegCon;
-            }
             else if (isJogconReply(ps2Data))
-            {
                 type = PS2ControllerTypeJogCon;
-            }
             else if (isGunconReply(ps2Data))
-            {
                 type = PS2ControllerTypeGunCon;
-            }
             else if (isMouseReply(ps2Data))
-            {
                 type = PS2ControllerTypeMouse;
-            }
             else if (isDigitalReply(ps2Data))
-            {
                 type = PS2ControllerTypeDigital;
-            }
-            // printf("found ps2 controller! %d\r\n", type);
             break;
         case ENUMERATED:
             if (valid)
@@ -323,7 +463,6 @@ void PSXController::process_data(bool ack, bool timeout)
             }
             else
             {
-                // allow a few failures before reinit
                 missing++;
                 if (missing > 10)
                 {
@@ -334,22 +473,33 @@ void PSXController::process_data(bool ack, bool timeout)
             }
             break;
         }
+
         m_poll_cmd[0] = 0x01;
         m_poll_cmd[1] = 0x42;
         m_poll_cmd[2] = 0x00;
         m_poll_cmd[3] = m_rumble_small ? 0x01 : 0x00;
         m_poll_cmd[4] = m_rumble_large;
+
+        // For a poll, the controller ID tells us the response length. This is
+        // the value the PIO path uses on the next transaction.
+        if (valid && status == ENUMERATED &&
+            (ps2Data[2] == 0x5A || ps2Data[2] == 0x00))
+        {
+            uint8_t response_len = 3 + (ps2Data[1] & 0x0F) * 2;
+            if (response_len <= BUFFER_SIZE)
+                ps2Len = response_len;
+        }
+
         auto_shift_data(m_poll_cmd, sizeof(m_poll_cmd));
         return;
     }
 
     uint8_t resp = interface.transfer(ps2DataOut != nullptr ? ps2DataOut[ps2Idx] : 0x5A);
     ps2Data[ps2Idx++] = resp;
-    // no more data in command
+
     if (ps2Idx > ps2DataLen)
-    {
         ps2DataOut = nullptr;
-    }
+
     if (ps2Idx == 4)
     {
         if (isValidReply(ps2Data))
@@ -363,15 +513,16 @@ void PSXController::process_data(bool ack, bool timeout)
             return;
         }
     }
+
     if (ps2Idx < ps2Len)
     {
         timeout_alarm_id = add_alarm_in_us(INTER_CMD_BYTE_DELAY, restart_handler, this, true);
         return;
     }
+
     valid = true;
     no_attention();
 }
-
 uint16_t PSXController::read_axis(PS2AxisType axisType)
 {
     switch (type)

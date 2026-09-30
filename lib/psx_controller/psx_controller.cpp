@@ -106,7 +106,12 @@ void attentionInterrupt(uint gpio, uint32_t events)
 static void dma_complete_handler()
 {
     if (controller)
-        controller->pio_dma_complete();
+    {
+        if (controller->pio_header)
+            controller->pio_header_complete();
+        else
+            controller->pio_dma_complete();
+    }
     dma_hw->ints1 = 1u << 0;
 }
 
@@ -116,7 +121,7 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     inst->process_data(false, true);
     return 0;
 }
-PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin) : interface(block, SPI_CPHA_1, SPI_CPOL_1, sck, mosi, miso, false, clock), m_attPin(attPin), m_ackPin(ackPin)
+PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin) : m_attPin(attPin), m_ackPin(ackPin)
 {
     printf("psx controller init!\r\n");
     gpio_init(attPin);
@@ -280,13 +285,42 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
     // existing ACK-driven path. Once enumerated, 0x42's response length is
     // already known from the previous header and the whole transaction can
     // be handed to PIO + DMA.
-    if (status != ENUMERATED)
-    {
-        ps2Len = len;
-        memset(ps2Data, 0, sizeof(ps2Data[0]));
-        signal_attention();
-        return true;
-    }
+    // PIO handles enumeration as well. For commands with an unknown response
+    // length, capture the first four bytes, inspect the controller ID, then
+    // let PIO/DMA capture the remainder. This is one CPU wakeup per command,
+    // not one wakeup per byte.
+    uint8_t target_len = (status == ENUMERATED) ? ps2Len : 4;
+    if (target_len < 4 || target_len > BUFFER_SIZE)
+        target_len = 4;
+
+    memset(ps2Data, 0, sizeof(ps2Data));
+    memset(ps2DataOutBuffer, 0x5A, sizeof(ps2DataOutBuffer));
+    memcpy(ps2DataOutBuffer, out, len < BUFFER_SIZE ? len : BUFFER_SIZE);
+
+    cancel_alarm(timeout_alarm_id);
+    gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
+    gpio_put(m_attPin, false);
+    done = false;
+    pio_active = true;
+    pio_header = (status != ENUMERATED);
+
+    pio_sm_set_enabled(pio, sm, false);
+    pio_sm_clear_fifos(pio, sm);
+    pio_sm_restart(pio, sm);
+    pio_sm_exec(pio, sm, pio_encode_set(pio_x, target_len - 1));
+    pio_sm_exec(pio, sm, pio_encode_jmp(offset));
+
+    dma_channel_abort(dma_rx);
+    dma_channel_abort(dma_tx);
+    dma_channel_set_irq1_enabled(dma_rx, true);
+    dma_channel_set_write_addr(dma_rx, ps2Data, false);
+    dma_channel_set_trans_count(dma_rx, target_len, false);
+    dma_channel_set_read_addr(dma_tx, ps2DataOutBuffer, false);
+    dma_channel_set_trans_count(dma_tx, target_len, false);
+    pio_started = false;
+
+    timeout_alarm_id = add_alarm_in_us(ATTN_DELAY, restart_handler, this, true);
+    return true;
 
     if (ps2Len < 5 || ps2Len > BUFFER_SIZE)
         ps2Len = 5;
@@ -324,6 +358,43 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
     timeout_alarm_id = add_alarm_in_us(ATTN_DELAY, restart_handler, this, true);
     return true;
 }
+void PSXController::pio_header_complete()
+{
+    if (!pio_active || !pio_header)
+        return;
+
+    dma_channel_set_irq1_enabled(dma_rx, false);
+    pio_sm_set_enabled(pio, sm, false);
+
+    uint8_t response_len = 3 + (ps2Data[1] & 0x0F) * 2;
+    if (response_len < 4 || response_len > BUFFER_SIZE)
+    {
+        pio_active = false;
+        pio_header = false;
+        valid = false;
+        no_attention();
+        return;
+    }
+
+    ps2Len = response_len;
+
+    // The first four bytes are already captured. Continue from byte 4.
+    pio_sm_clear_fifos(pio, sm);
+    pio_sm_restart(pio, sm);
+    pio_sm_exec(pio, sm, pio_encode_set(pio_x, response_len - 5));
+    pio_sm_exec(pio, sm, pio_encode_jmp(offset));
+
+    dma_channel_set_write_addr(dma_rx, ps2Data + 4, false);
+    dma_channel_set_trans_count(dma_rx, response_len - 4, false);
+    dma_channel_set_read_addr(dma_tx, ps2DataOutBuffer + 4, false);
+    dma_channel_set_trans_count(dma_tx, response_len - 4, false);
+    dma_channel_set_irq1_enabled(dma_rx, true);
+
+    pio_header = false;
+    dma_channel_start_channel_mask((1u << dma_rx) | (1u << dma_tx));
+    pio_sm_set_enabled(pio, sm, true);
+}
+
 void PSXController::pio_dma_complete()
 {
     if (!pio_active)

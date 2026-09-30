@@ -507,6 +507,15 @@ void XboxOneGamepadDevice::process_report_queue(uint32_t now)
 
 void XboxOneGamepadDevice::process_auth_device_connection(uint32_t now)
 {
+    // A legacy adapter is deliberately kept alive while the host-side Xbox One
+    // auth device appears/disappears. Re-enumerating the USB device stack here
+    // breaks an otherwise working WLA session.
+    if (is_legacy_adapter())
+    {
+        auth_handler_connected = auth_broker.has_handler(ModeXboxOne);
+        return;
+    }
+
     const bool handler_connected = auth_broker.has_handler(ModeXboxOne);
     if (!handler_connected)
     {

@@ -5,6 +5,7 @@
 #include "input_enums.pb.h"
 #include "pico/time.h"
 #include <hardware/gpio.h>
+#include <hardware/pio.h>
 #include "devices/base.hpp"
 
 /** \brief Size of internal communication buffer

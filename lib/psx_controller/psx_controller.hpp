@@ -1,7 +1,6 @@
 #pragma once
 #include <stdint.h>
 
-#include "spi.hpp"
 #include "enums.pb.h"
 #include "input_enums.pb.h"
 #include "pico/time.h"
@@ -78,12 +77,12 @@ public:
     bool controller_valid();
     void process_data(bool ack, bool timeout);
     void pio_dma_complete();
+    void pio_header_complete();
 
 private:
     bool auto_shift_data(const uint8_t *out, const uint8_t len);
     void no_attention();
     void signal_attention();
-    SPIMasterInterface interface;
     uint8_t m_attPin;
     uint8_t m_ackPin;
     uint8_t m_rumble_small = 0;
@@ -104,6 +103,7 @@ private:
     int dma_tx = -1;
     bool pio_active = false;
     bool pio_started = false;
+    bool pio_header = false;
     uint8_t lastInputs[BUFFER_SIZE];
     const uint8_t* ps2DataOut;
     uint8_t ps2Idx;

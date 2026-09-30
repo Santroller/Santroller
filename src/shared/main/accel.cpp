@@ -126,12 +126,20 @@ void tick_accel()
             filtered[i] = (raw[i]) * currentLowPassAlpha + (filtered[i] * (1.0 - currentLowPassAlpha));
         }
     }
-    if (type == SC7A20 || type == LIS3DSH)
+    if (type == LIS3DSH)
     {
         accel_found = twi_readFromPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_OUT, 6, (uint8_t *)raw);
         for (int i = 0; i < 3; i++)
         {
             filtered[i] = (raw[i]) * currentLowPassAlpha + (filtered[i] * (1.0 - currentLowPassAlpha));
+        }
+    }
+    if (type == SC7A20 )
+    {
+        accel_found = twi_readFromPointer(ACCEL_TWI_PORT, lis3dh_address, LIS3DH_REG_OUT, 6, (uint8_t *)raw);
+        for (int i = 0; i < 3; i++)
+        {
+            filtered[i] = (raw[i] >> 4) * currentLowPassAlpha + (filtered[i] * (1.0 - currentLowPassAlpha));
         }
     }
     if (type == ADXL345)

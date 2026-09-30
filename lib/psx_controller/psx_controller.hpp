@@ -11,6 +11,17 @@
 #include "psx_controller.pio.h"
 #include "devices/base.hpp"
 
+#ifndef PS2_DEBUG
+#define PS2_DEBUG 0
+#endif
+
+#if PS2_DEBUG
+#include <stdio.h>
+#define PS2_PRINT(...) printf(__VA_ARGS__)
+#else
+#define PS2_PRINT(...) ((void)0)
+#endif
+
 /** \brief Size of internal communication buffer
  *
  * This can be sized after the longest command reply (which is 21 bytes for

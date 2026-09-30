@@ -99,11 +99,17 @@ static PSXController *controller;
 
 static void trace_ps2_packet(const char *tag, const uint8_t *data, uint8_t len)
 {
+#if PS2_DEBUG
     printf("[PS2] %s len=%u:", tag, len);
     uint8_t shown = len > BUFFER_SIZE ? BUFFER_SIZE : len;
     for (uint8_t i = 0; i < shown; ++i)
         printf(" %02X", data[i]);
     printf("\r\n");
+#else
+    (void)tag;
+    (void)data;
+    (void)len;
+#endif
 }
 
 void attentionInterrupt(uint gpio, uint32_t events)
@@ -126,8 +132,8 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 }
 PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin) : m_attPin(attPin), m_ackPin(ackPin), m_sckPin(sck), m_mosiPin(mosi), m_misoPin(miso)
 {
-    printf("[PS2] init sck=%d mosi=%d miso=%d att=%u ack=%u clock=%u block=%u\r\n",
-           sck, mosi, miso, attPin, ackPin, clock, block);
+    PS2_PRINT("[PS2] init sck=%d mosi=%d miso=%d att=%u ack=%u clock=%u block=%u\r\n",
+              sck, mosi, miso, attPin, ackPin, clock, block);
     gpio_init(attPin);
     gpio_set_dir(attPin, true);
     gpio_put(attPin, true);
@@ -180,7 +186,7 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
 
         pio_sm_init(pio, sm, pio_offset, &c);
         pio_initialized = true;
-        printf("[PS2] PIO ACK pacer initialized pio=%u sm=%u offset=%u\r\n", pio_get_index(pio), sm, pio_offset);
+        PS2_PRINT("[PS2] PIO ACK pacer initialized pio=%u sm=%u offset=%u\r\n", pio_get_index(pio), sm, pio_offset);
     }
 
     dma_rx = dma_claim_unused_channel(true);
@@ -239,13 +245,14 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
 }
 void PSXController::begin()
 {
-    printf("[PS2] begin\r\n");
+    PS2_PRINT("[PS2] begin\r\n");
     gpio_set_irq_enabled_with_callback(m_ackPin, GPIO_IRQ_EDGE_RISE, true, &attentionInterrupt);
     auto_shift_data(commandPollInput, sizeof(commandPollInput));
 }
 static inline void abort_dma_if_active(int channel)
 {
-    if (channel < 0) return;
+    if (channel < 0)
+        return;
     if (dma_channel_is_busy(channel))
     {
         dma_channel_abort(channel);
@@ -307,11 +314,11 @@ void PSXController::save_state(DeviceReloadState &state) const
 
 PSXController::~PSXController()
 {
-    printf("~PSXController\r\n");
+    PS2_PRINT("~PSXController\r\n");
 }
 void PSXController::no_attention(void)
 {
-    printf("[PS2] transaction end state=%d valid=%d spi=%d\r\n", status, valid, spi_active);
+    PS2_PRINT("[PS2] transaction end state=%d valid=%d spi=%d\r\n", status, valid, spi_active);
     done = true;
     if (!spi_active)
         gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, true);
@@ -326,8 +333,8 @@ void PSXController::signal_attention(void)
 }
 bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
 {
-    printf("[PS2] start state=%d cmd=%02X len=%u ps2Len=%u\r\n",
-           status, len > 1 ? out[1] : 0, len, ps2Len);
+    PS2_PRINT("[PS2] start state=%d cmd=%02X len=%u ps2Len=%u\r\n",
+              status, len > 1 ? out[1] : 0, len, ps2Len);
     ps2Idx = 0;
     ps2DataLen = len;
     ps2DataOut = out;
@@ -346,10 +353,12 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
     for (uint8_t i = len; i < BUFFER_SIZE; ++i)
         ps2DataOutBuffer[i] = revbits(0x5A);
 
+#if PS2_DEBUG
     printf("[PS2] TX DMA:");
     for (int i = 0; i < 8; i++)
         printf(" %02X", out[i < len ? i : 0]);
     printf("\r\n");
+#endif
 
     cancel_alarm(timeout_alarm_id);
     gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
@@ -357,8 +366,8 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
     done = false;
     spi_active = true;
     spi_header = (status != ENUMERATED);
-    printf("[PS2] SPI armed header=%d target=%u tx=%02X\r\n",
-           spi_header, target_len, out[1]);
+    PS2_PRINT("[PS2] SPI armed header=%d target=%u tx=%02X\r\n",
+              spi_header, target_len, out[1]);
 
     // Drain any stale hardware SPI RX FIFO contents
     while (spi_is_readable(spi))
@@ -391,8 +400,8 @@ void PSXController::spi_header_complete()
         return;
 
     trace_ps2_packet("header", ps2Data, 4);
-    printf("[PS2] header complete state=%d response_id=%02X computed_len=%u\r\n",
-           status, ps2Data[1], (uint)(3 + (ps2Data[1] & 0x0F) * 2));
+    PS2_PRINT("[PS2] header complete state=%d response_id=%02X computed_len=%u\r\n",
+              status, ps2Data[1], (uint)(3 + (ps2Data[1] & 0x0F) * 2));
 
     dma_channel_set_irq1_enabled(dma_rx, false);
 
@@ -479,7 +488,7 @@ void PSXController::process_data(bool ack, bool timeout)
 
         if (timeout && !spi_started)
         {
-            printf("[PS2] SPI start state=%d header=%d DATA=%d ACK=%d\r\n", status, spi_header, gpio_get(m_misoPin), gpio_get(m_ackPin));
+            PS2_PRINT("[PS2] SPI start state=%d header=%d DATA=%d ACK=%d\r\n", status, spi_header, gpio_get(m_misoPin), gpio_get(m_ackPin));
             if (status == ENUMERATED && (ps2Len < 5 || ps2Len > BUFFER_SIZE))
                 ps2Len = 5;
 
@@ -516,12 +525,12 @@ void PSXController::process_data(bool ack, bool timeout)
 
         if (timeout)
         {
-            printf("[PS2] SPI TIMEOUT state=%d header=%d started=%d SCK=%d MOSI=%d DATA=%d ACK=%d rxleft=%u txleft=%u\r\n",
-                   status, spi_header, spi_started,
-                   gpio_get(m_sckPin), gpio_get(m_mosiPin),
-                   gpio_get(m_misoPin), gpio_get(m_ackPin),
-                   dma_hw->ch[dma_rx].transfer_count,
-                   pio_initialized ? dma_hw->ch[dma_tx_pacer].transfer_count : dma_hw->ch[dma_tx].transfer_count);
+            PS2_PRINT("[PS2] SPI TIMEOUT state=%d header=%d started=%d SCK=%d MOSI=%d DATA=%d ACK=%d rxleft=%u txleft=%u\r\n",
+                      status, spi_header, spi_started,
+                      gpio_get(m_sckPin), gpio_get(m_mosiPin),
+                      gpio_get(m_misoPin), gpio_get(m_ackPin),
+                      dma_hw->ch[dma_rx].transfer_count,
+                      pio_initialized ? dma_hw->ch[dma_tx_pacer].transfer_count : dma_hw->ch[dma_tx].transfer_count);
             abort_dma_if_active(dma_rx);
             abort_dma_if_active(dma_tx);
             abort_dma_if_active(dma_tx_pacer);
@@ -641,7 +650,7 @@ void PSXController::process_data(bool ack, bool timeout)
                 type = PS2ControllerTypeDigital;
             break;
         case ENUMERATED:
-            printf("[PS2] state ENUMERATED valid=%d\r\n", valid);
+            PS2_PRINT("[PS2] state ENUMERATED valid=%d\r\n", valid);
             if (valid)
             {
                 memcpy(lastInputs, ps2Data, BUFFER_SIZE);
@@ -804,6 +813,8 @@ uint16_t PSXController::read_axis(PS2AxisType axisType)
     case PS2ControllerTypeTaiko:
         return 0;
     case PS2ControllerTypePopNMusic:
+        return 0;
+    case PS2ControllerTypeDigital:
         return 0;
     }
     return 0;

@@ -11,7 +11,11 @@ void SwitchNetworkDevice::begin()
 {
     gpio_init_mask(m_device.pins);
     gpio_set_dir_in_masked(m_device.pins);
-    gpio_pull_up_mask(m_device.pins);
+    for (uint8_t pin = 0; pin < 32; ++pin)
+    {
+        if (using_pin(pin))
+            gpio_pull_up(pin);
+    }
 }
 
 void SwitchNetworkDevice::end(bool full)
@@ -40,7 +44,11 @@ bool SwitchNetworkDevice::read_switch(uint8_t pin, uint8_t other_pin)
         return false;
 
     gpio_set_dir_in_masked(m_device.pins);
-    gpio_pull_up_mask(m_device.pins);
+    for (uint8_t pin = 0; pin < 32; ++pin)
+    {
+        if (using_pin(pin))
+            gpio_pull_up(pin);
+    }
 
     gpio_set_dir_out_masked(pin_mask);
     gpio_put_masked(pin_mask, 0);
@@ -49,7 +57,11 @@ bool SwitchNetworkDevice::read_switch(uint8_t pin, uint8_t other_pin)
     const bool pressed = gpio_get(other_pin) == 0;
 
     gpio_set_dir_in_masked(pin_mask | other_mask);
-    gpio_pull_up_mask(pin_mask | other_mask);
+    for (uint8_t pin = 0; pin < 32; ++pin)
+    {
+        if ((pin_mask | other_mask) & (1u << pin))
+            gpio_pull_up(pin);
+    }
 
     return pressed;
 }

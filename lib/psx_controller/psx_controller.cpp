@@ -142,6 +142,8 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
     // enumerated, so let PIO own the byte-level exchange and DMA own the
     // packet buffer. The existing GPIO/SPI path is retained for enumeration.
     pio = pio0;
+    if (!pio_can_add_program(pio, &psx_controller_spi_program))
+        pio = pio1;
     sm = pio_claim_unused_sm(pio, true);
 
     uint16_t patched[32];
@@ -166,6 +168,16 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
     pio_program_t program = psx_controller_spi_program;
     program.instructions = patched;
     offset = pio_add_program(pio, &program);
+
+    printf("[CTRL PIO] pio=%u sm=%u length=%u offset=%u wrap_target=%u wrap=%u range=%u-%u\r\n",
+           pio_get_index(pio),
+           sm,
+           program.length,
+           offset,
+           psx_controller_spi_wrap_target,
+           psx_controller_spi_wrap,
+           offset,
+           offset + program.length - 1);
 
     pio_sm_config cfg = psx_controller_spi_program_get_default_config(offset);
     sm_config_set_out_pins(&cfg, mosi, 1);
@@ -217,12 +229,14 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
     irq_set_exclusive_handler(DMA_IRQ_1, dma_complete_handler);
     irq_set_enabled(DMA_IRQ_1, true);
 }
-void PSXController::begin() {
+void PSXController::begin()
+{
     printf("[PS2] begin\r\n");
     gpio_set_irq_enabled_with_callback(m_ackPin, GPIO_IRQ_EDGE_RISE, true, &attentionInterrupt);
     auto_shift_data(commandPollInput, sizeof(commandPollInput));
 }
-void PSXController::end() {
+void PSXController::end()
+{
     gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
     cancel_alarm(timeout_alarm_id);
 
@@ -236,7 +250,8 @@ void PSXController::end() {
         pio_active = false;
     }
 }
-void PSXController::load_state(const DeviceReloadState *state) {
+void PSXController::load_state(const DeviceReloadState *state)
+{
     type = state->ps2_type;
     valid = state->ps2_valid;
     hasTapBar = state->ps2_hasTapBar;
@@ -252,7 +267,8 @@ void PSXController::load_state(const DeviceReloadState *state) {
     done = state->ps2_done;
     packet_delay = state->ps2_packetDelay;
 }
-void PSXController::save_state(DeviceReloadState& state) const  {
+void PSXController::save_state(DeviceReloadState &state) const
+{
     state.ps2_type = type;
     state.ps2_valid = valid;
     state.ps2_hasTapBar = hasTapBar;
@@ -269,7 +285,8 @@ void PSXController::save_state(DeviceReloadState& state) const  {
     state.ps2_packetDelay = packet_delay;
 }
 
-PSXController::~PSXController() {
+PSXController::~PSXController()
+{
     printf("~PSXController\r\n");
 }
 void PSXController::no_attention(void)
@@ -310,6 +327,10 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
     memset(ps2Data, 0, sizeof(ps2Data));
     memset(ps2DataOutBuffer, 0x5A, sizeof(ps2DataOutBuffer));
     memcpy(ps2DataOutBuffer, out, len < BUFFER_SIZE ? len : BUFFER_SIZE);
+    printf("[PS2] TX DMA:");
+for (int i = 0; i < 8; i++)
+    printf(" %02X", ps2DataOutBuffer[i]);
+printf("\r\n");
 
     cancel_alarm(timeout_alarm_id);
     gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
@@ -345,6 +366,10 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
     memset(ps2Data, 0, sizeof(ps2Data));
     memset(ps2DataOutBuffer, 0x5A, sizeof(ps2DataOutBuffer));
     memcpy(ps2DataOutBuffer, out, len < BUFFER_SIZE ? len : BUFFER_SIZE);
+    printf("[PS2] TX DMA:");
+for (int i = 0; i < 8; i++)
+    printf(" %02X", ps2DataOutBuffer[i]);
+printf("\r\n");
 
     cancel_alarm(timeout_alarm_id);
     gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);

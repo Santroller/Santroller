@@ -305,10 +305,12 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
 
     // X counts the number of bytes after the current byte. The PIO therefore
     // knows exactly when to stop and, importantly, does not ACK the last byte.
-    pio_sm_put(pio, sm, pio_encode_set(pio_x, ps2Len - 1));
+    pio_sm_exec(pio, sm, pio_encode_set(pio_x, ps2Len - 1));
+    pio_sm_exec(pio, sm, pio_encode_jmp(offset));
 
     dma_channel_abort(dma_rx);
     dma_channel_abort(dma_tx);
+    dma_channel_set_irq1_enabled(dma_rx, true);
     dma_channel_set_write_addr(dma_rx, ps2Data, false);
     dma_channel_set_trans_count(dma_rx, ps2Len, false);
     dma_channel_set_read_addr(dma_tx, ps2DataOutBuffer, false);

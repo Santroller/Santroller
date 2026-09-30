@@ -181,6 +181,7 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
     pio_gpio_init(pio, sck);
     pio_gpio_init(pio, mosi);
     pio_gpio_init(pio, miso);
+    gpio_set_pulls(miso, true, false);
     pio_gpio_init(pio, ackPin);
 
     pio_sm_set_consecutive_pindirs(pio, sm, sck, 1, true);
@@ -315,7 +316,7 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
     pio_active = true;
     pio_header = (status != ENUMERATED);
     printf("[PS2] PIO armed header=%d target=%u tx=%02X\r\n",
-           pio_header, target_len, out[1]);
+           pio_header, target_len, out[1], gpio_get(miso), gpio_get(m_ackPin));
 
     pio_sm_set_enabled(pio, sm, false);
     pio_sm_clear_fifos(pio, sm);
@@ -445,7 +446,7 @@ void PSXController::process_data(bool ack, bool timeout)
 
         if (timeout && !pio_started)
         {
-            printf("[PS2] PIO start state=%d header=%d\r\n", status, pio_header);
+            printf("[PS2] PIO start state=%d header=%d DATA=%d ACK=%d\r\n", status, pio_header, gpio_get(miso), gpio_get(m_ackPin));
             // ATT has been low for the normal setup interval. Start both DMA
             // directions and then release the transaction entirely to PIO.
             dma_start_channel_mask((1u << dma_rx) | (1u << dma_tx));

@@ -10,20 +10,20 @@
 
 .wrap_target
 byte:
-    pull block
-    set y, 7
+    pull block side 1
+    set y, 7 side 1
 
 bitloop:
     out pins, 1 side 0
     in pins, 1 side 1
     jmp y-- bitloop side 1
 
-    push block
-    jmp !x done
-    wait 0 gpio PIN_ACK_PLACEHOLDER
-    wait 1 gpio PIN_ACK_PLACEHOLDER
-    jmp x-- byte
+    push block side 1
+    jmp !x done side 1
+    wait 0 gpio PIN_ACK_PLACEHOLDER side 1
+    wait 1 gpio PIN_ACK_PLACEHOLDER side 1
+    jmp x-- byte side 1
 
 done:
-    jmp done
+    jmp done side 1
 .wrap

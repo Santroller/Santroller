@@ -72,7 +72,5 @@ bool SwitchNetworkDevice::read_button(uint8_t button)
         return false;
 
     const auto &button_config = m_device.buttons[button];
-    return read_switch(
-        static_cast<uint8_t>(button_config.pin),
-        static_cast<uint8_t>(button_config.otherPin));
+    return read_switch(button_config.pin, button_config.otherPin);
 }

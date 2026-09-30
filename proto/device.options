@@ -1,1 +1,4 @@
 *Device.* submsg_callback:true
+proto.SwitchNetworkDevice.buttons max_count:32
+proto.SwitchNetworkDevice.buttons submsg_callback:false
+proto.SwitchNetworkButton.pin int_size:IS_8

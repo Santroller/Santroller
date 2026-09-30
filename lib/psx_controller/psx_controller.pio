@@ -1,0 +1,29 @@
+.program psx_controller_spi
+.side_set 1
+
+; PS2 host-side SPI transaction.
+; SCK idles high. Data changes on the falling edge and is sampled on
+; the following rising edge. ACK is checked between bytes.
+;
+; X contains the number of bytes remaining after the current byte.
+; The final byte does not wait for ACK.
+
+.wrap_target
+byte:
+    pull block
+    set y, 7
+
+bitloop:
+    out pins, 1 side 0
+    in pins, 1 side 1
+    jmp y-- bitloop side 1
+
+    push block
+    jmp !x done
+    wait 0 gpio PIN_ACK_PLACEHOLDER
+    wait 1 gpio PIN_ACK_PLACEHOLDER
+    jmp x-- byte
+
+done:
+    irq 0
+.wrap

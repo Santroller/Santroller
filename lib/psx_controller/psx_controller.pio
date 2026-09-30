@@ -1,0 +1,18 @@
+.program psx_ack_pacer
+; Hybrid ACK Pacer with Timeout Fallback for PS2 Controller SPI DMA
+; Listens on ACK pin (idles HIGH, pulses LOW on ACK).
+; If ACK pulses LOW, pushes 1 to RX FIFO immediately.
+; If ACK times out (~35 us), pushes 1 to RX FIFO on timeout.
+
+.wrap_target
+start:
+    set x, 1
+    mov isr, x
+    push block              ; Push 1 to RX FIFO to trigger DMA transfer
+    set y, 31               ; Load 35 us timeout counter (31 iterations)
+poll_loop:
+    jmp pin ack_not_low     ; If ACK pin is HIGH (1), jump to ack_not_low
+    jmp start               ; ACK pin is LOW (0)! Controller ACKed!
+ack_not_low:
+    jmp y-- poll_loop       ; Decrement timeout counter; loop if y > 0
+.wrap

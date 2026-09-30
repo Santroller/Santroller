@@ -7,6 +7,8 @@
 #include <hardware/gpio.h>
 #include <hardware/spi.h>
 #include <hardware/dma.h>
+#include <hardware/pio.h>
+#include "psx_controller.pio.h"
 #include "devices/base.hpp"
 
 /** \brief Size of internal communication buffer
@@ -104,7 +106,12 @@ private:
     uint8_t ps2DataOutBuffer[BUFFER_SIZE];
     int dma_rx = -1;
     int dma_tx = -1;
+    int dma_tx_pacer = -1;
     int dma_timer = -1;
+    PIO pio = pio0;
+    uint sm = 0;
+    uint pio_offset = 0;
+    bool pio_initialized = false;
     bool spi_active = false;
     bool spi_started = false;
     bool spi_header = false;

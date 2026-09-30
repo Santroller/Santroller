@@ -150,12 +150,26 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
         gpio_set_pulls(miso, true, false);
     }
 
-    // Configure a DMA Pacing Timer to pace DMA TX at 35 us per byte
-    // (16 us transmission + 19 us inter-byte processing delay for PS2 controller)
-    dma_timer = dma_claim_unused_timer(true);
-    uint16_t denom = (uint16_t)(clock_get_hz(clk_sys) / 28571);
-    dma_timer_set_fraction(dma_timer, 1, denom);
-    uint timer_dreq = dma_get_timer_dreq(dma_timer);
+    // Initialize PIO ACK Pacer
+    pio = pio0;
+    if (pio_can_add_program(pio, &psx_ack_pacer_program))
+    {
+        pio_offset = pio_add_program(pio, &psx_ack_pacer_program);
+        sm = pio_claim_unused_sm(pio, false);
+        if (sm != (uint)-1)
+        {
+            pio_sm_config c = psx_ack_pacer_program_get_default_config(pio_offset);
+            sm_config_set_jmp_pin(&c, ackPin);
+            sm_config_set_in_pins(&c, ackPin);
+
+            float clkdiv = (float)clock_get_hz(clk_sys) / 1771428.0f;
+            sm_config_set_clkdiv(&c, clkdiv);
+
+            pio_sm_init(pio, sm, pio_offset, &c);
+            pio_initialized = true;
+            printf("[PS2] PIO ACK pacer initialized sm=%u offset=%u\r\n", sm, pio_offset);
+        }
+    }
 
     dma_rx = dma_claim_unused_channel(true);
     dma_tx = dma_claim_unused_channel(true);
@@ -169,13 +183,43 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
         dma_rx, &rx_cfg, ps2Data,
         &spi_get_hw(spi)->dr, BUFFER_SIZE, false);
 
-    dma_channel_config tx_cfg = dma_channel_get_default_config(dma_tx);
-    channel_config_set_transfer_data_size(&tx_cfg, DMA_SIZE_8);
-    channel_config_set_dreq(&tx_cfg, timer_dreq);
-    channel_config_set_read_increment(&tx_cfg, true);
-    channel_config_set_write_increment(&tx_cfg, false);
-    dma_channel_configure(
-        dma_tx, &tx_cfg, &spi_get_hw(spi)->dr, ps2DataOutBuffer, BUFFER_SIZE, false);
+    if (pio_initialized)
+    {
+        dma_tx_pacer = dma_claim_unused_channel(true);
+
+        dma_channel_config pacer_cfg = dma_channel_get_default_config(dma_tx_pacer);
+        channel_config_set_transfer_data_size(&pacer_cfg, DMA_SIZE_32);
+        channel_config_set_dreq(&pacer_cfg, pio_get_dreq(pio, sm, false));
+        channel_config_set_read_increment(&pacer_cfg, false);
+        channel_config_set_write_increment(&pacer_cfg, false);
+        dma_channel_configure(
+            dma_tx_pacer, &pacer_cfg,
+            &dma_hw->ch[dma_tx].al1_transfer_count_trig,
+            &pio->rxf[sm], BUFFER_SIZE, false);
+
+        dma_channel_config tx_cfg = dma_channel_get_default_config(dma_tx);
+        channel_config_set_transfer_data_size(&tx_cfg, DMA_SIZE_8);
+        channel_config_set_dreq(&tx_cfg, DREQ_FORCE);
+        channel_config_set_read_increment(&tx_cfg, true);
+        channel_config_set_write_increment(&tx_cfg, false);
+        dma_channel_configure(
+            dma_tx, &tx_cfg, &spi_get_hw(spi)->dr, ps2DataOutBuffer, 1, false);
+    }
+    else
+    {
+        dma_timer = dma_claim_unused_timer(true);
+        uint16_t denom = (uint16_t)(clock_get_hz(clk_sys) / 28571);
+        dma_timer_set_fraction(dma_timer, 1, denom);
+        uint timer_dreq = dma_get_timer_dreq(dma_timer);
+
+        dma_channel_config tx_cfg = dma_channel_get_default_config(dma_tx);
+        channel_config_set_transfer_data_size(&tx_cfg, DMA_SIZE_8);
+        channel_config_set_dreq(&tx_cfg, timer_dreq);
+        channel_config_set_read_increment(&tx_cfg, true);
+        channel_config_set_write_increment(&tx_cfg, false);
+        dma_channel_configure(
+            dma_tx, &tx_cfg, &spi_get_hw(spi)->dr, ps2DataOutBuffer, BUFFER_SIZE, false);
+    }
 
     dma_channel_set_irq1_enabled(dma_rx, true);
     irq_set_exclusive_handler(DMA_IRQ_1, dma_complete_handler);
@@ -207,6 +251,9 @@ void PSXController::end()
     {
         abort_dma_if_active(dma_rx);
         abort_dma_if_active(dma_tx);
+        abort_dma_if_active(dma_tx_pacer);
+        if (pio_initialized)
+            pio_sm_set_enabled(pio, sm, false);
         dma_hw->ints1 = 1u << dma_rx;
         spi_active = false;
     }
@@ -307,12 +354,18 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
 
     abort_dma_if_active(dma_rx);
     abort_dma_if_active(dma_tx);
+    abort_dma_if_active(dma_tx_pacer);
+    if (pio_initialized)
+        pio_sm_set_enabled(pio, sm, false);
     dma_hw->ints1 = 1u << dma_rx;
     dma_channel_set_irq1_enabled(dma_rx, true);
     dma_channel_set_write_addr(dma_rx, ps2Data, false);
     dma_channel_set_trans_count(dma_rx, target_len, false);
     dma_channel_set_read_addr(dma_tx, ps2DataOutBuffer, false);
-    dma_channel_set_trans_count(dma_tx, target_len, false);
+    if (pio_initialized)
+        dma_channel_set_trans_count(dma_tx_pacer, target_len, false);
+    else
+        dma_channel_set_trans_count(dma_tx, target_len, false);
     spi_dma_offset = 0;
     spi_dma_len = target_len;
     spi_started = false;
@@ -352,7 +405,25 @@ void PSXController::spi_header_complete()
     spi_dma_offset = 4;
     spi_dma_len = response_len - 4;
     spi_header = false;
-    dma_start_channel_mask((1u << dma_rx) | (1u << dma_tx));
+
+    if (pio_initialized)
+    {
+        dma_channel_set_read_addr(dma_tx, ps2DataOutBuffer + 4, false);
+        dma_channel_set_trans_count(dma_tx_pacer, response_len - 4, false);
+
+        pio_sm_set_enabled(pio, sm, false);
+        pio_sm_clear_fifos(pio, sm);
+        pio_sm_exec(pio, sm, pio_encode_jmp(pio_offset));
+        pio_sm_set_enabled(pio, sm, true);
+
+        dma_start_channel_mask((1u << dma_rx) | (1u << dma_tx_pacer));
+    }
+    else
+    {
+        dma_channel_set_read_addr(dma_tx, ps2DataOutBuffer + 4, false);
+        dma_channel_set_trans_count(dma_tx, response_len - 4, false);
+        dma_start_channel_mask((1u << dma_rx) | (1u << dma_tx));
+    }
 }
 
 void PSXController::spi_dma_complete()
@@ -381,6 +452,9 @@ void PSXController::spi_dma_complete()
     done = true;
     valid = isValidReply(ps2Data);
 
+    if (pio_initialized)
+        pio_sm_set_enabled(pio, sm, false);
+
     process_data(false, false);
 }
 
@@ -403,7 +477,26 @@ void PSXController::process_data(bool ack, bool timeout)
 
             spi_dma_offset = 0;
             spi_dma_len = target_len;
-            dma_start_channel_mask((1u << dma_rx) | (1u << dma_tx));
+
+            if (pio_initialized)
+            {
+                dma_channel_set_read_addr(dma_tx, ps2DataOutBuffer, false);
+                dma_channel_set_trans_count(dma_tx_pacer, target_len, false);
+
+                pio_sm_set_enabled(pio, sm, false);
+                pio_sm_clear_fifos(pio, sm);
+                pio_sm_exec(pio, sm, pio_encode_jmp(pio_offset));
+                pio_sm_set_enabled(pio, sm, true);
+
+                dma_start_channel_mask((1u << dma_rx) | (1u << dma_tx_pacer));
+            }
+            else
+            {
+                dma_channel_set_read_addr(dma_tx, ps2DataOutBuffer, false);
+                dma_channel_set_trans_count(dma_tx, target_len, false);
+                dma_start_channel_mask((1u << dma_rx) | (1u << dma_tx));
+            }
+
             spi_started = true;
             timeout_alarm_id = add_alarm_in_us(packet_delay < 5000 ? 5000 : packet_delay, restart_handler, this, true);
             return;
@@ -416,9 +509,12 @@ void PSXController::process_data(bool ack, bool timeout)
                    gpio_get(m_sckPin), gpio_get(m_mosiPin),
                    gpio_get(m_misoPin), gpio_get(m_ackPin),
                    dma_hw->ch[dma_rx].transfer_count,
-                   dma_hw->ch[dma_tx].transfer_count);
+                   pio_initialized ? dma_hw->ch[dma_tx_pacer].transfer_count : dma_hw->ch[dma_tx].transfer_count);
             abort_dma_if_active(dma_rx);
             abort_dma_if_active(dma_tx);
+            abort_dma_if_active(dma_tx_pacer);
+            if (pio_initialized)
+                pio_sm_set_enabled(pio, sm, false);
             dma_hw->ints1 = 1u << dma_rx;
             spi_active = false;
             spi_started = false;

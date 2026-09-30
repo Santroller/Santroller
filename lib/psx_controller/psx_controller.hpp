@@ -99,6 +99,8 @@ private:
     void no_attention();
     void signal_attention();
     spi_inst_t *spi = nullptr;
+    uint8_t m_block;
+    uint32_t m_clock;
     uint8_t m_attPin;
     uint8_t m_ackPin;
     int8_t m_sckPin;

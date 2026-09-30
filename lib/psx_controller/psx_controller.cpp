@@ -130,30 +130,37 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     inst->process_data(false, true);
     return 0;
 }
-PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin) : m_attPin(attPin), m_ackPin(ackPin), m_sckPin(sck), m_mosiPin(mosi), m_misoPin(miso)
+PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin) 
+    : m_block(block), m_clock(clock), m_attPin(attPin), m_ackPin(ackPin), m_sckPin(sck), m_mosiPin(mosi), m_misoPin(miso)
 {
-    PS2_PRINT("[PS2] init sck=%d mosi=%d miso=%d att=%u ack=%u clock=%u block=%u\r\n",
-              sck, mosi, miso, attPin, ackPin, clock, block);
-    gpio_init(attPin);
-    gpio_set_dir(attPin, true);
-    gpio_put(attPin, true);
-    gpio_init(ackPin);
-    gpio_set_dir(ackPin, false);
-    gpio_set_pulls(ackPin, true, false);
+    controller = this;
+}
+
+void PSXController::begin()
+{
+    PS2_PRINT("[PS2] begin sck=%d mosi=%d miso=%d att=%u ack=%u clock=%u block=%u\r\n",
+              m_sckPin, m_mosiPin, m_misoPin, m_attPin, m_ackPin, m_clock, m_block);
+
+    gpio_init(m_attPin);
+    gpio_set_dir(m_attPin, true);
+    gpio_put(m_attPin, true);
+    gpio_init(m_ackPin);
+    gpio_set_dir(m_ackPin, false);
+    gpio_set_pulls(m_ackPin, true, false);
     controller = this;
 
-    spi = (block == 0) ? spi0 : spi1;
-    spi_init(spi, clock);
+    spi = (m_block == 0) ? spi0 : spi1;
+    spi_init(spi, m_clock);
     spi_set_format(spi, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
 
-    if (sck != -1)
-        gpio_set_function(sck, GPIO_FUNC_SPI);
-    if (mosi != -1)
-        gpio_set_function(mosi, GPIO_FUNC_SPI);
-    if (miso != -1)
+    if (m_sckPin != -1)
+        gpio_set_function(m_sckPin, GPIO_FUNC_SPI);
+    if (m_mosiPin != -1)
+        gpio_set_function(m_mosiPin, GPIO_FUNC_SPI);
+    if (m_misoPin != -1)
     {
-        gpio_set_function(miso, GPIO_FUNC_SPI);
-        gpio_set_pulls(miso, true, false);
+        gpio_set_function(m_misoPin, GPIO_FUNC_SPI);
+        gpio_set_pulls(m_misoPin, true, false);
     }
 
     // Initialize PIO ACK Pacer (try pio0 first, fallback to pio1)
@@ -178,8 +185,8 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
     if (pio != nullptr)
     {
         pio_sm_config c = psx_ack_pacer_program_get_default_config(pio_offset);
-        sm_config_set_jmp_pin(&c, ackPin);
-        sm_config_set_in_pins(&c, ackPin);
+        sm_config_set_jmp_pin(&c, m_ackPin);
+        sm_config_set_in_pins(&c, m_ackPin);
 
         float clkdiv = (float)clock_get_hz(clk_sys) / 1771428.0f;
         sm_config_set_clkdiv(&c, clkdiv);
@@ -255,10 +262,7 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
         irq_set_exclusive_handler(DMA_IRQ_1, dma_complete_handler);
         irq_set_enabled(DMA_IRQ_1, true);
     }
-}
-void PSXController::begin()
-{
-    PS2_PRINT("[PS2] begin\r\n");
+
     gpio_set_irq_enabled_with_callback(m_ackPin, GPIO_IRQ_EDGE_RISE, true, &attentionInterrupt);
     auto_shift_data(commandPollInput, sizeof(commandPollInput));
 }

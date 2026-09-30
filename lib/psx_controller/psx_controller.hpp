@@ -103,6 +103,7 @@ private:
     int dma_rx = -1;
     int dma_tx = -1;
     bool pio_active = false;
+    bool pio_started = false;
     uint8_t lastInputs[BUFFER_SIZE];
     const uint8_t* ps2DataOut;
     uint8_t ps2Idx;

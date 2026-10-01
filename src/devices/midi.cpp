@@ -1,5 +1,5 @@
 #include "devices/midi.hpp"
-#include "devices/usb.hpp"
+#include "devices/usb/host/host.hpp"
 #include "managers/device_manager.hpp"
 #include "utils.h"
 
@@ -70,33 +70,34 @@ void MidiDevice::save_reload_state(DeviceReloadState& state) const
     state.valid = true;
     memcpy(state.seen_midi_channels, seenChannels, sizeof(seenChannels));
 }
+
+bool MidiDevice::mark_channel_seen(uint8_t channel)
+{
+    if (seenChannels[channel])
+    {
+        return false;
+    }
+
+    printf("Seen new MIDI channel: %d on device %d\r\n", channel, m_id);
+    seenChannels[channel] = true;
+    reload();
+    return true;
+}
+
 void MidiDevice::rescan(bool first)
 {
-    if (first)
+    if (!first || usbBased)
     {
-        for (int i = 0; i < 18; i++)
+        return;
+    }
+
+    for (int i = 0; i < 18; i++)
+    {
+        if (seenChannels[i])
         {
-            if (seenChannels[i])
-            {
-                if (usbBased)
-                {
-                    auto host_itf = static_cast<UsbHostInterface *>(this);
-                    if (host_itf->dev_addr() < host_devices.size() && host_devices[host_itf->dev_addr()])
-                    {
-                        auto dev = host_devices[host_itf->dev_addr()]->host_devices_by_itf[host_itf->interface()];
-                        if (dev)
-                        {
-                            DeviceManager::instance().add_assignable_device(dev);
-                        }
-                    }
-                }
-                else
-                {
-                    // Non-USB MIDI devices grab from active_devices / root_devices
-                    DeviceManager::instance().add_assignable_device(std::static_pointer_cast<MidiDevice>(DeviceManager::instance().get_root_device(m_id)));
-                }
-                printf("Assigning MIDI channel: %d on device %d\r\n", i, m_id);
-            }
+            // Non-USB MIDI devices restore channel slots from the root device.
+            DeviceManager::instance().add_assignable_device(std::static_pointer_cast<MidiDevice>(DeviceManager::instance().get_root_device(m_id)));
+            printf("Assigning MIDI channel: %d on device %d\r\n", i, m_id);
         }
     }
 }
@@ -317,12 +318,7 @@ void MidiDevice::update(bool full_poll, bool send_events)
             }
             if (cable_state->data[0] < MIDI_STATUS_SYSEX_START)
             {
-                if (!seenChannels[channel])
-                {
-                    printf("Seen new MIDI channel: %d on device %d\r\n", channel, m_id);
-                    seenChannels[channel] = true;
-                    reload();
-                }
+                mark_channel_seen(channel);
             }
             if (cable_state->data[0] == MIDI_STATUS_SYSEX_START)
             {
@@ -331,15 +327,11 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 {
                     if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_SQUIER && !seenChannels[MIDI_CHANNEL_PROGUITAR_SQUIER])
                     {
-                        printf("Seen new MIDI channel: proguitar squier on device %d\r\n", m_id);
-                        seenChannels[MIDI_CHANNEL_PROGUITAR_SQUIER] = true;
-                        reload();
+                        mark_channel_seen(MIDI_CHANNEL_PROGUITAR_SQUIER);
                     }
                     if (cable_state->data[3] == MIDI_SYSEX_ID_PROGUITAR_MUSTANG && !seenChannels[MIDI_CHANNEL_PROGUITAR_MUSTANG])
                     {
-                        printf("Seen new MIDI channel: proguitar mustang on device %d\r\n", m_id);
-                        seenChannels[MIDI_CHANNEL_PROGUITAR_MUSTANG] = true;
-                        reload();
+                        mark_channel_seen(MIDI_CHANNEL_PROGUITAR_MUSTANG);
                     }
                     if (cable_state->data[4] == 0x08)
                     {

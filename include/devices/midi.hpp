@@ -89,6 +89,9 @@ public:
     bool is_assignable() const override { return true; }
     void save_reload_state(DeviceReloadState& state) const override;
 
+protected:
+    virtual bool mark_channel_seen(uint8_t channel);
+
 private:
     // Endpoint stream
     struct

@@ -24,6 +24,7 @@ public:
     }
     virtual bool set_config();
     virtual bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) = 0;
+    bool mark_channel_seen(uint8_t channel) override;
     uint8_t dev_addr()
     {
         return m_dev_addr;
@@ -91,6 +92,7 @@ protected:
 
 void usb_host_add_assignable_interface(std::shared_ptr<UsbHostInterface> device);
 void usb_host_add_enumerating_interface(std::shared_ptr<UsbHostInterface> device);
+void usb_host_promote_interface(UsbHostInterface *device);
 void usb_host_remove_assignable_interface(UsbHostInterface *device);
 void usb_host_remove_enumerating_interface(UsbHostInterface *device);
 void usb_host_remove_interfaces_by_address(uint8_t dev_addr);

@@ -50,6 +50,7 @@ std::array<std::shared_ptr<UsbHostDevice>, 127> host_devices;
 
 static std::vector<std::shared_ptr<UsbHostInterface>> usb_assignable_interfaces;
 static std::vector<std::shared_ptr<UsbHostInterface>> usb_enumerating_interfaces;
+static std::vector<UsbHostInterface *> usb_pending_promotions;
 
 template <typename Predicate>
 static void erase_usb_interfaces_if(std::vector<std::shared_ptr<UsbHostInterface>> &interfaces, Predicate predicate)
@@ -65,6 +66,25 @@ void usb_host_add_assignable_interface(std::shared_ptr<UsbHostInterface> device)
 void usb_host_add_enumerating_interface(std::shared_ptr<UsbHostInterface> device)
 {
     usb_enumerating_interfaces.push_back(device);
+}
+
+void usb_host_promote_interface(UsbHostInterface *device)
+{
+    if (std::find(usb_pending_promotions.begin(), usb_pending_promotions.end(), device) == usb_pending_promotions.end())
+    {
+        usb_pending_promotions.push_back(device);
+    }
+}
+
+bool UsbHostInterface::mark_channel_seen(uint8_t channel)
+{
+    if (!MidiDevice::mark_channel_seen(channel))
+    {
+        return false;
+    }
+
+    usb_host_promote_interface(this);
+    return true;
 }
 
 void usb_host_remove_assignable_interface(UsbHostInterface *device)
@@ -97,6 +117,20 @@ void usb_host_add_assignable_devices(bool rescan)
     for (const auto &device : usb_assignable_interfaces)
     {
         device->still_connected = true;
+
+        if (rescan && device->subtype() == SubType_Midi)
+        {
+            for (uint8_t channel = 0; channel < 18; ++channel)
+            {
+                if (device->has_midi_channel(channel))
+                {
+                    DeviceManager::instance().add_assignable_device(device);
+                    printf("Restoring USB MIDI channel %u on device %u\r\n", channel, device->m_id);
+                }
+            }
+            continue;
+        }
+
         DeviceManager::instance().add_assignable_device(device);
         if (rescan)
         {
@@ -115,6 +149,22 @@ void usb_host_update_interfaces(bool full_poll, bool send_events)
     {
         device->update(full_poll, send_events);
     }
+
+    for (auto *device : usb_pending_promotions)
+    {
+        auto it = std::find_if(usb_enumerating_interfaces.begin(), usb_enumerating_interfaces.end(),
+                               [device](const auto &candidate) { return candidate.get() == device; });
+        if (it == usb_enumerating_interfaces.end())
+        {
+            continue;
+        }
+
+        auto promoted = *it;
+        usb_enumerating_interfaces.erase(it);
+        usb_assignable_interfaces.push_back(std::move(promoted));
+        printf("Promoted USB MIDI interface to assignable: %u:%u\r\n", device->dev_addr(), device->interface());
+    }
+    usb_pending_promotions.clear();
 }
 
 void process_delayed_init()

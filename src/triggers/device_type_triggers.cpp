@@ -10,10 +10,10 @@
 #include "emulation/usb/hid_device.h"
 #include <algorithm>
 
-static void claim_profile_device(Profile *profile, const std::shared_ptr<Device> &device)
+static void claim_profile_device(Profile *profile, uint16_t slot_id, const std::shared_ptr<Device> &device)
 {
-    printf("Claiming profile device: profile=%d (%p) device=%d (%p)\n", profile->profile_id, profile, device->m_id, device.get());
-    profile->claimed_devices[device->m_id] = device;
+    printf("Claiming profile device: profile=%d (%p) slot=%d device=%d (%p)\n", profile->profile_id, profile, slot_id, device->m_id, device.get());
+    profile->claimed_devices[slot_id] = device;
     auto instances = ProfileManager::instance().get_instances_for_profile(profile->profile_id);
     for (const auto &inst : instances)
     {
@@ -27,9 +27,9 @@ static void claim_profile_device(Profile *profile, const std::shared_ptr<Device>
         }
     }
 }
-static void claim_profile_temp_device(Profile *profile, const std::shared_ptr<Device> &device)
+static void claim_profile_temp_device(Profile *profile, uint16_t slot_id, const std::shared_ptr<Device> &device)
 {
-    profile->temp_claimed_devices[device->m_id] = device;
+    profile->temp_claimed_devices[slot_id] = device;
 }
 
 static void clear_profile_temp_devices(Profile *profile)
@@ -82,7 +82,7 @@ bool WiiExtTypeActivationTrigger::validate(bool claim_device, bool full_poll, bo
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, device);
+            claim_profile_device(m_profile, m_id, device);
         }
         return true;
     }
@@ -111,7 +111,7 @@ bool PS2ControllerTypeActivationTrigger::validate(bool claim_device, bool full_p
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, device);
+            claim_profile_device(m_profile, m_id, device);
         }
         return true;
     }
@@ -140,11 +140,11 @@ bool UsbTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, device);
+            claim_profile_device(m_profile, m_id, device);
         }
         else
         {
-            claim_profile_temp_device(m_profile, device);
+            claim_profile_temp_device(m_profile, m_id, device);
         }
         return true;
     }
@@ -177,11 +177,11 @@ bool SpecificUsbDeviceActivationTrigger::validate(bool claim_device, bool full_p
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, device);
+            claim_profile_device(m_profile, m_id, device);
         }
         else
         {
-            claim_profile_temp_device(m_profile, device);
+            claim_profile_temp_device(m_profile, m_id, device);
         }
         return true;
     }
@@ -214,11 +214,11 @@ bool BluetoothTypeActivationTrigger::validate(bool claim_device, bool full_poll,
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, device);
+            claim_profile_device(m_profile, m_id, device);
         }
         else
         {
-            claim_profile_temp_device(m_profile, device);
+            claim_profile_temp_device(m_profile, m_id, device);
         }
         return true;
     }
@@ -251,11 +251,11 @@ bool SpecificBluetoothDeviceActivationTrigger::validate(bool claim_device, bool 
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, device);
+            claim_profile_device(m_profile, m_id, device);
         }
         else
         {
-            claim_profile_temp_device(m_profile, device);
+            claim_profile_temp_device(m_profile, m_id, device);
         }
         return true;
     }
@@ -288,12 +288,12 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, device);
+            claim_profile_device(m_profile, m_id, device);
             printf("Claimed device: %d %p %p\r\n", m_profile, m_profile, device);
         }
         else
         {
-            claim_profile_temp_device(m_profile, device);
+            claim_profile_temp_device(m_profile, m_id, device);
         }
         return true;
     }

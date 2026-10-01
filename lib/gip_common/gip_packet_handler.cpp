@@ -80,8 +80,11 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device)
             // Pass detected subtype to callback
             interface->on_device_descriptor(context, (SubType)subtype);
 
-            // not emulating xb1 (no registered auth passthrough handler), so skip auth
-            if (!auth_broker.has_handler(ModeXboxOne))
+            // Only hold off auth when an emulated Xbox One device (i.e. Xbox One
+            // mode with a loaded profile) will pass the console's auth through.
+            // Otherwise the controller sits unauthenticated and may fall back to
+            // its wireless radio.
+            if (!auth_broker.has_response_handler(ModeXboxOne))
             {
                 gip_default_auth_callback(
                     device,

@@ -282,12 +282,12 @@ void ProfileManager::prepare_for_config_reload()
     if (xone_it != m_emulated_devices.end() && xone_it->second)
     {
         auto xone = std::static_pointer_cast<XboxOneGamepadDevice>(xone_it->second);
-        if (xone->is_legacy_adapter())
-        {
-            m_preserved_xone = xone;
-            m_preserved_xone->profiles.clear();
-            m_was_legacy_adapter = true;
-        }
+        // Keep the Xbox One instance across reloads so its GIP handshake/auth
+        // state survives; a fresh instance would sit unauthenticated since the
+        // console won't re-run the handshake without a re-enumeration.
+        m_was_legacy_adapter = xone->is_legacy_adapter();
+        m_preserved_xone = xone;
+        m_preserved_xone->profiles.clear();
     }
 
     m_instances.clear();

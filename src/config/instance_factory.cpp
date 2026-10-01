@@ -78,9 +78,9 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
             auto preserved = profile_mgr.take_preserved_xone();
             if (preserved) {
                 profile_mgr.restore_preserved_xone(preserved);
-                preserved->profiles.push_back(profile);
+                setup_instance_from_profile(preserved, profile);
                 profile_mgr.register_instance(preserved, profile);
-                printf("Restored preserved Xbox One legacy adapter, total profiles: %zu\n", preserved->profiles.size());
+                printf("Restored preserved Xbox One instance, total profiles: %zu\n", preserved->profiles.size());
                 return preserved;
             }
         }

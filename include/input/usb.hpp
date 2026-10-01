@@ -13,11 +13,22 @@ public:
     uint16_t tick_analog();
     void link_device(bool claim_devices) override
     {
-        if (claim_devices) {
-            m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->devices[m_input.deviceid]);
-        } else {
-            m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->temp_devices[m_input.deviceid]);
+        auto &claimed = claim_devices ? m_profile->claimed_devices : m_profile->temp_claimed_devices;
+        auto it = claimed.find(m_input.deviceid);
+        if (it != claimed.end() && it->second) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(it->second);
+            return;
         }
+        if (!claimed.empty()) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(claimed.begin()->second);
+            return;
+        }
+        auto st_it = m_profile->devices.find(m_input.deviceid);
+        if (st_it != m_profile->devices.end()) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(st_it->second);
+            return;
+        }
+        m_device = nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
@@ -42,11 +53,22 @@ public:
     }
     void link_device(bool claim_devices) override
     {
-        if (claim_devices) {
-            m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->devices[m_input.deviceid]);
-        } else {
-            m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->temp_devices[m_input.deviceid]);
+        auto &claimed = claim_devices ? m_profile->claimed_devices : m_profile->temp_claimed_devices;
+        auto it = claimed.find(m_input.deviceid);
+        if (it != claimed.end() && it->second) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(it->second);
+            return;
         }
+        if (!claimed.empty()) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(claimed.begin()->second);
+            return;
+        }
+        auto st_it = m_profile->devices.find(m_input.deviceid);
+        if (st_it != m_profile->devices.end()) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(st_it->second);
+            return;
+        }
+        m_device = nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
@@ -65,11 +87,22 @@ public:
     uint64_t hardware_id() const override { return (static_cast<uint64_t>(InputHw_KeyboardKey) << 56) | (static_cast<uint64_t>(m_input.deviceid) << 16) | static_cast<uint32_t>(m_input.key); }
     void link_device(bool claim_devices) override
     {
-        if (claim_devices) {
-            m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->devices[m_input.deviceid]);
-        } else {
-            m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->temp_devices[m_input.deviceid]);
+        auto &claimed = claim_devices ? m_profile->claimed_devices : m_profile->temp_claimed_devices;
+        auto it = claimed.find(m_input.deviceid);
+        if (it != claimed.end() && it->second) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(it->second);
+            return;
         }
+        if (!claimed.empty()) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(claimed.begin()->second);
+            return;
+        }
+        auto st_it = m_profile->devices.find(m_input.deviceid);
+        if (st_it != m_profile->devices.end()) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(st_it->second);
+            return;
+        }
+        m_device = nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
@@ -87,11 +120,22 @@ public:
     uint16_t tick_analog();
     void link_device(bool claim_devices) override
     {
-        if (claim_devices) {
-            m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->devices[m_input.deviceid]);
-        } else {
-            m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->temp_devices[m_input.deviceid]);
+        auto &claimed = claim_devices ? m_profile->claimed_devices : m_profile->temp_claimed_devices;
+        auto it = claimed.find(m_input.deviceid);
+        if (it != claimed.end() && it->second) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(it->second);
+            return;
         }
+        if (!claimed.empty()) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(claimed.begin()->second);
+            return;
+        }
+        auto st_it = m_profile->devices.find(m_input.deviceid);
+        if (st_it != m_profile->devices.end()) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(st_it->second);
+            return;
+        }
+        m_device = nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
@@ -109,11 +153,22 @@ public:
     uint16_t tick_analog();
     void link_device(bool claim_devices) override
     {
-        if (claim_devices) {
-            m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->devices[m_input.deviceid]);
-        } else {
-            m_device = std::static_pointer_cast<UsbHostInterface>(m_profile->temp_devices[m_input.deviceid]);
+        auto &claimed = claim_devices ? m_profile->claimed_devices : m_profile->temp_claimed_devices;
+        auto it = claimed.find(m_input.deviceid);
+        if (it != claimed.end() && it->second) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(it->second);
+            return;
         }
+        if (!claimed.empty()) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(claimed.begin()->second);
+            return;
+        }
+        auto st_it = m_profile->devices.find(m_input.deviceid);
+        if (st_it != m_profile->devices.end()) {
+            m_device = std::static_pointer_cast<UsbHostInterface>(st_it->second);
+            return;
+        }
+        m_device = nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 

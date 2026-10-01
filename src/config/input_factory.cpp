@@ -36,7 +36,8 @@ static std::unique_ptr<Input> create_simple_input(const ConfigType &config)
 
 bool InputFactory::has_device(std::shared_ptr<Profile> profile, uint32_t device_id)
 {
-    return profile->devices.find(device_id) != profile->devices.end();
+    return profile->devices.find(device_id) != profile->devices.end() ||
+           profile->claimed_devices.find(device_id) != profile->claimed_devices.end();
 }
 
 std::unique_ptr<Input> InputFactory::create_input(

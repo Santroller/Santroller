@@ -158,6 +158,17 @@ void Instance::update_feedback(bool force)
                 dev_pair.second->set_stagekit_led(stagekit_param, stagekit_command);
             }
         }
+        for (const auto &dev_pair : profile->claimed_devices)
+        {
+            if (dev_pair.second)
+            {
+                dev_pair.second->set_rumble(rumble_left, rumble_right);
+                dev_pair.second->set_player_led(player_led);
+                dev_pair.second->set_lightbar(lightbar_red, lightbar_green, lightbar_blue);
+                dev_pair.second->set_euphoria_led(euphoria_led > 0);
+                dev_pair.second->set_stagekit_led(stagekit_param, stagekit_command);
+            }
+        }
         for (const auto &led_pair : profile->leds)
         {
             if (led_pair)
@@ -182,6 +193,24 @@ void Instance::update_capabilities()
             continue;
         }
         for (const auto &dev_pair : profile->devices)
+        {
+            if (dev_pair.second)
+            {
+                if (dev_pair.second->has_rumble())
+                {
+                    caps |= CapabilityHasRumble;
+                }
+                if (dev_pair.second->has_player_led())
+                {
+                    caps |= CapabilityHasStandardPlayerLeds;
+                }
+                if (dev_pair.second->has_euphoria_led())
+                {
+                    caps |= CapabilityHasRGBIndicatorLed;
+                }
+            }
+        }
+        for (const auto &dev_pair : profile->claimed_devices)
         {
             if (dev_pair.second)
             {

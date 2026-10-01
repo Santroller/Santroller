@@ -20,11 +20,22 @@ public:
     uint64_t hardware_id() const override { return (static_cast<uint64_t>(InputHw_MidiNote) << 56) | (static_cast<uint64_t>(m_device ? m_device->m_id : 0) << 16) | (static_cast<uint64_t>(m_input.channel) << 8) | static_cast<uint64_t>(m_input.note); }
     void link_device(bool claim_devices) override
     {
-        if (claim_devices) {
-            m_device = std::static_pointer_cast<MidiDevice>(m_profile->devices[m_device_id]);
-        } else {
-            m_device = std::static_pointer_cast<MidiDevice>(m_profile->temp_devices[m_device_id]);
+        auto &claimed = claim_devices ? m_profile->claimed_devices : m_profile->temp_claimed_devices;
+        auto it = claimed.find(m_device_id);
+        if (it != claimed.end() && it->second) {
+            m_device = std::static_pointer_cast<MidiDevice>(it->second);
+            return;
         }
+        if (!claimed.empty()) {
+            m_device = std::static_pointer_cast<MidiDevice>(claimed.begin()->second);
+            return;
+        }
+        auto st_it = m_profile->devices.find(m_device_id);
+        if (st_it != m_profile->devices.end()) {
+            m_device = std::static_pointer_cast<MidiDevice>(st_it->second);
+            return;
+        }
+        m_device = nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
@@ -44,11 +55,22 @@ public:
     uint16_t tick_analog();
     void link_device(bool claim_devices) override
     {
-        if (claim_devices) {
-            m_device = std::static_pointer_cast<MidiDevice>(m_profile->devices[m_device_id]);
-        } else {
-            m_device = std::static_pointer_cast<MidiDevice>(m_profile->temp_devices[m_device_id]);
+        auto &claimed = claim_devices ? m_profile->claimed_devices : m_profile->temp_claimed_devices;
+        auto it = claimed.find(m_device_id);
+        if (it != claimed.end() && it->second) {
+            m_device = std::static_pointer_cast<MidiDevice>(it->second);
+            return;
         }
+        if (!claimed.empty()) {
+            m_device = std::static_pointer_cast<MidiDevice>(claimed.begin()->second);
+            return;
+        }
+        auto st_it = m_profile->devices.find(m_device_id);
+        if (st_it != m_profile->devices.end()) {
+            m_device = std::static_pointer_cast<MidiDevice>(st_it->second);
+            return;
+        }
+        m_device = nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
@@ -67,11 +89,22 @@ public:
     uint16_t tick_analog();
     void link_device(bool claim_devices) override
     {
-        if (claim_devices) {
-            m_device = std::static_pointer_cast<MidiDevice>(m_profile->devices[m_device_id]);
-        } else {
-            m_device = std::static_pointer_cast<MidiDevice>(m_profile->temp_devices[m_device_id]);
+        auto &claimed = claim_devices ? m_profile->claimed_devices : m_profile->temp_claimed_devices;
+        auto it = claimed.find(m_device_id);
+        if (it != claimed.end() && it->second) {
+            m_device = std::static_pointer_cast<MidiDevice>(it->second);
+            return;
         }
+        if (!claimed.empty()) {
+            m_device = std::static_pointer_cast<MidiDevice>(claimed.begin()->second);
+            return;
+        }
+        auto st_it = m_profile->devices.find(m_device_id);
+        if (st_it != m_profile->devices.end()) {
+            m_device = std::static_pointer_cast<MidiDevice>(st_it->second);
+            return;
+        }
+        m_device = nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
@@ -90,11 +123,22 @@ public:
     uint16_t tick_analog();
     void link_device(bool claim_devices) override
     {
-        if (claim_devices) {
-            m_device = std::static_pointer_cast<ProGuitarMidiDevice>(m_profile->devices[m_device_id]);
-        } else {
-            m_device = std::static_pointer_cast<ProGuitarMidiDevice>(m_profile->temp_devices[m_device_id]);
+        auto &claimed = claim_devices ? m_profile->claimed_devices : m_profile->temp_claimed_devices;
+        auto it = claimed.find(m_device_id);
+        if (it != claimed.end() && it->second) {
+            m_device = std::static_pointer_cast<ProGuitarMidiDevice>(it->second);
+            return;
         }
+        if (!claimed.empty()) {
+            m_device = std::static_pointer_cast<ProGuitarMidiDevice>(claimed.begin()->second);
+            return;
+        }
+        auto st_it = m_profile->devices.find(m_device_id);
+        if (st_it != m_profile->devices.end()) {
+            m_device = std::static_pointer_cast<ProGuitarMidiDevice>(st_it->second);
+            return;
+        }
+        m_device = nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
@@ -113,11 +157,22 @@ public:
     uint16_t tick_analog();
     void link_device(bool claim_devices) override
     {
-        if (claim_devices) {
-            m_device = std::static_pointer_cast<ProGuitarMidiDevice>(m_profile->devices[m_device_id]);
-        } else {
-            m_device = std::static_pointer_cast<ProGuitarMidiDevice>(m_profile->temp_devices[m_device_id]);
+        auto &claimed = claim_devices ? m_profile->claimed_devices : m_profile->temp_claimed_devices;
+        auto it = claimed.find(m_device_id);
+        if (it != claimed.end() && it->second) {
+            m_device = std::static_pointer_cast<ProGuitarMidiDevice>(it->second);
+            return;
         }
+        if (!claimed.empty()) {
+            m_device = std::static_pointer_cast<ProGuitarMidiDevice>(claimed.begin()->second);
+            return;
+        }
+        auto st_it = m_profile->devices.find(m_device_id);
+        if (st_it != m_profile->devices.end()) {
+            m_device = std::static_pointer_cast<ProGuitarMidiDevice>(st_it->second);
+            return;
+        }
+        m_device = nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 

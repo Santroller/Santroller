@@ -32,6 +32,8 @@ public:
     std::vector<std::unique_ptr<LedMapping>> leds;
     std::map<uint16_t, std::shared_ptr<Device>> devices;
     std::map<uint16_t, std::shared_ptr<Device>> temp_devices;
+    std::map<uint16_t, std::shared_ptr<Device>> claimed_devices;
+    std::map<uint16_t, std::shared_ptr<Device>> temp_claimed_devices;
     DrumState drum_state;
     KeyboardState keyboard_state;
 };

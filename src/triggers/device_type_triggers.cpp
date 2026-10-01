@@ -13,7 +13,7 @@
 static void claim_profile_device(Profile *profile, const std::shared_ptr<Device> &device)
 {
     printf("Claiming profile device: profile=%d (%p) device=%d (%p)\n", profile->profile_id, profile, device->m_id, device.get());
-    profile->devices[device->m_id] = device;
+    profile->claimed_devices[device->m_id] = device;
     auto instances = ProfileManager::instance().get_instances_for_profile(profile->profile_id);
     for (const auto &inst : instances)
     {
@@ -29,18 +29,18 @@ static void claim_profile_device(Profile *profile, const std::shared_ptr<Device>
 }
 static void claim_profile_temp_device(Profile *profile, const std::shared_ptr<Device> &device)
 {
-    profile->temp_devices[device->m_id] = device;
+    profile->temp_claimed_devices[device->m_id] = device;
 }
 
 static void clear_profile_temp_devices(Profile *profile)
 {
-    profile->temp_devices.clear();
+    profile->temp_claimed_devices.clear();
 }
 
 template <typename Predicate>
 static std::shared_ptr<Device> get_assignable_device(Profile *profile, bool claim_device, Predicate predicate)
 {
-    for (const auto &device : profile->devices)
+    for (const auto &device : profile->claimed_devices)
     {
         if (device.second && device.second->still_connected && predicate(device.second))
         {

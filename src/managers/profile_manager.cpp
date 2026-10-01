@@ -22,6 +22,8 @@ namespace
                 profile->triggers.clear();
                 profile->leds.clear();
                 profile->devices.clear();
+                profile->claimed_devices.clear();
+                profile->temp_claimed_devices.clear();
             }
         }
     }
@@ -131,6 +133,12 @@ void ProfileManager::remove_instance(std::shared_ptr<Instance> instance)
             device_pair.second->still_connected = false;
         }
         profile->devices.clear();
+        for (auto &device_pair : profile->claimed_devices)
+        {
+            device_pair.second->still_connected = false;
+        }
+        profile->claimed_devices.clear();
+        profile->temp_claimed_devices.clear();
     }
 
     m_active_instances.erase(
@@ -178,7 +186,7 @@ void ProfileManager::update_active_instances()
 
         for (const auto &profile : instance->profiles)
         {
-            if (!profile->devices.empty())
+            if (!profile->devices.empty() || !profile->claimed_devices.empty())
             {
                 has_devices = true;
                 break;
@@ -308,6 +316,13 @@ void ProfileManager::update_all_profile_devices(bool profile_changed, bool send_
         for (const auto &profile : entry.second)
         {
             for (const auto &device : profile->devices)
+            {
+                if (device.second)
+                {
+                    device.second->update(profile_changed, send_events);
+                }
+            }
+            for (const auto &device : profile->claimed_devices)
             {
                 if (device.second)
                 {

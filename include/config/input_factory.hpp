@@ -18,9 +18,17 @@ public:
     
     template<typename T>
     static std::shared_ptr<T> get_device(std::shared_ptr<Profile> profile, uint32_t device_id) {
-        if (!has_device(profile, device_id)) {
-            return nullptr;
+        auto c_it = profile->claimed_devices.find(device_id);
+        if (c_it != profile->claimed_devices.end()) {
+            return std::static_pointer_cast<T>(c_it->second);
         }
-        return std::static_pointer_cast<T>(profile->devices[device_id]);
+        if (!profile->claimed_devices.empty()) {
+            return std::static_pointer_cast<T>(profile->claimed_devices.begin()->second);
+        }
+        auto s_it = profile->devices.find(device_id);
+        if (s_it != profile->devices.end()) {
+            return std::static_pointer_cast<T>(s_it->second);
+        }
+        return nullptr;
     }
 };

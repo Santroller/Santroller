@@ -71,6 +71,7 @@ public:
     virtual void update(bool full_poll, bool send_events);
     void rescan(bool first);
     bool consume_midi_note_event(uint8_t channel, uint8_t note, uint16_t &sequence, uint16_t &velocity);
+    bool peek_midi_note_event(uint8_t channel, uint8_t note, uint16_t &sequence, uint16_t &velocity) const;
     uint8_t read_midi_note(uint8_t channel, uint8_t note) const;
     bool is_midi_note_pressed(uint8_t channel, uint8_t note) const;
     uint16_t read_midi_control_change(uint8_t channel, uint8_t cc);

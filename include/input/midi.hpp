@@ -13,6 +13,7 @@ public:
     uint16_t tick_analog();
     bool consumes_events() const override { return true; }
     bool consume_event(uint16_t &value) override;
+    bool peek_event(uint16_t &value) override;
     MidiNoteInput *as_midi_note() override { return this; }
     uint8_t channel() const { return m_input.channel; }
     uint8_t note() const { return m_input.note; }
@@ -45,6 +46,7 @@ private:
     std::shared_ptr<MidiDevice> m_device;
     Profile *m_profile;
     uint16_t m_last_event_sequence = 0;
+    uint16_t m_last_ui_event_sequence = 0;
     uint32_t m_device_id;
 };
 class MidiControlChangeInput : public Input

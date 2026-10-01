@@ -15,13 +15,25 @@ bool MidiNoteInput::tick_digital()
 uint16_t MidiNoteInput::tick_analog()
 {
     if (!m_device) return 0;
-    uint16_t value;
+    uint16_t value = 0;
     consume_event(value);
     return value;
 }
 bool MidiNoteInput::consume_event(uint16_t &value)
 {
-    return m_device->consume_midi_note_event(m_input.channel - 1, m_input.note, m_last_event_sequence, value);
+    if (!m_device || !m_device->consume_midi_note_event(m_input.channel - 1, m_input.note, m_last_event_sequence, value))
+    {
+        return false;
+    }
+    return true;
+}
+bool MidiNoteInput::peek_event(uint16_t &value)
+{
+    if (!m_device)
+    {
+        return false;
+    }
+    return m_device->peek_midi_note_event(m_input.channel - 1, m_input.note, m_last_ui_event_sequence, value);
 }
 void MidiNoteInput::setup()
 {

@@ -429,6 +429,22 @@ bool MidiDevice::consume_midi_note_event(uint8_t channel, uint8_t note, uint16_t
     return false;
 }
 
+bool MidiDevice::peek_midi_note_event(uint8_t channel, uint8_t note, uint16_t &sequence, uint16_t &velocity) const
+{
+    for (size_t index = midiNoteEventCount; index > 0; --index)
+    {
+        const MidiNoteEvent &event = midiNoteEvents[(midiNoteEventHead + index - 1) % MIDI_NOTE_EVENT_CAPACITY];
+        if (event.channel == channel && event.note == note &&
+            static_cast<int16_t>(event.sequence - sequence) > 0)
+        {
+            sequence = event.sequence;
+            velocity = static_cast<uint16_t>(event.velocity) << 9;
+            return true;
+        }
+    }
+    return false;
+}
+
 uint16_t MidiDevice::read_midi_control_change(uint8_t channel, uint8_t cc)
 {
     if (channel >= 16 || !midiControlChanges[channel] || cc >= 128)

@@ -30,6 +30,7 @@ public:
     virtual void update_ogxbox(uint8_t *report) { (void)report; }
     virtual void update_xboxone(uint8_t *report) { (void)report; }
     void update_digital(bool full_poll);
+    uint16_t sample_ui_event();
     uint16_t calibrate(float val, float max, float min, float deadzone, float center, bool trigger);
     uint16_t id() const { return m_id; }
     Input* get_input() const { return m_input.get(); }
@@ -58,6 +59,8 @@ protected:
     std::vector<Mapping*> m_masked_mappings;
     bool m_suppressed = false;
     bool m_waiting_for_release = false;
+    uint16_t m_ui_event_value = 0;
+    uint32_t m_ui_event_time = 0;
 };
 
 class ButtonMapping : public Mapping
@@ -71,6 +74,7 @@ public:
 protected:
     bool m_last_value = false;
     bool m_last_sent_value = false;
+    uint16_t m_last_sent_trigger_value = 0;
     bool m_calibrated_value = false;
     uint64_t m_last_poll = 0;
 };

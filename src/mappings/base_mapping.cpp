@@ -8,6 +8,19 @@
 #include <stdint.h>
 #include "emulation/usb/hid_device.h"
 #include "input/shortcut.hpp"
+
+uint16_t Mapping::sample_ui_event()
+{
+    uint16_t value = 0;
+    if (m_input->peek_event(value))
+    {
+        m_ui_event_value = value;
+        m_ui_event_time = millis();
+    }
+    const uint32_t hold = (m_mapping.has_debounce && m_mapping.debounce) ? m_mapping.debounce : 100;
+    return (millis() - m_ui_event_time <= hold) ? m_ui_event_value : 0;
+}
+
 uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, float center, bool trigger)
 {
     if (trigger)
@@ -90,14 +103,21 @@ void ButtonMapping::update(bool full_poll, bool send_events)
     uint16_t event_value = 0;
     uint16_t trigger_value = 0;
     bool event_driven = m_input->consumes_events();
-    bool event_received = event_driven && m_input->consume_event(event_value);
-    auto calcVal = event_driven ? event_value>0 : m_input->tick_digital();
+    if (event_driven && !send_events)
+    {
+        m_input->consume_event(event_value);
+    }
+    if (event_driven && send_events)
+    {
+        event_value = sample_ui_event();
+    }
+    auto calcVal = event_driven ? event_value > 0 : m_input->tick_digital();
     if (!event_driven && m_mapping.inverted) {
         calcVal = !calcVal;
     }
     if (m_mapping.has_trigger)
     {
-        auto val = event_driven ? (event_received ? event_value : 0) : m_input->tick_analog();
+        auto val = event_driven ? event_value : m_input->tick_analog();
         trigger_value = val;
         calcVal = false;
         if (m_mapping.trigger == AnalogToDigitalTriggerType_JoyHigh)
@@ -157,11 +177,11 @@ void ButtonMapping::update(bool full_poll, bool send_events)
 
     if (m_mapping.has_trigger)
     {
-        if (send_events && (trigger_value != m_last_sent_value || full_poll))
+        if (send_events && (trigger_value != m_last_sent_trigger_value || full_poll))
         {
             proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, (uint32_t)trigger_value, calcVal ? (uint32_t)65535 : (uint32_t)0}}};
             HIDConfigDevice::send_event(event, false);
-            m_last_sent_value = trigger_value;
+            m_last_sent_trigger_value = trigger_value;
         }
     }
     else if (send_events && (calcVal != m_last_sent_value || full_poll))
@@ -182,8 +202,30 @@ void ButtonMapping::update(bool full_poll, bool send_events)
 }
 void AxisMapping::update(bool full_poll, bool send_events)
 {
-    uint16_t event_value;
+    uint16_t event_value = 0;
     bool event_driven = m_input->consumes_events();
+    if (send_events && event_driven)
+    {
+        event_value = sample_ui_event();
+        uint32_t val = event_value;
+        if (m_mapping.has_pressed)
+        {
+            val = event_value ? m_mapping.pressed : (m_mapping.has_released ? m_mapping.released : m_mapping.center);
+        }
+        else
+        {
+            val = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
+        }
+        if (event_value != m_last_sent_value || val != m_last_sent_calibrated_value || full_poll)
+        {
+            m_last_sent_value = event_value;
+            m_last_sent_calibrated_value = val;
+            proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, event_value, val}}};
+            HIDConfigDevice::send_event(event, false);
+        }
+        return;
+    }
+
     bool event_received = event_driven && m_input->consume_event(event_value);
     uint32_t uncalibrated = event_driven ? (event_received ? event_value : 0) : m_input->tick_analog();
     uint32_t val = uncalibrated;

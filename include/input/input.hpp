@@ -36,6 +36,7 @@ public:
     virtual bool valid() const { return true; }
     virtual bool consumes_events() const { return false; }
     virtual bool consume_event(uint16_t &value) { (void)value; return false; }
+    virtual bool peek_event(uint16_t &value) { (void)value; return false; }
     virtual MidiNoteInput* as_midi_note() { return nullptr; }
     virtual ShortcutInput* as_shortcut() { return nullptr; }
     virtual uint64_t hardware_id() const { return 0; }

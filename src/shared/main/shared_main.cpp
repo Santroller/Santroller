@@ -2943,6 +2943,7 @@ void tick_wiioutput()
         real_report->buttonsHigh = report->buttonsHigh;
         real_report->leftStickX = report->leftStickX >> 2;
         real_report->leftStickY = report->leftStickY >> 2;
+        real_report->rightStickY = report->rightStickY >> 3;
         real_report->rightTrigger = report->rightTrigger >> 3;
         real_report->rightStickX0 = intermediate_report.rightStickX0;
         real_report->rightStickX21 = intermediate_report.rightStickX21;

@@ -10,9 +10,7 @@ MidiNoteInput::MidiNoteInput(proto_MidiInput input, std::shared_ptr<MidiDevice> 
 }
 bool MidiNoteInput::tick_digital()
 {
-    if (!m_device) return false;
-    uint16_t value;
-    return consume_event(value);
+    return tick_analog() > 0;
 }
 uint16_t MidiNoteInput::tick_analog()
 {

@@ -87,17 +87,18 @@ uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, flo
 
 void ButtonMapping::update(bool full_poll, bool send_events)
 {
-    uint16_t event_value;
+    uint16_t event_value = 0;
+    uint16_t trigger_value = 0;
     bool event_driven = m_input->consumes_events();
     bool event_received = event_driven && m_input->consume_event(event_value);
-    auto calcVal = event_driven ? event_received : m_input->tick_digital();
-
+    auto calcVal = event_driven ? event_value>0 : m_input->tick_digital();
     if (!event_driven && m_mapping.inverted) {
         calcVal = !calcVal;
     }
     if (m_mapping.has_trigger)
     {
         auto val = event_driven ? (event_received ? event_value : 0) : m_input->tick_analog();
+        trigger_value = val;
         calcVal = false;
         if (m_mapping.trigger == AnalogToDigitalTriggerType_JoyHigh)
         {
@@ -156,15 +157,11 @@ void ButtonMapping::update(bool full_poll, bool send_events)
 
     if (m_mapping.has_trigger)
     {
-        uint16_t event_value;
-        bool event_driven = m_input->consumes_events();
-        bool event_received = event_driven && m_input->consume_event(event_value);
-        auto val = event_driven ? (event_received ? event_value : 0) : m_input->tick_analog();
-        if (send_events && (val != m_last_sent_value || full_poll))
+        if (send_events && (trigger_value != m_last_sent_value || full_poll))
         {
-            proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, (uint32_t)val, calcVal ? (uint32_t)65535 : (uint32_t)0}}};
+            proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, (uint32_t)trigger_value, calcVal ? (uint32_t)65535 : (uint32_t)0}}};
             HIDConfigDevice::send_event(event, false);
-            m_last_sent_value = val;
+            m_last_sent_value = trigger_value;
         }
     }
     else if (send_events && (calcVal != m_last_sent_value || full_poll))

@@ -16,8 +16,8 @@
 #include "emulation/usb/switch_device.h"
 #include "emulation/usb/gh_arcade_device.h"
 
-static auto& profile_mgr = ProfileManager::instance();
-static auto& config_mgr = ConfigManager::instance();
+static auto &profile_mgr = ProfileManager::instance();
+static auto &config_mgr = ConfigManager::instance();
 
 void InstanceFactory::setup_instance_from_profile(
     std::shared_ptr<Instance> instance,
@@ -34,49 +34,59 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
     int assignment_mask,
     std::shared_ptr<Profile> profile,
     ConsoleMode usb_mode,
-    const EmulationDeviceConfig& emulation_devices)
+    const EmulationDeviceConfig &emulation_devices)
 {
     std::shared_ptr<Instance> instance;
-    
-    if (assignment_mask & ProfileAssignMask_AssignBluetoothGamepad) {
-        if (!config_mgr.has_bluetooth()) {
+
+    if (assignment_mask & ProfileAssignMask_AssignBluetoothGamepad)
+    {
+        if (!config_mgr.has_bluetooth())
+        {
             return nullptr;
         }
         instance = std::make_shared<BTGamepadDevice>();
     }
-    else if (assignment_mask & ProfileAssignMask_AssignBluetoothWiimote) {
-        if (!config_mgr.has_bluetooth()) {
+    else if (assignment_mask & ProfileAssignMask_AssignBluetoothWiimote)
+    {
+        if (!config_mgr.has_bluetooth())
+        {
             return nullptr;
         }
         instance = std::make_shared<WiiRemoteEmulationDeviceInstance>();
     }
-    else if (assignment_mask & ProfileAssignMask_AssignPsx) {
-        if (!emulation_devices.has_psx) {
+    else if (assignment_mask & ProfileAssignMask_AssignPsx)
+    {
+        if (!emulation_devices.has_psx)
+        {
             return nullptr;
         }
         instance = std::make_shared<Ps2EmulationDeviceInstance>(
-            emulation_devices.psx
-        );
+            emulation_devices.psx);
     }
-    else if (assignment_mask & ProfileAssignMask_AssignWiimoteExtension) {
-        if (!emulation_devices.has_wii) {
+    else if (assignment_mask & ProfileAssignMask_AssignWiimoteExtension)
+    {
+        if (!emulation_devices.has_wii)
+        {
             return nullptr;
         }
         instance = std::make_shared<WiiExtensionEmulationDeviceInstance>(
-            emulation_devices.wii
-        );
+            emulation_devices.wii);
     }
-    else if (assignment_mask & ProfileAssignMask_AssignUsb) {
-        if (usb_mode == ModeXboxOne) {
+    else if (assignment_mask & ProfileAssignMask_AssignUsb)
+    {
+        if (usb_mode == ModeXboxOne)
+        {
             auto existing_dev = profile_mgr.get_emulated_device(ModeXboxOne);
-            if (existing_dev) {
+            if (existing_dev)
+            {
                 existing_dev->profiles.push_back(profile);
                 profile_mgr.register_instance(existing_dev, profile);
                 printf("Attaching profile to existing Xbox One instance, total profiles: %zu\n", existing_dev->profiles.size());
                 return existing_dev;
             }
             auto preserved = profile_mgr.take_preserved_xone();
-            if (preserved) {
+            if (preserved)
+            {
                 profile_mgr.restore_preserved_xone(preserved);
                 setup_instance_from_profile(preserved, profile);
                 profile_mgr.register_instance(preserved, profile);
@@ -84,23 +94,29 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
                 return preserved;
             }
         }
-        if (usb_mode == ModePs5) {
+        if (usb_mode == ModePs5)
+        {
             auto existing_dev = profile_mgr.get_emulated_device(ModePs5);
-            if (existing_dev) {
+            if (existing_dev)
+            {
                 printf("Multiple PS5 controllers on one pico is not supported\r\n");
                 return nullptr;
             }
         }
-        if (usb_mode == ModePs4) {
+        if (usb_mode == ModePs4)
+        {
             auto existing_dev = profile_mgr.get_emulated_device(ModePs4);
-            if (existing_dev) {
+            if (existing_dev)
+            {
                 printf("Multiple PS4 controllers on one pico is not supported\r\n");
                 return nullptr;
             }
         }
-        if (usb_mode == ModePs3) {
+        if (usb_mode == ModePs3)
+        {
             auto existing_dev = profile_mgr.get_emulated_device(ModePs3);
-            if (existing_dev) {
+            if (existing_dev)
+            {
                 printf("Multiple PS3 controllers on one pico is not supported\r\n");
                 return nullptr;
             }
@@ -108,17 +124,18 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
         instance = std::static_pointer_cast<Instance>(
             create_usb_instance(usb_mode, profile->subtype));
     }
-    
-    if (!instance) {
+
+    if (!instance)
+    {
         return nullptr;
     }
-    
+
     profile_mgr.add_instance(instance);
     setup_instance_from_profile(instance, profile);
     profile_mgr.register_instance(instance, profile);
     printf("Creating instance for profile with subtype: %d\n", profile->subtype);
     instance->initialize();
-    
+
     return instance;
 }
 
@@ -127,66 +144,74 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
     SubType subtype)
 {
     std::shared_ptr<UsbDevice> instance;
-    
-    if (subtype == SubType_KeyboardMouse) {
-        instance = std::make_shared<HIDKeyboardDevice>();
-        config_mgr.request_mode(ModeHid);
-        return instance;
-    }
+
     printf("Creating USB instance with mode: %d, subtype: %d\n", mode, subtype);
-    
-    switch (mode) {
+    if (subtype == SubType_KeyboardMouse && mode != ModeHid)
+    {   
+        config_mgr.request_mode(ModeHid);
+    }
+    switch (mode)
+    {
     case ModeHid:
-        instance = std::make_shared<HIDGamepadDevice>();
+        if (subtype == SubType_KeyboardMouse)
+        {
+            instance = std::make_shared<HIDKeyboardDevice>();
+        }
+        else
+        {
+            instance = std::make_shared<HIDGamepadDevice>();
+        }
         break;
-        
+
     case ModeOgXbox:
         instance = std::make_shared<OGXboxGamepadDevice>();
         break;
-        
+
     case ModeXbox360:
         instance = std::make_shared<XInputGamepadDevice>();
         break;
-        
+
     case ModeXboxOne:
         instance = std::make_shared<XboxOneGamepadDevice>();
         break;
-        
+
     case ModeWiiRb:
         instance = std::make_shared<PS3GamepadDevice>(true);
         break;
-        
+
     case ModePs3:
         instance = std::make_shared<PS3GamepadDevice>(false);
         break;
-        
+
     case ModePs4:
         instance = std::make_shared<PS4GamepadDevice>();
         break;
-        
+
     case ModePs5:
         instance = std::make_shared<PS5GamepadDevice>();
         break;
-        
+
     case ModeSwitch:
         instance = std::make_shared<SwitchGamepadDevice>();
         break;
-        
+
     case ModeGuitarHeroArcade:
         instance = std::make_shared<GHArcadeGamepadDevice>();
         break;
-        
+
     default:
         return nullptr;
     }
-    if (!profile_mgr.get_emulated_device(mode)) {
+    if (!profile_mgr.get_emulated_device(mode))
+    {
         profile_mgr.set_emulated_device(mode, instance);
     }
-    
-    if (instance) {
+
+    if (instance)
+    {
         instance->interface_id = profile_mgr.usb_instance_count();
         profile_mgr.set_usb_instance(instance->interface_id, instance);
     }
-    
+
     return instance;
 }

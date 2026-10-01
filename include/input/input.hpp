@@ -76,6 +76,22 @@ public:
 
 class KeyboardState {
     public:
-    uint32_t pressed_keys = 0;
-    uint8_t last_seen_keys[10];
+    uint8_t pressed_keys[32] = {0};
+    uint8_t last_seen_keys[10] = {0};
+
+    void set_key(uint8_t keycode) {
+        pressed_keys[keycode / 8] |= (1 << (keycode % 8));
+    }
+
+    void clear_key(uint8_t keycode) {
+        pressed_keys[keycode / 8] &= ~(1 << (keycode % 8));
+    }
+
+    bool is_key_pressed(uint8_t keycode) const {
+        return (pressed_keys[keycode / 8] & (1 << (keycode % 8))) != 0;
+    }
+
+    void clear_all() {
+        memset(pressed_keys, 0, sizeof(pressed_keys));
+    }
 };

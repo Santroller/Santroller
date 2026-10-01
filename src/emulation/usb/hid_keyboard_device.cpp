@@ -59,7 +59,7 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
   for (const auto &profile : profiles)
   {
     auto &state = profile->keyboard_state;
-    state.pressed_keys = 0;
+    state.clear_all();
     for (const auto &mapping : profile->mappings)
     {
       mapping->update(full_poll, send_events);
@@ -72,19 +72,20 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
     size_t current = 0;
     for (size_t i = 0; i < sizeof(state.last_seen_keys); i++)
     {
-      if (state.last_seen_keys[i] && state.pressed_keys & (1 << state.last_seen_keys[i]))
+      uint8_t key = state.last_seen_keys[i];
+      if (key && state.is_key_pressed(key))
       {
-        report->keycode[current++] = state.last_seen_keys[i];
-        state.pressed_keys &= ~(1 << state.last_seen_keys[i]);
+        report->keycode[current++] = key;
+        state.clear_key(key);
       }
     }
-    for (size_t i = 0; i < 255; i++)
+    for (size_t i = 0; i < 256; i++)
     {
       if (current >= sizeof(report->keycode))
       {
         break;
       }
-      if (state.pressed_keys & (1 << i))
+      if (state.is_key_pressed(i))
       {
         report->keycode[current++] = i;
       }

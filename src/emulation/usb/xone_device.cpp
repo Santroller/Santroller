@@ -856,6 +856,11 @@ void XboxOneGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
         desc->idVendor = XBOX_ONE_CONTROLLER_VID;
         desc->idProduct = XBOX_ONE_CONTROLLER_PID;
     }
+    else
+    {
+        desc->idVendor = MAD_CATZ_VID;
+        desc->idProduct = XBOX_ONE_CONTROLLER_PID;
+    }
     desc->bDeviceClass = 0xff;
     desc->bDeviceSubClass = 0x47;
     desc->bDeviceProtocol = 0xd0;

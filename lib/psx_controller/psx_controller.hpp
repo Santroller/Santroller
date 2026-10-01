@@ -135,7 +135,7 @@ private:
     uint8_t ps2Idx;
     uint8_t ps2Len;
     uint8_t ps2DataLen;
-    alarm_id_t timeout_alarm_id;
+    alarm_id_t timeout_alarm_id = 0;
     bool done = false;
     PSXControllerState status = DISCONNECTED;
     uint32_t packet_delay = 10000;

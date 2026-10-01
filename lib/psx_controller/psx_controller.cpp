@@ -127,6 +127,9 @@ static void dma_complete_handler()
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
     PSXController *inst = (PSXController *)user_data;
+    // A stale alarm can outlive the controller across config reloads
+    if (inst != controller)
+        return 0;
     inst->process_data(false, true);
     return 0;
 }
@@ -373,12 +376,14 @@ void PSXController::no_attention(void)
     if (!spi_active)
         gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, true);
     gpio_put(m_attPin, true);
+    cancel_alarm(timeout_alarm_id);
     timeout_alarm_id = add_alarm_in_us(packet_delay, restart_handler, this, true);
 }
 void PSXController::signal_attention(void)
 {
     done = false;
     gpio_put(m_attPin, false);
+    cancel_alarm(timeout_alarm_id);
     timeout_alarm_id = add_alarm_in_us(ATTN_DELAY, restart_handler, this, true);
 }
 bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)

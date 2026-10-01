@@ -78,6 +78,14 @@ public:
     bool read_pro_guitar_button(proto_ProGuitarMidiButtonType button);
     uint16_t read_pro_guitar_axis(proto_ProGuitarAxisType axis);
     bool has_midi_channel(uint8_t channel) { return seenChannels[channel]; }
+    bool has_any_midi_channel() const
+    {
+        for (int i = 0; i < 18; i++)
+        {
+            if (seenChannels[i]) return true;
+        }
+        return false;
+    }
     bool is_assignable() const override { return true; }
     void save_reload_state(DeviceReloadState& state) const override;
 

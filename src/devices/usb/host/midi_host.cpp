@@ -165,7 +165,6 @@ std::shared_ptr<UsbHostInterface> MidiHost::open(std::shared_ptr<UsbHostDevice> 
       TU_VERIFY(tuh_edpt_open(dev_addr, p_ep), 0);
       tu_edpt_stream_open(ep_stream, dev_addr, p_ep, tu_edpt_packet_size(p_ep));
       tu_edpt_stream_clear(ep_stream);
-      usb_host_add_assignable_interface(intf);
       break;
     }
 
@@ -174,6 +173,7 @@ std::shared_ptr<UsbHostInterface> MidiHost::open(std::shared_ptr<UsbHostDevice> 
     }
   } while (!found_new_interface);
 
+  usb_host_add_enumerating_interface(intf);
   *out_len = (uint16_t)((uintptr_t)p_desc - (uintptr_t)desc_start);
   return intf;
 }

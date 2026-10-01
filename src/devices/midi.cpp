@@ -1,4 +1,5 @@
 #include "devices/midi.hpp"
+#include "devices/usb.hpp"
 #include "managers/device_manager.hpp"
 #include "utils.h"
 
@@ -79,12 +80,19 @@ void MidiDevice::rescan(bool first)
             {
                 if (usbBased)
                 {
-                    // USB host has more than one interface, so we need to grab it from assignable
-                    DeviceManager::instance().add_assignable_device(std::static_pointer_cast<MidiDevice>(DeviceManager::instance().last_assignable_device()));
+                    auto host_itf = static_cast<UsbHostInterface *>(this);
+                    if (host_itf->dev_addr() < host_devices.size() && host_devices[host_itf->dev_addr()])
+                    {
+                        auto dev = host_devices[host_itf->dev_addr()]->host_devices_by_itf[host_itf->interface()];
+                        if (dev)
+                        {
+                            DeviceManager::instance().add_assignable_device(dev);
+                        }
+                    }
                 }
                 else
                 {
-                    // Every other device will do this scanning on creation, so we grab from active_devices
+                    // Non-USB MIDI devices grab from active_devices / root_devices
                     DeviceManager::instance().add_assignable_device(std::static_pointer_cast<MidiDevice>(DeviceManager::instance().get_root_device(m_id)));
                 }
                 printf("Assigning MIDI channel: %d on device %d\r\n", i, m_id);

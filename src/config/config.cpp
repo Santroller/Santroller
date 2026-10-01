@@ -22,6 +22,7 @@
 #include "input/midi.hpp"
 #include "input/protar_neck.hpp"
 #include "input/held.hpp"
+#include "input/shifted.hpp"
 #include "input/cycle.hpp"
 #include "input/toggle.hpp"
 #include "input/usb.hpp"
@@ -183,6 +184,7 @@ std::unique_ptr<Input> make_input(proto_Input input, ConfigDecodeContext &contex
         input.which_input == proto_Input_cycle_tag ||
         input.which_input == proto_Input_toggle_tag ||
         input.which_input == proto_Input_shortcut_tag ||
+        input.which_input == proto_Input_shifted_tag ||
         input.which_input == 0)
     {
         auto ret = context.last_special;
@@ -307,6 +309,25 @@ bool load_toggle(pb_istream_t *stream, const pb_field_t *field, void **arg)
     return true;
 }
 
+bool load_shifted(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto *context = static_cast<ConfigDecodeContext *>(*arg);
+    auto last_shifted = new ShiftedInput();
+    context->last_special = last_shifted;
+    proto_ShiftedInput input;
+    input.input.cb_input.funcs.decode = load_input_dev;
+    input.input.cb_input.arg = *arg;
+    input.shift.cb_input.funcs.decode = load_input_dev;
+    input.shift.cb_input.arg = *arg;
+    if (!pb_decode(stream, proto_ShiftedInput_fields, &input))
+    {
+        return false;
+    }
+
+    last_shifted->load(input, input.has_input ? make_input(input.input, *context, stream) : nullptr, input.has_shift ? make_input(input.shift, *context, stream) : nullptr);
+    return true;
+}
+
 bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     // //printf("input_dev: %d %p\r\n", field->tag, profile.get());
@@ -333,6 +354,12 @@ bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
         pb_callback_t *msg = (pb_callback_t *)field->pData;
         msg->funcs.decode = &load_shortcut;
+        msg->arg = *arg;
+    }
+    if (field->tag == proto_Input_shifted_tag)
+    {
+        pb_callback_t *msg = (pb_callback_t *)field->pData;
+        msg->funcs.decode = &load_shifted;
         msg->arg = *arg;
     }
     return true;

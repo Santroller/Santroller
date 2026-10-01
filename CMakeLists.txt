@@ -250,6 +250,7 @@ add_executable(
   src/input/cycle.cpp
   src/input/toggle.cpp
   src/input/held.cpp
+  src/input/shifted.cpp
   src/input/fixed.cpp
   src/input/ads1115.cpp
   src/input/multiplexer.cpp

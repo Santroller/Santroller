@@ -102,6 +102,12 @@ message HeldInput {
   required int32 time = 2;
 }
 
+message ShiftedInput {
+  optional Input input = 1;
+  optional Input shift = 2;
+  optional bool invertShift = 3;
+}
+
 
 message PS2AxisInput {
   required int32 deviceid = 1;
@@ -211,6 +217,7 @@ message Input {
     BTButtonInput btButton = 34;
     BTAxisInput btAxis = 35;
     EncoderInput encoder = 36;
+    ShiftedInput shifted = 38;
   }
 }
 message InputActivationTrigger {

@@ -2,4 +2,5 @@ proto.Input.shortcut type:FT_CALLBACK
 proto.Input.held type:FT_CALLBACK
 proto.Input.cycle type:FT_CALLBACK
 proto.Input.toggle type:FT_CALLBACK
+proto.Input.shifted type:FT_CALLBACK
 proto.Input.* submsg_callback:true

@@ -144,11 +144,12 @@ std::unique_ptr<Input> InputFactory::create_input(
     case proto_Input_encoder_tag:
         return create_device_input<EncoderInput, EncoderDevice>(profile, proto_input.input.encoder.deviceid, proto_input.input.encoder);
             
-    // Special inputs (held, cycle, toggle, shortcut) are handled by callbacks
+    // Special inputs (held, cycle, toggle, shortcut, shifted) are handled by callbacks
     case proto_Input_held_tag:
     case proto_Input_cycle_tag:
     case proto_Input_toggle_tag:
     case proto_Input_shortcut_tag:
+    case proto_Input_shifted_tag:
     case 0:
         // These are handled specially in config.cpp with callbacks
         return nullptr;

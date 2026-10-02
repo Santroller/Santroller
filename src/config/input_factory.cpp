@@ -20,8 +20,10 @@
 #include "input/encoder.hpp"
 #include "input/switch_network.hpp"
 #include "input/infinium_fader.hpp"
+#include "input/secondary_pico.hpp"
 #include "devices/encoder.hpp"
 #include "devices/infinium_fader.hpp"
+#include "devices/secondary_pico.hpp"
 
 template<typename InputType, typename DeviceType, typename ConfigType>
 static std::unique_ptr<Input> create_device_input(std::shared_ptr<Profile> profile, uint32_t device_id, const ConfigType &config)
@@ -65,6 +67,9 @@ std::unique_ptr<Input> InputFactory::create_input(
             
     case proto_Input_infiniumFader_tag:
         return create_device_input<InfiniumFaderInput, InfiniumFaderDevice>(profile, proto_input.input.infiniumFader.deviceid, proto_input.input.infiniumFader);
+            
+    case proto_Input_peripheral_tag:
+        return create_device_input<PeripheralInput, SecondaryPicoDevice>(profile, proto_input.input.peripheral.deviceid, proto_input.input.peripheral);
             
     case proto_Input_gpio_tag:
         return create_simple_input<GPIOInput>(proto_input.input.gpio);

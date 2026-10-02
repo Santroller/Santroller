@@ -8,6 +8,7 @@
 #include "hardware/dma.h"
 #include "hardware/irq.h"
 #include "hardware/clocks.h"
+#include "secondary_pico.hpp"
 static void i2c_dma_next_queued(
     i2c_dma_t *i2c_dma);
 inline void process_dma(i2c_dma_t *i2c_dma)
@@ -149,6 +150,14 @@ static int i2c_dma_init_intern(i2c_dma_t *i2c_dma)
     if (i2c_dma_is_blocked(i2c_dma))
     {
         i2c_dma_unblock(i2c_dma);
+    }
+
+    if (is_secondary_pico_mode())
+    {
+        if (i2c_dma->i2c == get_secondary_pico_slave_i2c() || (uint)i2c_dma->sda_gpio == get_secondary_pico_slave_sda() || (uint)i2c_dma->scl_gpio == get_secondary_pico_slave_scl())
+        {
+            return PICO_OK;
+        }
     }
 
     i2c_init(i2c_dma->i2c, i2c_dma->baudrate);
@@ -348,6 +357,13 @@ I2CMasterInterface::I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, ui
     }
     i2c = _hardwareBlocks[block];
     printf("i2c: %d %d %d %d\r\n", sda, scl, block, clock);
+    if (is_secondary_pico_mode())
+    {
+        if (i2c == get_secondary_pico_slave_i2c() || (sda >= 0 && (uint)sda == get_secondary_pico_slave_sda()) || (scl >= 0 && (uint)scl == get_secondary_pico_slave_scl()))
+        {
+            return;
+        }
+    }
     // if we have already set up DMA, then we do not want to set it up again
     if ((i2c == i2c0 && i2c_dma_list[0].device_count == 0) || (i2c == i2c1 && i2c_dma_list[1].device_count == 0))
     {

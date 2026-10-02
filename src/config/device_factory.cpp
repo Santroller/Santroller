@@ -29,6 +29,7 @@
 #include "devices/matrix.hpp"
 #include "devices/switch_network.hpp"
 #include "devices/infinium_fader.hpp"
+#include "devices/secondary_pico.hpp"
 #include "devices/cycle.hpp"
 #include "devices/toggle.hpp"
 #include "devices/dmx.hpp"
@@ -229,6 +230,10 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         
     case proto_Device_wiiEmulation_tag:
         device = std::make_shared<WiiExtensionEmulationDevice>(proto_device.device.wiiEmulation, device_id);
+        break;
+        
+    case proto_Device_peripheral_tag:
+        device = std::make_shared<SecondaryPicoDevice>(proto_device.device.peripheral, device_id);
         break;
         
     case proto_Device_protarNeck_tag:

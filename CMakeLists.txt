@@ -258,6 +258,7 @@ add_executable(
   src/input/crkd.cpp
   src/input/crkd_drum.cpp
   src/input/infinium_fader.cpp
+  src/input/secondary_pico.cpp
   src/input/gh5.cpp
   src/input/gpio.cpp
   src/input/matrix.cpp
@@ -323,6 +324,7 @@ add_executable(
   src/devices/encoder.cpp
   src/devices/crkd_drum.cpp
   src/devices/infinium_fader.cpp
+  src/devices/secondary_pico.cpp
   src/devices/ads1115.cpp
   src/devices/device.cpp
   src/devices/accelerometer.cpp

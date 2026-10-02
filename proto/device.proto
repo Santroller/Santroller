@@ -2,6 +2,7 @@ syntax = "proto2";
 
 package proto;
 import "enums.proto";
+import "input.proto";
 
 message UARTDevice {
   required int32 block = 1;
@@ -27,6 +28,8 @@ message SPIDevice {
 message PeripheralDevice {
   required I2CDevice i2c = 1;
   required int32 address = 2;
+  repeated Device devices = 3;
+  repeated Input inputs = 4;
 }
 
 message AccelerometerDevice { required I2CDevice i2c = 1; }

@@ -228,10 +228,17 @@ message Input {
     EncoderInput encoder = 36;
     ShiftedInput shifted = 38;
     InfiniumFaderInput infiniumFader = 39;
+    PeripheralInput peripheral = 40;
   }
 }
 message InfiniumFaderInput {
   required int32 deviceid = 1;
+}
+message PeripheralInput {
+  required int32 deviceid = 1;
+  required int32 pin = 2;
+  required PinMode pinMode = 3;
+  required bool analog = 4;
 }
 message InputActivationTrigger {
   required Input input = 1;

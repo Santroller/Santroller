@@ -50,6 +50,7 @@
 #include "ring_buffer.h"
 #include "hci.h"
 #include "devices/bt/bluetooth_stack.hpp"
+#include "secondary_pico.hpp"
 
 class HidConsoleBridge
 {
@@ -254,6 +255,11 @@ int main()
         // config was not valid, save a empty config
         load_empty();
         // load();
+    }
+    if (is_secondary_pico_mode())
+    {
+        printf("Entering secondary pico coprocessor mode\r\n");
+        secondary_pico_coprocessor_loop();
     }
     printf("init %d\r\n", ConfigManager::instance().get_current_mode());
     initialize_device_stack();

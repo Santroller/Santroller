@@ -202,11 +202,17 @@ message GuiConfig {
   }
 }
 
+message PeripheralBootConfig {
+  required I2CDevice i2c = 1;
+  required int32 idPin = 2;
+}
+
 message Config {
   repeated Device devices = 2;
   repeated Profile profiles = 3;
   repeated GuiConfig guiConfig = 4;
   optional bool syncCalibrations = 5;
+  optional PeripheralBootConfig peripheralBoot = 6;
 }
 
 message ConfigInfo {

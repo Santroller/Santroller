@@ -10,6 +10,7 @@
 #include "managers/profile_manager.hpp"
 #include "managers/config_manager.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
+#include "secondary_pico.hpp"
 #include "main.hpp"
 
 #include <memory>
@@ -55,6 +56,11 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     block.tlvEntries.funcs.decode = decode_bluetooth_tlv_entries;
     pb_decode(&auxInputStream, proto_AuxConfigBlock_fields, &block);
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
+    if (config.has_peripheralBoot)
+    {
+        i2c_inst_t *i2c_block = config.peripheralBoot.i2c.block == 1 ? i2c1 : i2c0;
+        secondary_pico_slave_init(i2c_block, config.peripheralBoot.i2c.sda, config.peripheralBoot.i2c.scl, config.peripheralBoot.idPin);
+    }
     profile_mgr.discard_preserved_devices();
 
     const ConsoleMode resolved_mode = config_mgr.get_requested_mode();

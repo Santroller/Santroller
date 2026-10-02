@@ -18,6 +18,7 @@
 #include "utils.h"
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
+#include "secondary_pico.hpp"
 #include "math.h"
 #include <pico_fota_bootloader/core.h>
 #include <algorithm>
@@ -650,6 +651,10 @@ bool HIDConfigDevice::tool_closed()
 
 bool HIDConfigDevice::send_event(proto_Event event, bool now)
 {
+  if (is_secondary_pico_mode())
+  {
+    return secondary_pico_enqueue_event(&event);
+  }
   auto dev = HIDConfigDevice::instance;
   if (tool_closed())
   {

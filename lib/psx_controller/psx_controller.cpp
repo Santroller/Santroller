@@ -137,6 +137,13 @@ PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso
     : m_block(block), m_clock(clock), m_attPin(attPin), m_ackPin(ackPin), m_sckPin(sck), m_mosiPin(mosi), m_misoPin(miso)
 {
     controller = this;
+    if (m_attPin != (uint8_t)-1)
+    {
+        gpio_init(m_attPin);
+        gpio_set_dir(m_attPin, true);
+        gpio_put(m_attPin, true);
+        gpio_set_pulls(m_attPin, true, false);
+    }
 }
 
 void PSXController::begin()
@@ -147,6 +154,7 @@ void PSXController::begin()
     gpio_init(m_attPin);
     gpio_set_dir(m_attPin, true);
     gpio_put(m_attPin, true);
+    gpio_set_pulls(m_attPin, true, false);
     gpio_init(m_ackPin);
     gpio_set_dir(m_ackPin, false);
     gpio_set_pulls(m_ackPin, true, false);
@@ -267,7 +275,9 @@ void PSXController::begin()
     }
 
     gpio_set_irq_enabled_with_callback(m_ackPin, GPIO_IRQ_EDGE_RISE, true, &attentionInterrupt);
-    auto_shift_data(commandPollInput, sizeof(commandPollInput));
+    status = DISCONNECTED;
+    packet_delay = 200000;
+    no_attention();
 }
 static inline void abort_dma_if_active(int channel)
 {
@@ -614,7 +624,7 @@ void PSXController::process_data(bool ack, bool timeout)
             {
                 status = CONNECTION_DELAY;
                 m_config_retries = 0;
-                packet_delay = 100000;
+                packet_delay = 300000;
                 no_attention();
                 return;
             }
@@ -787,6 +797,7 @@ void PSXController::process_data(bool ack, bool timeout)
 
     switch (status)
     {
+    case FIRST_INPUTS:
     case ENTER_CONFIG:
         auto_shift_data(commandEnterConfig, sizeof(commandEnterConfig));
         break;

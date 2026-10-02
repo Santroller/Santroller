@@ -29,6 +29,8 @@ void HIDKeyboardDevice::initialize()
   ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
   ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
   memset(&m_initial_report, 0, sizeof(m_initial_report));
+  memset(m_last_report, 0, sizeof(m_last_report));
+  m_sent_first_report = false;
 }
 void HIDKeyboardDevice::process(bool full_poll, bool send_events)
 {
@@ -54,14 +56,11 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
     }
     return;
   }
-  if (tud_ready() && !ready())
-  {
-    return;
-  }
   hid_keyboard_report_t *report = (hid_keyboard_report_t *)epin_buf;
   memcpy(epin_buf, m_initial_report, sizeof(epin_buf));
   for (const auto &profile : profiles)
   {
+    profile->reset_drum_state();
     auto &state = profile->keyboard_state;
     state.clear_all();
     for (const auto &mapping : profile->mappings)
@@ -115,7 +114,16 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
       memcpy(state.last_seen_keys, report->keycode, sizeof(report->keycode));
     }
   }
-  send_report(sizeof(hid_keyboard_report_t), 0, epin_buf);
+  if (!m_sent_first_report || memcmp(m_last_report, epin_buf, sizeof(hid_keyboard_report_t)) != 0)
+  {
+    if (!ready())
+    {
+      return;
+    }
+    send_report(sizeof(hid_keyboard_report_t), 0, epin_buf);
+    memcpy(m_last_report, epin_buf, sizeof(hid_keyboard_report_t));
+    m_sent_first_report = true;
+  }
 }
 
 size_t HIDKeyboardDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)

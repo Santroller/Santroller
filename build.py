@@ -105,6 +105,15 @@ if static_firmware_path:
     static_firmware_data = read_file(static_firmware_path)
     static_firmware_blocks = []
     STATIC_FIRMWARE_START = 0x1000A000
+    STATIC_FIRMWARE_END = STATIC_FIRMWARE_START + len(static_firmware_data)
+    blocks = [
+        b for b in blocks
+        if b.address + b.size <= STATIC_FIRMWARE_START or b.address >= STATIC_FIRMWARE_END
+    ]
+    app_only_blocks = [
+        b for b in decode_uf2(read_file(firmware_filename))
+        if b.address + b.size <= STATIC_FIRMWARE_START or b.address >= STATIC_FIRMWARE_END
+    ]
     for offset in range(0, len(static_firmware_data), block_size):
         chunk = static_firmware_data[offset:offset + block_size]
         if len(chunk) < block_size:
@@ -119,7 +128,6 @@ if static_firmware_path:
             chunk
         ))
     write_uf2(static_firmware_blocks, os.path.join(out_dir, "static_firmware.uf2"))
-    app_only_blocks = list(decode_uf2(read_file(firmware_filename)))
     write_uf2(app_only_blocks, os.path.join(out_dir, "santroller_app_only.uf2"))
     full_install_blocks = app_only_blocks + static_firmware_blocks
     write_uf2(full_install_blocks, firmware_filename)

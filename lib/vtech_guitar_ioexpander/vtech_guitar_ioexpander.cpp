@@ -66,19 +66,25 @@ void VTechGuitarIOExpander::end()
 };
 void VTechGuitarIOExpander::process_data(bool ack, bool timeout)
 {
-    uint8_t resp;
+    uint8_t resp = 0;
     if (!attention)
     {
         signal_attention();
         return;
     }
-    // printf("status: %d\r\n", status);
+
+    auto send_cmd = [this](uint8_t cmd, uint8_t data) -> uint8_t {
+        uint8_t tx[2] = {cmd, data};
+        uint8_t rx[2] = {0};
+        mInterface.transfer(tx, rx, 2);
+        no_attention();
+        return rx[1];
+    };
+
     switch (status)
     {
     case CHECK:
-        mInterface.transfer(0x00);
-        resp = mInterface.transfer(0x00);
-        no_attention();
+        resp = send_cmd(0x00, 0x00);
         // If init was successful, this final command responds with 0x5A
         if (resp == 0x5A)
         {
@@ -92,76 +98,51 @@ void VTechGuitarIOExpander::process_data(bool ack, bool timeout)
         }
         break;
     case POLL:
-        mInterface.transfer(0x0E);
-        resp = mInterface.transfer(0x0E);
-        no_attention();
-        button_data = resp;
+        button_data = send_cmd(0x0E, 0x0E);
         status = UPDATE_LED;
         break;
     case UPDATE_LED:
-        mInterface.transfer(0x81);
-        mInterface.transfer(led_data);
-        no_attention();
+        send_cmd(0x81, led_data);
         status = CHECK;
         break;
     case INIT_POWER_ON:
-        mInterface.transfer(0xFF);
-        mInterface.transfer(0x00);
-        no_attention();
+        send_cmd(0xFF, 0x00);
         status = INIT_2;
         break;
     case INIT_2:
-        mInterface.transfer(0x88);
-        mInterface.transfer(0xA5);
-        no_attention();
+        send_cmd(0x88, 0xA5);
         status = INIT_3;
         break;
     case INIT_3:
-        mInterface.transfer(0x80);
-        mInterface.transfer(0x5A);
-        no_attention();
+        send_cmd(0x80, 0x5A);
         status = INIT_4;
         break;
     case INIT_4:
-        mInterface.transfer(0x84);
-        mInterface.transfer(0xFF);
-        no_attention();
+        send_cmd(0x84, 0xFF);
         status = INIT_5;
         break;
     case INIT_5:
-        mInterface.transfer(0x89);
-        mInterface.transfer(0xFF);
-        no_attention();
+        send_cmd(0x89, 0xFF);
         status = INIT_6;
         break;
     case INIT_6:
-        mInterface.transfer(0x85);
-        mInterface.transfer(0xFF);
-        no_attention();
+        send_cmd(0x85, 0xFF);
         status = INIT_7;
         break;
     case INIT_7:
-        mInterface.transfer(0x81);
-        mInterface.transfer(0x00);
-        no_attention();
+        send_cmd(0x81, 0x00);
         status = INIT_8;
         break;
     case INIT_8:
-        mInterface.transfer(0x8A);
-        mInterface.transfer(0xFF);
-        no_attention();
+        send_cmd(0x8A, 0xFF);
         status = INIT_9;
         break;
     case INIT_9:
-        mInterface.transfer(0x86);
-        mInterface.transfer(0x00);
-        no_attention();
+        send_cmd(0x86, 0x00);
         status = INIT_10;
         break;
     case INIT_10:
-        mInterface.transfer(0x82);
-        mInterface.transfer(0xFF);
-        no_attention();
+        send_cmd(0x82, 0xFF);
         status = CHECK;
         break;
     }

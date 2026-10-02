@@ -35,4 +35,6 @@ private:
     wt_status_e status = WT_DRUM_REQUEST_STATUS;
     alarm_id_t restart_alarm_id;
     bool finished = false;
+    uint8_t m_rxBuf[64] = {0};
+    size_t m_bytesToRead = 0;
 };

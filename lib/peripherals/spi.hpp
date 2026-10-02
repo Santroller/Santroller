@@ -5,34 +5,11 @@
 #include <hardware/gpio.h>
 #include "pico/time.h"
 
-#define SPI_MAX_TRANSFER_SIZE 1056
+#define SPI_MAX_TRANSFER_SIZE 4096
 #define SPI_TRANSFER_TIMEOUT_MS 10000
 #define SPI_TAKE_MUTEX_TIMEOUT_MS 10000
 
-typedef struct spi_dma_s
-{
-    spi_inst_t *spi;
 
-    uint irq_num;
-    irq_handler_t irq_handler;
-
-    uint baudrate;
-    uint sda_gpio;
-    uint scl_gpio;
-    int tx_chan;
-    int rx_chan;
-    bool reading;
-    bool writing;
-
-    volatile bool stop_detected;
-    volatile bool abort_detected;
-    volatile bool timeout;
-    volatile bool running;
-    alarm_id_t timeout_alarm_id;
-
-    uint16_t data_cmds[SPI_MAX_TRANSFER_SIZE];
-    void (*process_data)(bool running, bool timeout, bool abort_detected, bool stop_detected);
-} spi_dma_t;
 
 class SPIMasterInterface
 {
@@ -43,6 +20,7 @@ public:
     void transfer(const uint8_t *tx, uint8_t *rx, size_t len);
 
     bool transfer_dma_start(const uint8_t *tx, uint8_t *rx, size_t len);
+    bool transfer_dma_start_paced(const uint8_t *tx, uint8_t *rx, size_t len, uint32_t interval_us);
     bool transfer_dma_busy();
     void transfer_dma_finish(uint8_t *rx, size_t len);
     void transfer_dma_abort();
@@ -54,6 +32,7 @@ private:
     bool m_valid;
     int m_dma_tx = -1;
     int m_dma_rx = -1;
+    int m_dma_timer = -1;
     uint8_t m_dma_tx_buf[64] = {0};
     uint8_t m_dma_rx_buf[64] = {0};
 };

@@ -22,16 +22,7 @@ void APA102Device::end(bool full)
 }
 void APA102Device::update(bool full_poll, bool send_events)
 {
-    m_apa102.begin();
-    for (int i = 0; i < m_device.count; i++)
-    {
-        uint8_t r = led_state[i] & 0xff;
-        uint8_t g = (led_state[i] >> 8) & 0xff;
-        uint8_t b = (led_state[i] >> 16) & 0xff;
-        uint8_t brightness = (led_state[i] >> 24) & 0xff;
-        m_apa102.putLed(brightness, r, g, b);
-    }
-    m_apa102.end();
+    m_apa102.putLeds(led_state, m_device.count);
 }
 
 bool APA102Device::using_pin(uint8_t pin)

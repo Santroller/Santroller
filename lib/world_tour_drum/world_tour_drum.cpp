@@ -35,6 +35,7 @@ void WorldTourDrum::begin()
 void WorldTourDrum::end()
 {
     cancel_alarm(restart_alarm_id);
+    mInterface.transfer_dma_abort();
     finished = true;
     printf("wt end\r\n");
 }
@@ -46,7 +47,7 @@ void WorldTourDrum::process_data()
     if (status == WT_DRUM_REQUEST_STATUS)
     {
         gpio_put(mCsPin, false);
-        status = WT_DRUM_REQUEST_STATUS;
+        status = WT_DRUM_CHECK_STATUS;
         restart_alarm_id = add_alarm_in_us(50, restart_handler, this, true);
         return;
     }
@@ -62,31 +63,50 @@ void WorldTourDrum::process_data()
                 missing = 0;
             }
             gpio_put(mCsPin, true);
-            restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
             status = WT_DRUM_REQUEST_STATUS;
+            restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
             return;
         }
         connected = true;
         // 2: Send 0x55, response: packet count in buffer
         resp = mInterface.transfer(0x55);
-        sleep_us(50);
         if (!resp)
         {
             // no packets in buffer
             gpio_put(mCsPin, true);
+            status = WT_DRUM_REQUEST_STATUS;
+            restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
             return;
         }
-        // 3: Stream in all data we receive straight to the midi parser
-        uint8_t data;
-        for (size_t i = 0; i < resp; i++)
+        // 3: Stream in data with 50us inter-byte pacing using PWM-paced DMA
+        m_bytesToRead = resp > sizeof(m_rxBuf) ? sizeof(m_rxBuf) : resp;
+        if (mInterface.transfer_dma_start_paced(nullptr, m_rxBuf, m_bytesToRead, 50))
         {
-            data = mInterface.transfer(0x00);
-            m_device->process_midi_data(&data, 1);
-            sleep_us(50);
+            status = WT_DRUM_READ_DATA;
+            restart_alarm_id = add_alarm_in_us(m_bytesToRead * 50 + 10, restart_handler, this, true);
+            return;
         }
+        else
+        {
+            gpio_put(mCsPin, true);
+            status = WT_DRUM_REQUEST_STATUS;
+            restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+            return;
+        }
+    }
+    if (status == WT_DRUM_READ_DATA)
+    {
+        if (mInterface.transfer_dma_busy())
+        {
+            restart_alarm_id = add_alarm_in_us(50, restart_handler, this, true);
+            return;
+        }
+        mInterface.transfer_dma_finish(m_rxBuf, m_bytesToRead);
+        m_device->process_midi_data(m_rxBuf, m_bytesToRead);
+
         gpio_put(mCsPin, true);
-        restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
         status = WT_DRUM_REQUEST_STATUS;
+        restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
         return;
     }
 }

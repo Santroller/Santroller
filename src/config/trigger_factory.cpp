@@ -132,10 +132,6 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             list_id
         );
         
-    case proto_ProfileAssignmentInfo_copilotProfile_tag:
-        // TODO: how do we handle this
-        return nullptr;
-        
     default:
         return nullptr;
     }

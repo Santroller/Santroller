@@ -26,12 +26,9 @@
 - [ ] Input from SNES controllers
 - [ ] Input from NES controllers
 - [ ] Inputs from NKRO keyboards over usb host
-- [ ] Inputs from switch controllers over usb host
 
 ## Mapping features
-- [ ] Defaults for outputs, like clicking a button that gives you all the keyboard inputs youd need for festival
 - [ ] Reverse debounce - https://github.com/Santroller/Santroller/issues/101
-- [ ] Copy profiles
 - [ ] Advanced joystick mapping - allow for mapping to just a specific range of motion instead of the entire stick. Some games need the ability to map an axis to only the top half of a stick for example
 - [ ] Better analog filtering - https://github.com/dxinteractive/ResponsiveAnalogRead
 - [ ] Rapid Trigger - https://github.com/minipadKB/minipad-firmware/blob/master/src/handlers/key_handler.cpp
@@ -39,7 +36,6 @@
 - [ ] Filters needed for hall effect
 
 ## Led / rumble features
-- [x] Gamepad rumble, including passthrough with usb host
 - [ ] Allow mapping stage kit led count to brightness
 - [ ] Support Spice2X serial API for games that run on that
 - [ ] Support directoutput (if we want to start supporting pinball cabs)
@@ -51,9 +47,3 @@
 - [ ] Port over logic for waking up 360s
 - [ ] max1704x
 - [ ] battery level estimate via ADC pin
-
-
-## UI
-- [ ] When you add a new profile, make it so that you are dropped in a new profile ui that asks you what devices you want so it can set up a sane assignment + the default mappings ( as an option ), do give people a button to skip if they want to do everything themselves though
-- [ ] Make it so you can have multiple sources on a single assignment without advanced mode
-- [ ] Make it so that things like console mode bindings are more obvious too

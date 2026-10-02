@@ -142,7 +142,6 @@ message ProfileAssignmentInfo {
     SpecificUsbDevice usbDevice = 8;
     InputActivationTrigger input = 10; // Input at startup
     InputActivationTrigger inputAnyTime = 11; // Input at any time
-    uint32 copilotProfile = 12; // copilot another profile
     uint32 midiChannel = 13;
     BluetoothMode bluetooth = 14;
     WiimoteAssignment wiiEmulation = 16;
@@ -150,6 +149,7 @@ message ProfileAssignmentInfo {
     SpecificBluetoothDevice bluetoothDevice = 15;
     SubType bluetoothType = 18;
   }
+  reserved 12;
 }
 
 message ProfileAssignment {

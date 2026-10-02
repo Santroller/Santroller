@@ -38,6 +38,11 @@ public:
     bool controller_valid() { return valid; }
 
 private:
+    enum class State {
+        IDLE,
+        TRANSFERRING
+    };
+
     bool auto_shift_data();
     void no_attention();
     void signal_attention();
@@ -48,4 +53,7 @@ private:
     uint32_t lastInput = 0;
     uint32_t lastInit = 0;
     protarneck_t lastInputs;
+    State m_state = State::IDLE;
+    uint32_t transferStartMicros = 0;
+    uint8_t m_rxBuf[1 + sizeof(protarneck_t)] = {0};
 };

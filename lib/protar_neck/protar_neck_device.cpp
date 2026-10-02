@@ -10,17 +10,21 @@ ProtarNeck::ProtarNeck(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint
     gpio_init(attPin);
     gpio_set_dir(attPin, true);
     gpio_set_pulls(attPin, false, false);
+    no_attention();
     last = micros();
     lastInit = millis();
 }
 
 void ProtarNeck::no_attention(void)
 {
+    busy_wait_us_32(2);
     gpio_put(m_attPin, true);
 }
+
 void ProtarNeck::signal_attention(void)
 {
     gpio_put(m_attPin, false);
+    busy_wait_us_32(2);
 }
 
 uint16_t ProtarNeck::read_axis(ProGuitarNeckAxisType axisType)
@@ -76,31 +80,80 @@ bool ProtarNeck::read_button(ProGuitarNeckButtonType buttonType)
 }
 void ProtarNeck::tick()
 {
-    if (micros() - last > 500)
+    if (m_state == State::IDLE)
     {
-        last = micros();
-        signal_attention();
-        uint8_t resp = interface.transfer(0x80);
-        if (resp == 0x00)
+        if (micros() - last > 500)
         {
-            valid = true;
+            last = micros();
+            signal_attention();
+
+            uint8_t txBuf[1 + sizeof(protarneck_t)] = {0x80, 0x12, 0x12, 0x12, 0x12, 0x12};
+            transferStartMicros = micros();
+            if (interface.transfer_dma_start(txBuf, m_rxBuf, sizeof(txBuf)))
+            {
+                m_state = State::TRANSFERRING;
+            }
+            else
+            {
+                // Fallback to blocking transfer if DMA channels unavailable
+                interface.transfer(txBuf, m_rxBuf, sizeof(txBuf));
+                no_attention();
+                uint8_t resp = m_rxBuf[0];
+                if (resp == 0x00)
+                {
+                    valid = true;
+                }
+                else if (resp != 0x80)
+                {
+                    valid = false;
+                }
+                else
+                {
+                    valid = true;
+                    memcpy(&lastInputs, &m_rxBuf[1], sizeof(lastInputs));
+                    lastInput = millis();
+                }
+            }
         }
-        else if (resp != 0x80)
+    }
+    else if (m_state == State::TRANSFERRING)
+    {
+        if (interface.transfer_dma_busy())
         {
-            valid = false;
+            // DMA timeout check (2ms) to prevent stuck CS/ATT line if hardware stalls
+            if (micros() - transferStartMicros > 2000)
+            {
+                interface.transfer_dma_abort();
+                no_attention();
+                valid = false;
+                m_state = State::IDLE;
+            }
         }
         else
         {
-            valid = true;
-            uint8_t *buf = (uint8_t *)&lastInputs;
-            for (size_t i = 0; i < sizeof(lastInputs); i++)
+            no_attention();
+            interface.transfer_dma_finish(m_rxBuf, sizeof(m_rxBuf));
+
+            uint8_t resp = m_rxBuf[0];
+            if (resp == 0x00)
             {
-                buf[i] = interface.transfer(0x12);
+                valid = true;
             }
-            lastInput = millis();
+            else if (resp != 0x80)
+            {
+                valid = false;
+            }
+            else
+            {
+                valid = true;
+                memcpy(&lastInputs, &m_rxBuf[1], sizeof(lastInputs));
+                lastInput = millis();
+            }
+
+            m_state = State::IDLE;
         }
     }
-    no_attention();
+
     if (millis() - lastInput > 10)
     {
         memset(&lastInputs, 0, sizeof(lastInputs));

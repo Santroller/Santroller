@@ -139,4 +139,5 @@ private:
     bool done = false;
     PSXControllerState status = DISCONNECTED;
     uint32_t packet_delay = 10000;
+    uint8_t m_config_retries = 0;
 };

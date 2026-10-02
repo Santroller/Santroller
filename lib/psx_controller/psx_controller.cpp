@@ -613,6 +613,7 @@ void PSXController::process_data(bool ack, bool timeout)
             if (valid)
             {
                 status = CONNECTION_DELAY;
+                m_config_retries = 0;
                 packet_delay = 100000;
                 no_attention();
                 return;
@@ -631,35 +632,78 @@ void PSXController::process_data(bool ack, bool timeout)
             break;
         case ENTER_CONFIG:
             if (valid)
+            {
+                m_config_retries = 0;
                 status = FIRST_INPUTS;
+            }
             else
-                status = SECOND_INPUTS;
+            {
+                if (m_config_retries < 5)
+                {
+                    m_config_retries++;
+                    status = FIRST_INPUTS;
+                }
+                else
+                {
+                    status = SECOND_INPUTS;
+                }
+            }
             packet_delay = 100;
             break;
         case ENABLE_ANALOG_MODE:
+            if (!valid && m_config_retries < 5)
+            {
+                m_config_retries++;
+                status = FIRST_INPUTS;
+                break;
+            }
             status = ENABLE_RUMBLE;
             packet_delay = 100;
             break;
         case ENABLE_RUMBLE:
+            if (!valid && m_config_retries < 5)
+            {
+                m_config_retries++;
+                status = FIRST_INPUTS;
+                break;
+            }
             status = ENABLE_PRESSURES;
             packet_delay = 100;
             break;
         case ENABLE_PRESSURES:
+            if (!valid && m_config_retries < 5)
+            {
+                m_config_retries++;
+                status = FIRST_INPUTS;
+                break;
+            }
             status = ENABLE_PRESSURES_2;
             packet_delay = 100;
             break;
         case ENABLE_PRESSURES_2:
+            if (!valid && m_config_retries < 5)
+            {
+                m_config_retries++;
+                status = FIRST_INPUTS;
+                break;
+            }
             status = EXIT_CONFIG;
             packet_delay = 100;
             break;
         case EXIT_CONFIG:
-            if (!isConfigReply(ps2Data))
-                status = SECOND_INPUTS;
             if (!isValidReply(ps2Data))
             {
+                if (m_config_retries < 5)
+                {
+                    m_config_retries++;
+                    status = FIRST_INPUTS;
+                    break;
+                }
                 status = DISCONNECTED;
                 break;
             }
+            if (!isConfigReply(ps2Data))
+                status = SECOND_INPUTS;
             packet_delay = 100;
             break;
         case SECOND_INPUTS:

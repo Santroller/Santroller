@@ -13,7 +13,7 @@ void VTechGuitarIOExpander::no_attention(void)
 {
     attention = false;
     gpio_put(mCsPin, true);
-    if (status == INIT_POWER_ON)
+    if (status == INIT_SOFT_RESET)
     {
         // first command needs a delay
         timeout_alarm_id = add_alarm_in_ms(30, restart_handler, this, true);
@@ -49,7 +49,7 @@ void VTechGuitarIOExpander::set_led(uint8_t i, uint8_t val)
 void VTechGuitarIOExpander::begin()
 {
 
-    status = INIT_POWER_ON;
+    status = INIT_SOFT_RESET;
     connected = false;
     attention = false;
     process_data(false, false);
@@ -83,67 +83,67 @@ void VTechGuitarIOExpander::process_data(bool ack, bool timeout)
 
     switch (status)
     {
-    case CHECK:
-        resp = send_cmd(0x00, 0x00);
+    case CHECK_HANDSHAKE:
+        resp = send_cmd(VTECH_REG_HANDSHAKE_READ, 0x00);
         // If init was successful, this final command responds with 0x5A
         if (resp == 0x5A)
         {
-            status = POLL;
+            status = POLL_INPUTS;
             connected = true;
         }
         else
         {
-            status = INIT_POWER_ON;
+            status = INIT_SOFT_RESET;
             connected = false;
         }
         break;
-    case POLL:
-        button_data = send_cmd(0x0E, 0x0E);
-        status = UPDATE_LED;
+    case POLL_INPUTS:
+        button_data = send_cmd(VTECH_REG_POLL_INPUTS, 0x0E);
+        status = UPDATE_LEDS;
         break;
-    case UPDATE_LED:
-        send_cmd(0x81, led_data);
-        status = CHECK;
+    case UPDATE_LEDS:
+        send_cmd(VTECH_REG_P0_OUT, led_data);
+        status = CHECK_HANDSHAKE;
         break;
-    case INIT_POWER_ON:
-        send_cmd(0xFF, 0x00);
-        status = INIT_2;
+    case INIT_SOFT_RESET:
+        send_cmd(VTECH_REG_SOFT_RESET, 0x00);
+        status = INIT_UNLOCK_KEY1;
         break;
-    case INIT_2:
-        send_cmd(0x88, 0xA5);
-        status = INIT_3;
+    case INIT_UNLOCK_KEY1:
+        send_cmd(VTECH_REG_KEY1, 0xA5);
+        status = INIT_UNLOCK_KEY2;
         break;
-    case INIT_3:
-        send_cmd(0x80, 0x5A);
-        status = INIT_4;
+    case INIT_UNLOCK_KEY2:
+        send_cmd(VTECH_REG_KEY2, 0x5A);
+        status = INIT_SET_P0_DIR_IN;
         break;
-    case INIT_4:
-        send_cmd(0x84, 0xFF);
-        status = INIT_5;
+    case INIT_SET_P0_DIR_IN:
+        send_cmd(VTECH_REG_P0_DIR, 0xFF);
+        status = INIT_SET_P0_PULLUP;
         break;
-    case INIT_5:
-        send_cmd(0x89, 0xFF);
-        status = INIT_6;
+    case INIT_SET_P0_PULLUP:
+        send_cmd(VTECH_REG_P0_PULLUP, 0xFF);
+        status = INIT_SET_P1_DIR_IN;
         break;
-    case INIT_6:
-        send_cmd(0x85, 0xFF);
-        status = INIT_7;
+    case INIT_SET_P1_DIR_IN:
+        send_cmd(VTECH_REG_P1_DIR, 0xFF);
+        status = INIT_SET_P0_OUT_CLEAR;
         break;
-    case INIT_7:
-        send_cmd(0x81, 0x00);
-        status = INIT_8;
+    case INIT_SET_P0_OUT_CLEAR:
+        send_cmd(VTECH_REG_P0_OUT, 0x00);
+        status = INIT_SET_P1_PULLUP;
         break;
-    case INIT_8:
-        send_cmd(0x8A, 0xFF);
-        status = INIT_9;
+    case INIT_SET_P1_PULLUP:
+        send_cmd(VTECH_REG_P1_PULLUP, 0xFF);
+        status = INIT_SET_P2_DIR_OUT;
         break;
-    case INIT_9:
-        send_cmd(0x86, 0x00);
-        status = INIT_10;
+    case INIT_SET_P2_DIR_OUT:
+        send_cmd(VTECH_REG_P2_DIR, 0x00);
+        status = INIT_SET_P1_OUT_OFF;
         break;
-    case INIT_10:
-        send_cmd(0x82, 0xFF);
-        status = CHECK;
+    case INIT_SET_P1_OUT_OFF:
+        send_cmd(VTECH_REG_P1_OUT, 0xFF);
+        status = CHECK_HANDSHAKE;
         break;
     }
 }

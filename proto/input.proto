@@ -182,6 +182,7 @@ message MidiInput {
 message EncoderInput {
   required int32 deviceid = 1;
   required EncoderInputType type = 2;
+  optional uint32 positionScale = 3;
 }
 
 message Input {

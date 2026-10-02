@@ -22,7 +22,10 @@ uint16_t EncoderInput::tick_analog()
         return static_cast<uint16_t>(val);
     }
     if (m_input.type == EncoderPosition)
-        return m_device->encoder.position;
+    {
+        uint32_t scale = m_input.has_positionScale && m_input.positionScale > 0 ? m_input.positionScale : 1;
+        return static_cast<uint16_t>(static_cast<uint32_t>(m_device->encoder.position) * scale);
+    }
     return 0;
 }
 void EncoderInput::setup()

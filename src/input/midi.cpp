@@ -4,7 +4,7 @@
 #include "stdio.h"
 
 
-MidiNoteInput::MidiNoteInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile* profile) : m_input(input.input.midiNote), m_device(device), m_profile(profile), m_device_id(input.deviceid)
+MidiNoteInput::MidiNoteInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile* profile) : m_input(input.input.midiNote), m_device(device), m_profile(profile), m_device_id(input.deviceid), m_slot_kind(midi_input_slot_kind(input))
 {
     printf("MidiNoteInput: %d\r\n", m_input.note);
 }
@@ -38,7 +38,7 @@ bool MidiNoteInput::peek_event(uint16_t &value)
 void MidiNoteInput::setup()
 {
 }
-MidiControlChangeInput::MidiControlChangeInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile* profile) : m_input(input.input.midiControlChange), m_device(device), m_profile(profile), m_device_id(input.deviceid)
+MidiControlChangeInput::MidiControlChangeInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile* profile) : m_input(input.input.midiControlChange), m_device(device), m_profile(profile), m_device_id(input.deviceid), m_slot_kind(midi_input_slot_kind(input))
 {
 }
 bool MidiControlChangeInput::tick_digital()
@@ -54,7 +54,7 @@ uint16_t MidiControlChangeInput::tick_analog()
 void MidiControlChangeInput::setup()
 {
 }
-MidiPitchBendInput::MidiPitchBendInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile* profile) : m_input(input.input.midiPitchBend), m_device(device), m_profile(profile), m_device_id(input.deviceid)
+MidiPitchBendInput::MidiPitchBendInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile* profile) : m_input(input.input.midiPitchBend), m_device(device), m_profile(profile), m_device_id(input.deviceid), m_slot_kind(midi_input_slot_kind(input))
 {
 }
 bool MidiPitchBendInput::tick_digital()
@@ -71,7 +71,7 @@ void MidiPitchBendInput::setup()
 {
 }
 
-MidiProGuitarButtonInput::MidiProGuitarButtonInput(proto_MidiInput input, std::shared_ptr<ProGuitarMidiDevice> device, Profile* profile) : m_input(input.input.midiProGuitarButton), m_device(device), m_profile(profile), m_device_id(input.deviceid)
+MidiProGuitarButtonInput::MidiProGuitarButtonInput(proto_MidiInput input, std::shared_ptr<ProGuitarMidiDevice> device, Profile* profile) : m_input(input.input.midiProGuitarButton), m_device(device), m_profile(profile), m_device_id(input.deviceid), m_slot_kind(midi_input_slot_kind(input))
 {
 }
 bool MidiProGuitarButtonInput::tick_digital()
@@ -88,7 +88,7 @@ void MidiProGuitarButtonInput::setup()
 {
 }
 
-MidiProGuitarAxisInput::MidiProGuitarAxisInput(proto_MidiInput input, std::shared_ptr<ProGuitarMidiDevice> device, Profile* profile) : m_input(input.input.midiProGuitarAxis), m_device(device), m_profile(profile), m_device_id(input.deviceid)
+MidiProGuitarAxisInput::MidiProGuitarAxisInput(proto_MidiInput input, std::shared_ptr<ProGuitarMidiDevice> device, Profile* profile) : m_input(input.input.midiProGuitarAxis), m_device(device), m_profile(profile), m_device_id(input.deviceid), m_slot_kind(midi_input_slot_kind(input))
 {
 }
 bool MidiProGuitarAxisInput::tick_digital()

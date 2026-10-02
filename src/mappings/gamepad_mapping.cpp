@@ -43,6 +43,35 @@ void GamepadAxisMapping::update_hid(uint8_t *buf)
 }
 void GamepadAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 {
+    if (m_mapping.mapping.mapping.gamepadAxis == Gamepad_LeftTrigger ||
+        m_mapping.mapping.mapping.gamepadAxis == Gamepad_RightTrigger)
+    {
+        const bool pressed = m_input->tick_digital() || !m_centered;
+        if (format == 1)
+        {
+            WiiClassicDataFormat1_t *report = (WiiClassicDataFormat1_t *)buf;
+            if (m_mapping.mapping.mapping.gamepadAxis == Gamepad_LeftTrigger)
+                report->l2 |= pressed;
+            else
+                report->r2 |= pressed;
+        }
+        else if (format == 2)
+        {
+            WiiClassicDataFormat2_t *report = (WiiClassicDataFormat2_t *)buf;
+            if (m_mapping.mapping.mapping.gamepadAxis == Gamepad_LeftTrigger)
+                report->l2 |= pressed;
+            else
+                report->r2 |= pressed;
+        }
+        else if (format == 3)
+        {
+            WiiClassicDataFormat3_t *report = (WiiClassicDataFormat3_t *)buf;
+            if (m_mapping.mapping.mapping.gamepadAxis == Gamepad_LeftTrigger)
+                report->l2 |= pressed;
+            else
+                report->r2 |= pressed;
+        }
+    }
     if (m_centered)
     {
         return;
@@ -178,11 +207,22 @@ void GamepadAxisMapping::update_switch(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps2(uint8_t *buf)
 {
+    PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadAxis)
+    {
+    case Gamepad_LeftTrigger:
+        report->l2 |= m_input->tick_digital() || !m_centered;
+        break;
+    case Gamepad_RightTrigger:
+        report->r2 |= m_input->tick_digital() || !m_centered;
+        break;
+    default:
+        break;
+    }
     if (m_centered)
     {
         return;
     }
-    PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:
@@ -210,11 +250,22 @@ void GamepadAxisMapping::update_ps2(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps3(uint8_t *buf)
 {
+    PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadAxis)
+    {
+    case Gamepad_LeftTrigger:
+        report->l2 |= m_input->tick_digital() || !m_centered;
+        break;
+    case Gamepad_RightTrigger:
+        report->r2 |= m_input->tick_digital() || !m_centered;
+        break;
+    default:
+        break;
+    }
     if (m_centered)
     {
         return;
     }
-    PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:
@@ -413,11 +464,22 @@ PS3GamepadAxisMapping::PS3GamepadAxisMapping(proto_Mapping mapping, std::unique_
 
 void PS3GamepadAxisMapping::update_ps3(uint8_t *buf)
 {
+    PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadAxis)
+    {
+    case Gamepad_LeftTrigger:
+        report->l2 |= m_input->tick_digital() || !m_centered;
+        break;
+    case Gamepad_RightTrigger:
+        report->r2 |= m_input->tick_digital() || !m_centered;
+        break;
+    default:
+        break;
+    }
     if (m_centered)
     {
         return;
     }
-    PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:
@@ -696,21 +758,25 @@ void GamepadButtonMapping::update_switch(uint8_t *buf)
 
 void GamepadButtonMapping::update_ps2(uint8_t *buf)
 {
-    // TODO: pressures
     PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)buf;
+    uint8_t pressure = m_last_pressure >> 8;
     switch (m_mapping.mapping.mapping.gamepadButton)
     {
     case Gamepad_A:
         report->a |= m_last_value;
+        report->pressureCross = std::max(report->pressureCross, pressure);
         break;
     case Gamepad_B:
         report->b |= m_last_value;
+        report->pressureCircle = std::max(report->pressureCircle, pressure);
         break;
     case Gamepad_X:
         report->x |= m_last_value;
+        report->pressureSquare = std::max(report->pressureSquare, pressure);
         break;
     case Gamepad_Y:
         report->y |= m_last_value;
+        report->pressureTriangle = std::max(report->pressureTriangle, pressure);
         break;
     case Gamepad_Start:
         report->start |= m_last_value;
@@ -723,9 +789,11 @@ void GamepadButtonMapping::update_ps2(uint8_t *buf)
         break;
     case Gamepad_LeftShoulder:
         report->leftShoulder |= m_last_value;
+        report->pressureL1 = std::max(report->pressureL1, pressure);
         break;
     case Gamepad_RightShoulder:
         report->rightShoulder |= m_last_value;
+        report->pressureR1 = std::max(report->pressureR1, pressure);
         break;
     case Gamepad_LeftThumbClick:
         report->leftThumbClick |= m_last_value;
@@ -735,15 +803,19 @@ void GamepadButtonMapping::update_ps2(uint8_t *buf)
         break;
     case Gamepad_DpadUp:
         report->dpadUp |= m_last_value;
+        report->pressureDpadUp = std::max(report->pressureDpadUp, pressure);
         break;
     case Gamepad_DpadDown:
         report->dpadDown |= m_last_value;
+        report->pressureDpadDown = std::max(report->pressureDpadDown, pressure);
         break;
     case Gamepad_DpadLeft:
         report->dpadLeft |= m_last_value;
+        report->pressureDpadLeft = std::max(report->pressureDpadLeft, pressure);
         break;
     case Gamepad_DpadRight:
         report->dpadRight |= m_last_value;
+        report->pressureDpadRight = std::max(report->pressureDpadRight, pressure);
         break;
     default:
         break;

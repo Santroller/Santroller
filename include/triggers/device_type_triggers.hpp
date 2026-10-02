@@ -5,7 +5,7 @@
 class WiiExtTypeActivationTrigger : public ActivationTrigger
 {
 public:
-    WiiExtTypeActivationTrigger(proto_WiiExtType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
+    WiiExtTypeActivationTrigger(proto_WiiExtType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
     ~WiiExtTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -17,7 +17,7 @@ protected:
 class PS2ControllerTypeActivationTrigger : public ActivationTrigger
 {
 public:
-    PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
+    PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
     ~PS2ControllerTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
@@ -29,7 +29,7 @@ protected:
 class UsbTypeActivationTrigger : public ActivationTrigger
 {
 public:
-    UsbTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
+    UsbTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
     ~UsbTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset() override;
@@ -42,7 +42,7 @@ protected:
 class SpecificUsbDeviceActivationTrigger : public ActivationTrigger
 {
 public:
-    SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
+    SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
     ~SpecificUsbDeviceActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset() override;
@@ -55,7 +55,7 @@ protected:
 class BluetoothTypeActivationTrigger : public ActivationTrigger
 {
 public:
-    BluetoothTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
+    BluetoothTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
     ~BluetoothTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset() override;
@@ -68,7 +68,7 @@ protected:
 class SpecificBluetoothDeviceActivationTrigger : public ActivationTrigger
 {
 public:
-    SpecificBluetoothDeviceActivationTrigger(proto_SpecificBluetoothDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
+    SpecificBluetoothDeviceActivationTrigger(proto_SpecificBluetoothDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
     ~SpecificBluetoothDeviceActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset() override;
@@ -81,7 +81,7 @@ protected:
 class MidiChannelActivationTrigger : public ActivationTrigger
 {
 public:
-    MidiChannelActivationTrigger(uint32_t channel, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
+    MidiChannelActivationTrigger(uint32_t channel, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
     ~MidiChannelActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset() override;

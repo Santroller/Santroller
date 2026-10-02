@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <map>
 #include <utility>
 #include <vector>
@@ -38,6 +39,7 @@ public:
     bool supports_ps4;
     bool supports_slider;
     bool cymbal_glitch_fix;
+    bool per_kind_slot_ids = false;
     ConsoleMode mode;
     uint32_t profile_id;
     std::vector<std::unique_ptr<Mapping>> mappings;
@@ -53,6 +55,33 @@ public:
         const auto &claimed = temporary ? temp_claimed_devices : claimed_devices;
         auto it = claimed.find({kind, slot_id});
         return it == claimed.end() ? nullptr : it->second;
+    }
+
+    std::shared_ptr<Device> get_midi_source_device(
+        uint16_t slot_id,
+        DeviceSlotKind source_kind,
+        bool temporary = false) const
+    {
+        auto supports_midi = [](const std::shared_ptr<Device> &device) {
+            return device && (device->is_midi_device() || device->is_pro_guitar_midi_device());
+        };
+
+        if (source_kind != DeviceSlotKind::None) {
+            auto device = get_claimed_device(source_kind, slot_id, temporary);
+            return supports_midi(device) ? device : nullptr;
+        }
+
+        std::shared_ptr<Device> matched_device;
+        for (auto kind : {DeviceSlotKind::MIDI, DeviceSlotKind::USB, DeviceSlotKind::Bluetooth, DeviceSlotKind::WiiExtension}) {
+            auto device = get_claimed_device(kind, slot_id, temporary);
+            if (!supports_midi(device)) continue;
+            if (matched_device && matched_device != device) return nullptr;
+            matched_device = device;
+        }
+        if (matched_device) return matched_device;
+
+        auto it = devices.find(slot_id);
+        return it != devices.end() && supports_midi(it->second) ? it->second : nullptr;
     }
 
     DrumState drum_state;

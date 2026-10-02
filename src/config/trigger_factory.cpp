@@ -10,6 +10,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
     std::shared_ptr<Profile> profile,
     std::unique_ptr<Input> input,
     uint32_t trigger_id,
+    uint32_t slot_id,
     uint32_t list_id)
 {
     switch (proto_assignment.which_assignment)
@@ -49,6 +50,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             proto_assignment.assignment.wiiExt,
             profile,
             trigger_id,
+            slot_id,
             list_id
         );
         
@@ -57,6 +59,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             proto_assignment.assignment.ps2Cnt,
             profile,
             trigger_id,
+            slot_id,
             list_id
         );
         
@@ -65,6 +68,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             proto_assignment.assignment.usbType,
             profile,
             trigger_id,
+            slot_id,
             list_id
         );
         
@@ -73,6 +77,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             proto_assignment.assignment.usbDevice,
             profile,
             trigger_id,
+            slot_id,
             list_id
         );
         
@@ -81,6 +86,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             proto_assignment.assignment.bluetoothType,
             profile,
             trigger_id,
+            slot_id,
             list_id
         );
         
@@ -89,6 +95,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             proto_assignment.assignment.bluetoothDevice,
             profile,
             trigger_id,
+            slot_id,
             list_id
         );
         
@@ -97,6 +104,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             proto_assignment.assignment.midiChannel,
             profile,
             trigger_id,
+            slot_id,
             list_id
         );
         

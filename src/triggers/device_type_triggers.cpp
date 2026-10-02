@@ -60,7 +60,7 @@ static void send_activation_event(uint16_t id, uint16_t list_id, uint16_t analog
     HIDConfigDevice::send_event(event, true);
 }
 
-WiiExtTypeActivationTrigger::WiiExtTypeActivationTrigger(proto_WiiExtType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_type(type)
+WiiExtTypeActivationTrigger::WiiExtTypeActivationTrigger(proto_WiiExtType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_type(type)
 {
 }
 
@@ -82,14 +82,14 @@ bool WiiExtTypeActivationTrigger::validate(bool claim_device, bool full_poll, bo
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, DeviceSlotKind::WiiExtension, m_id, device);
+            claim_profile_device(m_profile, DeviceSlotKind::WiiExtension, m_slot_id, device);
         }
         return true;
     }
     return false;
 }
 
-PS2ControllerTypeActivationTrigger::PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_type(type)
+PS2ControllerTypeActivationTrigger::PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_type(type)
 {
 }
 
@@ -111,14 +111,14 @@ bool PS2ControllerTypeActivationTrigger::validate(bool claim_device, bool full_p
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, DeviceSlotKind::PS2, m_id, device);
+            claim_profile_device(m_profile, DeviceSlotKind::PS2, m_slot_id, device);
         }
         return true;
     }
     return false;
 }
 
-UsbTypeActivationTrigger::UsbTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_type(type)
+UsbTypeActivationTrigger::UsbTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_type(type)
 {
 }
 
@@ -140,11 +140,11 @@ bool UsbTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, DeviceSlotKind::USB, m_id, device);
+            claim_profile_device(m_profile, DeviceSlotKind::USB, m_slot_id, device);
         }
         else
         {
-            claim_profile_temp_device(m_profile, DeviceSlotKind::USB, m_id, device);
+            claim_profile_temp_device(m_profile, DeviceSlotKind::USB, m_slot_id, device);
         }
         return true;
     }
@@ -155,7 +155,7 @@ void UsbTypeActivationTrigger::reset()
     clear_profile_temp_devices(m_profile);
 }
 
-SpecificUsbDeviceActivationTrigger::SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_device(device)
+SpecificUsbDeviceActivationTrigger::SpecificUsbDeviceActivationTrigger(proto_SpecificUsbDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_device(device)
 {
 }
 
@@ -177,11 +177,11 @@ bool SpecificUsbDeviceActivationTrigger::validate(bool claim_device, bool full_p
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, DeviceSlotKind::USB, m_id, device);
+            claim_profile_device(m_profile, DeviceSlotKind::USB, m_slot_id, device);
         }
         else
         {
-            claim_profile_temp_device(m_profile, DeviceSlotKind::USB, m_id, device);
+            claim_profile_temp_device(m_profile, DeviceSlotKind::USB, m_slot_id, device);
         }
         return true;
     }
@@ -192,7 +192,7 @@ void SpecificUsbDeviceActivationTrigger::reset()
     clear_profile_temp_devices(m_profile);
 }
 
-BluetoothTypeActivationTrigger::BluetoothTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_type(type)
+BluetoothTypeActivationTrigger::BluetoothTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_type(type)
 {
 }
 
@@ -214,11 +214,11 @@ bool BluetoothTypeActivationTrigger::validate(bool claim_device, bool full_poll,
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, DeviceSlotKind::Bluetooth, m_id, device);
+            claim_profile_device(m_profile, DeviceSlotKind::Bluetooth, m_slot_id, device);
         }
         else
         {
-            claim_profile_temp_device(m_profile, DeviceSlotKind::Bluetooth, m_id, device);
+            claim_profile_temp_device(m_profile, DeviceSlotKind::Bluetooth, m_slot_id, device);
         }
         return true;
     }
@@ -229,7 +229,7 @@ void BluetoothTypeActivationTrigger::reset()
 {
     clear_profile_temp_devices(m_profile);
 }
-SpecificBluetoothDeviceActivationTrigger::SpecificBluetoothDeviceActivationTrigger(proto_SpecificBluetoothDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_device(device)
+SpecificBluetoothDeviceActivationTrigger::SpecificBluetoothDeviceActivationTrigger(proto_SpecificBluetoothDevice device, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_device(device)
 {
 }
 
@@ -251,11 +251,11 @@ bool SpecificBluetoothDeviceActivationTrigger::validate(bool claim_device, bool 
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, DeviceSlotKind::Bluetooth, m_id, device);
+            claim_profile_device(m_profile, DeviceSlotKind::Bluetooth, m_slot_id, device);
         }
         else
         {
-            claim_profile_temp_device(m_profile, DeviceSlotKind::Bluetooth, m_id, device);
+            claim_profile_temp_device(m_profile, DeviceSlotKind::Bluetooth, m_slot_id, device);
         }
         return true;
     }
@@ -266,7 +266,7 @@ void SpecificBluetoothDeviceActivationTrigger::reset()
     clear_profile_temp_devices(m_profile);
 }
 
-MidiChannelActivationTrigger::MidiChannelActivationTrigger(uint32_t channel, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_channel(channel)
+MidiChannelActivationTrigger::MidiChannelActivationTrigger(uint32_t channel, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_channel(channel)
 {
 }
 
@@ -288,12 +288,12 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
     {
         if (claim_device)
         {
-            claim_profile_device(m_profile, DeviceSlotKind::MIDI, m_id, device);
+            claim_profile_device(m_profile, DeviceSlotKind::MIDI, m_slot_id, device);
             printf("Claimed device: %d %p %p\r\n", m_profile, m_profile, device);
         }
         else
         {
-            claim_profile_temp_device(m_profile, DeviceSlotKind::MIDI, m_id, device);
+            claim_profile_temp_device(m_profile, DeviceSlotKind::MIDI, m_slot_id, device);
         }
         return true;
     }

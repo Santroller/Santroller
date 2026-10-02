@@ -15,6 +15,7 @@ message ProfileOpts {
   optional bool ps4OrPs5Mode = 12;
   optional bool supportsSlider = 13;
   optional bool cymbalGlitchFix = 14;
+  optional uint32 deviceSlotIdVersion = 15;
 }
 
 message Profile {

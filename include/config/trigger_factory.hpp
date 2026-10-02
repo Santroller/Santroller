@@ -16,6 +16,7 @@ public:
         std::shared_ptr<Profile> profile,
         std::unique_ptr<Input> input,
         uint32_t trigger_id,
+        uint32_t slot_id,
         uint32_t list_id
     );
 };

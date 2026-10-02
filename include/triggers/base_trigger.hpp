@@ -10,6 +10,8 @@ class ActivationTrigger
 public:
     ActivationTrigger(Profile *profile, uint32_t id, uint32_t list_id) : m_profile(profile), m_id(id), m_list_id(list_id) {}
     ActivationTrigger(const std::shared_ptr<Profile> &profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile.get(), id, list_id) {}
+    ActivationTrigger(Profile *profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : m_profile(profile), m_id(id), m_slot_id(slot_id), m_list_id(list_id) {}
+    ActivationTrigger(const std::shared_ptr<Profile> &profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile.get(), id, slot_id, list_id) {}
     virtual ~ActivationTrigger() {}
     virtual bool validate(bool claim_device, bool full_poll, bool send_events) = 0;
     virtual void reset() {};
@@ -24,5 +26,6 @@ protected:
     bool m_last_val = false;
     uint16_t m_last_analog_val = 0;
     uint16_t m_id;
+    uint16_t m_slot_id = 0;
     uint16_t m_list_id;
 };

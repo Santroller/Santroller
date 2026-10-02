@@ -91,6 +91,7 @@
 #include <set>
 #include <memory>
 #include <algorithm>
+#include <array>
 #include "utils.h"
 #include "hci.h"
 
@@ -110,6 +111,7 @@ struct ConfigDecodeContext
     Input *last_special = nullptr;
     bool matched = false;
     bool changed = false;
+    std::array<uint16_t, 5> slot_counts{};
 };
 
 bool load_cycle_state(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -421,11 +423,45 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
         input = make_input(proto_assignment.assignment.inputAnyTime.input, *context, stream);
     }
 
+    auto slot_id = static_cast<uint32_t>(list->triggers.size());
+    if (profile->per_kind_slot_ids)
+    {
+        DeviceSlotKind kind = DeviceSlotKind::None;
+        switch (proto_assignment.which_assignment)
+        {
+        case proto_ProfileAssignmentInfo_wiiExt_tag:
+            kind = DeviceSlotKind::WiiExtension;
+            break;
+        case proto_ProfileAssignmentInfo_ps2Cnt_tag:
+            kind = DeviceSlotKind::PS2;
+            break;
+        case proto_ProfileAssignmentInfo_usbType_tag:
+        case proto_ProfileAssignmentInfo_usbDevice_tag:
+            kind = DeviceSlotKind::USB;
+            break;
+        case proto_ProfileAssignmentInfo_bluetoothType_tag:
+        case proto_ProfileAssignmentInfo_bluetoothDevice_tag:
+            kind = DeviceSlotKind::Bluetooth;
+            break;
+        case proto_ProfileAssignmentInfo_midiChannel_tag:
+            kind = DeviceSlotKind::MIDI;
+            break;
+        default:
+            break;
+        }
+        if (kind != DeviceSlotKind::None)
+        {
+            const auto index = static_cast<size_t>(kind);
+            slot_id = ++context->slot_counts[index];
+        }
+    }
+
     auto trigger = TriggerFactory::create_trigger(
         proto_assignment,
         profile,
         std::move(input),
         list->triggers.size(),
+        slot_id,
         profile->triggers.size() - 1);
 
     if (trigger)
@@ -441,6 +477,7 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     auto *context = static_cast<ConfigDecodeContext *>(*arg);
     auto profile = context->profile;
     auto list = new ActivationTriggerList();
+    context->slot_counts.fill(0);
     list->list_id = profile->triggers.size();
     profile->triggers.emplace_back(list);
     proto_ProfileAssignment proto_assignment = proto_ProfileAssignment_init_zero;
@@ -535,6 +572,7 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->supports_ps4 = opts.has_ps4OrPs5Mode && opts.ps4OrPs5Mode;
     profile->supports_slider = opts.has_supportsSlider && opts.supportsSlider;
     profile->cymbal_glitch_fix = opts.has_cymbalGlitchFix && opts.cymbalGlitchFix;
+    profile->per_kind_slot_ids = opts.has_deviceSlotIdVersion && opts.deviceSlotIdVersion >= 1;
     profile->subtype = opts.deviceToEmulate;
     return true;
 }

@@ -159,6 +159,13 @@ message MidiProGuitarButtonInput {
 message MidiProGuitarAxisInput {
   required ProGuitarAxisType axis = 2;
 }
+enum MidiInputSourceType {
+  MidiInputSourceType_Auto = 0;
+  MidiInputSourceType_MIDI = 1;
+  MidiInputSourceType_USB = 2;
+  MidiInputSourceType_Bluetooth = 3;
+  MidiInputSourceType_Wii = 4;
+}
 message ProtarNeckAxisInput {
   required int32 deviceid = 1;
   required ProGuitarNeckAxisType axis = 2;
@@ -170,6 +177,7 @@ message ProtarNeckButtonInput {
 
 message MidiInput {
   required int32 deviceid = 1;
+  optional MidiInputSourceType sourceType = 7;
   oneof input {
     MidiNoteInput midiNote = 4;
     MidiControlChangeInput midiControlChange = 5;

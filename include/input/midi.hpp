@@ -5,6 +5,26 @@
 #include "devices/midi.hpp"
 #include "profiles/profile.hpp"
 #include <memory>
+
+inline DeviceSlotKind midi_input_slot_kind(const proto_MidiInput &input)
+{
+    if (!input.has_sourceType) {
+        return DeviceSlotKind::None;
+    }
+    switch (input.sourceType) {
+    case proto_MidiInputSourceType_MidiInputSourceType_MIDI:
+        return DeviceSlotKind::MIDI;
+    case proto_MidiInputSourceType_MidiInputSourceType_USB:
+        return DeviceSlotKind::USB;
+    case proto_MidiInputSourceType_MidiInputSourceType_Bluetooth:
+        return DeviceSlotKind::Bluetooth;
+    case proto_MidiInputSourceType_MidiInputSourceType_Wii:
+        return DeviceSlotKind::WiiExtension;
+    default:
+        return DeviceSlotKind::None;
+    }
+}
+
 class MidiNoteInput : public Input
 {
 public:
@@ -21,11 +41,7 @@ public:
     uint64_t hardware_id() const override { return (static_cast<uint64_t>(InputHw_MidiNote) << 56) | (static_cast<uint64_t>(m_device ? m_device->m_id : 0) << 16) | (static_cast<uint64_t>(m_input.channel) << 8) | static_cast<uint64_t>(m_input.note); }
     void link_device(bool claim_devices) override
     {
-        auto device = m_profile->get_claimed_device(DeviceSlotKind::MIDI, m_device_id, !claim_devices);
-        if (!device) {
-            auto it = m_profile->devices.find(m_device_id);
-            if (it != m_profile->devices.end()) device = it->second;
-        }
+        auto device = m_profile->get_midi_source_device(m_device_id, m_slot_kind, !claim_devices);
         m_device = device && device->is_midi_device() ? std::static_pointer_cast<MidiDevice>(device) : nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
@@ -38,6 +54,7 @@ private:
     uint16_t m_last_event_sequence = 0;
     uint16_t m_last_ui_event_sequence = 0;
     uint32_t m_device_id;
+    DeviceSlotKind m_slot_kind;
 };
 class MidiControlChangeInput : public Input
 {
@@ -48,11 +65,7 @@ public:
     bool has_independent_analog_value() const override { return true; }
     void link_device(bool claim_devices) override
     {
-        auto device = m_profile->get_claimed_device(DeviceSlotKind::MIDI, m_device_id, !claim_devices);
-        if (!device) {
-            auto it = m_profile->devices.find(m_device_id);
-            if (it != m_profile->devices.end()) device = it->second;
-        }
+        auto device = m_profile->get_midi_source_device(m_device_id, m_slot_kind, !claim_devices);
         m_device = device && device->is_midi_device() ? std::static_pointer_cast<MidiDevice>(device) : nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
@@ -63,6 +76,7 @@ private:
     std::shared_ptr<MidiDevice> m_device;
     Profile *m_profile;
     uint32_t m_device_id;
+    DeviceSlotKind m_slot_kind;
 };
 class MidiPitchBendInput : public Input
 {
@@ -73,11 +87,7 @@ public:
     bool has_independent_analog_value() const override { return true; }
     void link_device(bool claim_devices) override
     {
-        auto device = m_profile->get_claimed_device(DeviceSlotKind::MIDI, m_device_id, !claim_devices);
-        if (!device) {
-            auto it = m_profile->devices.find(m_device_id);
-            if (it != m_profile->devices.end()) device = it->second;
-        }
+        auto device = m_profile->get_midi_source_device(m_device_id, m_slot_kind, !claim_devices);
         m_device = device && device->is_midi_device() ? std::static_pointer_cast<MidiDevice>(device) : nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
@@ -88,6 +98,7 @@ private:
     std::shared_ptr<MidiDevice> m_device;
     Profile *m_profile;
     uint32_t m_device_id;
+    DeviceSlotKind m_slot_kind;
 };
 class MidiProGuitarButtonInput : public Input
 {
@@ -97,11 +108,7 @@ public:
     uint16_t tick_analog();
     void link_device(bool claim_devices) override
     {
-        auto device = m_profile->get_claimed_device(DeviceSlotKind::MIDI, m_device_id, !claim_devices);
-        if (!device) {
-            auto it = m_profile->devices.find(m_device_id);
-            if (it != m_profile->devices.end()) device = it->second;
-        }
+        auto device = m_profile->get_midi_source_device(m_device_id, m_slot_kind, !claim_devices);
         m_device = device && device->is_pro_guitar_midi_device()
             ? std::static_pointer_cast<ProGuitarMidiDevice>(device)
             : nullptr;
@@ -114,6 +121,7 @@ private:
     std::shared_ptr<ProGuitarMidiDevice> m_device;
     Profile *m_profile;
     uint32_t m_device_id;
+    DeviceSlotKind m_slot_kind;
 };
 class MidiProGuitarAxisInput : public Input
 {
@@ -124,11 +132,7 @@ public:
     bool has_independent_analog_value() const override { return true; }
     void link_device(bool claim_devices) override
     {
-        auto device = m_profile->get_claimed_device(DeviceSlotKind::MIDI, m_device_id, !claim_devices);
-        if (!device) {
-            auto it = m_profile->devices.find(m_device_id);
-            if (it != m_profile->devices.end()) device = it->second;
-        }
+        auto device = m_profile->get_midi_source_device(m_device_id, m_slot_kind, !claim_devices);
         m_device = device && device->is_pro_guitar_midi_device()
             ? std::static_pointer_cast<ProGuitarMidiDevice>(device)
             : nullptr;
@@ -141,4 +145,5 @@ private:
     std::shared_ptr<ProGuitarMidiDevice> m_device;
     Profile *m_profile;
     uint32_t m_device_id;
+    DeviceSlotKind m_slot_kind;
 };

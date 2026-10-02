@@ -21,8 +21,6 @@ public:
         std::shared_ptr<Profile> profile
     );
     
-    static bool has_device(std::shared_ptr<Profile> profile, uint32_t device_id, DeviceSlotKind kind);
-    
     template<typename T>
     static std::shared_ptr<T> get_device(std::shared_ptr<Profile> profile, uint32_t device_id) {
         constexpr DeviceSlotKind slot_kind = [] {
@@ -77,5 +75,30 @@ public:
             return cast_device(s_it->second);
         }
         return nullptr;
+    }
+
+    template<typename InputType, typename DeviceType, typename ConfigType>
+    static std::unique_ptr<Input> create_midi_input(
+        std::shared_ptr<Profile> profile,
+        DeviceSlotKind source_kind,
+        const ConfigType &config)
+    {
+        auto device = profile->get_midi_source_device(
+            static_cast<uint16_t>(config.deviceid),
+            source_kind);
+        std::shared_ptr<DeviceType> typed_device;
+        if constexpr (std::is_same_v<DeviceType, MidiDevice>) {
+            if (device && device->is_midi_device()) {
+                typed_device = std::static_pointer_cast<DeviceType>(device);
+            }
+        } else if constexpr (std::is_same_v<DeviceType, ProGuitarMidiDevice>) {
+            if (device && device->is_pro_guitar_midi_device()) {
+                typed_device = std::static_pointer_cast<DeviceType>(device);
+            }
+        }
+        return std::make_unique<InputType>(
+            config,
+            typed_device,
+            profile.get());
     }
 };

@@ -54,6 +54,10 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
     }
     return;
   }
+  if (tud_ready() && !ready())
+  {
+    return;
+  }
   hid_keyboard_report_t *report = (hid_keyboard_report_t *)epin_buf;
   memcpy(epin_buf, m_initial_report, sizeof(epin_buf));
   for (const auto &profile : profiles)
@@ -69,32 +73,47 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
     {
       led->update(full_poll, send_events);
     }
-    size_t current = 0;
-    for (size_t i = 0; i < sizeof(state.last_seen_keys); i++)
-    {
-      uint8_t key = state.last_seen_keys[i];
-      if (key && state.is_key_pressed(key))
-      {
-        report->keycode[current++] = key;
-        state.clear_key(key);
-      }
-    }
+    size_t total_pressed = 0;
     for (size_t i = 0; i < 256; i++)
     {
-      if (current >= sizeof(report->keycode))
-      {
-        break;
-      }
       if (state.is_key_pressed(i))
       {
-        report->keycode[current++] = i;
+        total_pressed++;
       }
     }
-    memcpy(state.last_seen_keys, report->keycode, sizeof(report->keycode));
-  }
-  if (!ready())
-  {
-    return;
+    if (total_pressed > sizeof(report->keycode))
+    {
+      memset(report->keycode, 0x01, sizeof(report->keycode));
+      memset(state.last_seen_keys, 0, sizeof(state.last_seen_keys));
+    }
+    else
+    {
+      size_t current = 0;
+      for (size_t i = 0; i < sizeof(state.last_seen_keys); i++)
+      {
+        uint8_t key = state.last_seen_keys[i];
+        if (key && state.is_key_pressed(key))
+        {
+          if (current < sizeof(report->keycode))
+          {
+            report->keycode[current++] = key;
+          }
+          state.clear_key(key);
+        }
+      }
+      for (size_t i = 0; i < 256; i++)
+      {
+        if (current >= sizeof(report->keycode))
+        {
+          break;
+        }
+        if (state.is_key_pressed(i))
+        {
+          report->keycode[current++] = i;
+        }
+      }
+      memcpy(state.last_seen_keys, report->keycode, sizeof(report->keycode));
+    }
   }
   send_report(sizeof(hid_keyboard_report_t), 0, epin_buf);
 }

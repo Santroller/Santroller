@@ -91,25 +91,25 @@ for b in blocks:
     assert b.size == block_size
     assert b.family_id == ref.family_id
 
-dongle_candidates = [
-    os.path.join(out_dir, "xbox_dongle_firmware.bin"),
-    os.path.join(out_dir, "generated", "xbox_dongle_firmware.bin"),
-    os.path.join(out_dir, "..", "generated", "xbox_dongle_firmware.bin"),
+static_firmware_candidates = [
+    os.path.join(out_dir, "static_firmware.bin"),
+    os.path.join(out_dir, "generated", "static_firmware.bin"),
+    os.path.join(out_dir, "..", "generated", "static_firmware.bin"),
 ]
 if shared_gen_dir:
-    dongle_candidates.insert(0, os.path.join(shared_gen_dir, "xbox_dongle_firmware.bin"))
+    static_firmware_candidates.insert(0, os.path.join(shared_gen_dir, "static_firmware.bin"))
 
-dongle_fw_path = next((p for p in dongle_candidates if os.path.isfile(p)), None)
-if dongle_fw_path:
-    print(f"Found dongle firmware at {dongle_fw_path}, adding to UF2")
-    dongle_data = read_file(dongle_fw_path)
-    dongle_blocks = []
+static_firmware_path = next((p for p in static_firmware_candidates if os.path.isfile(p)), None)
+if static_firmware_path:
+    print(f"Found static firmware at {static_firmware_path}, adding to UF2")
+    static_firmware_data = read_file(static_firmware_path)
+    static_firmware_blocks = []
     STATIC_FIRMWARE_START = 0x1000A000
-    for offset in range(0, len(dongle_data), block_size):
-        chunk = dongle_data[offset:offset + block_size]
+    for offset in range(0, len(static_firmware_data), block_size):
+        chunk = static_firmware_data[offset:offset + block_size]
         if len(chunk) < block_size:
             chunk = chunk.ljust(block_size, b"\xFF")
-        dongle_blocks.append(Uf2Block(
+        static_firmware_blocks.append(Uf2Block(
             ref.flags,
             STATIC_FIRMWARE_START + offset,
             block_size,
@@ -118,8 +118,12 @@ if dongle_fw_path:
             ref.family_id,
             chunk
         ))
-    write_uf2(dongle_blocks, os.path.join(out_dir, "xbox_dongle_firmware.uf2"))
-    blocks += dongle_blocks
+    write_uf2(static_firmware_blocks, os.path.join(out_dir, "static_firmware.uf2"))
+    app_only_blocks = list(decode_uf2(read_file(firmware_filename)))
+    write_uf2(app_only_blocks, os.path.join(out_dir, "santroller_app_only.uf2"))
+    full_install_blocks = app_only_blocks + static_firmware_blocks
+    write_uf2(full_install_blocks, firmware_filename)
+    blocks += static_firmware_blocks
 
 block_map = set(b.address for b in blocks)
 sector_map = set(a // sector_size * sector_size for a in block_map)

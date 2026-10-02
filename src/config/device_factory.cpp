@@ -28,6 +28,7 @@
 #include "devices/vtechexpander.hpp"
 #include "devices/matrix.hpp"
 #include "devices/switch_network.hpp"
+#include "devices/infinium_fader.hpp"
 #include "devices/cycle.hpp"
 #include "devices/toggle.hpp"
 #include "devices/dmx.hpp"
@@ -202,6 +203,10 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         device = std::make_shared<CrkdDrumDevice>(proto_device.device.crkdDrum, device_id);
         break;
         
+    case proto_Device_infiniumFader_tag:
+        device = std::make_shared<InfiniumFaderDevice>(proto_device.device.infiniumFader, device_id);
+        break;
+        
     case proto_Device_wii_tag:
         // Preserve state from previous device
         device = std::make_shared<WiiDevice>(
@@ -210,7 +215,6 @@ std::shared_ptr<Device> DeviceFactory::create_device(
             device_id
         );
         break;
-        
     case proto_Device_psx_tag:
         // Preserve state from previous device
         device = std::make_shared<PS2Device>(
@@ -219,7 +223,6 @@ std::shared_ptr<Device> DeviceFactory::create_device(
             device_id
         );
         break;
-        
     case proto_Device_psxEmulation_tag:
         device = std::make_shared<PSXEmulationDevice>(proto_device.device.psxEmulation, device_id);
         break;

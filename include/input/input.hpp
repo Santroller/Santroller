@@ -23,6 +23,7 @@ enum InputHardwareType : uint8_t {
     InputHw_BTAxis = 15,
     InputHw_Encoder = 16,
     InputHw_SwitchNetwork = 17,
+    InputHw_InfiniumFader = 18,
 };
 
 class Input

@@ -1,4 +1,4 @@
-# Package firmware binaries into a static flash image and header
+# Package Xbox Wireless and CYW43 firmware into the static flash image
 # This script runs during CMake configuration
 
 if(DEFINED SANTROLLER_SHARED_GENERATED_DIR)
@@ -13,13 +13,23 @@ file(MAKE_DIRECTORY "${GENERATED_DIR}")
 
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
-message(STATUS "Packaging Xbox wireless dongle firmware into static flash image...")
+set(PACKAGE_ARGS
+    --firmware-dir "${FIRMWARE_DIR}"
+    --output-dir "${GENERATED_DIR}"
+    --partition-size-kb "${PFB_STATIC_FIRMWARE_SIZE_KB}"
+    --xbox-partition-size-kb "${XBOX_STATIC_FIRMWARE_SIZE_KB}"
+    --flash-offset 0xA000
+)
+if(ENABLE_WIFI)
+    list(APPEND PACKAGE_ARGS
+        --cyw43-header "${PICO_SDK_PATH}/lib/cyw43-driver/firmware/wb43439A0_7_95_49_00_combined.h"
+    )
+endif()
+
+message(STATUS "Packaging static firmware image...")
 execute_process(
     COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tools/package_dongle_firmware.py"
-        --firmware-dir "${FIRMWARE_DIR}"
-        --output-dir "${GENERATED_DIR}"
-        --partition-size-kb 96
-        --flash-offset 0xA000
+        ${PACKAGE_ARGS}
     RESULT_VARIABLE PACKAGE_RESULT
 )
 

@@ -227,7 +227,11 @@ message Input {
     BTAxisInput btAxis = 35;
     EncoderInput encoder = 36;
     ShiftedInput shifted = 38;
+    InfiniumFaderInput infiniumFader = 39;
   }
+}
+message InfiniumFaderInput {
+  required int32 deviceid = 1;
 }
 message InputActivationTrigger {
   required Input input = 1;

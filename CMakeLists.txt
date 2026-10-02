@@ -22,6 +22,17 @@ option(SANTROLLER_VARIANT_BUILD "Internal flag for single-board variant builds" 
 option(ENABLE_WIFI "Enable WiFi support (CYW43 driver)" ON)
 set(ENABLE_XBOX_WIRELESS ON CACHE BOOL "Enable Xbox Wireless Adapter support")
 
+set(XBOX_STATIC_FIRMWARE_SIZE_KB 0)
+if(ENABLE_XBOX_WIRELESS)
+  set(XBOX_STATIC_FIRMWARE_SIZE_KB 96)
+endif()
+set(CYW43_STATIC_FIRMWARE_SIZE_KB 0)
+if(ENABLE_WIFI)
+  set(CYW43_STATIC_FIRMWARE_SIZE_KB 232)
+endif()
+math(EXPR PFB_STATIC_FIRMWARE_SIZE_KB
+  "${XBOX_STATIC_FIRMWARE_SIZE_KB} + ${CYW43_STATIC_FIRMWARE_SIZE_KB}")
+
 if(SANTROLLER_VARIANT_DRIVER AND NOT SANTROLLER_VARIANT_BUILD)
   # Resolve the SDK once in the driver tree and share it with all variants.
   set(PICO_SDK_FETCH_FROM_GIT TRUE)
@@ -46,8 +57,10 @@ if(SANTROLLER_VARIANT_DRIVER AND NOT SANTROLLER_VARIANT_BUILD)
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
   file(WRITE "${CMAKE_BINARY_DIR}/commit.hash" "${SANTROLLER_GIT_COMMIT}")
-  if(ENABLE_XBOX_WIRELESS)
-    include(cmake/DownloadFirmware.cmake)
+  if(ENABLE_XBOX_WIRELESS OR ENABLE_WIFI)
+    if(ENABLE_XBOX_WIRELESS)
+      include(cmake/DownloadFirmware.cmake)
+    endif()
     include(cmake/ConvertFirmware.cmake)
   endif()
 
@@ -99,7 +112,6 @@ set(PICO_BOARD_HEADER_DIRS ${PICO_BOARD_HEADER_DIRS} CACHE STRING "PICO board he
 set(PFB_WITH_IMAGE_ENCRYPTION OFF)
 set(PFB_WITH_SHA256_HASHING OFF)
 set(PFB_RESERVED_FILESYSTEM_SIZE_KB 8)
-set(PFB_STATIC_FIRMWARE_SIZE_KB 96)
 set(PFB_WITH_BOOTLOADER_LOGS OFF)
 
 if(DEFINED SANTROLLER_SHARED_GENERATED_DIR)
@@ -126,6 +138,13 @@ include(compile_proto.cmake)
 compile_proto()
 
 pico_sdk_init()
+
+if(ENABLE_WIFI)
+  target_compile_definitions(cyw43_driver INTERFACE
+    CYW43_CHIPSET_FIRMWARE_INCLUDE_FILE="cyw43_static_firmware.h")
+  target_include_directories(cyw43_driver_headers INTERFACE
+    ${SANTROLLER_GENERATED_DIR})
+endif()
 
 add_compile_options(-fdata-sections -ffunction-sections)
 add_link_options(-Wl,--gc-sections)
@@ -238,6 +257,7 @@ add_executable(
   src/input/accelerometer.cpp
   src/input/crkd.cpp
   src/input/crkd_drum.cpp
+  src/input/infinium_fader.cpp
   src/input/gh5.cpp
   src/input/gpio.cpp
   src/input/matrix.cpp
@@ -302,6 +322,7 @@ add_executable(
   src/devices/crkd.cpp
   src/devices/encoder.cpp
   src/devices/crkd_drum.cpp
+  src/devices/infinium_fader.cpp
   src/devices/ads1115.cpp
   src/devices/device.cpp
   src/devices/accelerometer.cpp
@@ -356,9 +377,8 @@ if(ENABLE_XBOX_WIRELESS)
     target_compile_definitions(${TARGET} PRIVATE ENABLE_XBOX_WIRELESS=1)
 
     if(NOT DEFINED SANTROLLER_SHARED_GENERATED_DIR)
-      # Download and convert firmware once for a normal single-board build.
+      # Download and package static firmware once for a normal single-board build.
       include(cmake/DownloadFirmware.cmake)
-      include(cmake/ConvertFirmware.cmake)
     endif()
 
     # Add MT76 sources to main executable
@@ -393,6 +413,10 @@ if(ENABLE_XBOX_WIRELESS)
     message(STATUS "Xbox Wireless Adapter integration complete")
 endif()
 
+if((ENABLE_WIFI OR ENABLE_XBOX_WIRELESS) AND NOT DEFINED SANTROLLER_SHARED_GENERATED_DIR)
+  include(cmake/ConvertFirmware.cmake)
+endif()
+
 target_include_directories(${TARGET} PUBLIC
   ${SRC}
   include
@@ -423,6 +447,7 @@ target_link_libraries(
   protar_neck
   crkd_neck
   crkd_drum
+  infinium_fader
   wm_crypto
   peripherals
   quadrature_encoder

@@ -209,5 +209,9 @@ message Device {
     CycleDevice cycle = 34;
     ToggleDevice toggle = 35;
     DMXDevice dmx = 36;
+    InfiniumFaderDevice infiniumFader = 38;
   }
+}
+message InfiniumFaderDevice {
+  required UARTDevice uart = 1;
 }

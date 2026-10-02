@@ -12,6 +12,7 @@
 
 #define SLAVE_CMD_CONFIG              0x01
 #define SLAVE_CMD_GET_EVENTS          0x02
+#define SLAVE_CMD_GET_VERSION         0x03
 #define SLAVE_CMD_INITIALISE          0x0D
 #define SLAVE_CMD_OTA_BEGIN           0x80
 #define SLAVE_CMD_OTA_CHUNK           0x81
@@ -53,6 +54,14 @@ private:
 
     uint8_t tx_buf[8];
     uint8_t rx_buf[256];
+    uint8_t m_version_cmd_buf[1] = {SLAVE_CMD_GET_VERSION};
+    uint8_t m_version_rx_buf[16] = {0};
     uint32_t m_last_poll = 0;
     uint32_t m_last_recv = 0;
+    bool m_version_checked = false;
+    bool m_ota_in_progress = false;
+    bool m_rebooting = false;
+    uint32_t m_ota_offset = 0;
+    uint32_t m_ota_total_size = 0;
+    uint32_t m_last_ota_percent = 0;
 };

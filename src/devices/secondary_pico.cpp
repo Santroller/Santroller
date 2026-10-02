@@ -22,6 +22,11 @@ static bool encode_inputs_callback(pb_ostream_t *stream, const pb_field_t *field
     return true;
 }
 
+extern "C" {
+    extern uint32_t __FLASH_APP_START;
+    extern uint32_t __flash_binary_end;
+}
+
 SecondaryPicoDevice::SecondaryPicoDevice(proto_PeripheralDevice device, uint16_t id)
     : Device(id),
       interface(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock),
@@ -42,6 +47,10 @@ void SecondaryPicoDevice::begin()
     m_last_recv = 0;
     m_digital_inputs.clear();
     m_analog_inputs.clear();
+    m_version_checked = false;
+    m_ota_in_progress = false;
+    m_ota_offset = 0;
+    memset(m_version_rx_buf, 0, sizeof(m_version_rx_buf));
 
     interface.dmaInit(address, this);
     send_config_to_slave();
@@ -50,6 +59,8 @@ void SecondaryPicoDevice::begin()
 void SecondaryPicoDevice::end(bool full)
 {
     m_connected = false;
+    m_version_checked = false;
+    m_ota_in_progress = false;
     m_digital_inputs.clear();
     m_analog_inputs.clear();
     m_inputs.clear();
@@ -80,10 +91,76 @@ void SecondaryPicoDevice::update(bool full_poll, bool send_events)
         send_config_to_slave();
     }
 
+    if (m_ota_in_progress)
+    {
+        if ((millis() - m_last_poll) < 5) return;
+        m_last_poll = millis();
+
+        const uint8_t *app_start = (const uint8_t*)&__FLASH_APP_START;
+        const uint8_t *app_end = (const uint8_t*)&__flash_binary_end;
+        uint32_t raw_fw_size = app_end > app_start ? static_cast<uint32_t>(app_end - app_start) : 0;
+
+        if (m_ota_offset < m_ota_total_size)
+        {
+            uint8_t chunk[256];
+            memset(chunk, 0, sizeof(chunk));
+            if (m_ota_offset < raw_fw_size)
+            {
+                uint32_t copy_len = std::min<uint32_t>(256, raw_fw_size - m_ota_offset);
+                memcpy(chunk, app_start + m_ota_offset, copy_len);
+            }
+            send_ota_chunk(m_ota_offset, chunk, 256);
+            m_ota_offset += 256;
+
+            uint32_t percent = m_ota_total_size > 0 ? (m_ota_offset * 100) / m_ota_total_size : 0;
+            if (percent > 100) percent = 100;
+            if (percent != m_last_ota_percent && (percent % 5 == 0 || m_ota_offset >= m_ota_total_size))
+            {
+                m_last_ota_percent = percent;
+                proto_Event evt = proto_Event_init_zero;
+                evt.which_event = proto_Event_device_tag;
+                evt.event.device.id = m_id;
+                evt.event.device.connected = true;
+                evt.event.device.has_updating = true;
+                evt.event.device.updating = true;
+                evt.event.device.has_progress = true;
+                evt.event.device.progress = percent;
+                HIDConfigDevice::send_event(evt, true);
+            }
+        }
+        else
+        {
+            send_ota_finish(m_ota_total_size);
+            m_ota_in_progress = false;
+            m_version_checked = false;
+            m_rebooting = true;
+            proto_Event evt = proto_Event_init_zero;
+            evt.which_event = proto_Event_device_tag;
+            evt.event.device.id = m_id;
+            evt.event.device.connected = false;
+            evt.event.device.has_updating = true;
+            evt.event.device.updating = false;
+            evt.event.device.has_progress = true;
+            evt.event.device.progress = 100;
+            evt.event.device.has_rebooting = true;
+            evt.event.device.rebooting = true;
+            HIDConfigDevice::send_event(evt, true);
+        }
+        return;
+    }
+
     if ((millis() - m_last_poll) < 2) // Poll for streamed events every 2ms via DMA IRQ
         return;
 
     m_last_poll = millis();
+
+    if (!m_version_checked)
+    {
+        m_version_cmd_buf[0] = SLAVE_CMD_GET_VERSION;
+        interface.dmaWriteRead(address, m_version_cmd_buf, 1, m_version_rx_buf, 8);
+        return;
+    }
+
     tx_buf[0] = SLAVE_CMD_GET_EVENTS;
     interface.dmaWriteRead(address, tx_buf, 1, rx_buf, sizeof(rx_buf));
 }
@@ -95,7 +172,15 @@ void SecondaryPicoDevice::process_data(uint8_t addr, bool running, bool timeout,
         if (m_connected && (millis() - m_last_recv > 500))
         {
             m_connected = false;
-            proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, false}}};
+            proto_Event event = proto_Event_init_zero;
+            event.which_event = proto_Event_device_tag;
+            event.event.device.id = m_id;
+            event.event.device.connected = false;
+            if (m_rebooting)
+            {
+                event.event.device.has_rebooting = true;
+                event.event.device.rebooting = true;
+            }
             HIDConfigDevice::send_event(event, true);
         }
         return;
@@ -105,8 +190,54 @@ void SecondaryPicoDevice::process_data(uint8_t addr, bool running, bool timeout,
     if (!m_connected)
     {
         m_connected = true;
-        proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, true}}};
+        proto_Event event = proto_Event_init_zero;
+        event.which_event = proto_Event_device_tag;
+        event.event.device.id = m_id;
+        event.event.device.connected = true;
         HIDConfigDevice::send_event(event, true);
+    }
+
+    if (!m_version_checked)
+    {
+        m_version_checked = true;
+        static const char main_ver[] = GIT_HASH;
+        if (memcmp(m_version_rx_buf, main_ver, std::min<size_t>(8, strlen(main_ver))) != 0)
+        {
+            printf("Secondary Pico version mismatch! Starting auto-OTA...\n");
+            const uint8_t *app_start = (const uint8_t*)&__FLASH_APP_START;
+            const uint8_t *app_end = (const uint8_t*)&__flash_binary_end;
+            uint32_t raw_fw_size = app_end > app_start ? static_cast<uint32_t>(app_end - app_start) : 0;
+            if (raw_fw_size > 0 && raw_fw_size < 0x200000)
+            {
+                m_ota_total_size = ((raw_fw_size + 255) / 256) * 256;
+                m_ota_offset = 0;
+                m_ota_in_progress = true;
+                m_last_ota_percent = 0;
+                send_ota_begin(m_ota_total_size);
+
+                proto_Event evt = proto_Event_init_zero;
+                evt.which_event = proto_Event_device_tag;
+                evt.event.device.id = m_id;
+                evt.event.device.connected = true;
+                evt.event.device.has_updating = true;
+                evt.event.device.updating = true;
+                evt.event.device.has_progress = true;
+                evt.event.device.progress = 0;
+                HIDConfigDevice::send_event(evt, true);
+                return;
+            }
+        }
+        else if (m_rebooting)
+        {
+            m_rebooting = false;
+            proto_Event evt = proto_Event_init_zero;
+            evt.which_event = proto_Event_device_tag;
+            evt.event.device.id = m_id;
+            evt.event.device.connected = true;
+            evt.event.device.has_rebooting = true;
+            evt.event.device.rebooting = false;
+            HIDConfigDevice::send_event(evt, true);
+        }
     }
 
     // Decode incoming streamed events from Secondary Pico

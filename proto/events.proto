@@ -72,6 +72,9 @@ message MidiDetectionEvent {
 message DeviceHotplugEvent {
     required int32 id = 1;
     required bool connected = 2;
+    optional bool updating = 3;
+    optional int32 progress = 4;
+    optional bool rebooting = 5;
 }
 
 message UsbDeviceHotplugEvent {

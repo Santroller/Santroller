@@ -18,6 +18,7 @@
 #include "utils.h"
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
+#include "devices/secondary_pico.hpp"
 #include "secondary_pico.hpp"
 #include "math.h"
 #include <pico_fota_bootloader/core.h>
@@ -442,39 +443,65 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
           (firmware_offset + chunk_offset) >= firmware_size)
       {
         uint32_t uploaded = firmware_offset + chunk_offset;
-        multicore_lockout_start_blocking();
-        uint32_t write_size =
-            uploaded >= firmware_size
-                ? ((chunk_offset + firmware_write_alignment - 1) / firmware_write_alignment) * firmware_write_alignment
-                : firmware_write_block_size;
-        bool write_failed = pfb_write_to_flash_aligned_256_bytes(
-            fw_update_tmp,
-            firmware_offset,
-            write_size);
-        if (write_failed)
+        if (m_target_secondary_pico)
         {
-          printf("failed to write update! %02x\r\n", firmware_offset);
-        }
-        if (!write_failed && uploaded >= firmware_size)
-        {
-          printf("fw uploaded! checking\r\n");
-          if (pfb_firmware_sha256_check(firmware_size))
+          uint32_t send_len = uploaded >= firmware_size
+                                  ? ((chunk_offset + 255) / 256) * 256
+                                  : chunk_offset;
+          for (uint32_t i = 0; i < send_len; i += 256)
           {
-            printf("sha failed!\r\n");
+            uint32_t len = std::min<uint32_t>(256, send_len - i);
+            m_target_secondary_pico->send_ota_chunk(firmware_offset + i, fw_update_tmp + i, len);
+          }
+          if (uploaded >= firmware_size)
+          {
+            m_target_secondary_pico->send_ota_finish(firmware_size);
+            m_target_secondary_pico = nullptr;
+            fw_update_active = false;
           }
           else
           {
-            pfb_mark_download_slot_as_valid();
-            pfb_perform_update();
+            update_state.offset = uploaded;
+            update_state.chunkOffset = 0;
+            memset(fw_update_tmp, 0, sizeof(fw_update_tmp));
           }
         }
-        else if (!write_failed)
+        else
         {
-          update_state.offset = uploaded;
-          update_state.chunkOffset = 0;
-          memset(fw_update_tmp, 0, sizeof(fw_update_tmp));
+          multicore_lockout_start_blocking();
+          uint32_t write_size =
+              uploaded >= firmware_size
+                  ? ((chunk_offset + firmware_write_alignment - 1) / firmware_write_alignment) * firmware_write_alignment
+                  : firmware_write_block_size;
+          bool write_failed = pfb_write_to_flash_aligned_256_bytes(
+              fw_update_tmp,
+              firmware_offset,
+              write_size);
+          if (write_failed)
+          {
+            printf("failed to write update! %02x\r\n", firmware_offset);
+          }
+          if (!write_failed && uploaded >= firmware_size)
+          {
+            printf("fw uploaded! checking\r\n");
+            if (pfb_firmware_sha256_check(firmware_size))
+            {
+              printf("sha failed!\r\n");
+            }
+            else
+            {
+              pfb_mark_download_slot_as_valid();
+              pfb_perform_update();
+            }
+          }
+          else if (!write_failed)
+          {
+            update_state.offset = uploaded;
+            update_state.chunkOffset = 0;
+            memset(fw_update_tmp, 0, sizeof(fw_update_tmp));
+          }
+          multicore_lockout_end_blocking();
         }
-        multicore_lockout_end_blocking();
       }
       break;
     }
@@ -489,13 +516,29 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
       // printf("fw update offset: %02x\r\n", update_state.offset);
       tool_seen = true;
       fw_update_active = true;
+      if (update_state.has_deviceId && update_state.deviceId > 0)
+      {
+        auto dev = DeviceManager::instance().get_root_device(update_state.deviceId);
+        m_target_secondary_pico = std::static_pointer_cast<SecondaryPicoDevice>(dev);
+      }
+      else
+      {
+        m_target_secondary_pico = nullptr;
+      }
       if (update_state.offset == 0)
       {
         update_state.chunkOffset = 0;
         memset(fw_update_tmp, 0, sizeof(fw_update_tmp));
-        multicore_lockout_start_blocking();
-        pfb_initialize_download_slot();
-        multicore_lockout_end_blocking();
+        if (m_target_secondary_pico)
+        {
+          m_target_secondary_pico->send_ota_begin(update_state.firmwareSize);
+        }
+        else
+        {
+          multicore_lockout_start_blocking();
+          pfb_initialize_download_slot();
+          multicore_lockout_end_blocking();
+        }
       }
       break;
     }

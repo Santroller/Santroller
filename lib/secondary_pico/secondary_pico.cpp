@@ -25,6 +25,7 @@
 
 #define SLAVE_CMD_CONFIG              0x01
 #define SLAVE_CMD_GET_EVENTS          0x02
+#define SLAVE_CMD_GET_VERSION         0x03
 #define SLAVE_CMD_INITIALISE          0x0D
 #define SLAVE_CMD_OTA_BEGIN           0x80
 #define SLAVE_CMD_OTA_CHUNK           0x81
@@ -226,6 +227,14 @@ static void i2c_slave_handler(i2c_inst_t *i2c, i2c_slave_event_t event)
             if (g_rx_len > 0 && g_rx_buf[0] == SLAVE_CMD_GET_EVENTS)
             {
                 g_tx_len = secondary_pico_handle_get_events(g_tx_buf, sizeof(g_tx_buf));
+            }
+            else if (g_rx_len > 0 && g_rx_buf[0] == SLAVE_CMD_GET_VERSION)
+            {
+                static const char version_hash[] = GIT_HASH;
+                size_t len = strlen(version_hash);
+                if (len > sizeof(g_tx_buf)) len = sizeof(g_tx_buf);
+                memcpy(g_tx_buf, version_hash, len);
+                g_tx_len = len;
             }
             g_tx_ptr = 0;
         }

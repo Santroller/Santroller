@@ -98,6 +98,7 @@ private:
   bool last_digital_vals[NUM_BANK0_GPIOS];
   uint8_t fw_update_tmp[4096];
   proto_FirmwareUpdate update_state;
+  std::shared_ptr<class SecondaryPicoDevice> m_target_secondary_pico = nullptr;
 };
 class HIDGamepadDevice : public HIDDevice
 {

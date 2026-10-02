@@ -17,6 +17,7 @@ public:
     bool read_button(proto_WiiButtonType type);
     uint16_t read_button_pressure(proto_WiiButtonType type);
     bool is_wii_extension(WiiExtType type);
+    bool is_wii_device() const override { return true; }
     bool using_pin(uint8_t pin);
     void save_reload_state(DeviceReloadState& state) const override;
     void set_euphoria_led(bool state) override;

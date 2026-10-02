@@ -8,11 +8,11 @@ PS2AxisInput::PS2AxisInput(proto_PS2AxisInput input, std::shared_ptr<PS2Device> 
 }
 bool PS2AxisInput::tick_digital()
 {
-    return m_device->read_axis(m_input.axis) > 0;
+    return m_device && m_device->read_axis(m_input.axis) > 0;
 }
 uint16_t PS2AxisInput::tick_analog()
 {
-    return m_device->read_axis(m_input.axis);
+    return m_device ? m_device->read_axis(m_input.axis) : 0;
 }
 void PS2AxisInput::setup()
 {
@@ -22,11 +22,11 @@ PS2ButtonInput::PS2ButtonInput(proto_PS2ButtonInput input, std::shared_ptr<PS2De
 }
 bool PS2ButtonInput::tick_digital()
 {
-    return m_device->read_button(m_input.button);
+    return m_device && m_device->read_button(m_input.button);
 }
 uint16_t PS2ButtonInput::tick_analog()
 {
-    return m_device->read_button_pressure(m_input.button);
+    return m_device ? m_device->read_button_pressure(m_input.button) : 0;
 }
 void PS2ButtonInput::setup()
 {

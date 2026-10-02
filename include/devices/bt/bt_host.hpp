@@ -93,6 +93,7 @@ public:
     void begin() {}
     void end(bool full) {}
     bool is_assignable() const override { return true; }
+    bool is_bluetooth_host_interface() const override { return true; }
     bool using_pin(uint8_t pin) { return false; }
     bool is_usb_type(SubType type) { return false; }
     bool is_bluetooth_type(SubType type) { return type == m_subtype; }

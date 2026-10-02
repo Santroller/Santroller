@@ -53,6 +53,7 @@ public:
     {
         return true;
     }
+    bool is_usb_host_interface() const override { return true; }
     bool is_bluetooth_device(proto_SpecificBluetoothDevice type)
     {
         return false;

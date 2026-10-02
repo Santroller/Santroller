@@ -19,6 +19,7 @@ public:
     bool read_button(proto_PS2ButtonType type);
     uint16_t read_button_pressure(proto_PS2ButtonType type);
     bool is_ps2_device(PS2ControllerType type);
+    bool is_ps2_controller() const override { return true; }
     bool is_assignable() const override { return true; }
     void rescan(bool first);
     bool using_pin(uint8_t pin);

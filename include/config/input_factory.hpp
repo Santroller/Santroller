@@ -1,10 +1,17 @@
 #pragma once
 #include <memory>
 #include <stdint.h>
+#include <type_traits>
 #include "input.pb.h"
 #include "profiles/profile.hpp"
 
 class Input;
+class UsbHostInterface;
+class PS2Device;
+class BluetoothHostInterface;
+class WiiDevice;
+class MidiDevice;
+class ProGuitarMidiDevice;
 
 class InputFactory {
 public:
@@ -14,20 +21,60 @@ public:
         std::shared_ptr<Profile> profile
     );
     
-    static bool has_device(std::shared_ptr<Profile> profile, uint32_t device_id);
+    static bool has_device(std::shared_ptr<Profile> profile, uint32_t device_id, DeviceSlotKind kind);
     
     template<typename T>
     static std::shared_ptr<T> get_device(std::shared_ptr<Profile> profile, uint32_t device_id) {
-        auto c_it = profile->claimed_devices.find(device_id);
-        if (c_it != profile->claimed_devices.end()) {
-            return std::static_pointer_cast<T>(c_it->second);
-        }
-        if (!profile->claimed_devices.empty()) {
-            return std::static_pointer_cast<T>(profile->claimed_devices.begin()->second);
+        constexpr DeviceSlotKind slot_kind = [] {
+            if constexpr (std::is_same_v<T, UsbHostInterface>) return DeviceSlotKind::USB;
+            else if constexpr (std::is_same_v<T, PS2Device>) return DeviceSlotKind::PS2;
+            else if constexpr (std::is_same_v<T, BluetoothHostInterface>) return DeviceSlotKind::Bluetooth;
+            else if constexpr (std::is_same_v<T, WiiDevice>) return DeviceSlotKind::WiiExtension;
+            else if constexpr (std::is_same_v<T, MidiDevice>) return DeviceSlotKind::MIDI;
+            else if constexpr (std::is_same_v<T, ProGuitarMidiDevice>) return DeviceSlotKind::MIDI;
+            else return DeviceSlotKind::None;
+        }();
+
+        auto cast_device = [](const std::shared_ptr<Device> &device) -> std::shared_ptr<T> {
+            if (!device) {
+                return nullptr;
+            }
+            if constexpr (std::is_same_v<T, UsbHostInterface>) {
+                if (!device->is_usb_host_interface()) {
+                    return nullptr;
+                }
+            } else if constexpr (std::is_same_v<T, PS2Device>) {
+                if (!device->is_ps2_controller()) {
+                    return nullptr;
+                }
+            } else if constexpr (std::is_same_v<T, BluetoothHostInterface>) {
+                if (!device->is_bluetooth_host_interface()) {
+                    return nullptr;
+                }
+            } else if constexpr (std::is_same_v<T, WiiDevice>) {
+                if (!device->is_wii_device()) {
+                    return nullptr;
+                }
+            } else if constexpr (std::is_same_v<T, MidiDevice>) {
+                if (!device->is_midi_device()) {
+                    return nullptr;
+                }
+            } else if constexpr (std::is_same_v<T, ProGuitarMidiDevice>) {
+                if (!device->is_pro_guitar_midi_device()) {
+                    return nullptr;
+                }
+            }
+            return std::static_pointer_cast<T>(device);
+        };
+
+        if constexpr (slot_kind != DeviceSlotKind::None) {
+            if (auto claimed = profile->get_claimed_device(slot_kind, static_cast<uint16_t>(device_id))) {
+                return cast_device(claimed);
+            }
         }
         auto s_it = profile->devices.find(device_id);
         if (s_it != profile->devices.end()) {
-            return std::static_pointer_cast<T>(s_it->second);
+            return cast_device(s_it->second);
         }
         return nullptr;
     }

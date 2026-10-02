@@ -34,10 +34,10 @@ static std::unique_ptr<Input> create_simple_input(const ConfigType &config)
     return std::make_unique<InputType>(config);
 }
 
-bool InputFactory::has_device(std::shared_ptr<Profile> profile, uint32_t device_id)
+bool InputFactory::has_device(std::shared_ptr<Profile> profile, uint32_t device_id, DeviceSlotKind kind)
 {
     return profile->devices.find(device_id) != profile->devices.end() ||
-           profile->claimed_devices.find(device_id) != profile->claimed_devices.end();
+           profile->get_claimed_device(kind, static_cast<uint16_t>(device_id)) != nullptr;
 }
 
 std::unique_ptr<Input> InputFactory::create_input(
@@ -96,7 +96,7 @@ std::unique_ptr<Input> InputFactory::create_input(
             
     case proto_Input_midi_tag:
     {
-        if (!has_device(profile, proto_input.input.midi.deviceid)) return nullptr;
+        if (!has_device(profile, proto_input.input.midi.deviceid, DeviceSlotKind::MIDI)) return nullptr;
         
         switch (proto_input.input.midi.which_input)
         {

@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <utility>
 #include <vector>
 #include <memory>
 #include "input.pb.h"
@@ -11,6 +12,18 @@
 // Forward declarations to avoid circular dependencies
 class Mapping;
 class LedMapping;
+
+enum class DeviceSlotKind : uint8_t
+{
+    WiiExtension,
+    PS2,
+    USB,
+    Bluetooth,
+    MIDI,
+    None = 0xff
+};
+
+using DeviceSlotKey = std::pair<DeviceSlotKind, uint16_t>;
 
 class Profile
 {
@@ -32,8 +45,16 @@ public:
     std::vector<std::unique_ptr<LedMapping>> leds;
     std::map<uint16_t, std::shared_ptr<Device>> devices;
     std::map<uint16_t, std::shared_ptr<Device>> temp_devices;
-    std::map<uint16_t, std::shared_ptr<Device>> claimed_devices;
-    std::map<uint16_t, std::shared_ptr<Device>> temp_claimed_devices;
+    std::map<DeviceSlotKey, std::shared_ptr<Device>> claimed_devices;
+    std::map<DeviceSlotKey, std::shared_ptr<Device>> temp_claimed_devices;
+
+    std::shared_ptr<Device> get_claimed_device(DeviceSlotKind kind, uint16_t slot_id, bool temporary = false) const
+    {
+        const auto &claimed = temporary ? temp_claimed_devices : claimed_devices;
+        auto it = claimed.find({kind, slot_id});
+        return it == claimed.end() ? nullptr : it->second;
+    }
+
     DrumState drum_state;
     KeyboardState keyboard_state;
 };

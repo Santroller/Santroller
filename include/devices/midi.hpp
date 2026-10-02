@@ -88,6 +88,7 @@ public:
         return false;
     }
     bool is_assignable() const override { return true; }
+    bool is_midi_device() const override { return true; }
     void save_reload_state(DeviceReloadState& state) const override;
 
 protected:
@@ -145,6 +146,7 @@ public:
     bool is_bluetooth_type(SubType type) { return false; }
     bool is_ps2_device(PS2ControllerType type) { return false; }
     bool has_midi_channel(uint8_t channel) { return MIDI_CHANNEL_PROGUITAR_MUSTANG == channel || MIDI_CHANNEL_PROGUITAR_SQUIER == channel; }
+    bool is_pro_guitar_midi_device() const override { return true; }
     bool using_pin(uint8_t pin) { return m_midi_device->using_pin(pin); }
 
 private:

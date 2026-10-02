@@ -26,22 +26,12 @@ public:
     }
     void link_device(bool claim_devices) override
     {
-        auto &claimed = claim_devices ? m_profile->claimed_devices : m_profile->temp_claimed_devices;
-        auto it = claimed.find(m_input.deviceid);
-        if (it != claimed.end() && it->second) {
-            m_device = std::static_pointer_cast<BluetoothHostInterface>(it->second);
-            return;
+        auto device = m_profile->get_claimed_device(DeviceSlotKind::Bluetooth, m_input.deviceid, !claim_devices);
+        if (!device) {
+            auto it = m_profile->devices.find(m_input.deviceid);
+            if (it != m_profile->devices.end()) device = it->second;
         }
-        if (!claimed.empty()) {
-            m_device = std::static_pointer_cast<BluetoothHostInterface>(claimed.begin()->second);
-            return;
-        }
-        auto st_it = m_profile->devices.find(m_input.deviceid);
-        if (st_it != m_profile->devices.end()) {
-            m_device = std::static_pointer_cast<BluetoothHostInterface>(st_it->second);
-            return;
-        }
-        m_device = nullptr;
+        m_device = device && device->is_bluetooth_host_interface() ? std::static_pointer_cast<BluetoothHostInterface>(device) : nullptr;
     };
 
 private:
@@ -64,22 +54,12 @@ public:
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
     void link_device(bool claim_devices) override
     {
-        auto &claimed = claim_devices ? m_profile->claimed_devices : m_profile->temp_claimed_devices;
-        auto it = claimed.find(m_input.deviceid);
-        if (it != claimed.end() && it->second) {
-            m_device = std::static_pointer_cast<BluetoothHostInterface>(it->second);
-            return;
+        auto device = m_profile->get_claimed_device(DeviceSlotKind::Bluetooth, m_input.deviceid, !claim_devices);
+        if (!device) {
+            auto it = m_profile->devices.find(m_input.deviceid);
+            if (it != m_profile->devices.end()) device = it->second;
         }
-        if (!claimed.empty()) {
-            m_device = std::static_pointer_cast<BluetoothHostInterface>(claimed.begin()->second);
-            return;
-        }
-        auto st_it = m_profile->devices.find(m_input.deviceid);
-        if (st_it != m_profile->devices.end()) {
-            m_device = std::static_pointer_cast<BluetoothHostInterface>(st_it->second);
-            return;
-        }
-        m_device = nullptr;
+        m_device = device && device->is_bluetooth_host_interface() ? std::static_pointer_cast<BluetoothHostInterface>(device) : nullptr;
     };
 
 private:

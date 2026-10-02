@@ -4,13 +4,35 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
 #include "hardware/timer.h"
 
 #include "quadrature_encoder.pio.h"
 #include "quadrature_encoder.h"
+
+namespace
+{
+struct EncoderPioState
+{
+    uint users = 0;
+    uint offset = 0;
+};
+
+EncoderPioState encoder_pio_states[NUM_PIOS];
+
+bool gpio_range_matches_pio(PIO pio, uint pin)
+{
+#if defined(PICO_PIO_USE_GPIO_BASE) && PICO_PIO_USE_GPIO_BASE
+    return (pin >> 4) == (pio_get_gpio_base(pio) >> 4) &&
+           ((pin + 1) >> 4) == (pio_get_gpio_base(pio) >> 4);
+#else
+    (void)pio;
+    (void)pin;
+    return true;
+#endif
+}
+}
 
 //
 // ---- quadrature encoder interface example
@@ -41,15 +63,50 @@ void QuadratureEncoder::begin()
 {
     if (m_initialized)
         return;
-    if (pio_claim_free_sm_and_add_program_for_gpio_range(&quadrature_encoder_program, &pio, &sm, &m_offset, m_pin, 2, true))
+
+    for (int pio_index = NUM_PIOS - 1; pio_index >= 0; --pio_index)
     {
+        PIO candidate = pio_get_instance(static_cast<uint>(pio_index));
+        EncoderPioState &state = encoder_pio_states[pio_index];
+        if (state.users == 0 || !gpio_range_matches_pio(candidate, m_pin))
+        {
+            continue;
+        }
+
+        int claimed_sm = pio_claim_unused_sm(candidate, false);
+        if (claimed_sm < 0)
+        {
+            continue;
+        }
+
+        pio = candidate;
+        sm = static_cast<uint>(claimed_sm);
+        m_offset = state.offset;
+        ++state.users;
         m_initialized = true;
-        quadrature_encoder_program_init(pio, sm, m_pin, 0);
-        old_value = quadrature_encoder_get_count(pio, sm);
-        delta = 0;
-        position = 0;
-        m_sub_count = 0;
+        break;
     }
+
+    if (!m_initialized &&
+        pio_claim_free_sm_and_add_program_for_gpio_range(
+            &quadrature_encoder_program, &pio, &sm, &m_offset, m_pin, 2, true))
+    {
+        EncoderPioState &state = encoder_pio_states[pio_get_index(pio)];
+        state.offset = m_offset;
+        state.users = 1;
+        m_initialized = true;
+    }
+
+    if (!m_initialized)
+    {
+        return;
+    }
+
+    quadrature_encoder_program_init(pio, sm, m_pin, 0);
+    old_value = quadrature_encoder_get_count(pio, sm);
+    delta = 0;
+    position = 0;
+    m_sub_count = 0;
 }
     
 void QuadratureEncoder::end()
@@ -58,7 +115,17 @@ void QuadratureEncoder::end()
         return;
     m_initialized = false;
     quadrature_encoder_program_end(pio, sm);
-    pio_remove_program_and_unclaim_sm(&quadrature_encoder_program, pio, sm, m_offset);
+    EncoderPioState &state = encoder_pio_states[pio_get_index(pio)];
+    if (state.users == 1)
+    {
+        state.users = 0;
+        pio_remove_program_and_unclaim_sm(&quadrature_encoder_program, pio, sm, m_offset);
+    }
+    else
+    {
+        --state.users;
+        pio_sm_unclaim(pio, sm);
+    }
 }
 void QuadratureEncoder::tick()
 {
@@ -67,7 +134,6 @@ void QuadratureEncoder::tick()
     int new_value = quadrature_encoder_get_count(pio, sm);
     int raw_delta = new_value - old_value;
     old_value = new_value;
-
     if (m_divisor <= 1)
     {
         delta = raw_delta;

@@ -17,6 +17,19 @@ void wii_extension_backend_init(uint8_t *registers, bool *encrypted, uint8_t ext
     *encrypted = false;
     registers[0xF0] = 0;
 
+    if (extension_type == WII_EXTENSION_TAIKO)
+    {
+        const uint8_t report[] = {0xA0, 0x20, 0x50, 0x10, 0xFF, 0xFF};
+        const uint8_t extension_id[] = {0x00, 0x00, 0xA4, 0x20, 0x01, 0x11};
+        memcpy(registers, report, sizeof(report));
+        memset(&registers[0x15], 0xFF, 0x0B);
+        memset(&registers[0x40], 0xFF, 0xB0);
+        registers[0xF0] = 0x55;
+        memset(&registers[0xF1], 0xFF, 0x09);
+        memcpy(&registers[0xFA], extension_id, sizeof(extension_id));
+        return;
+    }
+
     const uint8_t *calibration = extension_type == WII_EXTENSION_NUNCHUK
                                       ? nunchuk_calibration : classic_calibration;
     if (extension_type == WII_EXTENSION_BALANCE_BOARD)

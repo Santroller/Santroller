@@ -21,6 +21,8 @@ bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
         switch (m_profile->mode)
         {
         case ModeGuitarHeroArcade:
+        case ModeSpice2x:
+        case ModePdLoader:
         case ModeHid:
             matched = m_config.consoleType == ConsolePC;
             break;
@@ -85,6 +87,8 @@ bool UsbModeActivationTrigger::forcedConsoleMode(ConsoleMode& mode) const
     case ModePs5:
     case ModeWiiRb:
     case ModeSwitch:
+    case ModeSpice2x:
+    case ModePdLoader:
     case ModeGuitarHeroArcade:
         break;
     default:

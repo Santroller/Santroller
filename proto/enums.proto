@@ -225,6 +225,8 @@ enum ConsoleMode {
     ModeWiiRb=8;
     ModeSwitch=9;
     ModeGuitarHeroArcade = 10;
+    ModeSpice2x = 11;
+    ModePdLoader = 12;
 };
 
 enum ConsoleType {

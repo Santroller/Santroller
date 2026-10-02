@@ -36,6 +36,7 @@ typedef struct psx_spi_protocol_state_t
     volatile uint8_t last_cmd;
     volatile bool has_new_cmd;
     volatile bool configMode;
+    bool digitalOnly;
     bool just_left_config;
     uint8_t cmd_id;
     bool locked;
@@ -79,22 +80,26 @@ typedef struct psx_spi_protocol_state_t
         if (!(s)->configMode) { (s)->rumble_small=(b)[3]; (s)->rumble_large=(b)[4]; } \
         break; \
     case 0x43: \
-        memcpy((s)->config_responses[0x06], init_resp_46[0], 6); \
-        memcpy((s)->config_responses[0x0C], init_resp_4c[0], 6); \
-        (s)->configMode=(b)[3]; \
+        if (!(s)->digitalOnly) { \
+            memcpy((s)->config_responses[0x06], init_resp_46[0], 6); \
+            memcpy((s)->config_responses[0x0C], init_resp_4c[0], 6); \
+            (s)->configMode=(b)[3]; \
+        } \
         break; \
     case 0x44: \
-        (s)->locked=(b)[4]; \
-        memset((s)->config_responses[0x01],0,sizeof((s)->config_responses[0x01])); \
-        memset((s)->report_mask,0,sizeof((s)->report_mask)); \
-        if ((b)[3]) { \
-            (s)->config_responses[0x05][2]=1; \
-            memcpy((s)->config_responses[0x01],init_resp_41_analog,6); \
-            (s)->report_mask[0]=0x3F; \
-        } else { \
-            (s)->config_responses[0x05][2]=0; \
-            memcpy((s)->config_responses[0x01],init_resp_41_digital,6); \
-            (s)->report_mask[0]=0x03; \
+        if (!(s)->digitalOnly) { \
+            (s)->locked=(b)[4]; \
+            memset((s)->config_responses[0x01],0,sizeof((s)->config_responses[0x01])); \
+            memset((s)->report_mask,0,sizeof((s)->report_mask)); \
+            if ((b)[3]) { \
+                (s)->config_responses[0x05][2]=1; \
+                memcpy((s)->config_responses[0x01],init_resp_41_analog,6); \
+                (s)->report_mask[0]=0x3F; \
+            } else { \
+                (s)->config_responses[0x05][2]=0; \
+                memcpy((s)->config_responses[0x01],init_resp_41_digital,6); \
+                (s)->report_mask[0]=0x03; \
+            } \
         } \
         break; \
     case 0x4C: \

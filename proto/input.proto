@@ -249,6 +249,7 @@ message Output {
     DJMaxTurntableButtonType djMaxButton = 17;
     DJMaxTurntableAxisType djMaxAxis = 18;
     ProjectDivaAxisType divaAxis = 20;
+    uint32 divaTouch = 21;
     GuitarFreaksButtonType gfButton = 22;
     GuitarHeroArcadeAxisType ghaAxis = 23;
     GuitarHeroArcadeButtonType ghaButton = 24;

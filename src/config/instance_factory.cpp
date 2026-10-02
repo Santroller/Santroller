@@ -15,6 +15,8 @@
 #include "emulation/usb/ps5_device.h"
 #include "emulation/usb/switch_device.h"
 #include "emulation/usb/gh_arcade_device.h"
+#include "emulation/usb/spice2x_device.h"
+#include "emulation/usb/pdloader_device.h"
 
 static auto &profile_mgr = ProfileManager::instance();
 static auto &config_mgr = ConfigManager::instance();
@@ -192,7 +194,22 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
         break;
 
     case ModeSwitch:
-        instance = std::make_shared<SwitchGamepadDevice>();
+        if (subtype == SubType_ProjectDiva || subtype == SubType_Taiko)
+        {
+            instance = std::make_shared<SwitchArcadeDevice>(subtype == SubType_Taiko);
+        }
+        else
+        {
+            instance = std::make_shared<SwitchGamepadDevice>();
+        }
+        break;
+
+    case ModeSpice2x:
+        instance = std::make_shared<Spice2xDevice>();
+        break;
+
+    case ModePdLoader:
+        instance = std::make_shared<PDLoaderDevice>();
         break;
 
     case ModeGuitarHeroArcade:

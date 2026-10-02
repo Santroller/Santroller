@@ -77,6 +77,8 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     case ModePs4:
     case ModePs5:
     case ModeSwitch:
+    case ModeSpice2x:
+    case ModePdLoader:
         break;
     case ModeHid:
     case ModeXbox360:

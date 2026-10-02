@@ -12,6 +12,10 @@ void ShortcutInput::setup()
 }
 bool ShortcutInput::tick_digital()
 {
+    if (inputs.empty())
+    {
+        return false;
+    }
     for (auto &input : inputs)
     {
         if (!input->tick_digital())

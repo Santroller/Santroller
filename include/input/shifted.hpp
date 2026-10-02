@@ -10,6 +10,7 @@ public:
     void load(proto_ShiftedInput config, std::unique_ptr<Input> input, std::unique_ptr<Input> shift);
     bool tick_digital() override;
     uint16_t tick_analog() override;
+    bool has_independent_analog_value() const override { return m_input ? m_input->has_independent_analog_value() : false; }
     void setup() override;
     ShortcutInput* as_shortcut() override { return nullptr; }
     uint64_t hardware_id() const override { return m_input ? m_input->hardware_id() : 0; }

@@ -13,6 +13,7 @@ static void init(wii_extension_context_t *context)
     uint8_t extension_id = context->type == GuitarHeroGuitar ? WII_EXTENSION_GUITAR :
                            context->type == GuitarHeroDrums ? WII_EXTENSION_DRUMS :
                            context->type == DjHeroTurntable ? WII_EXTENSION_TURNTABLE :
+                           context->type == Taiko ? WII_EXTENSION_TAIKO :
                            WII_EXTENSION_CLASSIC;
     wii_extension_backend_init(context->registers, &context->encrypted, extension_id);
 }

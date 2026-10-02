@@ -10,6 +10,7 @@ public:
     void load(proto_HeldInput config, std::unique_ptr<Input> input);
     bool tick_digital();
     uint16_t tick_analog();
+    bool has_independent_analog_value() const override { return m_input ? m_input->has_independent_analog_value() : false; }
     void setup();
     ShortcutInput* as_shortcut() override { return m_input ? m_input->as_shortcut() : nullptr; }
     uint64_t hardware_id() const override { return m_input ? m_input->hardware_id() : 0; }

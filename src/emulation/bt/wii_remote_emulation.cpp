@@ -51,6 +51,7 @@ void WiiRemoteEmulationDeviceInstance::initialize()
                                   subtype == GuitarHeroGuitar ? WIIMOTE_EXTENSION_GUITAR :
                                   subtype == GuitarHeroDrums ? WIIMOTE_EXTENSION_DRUMS :
                                   subtype == DjHeroTurntable ? WIIMOTE_EXTENSION_TURNTABLE :
+                                  subtype == Taiko ? WIIMOTE_EXTENSION_TAIKO :
                                   WIIMOTE_EXTENSION_CLASSIC;
     }
     m_extension_format = wii_extension_format_for_subtype(subtype, 1);

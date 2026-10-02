@@ -12,6 +12,7 @@ enum wii_extension_backend_type {
     WII_EXTENSION_DRUMS = 3,
     WII_EXTENSION_TURNTABLE = 4,
     WII_EXTENSION_BALANCE_BOARD = 5,
+    WII_EXTENSION_TAIKO = 6,
 };
 
 #ifdef __cplusplus

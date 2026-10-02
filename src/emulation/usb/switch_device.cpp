@@ -7,9 +7,14 @@
 #include "config/config.hpp"
 #include "emulation/usb/usb_devices.h"
 #include "pico/rand.h"
+#include <algorithm>
+#include <cassert>
+#include <cstring>
 
 uint8_t const desc_hid_report_switch_pro[] =
     {TUD_HID_REPORT_SWITCH()};
+static const uint8_t desc_hid_report_switch_arcade[] =
+    {TUD_HID_REPORT_DESC_SWITCH_ARCADE()};
 SwitchGamepadDevice::SwitchGamepadDevice()
 {
     playerID = 0;
@@ -228,6 +233,92 @@ uint16_t SwitchGamepadDevice::get_report(uint8_t report_id, hid_report_type_t re
     (void)reqlen;
 
     return 0;
+}
+
+void SwitchArcadeDevice::initialize()
+{
+    m_epin = next_epin();
+    m_epout = next_epout();
+    ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
+    ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
+}
+
+void SwitchArcadeDevice::process(bool full_poll, bool send_events)
+{
+    if (tud_suspended())
+    {
+        for (const auto &profile : profiles)
+            for (const auto &led : profile->leds) led->off();
+        return;
+    }
+    if (tud_ready() && !ready()) return;
+
+    SwitchArcadeReport next = {0, 0, 8, 128, 128, 128, 128, 0};
+    for (const auto &profile : profiles)
+    {
+        profile->reset_drum_state();
+        for (const auto &mapping : profile->mappings)
+        {
+            mapping->update(full_poll, send_events);
+            mapping->update_switch(reinterpret_cast<uint8_t *>(&next));
+        }
+        for (const auto &led : profile->leds) led->update(full_poll, send_events);
+    }
+    switch_arcade_finish_hat(next);
+    m_report = next;
+    if (ready()) send_report(sizeof(m_report), 0, &m_report);
+}
+
+size_t SwitchArcadeDevice::compatible_section_descriptor(uint8_t *, size_t)
+{
+    return 0;
+}
+
+size_t SwitchArcadeDevice::config_descriptor(uint8_t *dest, size_t remaining)
+{
+    const uint8_t descriptor[] = {
+        TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE,
+            sizeof(desc_hid_report_switch_arcade), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)
+    };
+    assert(sizeof(descriptor) <= remaining);
+    if (sizeof(descriptor) > remaining) return 0;
+    memcpy(dest, descriptor, sizeof(descriptor));
+    return sizeof(descriptor);
+}
+
+size_t SwitchArcadeDevice::device_name(uint8_t, char *)
+{
+    return 0;
+}
+
+void SwitchArcadeDevice::device_descriptor(tusb_desc_device_t *desc)
+{
+    desc->idVendor = SWITCH_ARCADE_VID;
+    desc->idProduct = m_tatacon ? SWITCH_TATACON_PID : SWITCH_ARCADE_PID;
+    desc->bcdDevice = 0x0100;
+}
+
+const uint8_t *SwitchArcadeDevice::report_descriptor()
+{
+    return desc_hid_report_switch_arcade;
+}
+
+uint16_t SwitchArcadeDevice::report_desc_len()
+{
+    return sizeof(desc_hid_report_switch_arcade);
+}
+
+uint16_t SwitchArcadeDevice::get_report(uint8_t report_id, hid_report_type_t report_type,
+                                       uint8_t *buffer, uint16_t reqlen)
+{
+    if (report_id != 0 || report_type != HID_REPORT_TYPE_INPUT || !buffer) return 0;
+    uint16_t size = std::min<uint16_t>(reqlen, sizeof(m_report));
+    memcpy(buffer, &m_report, size);
+    return size;
+}
+
+void SwitchArcadeDevice::set_report(uint8_t, hid_report_type_t, uint8_t const *, uint16_t)
+{
 }
 
 static inline uint8_t decode_switch_rumble(const uint8_t *data)

@@ -22,6 +22,22 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
     SubType subtype = Gamepad;
     switch (vid)
     {
+    case SWITCH_ARCADE_VID:
+        if (pid == SWITCH_ARCADE_PID || pid == SWITCH_TATACON_PID)
+        {
+            isValid = true;
+            isThirdParty = true;
+            subtype = pid == SWITCH_TATACON_PID ? Taiko : ProjectDiva;
+        }
+        break;
+    case PS3_DANCEPAD_VID:
+        if (pid == PS3_DANCEPAD_PID)
+        {
+            isValid = true;
+            isThirdParty = true;
+            subtype = Dancepad;
+        }
+        break;
     case SONY_VID:
         switch (pid)
         {
@@ -147,7 +163,20 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
     }
     if (isValid)
     {
+        bool dancepad = vid == PS3_DANCEPAD_VID && pid == PS3_DANCEPAD_PID;
+        bool switch_arcade = vid == SWITCH_ARCADE_VID &&
+            (pid == SWITCH_ARCADE_PID || pid == SWITCH_TATACON_PID);
+        bool compact_report = dancepad || switch_arcade;
+        if (compact_report && (itf_desc->bInterfaceClass != TUSB_CLASS_HID ||
+                               itf_desc->bInterfaceSubClass != HID_SUBCLASS_NONE ||
+                               itf_desc->bInterfaceProtocol != HID_ITF_PROTOCOL_NONE ||
+                               max_len < itf_desc->bLength + sizeof(tusb_hid_descriptor_hid_t)))
+            return nullptr;
         auto intf = std::make_shared<Ps3Host>(dev_addr, itf_desc->bInterfaceNumber, list->m_id, isThirdParty, rb2, ion, wt, subtype);
+        intf->m_dancepad = dancepad;
+        intf->m_switch_arcade = switch_arcade;
+        intf->m_vid = vid;
+        intf->m_pid = pid;
 
         if (!isThirdParty && vid == SONY_VID && pid == SONY_DS3_PID)
         {
@@ -195,14 +224,27 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
         tusb_hid_descriptor_hid_t *x_desc =
             (tusb_hid_descriptor_hid_t *)p_desc;
         TU_VERIFY(HID_DESC_TYPE_HID == x_desc->bDescriptorType, nullptr);
+        uint16_t consumed = itf_desc->bLength + x_desc->bLength;
+        if (compact_report && (x_desc->bLength < sizeof(tusb_hid_descriptor_hid_t) || consumed > max_len))
+            return nullptr;
         while (endpoints--)
         {
+            if (compact_report && consumed + sizeof(tusb_desc_endpoint_t) > max_len)
+                return nullptr;
             p_desc = tu_desc_next(p_desc);
             tusb_desc_endpoint_t const *desc_ep =
                 (tusb_desc_endpoint_t const *)p_desc;
             TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType, nullptr);
+            if (compact_report && (desc_ep->bLength < sizeof(tusb_desc_endpoint_t) ||
+                                   consumed + desc_ep->bLength > max_len ||
+                                   desc_ep->bmAttributes.xfer != TUSB_XFER_INTERRUPT))
+                return nullptr;
             if (desc_ep->bEndpointAddress & 0x80)
             {
+                if (compact_report && (desc_ep->wMaxPacketSize > sizeof(intf->m_ep_in_buf) ||
+                                       desc_ep->wMaxPacketSize < (dancepad ? sizeof(PS3DancepadReport) : sizeof(SwitchArcadeReport)) ||
+                                       intf->m_ep_in))
+                    return nullptr;
                 intf->m_ep_in = desc_ep->bEndpointAddress;
                 intf->m_ep_in_size = desc_ep->wMaxPacketSize;
                 TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
@@ -213,7 +255,10 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
                 intf->m_ep_out_size = desc_ep->wMaxPacketSize;
                 TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
             }
+            consumed += desc_ep->bLength;
         }
+        if (compact_report && !intf->m_ep_in)
+            return nullptr;
         if (intf->m_ep_out)
         {
             list->host_devices_by_endpoint_out[intf->m_ep_out] = intf;
@@ -247,6 +292,27 @@ bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
 {
     if (ep_addr & 0x80)
     {
+        if (m_dancepad)
+        {
+            m_valid_dancepad_report = result == XFER_RESULT_SUCCESS &&
+                xferred_bytes == sizeof(m_dancepad_report) &&
+                (m_ep_in_buf[2] & 0x0f) <= PS3_DANCEPAD_NEUTRAL_HAT;
+            if (m_valid_dancepad_report)
+                memcpy(&m_dancepad_report, m_ep_in_buf, sizeof(m_dancepad_report));
+            else
+                printf("PS3 dancepad: invalid input transfer (result %u, length %lu)\n",
+                       static_cast<unsigned>(result), static_cast<unsigned long>(xferred_bytes));
+        }
+        if (m_switch_arcade)
+        {
+            m_valid_switch_arcade_report = result == XFER_RESULT_SUCCESS &&
+                xferred_bytes >= sizeof(m_switch_arcade_report);
+            if (m_valid_switch_arcade_report)
+                memcpy(&m_switch_arcade_report, m_ep_in_buf, sizeof(m_switch_arcade_report));
+            else
+                printf("Switch arcade: invalid input transfer (result %u, length %lu)\n",
+                       static_cast<unsigned>(result), static_cast<unsigned long>(xferred_bytes));
+        }
         if ((millis() - m_init_time) < 5000)
         {
             if (m_subtype == ProKeys || m_subtype == ProGuitarMustang || m_subtype == ProGuitarSquire)
@@ -635,11 +701,100 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
 
 bool Ps3Host::tick_digital(proto_Output &type)
 {
+    if (m_switch_arcade)
+    {
+        if (!m_valid_switch_arcade_report)
+            return false;
+        const auto &report = m_switch_arcade_report;
+        uint16_t buttons = switch_arcade_buttons(report);
+        uint8_t hat = report.hat & 0x0f;
+        if (type.which_mapping == proto_Output_gamepadAxis_tag)
+        {
+            if (type.mapping.gamepadAxis == Gamepad_LeftTrigger) return buttons & SwitchArcade_ZL;
+            if (type.mapping.gamepadAxis == Gamepad_RightTrigger) return buttons & SwitchArcade_ZR;
+            return false;
+        }
+        if (type.which_mapping != proto_Output_gamepadButton_tag)
+            return false;
+        switch (type.mapping.gamepadButton)
+        {
+        case Gamepad_Y: return buttons & SwitchArcade_Y;
+        case Gamepad_B: return buttons & SwitchArcade_B;
+        case Gamepad_A: return buttons & SwitchArcade_A;
+        case Gamepad_X: return buttons & SwitchArcade_X;
+        case Gamepad_LeftShoulder: return buttons & SwitchArcade_L;
+        case Gamepad_RightShoulder: return buttons & SwitchArcade_R;
+        case Gamepad_Back: return buttons & SwitchArcade_Minus;
+        case Gamepad_Start: return buttons & SwitchArcade_Plus;
+        case Gamepad_LeftThumbClick: return buttons & SwitchArcade_LS;
+        case Gamepad_RightThumbClick: return buttons & SwitchArcade_RS;
+        case Gamepad_Guide: return buttons & SwitchArcade_Home;
+        case Gamepad_Capture: return buttons & SwitchArcade_Capture;
+        case Gamepad_DpadUp: return hat == 0 || hat == 1 || hat == 7;
+        case Gamepad_DpadRight: return hat == 1 || hat == 2 || hat == 3;
+        case Gamepad_DpadDown: return hat == 3 || hat == 4 || hat == 5;
+        case Gamepad_DpadLeft: return hat == 5 || hat == 6 || hat == 7;
+        default: return false;
+        }
+    }
+    if (m_dancepad)
+    {
+        if (!m_valid_dancepad_report || type.which_mapping != proto_Output_gamepadButton_tag)
+            return false;
+        const auto &report = m_dancepad_report;
+        uint8_t hat = report.hat & 0x0f;
+        switch (type.mapping.gamepadButton)
+        {
+        case Gamepad_DpadUp: return report.vendor_up || ps3_dancepad_direction(hat, 0);
+        case Gamepad_DpadRight: return report.vendor_right || ps3_dancepad_direction(hat, 1);
+        case Gamepad_DpadDown: return report.vendor_down || ps3_dancepad_direction(hat, 2);
+        case Gamepad_DpadLeft: return report.vendor_left || ps3_dancepad_direction(hat, 3);
+        case Gamepad_X: return (report.buttons1 & 1) || report.vendor_west;
+        case Gamepad_A: return (report.buttons1 & 2) || report.vendor_south;
+        case Gamepad_B: return (report.buttons1 & 4) || report.vendor_east;
+        case Gamepad_Y: return (report.buttons1 & 8) || report.vendor_north;
+        case Gamepad_LeftShoulder: return report.buttons1 & 16;
+        case Gamepad_RightShoulder: return report.buttons1 & 32;
+        case Gamepad_Back: return report.buttons2 & 1;
+        case Gamepad_Start: return report.buttons2 & 2;
+        case Gamepad_Guide: return report.buttons2 & 16;
+        default: return false;
+        }
+    }
     return ps3_tick_digital(m_ep_in_buf, m_subtype, m_third_party, type, m_wt);
 }
 
 uint16_t Ps3Host::tick_analog(proto_Output &type)
 {
+    if (m_switch_arcade)
+    {
+        if (!m_valid_switch_arcade_report || type.which_mapping != proto_Output_gamepadAxis_tag)
+            return 0;
+        const auto &report = m_switch_arcade_report;
+        switch (type.mapping.gamepadAxis)
+        {
+        case Gamepad_LeftStickX: return uint16_t(report.lx) * 0x101;
+        case Gamepad_LeftStickY: return uint16_t(UINT8_MAX - report.ly) * 0x101;
+        case Gamepad_RightStickX: return uint16_t(report.rx) * 0x101;
+        case Gamepad_RightStickY: return uint16_t(UINT8_MAX - report.ry) * 0x101;
+        case Gamepad_LeftTrigger: return (switch_arcade_buttons(report) & SwitchArcade_ZL) ? UINT16_MAX : 0;
+        case Gamepad_RightTrigger: return (switch_arcade_buttons(report) & SwitchArcade_ZR) ? UINT16_MAX : 0;
+        default: return 0;
+        }
+    }
+    if (m_dancepad)
+    {
+        if (!m_valid_dancepad_report || type.which_mapping != proto_Output_gamepadAxis_tag)
+            return 0;
+        switch (type.mapping.gamepadAxis)
+        {
+        case Gamepad_LeftStickX: return m_dancepad_report.x * 257;
+        case Gamepad_LeftStickY: return (255 - m_dancepad_report.y) * 257;
+        case Gamepad_RightStickX: return m_dancepad_report.z * 257;
+        case Gamepad_RightStickY: return (255 - m_dancepad_report.rz) * 257;
+        default: return 0;
+        }
+    }
     return ps3_tick_analog(m_ep_in_buf, m_subtype, m_third_party, type);
 }
 
@@ -655,11 +810,23 @@ bool Ps3Host::tick_axis_digital(proto_Output &type)
 
 uint16_t Ps3Host::tick_button_pressure(proto_Output &type)
 {
+    if (m_switch_arcade)
+        return tick_digital(type) ? UINT16_MAX : 0;
+    if (m_dancepad)
+        return tick_digital(type) ? UINT16_MAX : 0;
     return ps3_tick_button_pressure(m_ep_in_buf, m_subtype, m_third_party, type);
 }
 
 bool Ps3Host::send_ps3_output()
 {
+    if (m_switch_arcade)
+        return false;
+    if (m_dancepad)
+    {
+        PS3DancepadOutput report = {};
+        report.player_led = m_player & 0x0f;
+        return set_report(0, HID_REPORT_TYPE_OUTPUT, reinterpret_cast<uint8_t *>(&report), sizeof(report));
+    }
     if (m_subtype == DjHeroTurntable)
     {
         ps3_turntable_output_report_t rep = {};

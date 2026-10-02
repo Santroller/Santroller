@@ -8,6 +8,7 @@
 #include "devices/usb/host/xinput_host.h"
 #include "devices/usb/host/hid/hid_host.h"
 #include "devices/usb/host/midi_host.h"
+#include "devices/usb/host/pdloader_host.h"
 #include "devices/usb/host/ogxbox_host.h"
 #include "devices/usb/host/xone_host.h"
 #include "devices/usb/host/xbox_wireless_host.h"
@@ -525,6 +526,7 @@ static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<
     OGXboxHost::open,
     XboxOneHost::open,
     XboxWirelessHost::open,
+    PDLoaderHost::open,
     HidHost::open,
     MidiHost::open};
 

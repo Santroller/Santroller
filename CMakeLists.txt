@@ -206,6 +206,8 @@ add_executable(
   src/emulation/usb/hid_config_device.cpp
   src/emulation/usb/switch_device.cpp
   src/emulation/usb/gh_arcade_device.cpp
+  src/emulation/usb/spice2x_device.cpp
+  src/emulation/usb/pdloader_device.cpp
   src/devices/usb/host/xone_host.cpp
   src/devices/usb/host/midi_host.cpp
   src/devices/usb/host/ogxbox_host.cpp
@@ -217,6 +219,8 @@ add_executable(
   src/devices/usb/host/hid/keyboard_host.cpp
   src/devices/usb/host/hid/generic_host.cpp
   src/devices/usb/host/hid/ltek_host.cpp
+  src/devices/usb/host/hid/spice2x_host.cpp
+  src/devices/usb/host/pdloader_host.cpp
   src/devices/usb/host/hid/raphnet_host.cpp
   src/devices/usb/host/hid/stadia_host.cpp
   src/devices/usb/host/hid/stepmania_host.cpp

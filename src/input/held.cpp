@@ -10,10 +10,17 @@ void HeldInput::load(proto_HeldInput config, std::unique_ptr<Input> input) {
 }
 void HeldInput::setup()
 {
-    m_input->setup();
+    if (m_input)
+    {
+        m_input->setup();
+    }
 }
 bool HeldInput::tick_digital()
 {
+    if (!m_input)
+    {
+        return false;
+    }
     if (m_input->tick_digital())
     {
         if (m_last_pressed == 0)

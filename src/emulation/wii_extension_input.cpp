@@ -12,6 +12,8 @@ uint8_t wii_extension_format_for_subtype(SubType subtype, uint8_t detected_forma
 
 uint8_t wii_extension_report_size(SubType subtype, uint8_t format)
 {
+    if (subtype == Taiko)
+        return sizeof(WiiTaikoData_t);
     if (subtype == GuitarHeroGuitar)
     {
         return sizeof(WiiGuitarDataFormat3_t);
@@ -41,7 +43,18 @@ void initialize_wii_extension_report(SubType subtype, uint8_t format,
                                       uint8_t *buttons_high_offset)
 {
     memset(report, 0, wii_extension_report_size(subtype, format));
-    if (subtype == GuitarHeroGuitar)
+    if (subtype == Taiko)
+    {
+        auto *data = reinterpret_cast<WiiTaikoData_t *>(report);
+        data->staticData[0] = 0xA0;
+        data->staticData[1] = 0x20;
+        data->staticData[2] = 0x50;
+        data->staticData[3] = 0x10;
+        data->staticData[4] = 0xFF;
+        if (buttons_low_offset) *buttons_low_offset = offsetof(WiiTaikoData_t, buttons);
+        if (buttons_high_offset) *buttons_high_offset = offsetof(WiiTaikoData_t, buttons);
+    }
+    else if (subtype == GuitarHeroGuitar)
     {
         auto *data = reinterpret_cast<WiiGuitarDataFormat3_t *>(report);
         data->leftStickX = 32;
@@ -106,6 +119,11 @@ void finalize_wii_extension_report(uint8_t *report,
                                    uint8_t buttons_low_offset,
                                    uint8_t buttons_high_offset)
 {
+    if (buttons_low_offset == buttons_high_offset)
+    {
+        report[buttons_low_offset] = ~report[buttons_low_offset];
+        return;
+    }
     report[buttons_low_offset] = ~report[buttons_low_offset];
     report[buttons_high_offset] = ~report[buttons_high_offset];
 }

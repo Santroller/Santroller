@@ -9,6 +9,7 @@
 #include <utils.h>
 #include <stdint.h>
 #include <config/config.hpp>
+#include "protocols/switch_arcade.hpp"
 
 GamepadAxisMapping::GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.gamepadAxis == Gamepad_LeftTrigger || mapping.mapping.mapping.gamepadAxis == Gamepad_RightTrigger)
 {
@@ -692,6 +693,7 @@ void GamepadButtonMapping::update_switch(uint8_t *buf)
         break;
     }
 }
+
 void GamepadButtonMapping::update_ps2(uint8_t *buf)
 {
     // TODO: pressures

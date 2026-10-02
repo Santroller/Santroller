@@ -5,6 +5,7 @@
 
 #include "tusb.h"
 #include "emulation/usb/gh_arcade_device.h"
+#include "emulation/usb/pdloader_device.h"
 #include "emulation/usb/xinput_device.h"
 #include "emulation/usb/xone_device.h"
 #include "emulation/usb/ogxbox_device.h"
@@ -16,6 +17,7 @@
 #include <pico/unique_id.h>
 #include "enums.pb.h"
 #include "config/config.hpp"
+#include "managers/config_manager.hpp"
 #include "main.hpp"
 
 bool usb_device_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
@@ -71,6 +73,15 @@ uint8_t const *tud_descriptor_device_cb(void)
     instance->device_descriptor((tusb_desc_device_t *)descriptor_buffer);
   });
   return descriptor_buffer;
+}
+
+uint8_t const *tud_descriptor_bos_cb(void)
+{
+  if (ConfigManager::instance().get_requested_mode() == ModePdLoader)
+  {
+    return PDLoaderDevice::bos_descriptor();
+  }
+  return nullptr;
 }
 
 uint8_t const *tud_hid_descriptor_report_cb(uint8_t interface)
@@ -257,6 +268,20 @@ void tud_reset(uint8_t rhport)
 
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
+  if (ConfigManager::instance().get_requested_mode() == ModePdLoader &&
+      request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR &&
+      request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_DEVICE &&
+      request->bmRequestType_bit.direction == TUSB_DIR_IN &&
+      request->bRequest == 1 && request->wIndex == 7)
+  {
+    if (stage == CONTROL_STAGE_SETUP)
+    {
+      return tud_control_xfer(rhport, request,
+          const_cast<uint8_t *>(PDLoaderDevice::ms_os_20_descriptor()),
+          PDLoaderDevice::ms_os_20_descriptor_length());
+    }
+    return true;
+  }
   if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
   {
 

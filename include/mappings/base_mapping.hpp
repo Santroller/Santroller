@@ -27,6 +27,7 @@ public:
     virtual void update_ps4(uint8_t *report) { (void)report; }
     virtual void update_ps5(uint8_t *report) { (void)report; }
     virtual void update_xinput(uint8_t *report) { (void)report; }
+    virtual void update_pdloader(uint8_t *report) { (void)report; }
     virtual void update_ogxbox(uint8_t *report) { (void)report; }
     virtual void update_xboxone(uint8_t *report) { (void)report; }
     void update_digital(bool full_poll);

@@ -795,6 +795,9 @@ void init_extension(struct wiimote_state * state)
     case BalanceBoard:
       extension_type = WII_EXTENSION_BALANCE_BOARD;
       break;
+    case TaikoExtension:
+      extension_type = WII_EXTENSION_TAIKO;
+      break;
     default:
             extension_type = (uint8_t)state->sys.connected_extension_type == (uint8_t)WIIMOTE_EXTENSION_GUITAR
                          ? WII_EXTENSION_GUITAR

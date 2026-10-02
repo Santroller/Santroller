@@ -385,6 +385,11 @@ size_t XInputGamepadDevice::device_name(uint8_t idx, char *desc)
 
 void XInputGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
+    if (subtype == Dancepad)
+    {
+        desc->idVendor = 0x12ab;
+        desc->idProduct = 0x0004;
+    }
 }
 
 XInputSecurityDevice::XInputSecurityDevice()

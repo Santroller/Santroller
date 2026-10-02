@@ -11,8 +11,10 @@ public:
     void load(proto_CycleInput config, std::shared_ptr<CycleDevice> device, std::unique_ptr<Input> input, std::unique_ptr<Input> input_reverse);
     bool tick_digital();
     uint16_t tick_analog();
+    bool has_independent_analog_value() const override { return m_input ? m_input->has_independent_analog_value() : false; }
     void setup();
     uint64_t hardware_id() const override { return m_input ? m_input->hardware_id() : 0; }
+    bool valid() const override { return m_input ? m_input->valid() : false; }
 
 private:
     std::unique_ptr<Input> m_input;

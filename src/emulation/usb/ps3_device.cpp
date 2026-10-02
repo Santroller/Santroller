@@ -9,6 +9,11 @@
 
 static const char str_powergig_guitar[] = "Seven45 Guitar Controller";
 static const char str_powergig_drums[] = "Seven45 Drum Controller";
+static bool uses_ps3_gamepad_report(SubType subtype)
+{
+    return subtype == Gamepad || subtype == Taiko;
+}
+
 uint8_t ef_byte = 0;
 uint8_t master_bd_addr[6];
 uint8_t f5_state = 0;
@@ -173,19 +178,36 @@ void PS3GamepadDevice::initialize()
     m_strid = next_strid();
     ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
     ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
-    if (subtype == Gamepad)
+    if (uses_ps3_gamepad_report(subtype))
     {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)m_initial_report;
         memset(report, 0, sizeof(PS3Gamepad_Data_t));
         report->report_id = 1;
-        report->accelX = __builtin_bswap16(PS3_ACCEL_CENTER);
-        report->accelY = __builtin_bswap16(PS3_ACCEL_CENTER);
-        report->accelZ = __builtin_bswap16(PS3_ACCEL_CENTER);
-        report->gyro = __builtin_bswap16(PS3_ACCEL_CENTER);
         report->leftStickX = PS3_STICK_CENTER;
         report->leftStickY = PS3_STICK_CENTER;
         report->rightStickX = PS3_STICK_CENTER;
         report->rightStickY = PS3_STICK_CENTER;
+        if (subtype == Taiko)
+        {
+            report->charge = 0x02;
+            report->battery_status = 0xEF;
+            report->connection = 0x12;
+            report->unk4[0] = 0x12;
+            report->unk4[1] = 0xF8;
+            report->unk4[2] = 0x77;
+            report->unk4[4] = 0x40;
+            report->accelX = 0x01FF;
+            report->accelY = 0x01FF;
+            report->accelZ = 0x01FF;
+            report->gyro = 0x0200;
+        }
+        else
+        {
+            report->accelX = __builtin_bswap16(PS3_ACCEL_CENTER);
+            report->accelY = __builtin_bswap16(PS3_ACCEL_CENTER);
+            report->accelZ = __builtin_bswap16(PS3_ACCEL_CENTER);
+            report->gyro = __builtin_bswap16(PS3_ACCEL_CENTER);
+        }
         return;
     }
     PS3Dpad_Data_t *gamepad = (PS3Dpad_Data_t *)m_initial_report;
@@ -287,7 +309,7 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
         }
     }
 
-    if (subtype == Gamepad)
+    if (uses_ps3_gamepad_report(subtype))
     {
         send_report(sizeof(PS3Gamepad_Data_t), 0, epin_buf);
     }
@@ -316,7 +338,7 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
 
 size_t PS3GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
 {
-    if (subtype != GuitarHeroGuitar && subtype != Gamepad)
+    if (subtype != GuitarHeroGuitar && !uses_ps3_gamepad_report(subtype))
     {
         OS_COMPATIBLE_SECTION section = {
             FirstInterfaceNumber : interface_id,
@@ -334,7 +356,7 @@ size_t PS3GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t rem
 
 size_t PS3GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-    if (subtype == Gamepad)
+    if (uses_ps3_gamepad_report(subtype))
     {
 
         uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_ps3_gamepad), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
@@ -387,6 +409,7 @@ void PS3GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
     case RockRevolutionGuitar:
         return;
     case Gamepad:
+    case Taiko:
         desc->idVendor = SONY_VID;
         desc->idProduct = SONY_DS3_PID;
         return;
@@ -429,17 +452,13 @@ void PS3GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
         desc->idVendor = REDOCTANE_VID;
         desc->idProduct = PS3_KEYBOARD_PID;
         return;
-    case Taiko:
-        desc->idVendor = REDOCTANE_VID;
-        desc->idProduct = PS3_KEYBOARD_PID;
-        return;
     default:
         return;
     }
 }
 const uint8_t *PS3GamepadDevice::report_descriptor()
 {
-    if (subtype == Gamepad)
+    if (uses_ps3_gamepad_report(subtype))
     {
         return desc_hid_report_ps3_gamepad;
     }
@@ -451,7 +470,7 @@ const uint8_t *PS3GamepadDevice::report_descriptor()
 
 uint16_t PS3GamepadDevice::report_desc_len()
 {
-    if (subtype == Gamepad)
+    if (uses_ps3_gamepad_report(subtype))
     {
         return sizeof(desc_hid_report_ps3_gamepad);
     }

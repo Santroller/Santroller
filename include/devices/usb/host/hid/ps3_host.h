@@ -1,5 +1,7 @@
 #pragma once
 #include "devices/usb/host/hid/hid_host.h"
+#include "protocols/ps3_dancepad.hpp"
+#include "protocols/switch_arcade.hpp"
 #include "utils.h"
 
 // Shared tick implementations — callable from both USB and BT hosts
@@ -26,8 +28,8 @@ public:
     void set_rumble(uint8_t left, uint8_t right) override;
     void set_player_led(uint8_t player) override;
     void set_euphoria_led(bool state) override;
-    bool has_rumble() const override { return true; }
-    bool has_player_led() const override { return true; }
+    bool has_rumble() const override { return !m_dancepad && !m_switch_arcade; }
+    bool has_player_led() const override { return !m_switch_arcade; }
     bool has_euphoria_led() const override { return m_subtype == DjHeroTurntable; }
     bool has_stagekit_led() const override { return subtype_supports_stagekit(m_subtype); }
     void set_stagekit_led(uint8_t param, uint8_t command) override;
@@ -38,6 +40,12 @@ private:
     bool m_ion;
     bool m_wt;
     bool m_third_party;
+    bool m_dancepad = false;
+    bool m_valid_dancepad_report = false;
+    PS3DancepadReport m_dancepad_report = {};
+    bool m_switch_arcade = false;
+    bool m_valid_switch_arcade_report = false;
+    SwitchArcadeReport m_switch_arcade_report = {};
     uint32_t m_init_time = 0;
     uint32_t m_last_ghl_poke = 0;
     uint8_t m_rumble_left = 0;

@@ -192,6 +192,13 @@ typedef struct
 
 typedef struct
 {
+    uint8_t staticData[5];
+    uint8_t buttons;
+} __attribute__((packed)) WiiTaikoData_t;
+static_assert(sizeof(WiiTaikoData_t) == 6, "Wii Taiko extension report must be six bytes");
+
+typedef struct
+{
     uint8_t leftStickX : 6;
     uint8_t : 2;
 

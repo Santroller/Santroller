@@ -10,6 +10,7 @@ enum wiimote_connected_extension_type
   Nunchuk = 0x0,
   Classic = 0x1,
   BalanceBoard = 0x2,
+  TaikoExtension = 0x7,
   NoExtension = 0xff
 };
 
@@ -220,6 +221,7 @@ enum wiimote_extension_type {
   WIIMOTE_EXTENSION_DRUMS = 4,
   WIIMOTE_EXTENSION_TURNTABLE = 5,
   WIIMOTE_EXTENSION_BALANCE_BOARD = 6,
+  WIIMOTE_EXTENSION_TAIKO = 7,
 };
 
 void wiimote_init(struct wiimote_state *state);

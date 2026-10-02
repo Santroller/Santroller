@@ -136,6 +136,23 @@ size_t PS4GamepadDevice::device_name(uint8_t idx, char *desc)
 
 void PS4GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
+    switch (subtype)
+    {
+    case ProjectDiva:
+        desc->idVendor = HORI_VID;
+        desc->idProduct = 0x013c;
+        break;
+    case Taiko:
+        desc->idVendor = HORI_VID;
+        desc->idProduct = HORI_PS4_TAIKO_PID;
+        break;
+    case Dancepad:
+        desc->idVendor = 0x1532;
+        desc->idProduct = 0x0401;
+        break;
+    default:
+        break;
+    }
 }
 const uint8_t *PS4GamepadDevice::report_descriptor()
 {

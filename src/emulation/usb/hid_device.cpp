@@ -87,7 +87,7 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
   {
     clearedIn |= tu_edpt_dir(request->wIndex) == TUSB_DIR_IN;
     clearedOut |= tu_edpt_dir(request->wIndex) == TUSB_DIR_OUT;
-    if (clearedIn && clearedOut)
+    if (clearedIn && clearedOut && ConfigManager::instance().get_current_mode() == ModeHid)
     {
       ConfigManager::instance().request_mode(ModeSwitch);
       return false;

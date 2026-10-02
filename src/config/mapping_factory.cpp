@@ -2,6 +2,8 @@
 #include "managers/config_manager.hpp"
 #include "profiles/profile.hpp"
 #include "mappings/mapping.hpp"
+#include "mappings/project_diva_mappings.hpp"
+#include "mappings/taiko_mappings.hpp"
 
 static auto& config_mgr = ConfigManager::instance();
 
@@ -18,7 +20,16 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
     switch (proto_mapping.mapping.which_mapping)
     {
     case proto_Output_gamepadAxis_tag:
-        if (profile->subtype == Gamepad && config_mgr.get_requested_mode() == ModePs3) {
+        if (profile->subtype == Taiko) {
+            return std::make_unique<TaikoAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
+        }
+        if (config_mgr.get_requested_mode() == ModeSwitch) {
+            if (profile->subtype == ProjectDiva) {
+                return std::make_unique<ProjectDivaAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
+            }
+        }
+        if (profile->subtype == Gamepad &&
+            config_mgr.get_requested_mode() == ModePs3) {
             return std::make_unique<PS3GamepadAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
         // XB1 guitars and drums don't use the same report format as gamepads
@@ -49,12 +60,21 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
         return std::make_unique<RockBandGuitarButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         
     case proto_Output_gamepadButton_tag:
+        if (profile->subtype == Taiko) {
+            return std::make_unique<TaikoButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
+        }
+        if (config_mgr.get_requested_mode() == ModeSwitch) {
+            if (profile->subtype == ProjectDiva) {
+                return std::make_unique<ProjectDivaButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
+            }
+        }
         // PS2 GH guitars don't use the same report format as gamepads
         if (profile->subtype == GuitarHeroGuitar) {
             return std::make_unique<GuitarHeroGuitarGamepadButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
         // PS3 gamepads use a totally different report format
-        if (profile->subtype == Gamepad && config_mgr.get_requested_mode() == ModePs3) {
+        if (profile->subtype == Gamepad &&
+            config_mgr.get_requested_mode() == ModePs3) {
             return std::make_unique<PS3GamepadButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
         return std::make_unique<GamepadButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
@@ -100,6 +120,9 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
         
     case proto_Output_divaAxis_tag:
         return std::make_unique<ProjectDivaAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
+
+    case proto_Output_divaTouch_tag:
+        return std::make_unique<ProjectDivaButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         
     case proto_Output_gfButton_tag:
         return std::make_unique<GuitarFreaksButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);

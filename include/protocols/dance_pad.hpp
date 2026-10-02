@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #define STEPMANIA_X_REPORT_ID 3
+#define LTEK_REPORT_ID 1
 typedef struct {
     uint8_t reportId;  // 0x01
     uint8_t dpadLeft : 1;

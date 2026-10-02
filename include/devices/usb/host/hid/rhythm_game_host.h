@@ -6,7 +6,10 @@ class LTekHost : public HidHost
 {
 public:
     ~LTekHost() {}
-    LTekHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : HidHost(dev_addr, interface, id) {}
+    LTekHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : HidHost(dev_addr, interface, id)
+    {
+        m_subtype = Dancepad;
+    }
 
     bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
@@ -21,13 +24,17 @@ private:
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
+    LTEK_Report_Data_t m_last_input_report = {};
 };
 
 class StepmaniaHost : public HidHost
 {
 public:
     ~StepmaniaHost() {}
-    StepmaniaHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : HidHost(dev_addr, interface, id) {}
+    StepmaniaHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : HidHost(dev_addr, interface, id)
+    {
+        m_subtype = Dancepad;
+    }
 
     bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
@@ -41,5 +48,5 @@ private:
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
-    StepManiaX_Report_Data_t m_last_input_report;
+    StepManiaX_Report_Data_t m_last_input_report = {};
 };

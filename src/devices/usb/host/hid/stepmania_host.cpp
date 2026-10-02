@@ -20,6 +20,8 @@ std::shared_ptr<UsbHostInterface> StepmaniaHost::open(std::shared_ptr<UsbHostDev
         return nullptr;
     }
     auto intf = std::make_shared<StepmaniaHost>(dev_addr, itf_desc->bInterfaceNumber, list->m_id);
+    intf->m_vid = vid;
+    intf->m_pid = pid;
     uint8_t endpoints = itf_desc->bNumEndpoints;
     p_desc = tu_desc_next(p_desc);
     tusb_hid_descriptor_hid_t *x_desc =
@@ -61,9 +63,11 @@ bool StepmaniaHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xfer
 {
     if (ep_addr & 0x80)
     {
-        if (m_ep_in_buf[0] == STEPMANIA_X_REPORT_ID)
+        if (result == XFER_RESULT_SUCCESS &&
+            xferred_bytes >= sizeof(m_last_input_report) &&
+            m_ep_in_buf[0] == STEPMANIA_X_REPORT_ID)
         {
-            memcpy(&m_last_input_report, m_ep_in_buf, m_ep_in_size);
+            memcpy(&m_last_input_report, m_ep_in_buf, sizeof(m_last_input_report));
         }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
@@ -85,14 +89,20 @@ bool StepmaniaHost::tick_digital(proto_Output &type)
     if (type.which_mapping == proto_Output_gamepadButton_tag)
         switch (type.mapping.gamepadButton)
         {
+        case Gamepad_A:
+            return m_last_input_report.dpadCenter;
         case Gamepad_DpadUp:
-            return m_last_input_report.dpadUp;
+            return m_last_input_report.dpadUp || m_last_input_report.dpadUpLeft ||
+                   m_last_input_report.dpadUpRight;
         case Gamepad_DpadDown:
-            return m_last_input_report.dpadDown;
+            return m_last_input_report.dpadDown || m_last_input_report.dpadDownLeft ||
+                   m_last_input_report.dpadDownRight;
         case Gamepad_DpadLeft:
-            return m_last_input_report.dpadLeft;
+            return m_last_input_report.dpadLeft || m_last_input_report.dpadUpLeft ||
+                   m_last_input_report.dpadDownLeft;
         case Gamepad_DpadRight:
-            return m_last_input_report.dpadRight;
+            return m_last_input_report.dpadRight || m_last_input_report.dpadUpRight ||
+                   m_last_input_report.dpadDownRight;
         default:
             return false;
         }

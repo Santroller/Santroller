@@ -22,6 +22,8 @@ std::shared_ptr<UsbHostInterface> LTekHost::open(std::shared_ptr<UsbHostDevice> 
         return nullptr;
     }
     auto intf = std::make_shared<LTekHost>(dev_addr, itf_desc->bInterfaceNumber, list->m_id);
+    intf->m_vid = vid;
+    intf->m_pid = pid;
     uint8_t endpoints = itf_desc->bNumEndpoints;
     p_desc = tu_desc_next(p_desc);
     tusb_hid_descriptor_hid_t *x_desc =
@@ -64,6 +66,17 @@ bool LTekHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_b
 {
     if (ep_addr & 0x80)
     {
+        if (result == XFER_RESULT_SUCCESS)
+        {
+            const auto report_offset = m_has_report_id ? 1u : 0u;
+            const auto required_size = report_offset + sizeof(LTEK_Report_Data_t);
+            if (xferred_bytes >= required_size &&
+                (!m_has_report_id || m_ep_in_buf[0] == LTEK_REPORT_ID))
+            {
+                const auto *report = reinterpret_cast<const LTEK_Report_Data_t *>(m_ep_in_buf + report_offset);
+                m_last_input_report = *report;
+            }
+        }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;
@@ -80,29 +93,23 @@ bool LTekHost::set_config()
 }
 bool LTekHost::tick_digital(proto_Output& type)
 {
-    // TODO: do we deal with center?
-    LTEK_Report_Data_t *report = (LTEK_Report_Data_t *)m_ep_in_buf;
-    if (m_has_report_id)
-    {
-        // skip report id
-        report = (LTEK_Report_Data_t *)(m_ep_in_buf + 1);
-    }
-    // TODO: this
     if (type.which_mapping == proto_Output_gamepadButton_tag)
     switch (type.mapping.gamepadButton)
     {
+    case Gamepad_A:
+        return m_last_input_report.dpadCenter;
     case Gamepad_DpadUp:
-        return report->dpadUp;
+        return m_last_input_report.dpadUp;
     case Gamepad_DpadDown:
-        return report->dpadDown;
+        return m_last_input_report.dpadDown;
     case Gamepad_DpadLeft:
-        return report->dpadLeft;
+        return m_last_input_report.dpadLeft;
     case Gamepad_DpadRight:
-        return report->dpadRight;
+        return m_last_input_report.dpadRight;
     case Gamepad_Back:
-        return report->back;
+        return m_last_input_report.back;
     case Gamepad_Start:
-        return report->start;
+        return m_last_input_report.start;
     default:
         return false;
     }

@@ -266,6 +266,20 @@ uint16_t WiiExtensionDecoder::read_axis(proto_WiiAxisType type) const
     return 0;
 }
 
+uint16_t WiiExtensionDecoder::read_button_pressure(proto_WiiButtonType type) const
+{
+    if (mType == WiiClassicController || mType == WiiClassicControllerPro)
+    {
+        switch (type)
+        {
+        case WiiButtonClassicLt: return read_axis(WiiAxisClassicLeftTrigger);
+        case WiiButtonClassicRt: return read_axis(WiiAxisClassicRightTrigger);
+        default: break;
+        }
+    }
+    return read_button(type) ? UINT16_MAX : 0;
+}
+
 bool WiiExtensionDecoder::read_button(proto_WiiButtonType type) const
 {
     auto lastTap = hasTapBar ? (mBuffer[2] & 0x1f) : 0x0F;
@@ -463,6 +477,16 @@ bool WiiExtensionDecoder::read_button(proto_WiiButtonType type) const
 
 bool WiiExtensionDecoder::tick_digital(proto_Output &type) const
 {
+    if ((mType == WiiClassicController || mType == WiiClassicControllerPro) &&
+        type.which_mapping == proto_Output_gamepadAxis_tag)
+    {
+        switch (type.mapping.gamepadAxis)
+        {
+        case Gamepad_LeftTrigger: return read_button(WiiButtonClassicLt);
+        case Gamepad_RightTrigger: return read_button(WiiButtonClassicRt);
+        default: break;
+        }
+    }
     if (type.which_mapping == proto_Output_ghButton_tag)
     {
         if (mType == WiiExtType::WiiGuitarHeroGuitar)

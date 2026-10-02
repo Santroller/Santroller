@@ -26,7 +26,7 @@ bool PS2ButtonInput::tick_digital()
 }
 uint16_t PS2ButtonInput::tick_analog()
 {
-    return m_device->read_button(m_input.button) ? 65535 : 0;
+    return m_device->read_button_pressure(m_input.button);
 }
 void PS2ButtonInput::setup()
 {

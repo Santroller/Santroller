@@ -11,6 +11,7 @@ public:
     USBAxisInput(proto_USBAxisInput input, std::shared_ptr<UsbHostInterface> device, Profile *profile);
     bool tick_digital();
     uint16_t tick_analog();
+    bool has_independent_analog_value() const override { return true; }
     void link_device(bool claim_devices) override
     {
         auto &claimed = claim_devices ? m_profile->claimed_devices : m_profile->temp_claimed_devices;
@@ -44,6 +45,7 @@ public:
     USBButtonInput(proto_USBButtonInput input, std::shared_ptr<UsbHostInterface> device, Profile *profile);
     bool tick_digital();
     uint16_t tick_analog();
+    bool has_independent_analog_value() const override { return true; }
     uint64_t hardware_id() const override
     {
         return (static_cast<uint64_t>(InputHw_USBButton) << 56) |

@@ -9,7 +9,7 @@ USBAxisInput::USBAxisInput(proto_USBAxisInput input, std::shared_ptr<UsbHostInte
 bool USBAxisInput::tick_digital()
 {
     if (!m_device) return false;
-    return m_device->tick_analog(m_input.axis) != 0;
+    return m_device->tick_axis_digital(m_input.axis);
 }
 uint16_t USBAxisInput::tick_analog()
 {
@@ -30,7 +30,7 @@ bool USBButtonInput::tick_digital()
 uint16_t USBButtonInput::tick_analog()
 {
     if (!m_device) return 0;
-    return m_device->tick_digital(m_input.button) ? UINT16_MAX : 0;
+    return m_device->tick_button_pressure(m_input.button);
 }
 void USBButtonInput::setup()
 {

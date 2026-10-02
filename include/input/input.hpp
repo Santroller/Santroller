@@ -34,6 +34,7 @@ public:
     virtual uint16_t tick_analog() = 0;
     virtual void setup() = 0;
     virtual bool valid() const { return true; }
+    virtual bool has_independent_analog_value() const { return false; }
     virtual bool consumes_events() const { return false; }
     virtual bool consume_event(uint16_t &value) { (void)value; return false; }
     virtual bool peek_event(uint16_t &value) { (void)value; return false; }

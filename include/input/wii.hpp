@@ -10,6 +10,7 @@ public:
     WiiAxisInput(proto_WiiAxisInput input, std::shared_ptr<WiiDevice> device, Profile* profile);
     bool tick_digital();
     uint16_t tick_analog();
+    bool has_independent_analog_value() const override { return true; }
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
@@ -23,6 +24,7 @@ public:
     WiiButtonInput(proto_WiiButtonInput input, std::shared_ptr<WiiDevice> device, Profile* profile);
     bool tick_digital();
     uint16_t tick_analog();
+    bool has_independent_analog_value() const override { return true; }
     uint64_t hardware_id() const override { return (static_cast<uint64_t>(InputHw_WiiButton) << 56) | (static_cast<uint64_t>(m_input.deviceid) << 16) | static_cast<uint32_t>(m_input.button); }
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 

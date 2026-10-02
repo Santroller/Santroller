@@ -5,6 +5,7 @@
 // Shared tick implementations — callable from both USB and BT hosts
 bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool wt = false);
 uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+uint16_t ps3_tick_button_pressure(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
 
 class Ps3Host : public HidHost
 {
@@ -20,6 +21,8 @@ public:
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info);
     bool tick_digital(proto_Output& type);
     uint16_t tick_analog(proto_Output& type);
+    bool tick_axis_digital(proto_Output& type) override;
+    uint16_t tick_button_pressure(proto_Output& type) override;
     void set_rumble(uint8_t left, uint8_t right) override;
     void set_player_led(uint8_t player) override;
     void set_euphoria_led(bool state) override;

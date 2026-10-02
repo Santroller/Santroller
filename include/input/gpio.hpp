@@ -7,6 +7,7 @@ class GPIOInput: public Input {
     GPIOInput(proto_GPIOInput input);
     bool tick_digital();
     uint16_t tick_analog();
+    bool has_independent_analog_value() const override { return m_analog; }
     void setup();
     uint64_t hardware_id() const override { return (static_cast<uint64_t>(InputHw_GPIO) << 56) | m_pin; }
    private:

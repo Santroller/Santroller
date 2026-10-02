@@ -23,6 +23,7 @@ void reload();
 // Actually the simplest fix: just declare the shared functions ourselves.
 bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool wt = false);
 uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+uint16_t ps3_tick_button_pressure(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
 bool ps4_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, uint32_t *last_ghl_poke);
 uint16_t ps4_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
 bool ps5_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
@@ -62,6 +63,21 @@ bool BtDs3Host::tick_digital(proto_Output &type)
 uint16_t BtDs3Host::tick_analog(proto_Output &type)
 {
     return ps3_tick_analog(m_report_buf, m_subtype, false, type);
+}
+
+bool BtDs3Host::tick_axis_digital(proto_Output &type)
+{
+    if (type.which_mapping == proto_Output_gamepadAxis_tag &&
+        (type.mapping.gamepadAxis == Gamepad_LeftTrigger || type.mapping.gamepadAxis == Gamepad_RightTrigger))
+    {
+        return tick_digital(type);
+    }
+    return BluetoothHostInterface::tick_axis_digital(type);
+}
+
+uint16_t BtDs3Host::tick_button_pressure(proto_Output &type)
+{
+    return ps3_tick_button_pressure(m_report_buf, m_subtype, false, type);
 }
 
 // ============================================================================
@@ -782,6 +798,15 @@ bool BtWiiHost::tick_digital(proto_Output &type)
             default:                      return false;
             }
         }
+        if (type.which_mapping == proto_Output_gamepadAxis_tag)
+        {
+            switch (type.mapping.gamepadAxis)
+            {
+            case Gamepad_LeftTrigger: return !(d[9] & 0x80);
+            case Gamepad_RightTrigger: return !(d[9] & 0x04);
+            default: break;
+            }
+        }
         return false;
     }
 
@@ -861,6 +886,32 @@ uint16_t BtWiiHost::tick_analog(proto_Output &type)
     }
 
     return 0;
+}
+
+uint16_t BtWiiHost::tick_button_pressure(proto_Output &type)
+{
+    if (!m_is_pro && (m_decoder.mType == WiiClassicController || m_decoder.mType == WiiClassicControllerPro) &&
+        type.which_mapping == proto_Output_gamepadButton_tag)
+    {
+        switch (type.mapping.gamepadButton)
+        {
+        case Gamepad_LeftShoulder: return m_decoder.read_button_pressure(WiiButtonClassicLt);
+        case Gamepad_RightShoulder: return m_decoder.read_button_pressure(WiiButtonClassicRt);
+        default: break;
+        }
+    }
+    return BluetoothHostInterface::tick_button_pressure(type);
+}
+
+bool BtWiiHost::tick_axis_digital(proto_Output &type)
+{
+    if ((m_is_pro || m_decoder.mType == WiiClassicController || m_decoder.mType == WiiClassicControllerPro) &&
+        type.which_mapping == proto_Output_gamepadAxis_tag &&
+        (type.mapping.gamepadAxis == Gamepad_LeftTrigger || type.mapping.gamepadAxis == Gamepad_RightTrigger))
+    {
+        return tick_digital(type);
+    }
+    return BluetoothHostInterface::tick_axis_digital(type);
 }
 
 // ============================================================================

@@ -10,6 +10,7 @@ public:
     ProtarNeckAxisInput(proto_ProtarNeckAxisInput input, std::shared_ptr<ProtarNeckDevice> device, Profile* profile);
     bool tick_digital();
     uint16_t tick_analog();
+    bool has_independent_analog_value() const override { return true; }
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:

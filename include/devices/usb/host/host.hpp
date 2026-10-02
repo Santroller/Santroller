@@ -34,6 +34,8 @@ public:
     virtual void disconnect();
     virtual bool tick_digital(proto_Output& type) = 0;
     virtual uint16_t tick_analog(proto_Output& type) = 0;
+    virtual bool tick_axis_digital(proto_Output& type) { return tick_analog(type) != 0; }
+    virtual uint16_t tick_button_pressure(proto_Output& type) { return tick_digital(type) ? UINT16_MAX : 0; }
     virtual void update(bool full_poll, bool send_events);
     bool is_wii_extension(WiiExtType type)
     {

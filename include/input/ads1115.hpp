@@ -9,6 +9,7 @@ class ADS1115Input: public Input {
     ADS1115Input(proto_ADS1115Input input, std::shared_ptr<ADS1115Device> device, Profile* profile);
     bool tick_digital();
     uint16_t tick_analog();
+    bool has_independent_analog_value() const override { return true; }
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
    private:
     void setup();

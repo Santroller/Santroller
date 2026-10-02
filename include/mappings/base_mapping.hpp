@@ -73,8 +73,9 @@ public:
 
 protected:
     bool m_last_value = false;
+    uint16_t m_last_pressure = 0;
     bool m_last_sent_value = false;
-    uint16_t m_last_sent_trigger_value = 0;
+    uint16_t m_last_sent_pressure = 0;
     bool m_calibrated_value = false;
     uint64_t m_last_poll = 0;
 };

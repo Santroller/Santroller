@@ -167,37 +167,40 @@ void ButtonMapping::update(bool full_poll, bool send_events)
         }
     }
 
+    uint16_t pressure = m_mapping.has_trigger ? trigger_value
+        : event_driven ? event_value
+        : m_input->has_independent_analog_value() ? m_input->tick_analog()
+        : calcVal ? UINT16_MAX : 0;
+
     if (m_suppressed || m_waiting_for_release)
     {
         calcVal = false;
         m_last_value = false;
+        m_last_pressure = 0;
     }
 
     m_suppressed = false;
 
-    if (m_mapping.has_trigger)
+    if (send_events)
     {
-        if (send_events && (trigger_value != m_last_sent_trigger_value || full_poll))
+        if (pressure != m_last_sent_pressure || calcVal != m_last_sent_value || full_poll)
         {
-            proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, (uint32_t)trigger_value, calcVal ? (uint32_t)65535 : (uint32_t)0}}};
+            proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, pressure, calcVal ? (uint32_t)65535 : (uint32_t)0}}};
             HIDConfigDevice::send_event(event, false);
-            m_last_sent_trigger_value = trigger_value;
+            m_last_sent_pressure = pressure;
+            m_last_sent_value = calcVal;
         }
-    }
-    else if (send_events && (calcVal != m_last_sent_value || full_poll))
-    {
-        proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, calcVal, calcVal}}};
-        HIDConfigDevice::send_event(event, false);
-        m_last_sent_value = calcVal;
     }
     if (calcVal)
     {
         m_last_poll = millis();
         m_last_value = calcVal;
+        m_last_pressure = m_mapping.inverted && !m_mapping.has_trigger ? UINT16_MAX : pressure;
     }
     else if (!m_mapping.has_debounce || (millis() - m_last_poll) > m_mapping.debounce)
     {
         m_last_value = calcVal;
+        m_last_pressure = 0;
     }
 }
 void AxisMapping::update(bool full_poll, bool send_events)

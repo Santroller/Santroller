@@ -70,6 +70,34 @@ bool PS2Device::read_button(proto_PS2ButtonType type)
 {
     return m_controller.read_button(type);
 }
+uint16_t PS2Device::read_button_pressure(proto_PS2ButtonType type)
+{
+    if (!m_controller.read_button(type))
+    {
+        return 0;
+    }
+    if (m_controller.type != PS2ControllerTypeDualshock2)
+    {
+        return UINT16_MAX;
+    }
+
+    switch (type)
+    {
+    case PS2ButtonDpadRight: return m_controller.read_axis(PS2AxisDualshock2RightButton);
+    case PS2ButtonDpadLeft: return m_controller.read_axis(PS2AxisDualshock2LeftButton);
+    case PS2ButtonDpadUp: return m_controller.read_axis(PS2AxisDualshock2UpButton);
+    case PS2ButtonDpadDown: return m_controller.read_axis(PS2AxisDualshock2DownButton);
+    case PS2ButtonTriangle: return m_controller.read_axis(PS2AxisDualshock2Triangle);
+    case PS2ButtonCircle: return m_controller.read_axis(PS2AxisDualshock2Circle);
+    case PS2ButtonCross: return m_controller.read_axis(PS2AxisDualshock2Cross);
+    case PS2ButtonSquare: return m_controller.read_axis(PS2AxisDualshock2Square);
+    case PS2ButtonL1: return m_controller.read_axis(PS2AxisDualshock2L1);
+    case PS2ButtonR1: return m_controller.read_axis(PS2AxisDualshock2R1);
+    case PS2ButtonL2: return m_controller.read_axis(PS2AxisDualshock2L2);
+    case PS2ButtonR2: return m_controller.read_axis(PS2AxisDualshock2R2);
+    default: return UINT16_MAX;
+    }
+}
 bool PS2Device::is_ps2_device(PS2ControllerType type)
 {
     return m_lastControllerType == type;

@@ -1,4 +1,5 @@
 #include "mappings/mapping.hpp"
+#include <algorithm>
 #include "instance.hpp"
 #include "tusb.h"
 #include "emulation/usb/usb_descriptors.h"
@@ -977,21 +978,21 @@ void GamepadButtonMapping::update_xinput(uint8_t *buf)
 }
 void GamepadButtonMapping::update_ogxbox(uint8_t *buf)
 {
-    // TODO: pressures
     OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)buf;
+    uint8_t pressure = m_last_pressure >> 8;
     switch (m_mapping.mapping.mapping.gamepadButton)
     {
     case Gamepad_A:
-        report->a |= m_last_value;
+        report->a = std::max(report->a, pressure);
         break;
     case Gamepad_B:
-        report->b |= m_last_value;
+        report->b = std::max(report->b, pressure);
         break;
     case Gamepad_X:
-        report->x |= m_last_value;
+        report->x = std::max(report->x, pressure);
         break;
     case Gamepad_Y:
-        report->y |= m_last_value;
+        report->y = std::max(report->y, pressure);
         break;
     case Gamepad_Start:
         report->start |= m_last_value;
@@ -1000,10 +1001,10 @@ void GamepadButtonMapping::update_ogxbox(uint8_t *buf)
         report->back |= m_last_value;
         break;
     case Gamepad_LeftShoulder:
-        report->leftShoulder |= m_last_value;
+        report->leftShoulder = std::max(report->leftShoulder, pressure);
         break;
     case Gamepad_RightShoulder:
-        report->rightShoulder |= m_last_value;
+        report->rightShoulder = std::max(report->rightShoulder, pressure);
         break;
     case Gamepad_LeftThumbClick:
         report->leftThumbClick |= m_last_value;
@@ -1092,21 +1093,25 @@ PS3GamepadButtonMapping::PS3GamepadButtonMapping(proto_Mapping mapping, std::uni
 }
 void PS3GamepadButtonMapping::update_ps3(uint8_t *buf)
 {
-    // TODO: pressures
     PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)buf;
+    uint8_t pressure = m_last_pressure >> 8;
     switch (m_mapping.mapping.mapping.gamepadButton)
     {
     case Gamepad_A:
         report->a |= m_last_value;
+        report->pressureCross = std::max(report->pressureCross, pressure);
         break;
     case Gamepad_B:
         report->b |= m_last_value;
+        report->pressureCircle = std::max(report->pressureCircle, pressure);
         break;
     case Gamepad_X:
         report->x |= m_last_value;
+        report->pressureSquare = std::max(report->pressureSquare, pressure);
         break;
     case Gamepad_Y:
         report->y |= m_last_value;
+        report->pressureTriangle = std::max(report->pressureTriangle, pressure);
         break;
     case Gamepad_Start:
         report->start |= m_last_value;
@@ -1122,9 +1127,11 @@ void PS3GamepadButtonMapping::update_ps3(uint8_t *buf)
         break;
     case Gamepad_LeftShoulder:
         report->leftShoulder |= m_last_value;
+        report->pressureL1 = std::max(report->pressureL1, pressure);
         break;
     case Gamepad_RightShoulder:
         report->rightShoulder |= m_last_value;
+        report->pressureR1 = std::max(report->pressureR1, pressure);
         break;
     case Gamepad_LeftThumbClick:
         report->leftThumbClick |= m_last_value;
@@ -1134,15 +1141,19 @@ void PS3GamepadButtonMapping::update_ps3(uint8_t *buf)
         break;
     case Gamepad_DpadUp:
         report->dpadUp |= m_last_value;
+        report->pressureDpadUp = std::max(report->pressureDpadUp, pressure);
         break;
     case Gamepad_DpadDown:
         report->dpadDown |= m_last_value;
+        report->pressureDpadDown = std::max(report->pressureDpadDown, pressure);
         break;
     case Gamepad_DpadLeft:
         report->dpadLeft |= m_last_value;
+        report->pressureDpadLeft = std::max(report->pressureDpadLeft, pressure);
         break;
     case Gamepad_DpadRight:
         report->dpadRight |= m_last_value;
+        report->pressureDpadRight = std::max(report->pressureDpadRight, pressure);
         break;
     default:
         break;

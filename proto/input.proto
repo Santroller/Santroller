@@ -265,7 +265,8 @@ message Mapping {
   required Output mapping = 1;
   required Input input = 50;
   optional bool inverted = 51;
-  optional Input pressureInput = 52;
+  reserved 52;
+  reserved "pressureInput";
   optional AnalogToDigitalTriggerType trigger = 53;
   optional int32 pressed = 54;
   optional int32 released = 55;

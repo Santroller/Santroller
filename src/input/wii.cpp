@@ -8,6 +8,10 @@ WiiAxisInput::WiiAxisInput(proto_WiiAxisInput input, std::shared_ptr<WiiDevice> 
 }
 bool WiiAxisInput::tick_digital()
 {
+    if (m_input.axis == WiiAxisClassicLeftTrigger)
+        return m_device->read_button(WiiButtonClassicLt);
+    if (m_input.axis == WiiAxisClassicRightTrigger)
+        return m_device->read_button(WiiButtonClassicRt);
     return m_device->read_axis(m_input.axis) > 0;
 }
 uint16_t WiiAxisInput::tick_analog()
@@ -26,7 +30,7 @@ bool WiiButtonInput::tick_digital()
 }
 uint16_t WiiButtonInput::tick_analog()
 {
-    return m_device->read_button(m_input.button) ? 65535 : 0;
+    return m_device->read_button_pressure(m_input.button);
 }
 void WiiButtonInput::setup()
 {

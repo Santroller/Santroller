@@ -320,6 +320,16 @@ bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
                 return false;
             }
         }
+        if (type.which_mapping == proto_Output_gamepadAxis_tag)
+        {
+            auto data = (PS3Gamepad_Data_t *)m_ep_in_buf;
+            switch (type.mapping.gamepadAxis)
+            {
+            case Gamepad_LeftTrigger: return data->l2;
+            case Gamepad_RightTrigger: return data->r2;
+            default: break;
+            }
+        }
         return false;
     }
     PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)m_ep_in_buf;
@@ -367,6 +377,16 @@ bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
             return right;
         default:
             return false;
+        }
+    }
+    if (type.which_mapping == proto_Output_gamepadAxis_tag)
+    {
+        auto data = (PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf;
+        switch (type.mapping.gamepadAxis)
+        {
+        case Gamepad_LeftTrigger: return data->l2;
+        case Gamepad_RightTrigger: return data->r2;
+        default: break;
         }
     }
     switch (subtype)
@@ -471,6 +491,34 @@ bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
 
     return false;
 }
+uint16_t ps3_tick_button_pressure(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type)
+{
+    if (!ps3_tick_digital(buf, subtype, third_party, type))
+    {
+        return 0;
+    }
+    if (third_party || type.which_mapping != proto_Output_gamepadButton_tag)
+    {
+        return UINT16_MAX;
+    }
+
+    const auto *data = (const PS3Gamepad_Data_t *)buf;
+    switch (type.mapping.gamepadButton)
+    {
+    case Gamepad_A: return data->pressureCross << 8;
+    case Gamepad_B: return data->pressureCircle << 8;
+    case Gamepad_X: return data->pressureSquare << 8;
+    case Gamepad_Y: return data->pressureTriangle << 8;
+    case Gamepad_LeftShoulder: return data->pressureL1 << 8;
+    case Gamepad_RightShoulder: return data->pressureR1 << 8;
+    case Gamepad_DpadUp: return data->pressureDpadUp << 8;
+    case Gamepad_DpadDown: return data->pressureDpadDown << 8;
+    case Gamepad_DpadLeft: return data->pressureDpadLeft << 8;
+    case Gamepad_DpadRight: return data->pressureDpadRight << 8;
+    default: return UINT16_MAX;
+    }
+}
+
 uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type)
 {
     const uint8_t *m_ep_in_buf = buf;
@@ -593,6 +641,21 @@ bool Ps3Host::tick_digital(proto_Output &type)
 uint16_t Ps3Host::tick_analog(proto_Output &type)
 {
     return ps3_tick_analog(m_ep_in_buf, m_subtype, m_third_party, type);
+}
+
+bool Ps3Host::tick_axis_digital(proto_Output &type)
+{
+    if (type.which_mapping == proto_Output_gamepadAxis_tag &&
+        (type.mapping.gamepadAxis == Gamepad_LeftTrigger || type.mapping.gamepadAxis == Gamepad_RightTrigger))
+    {
+        return tick_digital(type);
+    }
+    return UsbHostInterface::tick_axis_digital(type);
+}
+
+uint16_t Ps3Host::tick_button_pressure(proto_Output &type)
+{
+    return ps3_tick_button_pressure(m_ep_in_buf, m_subtype, m_third_party, type);
 }
 
 bool Ps3Host::send_ps3_output()

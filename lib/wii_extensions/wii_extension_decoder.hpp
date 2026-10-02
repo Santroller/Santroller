@@ -27,6 +27,7 @@ public:
     // Wii direct input reading
     uint16_t read_axis(proto_WiiAxisType type) const;
     bool read_button(proto_WiiButtonType type) const;
+    uint16_t read_button_pressure(proto_WiiButtonType type) const;
 
     // Output mapping for assignable host interfaces (BT / USB)
     bool tick_digital(proto_Output &type) const;
@@ -35,4 +36,3 @@ public:
     // SubType mapping helper
     SubType get_subtype() const;
 };
-

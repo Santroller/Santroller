@@ -15,6 +15,7 @@ public:
     void update(bool full_poll, bool send_events);
     uint16_t read_axis(proto_WiiAxisType type);
     bool read_button(proto_WiiButtonType type);
+    uint16_t read_button_pressure(proto_WiiButtonType type);
     bool is_wii_extension(WiiExtType type);
     bool using_pin(uint8_t pin);
     void save_reload_state(DeviceReloadState& state) const override;

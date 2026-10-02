@@ -65,6 +65,8 @@ public:
 
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
+    bool tick_axis_digital(proto_Output &type) override;
+    uint16_t tick_button_pressure(proto_Output &type) override;
 };
 
 // ---------------------------------------------------------------------------
@@ -279,6 +281,8 @@ public:
 
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
+    bool tick_axis_digital(proto_Output &type) override;
+    uint16_t tick_button_pressure(proto_Output &type) override;
 
     bool is_wii_extension(WiiExtType type) override
     {
@@ -323,4 +327,3 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
                                                                 bool known_ready = false,
                                                                 const char *dev_name = nullptr,
                                                                 BtControllerType known_controller_type = BtControllerType_BtControllerTypeGeneric);
-

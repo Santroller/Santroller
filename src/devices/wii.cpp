@@ -72,6 +72,10 @@ bool WiiDevice::read_button(proto_WiiButtonType type)
 {
     return m_extension.read_button(type);
 }
+uint16_t WiiDevice::read_button_pressure(proto_WiiButtonType type)
+{
+    return m_extension.read_button_pressure(type);
+}
 bool WiiDevice::is_wii_extension(WiiExtType type)
 {
     return m_extension.mType == type;

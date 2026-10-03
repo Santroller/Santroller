@@ -111,6 +111,7 @@ private:
     bool m_found = false;
     uint32_t m_check_caps = 0;
     uint32_t m_check_link = 0;
+    uint8_t m_last_player_led = 0;
     bool m_wt = false;
 };
 class XInputWirelessAudioHost : public UsbHostInterface

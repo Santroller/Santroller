@@ -156,6 +156,7 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                         printf("Found wt\r\n");
                     }
                     m_check_caps = 0;
+                    set_player_led(m_last_player_led);
                 }
             }
         }
@@ -195,16 +196,18 @@ void XInputWirelessGamepadHost::set_rumble(uint8_t left, uint8_t right)
 
 void XInputWirelessGamepadHost::set_player_led(uint8_t player)
 {
+    m_last_player_led = player;
     if (!m_ep_out || !m_found) return;
-    if (player == 0)
+    uint8_t target_player = player;
+    if (target_player == 0)
     {
-        player = (m_ep_out / 2) + 1;
+        target_player = (m_ep_out / 2) + 1;
     }
     uint8_t led_code = 0;
-    if (player == 1) led_code = 2;
-    else if (player == 2) led_code = 3;
-    else if (player == 3) led_code = 4;
-    else if (player == 4) led_code = 5;
+    if (target_player == 1) led_code = 6;
+    else if (target_player == 2) led_code = 7;
+    else if (target_player == 3) led_code = 8;
+    else if (target_player == 4) led_code = 9;
     if (led_code == 0) return;
     uint8_t buf[12] = {0x00, 0x00, 0x08, (uint8_t)(0x40 + led_code), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     memcpy(m_ep_out_buf, buf, sizeof(buf));

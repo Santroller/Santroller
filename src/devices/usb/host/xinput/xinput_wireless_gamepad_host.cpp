@@ -118,6 +118,10 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
             if (header->type == 0x01 || header->type == 0x03)
             {
                 memcpy(m_report_buf, m_ep_in_buf + sizeof(header), xferred_bytes - sizeof(header));
+                if (!m_led_set)
+                {
+                    set_player_led(m_last_player_led);
+                }
             }
             // Link report
             if (header->type == 0x0f)
@@ -137,10 +141,11 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                     send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(capabilitiesRequest));
                     m_check_caps = millis() + 1000;
                     m_found = true;
+                    m_led_set = false;
                     usb_host_remove_enumerating_interface(this);
                     usb_host_add_assignable_interface(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
                     process_delayed_init();
-                    set_player_led(0);
+                    set_player_led(m_last_player_led);
                 }
             }
             // Capabilities report
@@ -156,7 +161,10 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                         printf("Found wt\r\n");
                     }
                     m_check_caps = 0;
-                    set_player_led(m_last_player_led);
+                    if (!m_led_set)
+                    {
+                        set_player_led(m_last_player_led);
+                    }
                 }
             }
         }
@@ -211,5 +219,8 @@ void XInputWirelessGamepadHost::set_player_led(uint8_t player)
     if (led_code == 0) return;
     uint8_t buf[12] = {0x00, 0x00, 0x08, (uint8_t)(0x40 + led_code), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     memcpy(m_ep_out_buf, buf, sizeof(buf));
-    send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(buf));
+    if (send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(buf)))
+    {
+        m_led_set = true;
+    }
 }

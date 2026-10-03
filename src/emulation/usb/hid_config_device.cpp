@@ -692,6 +692,17 @@ bool HIDConfigDevice::tool_closed()
   return millis() - dev->lastKeepAlive > 1000 && !dev->processing;
 }
 
+bool HIDConfigDevice::has_event_space()
+{
+  auto dev = HIDConfigDevice::instance;
+  if (!dev || tool_closed())
+  {
+    return false;
+  }
+  dev->process_events();
+  return dev->list.event_count < TU_ARRAY_SIZE(dev->list.event);
+}
+
 bool HIDConfigDevice::send_event(proto_Event event, bool now)
 {
   if (is_secondary_pico_mode())
@@ -704,11 +715,16 @@ bool HIDConfigDevice::send_event(proto_Event event, bool now)
     return false;
   }
   dev->processing = true;
-  // flush queue if event is important
-  while (((dev->list.event_count && now)) && !tool_closed())
+  // Flush the queue for important events, but bound the wait: tuh_task() is not
+  // serviced here, so blocking on a slow PC reader would starve host devices.
+  if (now)
   {
-    dev->process_events();
-    tud_task();
+    const uint32_t started_us = micros();
+    while (dev->list.event_count && !tool_closed() && micros() - started_us < max_event_flush_wait_us)
+    {
+      dev->process_events();
+      tud_task();
+    }
   }
   // Check if the event is an axis event and update the existing event in the list if it exists.
   if (event.which_event == proto_Event_axis_tag) {

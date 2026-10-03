@@ -72,6 +72,9 @@ public:
   uint16_t get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
   void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
   static bool send_event(proto_Event event, bool now);
+  // Non-blocking: true if an event can be queued without waiting on the host.
+  static bool has_event_space();
+  static constexpr uint32_t max_event_flush_wait_us = 2000;
   static std::shared_ptr<HIDConfigDevice> instance;
 
 private:

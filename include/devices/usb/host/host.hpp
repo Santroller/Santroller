@@ -106,11 +106,10 @@ void usb_host_update_interfaces(bool full_poll, bool send_events);
 class UsbHostDevice : public Device
 {
 public:
-    ~UsbHostDevice() { printf("~UsbHostDevice(%p)\r\n", this); }
+    ~UsbHostDevice() {}
 
     UsbHostDevice(uint8_t d_addr, uint16_t id) : Device(id), m_dev_addr(d_addr)
     {
-         printf("UsbHostDevice(%p)\r\n", this);
     }
     void disconnect();
     void begin() {};

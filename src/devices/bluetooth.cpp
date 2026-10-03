@@ -39,13 +39,9 @@ void BluetoothDevice::begin()
 
 void BluetoothDevice::rescan(bool first)
 {
-    printf("BluetoothDevice rescan\r\n");
     if (first)
     {
-        printf("assignable_devices before: %d\r\n", bt_host_assignable_interface_count());
-
         bt_host_add_assignable_devices(true);
-        printf("assignable_devices after: %d\r\n", bt_host_assignable_interface_count());
     }
 }
 

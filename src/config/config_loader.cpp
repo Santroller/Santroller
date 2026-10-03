@@ -58,10 +58,8 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
         secondary_pico_slave_init(i2c_block, config.peripheralBoot.i2c.sda, config.peripheralBoot.i2c.scl, config.peripheralBoot.idPin);
     }
     const ConsoleMode resolved_mode = config_mgr.get_requested_mode();
-    printf("resolved_mode: %d, current_mode: %d\r\n", resolved_mode, current_mode);
     if (!profile_mgr.has_active_instances() || resolved_mode == ModeHid || resolved_mode == ModeXbox360)
     {
-        printf("adding HID config device\r\n");
         auto confDevice = HIDConfigDevice::instance;
         confDevice->interface_id = profile_mgr.usb_instance_count();
         profile_mgr.add_instance(confDevice);
@@ -115,7 +113,6 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     }
     }
     device_mgr.remove_disconnected_root_devices();
-    printf("resolved_mode: %d, current_mode: %d\r\n", resolved_mode, current_mode);
     if (config_mgr.should_reinitialize_device_stack() || resolved_mode != current_mode || profile_mgr.changed_types())
     {
         reinitialize_device_stack();

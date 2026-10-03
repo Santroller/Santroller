@@ -139,7 +139,6 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
     profile_mgr.add_instance(instance);
     setup_instance_from_profile(instance, profile);
     profile_mgr.register_instance(instance, profile, (assignment_mask & ProfileAssignMask_AssignUsb) != 0);
-    printf("Creating instance for profile with subtype: %d\n", profile->subtype);
     instance->initialize();
     if (assignment_mask & ProfileAssignMask_AssignUsb)
     {
@@ -155,7 +154,7 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
 {
     std::shared_ptr<UsbDevice> instance;
 
-    printf("Creating USB instance with mode: %d, subtype: %d\n", mode, subtype);
+    printf("usbd new mode=%d sub=%d\r\n", mode, subtype);
     if (subtype == SubType_KeyboardMouse && mode != ModeHid)
     {   
         config_mgr.request_mode(ModeHid);

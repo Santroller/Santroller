@@ -36,17 +36,14 @@ public:
     virtual uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len) = 0;
     static inline uint8_t next_epin()
     {
-        printf("epin: %d\r\n", m_last_epin);
         return m_last_epin++;
     }
     static inline uint8_t next_epout()
     {
-        printf("epout: %d\r\n", m_last_epout);
         return m_last_epout++;
     }
     static inline uint8_t next_strid()
     {
-        printf("strid: %d\r\n", m_last_strid);
         return m_last_strid++;
     }
     static inline void reset_ep()

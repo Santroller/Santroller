@@ -421,27 +421,22 @@ void USBHostHardwareDevice::update(bool full_poll, bool send_events)
 
     if (m_devices_changed && millis() > m_devices_changed)
     {
-        printf("devices changed! count: %d\r\n", usb_host_assignable_interface_count());
+        printf("usbh changed n=%d\r\n", usb_host_assignable_interface_count());
         m_devices_changed = 0;
         ConfigManager::instance().mark_mode_change_time(millis());
         reload();
     }
     if (full_poll)
     {
-
-        printf("usbhosthardware update %d %d\r\n", full_poll, send_events);
     }
     usb_host_update_interfaces(full_poll, send_events);
 }
 void USBHostHardwareDevice::rescan(bool first)
 {
-    printf("usbhosthardware rescan\r\n");
     if (first)
     {
-        printf("assignable_devices before: %d\r\n", usb_host_assignable_interface_count());
-
         usb_host_add_assignable_devices(true);
-        printf("assignable_devices after: %d\r\n", usb_host_assignable_interface_count());
+        printf("usbh assignable=%d\r\n", usb_host_assignable_interface_count());
     }
 }
 
@@ -574,7 +569,6 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
     {
         return 0;
     }
-    printf("trying to open\r\n");
     for (auto &open_device : host_device_types)
     {
         uint16_t out_len;
@@ -586,7 +580,6 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
         if (dev)
         {
             device_container->host_devices_by_itf[desc_itf->bInterfaceNumber] = dev;
-            printf("done\r\n");
             return out_len;
         }
     }

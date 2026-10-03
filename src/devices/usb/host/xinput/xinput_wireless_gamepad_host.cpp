@@ -33,16 +33,15 @@ static void trace_wireless_report(uint8_t dev_addr, uint8_t interface, uint8_t e
                                   bool found, uint32_t xferred_bytes, const uint8_t *data,
                                   const char *direction, const char *reason)
 {
-    constexpr size_t max_bytes = 32;
-    char hex[max_bytes * 3 + 1] = {};
+    constexpr size_t max_bytes = 16;
+    char hex[max_bytes * 2 + 1] = {};
     const size_t count = std::min(static_cast<size_t>(xferred_bytes), max_bytes);
     for (size_t i = 0; i < count; ++i)
     {
-        snprintf(hex + i * 3, sizeof(hex) - i * 3, "%02x ", data[i]);
+        snprintf(hex + i * 2, sizeof(hex) - i * 2, "%02x", data[i]);
     }
-    XINPUT_WIRELESS_DEBUG_PRINT("X360 wireless %s t=%lu dev=%u itf=%u ep=%02x found=%u len=%lu reason=%s data=%s\r\n",
-           direction, static_cast<unsigned long>(millis()), dev_addr, interface, ep_addr,
-           found, static_cast<unsigned long>(xferred_bytes), reason, hex);
+    XINPUT_WIRELESS_DEBUG_PRINT("x360w %lu %u %s %s %s\r\n",
+           static_cast<unsigned long>(millis()), interface, direction, reason, hex);
 }
 
 XInputWirelessGamepadHost::XInputWirelessGamepadHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {
@@ -56,20 +55,18 @@ void XInputWirelessGamepadHost::update(bool full_poll, bool send_events)
     const uint32_t now = millis();
     if (m_found && static_cast<int32_t>(now - m_next_input_stats_ms) >= 0)
     {
-        XINPUT_WIRELESS_DEBUG_PRINT("X360 wireless input stats t=%lu dev=%u itf=%u inputs=%lu new_inputs=%lu ever_input=%u last_input_age_ms=%lu\r\n",
-               static_cast<unsigned long>(now), m_dev_addr, m_interface,
-               static_cast<unsigned long>(m_input_count),
+        XINPUT_WIRELESS_DEBUG_PRINT("x360w %lu %u in n=%lu age=%lu\r\n",
+               static_cast<unsigned long>(now), m_interface,
                static_cast<unsigned long>(m_input_count - m_reported_input_count),
-               m_last_input_ms != 0,
                static_cast<unsigned long>(m_last_input_ms ? now - m_last_input_ms : 0));
         m_reported_input_count = m_input_count;
         m_next_input_stats_ms = now + 4000;
     }
     if (m_found && static_cast<int32_t>(now - m_check_link) >= 0)
     {
-        if (!send_out("presence", xbox360w_prescence, sizeof(xbox360w_prescence)))
+        if (!send_out("pres", xbox360w_prescence, sizeof(xbox360w_prescence)))
         {
-            XINPUT_WIRELESS_DEBUG_PRINT("X360 wireless connected presence queue full dev=%u itf=%u\r\n", m_dev_addr, m_interface);
+            XINPUT_WIRELESS_DEBUG_PRINT("x360w %u qfull presence\r\n", m_interface);
         }
         m_check_link = millis() + connected_presence_interval_ms;
     }
@@ -81,7 +78,7 @@ bool XInputWirelessGamepadHost::send_out(const char *reason, const uint8_t *pack
     {
         return false;
     }
-    if (strcmp(reason, "rumble") == 0 || strcmp(reason, "player-led") == 0)
+    if (strcmp(reason, "rmbl") == 0 || strcmp(reason, "led") == 0)
     {
         for (size_t i = 0; i < m_out_queue_count; ++i)
         {
@@ -118,22 +115,22 @@ void XInputWirelessGamepadHost::flush_out_queue()
     {
         if (m_out_submit_failures++ == 0)
         {
-            XINPUT_WIRELESS_DEBUG_PRINT("X360 wireless OUT submit failed t=%lu dev=%u itf=%u ep=%02x found=%u reason=%s queued=%lu\r\n",
-                   static_cast<unsigned long>(millis()), m_dev_addr, m_interface, m_ep_out,
-                   m_found, command.reason, static_cast<unsigned long>(m_out_queue_count));
+            XINPUT_WIRELESS_DEBUG_PRINT("x360w %lu %u out fail %s q=%lu\r\n",
+                   static_cast<unsigned long>(millis()), m_interface,
+                   command.reason, static_cast<unsigned long>(m_out_queue_count));
         }
         return;
     }
     if (m_out_submit_failures)
     {
-        XINPUT_WIRELESS_DEBUG_PRINT("X360 wireless OUT submit recovered t=%lu dev=%u itf=%u ep=%02x failures=%lu\r\n",
-               static_cast<unsigned long>(millis()), m_dev_addr, m_interface, m_ep_out,
+        XINPUT_WIRELESS_DEBUG_PRINT("x360w %lu %u out ok after %lu\r\n",
+               static_cast<unsigned long>(millis()), m_interface,
                static_cast<unsigned long>(m_out_submit_failures));
         m_out_submit_failures = 0;
     }
     m_out_pending = true;
     trace_wireless_report(m_dev_addr, m_interface, m_ep_out, m_found,
-                          command.length, m_ep_out_buf, "OUT submit", command.reason);
+                          command.length, m_ep_out_buf, "out", command.reason);
     --m_out_queue_count;
     for (size_t i = 0; i < m_out_queue_count; ++i)
     {
@@ -143,23 +140,23 @@ void XInputWirelessGamepadHost::flush_out_queue()
 
 void XInputWirelessGamepadHost::send_link_requests(bool newly_connected)
 {
-    if (!send_out("controller-header-0842", controllerHeader842, sizeof(controllerHeader842)))
+    if (!send_out("h842", controllerHeader842, sizeof(controllerHeader842)))
     {
-        XINPUT_WIRELESS_DEBUG_PRINT("X360 wireless controller header queue full dev=%u itf=%u\r\n", m_dev_addr, m_interface);
+        XINPUT_WIRELESS_DEBUG_PRINT("x360w %u qfull hdr\r\n", m_interface);
         return;
     }
     if (newly_connected)
     {
         m_check_caps = millis() + 1000;
         m_caps_retries = 0;
-        if (!send_out("capabilities", capabilitiesRequest, sizeof(capabilitiesRequest)))
+        if (!send_out("caps", capabilitiesRequest, sizeof(capabilitiesRequest)))
         {
-            XINPUT_WIRELESS_DEBUG_PRINT("X360 wireless capabilities queue full dev=%u itf=%u\r\n", m_dev_addr, m_interface);
+            XINPUT_WIRELESS_DEBUG_PRINT("x360w %u qfull caps\r\n", m_interface);
         }
     }
-    if (!send_out("controller-header-0040", controllerHeader40, sizeof(controllerHeader40)))
+    if (!send_out("h40", controllerHeader40, sizeof(controllerHeader40)))
     {
-        XINPUT_WIRELESS_DEBUG_PRINT("X360 wireless controller header queue full dev=%u itf=%u\r\n", m_dev_addr, m_interface);
+        XINPUT_WIRELESS_DEBUG_PRINT("x360w %u qfull hdr\r\n", m_interface);
     }
 }
 
@@ -206,7 +203,6 @@ std::shared_ptr<UsbHostInterface> XInputWirelessGamepadHost::open(std::shared_pt
     usb_host_add_enumerating_interface(intf);
 
     *out_len = TUD_XINPUT_WIRELESS_CONTROLLER_DESC_LEN;
-    printf("found device: %d\r\n", intf->m_subtype);
     return intf;
 }
 
@@ -224,11 +220,11 @@ bool XInputWirelessGamepadHost::set_config()
     {
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
-    if (!send_out("controller-header-0840", controllerHeader840, sizeof(controllerHeader840)))
+    if (!send_out("h840", controllerHeader840, sizeof(controllerHeader840)))
     {
-        XINPUT_WIRELESS_DEBUG_PRINT("X360 wireless initial controller header queue full dev=%u itf=%u\r\n", m_dev_addr, m_interface);
+        XINPUT_WIRELESS_DEBUG_PRINT("x360w %u qfull hdr0\r\n", m_interface);
     }
-    send_out("presence", xbox360w_prescence, sizeof(xbox360w_prescence));
+    send_out("pres", xbox360w_prescence, sizeof(xbox360w_prescence));
     m_check_link = millis() + 1000;
     return true;
 }
@@ -237,11 +233,10 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
 {
     if (!(ep_addr & 0x80))
     {
-        if (m_out_pending)
+        if (m_out_pending && result != XFER_RESULT_SUCCESS)
         {
-            XINPUT_WIRELESS_DEBUG_PRINT("X360 wireless OUT complete t=%lu dev=%u itf=%u ep=%02x result=%d len=%lu data=%02x %02x %02x %02x\r\n",
-                   static_cast<unsigned long>(millis()), m_dev_addr, m_interface, ep_addr,
-                   result, static_cast<unsigned long>(xferred_bytes),
+            XINPUT_WIRELESS_DEBUG_PRINT("x360w %lu %u out err %d %02x%02x%02x%02x\r\n",
+                   static_cast<unsigned long>(millis()), m_interface, result,
                    m_ep_out_buf[0], m_ep_out_buf[1], m_ep_out_buf[2], m_ep_out_buf[3]);
         }
         if (m_out_pending && result != XFER_RESULT_SUCCESS &&
@@ -256,9 +251,8 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
     {
         if (result != XFER_RESULT_SUCCESS)
         {
-            XINPUT_WIRELESS_DEBUG_PRINT("X360 wireless IN error dev=%u itf=%u ep=%02x result=%d len=%lu found=%u\r\n",
-                   m_dev_addr, m_interface, ep_addr, result,
-                   static_cast<unsigned long>(xferred_bytes), m_found);
+            XINPUT_WIRELESS_DEBUG_PRINT("x360w %lu %u in err %d\r\n",
+                   static_cast<unsigned long>(millis()), m_interface, result);
         }
         if (result == XFER_RESULT_SUCCESS && xferred_bytes >= 2)
         {
@@ -266,7 +260,7 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
             if (header->id == 0x08 || (header->id == 0x00 && header->type == 0x0f))
             {
                 trace_wireless_report(m_dev_addr, m_interface, ep_addr, m_found,
-                                      xferred_bytes, m_ep_in_buf, "IN", "status/link");
+                                      xferred_bytes, m_ep_in_buf, "in", "status");
             }
             if (header->id == 0x08)
             {
@@ -275,11 +269,9 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                 {
                     if (m_found)
                     {
-                        XINPUT_WIRELESS_DEBUG_PRINT("X360 wireless disconnect t=%lu dev=%u itf=%u ep=%02x out_pending=%u out_data=%02x %02x %02x %02x queued=%lu next=%s submit_failures=%lu inputs=%lu last_input_age=%lu\r\n",
-                               static_cast<unsigned long>(millis()), m_dev_addr, m_interface, m_ep_out,
-                               m_out_pending, m_ep_out_buf[0], m_ep_out_buf[1], m_ep_out_buf[2], m_ep_out_buf[3],
-                               static_cast<unsigned long>(m_out_queue_count),
-                               m_out_queue_count ? m_out_queue[0].reason : "none",
+                        XINPUT_WIRELESS_DEBUG_PRINT("x360w %lu %u DISCONNECT pend=%u q=%lu fail=%lu n=%lu age=%lu\r\n",
+                               static_cast<unsigned long>(millis()), m_interface,
+                               m_out_pending, static_cast<unsigned long>(m_out_queue_count),
                                static_cast<unsigned long>(m_out_submit_failures),
                                static_cast<unsigned long>(m_input_count),
                                static_cast<unsigned long>(m_last_input_ms ? millis() - m_last_input_ms : 0));
@@ -311,9 +303,9 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                     {
                         m_check_link = millis() + 1000;
                     }
-                    if (!send_out("controller-header-0040", controllerHeader40, sizeof(controllerHeader40)))
+                    if (!send_out("h40", controllerHeader40, sizeof(controllerHeader40)))
                     {
-                        XINPUT_WIRELESS_DEBUG_PRINT("X360 wireless controller header queue full dev=%u itf=%u\r\n", m_dev_addr, m_interface);
+                        XINPUT_WIRELESS_DEBUG_PRINT("x360w %u qfull hdr\r\n", m_interface);
                     }
                 }
             }
@@ -331,7 +323,7 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                 else if (header->type != 0x0f && header->type != 0x05)
                 {
                     trace_wireless_report(m_dev_addr, m_interface, ep_addr, m_found,
-                                          xferred_bytes, m_ep_in_buf, "IN", "other");
+                                          xferred_bytes, m_ep_in_buf, "in", "other");
                 }
                 if ((header->type == 0x01 || header->type == 0x03) &&
                     xferred_bytes >= report_offset + sizeof(XInputGamepad_Data_t) &&
@@ -400,12 +392,12 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
         }
         if (!m_found && millis() > m_check_link)
         {
-            send_out("presence", xbox360w_prescence, sizeof(xbox360w_prescence));
+            send_out("pres", xbox360w_prescence, sizeof(xbox360w_prescence));
             m_check_link = millis() + 1000;
         }
         if (m_check_caps && millis() > m_check_caps)
         {
-            send_out("capabilities", capabilitiesRequest, sizeof(capabilitiesRequest));
+            send_out("caps", capabilitiesRequest, sizeof(capabilitiesRequest));
             m_check_caps = millis() + 1000;
         }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
@@ -426,7 +418,7 @@ void XInputWirelessGamepadHost::set_rumble(uint8_t left, uint8_t right)
 {
     if (!m_ep_out || !m_found) return;
     uint8_t buf[12] = {0x00, 0x01, 0x0f, 0xc0, 0x00, left, right, 0x00, 0x00, 0x00, 0x00, 0x00};
-    send_out("rumble", buf, sizeof(buf));
+    send_out("rmbl", buf, sizeof(buf));
 }
 
 void XInputWirelessGamepadHost::set_player_led(uint8_t player)
@@ -445,7 +437,7 @@ void XInputWirelessGamepadHost::set_player_led(uint8_t player)
     else if (target_player == 4) led_code = 9;
     if (led_code == 0) return;
     uint8_t buf[12] = {0x00, 0x00, 0x08, (uint8_t)(0x40 + led_code), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    if (send_out("player-led", buf, sizeof(buf)))
+    if (send_out("led", buf, sizeof(buf)))
     {
         m_led_set = true;
     }

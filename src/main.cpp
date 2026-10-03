@@ -97,11 +97,12 @@ public:
             return;
         }
         size_t packets_sent = 0;
-        while (packets_sent < max_packets_per_flush && !ring_buffer_is_empty_unsafe(&m_buffer) && can_send())
+        // Only queue into free slots; never wait on the PC, as that stalls tuh_task().
+        while (packets_sent < max_packets_per_flush && !ring_buffer_is_empty_unsafe(&m_buffer) && HIDConfigDevice::has_event_space())
         {
             tu_memclr(m_event.event.console.data, sizeof(m_event.event.console.data));
             ring_buffer_pop_unsafe(&m_buffer, m_event.event.console.data, sizeof(m_event.event.console.data) - 1);
-            HIDConfigDevice::send_event(m_event, true);
+            HIDConfigDevice::send_event(m_event, false);
             packets_sent++;
         }
     }
@@ -191,22 +192,17 @@ void hid_task(void)
             HIDConfigDevice::send_event(event, true);
             tud_task();
         }
-        printf("requested: %d current: %d init: %d\r\n", requested_mode, current_mode, config_mgr.get_reinit_time());
+        printf("reload mode %d->%d\r\n", current_mode, requested_mode);
         static uint32_t reload_count = 0;
         const auto before = heap_snapshot();
-        printf("reload heap #%lu before: used=%u free=%u (blocks=%u unclaimed=%u)\r\n",
-               static_cast<unsigned long>(++reload_count), static_cast<unsigned>(before.used),
-               static_cast<unsigned>(before.free_blocks + before.unclaimed),
-               static_cast<unsigned>(before.free_blocks),
-               static_cast<unsigned>(before.unclaimed));
+        ++reload_count;
         config_mgr.begin_reinit();
         load();
         config_mgr.finish_reinit(millis());
         const auto after = heap_snapshot();
-        printf("reload heap #%lu after: used=%u free=%u (blocks=%u unclaimed=%u) used_delta=%ld\r\n",
+        printf("reload #%lu heap used=%u free=%u d=%ld\r\n",
                static_cast<unsigned long>(reload_count), static_cast<unsigned>(after.used),
                static_cast<unsigned>(after.free_blocks + after.unclaimed),
-               static_cast<unsigned>(after.free_blocks), static_cast<unsigned>(after.unclaimed),
                static_cast<long>(after.used) - static_cast<long>(before.used));
         return;
     }
@@ -233,7 +229,7 @@ static void initialize_device_stack()
 
 void reinitialize_device_stack()
 {
-    printf("Reinitializing device stack\r\n");
+    printf("usbd reinit\r\n");
     ProfileManager::instance().deinitialize_device_bluetooth();
     tud_deinit(TUD_OPT_RHPORT);
     initialize_device_stack();

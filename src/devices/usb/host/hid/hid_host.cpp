@@ -35,7 +35,6 @@ std::shared_ptr<UsbHostInterface> HidHost::open(std::shared_ptr<UsbHostDevice> l
     const uint16_t drv_len = (uint16_t)(sizeof(tusb_desc_interface_t) + sizeof(tusb_hid_descriptor_hid_t) +
                                         desc_itf->bNumEndpoints * sizeof(tusb_desc_endpoint_t));
     uint8_t dev_addr = list->dev_addr();
-    printf("hidhost_open: %02x\r\n", dev_addr);
 
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
     p_desc = tu_desc_next(p_desc);
@@ -45,7 +44,7 @@ std::shared_ptr<UsbHostInterface> HidHost::open(std::shared_ptr<UsbHostDevice> l
 
     uint16_t vid, pid;
     tuh_vid_pid_get(dev_addr, &vid, &pid);
-    printf("vid_pid: %04x_%04x itf: %d len: %d\r\n", vid, pid, desc_itf->bInterfaceNumber, x_desc->wReportLength);
+    printf("hid %04x:%04x itf=%d len=%d\r\n", vid, pid, desc_itf->bInterfaceNumber, x_desc->wReportLength);
     tuh_descriptor_get_hid_report_sync(dev_addr, desc_itf->bInterfaceNumber, x_desc->bReportType, 0, temp_buf, x_desc->wReportLength);
     HID_ReportInfo_t *info = nullptr;
     auto parse_res = USB_ProcessHIDReport(temp_buf, x_desc->wReportLength, &info);

@@ -29,7 +29,7 @@ namespace
 }
 bool ProfileManager::changed_types()
 {
-    printf("ProfileManager::changed_types() called with m_subtypes_changed=%d, m_current_subtypes.size()=%zu, m_last_subtypes.size()=%zu\n", m_subtypes_changed, m_current_subtypes.size(), m_last_subtypes.size());
+    printf("subtypes changed=%d n=%zu was=%zu\r\n", m_subtypes_changed, m_current_subtypes.size(), m_last_subtypes.size());
     for (size_t i = 0; i < std::size(m_usb_instances); ++i)
     {
         if (m_usb_instances[i] != m_previous_usb_instances[i])
@@ -244,12 +244,11 @@ bool ProfileManager::assign_profile_to_devices(
         {
             continue;
         }
-        printf("Attempting to assign profile %u to assignment type %d\n", profile->profile_id, assignment_type);
 
         auto instance = InstanceFactory::create_instance(assignment_type, profile, usb_mode);
         if (instance)
         {
-            printf("Successfully assigned profile %u to assignment type %d\n", profile->profile_id, assignment_type);
+            printf("assign p=%u t=%d\r\n", profile->profile_id, assignment_type);
             if (exclusive)
             {
                 config_mgr.mark_seen_assignment(assignment_type);
@@ -358,7 +357,7 @@ std::shared_ptr<UsbDevice> ProfileManager::reuse_usb_instance(uint8_t id, Consol
         return nullptr;
     }
     auto instance = m_previous_usb_instances[id];
-    printf("Reusing USB instance at interface %u, mode %d, subtype %d\n", id, mode, subtype);
+    printf("usbd reuse itf=%u mode=%d sub=%d\r\n", id, mode, subtype);
     m_instances.push_back(instance);
     m_usb_instances[id] = instance;
     m_usb_reload_identities[id] = identity;

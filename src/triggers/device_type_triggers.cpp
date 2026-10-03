@@ -12,7 +12,7 @@
 
 static void claim_profile_device(Profile *profile, DeviceSlotKind kind, uint16_t slot_id, const std::shared_ptr<Device> &device)
 {
-    printf("Claiming profile device: profile=%d (%p) kind=%d slot=%d device=%d (%p)\n", profile->profile_id, profile, static_cast<int>(kind), slot_id, device->m_id, device.get());
+    printf("claim p=%d k=%d s=%d dev=%d\r\n", profile->profile_id, static_cast<int>(kind), slot_id, device->m_id);
     profile->claimed_devices[{kind, slot_id}] = device;
     auto instances = ProfileManager::instance().get_instances_for_profile(profile->profile_id);
     for (const auto &inst : instances)

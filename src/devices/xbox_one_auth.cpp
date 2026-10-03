@@ -1,17 +1,20 @@
 #include "devices/xbox_one_auth.hpp"
 #include "usb/auth_broker.h"
+#include "events.pb.h"
+#include "emulation/usb/hid_device.h"
 
 static constexpr uint16_t gip_max_chunk = 0x3A;
 
 XboxOneAuthDevice::XboxOneAuthDevice(proto_XboxOneAuthDevice device, uint16_t id)
     : Device(id),
-      m_chip(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock, device.has_resetPin ? device.resetPin : -1),
+      m_chip(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock, device.has_resetPin && device.resetPin >= 0 ? device.resetPin : -1),
       m_device(device)
 {
 }
 
 void XboxOneAuthDevice::begin()
 {
+    m_lastConnected = false;
     m_chip.begin();
 }
 
@@ -38,6 +41,13 @@ void XboxOneAuthDevice::handle_auth(XGIPProtocol *packet)
 void XboxOneAuthDevice::update(bool full_poll, bool send_events)
 {
     m_chip.tick();
+    bool connected = m_chip.is_ready();
+    if (m_lastConnected != connected || full_poll)
+    {
+        m_lastConnected = connected;
+        proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
+        HIDConfigDevice::send_event(event, true);
+    }
     // Only claim auth once the chip has answered, and never take over from another provider
     if (m_chip.is_ready() && !m_registered && !auth_broker.has_handler(ModeXboxOne))
     {
@@ -58,5 +68,5 @@ void XboxOneAuthDevice::update(bool full_poll, bool send_events)
 
 bool XboxOneAuthDevice::using_pin(uint8_t pin)
 {
-    return pin == m_device.i2c.scl || pin == m_device.i2c.sda || (m_device.has_resetPin && pin == m_device.resetPin);
+    return pin == m_device.i2c.scl || pin == m_device.i2c.sda || (m_device.has_resetPin && m_device.resetPin >= 0 && pin == m_device.resetPin);
 }

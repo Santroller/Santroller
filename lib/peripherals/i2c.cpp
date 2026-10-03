@@ -256,6 +256,7 @@ static void i2c_dma_next_queued(
     size_t wbuf_len = transfer->wbuf_len;
     uint8_t *rbuf = transfer->rbuf;
     size_t rbuf_len = transfer->rbuf_len;
+    uint16_t *data_cmds = transfer->cmds ? transfer->cmds : i2c_dma->data_cmds;
     i2c_dma->currentDevAddr = addr;
     i2c_dma->writing = (wbuf_len > 0);
     i2c_dma->reading = (rbuf_len > 0);
@@ -265,11 +266,11 @@ static void i2c_dma_next_queued(
         // Setup commands for each byte to write to the I2C bus.
         for (size_t i = 0; i != wbuf_len; ++i)
         {
-            i2c_dma->data_cmds[i] = wbuf[i];
+            data_cmds[i] = wbuf[i];
         }
 
         // The first byte written must be preceded by a start.
-        i2c_dma->data_cmds[0] |= I2C_IC_DATA_CMD_RESTART_BITS;
+        data_cmds[0] |= I2C_IC_DATA_CMD_RESTART_BITS;
     }
 
     if (i2c_dma->reading)
@@ -277,15 +278,15 @@ static void i2c_dma_next_queued(
         // Setup commands for each byte to read from the I2C bus.
         for (size_t i = 0; i != rbuf_len; ++i)
         {
-            i2c_dma->data_cmds[wbuf_len + i] = I2C_IC_DATA_CMD_CMD_BITS;
+            data_cmds[wbuf_len + i] = I2C_IC_DATA_CMD_CMD_BITS;
         }
 
         // The first byte read must be preceded by a start/restart.
-        i2c_dma->data_cmds[wbuf_len] |= I2C_IC_DATA_CMD_RESTART_BITS;
+        data_cmds[wbuf_len] |= I2C_IC_DATA_CMD_RESTART_BITS;
     }
 
     // The last byte transfered must be followed by a stop.
-    i2c_dma->data_cmds[wbuf_len + rbuf_len - 1] |= I2C_IC_DATA_CMD_STOP_BITS;
+    data_cmds[wbuf_len + rbuf_len - 1] |= I2C_IC_DATA_CMD_STOP_BITS;
 
     // Tell the I2C peripheral the adderss of the device for the transfer.
     i2c_dma_set_target_addr(i2c_dma->i2c, addr);
@@ -300,7 +301,7 @@ static void i2c_dma_next_queued(
         i2c_dma_rx_channel_configure(i2c_dma->i2c, i2c_dma->rx_chan, rbuf, rbuf_len);
     }
     i2c_dma_tx_channel_configure(
-        i2c_dma->i2c, i2c_dma->tx_chan, i2c_dma->data_cmds, wbuf_len + rbuf_len);
+        i2c_dma->i2c, i2c_dma->tx_chan, data_cmds, wbuf_len + rbuf_len);
     i2c_dma->timeout_alarm_id = add_alarm_in_ms(I2C_TRANSFER_TIMEOUT_MS, timeout_handler, i2c_dma, true);
 }
 
@@ -423,10 +424,21 @@ void I2CMasterInterface::dmaWriteRead(uint8_t addr,
                                       uint8_t *rbuf,
                                       size_t rbuf_len)
 {
-    if (!i2c_dma)
+    dmaWriteRead(addr, wbuf, wbuf_len, rbuf, rbuf_len, nullptr);
+}
+
+void I2CMasterInterface::dmaWriteRead(uint8_t addr,
+                                      const uint8_t *wbuf,
+                                      size_t wbuf_len,
+                                      uint8_t *rbuf,
+                                      size_t rbuf_len,
+                                      uint16_t *cmds)
+{
+    if (!i2c_dma || (!cmds && wbuf_len + rbuf_len > I2C_MAX_TRANSFER_SIZE))
     {
         return;
     }
+    i2c_dma->waitingTransfers[addr].cmds = cmds;
     i2c_dma->waitingTransfers[addr].addr = addr;
     i2c_dma->waitingTransfers[addr].wbuf_len = wbuf_len;
     i2c_dma->waitingTransfers[addr].rbuf_len = rbuf_len;

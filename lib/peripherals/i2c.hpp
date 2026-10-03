@@ -25,6 +25,7 @@ typedef struct
     size_t wbuf_len;
     uint8_t* rbuf;
     size_t rbuf_len;
+    uint16_t* cmds;
 } i2c_dma_transfer_t;
 typedef struct i2c_dma_s
 {
@@ -71,6 +72,14 @@ public:
         size_t wbuf_len,
         uint8_t *rbuf,
         size_t rbuf_len);
+    // For transfers larger than I2C_MAX_TRANSFER_SIZE: cmds must hold wbuf_len + rbuf_len entries
+    void dmaWriteRead(
+        uint8_t addr,
+        const uint8_t *wbuf,
+        size_t wbuf_len,
+        uint8_t *rbuf,
+        size_t rbuf_len,
+        uint16_t *cmds);
 
 private:
     i2c_dma_t *i2c_dma = nullptr;

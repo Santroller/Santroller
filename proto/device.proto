@@ -36,6 +36,11 @@ message AccelerometerDevice { required I2CDevice i2c = 1; }
 
 message Max1704xDevice { required I2CDevice i2c = 1; }
 
+message XboxOneAuthDevice {
+  required I2CDevice i2c = 1;
+  optional int32 resetPin = 2;
+}
+
 message Mpr121Device {
   required I2CDevice i2c = 1;
   required int32 touchpadCount = 2;
@@ -213,6 +218,7 @@ message Device {
     ToggleDevice toggle = 35;
     DMXDevice dmx = 36;
     InfiniumFaderDevice infiniumFader = 38;
+    XboxOneAuthDevice xboxOneAuth = 39;
   }
 }
 message InfiniumFaderDevice {

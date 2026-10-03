@@ -345,6 +345,7 @@ add_executable(
   src/devices/midi.cpp
   src/devices/gh5neck.cpp
   src/devices/max1704x.cpp
+  src/devices/xbox_one_auth.cpp
   src/devices/mpr121.cpp
   src/devices/ws2812.cpp
   src/devices/apa102.cpp
@@ -466,6 +467,7 @@ target_link_libraries(
   xsm3
   matrix
   max1704x
+  xbox_one_auth
   mpr121
   ads1115
   multiplexer

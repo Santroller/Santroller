@@ -11,6 +11,7 @@ public:
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);
+    bool matches_reload_config(const proto_Device &config) const override;
     bool using_pin(uint8_t pin);
     MidiSerial serial;
 

@@ -2,20 +2,25 @@
 #include "wii_extension_backend.h"
 #include <hardware/gpio.h>
 #include <pico/time.h>
+#include <hardware/sync.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <pico/i2c_slave.h>
 static wii_extension_context_t context_0;
 static wii_extension_context_t context_1;
+static uint8_t extension_id_for_subtype(SubType type)
+{
+    return type == GuitarHeroGuitar ? WII_EXTENSION_GUITAR :
+           type == GuitarHeroDrums ? WII_EXTENSION_DRUMS :
+           type == DjHeroTurntable ? WII_EXTENSION_TURNTABLE :
+           type == Taiko ? WII_EXTENSION_TAIKO :
+           WII_EXTENSION_CLASSIC;
+}
 static void init(wii_extension_context_t *context)
 {
-    uint8_t extension_id = context->type == GuitarHeroGuitar ? WII_EXTENSION_GUITAR :
-                           context->type == GuitarHeroDrums ? WII_EXTENSION_DRUMS :
-                           context->type == DjHeroTurntable ? WII_EXTENSION_TURNTABLE :
-                           context->type == Taiko ? WII_EXTENSION_TAIKO :
-                           WII_EXTENSION_CLASSIC;
-    wii_extension_backend_init(context->registers, &context->encrypted, extension_id);
+    wii_extension_backend_init(context->registers, &context->encrypted,
+                               extension_id_for_subtype(context->type));
 }
 static void i2c_slave_handler(i2c_inst_t *i2c, wii_extension_context_t *context, i2c_slave_event_t event)
 {
@@ -101,7 +106,18 @@ void WiiExtensionEmulation::begin(SubType type)
     }
     if (m_context)
     {
-        end();
+        uint8_t registers[256];
+        bool encrypted = false;
+        wii_extension_backend_init(registers, &encrypted, extension_id_for_subtype(type));
+
+        // Leave I2C and the Wiimote's encryption session intact while changing
+        // the advertised extension and calibration data.
+        uint32_t irq_state = save_and_disable_interrupts();
+        memcpy(&m_context->registers[0x20], &registers[0x20], 0x20);
+        memcpy(&m_context->registers[0xFA], &registers[0xFA], 6);
+        m_context->type = type;
+        restore_interrupts(irq_state);
+        return;
     }
     if (m_block == 0)
     {

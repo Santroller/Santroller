@@ -189,6 +189,21 @@ USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_
     printf("UsbHostHardwareDevice: %p\r\n", this);
 }
 
+bool USBHostHardwareDevice::matches_reload_config(const proto_Device &config) const
+{
+    if (config.which_device != proto_Device_usbHost_tag)
+    {
+        return false;
+    }
+    const auto &device = config.device.usbHost;
+    return m_device.firstPin == device.firstPin &&
+           m_device.enable5v == device.enable5v &&
+           m_device.dmFirst == device.dmFirst &&
+           m_device.mappingMode == device.mappingMode &&
+           m_device.has_noteHoldTime == device.has_noteHoldTime &&
+           (!device.has_noteHoldTime || m_device.noteHoldTime == device.noteHoldTime);
+}
+
 USBHostHardwareDevice::~USBHostHardwareDevice()
 {
     printf("USBHostHardwareDevice destructor\r\n");

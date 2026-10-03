@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "stdio.h"
 #include <algorithm>
+#include <cstring>
 PSXEmulationDevice::PSXEmulationDevice(const DeviceReloadState *state, proto_PSXEmulationDevice device, uint16_t id)
     : Device(id), m_device(device), m_controller(device.clockPin, device.commandPin, device.dataPin, device.attentionPin, device.acknowledgePin)
 {
@@ -14,6 +15,12 @@ PSXEmulationDevice::PSXEmulationDevice(const DeviceReloadState *state, proto_PSX
     {
         m_last_communicating = state->psx_emulation_communicating;
     }
+}
+
+bool PSXEmulationDevice::matches_reload_config(const proto_Device &config) const
+{
+    return config.which_device == proto_Device_psxEmulation_tag &&
+           memcmp(&m_device, &config.device.psxEmulation, sizeof(m_device)) == 0;
 }
 
 void PSXEmulationDevice::save_reload_state(DeviceReloadState &state) const

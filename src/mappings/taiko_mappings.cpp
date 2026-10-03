@@ -12,7 +12,7 @@ TaikoButtonMapping::TaikoButtonMapping(proto_Mapping mapping, std::unique_ptr<In
 void TaikoButtonMapping::update_switch(uint8_t *buf)
 {
     auto &report = *reinterpret_cast<SwitchArcadeReport *>(buf);
-    switch_arcade_update_button(m_mapping, m_last_value, report);
+    switch_arcade_update_button(m_mapping.mapping, m_last_value, report);
 }
 
 void TaikoButtonMapping::update_wii(uint8_t, uint8_t *buf)
@@ -38,7 +38,7 @@ TaikoAxisMapping::TaikoAxisMapping(proto_Mapping mapping, std::unique_ptr<Input>
 void TaikoAxisMapping::update_switch(uint8_t *buf)
 {
     auto &report = *reinterpret_cast<SwitchArcadeReport *>(buf);
-    switch_arcade_update_axis(m_mapping, m_calibrated_value, m_centered, report);
+    switch_arcade_update_axis(m_mapping.mapping, m_calibrated_value, m_centered, report);
 }
 
 void TaikoAxisMapping::update_ps3(uint8_t *buf)

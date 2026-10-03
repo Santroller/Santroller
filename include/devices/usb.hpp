@@ -17,6 +17,7 @@ public:
     void end(bool full);
     void update(bool full_poll, bool send_events);
     void rescan(bool first);
+    bool matches_reload_config(const proto_Device &config) const override;
     bool using_pin(uint8_t pin);
     bool is_assignable() const override { return false; }
     bool is_usb_type(SubType type) override { return false; }

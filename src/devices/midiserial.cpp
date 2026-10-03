@@ -9,6 +9,20 @@ MidiSerialDevice::MidiSerialDevice(const DeviceReloadState* state, proto_SerialM
     m_device(device)
 {
 }
+bool MidiSerialDevice::matches_reload_config(const proto_Device &config) const
+{
+    if (config.which_device != proto_Device_midiSerial_tag)
+    {
+        return false;
+    }
+    const auto &device = config.device.midiSerial;
+    return m_device.uart.block == device.uart.block &&
+           m_device.uart.tx == device.uart.tx &&
+           m_device.uart.rx == device.uart.rx &&
+           m_device.uart.baudrate == device.uart.baudrate &&
+           m_device.has_noteHoldTime == device.has_noteHoldTime &&
+           (!device.has_noteHoldTime || m_device.noteHoldTime == device.noteHoldTime);
+}
 void MidiSerialDevice::begin()
 {
 }

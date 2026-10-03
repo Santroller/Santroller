@@ -92,6 +92,7 @@ public:
     XInputWirelessGamepadHost(uint8_t dev_addr, uint8_t interface, uint16_t id);
     bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+    void update(bool full_poll, bool send_events) override;
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
     bool tick_digital(proto_Output &type);
     uint16_t tick_analog(proto_Output &type);
@@ -101,6 +102,18 @@ public:
     bool has_player_led() const override { return true; }
 
 private:
+    bool send_out(const char *reason, const uint8_t *packet, uint8_t len);
+    void flush_out_queue();
+    void send_link_requests(bool newly_connected);
+    struct OutCommand
+    {
+        const char *reason;
+        uint8_t length;
+        uint8_t data[12];
+    };
+    static constexpr size_t out_queue_capacity = 6;
+    OutCommand m_out_queue[out_queue_capacity] = {};
+    size_t m_out_queue_count = 0;
     uint8_t m_ep_in;
     uint8_t m_ep_out;
     uint8_t m_ep_in_size;
@@ -115,6 +128,12 @@ private:
     uint8_t m_last_player_led = 0;
     bool m_led_set = false;
     bool m_wt = false;
+    bool m_out_pending = false;
+    uint32_t m_out_submit_failures = 0;
+    uint32_t m_input_count = 0;
+    uint32_t m_last_input_ms = 0;
+    uint32_t m_next_input_stats_ms = 0;
+    uint32_t m_reported_input_count = 0;
 };
 class XInputWirelessAudioHost : public UsbHostInterface
 {

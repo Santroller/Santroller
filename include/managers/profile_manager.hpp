@@ -8,6 +8,7 @@
 #include <algorithm>
 #include "profiles/profile.hpp"
 #include "instance.hpp"
+#include "emulation/usb/device.hpp"
 #include "config.pb.h"
 
 class Device;
@@ -37,7 +38,7 @@ public:
     );
     bool changed_types();
     
-    void register_instance(std::shared_ptr<Instance> instance, std::shared_ptr<Profile> profile);
+    void register_instance(std::shared_ptr<Instance> instance, std::shared_ptr<Profile> profile, bool usb_instance);
     void remove_instance(std::shared_ptr<Instance> instance);
     
     bool has_active_instances() const;
@@ -87,6 +88,10 @@ public:
     }
     void clear_all();
     void prepare_for_config_reload();
+    void finish_config_reload();
+    std::shared_ptr<UsbDevice> reuse_usb_instance(uint8_t id, ConsoleMode mode, SubType subtype, bool auxiliary);
+    void set_usb_reload_identity(uint8_t id, ConsoleMode mode, SubType subtype, bool auxiliary);
+    void finish_usb_instance_initialization(uint8_t id);
     void initialize_device_bluetooth();
     void deinitialize_device_bluetooth();
     
@@ -114,9 +119,6 @@ public:
     void map_usb_instance_epout(uint8_t ep, uint8_t interface_id);
     std::shared_ptr<UsbDevice> get_emulated_device(ConsoleMode mode);
     void set_emulated_device(ConsoleMode mode, std::shared_ptr<UsbDevice> device);
-    std::shared_ptr<XboxOneGamepadDevice> take_preserved_xone();
-    void restore_preserved_xone(std::shared_ptr<XboxOneGamepadDevice> device);
-    void discard_preserved_devices();
 
 private:
     ProfileManager() = default;
@@ -130,12 +132,25 @@ private:
     std::vector<SubType> m_current_subtypes;
     bool m_subtypes_changed = false;
     bool m_was_legacy_adapter = false;
-    std::shared_ptr<XboxOneGamepadDevice> m_preserved_xone = nullptr;
     std::unordered_map<uint32_t, std::vector<std::shared_ptr<Instance>>> m_profile_to_instance;
     
     std::vector<std::shared_ptr<Instance>> m_instances;
     std::shared_ptr<UsbDevice> m_usb_instances[32];
     std::shared_ptr<UsbDevice> m_usb_instances_by_epin[16];
     std::shared_ptr<UsbDevice> m_usb_instances_by_epout[16];
+    struct UsbReloadIdentity
+    {
+        ConsoleMode mode = ModeHid;
+        SubType subtype = static_cast<SubType>(0);
+        bool auxiliary = false;
+        bool valid = false;
+        UsbDevice::AllocationState before = {};
+        UsbDevice::AllocationState after = {};
+    };
+    UsbReloadIdentity m_usb_reload_identities[32] = {};
+    UsbReloadIdentity m_previous_usb_reload_identities[32] = {};
+    std::shared_ptr<UsbDevice> m_previous_usb_instances[32];
+    std::shared_ptr<UsbDevice> m_previous_usb_instances_by_epin[16];
+    std::shared_ptr<UsbDevice> m_previous_usb_instances_by_epout[16];
     std::map<ConsoleMode, std::shared_ptr<UsbDevice>> m_emulated_devices;
 };

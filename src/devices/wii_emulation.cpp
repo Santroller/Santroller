@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "stdio.h"
 #include <algorithm>
+#include <cstring>
 WiiExtensionEmulationDevice::WiiExtensionEmulationDevice(const DeviceReloadState *state, proto_WiiEmulationDevice device, uint16_t id)
     : Device(id), m_device(device), m_controller(device.i2c.block, device.i2c.sda, device.i2c.scl)
 {
@@ -14,6 +15,12 @@ WiiExtensionEmulationDevice::WiiExtensionEmulationDevice(const DeviceReloadState
     {
         m_last_communicating = state->wii_emulation_communicating;
     }
+}
+
+bool WiiExtensionEmulationDevice::matches_reload_config(const proto_Device &config) const
+{
+    return config.which_device == proto_Device_wiiEmulation_tag &&
+           memcmp(&m_device, &config.device.wiiEmulation, sizeof(m_device)) == 0;
 }
 
 void WiiExtensionEmulationDevice::save_reload_state(DeviceReloadState &state) const

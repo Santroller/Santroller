@@ -20,6 +20,7 @@ public:
     bool is_wii_device() const override { return true; }
     bool using_pin(uint8_t pin);
     void save_reload_state(DeviceReloadState& state) const override;
+    bool matches_reload_config(const proto_Device &config) const override;
     void set_euphoria_led(bool state) override;
     bool has_euphoria_led() const override;
 

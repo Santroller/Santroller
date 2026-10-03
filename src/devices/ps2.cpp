@@ -19,6 +19,23 @@ PS2Device::PS2Device(const DeviceReloadState *state, proto_PSXDevice device, uin
     }
 }
 
+bool PS2Device::matches_reload_config(const proto_Device &config) const
+{
+    if (config.which_device != proto_Device_psx_tag)
+    {
+        return false;
+    }
+    const auto &device = config.device.psx;
+    return m_device.spi.block == device.spi.block &&
+           m_device.spi.sck == device.spi.sck &&
+           m_device.spi.mosi == device.spi.mosi &&
+           m_device.spi.miso == device.spi.miso &&
+           m_device.spi.clock == device.spi.clock &&
+           m_device.attPin == device.attPin &&
+           m_device.ackPin == device.ackPin &&
+           m_device.mappingMode == device.mappingMode;
+}
+
 void PS2Device::save_reload_state(DeviceReloadState &state) const
 {
     state.valid = true;

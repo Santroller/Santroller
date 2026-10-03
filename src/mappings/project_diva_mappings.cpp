@@ -11,7 +11,7 @@ ProjectDivaButtonMapping::ProjectDivaButtonMapping(proto_Mapping mapping, std::u
 void ProjectDivaButtonMapping::update_switch(uint8_t *buf)
 {
     auto &report = *reinterpret_cast<SwitchArcadeReport *>(buf);
-    switch_arcade_update_button(m_mapping, m_last_value, report);
+    switch_arcade_update_button(m_mapping.mapping, m_last_value, report);
 }
 
 void ProjectDivaButtonMapping::update_pdloader(uint8_t *buf)
@@ -41,7 +41,7 @@ void ProjectDivaAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 void ProjectDivaAxisMapping::update_switch(uint8_t *buf)
 {
     auto &report = *reinterpret_cast<SwitchArcadeReport *>(buf);
-    switch_arcade_update_axis(m_mapping, m_calibrated_value, m_centered, report);
+    switch_arcade_update_axis(m_mapping.mapping, m_calibrated_value, m_centered, report);
     if (m_mapping.mapping.which_mapping != proto_Output_divaAxis_tag)
         return;
     switch (m_mapping.mapping.mapping.divaAxis)

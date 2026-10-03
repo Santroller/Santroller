@@ -85,18 +85,9 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
             if (existing_dev)
             {
                 existing_dev->profiles.push_back(profile);
-                profile_mgr.register_instance(existing_dev, profile);
+                profile_mgr.register_instance(existing_dev, profile, true);
                 printf("Attaching profile to existing Xbox One instance, total profiles: %zu\n", existing_dev->profiles.size());
                 return existing_dev;
-            }
-            auto preserved = profile_mgr.take_preserved_xone();
-            if (preserved)
-            {
-                profile_mgr.restore_preserved_xone(preserved);
-                setup_instance_from_profile(preserved, profile);
-                profile_mgr.register_instance(preserved, profile);
-                printf("Restored preserved Xbox One instance, total profiles: %zu\n", preserved->profiles.size());
-                return preserved;
             }
         }
         if (usb_mode == ModePs5)
@@ -126,8 +117,18 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
                 return nullptr;
             }
         }
-        instance = std::static_pointer_cast<Instance>(
-            create_usb_instance(usb_mode, profile->subtype));
+        auto reused = profile_mgr.reuse_usb_instance(profile_mgr.usb_instance_count(), usb_mode, profile->subtype, false);
+        if (reused)
+        {
+            if (!profile_mgr.get_emulated_device(usb_mode))
+            {
+                profile_mgr.set_emulated_device(usb_mode, reused);
+            }
+            setup_instance_from_profile(reused, profile);
+            profile_mgr.register_instance(reused, profile, true);
+            return reused;
+        }
+        instance = create_usb_instance(usb_mode, profile->subtype);
     }
 
     if (!instance)
@@ -137,9 +138,13 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
 
     profile_mgr.add_instance(instance);
     setup_instance_from_profile(instance, profile);
-    profile_mgr.register_instance(instance, profile);
+    profile_mgr.register_instance(instance, profile, (assignment_mask & ProfileAssignMask_AssignUsb) != 0);
     printf("Creating instance for profile with subtype: %d\n", profile->subtype);
     instance->initialize();
+    if (assignment_mask & ProfileAssignMask_AssignUsb)
+    {
+        profile_mgr.finish_usb_instance_initialization(std::static_pointer_cast<UsbDevice>(instance)->interface_id);
+    }
 
     return instance;
 }
@@ -231,6 +236,7 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
     {
         instance->interface_id = profile_mgr.usb_instance_count();
         profile_mgr.set_usb_instance(instance->interface_id, instance);
+        profile_mgr.set_usb_reload_identity(instance->interface_id, mode, subtype, false);
     }
 
     return instance;

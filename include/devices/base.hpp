@@ -98,6 +98,7 @@ public:
     virtual void rescan(bool first);
     virtual void handle_command(proto_Command command) {};
     virtual void save_reload_state(DeviceReloadState &state) const { state.valid = true; }
+    virtual bool matches_reload_config(const proto_Device &config) const { return false; }
     virtual void set_rumble(uint8_t left, uint8_t right) {}
     virtual void set_player_led(uint8_t player) {}
     virtual void set_lightbar(uint8_t r, uint8_t g, uint8_t b) {}

@@ -2,6 +2,7 @@
 #include <pb_encode.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <malloc.h>
 #include <map>
 #include "main.hpp"
 #include "config/config.hpp"
@@ -150,6 +151,25 @@ bool mode_recently_changed()
 {
     return ConfigManager::instance().mode_recently_changed(millis());
 }
+
+extern "C" void *_sbrk(int increment);
+extern char __StackLimit;
+
+struct HeapSnapshot
+{
+    size_t used;
+    size_t free_blocks;
+    size_t unclaimed;
+};
+
+static HeapSnapshot heap_snapshot()
+{
+    const auto info = mallinfo();
+    const auto break_address = reinterpret_cast<uintptr_t>(_sbrk(0));
+    const auto limit = reinterpret_cast<uintptr_t>(&__StackLimit);
+    return {info.uordblks, info.fordblks, limit > break_address ? limit - break_address : 0};
+}
+
 void hid_task(void)
 {
     auto& config_mgr = ConfigManager::instance();
@@ -172,9 +192,22 @@ void hid_task(void)
             tud_task();
         }
         printf("requested: %d current: %d init: %d\r\n", requested_mode, current_mode, config_mgr.get_reinit_time());
+        static uint32_t reload_count = 0;
+        const auto before = heap_snapshot();
+        printf("reload heap #%lu before: used=%u free=%u (blocks=%u unclaimed=%u)\r\n",
+               static_cast<unsigned long>(++reload_count), static_cast<unsigned>(before.used),
+               static_cast<unsigned>(before.free_blocks + before.unclaimed),
+               static_cast<unsigned>(before.free_blocks),
+               static_cast<unsigned>(before.unclaimed));
         config_mgr.begin_reinit();
         load();
         config_mgr.finish_reinit(millis());
+        const auto after = heap_snapshot();
+        printf("reload heap #%lu after: used=%u free=%u (blocks=%u unclaimed=%u) used_delta=%ld\r\n",
+               static_cast<unsigned long>(reload_count), static_cast<unsigned>(after.used),
+               static_cast<unsigned>(after.free_blocks + after.unclaimed),
+               static_cast<unsigned>(after.free_blocks), static_cast<unsigned>(after.unclaimed),
+               static_cast<long>(after.used) - static_cast<long>(before.used));
         return;
     }
     update();
@@ -264,9 +297,28 @@ int main()
     printf("init %d\r\n", ConfigManager::instance().get_current_mode());
     initialize_device_stack();
     ConfigManager::instance().finish_reinit(millis());
-    
+
+    uint32_t last_loop_us = micros();
+    uint32_t next_loop_stats_ms = millis() + 4000;
+    uint32_t max_loop_gap_us = 0;
     while (1)
     {
+        const uint32_t loop_us = micros();
+        const uint32_t loop_gap_us = loop_us - last_loop_us;
+        last_loop_us = loop_us;
+        if (loop_gap_us > max_loop_gap_us)
+        {
+            max_loop_gap_us = loop_gap_us;
+        }
+        const uint32_t loop_ms = millis();
+        if (static_cast<int32_t>(loop_ms - next_loop_stats_ms) >= 0)
+        {
+            printf("Main loop stats t=%lu max_gap_us=%lu\r\n",
+                   static_cast<unsigned long>(loop_ms),
+                   static_cast<unsigned long>(max_loop_gap_us));
+            max_loop_gap_us = 0;
+            next_loop_stats_ms = loop_ms + 4000;
+        }
         tud_task(); // tinyusb device task
         tuh_task();
         hid_task();

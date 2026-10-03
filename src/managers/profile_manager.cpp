@@ -29,18 +29,21 @@ namespace
 }
 bool ProfileManager::changed_types()
 {
-    auto dev = get_emulated_device(ModeXboxOne);
-    if (m_was_legacy_adapter && dev)
+    printf("ProfileManager::changed_types() called with m_subtypes_changed=%d, m_current_subtypes.size()=%zu, m_last_subtypes.size()=%zu\n", m_subtypes_changed, m_current_subtypes.size(), m_last_subtypes.size());
+    for (size_t i = 0; i < std::size(m_usb_instances); ++i)
     {
-        auto xone = std::static_pointer_cast<XboxOneGamepadDevice>(dev);
-        if (xone && xone->is_legacy_adapter())
+        if (m_usb_instances[i] != m_previous_usb_instances[i])
         {
-            printf("ProfileManager::changed_types(): preserving legacy adapter emulation without USB reset\n");
-            return false;
+            return true;
         }
     }
-    printf("ProfileManager::changed_types() called with m_subtypes_changed=%d, m_current_subtypes.size()=%zu, m_last_subtypes.size()=%zu\n", m_subtypes_changed, m_current_subtypes.size(), m_last_subtypes.size());
-    return m_subtypes_changed || (m_current_subtypes.size() < m_last_subtypes.size());
+    auto dev = get_emulated_device(ModeXboxOne);
+    if (m_was_legacy_adapter && dev &&
+        std::static_pointer_cast<XboxOneGamepadDevice>(dev)->is_legacy_adapter())
+    {
+        return false;
+    }
+    return m_subtypes_changed || m_current_subtypes.size() < m_last_subtypes.size();
 }
 void ProfileManager::add_profile(uint32_t profile_id, std::shared_ptr<Profile> profile)
 {
@@ -98,12 +101,16 @@ std::shared_ptr<Profile> ProfileManager::get_profile(uint32_t profile_id, size_t
     return it->second.front();
 }
 
-void ProfileManager::register_instance(std::shared_ptr<Instance> instance, std::shared_ptr<Profile> profile)
+void ProfileManager::register_instance(std::shared_ptr<Instance> instance, std::shared_ptr<Profile> profile, bool usb_instance)
 {
-    m_current_subtypes.push_back(instance->subtype);
-    if (m_current_subtypes.size() > m_last_subtypes.size() || m_last_subtypes[m_current_subtypes.size() - 1] != instance->subtype)
+    // Only USB instances affect descriptors; PS2/Wii/Bluetooth assignments must not reset the PC link.
+    if (usb_instance)
     {
-        m_subtypes_changed = true;
+        m_current_subtypes.push_back(instance->subtype);
+        if (m_current_subtypes.size() > m_last_subtypes.size() || m_last_subtypes[m_current_subtypes.size() - 1] != instance->subtype)
+        {
+            m_subtypes_changed = true;
+        }
     }
     if (std::find(m_active_instances.begin(), m_active_instances.end(), instance) == m_active_instances.end())
     {
@@ -280,20 +287,21 @@ void ProfileManager::prepare_for_config_reload()
     m_last_subtypes = m_current_subtypes;
     m_current_subtypes.clear();
     m_subtypes_changed = false;
+    auto xone = get_emulated_device(ModeXboxOne);
+    m_was_legacy_adapter = xone && std::static_pointer_cast<XboxOneGamepadDevice>(xone)->is_legacy_adapter();
+    std::copy(std::begin(m_usb_instances), std::end(m_usb_instances), std::begin(m_previous_usb_instances));
+    std::copy(std::begin(m_usb_instances_by_epin), std::end(m_usb_instances_by_epin), std::begin(m_previous_usb_instances_by_epin));
+    std::copy(std::begin(m_usb_instances_by_epout), std::end(m_usb_instances_by_epout), std::begin(m_previous_usb_instances_by_epout));
+    std::copy(std::begin(m_usb_reload_identities), std::end(m_usb_reload_identities), std::begin(m_previous_usb_reload_identities));
+    std::fill(std::begin(m_usb_reload_identities), std::end(m_usb_reload_identities), UsbReloadIdentity{});
 
-    // Check if we have an active Xbox One device emulating the legacy adapter
-    m_was_legacy_adapter = false;
-    m_preserved_xone = nullptr;
-    auto xone_it = m_emulated_devices.find(ModeXboxOne);
-    if (xone_it != m_emulated_devices.end() && xone_it->second)
+    for (size_t i = 0; i < std::size(m_previous_usb_instances); ++i)
     {
-        auto xone = std::static_pointer_cast<XboxOneGamepadDevice>(xone_it->second);
-        // Keep the Xbox One instance across reloads so its GIP handshake/auth
-        // state survives; a fresh instance would sit unauthenticated since the
-        // console won't re-run the handshake without a re-enumeration.
-        m_was_legacy_adapter = xone->is_legacy_adapter();
-        m_preserved_xone = xone;
-        m_preserved_xone->profiles.clear();
+        if (m_previous_usb_instances[i] && m_previous_usb_reload_identities[i].valid &&
+            !m_previous_usb_reload_identities[i].auxiliary)
+        {
+            m_previous_usb_instances[i]->profiles.clear();
+        }
     }
 
     m_instances.clear();
@@ -305,6 +313,68 @@ void ProfileManager::prepare_for_config_reload()
     std::fill(std::begin(m_usb_instances), std::end(m_usb_instances), nullptr);
     std::fill(std::begin(m_usb_instances_by_epin), std::end(m_usb_instances_by_epin), nullptr);
     std::fill(std::begin(m_usb_instances_by_epout), std::end(m_usb_instances_by_epout), nullptr);
+}
+
+void ProfileManager::finish_config_reload()
+{
+    // The old endpoint buffers must remain alive until the device stack has stopped using them.
+    std::fill(std::begin(m_previous_usb_instances), std::end(m_previous_usb_instances), nullptr);
+    std::fill(std::begin(m_previous_usb_instances_by_epin), std::end(m_previous_usb_instances_by_epin), nullptr);
+    std::fill(std::begin(m_previous_usb_instances_by_epout), std::end(m_previous_usb_instances_by_epout), nullptr);
+}
+
+void ProfileManager::set_usb_reload_identity(uint8_t id, ConsoleMode mode, SubType subtype, bool auxiliary)
+{
+    if (id < std::size(m_usb_reload_identities))
+    {
+        m_usb_reload_identities[id] = {mode, subtype, auxiliary, true, UsbDevice::allocation_state(), {}};
+    }
+}
+
+void ProfileManager::finish_usb_instance_initialization(uint8_t id)
+{
+    if (id < std::size(m_usb_reload_identities) && m_usb_reload_identities[id].valid)
+    {
+        m_usb_reload_identities[id].after = UsbDevice::allocation_state();
+    }
+}
+
+std::shared_ptr<UsbDevice> ProfileManager::reuse_usb_instance(uint8_t id, ConsoleMode mode, SubType subtype, bool auxiliary)
+{
+    if (id >= std::size(m_previous_usb_instances))
+    {
+        return nullptr;
+    }
+    const auto &identity = m_previous_usb_reload_identities[id];
+    if (!identity.valid || identity.mode != mode || identity.subtype != subtype ||
+        identity.auxiliary != auxiliary || !m_previous_usb_instances[id])
+    {
+        return nullptr;
+    }
+    const auto current = UsbDevice::allocation_state();
+    if (current.epin != identity.before.epin || current.epout != identity.before.epout ||
+        current.strid != identity.before.strid)
+    {
+        return nullptr;
+    }
+    auto instance = m_previous_usb_instances[id];
+    printf("Reusing USB instance at interface %u, mode %d, subtype %d\n", id, mode, subtype);
+    m_instances.push_back(instance);
+    m_usb_instances[id] = instance;
+    m_usb_reload_identities[id] = identity;
+    UsbDevice::restore_allocation_state(identity.after);
+    for (size_t ep = 0; ep < std::size(m_usb_instances_by_epin); ++ep)
+    {
+        if (m_previous_usb_instances_by_epin[ep] == instance)
+        {
+            m_usb_instances_by_epin[ep] = instance;
+        }
+        if (m_previous_usb_instances_by_epout[ep] == instance)
+        {
+            m_usb_instances_by_epout[ep] = instance;
+        }
+    }
+    return instance;
 }
 
 void ProfileManager::update_all_profile_devices(bool profile_changed, bool send_events)
@@ -368,10 +438,13 @@ void ProfileManager::clear_all()
     m_last_subtypes.clear();
     m_current_subtypes.clear();
     m_subtypes_changed = false;
+    m_was_legacy_adapter = false;
     m_emulated_devices.clear();
     std::fill(std::begin(m_usb_instances), std::end(m_usb_instances), nullptr);
     std::fill(std::begin(m_usb_instances_by_epin), std::end(m_usb_instances_by_epin), nullptr);
     std::fill(std::begin(m_usb_instances_by_epout), std::end(m_usb_instances_by_epout), nullptr);
+    std::fill(std::begin(m_usb_reload_identities), std::end(m_usb_reload_identities), UsbReloadIdentity{});
+    finish_config_reload();
 }
 
 void ProfileManager::initialize_device_bluetooth()
@@ -472,30 +545,4 @@ std::shared_ptr<UsbDevice> ProfileManager::get_emulated_device(ConsoleMode mode)
 void ProfileManager::set_emulated_device(ConsoleMode mode, std::shared_ptr<UsbDevice> device)
 {
     m_emulated_devices[mode] = device;
-}
-
-std::shared_ptr<XboxOneGamepadDevice> ProfileManager::take_preserved_xone()
-{
-    auto dev = m_preserved_xone;
-    m_preserved_xone = nullptr;
-    return dev;
-}
-
-void ProfileManager::restore_preserved_xone(std::shared_ptr<XboxOneGamepadDevice> device)
-{
-    m_emulated_devices[ModeXboxOne] = device;
-    m_instances.push_back(device);
-    m_usb_instances[device->interface_id] = device;
-    map_usb_instance_epin(device->m_epin, device->interface_id);
-    map_usb_instance_epout(device->m_epout, device->interface_id);
-}
-
-void ProfileManager::discard_preserved_devices()
-{
-    if (m_preserved_xone)
-    {
-        printf("Discarding unneeded preserved Xbox One device\n");
-        m_preserved_xone = nullptr;
-        m_was_legacy_adapter = false;
-    }
 }

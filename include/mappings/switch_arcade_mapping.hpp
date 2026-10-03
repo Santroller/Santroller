@@ -3,14 +3,14 @@
 #include "input.pb.h"
 #include "protocols/switch_arcade.hpp"
 
-inline void switch_arcade_update_button(proto_Mapping const &mapping, bool pressed,
+inline void switch_arcade_update_button(proto_Output const &mapping, bool pressed,
                                         SwitchArcadeReport &report)
 {
-    if (!pressed || mapping.mapping.which_mapping != proto_Output_gamepadButton_tag)
+    if (!pressed || mapping.which_mapping != proto_Output_gamepadButton_tag)
         return;
 
     uint16_t button = 0;
-    switch (mapping.mapping.mapping.gamepadButton)
+    switch (mapping.mapping.gamepadButton)
     {
     case Gamepad_Y:               button = SwitchArcade_Y; break;
     case Gamepad_B:               button = SwitchArcade_B; break;
@@ -33,13 +33,13 @@ inline void switch_arcade_update_button(proto_Mapping const &mapping, bool press
     switch_arcade_set_button(report, button);
 }
 
-inline void switch_arcade_update_axis(proto_Mapping const &mapping, uint32_t value,
+inline void switch_arcade_update_axis(proto_Output const &mapping, uint32_t value,
                                       bool centered, SwitchArcadeReport &report)
 {
-    if (centered || mapping.mapping.which_mapping != proto_Output_gamepadAxis_tag)
+    if (centered || mapping.which_mapping != proto_Output_gamepadAxis_tag)
         return;
 
-    switch (mapping.mapping.mapping.gamepadAxis)
+    switch (mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:   report.lx = value >> 8; break;
     case Gamepad_LeftStickY:   report.ly = (UINT16_MAX - value) >> 8; break;

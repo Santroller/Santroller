@@ -57,8 +57,6 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
         i2c_inst_t *i2c_block = config.peripheralBoot.i2c.block == 1 ? i2c1 : i2c0;
         secondary_pico_slave_init(i2c_block, config.peripheralBoot.i2c.sda, config.peripheralBoot.i2c.scl, config.peripheralBoot.idPin);
     }
-    profile_mgr.discard_preserved_devices();
-
     const ConsoleMode resolved_mode = config_mgr.get_requested_mode();
     printf("resolved_mode: %d, current_mode: %d\r\n", resolved_mode, current_mode);
     if (!profile_mgr.has_active_instances() || resolved_mode == ModeHid || resolved_mode == ModeXbox360)
@@ -85,20 +83,34 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     case ModeHid:
     case ModeXbox360:
     {
-        auto secDevice = std::make_shared<XInputSecurityDevice>();
-        secDevice->interface_id = profile_mgr.usb_instance_count();
-        profile_mgr.add_instance(secDevice);
-        profile_mgr.set_usb_instance(secDevice->interface_id, secDevice);
-        secDevice->initialize();
+        const auto id = profile_mgr.usb_instance_count();
+        auto secDevice = profile_mgr.reuse_usb_instance(id, resolved_mode, static_cast<SubType>(0), true);
+        if (!secDevice)
+        {
+            secDevice = std::make_shared<XInputSecurityDevice>();
+            secDevice->interface_id = id;
+            profile_mgr.add_instance(secDevice);
+            profile_mgr.set_usb_instance(id, secDevice);
+            profile_mgr.set_usb_reload_identity(id, resolved_mode, static_cast<SubType>(0), true);
+            secDevice->initialize();
+            profile_mgr.finish_usb_instance_initialization(id);
+        }
         break;
     }
     case ModeGuitarHeroArcade:
     {
-        auto venDevice = std::make_shared<GHArcadeVendorDevice>();
-        venDevice->interface_id = profile_mgr.usb_instance_count();
-        profile_mgr.add_instance(venDevice);
-        profile_mgr.set_usb_instance(venDevice->interface_id, venDevice);
-        venDevice->initialize();
+        const auto id = profile_mgr.usb_instance_count();
+        auto venDevice = profile_mgr.reuse_usb_instance(id, resolved_mode, static_cast<SubType>(0), true);
+        if (!venDevice)
+        {
+            venDevice = std::make_shared<GHArcadeVendorDevice>();
+            venDevice->interface_id = id;
+            profile_mgr.add_instance(venDevice);
+            profile_mgr.set_usb_instance(id, venDevice);
+            profile_mgr.set_usb_reload_identity(id, resolved_mode, static_cast<SubType>(0), true);
+            venDevice->initialize();
+            profile_mgr.finish_usb_instance_initialization(id);
+        }
         break;
     }
     }
@@ -108,6 +120,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     {
         reinitialize_device_stack();
     }
+    profile_mgr.finish_config_reload();
     config_mgr.sync_requested_mode_to_current();
     return ret;
 }

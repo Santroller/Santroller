@@ -7,6 +7,50 @@
 #include "config.pb.h"
 #include "wiimote.h"
 
+struct MappingConfig
+{
+    explicit MappingConfig(const proto_Mapping &source)
+        : mapping(source.mapping),
+          inverted(source.inverted),
+          has_trigger(source.has_trigger),
+          trigger(source.trigger),
+          has_pressed(source.has_pressed),
+          pressed(source.pressed),
+          has_released(source.has_released),
+          released(source.released),
+          min(source.min),
+          max(source.max),
+          center(source.center),
+          deadzone(source.deadzone),
+          triggerValue(source.triggerValue),
+          has_debounce(source.has_debounce),
+          debounce(source.debounce),
+          maxTriggerValue(source.maxTriggerValue),
+          has_peakBased(source.has_peakBased),
+          peakBased(source.peakBased)
+    {
+    }
+
+    proto_Output mapping;
+    bool inverted;
+    bool has_trigger;
+    proto_AnalogToDigitalTriggerType trigger;
+    bool has_pressed;
+    int32_t pressed;
+    bool has_released;
+    int32_t released;
+    int32_t min;
+    int32_t max;
+    int32_t center;
+    int32_t deadzone;
+    int32_t triggerValue;
+    bool has_debounce;
+    uint32_t debounce;
+    int32_t maxTriggerValue;
+    bool has_peakBased;
+    bool peakBased;
+};
+
 class Mapping
 {
 public:
@@ -49,7 +93,7 @@ public:
     bool is_suppressed() const { return m_suppressed || m_waiting_for_release; }
 
 protected:
-    proto_Mapping m_mapping;
+    MappingConfig m_mapping;
     uint16_t m_id;
     Profile *m_profile;
     uint32_t m_last_value_raw = 0;

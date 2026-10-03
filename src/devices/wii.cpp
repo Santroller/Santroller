@@ -20,6 +20,20 @@ WiiDevice::WiiDevice(const DeviceReloadState *state, proto_WiiDevice device, uin
     }
 }
 
+bool WiiDevice::matches_reload_config(const proto_Device &config) const
+{
+    if (config.which_device != proto_Device_wii_tag)
+    {
+        return false;
+    }
+    const auto &device = config.device.wii;
+    return m_device.i2c.block == device.i2c.block &&
+           m_device.i2c.sda == device.i2c.sda &&
+           m_device.i2c.scl == device.i2c.scl &&
+           m_device.i2c.clock == device.i2c.clock &&
+           m_device.mappingMode == device.mappingMode;
+}
+
 void WiiDevice::save_reload_state(DeviceReloadState &state) const
 {
     MidiDevice::save_reload_state(state);

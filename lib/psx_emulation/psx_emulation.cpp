@@ -23,7 +23,28 @@ void PSXEmulation::begin(SubType type)
         {
             return;
         }
-        end();
+        // Keep the console's negotiated mode and report mask when changing
+        // between gamepad and guitar; restarting PIO forces digital mode.
+        uint32_t irq_state = save_and_disable_interrupts();
+        if (spi->type == SubType_Taiko || type == SubType_Taiko)
+        {
+            PSX_SPI_PROTOCOL_INIT(&spi->protocol, type == SubType_GuitarHeroGuitar);
+        }
+        spi->type = type;
+        spi->protocol.digitalOnly = type == SubType_Taiko;
+        spi->protocol.config_responses[0x05][0] =
+            type == SubType_GuitarHeroGuitar ? init_resp_45_gh[0] : init_resp_45_ds2[0];
+        if (type == SubType_GuitarHeroGuitar && !spi->protocol.config_responses[0x05][2])
+        {
+            spi->protocol.config_responses[0x05][2] = 1;
+            memcpy(spi->protocol.config_responses[0x01], init_resp_41_analog,
+                   sizeof(spi->protocol.config_responses[0x01]));
+            spi->protocol.report_mask[0] = 0x3F;
+            spi->protocol.report_mask[1] = 0;
+            spi->protocol.report_mask[2] = 0;
+        }
+        restore_interrupts(irq_state);
+        return;
     }
     pio_spi_config_t config = {
         .pio_idx = 1,

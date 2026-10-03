@@ -10,6 +10,22 @@ class UsbDevice : public Instance
 {
 public:
     virtual ~UsbDevice() {}
+    struct AllocationState
+    {
+        uint8_t epin;
+        uint8_t epout;
+        uint8_t strid;
+    };
+    static AllocationState allocation_state()
+    {
+        return {m_last_epin, m_last_epout, m_last_strid};
+    }
+    static void restore_allocation_state(AllocationState state)
+    {
+        m_last_epin = state.epin;
+        m_last_epout = state.epout;
+        m_last_strid = state.strid;
+    }
     uint8_t interface_id = 0;
     virtual size_t compatible_section_descriptor(uint8_t *desc, size_t remaining) = 0;
     virtual size_t config_descriptor(uint8_t *desc, size_t remaining) = 0;

@@ -54,7 +54,7 @@ typedef struct psx_spi_protocol_state_t
     memset((s), 0, sizeof(*(s))); \
     memcpy((s)->config_responses[0x00], init_resp_40, 6); \
     memcpy((s)->config_responses[0x01], init_resp_41_digital, 6); \
-    memcpy((s)->config_responses[0x02], init_resp_42, sizeof(init_resp_42)); \
+    memcpy((s)->config_responses[0x02], init_resp_42, sizeof((s)->config_responses[0x02])); \
     memcpy((s)->config_responses[0x03], init_resp_43, 6); \
     memcpy((s)->config_responses[0x04], init_resp_44, 6); \
     memcpy((s)->config_responses[0x05], init_resp_45_ds2, 6); \

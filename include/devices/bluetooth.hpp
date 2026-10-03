@@ -9,6 +9,10 @@ public:
     void begin();
     void end(bool full);
     void rescan(bool first);
+    bool matches_reload_config(const proto_Device &config) const override
+    {
+        return config.which_device == proto_Device_bt_tag;
+    }
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
     void handle_command(proto_Command command);

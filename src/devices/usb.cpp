@@ -228,6 +228,12 @@ void USBHostHardwareDevice::begin()
 
     m_last_dp_first = m_device.dmFirst;
     m_last_first_pin = m_device.firstPin;
+    if (m_device.enable5v) {
+        // Enable 5V power for the USB host for Adafruit feathers
+        gpio_init(18);
+        gpio_set_dir(18, true);
+        gpio_put(18, 1);
+    }
     printf("USBHostHardwareDevice init! %d %d %d\r\n", m_device.dmFirst, m_device.firstPin, m_device.firstPin + 1);
     int8_t tx_ch = -1;
     int8_t tx_sm = -1;

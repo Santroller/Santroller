@@ -91,6 +91,13 @@ public:
     void update_all_devices(bool profile_changed, bool send_events);
     void clear_all();
 
+    std::shared_ptr<class PSXEmulationDevice> get_psx_emulation_device() const { return m_psx_emulation_device; }
+    std::shared_ptr<class WiiExtensionEmulationDevice> get_wii_emulation_device() const { return m_wii_emulation_device; }
+    void set_psx_emulation_device(std::shared_ptr<class PSXEmulationDevice> device) { m_psx_emulation_device = device; }
+    void set_wii_emulation_device(std::shared_ptr<class WiiExtensionEmulationDevice> device) { m_wii_emulation_device = device; }
+    bool is_psx_communicating() const;
+    bool is_wii_communicating() const;
+
 private:
     DeviceManager() = default;
     ~DeviceManager() = default;
@@ -101,4 +108,6 @@ private:
     std::unordered_map<uint32_t, std::shared_ptr<Device>> m_root_devices;
     std::vector<std::shared_ptr<Device>> m_assignable_devices;
     std::map<ConsoleMode, std::shared_ptr<UsbHostInterface>> m_auth_devices;
+    std::shared_ptr<class PSXEmulationDevice> m_psx_emulation_device;
+    std::shared_ptr<class WiiExtensionEmulationDevice> m_wii_emulation_device;
 };

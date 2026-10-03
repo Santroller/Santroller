@@ -65,6 +65,9 @@ struct DeviceReloadState
     uint8_t wii_s_box = 0;
     uint8_t wii_m_block = 0;
     wii_status_e wii_status = WII_INIT_FINISH_ENC;
+    // Emulation State
+    bool psx_emulation_communicating = false;
+    bool wii_emulation_communicating = false;
 };
 
 class Device

@@ -1,6 +1,5 @@
 #include "managers/profile_manager.hpp"
 #include "config/config.hpp"
-#include "config/emulation_device_config.hpp"
 #include "config/instance_factory.hpp"
 #include "managers/config_manager.hpp"
 #include "devices/base.hpp"
@@ -211,8 +210,7 @@ void ProfileManager::update_active_instances()
 bool ProfileManager::assign_profile_to_devices(
     std::shared_ptr<Profile> profile,
     int assigned_devices,
-    ConsoleMode usb_mode,
-    const EmulationDeviceConfig &emulation_devices)
+    ConsoleMode usb_mode)
 {
     bool assigned = false;
     auto &config_mgr = ConfigManager::instance();
@@ -241,7 +239,7 @@ bool ProfileManager::assign_profile_to_devices(
         }
         printf("Attempting to assign profile %u to assignment type %d\n", profile->profile_id, assignment_type);
 
-        auto instance = InstanceFactory::create_instance(assignment_type, profile, usb_mode, emulation_devices);
+        auto instance = InstanceFactory::create_instance(assignment_type, profile, usb_mode);
         if (instance)
         {
             printf("Successfully assigned profile %u to assignment type %d\n", profile->profile_id, assignment_type);

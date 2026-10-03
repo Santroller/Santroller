@@ -22,7 +22,7 @@ public:
     void process(bool full_poll, bool send_events);
 private:
     proto_PSXEmulationDevice m_device;
-    PSXEmulation m_controller;
+    PSXEmulation *m_controller = nullptr;
     uint8_t m_size;
     uint8_t m_initial_report[32];
     uint8_t m_buffer[32];

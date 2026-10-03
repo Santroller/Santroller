@@ -13,7 +13,6 @@
 class Device;
 class UsbDevice;
 class XboxOneGamepadDevice;
-struct EmulationDeviceConfig;
 
 class ProfileManager
 {
@@ -34,8 +33,7 @@ public:
     bool assign_profile_to_devices(
         std::shared_ptr<Profile> profile,
         int assigned_devices,
-        ConsoleMode usb_mode,
-        const EmulationDeviceConfig& emulation_devices
+        ConsoleMode usb_mode
     );
     bool changed_types();
     

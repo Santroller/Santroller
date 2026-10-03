@@ -27,10 +27,11 @@ public:
     void sendData(uint8_t len, uint8_t *data);
     PsxReportFormat_t getReportFormat();
     void get_rumble(uint8_t &small, uint8_t &large);
+    bool is_communicating() const { return spi != nullptr && spi->watchdog_active; }
 
 private:
     volatile bool sent = true;
-    pio_spi_t *spi;
+    pio_spi_t *spi = nullptr;
     int8_t sck;
     int8_t cmd;
     int8_t dat;

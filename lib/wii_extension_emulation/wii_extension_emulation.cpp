@@ -19,6 +19,11 @@ static void init(wii_extension_context_t *context)
 }
 static void i2c_slave_handler(i2c_inst_t *i2c, wii_extension_context_t *context, i2c_slave_event_t event)
 {
+    if (event == I2C_SLAVE_RECEIVE || event == I2C_SLAVE_REQUEST)
+    {
+        context->last_activity_ms = to_ms_since_boot(get_absolute_time());
+    }
+
     switch (event)
     {
     case I2C_SLAVE_RECEIVE:
@@ -120,15 +125,50 @@ void WiiExtensionEmulation::begin(SubType type)
         i2c_slave_init(i2c1, WII_ADDR, &i2c_slave_handler1);
     }
 }
-WiiExtensionEmulation::WiiExtensionEmulation(uint8_t block, uint8_t sda, uint8_t scl) : m_block(block), m_sda(sda), m_scl(scl)
+WiiExtensionEmulation::WiiExtensionEmulation(uint8_t block, uint8_t sda, uint8_t scl) : m_block(block), m_sda(sda), m_scl(scl), m_context(nullptr)
 {
+}
+WiiExtensionEmulation::~WiiExtensionEmulation()
+{
+    end();
 }
 void WiiExtensionEmulation::set_inputs(uint8_t *inputs, uint8_t len)
 {
+    if (!m_context)
+    {
+        return;
+    }
     memcpy(m_context->registers, inputs, len);
 }
 
 uint8_t WiiExtensionEmulation::wii_data_format()
 {
+    if (!m_context)
+    {
+        return 0;
+    }
     return m_context->registers[0xFE];
+}
+
+void WiiExtensionEmulation::end()
+{
+    if (m_context)
+    {
+        i2c_slave_deinit(m_block == 0 ? i2c0 : i2c1);
+        m_context = nullptr;
+    }
+}
+
+void WiiExtensionEmulation::update()
+{
+}
+
+bool WiiExtensionEmulation::is_communicating() const
+{
+    if (!m_context || m_context->last_activity_ms == 0)
+    {
+        return false;
+    }
+    uint32_t now = to_ms_since_boot(get_absolute_time());
+    return (uint32_t)(now - m_context->last_activity_ms) < 1000;
 }

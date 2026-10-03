@@ -1,7 +1,9 @@
 #include "config/instance_factory.hpp"
-#include "config/emulation_device_config.hpp"
 #include "managers/profile_manager.hpp"
 #include "managers/config_manager.hpp"
+#include "managers/device_manager.hpp"
+#include "devices/ps2_emulation.hpp"
+#include "devices/wii_emulation.hpp"
 #include "emulation/bt/bt_gamepad.h"
 #include "emulation/ps2_emulation.hpp"
 #include "emulation/wii_emulation.hpp"
@@ -35,8 +37,7 @@ void InstanceFactory::setup_instance_from_profile(
 std::shared_ptr<Instance> InstanceFactory::create_instance(
     int assignment_mask,
     std::shared_ptr<Profile> profile,
-    ConsoleMode usb_mode,
-    const EmulationDeviceConfig &emulation_devices)
+    ConsoleMode usb_mode)
 {
     std::shared_ptr<Instance> instance;
 
@@ -58,21 +59,23 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
     }
     else if (assignment_mask & ProfileAssignMask_AssignPsx)
     {
-        if (!emulation_devices.has_psx)
+        auto psx_dev = DeviceManager::instance().get_psx_emulation_device();
+        if (!psx_dev)
         {
             return nullptr;
         }
         instance = std::make_shared<Ps2EmulationDeviceInstance>(
-            emulation_devices.psx);
+            psx_dev->get_config());
     }
     else if (assignment_mask & ProfileAssignMask_AssignWiimoteExtension)
     {
-        if (!emulation_devices.has_wii)
+        auto wii_dev = DeviceManager::instance().get_wii_emulation_device();
+        if (!wii_dev)
         {
             return nullptr;
         }
         instance = std::make_shared<WiiExtensionEmulationDeviceInstance>(
-            emulation_devices.wii);
+            wii_dev->get_config());
     }
     else if (assignment_mask & ProfileAssignMask_AssignUsb)
     {

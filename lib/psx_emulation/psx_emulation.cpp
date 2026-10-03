@@ -17,6 +17,10 @@ void PSXEmulation::begin(SubType type)
     #if PSX_SPI_DEBUG_LOGGING
     printf("PSXEmulation begin\r\n");
     #endif
+    if (spi)
+    {
+        end();
+    }
     pio_spi_config_t config = {
         .pio_idx = 1,
         .cs_pin = attPin,
@@ -35,8 +39,12 @@ void PSXEmulation::end()
     #if PSX_SPI_DEBUG_LOGGING
     printf("PSXEmulation end\r\n");
     #endif
-    pio_spi_stop(spi);
-    pio_spi_free(spi);
+    if (spi)
+    {
+        pio_spi_stop(spi);
+        pio_spi_free(spi);
+        spi = nullptr;
+    }
 }
 
 void PSXEmulation::load_state(PSXEmulation *state)
@@ -44,7 +52,10 @@ void PSXEmulation::load_state(PSXEmulation *state)
 }
 void PSXEmulation::tick()
 {
-    pio_spi_watchdog_tick(spi);
+    if (spi)
+    {
+        pio_spi_watchdog_tick(spi);
+    }
 }
 
 PSXEmulation::PSXEmulation(int8_t sck, int8_t cmd, int8_t dat, uint8_t attPin, uint8_t ackPin) : sck(sck), cmd(cmd), dat(dat), attPin(attPin), ackPin(ackPin)
@@ -56,6 +67,10 @@ PSXEmulation::PSXEmulation(int8_t sck, int8_t cmd, int8_t dat, uint8_t attPin, u
 
 void PSXEmulation::sendData(uint8_t len, uint8_t *data)
 {
+    if (!spi)
+    {
+        return;
+    }
     // sendData supplies raw controller state only. The PSX response format and
     // length are selected later, when the next SPI transaction is prepared,
     // after all command-driven protocol state changes have been applied.
@@ -117,6 +132,10 @@ static void dump_timing_trace(pio_spi_t *spi)
 uint8_t last_lastcmd = 0;
 PsxReportFormat_t PSXEmulation::getReportFormat()
 {
+    if (!spi)
+    {
+        return {false, {0, 0, 0}};
+    }
     return {is_analog(spi), {spi->protocol.report_mask[0], spi->protocol.report_mask[1], spi->protocol.report_mask[2]}};
 }
 bool PSXEmulation::ready()

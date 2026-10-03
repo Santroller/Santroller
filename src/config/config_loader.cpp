@@ -1,7 +1,6 @@
 #include "config/config_loader.hpp"
 
 #include "config/device_factory.hpp"
-#include "config/emulation_device_config.hpp"
 #include "devices/usb.hpp"
 #include "emulation/usb/gh_arcade_device.h"
 #include "emulation/usb/hid_device.h"
@@ -28,7 +27,6 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     DeviceManager &device_mgr = DeviceManager::instance();
     ProfileManager &profile_mgr = ProfileManager::instance();
     ConfigManager &config_mgr = ConfigManager::instance();
-    EmulationDeviceConfig emulation_devices;
 
     DeviceFactory::clear_cycle_states();
     DeviceFactory::clear_toggle_states();
@@ -37,9 +35,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     device_mgr.clear_assignable_devices();
 
     config.devices.funcs.decode = &load_device;
-    config.devices.arg = &emulation_devices;
     config.profiles.funcs.decode = &load_profile;
-    config.profiles.arg = &emulation_devices;
     config.guiConfig.funcs.decode = nullptr;
     config_mgr.clear_seen_masks();
     device_mgr.clear_active_devices();

@@ -2,11 +2,12 @@
 #include <cstring>
 #include "xbox_dongle_firmware.h"
 #include "devices/bt/bt_tlv_storage.hpp"
+#include "devices/ps2_emulation.hpp"
+#include "devices/wii_emulation.hpp"
 #include "managers/profile_manager.hpp"
 #include "managers/device_manager.hpp"
 #include "managers/config_manager.hpp"
 #include "config/device_factory.hpp"
-#include "config/emulation_device_config.hpp"
 #include "config/input_factory.hpp"
 #include "config/mapping_factory.hpp"
 #include "config/trigger_factory.hpp"
@@ -110,7 +111,6 @@ ConsoleMode newMode = mode;
 struct ConfigDecodeContext
 {
     std::shared_ptr<Profile> profile;
-    const EmulationDeviceConfig *emulation_devices = nullptr;
     ShortcutInput *last_shortcut = nullptr;
     Input *last_special = nullptr;
     bool matched = false;
@@ -137,25 +137,10 @@ bool load_device_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    auto *emulation_devices = static_cast<EmulationDeviceConfig *>(arg ? *arg : nullptr);
     proto_Device proto_device proto_Device_init_zero;
     proto_device.cb_device.funcs.decode = load_device_dev;
     proto_device.cb_device.arg = arg ? *arg : nullptr;
     pb_decode(stream, proto_Device_fields, &proto_device);
-
-    if (emulation_devices)
-    {
-        if (proto_device.which_device == proto_Device_psxEmulation_tag)
-        {
-            emulation_devices->psx = proto_device.device.psxEmulation;
-            emulation_devices->has_psx = true;
-        }
-        else if (proto_device.which_device == proto_Device_wiiEmulation_tag)
-        {
-            emulation_devices->wii = proto_device.device.wiiEmulation;
-            emulation_devices->has_wii = true;
-        }
-    }
 
     auto device_id = proto_device.deviceid;
     DeviceReloadState previous_state;
@@ -178,6 +163,14 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     }
 
     device_mgr.set_root_device(device_id, device);
+    if (proto_device.which_device == proto_Device_psxEmulation_tag)
+    {
+        device_mgr.set_psx_emulation_device(std::static_pointer_cast<PSXEmulationDevice>(device));
+    }
+    else if (proto_device.which_device == proto_Device_wiiEmulation_tag)
+    {
+        device_mgr.set_wii_emulation_device(std::static_pointer_cast<WiiExtensionEmulationDevice>(device));
+    }
     device_mgr.add_active_device(device);
     device->still_connected = true;
     device->begin();
@@ -517,7 +510,7 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
         printf("profile assigned! profile_id=%d mode=%d\r\n", profile->profile_id, usb_mode);
 
         // Assign profile to appropriate devices
-        profile_mgr.assign_profile_to_devices(profile, assignedDevices, usb_mode, *context->emulation_devices);
+        profile_mgr.assign_profile_to_devices(profile, assignedDevices, usb_mode);
     }
     else if (context->matched)
     {
@@ -583,12 +576,7 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     // printf("load_profile\r\n");
-    auto *emulation_devices = static_cast<EmulationDeviceConfig *>(arg ? *arg : nullptr);
-    if (!emulation_devices)
-    {
-        return false;
-    }
-    // Snapshot this profile submessage's bytes (config is decoded from an in-memory
+    // Snapshot this profile submessage'bytes (config is decoded from an in-memory
     // buffer, so this is just a cheap copy of the stream cursor) so it can be
     // re-decoded once per physical device combo that matches its triggers. That
     // gives each matching device (e.g. two identical USB guitars) its own bound
@@ -605,7 +593,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
                                                   profile->devices.emplace(device->m_id, device);
                                               }
                                           });
-        ConfigDecodeContext context{profile, emulation_devices};
+        ConfigDecodeContext context{profile};
         context.matched = false;
         proto_Profile proto_profile;
         memset(&proto_profile, 0, sizeof(proto_profile));

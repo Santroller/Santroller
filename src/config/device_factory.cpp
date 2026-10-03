@@ -225,11 +225,11 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         );
         break;
     case proto_Device_psxEmulation_tag:
-        device = std::make_shared<PSXEmulationDevice>(proto_device.device.psxEmulation, device_id);
+        device = std::make_shared<PSXEmulationDevice>(previous_state, proto_device.device.psxEmulation, device_id);
         break;
         
     case proto_Device_wiiEmulation_tag:
-        device = std::make_shared<WiiExtensionEmulationDevice>(proto_device.device.wiiEmulation, device_id);
+        device = std::make_shared<WiiExtensionEmulationDevice>(previous_state, proto_device.device.wiiEmulation, device_id);
         break;
         
     case proto_Device_peripheral_tag:

@@ -1,5 +1,6 @@
 #include "triggers/mode_triggers.hpp"
 #include "managers/config_manager.hpp"
+#include "managers/device_manager.hpp"
 #include "mappings/mapping.hpp"
 #include "tusb.h"
 #include "emulation/usb/usb_descriptors.h"
@@ -141,6 +142,14 @@ WiiExtensionEmulationActivationTrigger::WiiExtensionEmulationActivationTrigger(p
 
 bool WiiExtensionEmulationActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
+    if (!DeviceManager::instance().is_wii_communicating())
+    {
+        return false;
+    }
+    if (claim_device && ConfigManager::instance().has_seen_assignment(AssignWiimoteExtension))
+    {
+        return false;
+    }
     if (send_events && (!m_last_val || full_poll))
     {
         m_last_val = true;
@@ -156,6 +165,14 @@ PS2ControllerEmulationActivationTrigger::PS2ControllerEmulationActivationTrigger
 
 bool PS2ControllerEmulationActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
+    if (!DeviceManager::instance().is_psx_communicating())
+    {
+        return false;
+    }
+    if (claim_device && ConfigManager::instance().has_seen_assignment(AssignPsx))
+    {
+        return false;
+    }
     if (send_events && (!m_last_val || full_poll))
     {
         m_last_val = true;

@@ -22,7 +22,7 @@ public:
     void process(bool full_poll, bool send_events);
 private:
     proto_WiiEmulationDevice m_device;
-    WiiExtensionEmulation m_controller;
+    WiiExtensionEmulation *m_controller = nullptr;
     uint8_t m_report_size;
     uint8_t m_last_format = 1;
     uint8_t m_buttons_low_idx;

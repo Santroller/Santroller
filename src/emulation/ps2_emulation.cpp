@@ -6,17 +6,28 @@
 #include <protocols/ps2.hpp>
 #include <pico/unique_id.h>
 #include "emulation/ps2_emulation.hpp"
+#include "devices/ps2_emulation.hpp"
+#include "managers/device_manager.hpp"
 #include "utils.h"
 const uint8_t guitar_dpad_bindings[] = {0x80, 0x23, 0xaa, 0x20, 0x58, 0x1c, 0x4b, 0x1a, 0xec, 0x23, 0xa1, 0x20, 0x55, 0x1b, 0x49, 0x1a};
-Ps2EmulationDeviceInstance::Ps2EmulationDeviceInstance(proto_PSXEmulationDevice device) : m_device(device), m_controller(device.clockPin, device.commandPin, device.dataPin, device.attentionPin, device.acknowledgePin)
+Ps2EmulationDeviceInstance::Ps2EmulationDeviceInstance(proto_PSXEmulationDevice device)
+    : m_device(device)
 {
+    auto psx_dev = DeviceManager::instance().get_psx_emulation_device();
+    if (psx_dev)
+    {
+        m_controller = &psx_dev->get_controller();
+    }
 }
 Ps2EmulationDeviceInstance::~Ps2EmulationDeviceInstance()
 {
 }
 void Ps2EmulationDeviceInstance::initialize()
 {
-    m_controller.begin(subtype);
+    if (m_controller)
+    {
+        m_controller->begin(subtype);
+    }
     switch (subtype)
     {
     case Gamepad:
@@ -69,17 +80,25 @@ void Ps2EmulationDeviceInstance::process(bool full_poll, bool send_events)
     m_buffer[0] = ~m_buffer[0];
     m_buffer[1] = ~m_buffer[1];
     uint8_t small = 0, large = 0;
-    m_controller.get_rumble(small, large);
+    if (m_controller)
+    {
+        m_controller->get_rumble(small, large);
+    }
     set_rumble(large, small ? 255 : 0);
+
+    if (!m_controller)
+    {
+        return;
+    }
 
     if (subtype == Gamepad)
     {
         // Always hand the complete 18-byte controller report to the PSX
         // protocol layer. Formatting is deferred until the next SPI transaction
         // is armed, so the current command/state machine is authoritative.
-        m_controller.getReportFormat();
-        m_controller.sendData(18, m_buffer);
+        m_controller->getReportFormat();
+        m_controller->sendData(18, m_buffer);
         return;
     }
-    m_controller.sendData(m_size, m_buffer);
+    m_controller->sendData(m_size, m_buffer);
 }

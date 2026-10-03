@@ -90,83 +90,87 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
 {
     if (ep_addr & 0x80)
     {
-        XBOX_WIRELESS_HEADER *header = (XBOX_WIRELESS_HEADER *)m_ep_in_buf;
-        if (header->id == 0x08)
+        if (result == XFER_RESULT_SUCCESS && xferred_bytes >= 2)
         {
-            // Disconnected
-            if (header->type == 0x00)
+            XBOX_WIRELESS_HEADER *header = (XBOX_WIRELESS_HEADER *)m_ep_in_buf;
+            if (header->id == 0x08)
             {
-                if (m_found)
+                // Disconnected
+                if (header->type == 0x00 || !(header->type & 0x80))
                 {
-                    printf("Disconnected %02x %02x\r\n", m_dev_addr, m_interface);
-                    usb_host_remove_assignable_interface(this);
-                    usb_host_add_enumerating_interface(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
-                    for (size_t i = 0; i < sizeof(xinput_wireless_gamepad_disconnected_name); i++)
+                    if (m_found)
                     {
-                        // skip header
-                        m_name[(i + 1) * 2] = xinput_wireless_gamepad_disconnected_name[i];
+                        printf("Disconnected %02x %02x\r\n", m_dev_addr, m_interface);
+                        usb_host_remove_assignable_interface(this);
+                        usb_host_add_enumerating_interface(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
+                        for (size_t i = 0; i < sizeof(xinput_wireless_gamepad_disconnected_name); i++)
+                        {
+                            // skip header
+                            m_name[(i + 1) * 2] = xinput_wireless_gamepad_disconnected_name[i];
+                        }
+                        m_name[(sizeof(xinput_wireless_gamepad_disconnected_name) - 1) * 2] = '1' + (m_ep_out / 2);
+                        m_found = false;
+                        m_check_link = millis() + 4000;
+                        process_delayed_init();
                     }
-                    m_name[(sizeof(xinput_wireless_gamepad_disconnected_name) - 1) * 2] = '1' + (m_ep_out / 2);
-                    m_found = false;
-                    process_delayed_init();
                 }
             }
-        }
-        else if (header->id == 0x00)
-        {
-            // Gamepad inputs
-            if (header->type == 0x01 || header->type == 0x03)
+            else if (header->id == 0x00)
             {
-                m_check_caps = 0;
-                memcpy(m_report_buf, m_ep_in_buf + sizeof(header), xferred_bytes - sizeof(header));
-                if (!m_led_set)
+                // Gamepad inputs
+                if (header->type == 0x01 || header->type == 0x03)
                 {
-                    set_player_led(m_last_player_led);
-                }
-            }
-            // Link report
-            if (header->type == 0x0f)
-            {
-                XBOX_WIRELESS_LINK_REPORT *linkReport = (XBOX_WIRELESS_LINK_REPORT *)m_ep_in_buf;
-                if (linkReport->always_0xCC == 0xCC && !m_found)
-                {
-                    m_subtype = get_subtype_from_xinput(linkReport->subtype & ~0x80);
-                    printf("Found subtype: %02x %02x %02x\r\n", m_subtype, m_dev_addr, m_interface);
-                    for (size_t i = 0; i < sizeof(xinput_wireless_gamepad_name); i++)
-                    {
-                        // skip header
-                        m_name[(i + 1) * 2] = xinput_wireless_gamepad_name[i];
-                    }
-                    m_name[(sizeof(xinput_wireless_gamepad_name) - 1) * 2] = '0' + m_subtype;
-                    memcpy(m_ep_out_buf, capabilitiesRequest, sizeof(capabilitiesRequest));
-                    send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(capabilitiesRequest));
-                    m_check_caps = millis() + 1000;
-                    m_caps_retries = 0;
-                    m_found = true;
-                    m_led_set = false;
-                    usb_host_remove_enumerating_interface(this);
-                    usb_host_add_assignable_interface(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
-                    process_delayed_init();
-                    set_player_led(m_last_player_led);
-                }
-            }
-            // Capabilities report
-            if (header->type == 0x05)
-            {
-                XBOX_WIRELESS_CAPABILITIES *caps = (XBOX_WIRELESS_CAPABILITIES *)m_ep_in_buf;
-                if (caps->always_0x12 == 0x12)
-                {
-                    printf("Found capabilities: %02x %02x\r\n", m_dev_addr, m_interface);
-                    if (caps->leftStickX == 0xFFC0 && caps->rightStickX == 0xFFC0)
-                    {
-                        m_wt = true;
-                        printf("Found wt\r\n");
-                    }
                     m_check_caps = 0;
-                    m_caps_retries = 0;
+                    memcpy(m_report_buf, m_ep_in_buf + sizeof(header), xferred_bytes - sizeof(header));
                     if (!m_led_set)
                     {
                         set_player_led(m_last_player_led);
+                    }
+                }
+                // Link report
+                if (header->type == 0x0f)
+                {
+                    XBOX_WIRELESS_LINK_REPORT *linkReport = (XBOX_WIRELESS_LINK_REPORT *)m_ep_in_buf;
+                    if (linkReport->always_0xCC == 0xCC && !m_found)
+                    {
+                        m_subtype = get_subtype_from_xinput(linkReport->subtype & ~0x80);
+                        printf("Found subtype: %02x %02x %02x\r\n", m_subtype, m_dev_addr, m_interface);
+                        for (size_t i = 0; i < sizeof(xinput_wireless_gamepad_name); i++)
+                        {
+                            // skip header
+                            m_name[(i + 1) * 2] = xinput_wireless_gamepad_name[i];
+                        }
+                        m_name[(sizeof(xinput_wireless_gamepad_name) - 1) * 2] = '0' + m_subtype;
+                        memcpy(m_ep_out_buf, capabilitiesRequest, sizeof(capabilitiesRequest));
+                        send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(capabilitiesRequest));
+                        m_check_caps = millis() + 1000;
+                        m_caps_retries = 0;
+                        m_found = true;
+                        m_led_set = false;
+                        usb_host_remove_enumerating_interface(this);
+                        usb_host_add_assignable_interface(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
+                        process_delayed_init();
+                        set_player_led(m_last_player_led);
+                    }
+                }
+                // Capabilities report
+                if (header->type == 0x05)
+                {
+                    XBOX_WIRELESS_CAPABILITIES *caps = (XBOX_WIRELESS_CAPABILITIES *)m_ep_in_buf;
+                    if (caps->always_0x12 == 0x12)
+                    {
+                        printf("Found capabilities: %02x %02x\r\n", m_dev_addr, m_interface);
+                        if (caps->leftStickX == 0xFFC0 && caps->rightStickX == 0xFFC0)
+                        {
+                            m_wt = true;
+                            printf("Found wt\r\n");
+                        }
+                        m_check_caps = 0;
+                        m_caps_retries = 0;
+                        if (!m_led_set)
+                        {
+                            set_player_led(m_last_player_led);
+                        }
                     }
                 }
             }

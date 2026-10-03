@@ -2,12 +2,31 @@
 #include "gip_device_mappings.h"
 #include "gip_device.h"
 #include "usb/auth_broker.h"
+#include "managers/config_manager.hpp"
 #include "../../lib/xgip_protocol/xgip_protocol.h"
 #include "../../include/protocols/xbox_one.hpp"
 #include <string.h>
 #include <stdio.h>
 
 // Shared default callback implementations
+
+// While emulating (or about to emulate) an Xbox One controller, the console must
+// authenticate the real controller, so never fake auth-complete locally.
+static bool gip_console_auth_expected(void)
+{
+    // Host already declared auth complete, so complete late-connecting controllers locally.
+    if (auth_broker.is_auth_completed(ModeXboxOne))
+    {
+        return false;
+    }
+    if (auth_broker.has_response_handler(ModeXboxOne))
+    {
+        return true;
+    }
+    auto &config_mgr = ConfigManager::instance();
+    return config_mgr.get_current_mode() == ModeXboxOne ||
+           config_mgr.get_requested_mode() == ModeXboxOne;
+}
 
 void gip_default_ack_callback(void *context)
 {
@@ -84,7 +103,7 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device)
             // mode with a loaded profile) will pass the console's auth through.
             // Otherwise the controller sits unauthenticated and may fall back to
             // its wireless radio.
-            if (!auth_broker.has_response_handler(ModeXboxOne))
+            if (!gip_console_auth_expected())
             {
                 gip_default_auth_callback(
                     device,
@@ -98,11 +117,11 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device)
         // If an emulated (console-facing) device is passthrough-forwarding
         // auth for this mode, relay the real controller's auth response back
         // to it instead of faking an auth-complete here.
-        if (auth_broker.has_response_handler(ModeXboxOne))
+        if (auth_broker.has_response_handler(ModeXboxOne) && !auth_broker.is_auth_completed(ModeXboxOne))
         {
             auth_broker.forward_auth_response(ModeXboxOne, xgip);
         }
-        else
+        else if (!gip_console_auth_expected())
         {
             // Not passing through auth, so use default auth handler (sends auth complete)
             gip_default_auth_callback(

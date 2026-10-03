@@ -31,6 +31,7 @@ public:
     gip_report_queue_t* m_report_queue;  // Shared report queue (public for callbacks)
     
 private:
+    void send_feedback_packet(uint8_t command, const uint8_t *data, uint16_t len);
     uint8_t m_ep_in;
     uint8_t m_ep_out;
     uint8_t m_ep_in_size;

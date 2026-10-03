@@ -186,12 +186,12 @@ const uint8_t xb1_descriptor_ld[] = {
 
 const uint8_t announce_gamepad[] = {
     0x7e, 0xed, 0x8d, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x5e, 0x04, 0xea, 0x02,
-    0x01, 0x00, 0x00, 0x00, 0x82, 0x0c, 0x00, 0x00, 0x04, 0x05, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
+    0x05, 0x00, 0x17, 0x00, 0x06, 0x00, 0x00, 0x00, 0x04, 0x05, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00};
 
 const uint8_t xb1_descriptor_gamepad[] = {
     0x10, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xDA, 0x00,
     0x9B, 0x00, 0x16, 0x00, 0x1F, 0x00, 0x20, 0x00, 0x27, 0x00, 0x2D, 0x00, 0x4A, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x05, 0x00, 0x17, 0x00, 0x00,
     0x06, 0x01, 0x02, 0x03, 0x04, 0x06, 0x07, 0x05, 0x01, 0x04, 0x05, 0x06, 0x0A, 0x01, 0x1A, 0x00,
     0x57, 0x69, 0x6E, 0x64, 0x6F, 0x77, 0x73, 0x2E, 0x58, 0x62, 0x6F, 0x78, 0x2E, 0x49, 0x6E, 0x70,
     0x75, 0x74, 0x2E, 0x47, 0x61, 0x6D, 0x65, 0x70, 0x61, 0x64, 0x05, 0x56, 0xFF, 0x76, 0x97, 0xFD,
@@ -244,6 +244,7 @@ uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint1
     }
     xboneDriverState = XboxOneDriverState::EMU_READY_ANNOUNCE;
     auth_completed = false;
+    auth_broker.set_auth_completed(ModeXboxOne, false);
     waiting_ack = false;
     xbox_one_powered_on = false;
     auth_handler_connected = auth_broker.has_handler(ModeXboxOne);
@@ -281,7 +282,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE, false));
             return true;
         }
-        printf("got cmd: %02x\r\n", command);
+        // printf("got cmd: %02x\r\n", command);
         if (command == GIP_ACK_RESPONSE)
         {
             waiting_ack = false;
@@ -382,6 +383,8 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             }
             break;
             case GIP_STATE_RESET:
+                auth_completed = false;
+                auth_broker.set_auth_completed(ModeXboxOne, false);
                 xboneDriverState = XboxOneDriverState::EMU_READY_ANNOUNCE;
                 incomingXGIP.reset();
                 outgoingXGIP.reset();
@@ -394,7 +397,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             default:
                 break;
             }
-            printf("state: %d\r\n", incomingXGIP.getData()[0]);
+            // printf("state: %d\r\n", incomingXGIP.getData()[0]);
         }
         else if (command == GIP_CMD_LED_ON)
         {
@@ -423,16 +426,12 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         }
         else if ((command == GIP_AUTH || command == GIP_FINAL_AUTH))
         {
-            for (size_t i = 0; i < incomingXGIP.getDataLength(); i++)
-            {
-                printf("%02x ", incomingXGIP.getData()[i]);
-            }
-            printf("\r\n");
             if (incomingXGIP.getDataLength() == 2 && memcmp(incomingXGIP.getData(), authReady, sizeof(authReady)) == 0)
             {
                 printf("auth done\r\n");
                 xboneDriverState = XboxOneDriverState::EMU_AUTH_DONE;
                 auth_completed = true;
+                auth_broker.set_auth_completed(ModeXboxOne, true);
             }
 
             // Forward auth packet to registered host device via broker

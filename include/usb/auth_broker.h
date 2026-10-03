@@ -86,7 +86,15 @@ public:
      */
     bool has_response_handler(ConsoleMode mode) const;
 
+    /**
+     * Track whether the console/PC has declared auth complete for a mode, so
+     * controllers connected afterwards can be completed locally.
+     */
+    void set_auth_completed(ConsoleMode mode, bool completed);
+    bool is_auth_completed(ConsoleMode mode) const;
+
 private:
+    std::map<ConsoleMode, bool> auth_completed;
     std::map<ConsoleMode, AuthHandler> handlers;
     std::map<ConsoleMode, std::shared_ptr<UsbHostInterface>> auth_devices;
     std::map<ConsoleMode, AuthHandler> response_handlers;

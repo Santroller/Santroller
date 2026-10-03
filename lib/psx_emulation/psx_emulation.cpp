@@ -19,6 +19,10 @@ void PSXEmulation::begin(SubType type)
     #endif
     if (spi)
     {
+        if (spi->type == type)
+        {
+            return;
+        }
         end();
     }
     pio_spi_config_t config = {

@@ -95,6 +95,14 @@ static void i2c_slave_handler1(i2c_inst_t *i2c, i2c_slave_event_t event)
 void WiiExtensionEmulation::begin(SubType type)
 {
     printf("WiiExtensionEmulation begin %d %d %d\r\n", m_sda, m_scl, m_block);
+    if (m_context && m_context->type == type)
+    {
+        return;
+    }
+    if (m_context)
+    {
+        end();
+    }
     if (m_block == 0)
     {
         m_context = &context_0;

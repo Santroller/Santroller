@@ -57,6 +57,15 @@ bool AuthBroker::forward_auth_response(ConsoleMode mode, XGIPProtocol* packet) {
     return false;
 }
 
+void AuthBroker::set_auth_completed(ConsoleMode mode, bool completed) {
+    auth_completed[mode] = completed;
+}
+
+bool AuthBroker::is_auth_completed(ConsoleMode mode) const {
+    auto it = auth_completed.find(mode);
+    return it != auth_completed.end() && it->second;
+}
+
 bool AuthBroker::has_response_handler(ConsoleMode mode) const {
     return response_handlers.find(mode) != response_handlers.end();
 }

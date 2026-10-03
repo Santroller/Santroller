@@ -94,6 +94,9 @@ void XboxOneHost::disconnect()
 
 void XboxOneHost::send_report_from_host(XGIPProtocol *report)
 {
+    // The console is now driving auth, so any earlier local auth-complete is stale.
+    // The forwarded packet itself may be the console's auth-complete.
+    m_gip_device.auth_complete_sent = false;
     m_gip_device.outgoing_xgip->copyAttributes(report);
     if (m_gip_device.outgoing_xgip->getSequence() == 0)
     {
@@ -315,17 +318,24 @@ void XboxOneHost::set_rumble(uint8_t left, uint8_t right)
     rumble.rightMotor = (uint16_t)right * 100 / 255;
     rumble.duration = (left || right) ? 0xFF : 0;
 
-    m_gip_device.outgoing_xgip->reset();
-    m_gip_device.outgoing_xgip->setCommand(GIP_CMD_RUMBLE);
-    m_gip_device.outgoing_xgip->setData((uint8_t *)&rumble, sizeof(rumble));
-    send_report_from_host(m_gip_device.outgoing_xgip);
+    send_feedback_packet(GIP_CMD_RUMBLE, (uint8_t *)&rumble, sizeof(rumble));
+}
+
+// Feedback must not touch m_gip_device.outgoing_xgip: it may hold an in-flight
+// chunked auth transfer forwarded from the console, and resetting it mid-transfer
+// truncates the auth exchange.
+void XboxOneHost::send_feedback_packet(uint8_t command, const uint8_t *data, uint16_t len)
+{
+    static XGIPProtocol feedback;
+    feedback.reset();
+    feedback.setCommand(command);
+    feedback.setSequence(gip_sequence_pool_next(&m_gip_device.tx_sequence_pools, command));
+    feedback.setData(data, len);
+    gip_report_queue_push(m_report_queue, feedback.generatePacket(), feedback.getPacketLength());
 }
 
 void XboxOneHost::set_player_led(uint8_t player)
 {
     uint8_t data[3] = {0x00, (uint8_t)(player ? 0x01 : 0x00), 0x14};
-    m_gip_device.outgoing_xgip->reset();
-    m_gip_device.outgoing_xgip->setCommand(GIP_CMD_LED_ON);
-    m_gip_device.outgoing_xgip->setData(data, sizeof(data));
-    send_report_from_host(m_gip_device.outgoing_xgip);
+    send_feedback_packet(GIP_CMD_LED_ON, data, sizeof(data));
 }

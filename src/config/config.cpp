@@ -145,6 +145,35 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     auto device_id = proto_device.deviceid;
     DeviceReloadState previous_state;
     auto previous_device = device_mgr.get_root_device(device_id);
+
+    // Keep console emulation devices alive across reloads so the console link isn't dropped
+    // (dropping it would flip the communication state and trigger another reload).
+    std::shared_ptr<Device> preserved;
+    if (proto_device.which_device == proto_Device_psxEmulation_tag && previous_device &&
+        previous_device == device_mgr.get_psx_emulation_device())
+    {
+        auto psx = std::static_pointer_cast<PSXEmulationDevice>(previous_device);
+        if (memcmp(&psx->get_config(), &proto_device.device.psxEmulation, sizeof(proto_PSXEmulationDevice)) == 0)
+        {
+            preserved = previous_device;
+        }
+    }
+    else if (proto_device.which_device == proto_Device_wiiEmulation_tag && previous_device &&
+             previous_device == device_mgr.get_wii_emulation_device())
+    {
+        auto wii = std::static_pointer_cast<WiiExtensionEmulationDevice>(previous_device);
+        if (memcmp(&wii->get_config(), &proto_device.device.wiiEmulation, sizeof(proto_WiiEmulationDevice)) == 0)
+        {
+            preserved = previous_device;
+        }
+    }
+    if (preserved)
+    {
+        device_mgr.add_active_device(preserved);
+        preserved->still_connected = true;
+        return true;
+    }
+
     if (previous_device)
     {
         previous_device->save_reload_state(previous_state);

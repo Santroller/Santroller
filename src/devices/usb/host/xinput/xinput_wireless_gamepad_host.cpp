@@ -81,8 +81,8 @@ bool XInputWirelessGamepadHost::set_config()
     {
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
-    send_intr_xfer(m_ep_out, xbox360w_prescence, sizeof(xbox360w_prescence));
-    send_intr_xfer(m_ep_out, xbox360w_prescence, sizeof(xbox360w_prescence));
+    memcpy(m_ep_out_buf, xbox360w_prescence, sizeof(xbox360w_prescence));
+    send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(xbox360w_prescence));
     return true;
 }
 
@@ -133,12 +133,14 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                         m_name[(i + 1) * 2] = xinput_wireless_gamepad_name[i];
                     }
                     m_name[(sizeof(xinput_wireless_gamepad_name) - 1) * 2] = '0' + m_subtype;
-                    send_intr_xfer(m_ep_out, capabilitiesRequest, sizeof(capabilitiesRequest));
+                    memcpy(m_ep_out_buf, capabilitiesRequest, sizeof(capabilitiesRequest));
+                    send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(capabilitiesRequest));
                     m_check_caps = millis() + 1000;
                     m_found = true;
                     usb_host_remove_enumerating_interface(this);
                     usb_host_add_assignable_interface(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
                     process_delayed_init();
+                    set_player_led(0);
                 }
             }
             // Capabilities report
@@ -159,12 +161,14 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
         }
         if (!m_found && millis() > m_check_link)
         {
-            send_intr_xfer(m_ep_out, xbox360w_prescence, sizeof(xbox360w_prescence));
+            memcpy(m_ep_out_buf, xbox360w_prescence, sizeof(xbox360w_prescence));
+            send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(xbox360w_prescence));
             m_check_link = millis() + 1000;
         }
         if (m_check_caps && millis() > m_check_caps)
         {
-            send_intr_xfer(m_ep_out, capabilitiesRequest, sizeof(capabilitiesRequest));
+            memcpy(m_ep_out_buf, capabilitiesRequest, sizeof(capabilitiesRequest));
+            send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(capabilitiesRequest));
             m_check_caps = millis() + 1000;
         }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
@@ -185,17 +189,24 @@ void XInputWirelessGamepadHost::set_rumble(uint8_t left, uint8_t right)
 {
     if (!m_ep_out || !m_found) return;
     uint8_t buf[12] = {0x00, 0x01, 0x0f, 0xc0, 0x00, left, right, 0x00, 0x00, 0x00, 0x00, 0x00};
-    send_intr_xfer(m_ep_out, buf, sizeof(buf));
+    memcpy(m_ep_out_buf, buf, sizeof(buf));
+    send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(buf));
 }
 
 void XInputWirelessGamepadHost::set_player_led(uint8_t player)
 {
     if (!m_ep_out || !m_found) return;
+    if (player == 0)
+    {
+        player = (m_ep_out / 2) + 1;
+    }
     uint8_t led_code = 0;
     if (player == 1) led_code = 2;
     else if (player == 2) led_code = 3;
     else if (player == 3) led_code = 4;
     else if (player == 4) led_code = 5;
+    if (led_code == 0) return;
     uint8_t buf[12] = {0x00, 0x00, 0x08, (uint8_t)(0x40 + led_code), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    send_intr_xfer(m_ep_out, buf, sizeof(buf));
+    memcpy(m_ep_out_buf, buf, sizeof(buf));
+    send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(buf));
 }

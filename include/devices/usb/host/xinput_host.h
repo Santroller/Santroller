@@ -105,7 +105,8 @@ private:
     uint8_t m_ep_out;
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
-    uint8_t m_ep_in_buf[64];
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[64];
     uint8_t m_report_buf[64];
     bool m_found = false;
     uint32_t m_check_caps = 0;

@@ -117,6 +117,7 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
             // Gamepad inputs
             if (header->type == 0x01 || header->type == 0x03)
             {
+                m_check_caps = 0;
                 memcpy(m_report_buf, m_ep_in_buf + sizeof(header), xferred_bytes - sizeof(header));
                 if (!m_led_set)
                 {
@@ -140,6 +141,7 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                     memcpy(m_ep_out_buf, capabilitiesRequest, sizeof(capabilitiesRequest));
                     send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(capabilitiesRequest));
                     m_check_caps = millis() + 1000;
+                    m_caps_retries = 0;
                     m_found = true;
                     m_led_set = false;
                     usb_host_remove_enumerating_interface(this);
@@ -161,6 +163,7 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
                         printf("Found wt\r\n");
                     }
                     m_check_caps = 0;
+                    m_caps_retries = 0;
                     if (!m_led_set)
                     {
                         set_player_led(m_last_player_led);
@@ -176,9 +179,17 @@ bool XInputWirelessGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, u
         }
         if (m_check_caps && millis() > m_check_caps)
         {
-            memcpy(m_ep_out_buf, capabilitiesRequest, sizeof(capabilitiesRequest));
-            send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(capabilitiesRequest));
-            m_check_caps = millis() + 1000;
+            if (m_caps_retries < 2)
+            {
+                m_caps_retries++;
+                memcpy(m_ep_out_buf, capabilitiesRequest, sizeof(capabilitiesRequest));
+                send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(capabilitiesRequest));
+                m_check_caps = millis() + 1000;
+            }
+            else
+            {
+                m_check_caps = 0;
+            }
         }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }

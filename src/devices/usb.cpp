@@ -115,8 +115,9 @@ size_t usb_host_assignable_interface_count()
 
 void usb_host_add_assignable_devices(bool rescan)
 {
-    for (const auto &device : usb_assignable_interfaces)
+    for (size_t i = 0; i < usb_assignable_interfaces.size(); ++i)
     {
+        auto device = usb_assignable_interfaces[i];
         device->still_connected = true;
 
         if (rescan && device->subtype() == SubType_Midi)
@@ -142,13 +143,24 @@ void usb_host_add_assignable_devices(bool rescan)
 
 void usb_host_update_interfaces(bool full_poll, bool send_events)
 {
-    for (const auto &device : usb_enumerating_interfaces)
+    for (size_t i = 0; i < usb_enumerating_interfaces.size(); )
     {
+        auto device = usb_enumerating_interfaces[i];
         device->update(full_poll, send_events);
+        if (i < usb_enumerating_interfaces.size() && usb_enumerating_interfaces[i] == device)
+        {
+            ++i;
+        }
     }
-    for (const auto &device : usb_assignable_interfaces)
+
+    for (size_t i = 0; i < usb_assignable_interfaces.size(); )
     {
+        auto device = usb_assignable_interfaces[i];
         device->update(full_poll, send_events);
+        if (i < usb_assignable_interfaces.size() && usb_assignable_interfaces[i] == device)
+        {
+            ++i;
+        }
     }
 
     for (auto *device : usb_pending_promotions)

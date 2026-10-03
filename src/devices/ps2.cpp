@@ -100,7 +100,7 @@ uint16_t PS2Device::read_button_pressure(proto_PS2ButtonType type)
 }
 bool PS2Device::is_ps2_device(PS2ControllerType type)
 {
-    return m_lastControllerType == type;
+    return m_controller.controller_valid() && m_lastControllerType == type;
 }
 
 void PS2Device::set_rumble(uint8_t left, uint8_t right)

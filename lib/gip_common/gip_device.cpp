@@ -13,6 +13,22 @@
 #define GIP_TRACE_ENABLED 0
 #define GIP_RELIABLE_MESSAGE_MAX_HEARTBEAT_ACKS 8
 
+// Share button lives in the IConsoleFunctionMap input report extension (MS-GIPUSB 3.1.5.6.1.3.1),
+// located from the device metadata; see gip_parse_console_function_offset.
+static bool gip_read_capture(const gip_device_t *device, const uint8_t *data, uint16_t len)
+{
+    uint16_t offset = device->console_function_offset;
+    if (offset == 0 || len < offset + GIP_CONSOLE_FUNCTION_MAP_LENGTH)
+        return false;
+    // Function IDs can appear in any slot
+    for (uint16_t i = 0; i < GIP_CONSOLE_FUNCTION_MAP_LENGTH && data[offset + i]; i++)
+    {
+        if (data[offset + i] == GIP_CONSOLE_FUNCTION_SHARE)
+            return true;
+    }
+    return false;
+}
+
 void gip_device_init(gip_device_t *device)
 {
     if (!device) return;
@@ -127,6 +143,7 @@ bool gip_device_process_incoming(
             uint16_t input_len = device->incoming_xgip->getDataLength();
             if (input_len <= sizeof(device->raw_input)) {
                 memcpy(device->raw_input, input_data, input_len);
+                device->capture = gip_read_capture(device, input_data, input_len);
                 if (device->has_virtual_key_guide) {
                     auto gamepad = (XboxOneGamepad_Data_t *)device->raw_input;
                     gamepad->guide = gamepad->guide | (device->virtual_key_guide ? 1 : 0);

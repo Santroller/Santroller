@@ -196,6 +196,16 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
   process_events();
 }
 
+void HIDConfigDevice::drain_pending()
+{
+  while (m_pending_count && list.event_count < TU_ARRAY_SIZE(list.event))
+  {
+    list.event[list.event_count++] = m_pending[m_pending_head];
+    m_pending_head = (m_pending_head + 1) % max_pending_events;
+    m_pending_count--;
+  }
+}
+
 void HIDConfigDevice::process_events()
 {
   // safety net in case event_count was ever pushed past the array's capacity
@@ -203,6 +213,7 @@ void HIDConfigDevice::process_events()
   {
     list.event_count = TU_ARRAY_SIZE(list.event);
   }
+  drain_pending();
   if (list.event_count == 0 || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
   {
     return;
@@ -282,7 +293,7 @@ void HIDConfigDevice::handle_command(proto_Command command)
   {
   case proto_Command_setProfile_tag:
   {
-    printf("Set id: %d, instance: %d\r\n", command.command.setProfile.profileId, command.command.setProfile.instanceId);
+    printf("Set id %lu: %d, instance: %d\r\n", static_cast<unsigned long>(millis()), command.command.setProfile.profileId, command.command.setProfile.instanceId);
     profile_selected = true;
     profile_changed = true;
     selected_profile = command.command.setProfile.profileId;
@@ -700,7 +711,23 @@ bool HIDConfigDevice::has_event_space()
     return false;
   }
   dev->process_events();
-  return dev->list.event_count < TU_ARRAY_SIZE(dev->list.event);
+  return !dev->m_pending_count && dev->list.event_count < TU_ARRAY_SIZE(dev->list.event);
+}
+
+void HIDConfigDevice::flush_events(uint32_t timeout_us)
+{
+  auto dev = HIDConfigDevice::instance;
+  if (!dev || is_secondary_pico_mode())
+  {
+    return;
+  }
+  const uint32_t started_us = micros();
+  while ((dev->list.event_count || dev->m_pending_count || (tud_ready() && usbd_edpt_busy(TUD_OPT_RHPORT, dev->m_epin))) &&
+         !tool_closed() && micros() - started_us < timeout_us)
+  {
+    tud_task();
+    dev->process_events();
+  }
 }
 
 bool HIDConfigDevice::send_event(proto_Event event, bool now)
@@ -755,10 +782,21 @@ bool HIDConfigDevice::send_event(proto_Event event, bool now)
     }
   }
   bool sent = false;
-  if (dev->list.event_count < TU_ARRAY_SIZE(dev->list.event))
+  dev->drain_pending();
+  if (!dev->m_pending_count && dev->list.event_count < TU_ARRAY_SIZE(dev->list.event))
   {
     dev->list.event[dev->list.event_count++] = event;
     sent = true;
+  }
+  else if (now && dev->m_pending_count < max_pending_events)
+  {
+    dev->m_pending[(dev->m_pending_head + dev->m_pending_count) % max_pending_events] = event;
+    dev->m_pending_count++;
+    sent = true;
+  }
+  else if (now)
+  {
+    printf("cfg event overflow t=%d\r\n", event.which_event);
   }
   dev->lastKeepAlive = millis();
   dev->processing = false;
@@ -774,6 +812,8 @@ void HIDConfigDevice::reset_keepalive()
   auto dev = HIDConfigDevice::instance;
   dev->lastKeepAlive = 0;
   dev->tool_seen = false;
+  dev->m_pending_count = 0;
+  dev->m_pending_head = 0;
   dev->selected_profile = 0;
   dev->profile_selected = false;
   dev->profile_changed = false;

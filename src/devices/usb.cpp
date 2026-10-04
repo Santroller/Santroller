@@ -421,7 +421,7 @@ void USBHostHardwareDevice::update(bool full_poll, bool send_events)
 
     if (m_devices_changed && millis() > m_devices_changed)
     {
-        printf("usbh changed n=%d\r\n", usb_host_assignable_interface_count());
+        printf("usbh changed %lu n=%d\r\n", static_cast<unsigned long>(millis()), usb_host_assignable_interface_count());
         m_devices_changed = 0;
         ConfigManager::instance().mark_mode_change_time(millis());
         reload();

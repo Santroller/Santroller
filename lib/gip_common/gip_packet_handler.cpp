@@ -87,6 +87,7 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device)
         return true;
 
     case GIP_DEVICE_DESCRIPTOR:
+        device->console_function_offset = gip_parse_console_function_offset(xgip->getData(), xgip->getDataLength());
         if (interface->on_device_descriptor)
         {
             // Detect device subtype from descriptor data using shared mappings
@@ -238,6 +239,73 @@ uint8_t gip_detect_device_subtype(
     }
 
     return 0xFF; // Unknown device
+}
+
+// Windows.Xbox.Input.IConsoleFunctionMap {ECDDD2FE-D387-4294-BD96-1A712E3DC77D}, little-endian GUID layout
+static const uint8_t GIP_CONSOLE_FUNCTION_MAP_GUID[16] = {
+    0xFE, 0xD2, 0xDD, 0xEC, 0x87, 0xD3, 0x94, 0x42, 0xBD, 0x96, 0x1A, 0x71, 0x2E, 0x3D, 0xC7, 0x7D};
+
+#define GIP_METADATA_MESSAGES_OFFSET 0   // BinaryDeviceMetadata::length is really the messages array offset
+#define GIP_METADATA_INTERFACES_OFFSET 12 // BinaryDeviceMetadata::interfaces_offset
+#define GIP_METADATA_MESSAGE_ENTRY_LENGTH 23
+
+// Per MS-GIPUSB 3.1.5.6.1.3, input report extensions are appended to the end of the input report and
+// the 0x20 message length in the metadata includes them. With IConsoleFunctionMap as the only extension,
+// the map occupies the last 18 bytes of the report.
+uint16_t gip_parse_console_function_offset(const uint8_t *data, uint16_t len)
+{
+    if (!data || len < sizeof(BinaryMetadataHeader) + sizeof(BinaryDeviceMetadata))
+    {
+        return 0;
+    }
+    const uint8_t *md = data + sizeof(BinaryMetadataHeader);
+    uint16_t md_len = len - sizeof(BinaryMetadataHeader);
+
+    uint16_t interfaces = read_le16(md + GIP_METADATA_INTERFACES_OFFSET);
+    if (!interfaces || interfaces >= md_len)
+    {
+        return 0;
+    }
+    uint8_t count = md[interfaces];
+    if (interfaces + 1 + count * 16 > md_len)
+    {
+        return 0;
+    }
+    bool supported = false;
+    for (uint8_t i = 0; i < count && !supported; i++)
+    {
+        supported = memcmp(md + interfaces + 1 + i * 16, GIP_CONSOLE_FUNCTION_MAP_GUID, 16) == 0;
+    }
+    if (!supported)
+    {
+        return 0;
+    }
+
+    uint16_t messages = read_le16(md + GIP_METADATA_MESSAGES_OFFSET);
+    if (!messages || messages >= md_len)
+    {
+        return 0;
+    }
+    count = md[messages];
+    if (messages + 1 + count * GIP_METADATA_MESSAGE_ENTRY_LENGTH > md_len)
+    {
+        return 0;
+    }
+    for (uint8_t i = 0; i < count; i++)
+    {
+        const uint8_t *entry = md + messages + 1 + i * GIP_METADATA_MESSAGE_ENTRY_LENGTH;
+        if (entry[2] != GIP_INPUT_REPORT)
+        {
+            continue;
+        }
+        uint16_t message_length = read_le16(entry + 3);
+        if (message_length < GIP_CONSOLE_FUNCTION_MAP_LENGTH)
+        {
+            return 0;
+        }
+        return message_length - GIP_CONSOLE_FUNCTION_MAP_LENGTH;
+    }
+    return 0;
 }
 
 void gip_send_power_on_sequence(gip_device_t *device)

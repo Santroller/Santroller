@@ -19,10 +19,11 @@ extern "C" {
  * 
  * @param input_data Pointer to controller input data (XboxOneGamepad_Data_t, etc.)
  * @param subtype Device subtype (SubType_Gamepad, SubType_RockBandGuitar, etc.)
+ * @param capture Share/capture button state (gip_device_t::capture)
  * @param type Output mapping type
  * @return true if button is pressed, false otherwise
  */
-bool gip_tick_digital(const void *input_data, uint8_t subtype, proto_Output *type);
+bool gip_tick_digital(const void *input_data, uint8_t subtype, bool capture, proto_Output *type);
 
 /**
  * Shared tick_analog implementation for Xbox One controllers

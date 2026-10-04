@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include "device.pb.h"
 
-bool gip_tick_digital(const void *input_data, uint8_t subtype, proto_Output *type)
+bool gip_tick_digital(const void *input_data, uint8_t subtype, bool capture, proto_Output *type)
 {
     if (!input_data || !type) {
         return false;
@@ -95,6 +95,8 @@ bool gip_tick_digital(const void *input_data, uint8_t subtype, proto_Output *typ
             return data->dpadLeft;
         case Gamepad_DpadRight:
             return data->dpadRight;
+        case Gamepad_Capture:
+            return capture;
         default:
             return false;
         }

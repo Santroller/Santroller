@@ -302,7 +302,7 @@ void XboxOneHost::update(bool full_poll, bool send_events)
 bool XboxOneHost::tick_digital(proto_Output &type)
 {
     // Use shared GIP button mapping with shared device raw input
-    return gip_tick_digital(m_gip_device.raw_input, m_subtype, &type);
+    return gip_tick_digital(m_gip_device.raw_input, m_subtype, m_gip_device.capture, &type);
 }
 uint16_t XboxOneHost::tick_analog(proto_Output &type)
 {

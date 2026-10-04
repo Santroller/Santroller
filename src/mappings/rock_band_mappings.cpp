@@ -1197,35 +1197,41 @@ void RockBandDrumsAxisMapping::update_xboxone(uint8_t *buf)
         return;
     }
     XboxOneRockBandDrums_Data_t *report = (XboxOneRockBandDrums_Data_t *)buf;
+    // Velocity is 4 bits; a light hit must never round to 0 or the game reads it as the other pad type
+    uint8_t velocity = m_calibrated_value >> 12;
+    if (velocity == 0)
+    {
+        velocity = 1;
+    }
 
     switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
-        report->redVelocity = m_calibrated_value >> 12;
+        report->redVelocity = velocity;
         report->b = true;
         break;
     case RockBandDrums_YellowPad:
-        report->yellowVelocity = m_calibrated_value >> 12;
+        report->yellowVelocity = velocity;
         report->y = true;
         break;
     case RockBandDrums_BluePad:
-        report->blueVelocity = m_calibrated_value >> 12;
+        report->blueVelocity = velocity;
         report->x = true;
         break;
     case RockBandDrums_GreenPad:
-        report->greenVelocity = m_calibrated_value >> 12;
+        report->greenVelocity = velocity;
         report->a = true;
         break;
     case RockBandDrums_YellowCymbal:
-        report->yellowCymbalVelocity = m_calibrated_value >> 12;
+        report->yellowCymbalVelocity = velocity;
         report->y = true;
         break;
     case RockBandDrums_BlueCymbal:
-        report->blueCymbalVelocity = m_calibrated_value >> 12;
+        report->blueCymbalVelocity = velocity;
         report->x = true;
         break;
     case RockBandDrums_GreenCymbal:
-        report->greenCymbalVelocity = m_calibrated_value >> 12;
+        report->greenCymbalVelocity = velocity;
         report->a = true;
         break;
     // case RockBandDrums_LeftStickX:

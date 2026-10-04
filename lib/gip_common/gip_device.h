@@ -12,6 +12,9 @@ extern "C" {
 // Forward declaration
 typedef struct XGIPProtocol XGIPProtocol;
 
+#define GIP_CONSOLE_FUNCTION_MAP_LENGTH 18
+#define GIP_CONSOLE_FUNCTION_SHARE 0x01
+
 // GIP device state
 typedef struct gip_device_t {
     XGIPProtocol *incoming_xgip;  // For parsing incoming packets
@@ -28,6 +31,8 @@ typedef struct gip_device_t {
     uint8_t incoming_chunk_heartbeat_acks; // Heartbeat ACKs sent since the last received fragment
     bool has_virtual_key_guide;           // Controller reports guide button via GIP_VIRTUAL_KEYCODE
     uint8_t virtual_key_guide;            // Current guide button state from virtual key (0 or 1)
+    bool capture;                         // Share/capture button state from the console function map
+    uint16_t console_function_offset;     // Offset of IConsoleFunctionMap in the 0x20 input report, 0 = unsupported
     bool auth_complete_sent;              // Auth-complete packet has already been queued
     uint32_t last_ghl_poke;               // Timestamp of last GHL magic poke sent
     void *user_context;           // User context (e.g., pointer to owning controller instance)

@@ -52,6 +52,10 @@
 #include "hci.h"
 #include "devices/bt/bluetooth_stack.hpp"
 #include "secondary_pico.hpp"
+#ifndef MAIN_LOOP_STATS
+#define MAIN_LOOP_STATS 0
+#endif
+void wireless_trace_record(uint8_t interface, bool out, const char *reason, const uint8_t *data, uint32_t len);
 
 class HidConsoleBridge
 {
@@ -190,18 +194,21 @@ void hid_task(void)
         {
             proto_Event event = {which_event : proto_Event_reload_tag, event : {reload : {}}};
             HIDConfigDevice::send_event(event, true);
-            tud_task();
+            // The reload may reinit the device stack, which would discard anything still queued
+            HIDConfigDevice::flush_events(100000);
         }
-        printf("reload mode %d->%d\r\n", current_mode, requested_mode);
+        printf("reload %lu mode %d->%d\r\n", static_cast<unsigned long>(now), current_mode, requested_mode);
         static uint32_t reload_count = 0;
+        wireless_trace_record(0xff, false, "RELOAD", nullptr, 0);
         const auto before = heap_snapshot();
         ++reload_count;
         config_mgr.begin_reinit();
         load();
         config_mgr.finish_reinit(millis());
+        wireless_trace_record(0xff, false, "RELOADED", nullptr, 0);
         const auto after = heap_snapshot();
-        printf("reload #%lu heap used=%u free=%u d=%ld\r\n",
-               static_cast<unsigned long>(reload_count), static_cast<unsigned>(after.used),
+        printf("reload #%lu %lu heap used=%u free=%u d=%ld\r\n",
+               static_cast<unsigned long>(reload_count), static_cast<unsigned long>(millis()), static_cast<unsigned>(after.used),
                static_cast<unsigned>(after.free_blocks + after.unclaimed),
                static_cast<long>(after.used) - static_cast<long>(before.used));
         return;
@@ -229,7 +236,7 @@ static void initialize_device_stack()
 
 void reinitialize_device_stack()
 {
-    printf("usbd reinit\r\n");
+    printf("usbd reinit %lu\r\n", static_cast<unsigned long>(millis()));
     ProfileManager::instance().deinitialize_device_bluetooth();
     tud_deinit(TUD_OPT_RHPORT);
     initialize_device_stack();
@@ -294,11 +301,14 @@ int main()
     initialize_device_stack();
     ConfigManager::instance().finish_reinit(millis());
 
+#if MAIN_LOOP_STATS
     uint32_t last_loop_us = micros();
     uint32_t next_loop_stats_ms = millis() + 4000;
     uint32_t max_loop_gap_us = 0;
+#endif
     while (1)
     {
+#if MAIN_LOOP_STATS
         const uint32_t loop_us = micros();
         const uint32_t loop_gap_us = loop_us - last_loop_us;
         last_loop_us = loop_us;
@@ -314,7 +324,10 @@ int main()
                    static_cast<unsigned long>(max_loop_gap_us));
             max_loop_gap_us = 0;
             next_loop_stats_ms = loop_ms + 4000;
+            // Don't count the stats print itself as a loop gap
+            last_loop_us = micros();
         }
+#endif
         tud_task(); // tinyusb device task
         tuh_task();
         hid_task();

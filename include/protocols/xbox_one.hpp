@@ -275,8 +275,12 @@ typedef struct
     uint8_t yellowCymbalVelocity : 4;
     uint8_t : 4;
     uint8_t greenCymbalVelocity : 4;
+    uint8_t unknown[4];
+    // IConsoleFunctionMap extension, which MS-GIPUSB places directly after the standard payload
     uint8_t consoleFunctions[18];
 } __attribute__((packed)) XboxOneRockBandDrums_Data_t;
+// Must match the 0x20 message length declared in xb1_descriptor_drum
+static_assert(sizeof(XboxOneRockBandDrums_Data_t) == 0x1C, "Xbox One drum input report size must match descriptor");
 
 // This isnt actually real but by doing this we can get some sane gamepad mappings in turntable mode
 typedef struct

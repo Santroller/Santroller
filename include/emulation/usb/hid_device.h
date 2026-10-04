@@ -75,10 +75,18 @@ public:
   // Non-blocking: true if an event can be queued without waiting on the host.
   static bool has_event_space();
   static constexpr uint32_t max_event_flush_wait_us = 2000;
+  // Waits (servicing tud_task) until every queued event has been read by the tool, or the tool goes away
+  static void flush_events(uint32_t timeout_us);
   static std::shared_ptr<HIDConfigDevice> instance;
 
 private:
   void process_events();
+  void drain_pending();
+  // Important (now=true) events that didn't fit in list; never dropped while the tool is open
+  static constexpr uint8_t max_pending_events = 16;
+  proto_Event m_pending[max_pending_events];
+  uint8_t m_pending_head = 0;
+  uint8_t m_pending_count = 0;
   void handle_command(proto_Command command);
   proto_EventList list;
   proto_PinDetectType m_detect_type;

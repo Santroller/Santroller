@@ -371,7 +371,7 @@ void BtXboxOneHost::send_hid_output(const uint8_t *data, uint16_t len)
 
 bool BtXboxOneHost::tick_digital(proto_Output &type)
 {
-    return gip_tick_digital(m_gip_device.raw_input, m_subtype, &type);
+    return gip_tick_digital(m_gip_device.raw_input, m_subtype, m_gip_device.capture, &type);
 }
 
 uint16_t BtXboxOneHost::tick_analog(proto_Output &type)

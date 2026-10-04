@@ -58,6 +58,15 @@ uint8_t gip_detect_device_subtype(
 );
 
 /**
+ * Locate the IConsoleFunctionMap extension in the 0x20 input report from device metadata
+ *
+ * @param data Device descriptor data (including BinaryMetadataHeader)
+ * @param len Length of data
+ * @return Byte offset of the console function map in the input report, or 0 if unsupported
+ */
+uint16_t gip_parse_console_function_offset(const uint8_t *data, uint16_t len);
+
+/**
  * Send power-on sequence to device
  * 
  * @param device GIP device

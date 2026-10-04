@@ -1131,7 +1131,18 @@ void GamepadButtonMapping::update_xboxone(uint8_t *buf)
     case Gamepad_Capture:
         if (m_last_value)
         {
-            report->consoleFunctions[0] = 0x01;
+            // IConsoleFunctionMap sits directly after each device type's standard payload
+            switch (m_profile->subtype)
+            {
+            case GuitarHeroDrums:
+            case RockBandDrums:
+            case PowerGigDrum:
+                ((XboxOneRockBandDrums_Data_t *)buf)->consoleFunctions[0] = 0x01;
+                break;
+            default:
+                report->consoleFunctions[0] = 0x01;
+                break;
+            }
         }
         break;
     case Gamepad_LeftShoulder:

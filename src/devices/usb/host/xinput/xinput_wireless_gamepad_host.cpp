@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <cstring>
 #include <stdio.h>
-#define XINPUT_WIRELESS_DEBUG 1
+#define XINPUT_WIRELESS_DEBUG 0
 #if XINPUT_WIRELESS_DEBUG
 #define XINPUT_WIRELESS_DEBUG_PRINT(...) printf(__VA_ARGS__)
 #else

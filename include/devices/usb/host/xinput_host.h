@@ -1,6 +1,7 @@
 #pragma once
 #include "devices/usb/host/host.hpp"
 #include "protocols/xinput.hpp"
+#include <atomic>
 
 class XInputGamepadHost : public UsbHostInterface
 {
@@ -105,6 +106,27 @@ private:
     bool send_out(const char *reason, const uint8_t *packet, uint8_t len);
     void flush_out_queue();
     void send_link_requests(bool newly_connected);
+    void process_events();
+    void link_restored(const char *why);
+    void disconnect();
+    void process_in(const uint8_t *buf, uint32_t len);
+    void process_out(xfer_result_t result);
+    // IN transfers captured in xfer_cb (producer) and serviced from update (consumer)
+    struct InEvent
+    {
+        xfer_result_t result;
+        uint8_t length;
+        uint8_t data[64];
+    };
+    static constexpr uint8_t event_queue_capacity = 8;
+    InEvent m_events[event_queue_capacity] = {};
+    std::atomic<uint8_t> m_event_head{0};
+    std::atomic<uint8_t> m_event_tail{0};
+    std::atomic<uint32_t> m_events_dropped{0};
+    uint32_t m_events_dropped_reported = 0;
+    // Only one OUT transfer is in flight at a time, so a single slot is enough
+    std::atomic<bool> m_out_done{false};
+    xfer_result_t m_out_result = XFER_RESULT_SUCCESS;
     struct OutCommand
     {
         const char *reason;
@@ -126,6 +148,9 @@ private:
     uint32_t m_check_link = 0;
     uint8_t m_caps_retries = 0;
     uint8_t m_last_player_led = 0;
+    // Non-zero while the data link is down but the slot is still held
+    uint32_t m_link_lost_ms = 0;
+    static constexpr uint32_t link_loss_grace_ms = 3000;
     bool m_led_set = false;
     bool m_wt = false;
     bool m_out_pending = false;
@@ -134,6 +159,7 @@ private:
     uint32_t m_last_input_ms = 0;
     uint32_t m_next_input_stats_ms = 0;
     uint32_t m_reported_input_count = 0;
+    uint32_t m_empty_count = 0;
 };
 class XInputWirelessAudioHost : public UsbHostInterface
 {
@@ -151,5 +177,5 @@ private:
     uint8_t m_ep_out;
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
-    uint8_t m_ep_in_buf[64];
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
 };

@@ -94,6 +94,7 @@ void GuitarHeroGuitarButtonMapping::update_switch(uint8_t *buf)
 void GuitarHeroGuitarButtonMapping::update_ps2(uint8_t *buf)
 {
     PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)buf;
+    report->dpadLeft = true;
     switch (m_mapping.mapping.mapping.ghButton)
     {
     case GuitarHeroGuitar_Green:

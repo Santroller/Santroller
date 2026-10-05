@@ -556,8 +556,8 @@ bool WiiExtensionDecoder::tick_digital(proto_Output &type) const
             case Gamepad_DpadDown:      return read_button(WiiButtonClassicDPadDown);
             case Gamepad_DpadLeft:      return read_button(WiiButtonClassicDPadLeft);
             case Gamepad_DpadRight:     return read_button(WiiButtonClassicDPadRight);
-            case Gamepad_LeftShoulder:  return read_button(WiiButtonClassicLt);
-            case Gamepad_RightShoulder: return read_button(WiiButtonClassicRt);
+            case Gamepad_LeftShoulder:  return read_button(WiiButtonClassicZl);
+            case Gamepad_RightShoulder: return read_button(WiiButtonClassicZr);
             case Gamepad_Start:         return read_button(WiiButtonClassicPlus);
             case Gamepad_Back:          return read_button(WiiButtonClassicMinus);
             case Gamepad_Guide:         return read_button(WiiButtonClassicHome);

@@ -27,7 +27,11 @@ static const char xinput_wireless_gamepad_name[] = "X360 Wireless 0";
 static const char xinput_wireless_gamepad_disconnected_name[] = "X360 Wireless Receiver Slot 0";
 
 #ifndef XINPUT_WIRELESS_TRACE
-#define XINPUT_WIRELESS_TRACE 0
+#define XINPUT_WIRELESS_TRACE 1
+#endif
+
+#ifndef XINPUT_WIRELESS_TRACE_RECORD
+#define XINPUT_WIRELESS_TRACE_RECORD 1
 #endif
 
 #if XINPUT_WIRELESS_TRACE
@@ -48,6 +52,7 @@ static size_t wireless_trace_count = 0;
 
 void wireless_trace_record(uint8_t interface, bool out, const char *reason, const uint8_t *data, uint32_t len)
 {
+#if XINPUT_WIRELESS_TRACE_RECORD
     auto &e = wireless_trace[wireless_trace_head];
     e.ms = millis();
     e.reason = reason;
@@ -58,6 +63,13 @@ void wireless_trace_record(uint8_t interface, bool out, const char *reason, cons
     wireless_trace_head = (wireless_trace_head + 1) % wireless_trace_size;
     if (wireless_trace_count < wireless_trace_size)
         wireless_trace_count++;
+#else
+    (void)interface;
+    (void)out;
+    (void)reason;
+    (void)data;
+    (void)len;
+#endif
 }
 
 // Snapshot the trace on drop and print it a line at a time, so it doesn't overflow the console buffer
@@ -103,6 +115,7 @@ static void trace_wireless_report(uint8_t dev_addr, uint8_t interface, uint8_t e
 {
     if (strcmp(reason, "other") != 0)
         wireless_trace_record(interface, direction[0] == 'o', reason, data, xferred_bytes);
+
     constexpr size_t max_bytes = 16;
     char hex[max_bytes * 2 + 1] = {};
     size_t count = std::min(static_cast<size_t>(xferred_bytes), max_bytes);
@@ -115,8 +128,10 @@ static void trace_wireless_report(uint8_t dev_addr, uint8_t interface, uint8_t e
     {
         snprintf(hex + i * 2, sizeof(hex) - i * 2, "%02x", data[i]);
     }
+#if XINPUT_WIRELESS_DEBUG
     XINPUT_WIRELESS_DEBUG_PRINT("w %lu %u %c %s %s\r\n",
                                 static_cast<unsigned long>(millis()), interface, direction[0], reason, hex);
+#endif
 }
 
 XInputWirelessGamepadHost::XInputWirelessGamepadHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id)

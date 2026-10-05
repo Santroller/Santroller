@@ -35,6 +35,7 @@ public:
 
 private:
     bool send_ps4_output();
+    bool send_ghl_player_led();
     ps4_output_report m_output_report = {};
     bool m_output_dirty = true;
     bool m_out_pending = false;
@@ -52,6 +53,9 @@ private:
     bool m_third_party;
     bool m_auth_registered = false;
     uint32_t m_last_ghl_poke = 0;
+    uint8_t m_player = 1;
+    bool m_ghl_player_led_dirty = false;
+    bool m_ghl_submit_failed = false;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[64];
 };

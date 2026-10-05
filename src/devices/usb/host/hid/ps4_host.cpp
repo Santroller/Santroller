@@ -193,9 +193,7 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
         }
         if (intf->m_subtype == LiveGuitar)
         {
-            uint8_t ghl_ps4_magic_data[] = {0x30, 0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
-            intf->set_report(0x01, HID_REPORT_TYPE_OUTPUT, ghl_ps4_magic_data, sizeof(ghl_ps4_magic_data));
-            intf->set_report(0x30, HID_REPORT_TYPE_OUTPUT, ghl_ps4_magic_data, sizeof(ghl_ps4_magic_data));
+            intf->m_ghl_player_led_dirty = true;
             intf->m_last_ghl_poke = millis();
         }
         usb_host_add_assignable_interface(intf);
@@ -229,9 +227,7 @@ bool Ps4Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
             if ((millis() - m_last_ghl_poke) >= 8000)
             {
                 m_last_ghl_poke = millis();
-                uint8_t ghl_ps4_magic_data[] = {0x30, 0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
-                set_report(0x01, HID_REPORT_TYPE_OUTPUT, ghl_ps4_magic_data, sizeof(ghl_ps4_magic_data));
-                set_report(0x30, HID_REPORT_TYPE_OUTPUT, ghl_ps4_magic_data, sizeof(ghl_ps4_magic_data));
+                m_ghl_player_led_dirty = true;
             }
         }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
@@ -440,6 +436,23 @@ void Ps4Host::update(bool full_poll, bool send_events)
             printf("PS4 output failed: dev=%u ep=%u result=%u\r\n", m_dev_addr, m_ep_out, unsigned(m_out_result));
         }
     }
+
+    if (m_out_pending || (m_ep_out && usbh_edpt_busy(m_dev_addr, m_ep_out)))
+        return;
+
+    if (m_subtype == LiveGuitar && m_ghl_player_led_dirty)
+    {
+        if (!send_ghl_player_led())
+        {
+            if (!m_ghl_submit_failed)
+                printf("PS4 GHL player LED submission failed: dev=%u\r\n", m_dev_addr);
+            m_ghl_submit_failed = true;
+            return;
+        }
+        m_ghl_submit_failed = false;
+        m_ghl_player_led_dirty = false;
+    }
+
     if (!m_output_dirty || m_out_pending ||
         (m_ep_out && usbh_edpt_busy(m_dev_addr, m_ep_out)))
         return;
@@ -453,6 +466,13 @@ void Ps4Host::update(bool full_poll, bool send_events)
     m_out_submit_failed = false;
     m_output_dirty = false;
     m_out_pending = m_ep_out != 0;
+}
+
+bool Ps4Host::send_ghl_player_led()
+{
+    uint8_t player_led = static_cast<uint8_t>(1u << (m_player - 1));
+    uint8_t report[] = {0x30, player_led, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
+    return set_report(0x2, HID_REPORT_TYPE_OUTPUT, report, sizeof(report)) == sizeof(report);
 }
 
 bool Ps4Host::send_ps4_output()
@@ -489,6 +509,15 @@ void Ps4Host::set_lightbar(uint8_t r, uint8_t g, uint8_t b)
 
 void Ps4Host::set_player_led(uint8_t player)
 {
+    if (m_subtype == LiveGuitar)
+    {
+        if (player < 1 || player > 4 || m_player == player)
+            return;
+        m_player = player;
+        m_ghl_player_led_dirty = true;
+        return;
+    }
+
     if (player == 0)
     {
         set_lightbar(0, 0, 0);

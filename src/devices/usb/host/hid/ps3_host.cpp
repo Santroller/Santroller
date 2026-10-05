@@ -295,11 +295,6 @@ bool Ps3Host::set_config()
 
 bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
-    if (ep_addr == m_ep_out)
-    {
-        m_out_result = result;
-        m_out_done.store(true, std::memory_order_release);
-    }
     if (ep_addr & 0x80)
     {
         if (m_dancepad)
@@ -342,7 +337,6 @@ bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
             {
                 m_last_ghl_poke = millis();
                 uint8_t ghl_ps3wiiu_magic_data[] = {0x02, 0x08, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00};
-                set_report(0x01, HID_REPORT_TYPE_OUTPUT, ghl_ps3wiiu_magic_data, sizeof(ghl_ps3wiiu_magic_data));
                 set_report(0x02, HID_REPORT_TYPE_OUTPUT, ghl_ps3wiiu_magic_data, sizeof(ghl_ps3wiiu_magic_data));
             }
         }
@@ -830,23 +824,6 @@ uint16_t Ps3Host::tick_button_pressure(proto_Output &type)
 void Ps3Host::update(bool full_poll, bool send_events)
 {
     UsbHostInterface::update(full_poll, send_events);
-    if (m_out_done.exchange(false, std::memory_order_acquire))
-    {
-        m_out_pending = false;
-        if (m_out_result != XFER_RESULT_SUCCESS)
-        {
-            if (m_pending_player_led)
-                m_player_led_dirty = true;
-            else
-                m_output_dirty = true;
-            printf("PS3 output failed: dev=%u ep=%u result=%u\r\n", m_dev_addr, m_ep_out, unsigned(m_out_result));
-        }
-        m_pending_player_led = false;
-    }
-    if (m_out_pending ||
-        (m_ep_out && m_third_party && usbh_edpt_busy(m_dev_addr, m_ep_out)))
-        return;
-
     if (m_third_party && m_player_led_dirty && !m_switch_arcade)
     {
         if (!send_ps3_player_led())
@@ -858,7 +835,6 @@ void Ps3Host::update(bool full_poll, bool send_events)
         }
         m_out_submit_failed = false;
         m_player_led_dirty = false;
-        m_pending_player_led = m_ep_out && m_third_party;
         return;
     }
 
@@ -890,23 +866,23 @@ void Ps3Host::update(bool full_poll, bool send_events)
         }
         m_out_submit_failed = false;
         m_last_output_stagekit = true;
-        m_stagekit_queue_head = (m_stagekit_queue_head + 1) % stagekit_queue_capacity;
-        --m_stagekit_queue_count;
-        if (m_stagekit_queue_count < stagekit_queue_capacity)
-            m_stagekit_queue_overflow_reported = false;
+        complete_stagekit_command();
     }
+}
+
+void Ps3Host::complete_stagekit_command()
+{
+    if (m_stagekit_queue_count == 0)
+        return;
+    m_stagekit_queue_head = (m_stagekit_queue_head + 1) % stagekit_queue_capacity;
+    --m_stagekit_queue_count;
+    if (m_stagekit_queue_count < stagekit_queue_capacity)
+        m_stagekit_queue_overflow_reported = false;
 }
 
 bool Ps3Host::submit_ps3_output(uint8_t report_id, const void *report, uint8_t len)
 {
     memcpy(m_ep_out_buf, report, len);
-    if (m_ep_out && m_third_party)
-    {
-        if (!send_intr_xfer(m_ep_out, m_ep_out_buf, len))
-            return false;
-        m_out_pending = true;
-        return true;
-    }
     uint32_t result = set_report(report_id, HID_REPORT_TYPE_OUTPUT, m_ep_out_buf, len);
     return result == len;
 }

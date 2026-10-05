@@ -4,7 +4,6 @@
 #include "protocols/ps3_dancepad.hpp"
 #include "protocols/switch_arcade.hpp"
 #include "utils.h"
-#include <atomic>
 
 // Shared tick implementations — callable from both USB and BT hosts
 bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool wt = false);
@@ -53,15 +52,12 @@ private:
     bool send_ps3_output();
     bool submit_ps3_output(uint8_t report_id, const void *report, uint8_t len);
     bool send_ps3_player_led();
+    void complete_stagekit_command();
     bool m_output_dirty = true;
     bool m_player_led_dirty = true;
     ps3_output_report m_output_report = {};
-    bool m_out_pending = false;
-    bool m_pending_player_led = false;
     bool m_out_submit_failed = false;
     bool m_last_output_stagekit = false;
-    std::atomic<bool> m_out_done{false};
-    xfer_result_t m_out_result = XFER_RESULT_SUCCESS;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[64];
     static constexpr uint8_t stagekit_queue_capacity = 8;
     std::array<std::array<uint8_t, 2>, stagekit_queue_capacity> m_stagekit_commands = {};

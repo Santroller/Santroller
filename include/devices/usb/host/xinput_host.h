@@ -105,7 +105,6 @@ public:
 private:
     bool send_out(const char *reason, const uint8_t *packet, uint8_t len);
     void flush_out_queue();
-    void send_link_requests(bool newly_connected);
     void process_events();
     void link_restored(const char *why);
     void disconnect();
@@ -144,11 +143,10 @@ private:
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[64];
     uint8_t m_report_buf[64];
     bool m_found = false;
-    uint32_t m_check_caps = 0;
-    uint32_t m_check_link = 0;
-    uint8_t m_caps_retries = 0;
+    bool m_request_caps_on_input = false;
     uint8_t m_last_player_led = 0;
-    // Non-zero while the data link is down but the slot is still held
+    // Set while the data link is down but the slot is still held
+    bool m_link_lost = false;
     uint32_t m_link_lost_ms = 0;
     static constexpr uint32_t link_loss_grace_ms = 3000;
     bool m_led_set = false;
@@ -160,6 +158,11 @@ private:
     uint32_t m_next_input_stats_ms = 0;
     uint32_t m_reported_input_count = 0;
     uint32_t m_empty_count = 0;
+    // Written only by xfer_cb; update() reads and resets (a lost max is harmless)
+    volatile uint32_t m_last_in_us = 0;
+    volatile uint32_t m_max_in_gap_us = 0;
+    uint32_t m_last_update_us = 0;
+    uint32_t m_max_update_gap_us = 0;
 };
 class XInputWirelessAudioHost : public UsbHostInterface
 {

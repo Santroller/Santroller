@@ -52,7 +52,11 @@ public:
     static uint8_t xinputInterfaces[4];
     static uint8_t lastIntfInput;
     static uint32_t last_caps_query_time;
+    static volatile uint32_t report_generation;
 
 private:
     XInputGamepad_Data_t m_initial_report;
+    XInputGamepad_Data_t m_last_report;
+    bool m_has_last_report = false;
+    uint32_t m_report_generation = 0;
 };

@@ -8,7 +8,7 @@
 #include "managers/device_manager.hpp"
 
 
-#if 0
+#if 1
 std::shared_ptr<UsbHostInterface> XInputWirelessAudioHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
     // Audio is not yet supported; skip opening to save RAM and endpoint resources.

@@ -38,6 +38,7 @@ void XInputGamepadDevice::reset()
     memset(xinputInterfaces, 0xFF, sizeof(xinputInterfaces));
     lastIntfInput = 0;
     last_caps_query_time = 0;
+    ++report_generation;
 }
 XInputGamepadDevice::XInputGamepadDevice()
 {
@@ -56,6 +57,9 @@ void XInputGamepadDevice::initialize()
     ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
 
     memset(&m_initial_report, 0, sizeof(m_initial_report));
+    memset(&m_last_report, 0, sizeof(m_last_report));
+    m_has_last_report = false;
+    m_report_generation = report_generation;
     m_initial_report.leftStickX = 0;
     m_initial_report.leftStickY = 0;
     m_initial_report.rightStickX = 0;
@@ -225,12 +229,32 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
         reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
     }
 
+    if (m_report_generation != report_generation)
+    {
+        m_report_generation = report_generation;
+        m_has_last_report = false;
+    }
+
+    if (m_has_last_report &&
+        memcmp(&m_last_report, epin_buf, sizeof(XInputGamepad_Data_t)) == 0)
+    {
+        return;
+    }
+
     if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
     {
         return;
     }
 
-    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(XInputGamepad_Data_t), false);
+    if (usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(XInputGamepad_Data_t), false))
+    {
+        memcpy(&m_last_report, epin_buf, sizeof(XInputGamepad_Data_t));
+        m_has_last_report = true;
+    }
+    else
+    {
+        usbd_edpt_release(TUD_OPT_RHPORT, m_epin);
+    }
 }
 
 bool XInputGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
@@ -577,3 +601,4 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
 uint8_t XInputGamepadDevice::xinputInterfaces[4] = {0xFF, 0xFF, 0xFF, 0xFF};
 uint8_t XInputGamepadDevice::lastIntfInput = 0;
 uint32_t XInputGamepadDevice::last_caps_query_time = 0;
+volatile uint32_t XInputGamepadDevice::report_generation = 0;

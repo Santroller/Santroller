@@ -2,7 +2,6 @@
 #include <pb_encode.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <malloc.h>
 #include <map>
 #include "main.hpp"
 #include "config/config.hpp"
@@ -52,11 +51,6 @@
 #include "hci.h"
 #include "devices/bt/bluetooth_stack.hpp"
 #include "secondary_pico.hpp"
-#ifndef MAIN_LOOP_STATS
-#define MAIN_LOOP_STATS 0
-#endif
-void wireless_trace_record(uint8_t interface, bool out, const char *reason, const uint8_t *data, uint32_t len);
-
 class HidConsoleBridge
 {
 public:
@@ -157,24 +151,6 @@ bool mode_recently_changed()
     return ConfigManager::instance().mode_recently_changed(millis());
 }
 
-extern "C" void *_sbrk(int increment);
-extern char __StackLimit;
-
-struct HeapSnapshot
-{
-    size_t used;
-    size_t free_blocks;
-    size_t unclaimed;
-};
-
-static HeapSnapshot heap_snapshot()
-{
-    const auto info = mallinfo();
-    const auto break_address = reinterpret_cast<uintptr_t>(_sbrk(0));
-    const auto limit = reinterpret_cast<uintptr_t>(&__StackLimit);
-    return {info.uordblks, info.fordblks, limit > break_address ? limit - break_address : 0};
-}
-
 void hid_task(void)
 {
     auto& config_mgr = ConfigManager::instance();
@@ -183,9 +159,6 @@ void hid_task(void)
     {
         return;
     }
-    
-    ConsoleMode requested_mode = config_mgr.get_requested_mode();
-    ConsoleMode current_mode = config_mgr.get_current_mode();
     
     uint32_t now = millis();
     if (config_mgr.should_reinit(now))
@@ -197,20 +170,9 @@ void hid_task(void)
             // The reload may reinit the device stack, which would discard anything still queued
             HIDConfigDevice::flush_events(100000);
         }
-        printf("reload %lu mode %d->%d\r\n", static_cast<unsigned long>(now), current_mode, requested_mode);
-        static uint32_t reload_count = 0;
-        wireless_trace_record(0xff, false, "RELOAD", nullptr, 0);
-        const auto before = heap_snapshot();
-        ++reload_count;
         config_mgr.begin_reinit();
         load();
         config_mgr.finish_reinit(millis());
-        wireless_trace_record(0xff, false, "RELOADED", nullptr, 0);
-        const auto after = heap_snapshot();
-        printf("reload #%lu %lu heap used=%u free=%u d=%ld\r\n",
-               static_cast<unsigned long>(reload_count), static_cast<unsigned long>(millis()), static_cast<unsigned>(after.used),
-               static_cast<unsigned>(after.free_blocks + after.unclaimed),
-               static_cast<long>(after.used) - static_cast<long>(before.used));
         return;
     }
     update();
@@ -236,7 +198,6 @@ static void initialize_device_stack()
 
 void reinitialize_device_stack()
 {
-    printf("usbd reinit %lu\r\n", static_cast<unsigned long>(millis()));
     ProfileManager::instance().deinitialize_device_bluetooth();
     tud_deinit(TUD_OPT_RHPORT);
     initialize_device_stack();
@@ -270,8 +231,8 @@ void core1()
 }
 
 int main()
- {
-     if (pfb_is_after_firmware_update())
+{
+    if (pfb_is_after_firmware_update())
     {
         // handle new firmare info if needed
     }
@@ -301,33 +262,8 @@ int main()
     initialize_device_stack();
     ConfigManager::instance().finish_reinit(millis());
 
-#if MAIN_LOOP_STATS
-    uint32_t last_loop_us = micros();
-    uint32_t next_loop_stats_ms = millis() + 4000;
-    uint32_t max_loop_gap_us = 0;
-#endif
     while (1)
     {
-#if MAIN_LOOP_STATS
-        const uint32_t loop_us = micros();
-        const uint32_t loop_gap_us = loop_us - last_loop_us;
-        last_loop_us = loop_us;
-        if (loop_gap_us > max_loop_gap_us)
-        {
-            max_loop_gap_us = loop_gap_us;
-        }
-        const uint32_t loop_ms = millis();
-        if (static_cast<int32_t>(loop_ms - next_loop_stats_ms) >= 0)
-        {
-            printf("Main loop stats t=%lu max_gap_us=%lu\r\n",
-                   static_cast<unsigned long>(loop_ms),
-                   static_cast<unsigned long>(max_loop_gap_us));
-            max_loop_gap_us = 0;
-            next_loop_stats_ms = loop_ms + 4000;
-            // Don't count the stats print itself as a loop gap
-            last_loop_us = micros();
-        }
-#endif
         tud_task(); // tinyusb device task
         tuh_task();
         hid_task();

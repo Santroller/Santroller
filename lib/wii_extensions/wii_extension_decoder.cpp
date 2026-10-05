@@ -316,10 +316,6 @@ bool WiiExtensionDecoder::read_button(proto_WiiButtonType type) const
         case WiiButtonClassicDPadLeft:
             return ((wiiButtonsHigh) & (1 << 1));
         case WiiButtonClassicZr:
-            if (mType == WiiClassicControllerPro)
-            {
-                return ((wiiButtonsLow) & (1 << 1));
-            }
             return ((wiiButtonsHigh) & (1 << 2));
         case WiiButtonClassicX:
             return ((wiiButtonsHigh) & (1 << 3));
@@ -330,10 +326,6 @@ bool WiiExtensionDecoder::read_button(proto_WiiButtonType type) const
         case WiiButtonClassicB:
             return ((wiiButtonsHigh) & (1 << 6));
         case WiiButtonClassicZl:
-            if (mType == WiiClassicControllerPro)
-            {
-                return ((wiiButtonsLow) & (1 << 5));
-            }
             return ((wiiButtonsHigh) & (1 << 7));
         default:
             return false;

@@ -516,7 +516,7 @@ void GuitarHeroGuitarAxisMapping::update_ps2(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibrated_value >> 8;
+        report->whammy = 0x7f - (m_calibrated_value >> 9) ;
         break;
     case GuitarHeroGuitar_Tilt:
         report->tilt = m_calibrated_value > 60000;

@@ -224,6 +224,10 @@ uint16_t XInputGamepadHost::tick_analog(proto_Output &type)
 {
     return xinput_tick_analog_impl(m_ep_in_buf, m_subtype, type);
 }
+uint16_t XInputGamepadHost::tick_button_pressure(proto_Output &type)
+{
+    return xinput_tick_button_pressure_impl(m_ep_in_buf, m_subtype, type, m_wt);
+}
 
 void XInputGamepadHost::set_rumble(uint8_t left, uint8_t right)
 {

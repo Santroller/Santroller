@@ -1,7 +1,6 @@
 #pragma once
 #include "devices/usb/host/hid/hid_host.h"
 #include "protocols/ps3.hpp"
-#include "protocols/ps3_dancepad.hpp"
 #include "protocols/switch_arcade.hpp"
 #include "utils.h"
 
@@ -14,9 +13,16 @@ class Ps3Host : public HidHost
 {
 public:
     ~Ps3Host() {}
-    Ps3Host(uint8_t dev_addr, uint8_t interface, uint16_t id, bool third_party, bool rb2, bool ion, bool wt, SubType subtype) : HidHost(dev_addr, interface, id), m_rb2(rb2), m_ion(ion), m_wt(wt), m_third_party(third_party), m_init_time(millis())
+    Ps3Host(uint8_t dev_addr, uint8_t interface, uint16_t id, bool third_party, bool rb2, bool ion, bool wt, SubType subtype) : HidHost(dev_addr, interface, id), m_rb2(rb2), m_ion(ion), m_wt(wt), m_third_party(third_party)
     {
         m_subtype = subtype;
+        memset(m_ep_in_buf, 0, sizeof(m_ep_in_buf));
+        auto *input_report = reinterpret_cast<PS3Dpad_Data_t *>(m_ep_in_buf);
+        input_report->dpad = 8;
+        input_report->leftStickX = 0x80;
+        input_report->leftStickY = 0x80;
+        input_report->rightStickX = 0x80;
+        input_report->rightStickY = 0x80;
         m_output_report.report_id = PS3_RUMBLE_ID;
         m_output_report.rumble.padding = 0x01;
         m_output_report.rumble.right_duration = 0xFF;
@@ -52,6 +58,7 @@ private:
     bool send_ps3_output();
     bool submit_ps3_output(uint8_t report_id, const void *report, uint8_t len);
     bool send_ps3_player_led();
+    bool enable_pro_instrument_full_report();
     void complete_stagekit_command();
     bool m_output_dirty = true;
     bool m_player_led_dirty = true;
@@ -72,12 +79,10 @@ private:
     bool m_third_party;
     bool m_dancepad = false;
     bool m_valid_dancepad_report = false;
-    PS3DancepadReport m_dancepad_report = {};
     bool m_switch_arcade = false;
     bool m_valid_switch_arcade_report = false;
-    SwitchArcadeReport m_switch_arcade_report = {};
-    uint32_t m_init_time = 0;
     uint32_t m_last_ghl_poke = 0;
+    uint32_t m_last_pro_instrument_poke = 0;
     uint8_t m_rumble_left = 0;
     uint8_t m_rumble_right = 0;
     uint8_t m_player = 0;

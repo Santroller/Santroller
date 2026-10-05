@@ -64,6 +64,7 @@ public:
 
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
+    uint16_t tick_button_pressure(proto_Output &type) override;
 
 private:
     void handle_report_v1(const uint8_t *data, uint16_t len);
@@ -129,4 +130,3 @@ std::shared_ptr<BluetoothHostInterface> ble_create_host(uint16_t vid, uint16_t p
                                                          uint16_t device_id,
                                                          HID_ReportInfo_t *info,
                                                          SubType known_subtype = SubType_Unknown);
-

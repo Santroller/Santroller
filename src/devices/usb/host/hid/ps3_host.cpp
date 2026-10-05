@@ -8,6 +8,7 @@
 #include "managers/device_manager.hpp"
 #include "hidparser.h"
 #include "protocols/ps3.hpp"
+#include "protocols/pro_keys.hpp"
 #include "devices/usb/host/gh_slider_helpers.h"
 
 std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
@@ -191,13 +192,8 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
 
         if (subtype == ProKeys || subtype == ProGuitarMustang || subtype == ProGuitarSquire)
         {
-            uint8_t hid_command_enable[40] = {
-                0xE9, 0x00, 0x89, 0x1B, 0x00, 0x00, 0x00, 0x02,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00,
-                0x00, 0x00, 0x89, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0xE9, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-            intf->set_report(0x00, HID_REPORT_TYPE_FEATURE, hid_command_enable, sizeof(hid_command_enable));
+            intf->enable_pro_instrument_full_report();
+            intf->m_last_pro_instrument_poke = millis();
         }
 
         if (subtype == LiveGuitar)
@@ -231,7 +227,7 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
             if (desc_ep->bEndpointAddress & 0x80)
             {
                 if (compact_report && (desc_ep->wMaxPacketSize > sizeof(intf->m_ep_in_buf) ||
-                                       desc_ep->wMaxPacketSize < (dancepad ? sizeof(PS3DancepadReport) : sizeof(SwitchArcadeReport)) ||
+                                       desc_ep->wMaxPacketSize < (dancepad ? sizeof(PS3Dpad_Data_t) : sizeof(SwitchArcadeReport)) ||
                                        intf->m_ep_in))
                     return nullptr;
                 intf->m_ep_in = desc_ep->bEndpointAddress;
@@ -300,36 +296,41 @@ bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
         if (m_dancepad)
         {
             m_valid_dancepad_report = result == XFER_RESULT_SUCCESS &&
-                xferred_bytes == sizeof(m_dancepad_report) &&
-                (m_ep_in_buf[2] & 0x0f) <= PS3_DANCEPAD_NEUTRAL_HAT;
-            if (m_valid_dancepad_report)
-                memcpy(&m_dancepad_report, m_ep_in_buf, sizeof(m_dancepad_report));
-            else
+                xferred_bytes == sizeof(PS3Dpad_Data_t) &&
+                (m_ep_in_buf[2] & 0x0f) <= 8;
+            if (!m_valid_dancepad_report)
                 printf("PS3 dancepad: invalid input transfer (result %u, length %lu)\n",
                        static_cast<unsigned>(result), static_cast<unsigned long>(xferred_bytes));
         }
         if (m_switch_arcade)
         {
             m_valid_switch_arcade_report = result == XFER_RESULT_SUCCESS &&
-                xferred_bytes >= sizeof(m_switch_arcade_report);
+                xferred_bytes >= sizeof(SwitchArcadeReport);
             if (m_valid_switch_arcade_report)
-                memcpy(&m_switch_arcade_report, m_ep_in_buf, sizeof(m_switch_arcade_report));
+            {
+                const uint8_t buttons_low = m_ep_in_buf[0];
+                // switch arcade report clearly kept things in the same position instead of keeping the icons the same
+                // so swap AB and XY
+                const uint8_t face_buttons = buttons_low & 0x0f;
+                m_ep_in_buf[0] = (buttons_low & 0xf0) |
+                    ((face_buttons & 0x01) << 3) |
+                    ((face_buttons & 0x02) << 1) |
+                    ((face_buttons & 0x04) >> 1) |
+                    ((face_buttons & 0x08) >> 3);
+                memset(&m_ep_in_buf[7], 0, sizeof(m_ep_in_buf) - 7);
+                auto *report = reinterpret_cast<PS3Dpad_Data_t *>(m_ep_in_buf);
+                report->leftTrigger = (buttons_low & static_cast<uint8_t>(SwitchArcade_ZL)) ? UINT8_MAX : 0;
+                report->rightTrigger = (buttons_low & static_cast<uint8_t>(SwitchArcade_ZR)) ? UINT8_MAX : 0;
+            }
             else
                 printf("Switch arcade: invalid input transfer (result %u, length %lu)\n",
                        static_cast<unsigned>(result), static_cast<unsigned long>(xferred_bytes));
         }
-        if ((millis() - m_init_time) < 5000)
+        if ((m_subtype == ProKeys || m_subtype == ProGuitarMustang || m_subtype == ProGuitarSquire) &&
+            (millis() - m_last_pro_instrument_poke) >= 8000)
         {
-            if (m_subtype == ProKeys || m_subtype == ProGuitarMustang || m_subtype == ProGuitarSquire)
-            {
-                uint8_t hid_command_enable[40] = {
-                    0xE9, 0x00, 0x89, 0x1B, 0x00, 0x00, 0x00, 0x02,
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00,
-                    0x00, 0x00, 0x89, 0x00, 0x00, 0x00, 0x00, 0x00,
-                    0xE9, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-                set_report(0x00, HID_REPORT_TYPE_FEATURE, hid_command_enable, sizeof(hid_command_enable));
-            }
+            enable_pro_instrument_full_report();
+            m_last_pro_instrument_poke = millis();
         }
         if (m_subtype == LiveGuitar)
         {
@@ -555,6 +556,18 @@ bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
             }
         }
         return false;
+    case ProKeys:
+        if (type.which_mapping == proto_Output_proKeySingle_tag ||
+            type.which_mapping == proto_Output_proKeyMultiple_tag)
+        {
+            const auto *data = reinterpret_cast<const PS3RockBandProKeyboard_Data_t *>(m_ep_in_buf);
+            if (type.which_mapping == proto_Output_proKeySingle_tag)
+                return pro_keyboard_key_pressed(data->key1, data->key2, data->key3,
+                                                data->velocities, type.mapping.proKeySingle);
+            return pro_keyboard_any_key_pressed(data->key1, data->key2, data->key3,
+                                                data->velocities, type.mapping.proKeyMultiple);
+        }
+        return false;
     default:
         return false;
     }
@@ -566,6 +579,17 @@ uint16_t ps3_tick_button_pressure(const uint8_t *buf, SubType subtype, bool thir
     if (!ps3_tick_digital(buf, subtype, third_party, type))
     {
         return 0;
+    }
+    if (subtype == ProKeys &&
+        (type.which_mapping == proto_Output_proKeySingle_tag ||
+         type.which_mapping == proto_Output_proKeyMultiple_tag))
+    {
+        const auto *data = reinterpret_cast<const PS3RockBandProKeyboard_Data_t *>(buf);
+        if (type.which_mapping == proto_Output_proKeySingle_tag)
+            return pro_keyboard_key_pressure(data->key1, data->key2, data->key3,
+                                             data->velocities, type.mapping.proKeySingle);
+        return pro_keyboard_key_range_pressure(data->key1, data->key2, data->key3,
+                                               data->velocities, type.mapping.proKeyMultiple);
     }
     if (third_party || type.which_mapping != proto_Output_gamepadButton_tag)
     {
@@ -696,6 +720,64 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
                 return 0;
             }
         }
+
+    case ProGuitarSquire:
+    case ProGuitarMustang:
+        if (type.which_mapping == proto_Output_proAxis_tag)
+        {
+            auto data = (PS3RockBandProGuitar_Data_t *)m_ep_in_buf;
+            switch (type.mapping.proAxis)
+            {
+            case ProGuitar_LowEFret:
+                return data->lowEFret << 11;
+            case ProGuitar_AFret:
+                return data->aFret << 11;
+            case ProGuitar_DFret:
+                return data->dFret << 11;
+            case ProGuitar_GFret:
+                return data->gFret << 11;
+            case ProGuitar_BFret:
+                return data->bFret << 11;
+            case ProGuitar_HighEFret:
+                return data->highEFret << 11;
+            case ProGuitar_LowEFretVelocity:
+                return data->lowEFretVelocity << 9;
+            case ProGuitar_AFretVelocity:
+                return data->aFretVelocity << 9;
+            case ProGuitar_DFretVelocity:
+                return data->dFretVelocity << 9;
+            case ProGuitar_GFretVelocity:
+                return data->gFretVelocity << 9;
+            case ProGuitar_BFretVelocity:
+                return data->bFretVelocity << 9;
+            case ProGuitar_HighEFretVelocity:
+                return data->highEFretVelocity << 9;
+            case ProGuitar_Tilt:
+                return data->tilt << 8;
+            case ProGuitar_AutoCalibrationMicrophone:
+                return data->autoCal_Microphone << 8;
+            case ProGuitar_AutoCalibrationLight:
+                return data->autoCal_Light << 8;
+            default:
+                return 0;
+            }
+        }
+        break;
+    case ProKeys:
+        if (type.which_mapping == proto_Output_proKeyboardAxis_tag)
+        {
+            auto data = (PS3RockBandProKeyboard_Data_t *)m_ep_in_buf;
+            switch (type.mapping.proKeyboardAxis)
+            {
+            case ProKeyboardPedal:
+                return data->pedalAnalog << 9;
+            case ProKeyboardTouchPad:
+                return data->touchPad << 9;
+            default:
+                return 0;
+            }
+        }
+        break;
     default:
         break;
     }
@@ -705,100 +787,19 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
 
 bool Ps3Host::tick_digital(proto_Output &type)
 {
-    if (m_switch_arcade)
-    {
-        if (!m_valid_switch_arcade_report)
-            return false;
-        const auto &report = m_switch_arcade_report;
-        uint16_t buttons = switch_arcade_buttons(report);
-        uint8_t hat = report.hat & 0x0f;
-        if (type.which_mapping == proto_Output_gamepadAxis_tag)
-        {
-            if (type.mapping.gamepadAxis == Gamepad_LeftTrigger) return buttons & SwitchArcade_ZL;
-            if (type.mapping.gamepadAxis == Gamepad_RightTrigger) return buttons & SwitchArcade_ZR;
-            return false;
-        }
-        if (type.which_mapping != proto_Output_gamepadButton_tag)
-            return false;
-        switch (type.mapping.gamepadButton)
-        {
-        case Gamepad_Y: return buttons & SwitchArcade_Y;
-        case Gamepad_B: return buttons & SwitchArcade_B;
-        case Gamepad_A: return buttons & SwitchArcade_A;
-        case Gamepad_X: return buttons & SwitchArcade_X;
-        case Gamepad_LeftShoulder: return buttons & SwitchArcade_L;
-        case Gamepad_RightShoulder: return buttons & SwitchArcade_R;
-        case Gamepad_Back: return buttons & SwitchArcade_Minus;
-        case Gamepad_Start: return buttons & SwitchArcade_Plus;
-        case Gamepad_LeftThumbClick: return buttons & SwitchArcade_LS;
-        case Gamepad_RightThumbClick: return buttons & SwitchArcade_RS;
-        case Gamepad_Guide: return buttons & SwitchArcade_Home;
-        case Gamepad_Capture: return buttons & SwitchArcade_Capture;
-        case Gamepad_DpadUp: return hat == 0 || hat == 1 || hat == 7;
-        case Gamepad_DpadRight: return hat == 1 || hat == 2 || hat == 3;
-        case Gamepad_DpadDown: return hat == 3 || hat == 4 || hat == 5;
-        case Gamepad_DpadLeft: return hat == 5 || hat == 6 || hat == 7;
-        default: return false;
-        }
-    }
-    if (m_dancepad)
-    {
-        if (!m_valid_dancepad_report || type.which_mapping != proto_Output_gamepadButton_tag)
-            return false;
-        const auto &report = m_dancepad_report;
-        uint8_t hat = report.hat & 0x0f;
-        switch (type.mapping.gamepadButton)
-        {
-        case Gamepad_DpadUp: return report.vendor_up || ps3_dancepad_direction(hat, 0);
-        case Gamepad_DpadRight: return report.vendor_right || ps3_dancepad_direction(hat, 1);
-        case Gamepad_DpadDown: return report.vendor_down || ps3_dancepad_direction(hat, 2);
-        case Gamepad_DpadLeft: return report.vendor_left || ps3_dancepad_direction(hat, 3);
-        case Gamepad_X: return (report.buttons1 & 1) || report.vendor_west;
-        case Gamepad_A: return (report.buttons1 & 2) || report.vendor_south;
-        case Gamepad_B: return (report.buttons1 & 4) || report.vendor_east;
-        case Gamepad_Y: return (report.buttons1 & 8) || report.vendor_north;
-        case Gamepad_LeftShoulder: return report.buttons1 & 16;
-        case Gamepad_RightShoulder: return report.buttons1 & 32;
-        case Gamepad_Back: return report.buttons2 & 1;
-        case Gamepad_Start: return report.buttons2 & 2;
-        case Gamepad_Guide: return report.buttons2 & 16;
-        default: return false;
-        }
-    }
+    if (m_switch_arcade && !m_valid_switch_arcade_report)
+        return false;
+    if (m_dancepad && !m_valid_dancepad_report)
+        return false;
     return ps3_tick_digital(m_ep_in_buf, m_subtype, m_third_party, type, m_wt);
 }
 
 uint16_t Ps3Host::tick_analog(proto_Output &type)
 {
-    if (m_switch_arcade)
-    {
-        if (!m_valid_switch_arcade_report || type.which_mapping != proto_Output_gamepadAxis_tag)
-            return 0;
-        const auto &report = m_switch_arcade_report;
-        switch (type.mapping.gamepadAxis)
-        {
-        case Gamepad_LeftStickX: return uint16_t(report.lx) * 0x101;
-        case Gamepad_LeftStickY: return uint16_t(UINT8_MAX - report.ly) * 0x101;
-        case Gamepad_RightStickX: return uint16_t(report.rx) * 0x101;
-        case Gamepad_RightStickY: return uint16_t(UINT8_MAX - report.ry) * 0x101;
-        case Gamepad_LeftTrigger: return (switch_arcade_buttons(report) & SwitchArcade_ZL) ? UINT16_MAX : 0;
-        case Gamepad_RightTrigger: return (switch_arcade_buttons(report) & SwitchArcade_ZR) ? UINT16_MAX : 0;
-        default: return 0;
-        }
-    }
-    if (m_dancepad)
-    {
-        if (!m_valid_dancepad_report || type.which_mapping != proto_Output_gamepadAxis_tag)
-            return 0;
-        switch (type.mapping.gamepadAxis)
-        {
-        case Gamepad_LeftStickX: return m_dancepad_report.x * 257;
-        case Gamepad_LeftStickY: return (255 - m_dancepad_report.y) * 257;
-        case Gamepad_RightStickX: return m_dancepad_report.z * 257;
-        case Gamepad_RightStickY: return (255 - m_dancepad_report.rz) * 257;
-        default: return 0;
-        }
-    }
+    if (m_switch_arcade && !m_valid_switch_arcade_report)
+        return 0;
+    if (m_dancepad && !m_valid_dancepad_report)
+        return 0;
     return ps3_tick_analog(m_ep_in_buf, m_subtype, m_third_party, type);
 }
 
@@ -814,10 +815,10 @@ bool Ps3Host::tick_axis_digital(proto_Output &type)
 
 uint16_t Ps3Host::tick_button_pressure(proto_Output &type)
 {
-    if (m_switch_arcade)
-        return tick_digital(type) ? UINT16_MAX : 0;
-    if (m_dancepad)
-        return tick_digital(type) ? UINT16_MAX : 0;
+    if (m_switch_arcade && !m_valid_switch_arcade_report)
+        return 0;
+    if (m_dancepad && !m_valid_dancepad_report)
+        return 0;
     return ps3_tick_button_pressure(m_ep_in_buf, m_subtype, m_third_party, type);
 }
 
@@ -878,6 +879,17 @@ void Ps3Host::complete_stagekit_command()
     --m_stagekit_queue_count;
     if (m_stagekit_queue_count < stagekit_queue_capacity)
         m_stagekit_queue_overflow_reported = false;
+}
+
+bool Ps3Host::enable_pro_instrument_full_report()
+{
+    uint8_t report[] = {
+        0xE9, 0x00, 0x89, 0x1B, 0x00, 0x00, 0x00, 0x02,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00,
+        0x00, 0x00, 0x89, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xE9, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    return set_report(0x00, HID_REPORT_TYPE_FEATURE, report, sizeof(report)) == sizeof(report);
 }
 
 bool Ps3Host::submit_ps3_output(uint8_t report_id, const void *report, uint8_t len)

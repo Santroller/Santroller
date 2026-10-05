@@ -323,6 +323,13 @@ uint16_t BleSantrollerHost::tick_analog(proto_Output &type)
     return tick_analog_v1(type);
 }
 
+uint16_t BleSantrollerHost::tick_button_pressure(proto_Output &type)
+{
+    if (m_is_v2)
+        return xinput_tick_button_pressure_impl(m_report_buf, m_subtype, type);
+    return tick_digital(type) ? UINT16_MAX : 0;
+}
+
 bool BleSantrollerHost::tick_digital_v1(proto_Output &type)
 {
     uint8_t hat = m_report_buf[3] & 0x0F;

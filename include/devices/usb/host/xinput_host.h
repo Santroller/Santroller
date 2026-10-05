@@ -14,6 +14,7 @@ public:
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
     bool tick_digital(proto_Output &type);
     uint16_t tick_analog(proto_Output &type);
+    uint16_t tick_button_pressure(proto_Output &type) override;
     void set_rumble(uint8_t left, uint8_t right) override;
     void set_player_led(uint8_t player) override;
     void set_euphoria_led(bool state) override;
@@ -109,6 +110,7 @@ public:
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
     bool tick_digital(proto_Output &type);
     uint16_t tick_analog(proto_Output &type);
+    uint16_t tick_button_pressure(proto_Output &type) override;
     void set_rumble(uint8_t left, uint8_t right) override;
     void set_player_led(uint8_t player) override;
     bool has_rumble() const override { return true; }

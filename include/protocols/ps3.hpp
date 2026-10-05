@@ -13,6 +13,16 @@
 #define POWERGIG_DRUM_RB_COMPAT_MODE 0x0600
 #define POWERGIG_DRUM_PG_MODE 0x0700
 
+struct PS3InstrumentOutput
+{
+    uint8_t output_type;
+    uint8_t data_length;
+    uint8_t player_led;
+    uint8_t unknown2[5];
+} __attribute__((packed));
+static_assert(sizeof(PS3InstrumentOutput) == 8, "PS3 instrument output is 8 bytes");
+static_assert(offsetof(PS3InstrumentOutput, player_led) == 2, "Player LED mask is output byte 2");
+
 #define PS3_RUMBLE_ID 0x01
 #define PS3_LED_ID 0x00
 #define DJ_LED_ID 0x91

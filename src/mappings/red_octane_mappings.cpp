@@ -519,7 +519,7 @@ void GuitarHeroGuitarAxisMapping::update_ps2(uint8_t *buf)
         report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->tilt = m_calibrated_value > 60000;
         break;
     default:
         break;

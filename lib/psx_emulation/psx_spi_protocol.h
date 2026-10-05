@@ -50,7 +50,7 @@ typedef struct psx_spi_protocol_state_t
  * Canonical protocol initialization.  Both firmware and host replay use
  * this exact state type and initializer; hardware/PIO state stays outside.
  */
-#define PSX_SPI_PROTOCOL_INIT(s, guitar_hero_guitar) do { \
+#define PSX_SPI_PROTOCOL_INIT(s, type) do { \
     memset((s), 0, sizeof(*(s))); \
     memcpy((s)->config_responses[0x00], init_resp_40, 6); \
     memcpy((s)->config_responses[0x01], init_resp_41_digital, 6); \
@@ -64,10 +64,15 @@ typedef struct psx_spi_protocol_state_t
     memcpy((s)->config_responses[0x0D], init_resp_4d, 6); \
     memcpy((s)->config_responses[0x0F], init_resp_4f, 6); \
     memset((s)->button_attr, 0x02, sizeof((s)->button_attr)); \
+    memset((s)->report_mask, 0x00, sizeof((s)->report_mask)); \
+    (s)->rumble_small = 0; \
+    (s)->rumble_large = 0; \
+    (s)->locked = false; \
     (s)->report_mask[0] = 0x03; \
     (s)->configMode = false; \
-    if (guitar_hero_guitar) \
+    if (type == SubType_GuitarHeroGuitar) \
         memcpy((s)->config_responses[0x05], init_resp_45_gh, 6); \
+    (s)->digitalOnly = type == SubType_Taiko; \
 } while (0)
 
 #define PSX_SPI_PROCESS_COMMAND(s, b) do { \

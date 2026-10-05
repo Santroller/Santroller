@@ -553,8 +553,7 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
     spi->config = *config;
     spi->pio = config->pio_idx == 0 ? pio0 : pio1;
     spi->type = config->type;
-    PSX_SPI_PROTOCOL_INIT(&spi->protocol, spi->type == SubType_GuitarHeroGuitar);
-    spi->protocol.digitalOnly = spi->type == SubType_Taiko;
+    PSX_SPI_PROTOCOL_INIT(&spi->protocol, spi->type);
     spi->protocol.cmd_id = 0;
     spi->watchdog_active = false;
     spi->watchdog_last_activity_ms = 0;

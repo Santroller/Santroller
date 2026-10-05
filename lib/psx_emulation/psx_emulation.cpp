@@ -8,41 +8,25 @@
 PSXEmulation::~PSXEmulation()
 {
     end();
-    #if PSX_SPI_DEBUG_LOGGING
+#if PSX_SPI_DEBUG_LOGGING
     printf("~PSXEmulation\r\n");
-    #endif
+#endif
 }
 void PSXEmulation::begin(SubType type)
 {
-    #if PSX_SPI_DEBUG_LOGGING
+#if PSX_SPI_DEBUG_LOGGING
     printf("PSXEmulation begin\r\n");
-    #endif
+#endif
     if (spi)
     {
         if (spi->type == type)
         {
             return;
         }
-        // Keep the console's negotiated mode and report mask when changing
-        // between gamepad and guitar; restarting PIO forces digital mode.
         uint32_t irq_state = save_and_disable_interrupts();
-        if (spi->type == SubType_Taiko || type == SubType_Taiko)
-        {
-            PSX_SPI_PROTOCOL_INIT(&spi->protocol, type == SubType_GuitarHeroGuitar);
-        }
+        PSX_SPI_PROTOCOL_INIT(&spi->protocol, type);
+        spi->watchdog_active = false;
         spi->type = type;
-        spi->protocol.digitalOnly = type == SubType_Taiko;
-        spi->protocol.config_responses[0x05][0] =
-            type == SubType_GuitarHeroGuitar ? init_resp_45_gh[0] : init_resp_45_ds2[0];
-        if (type == SubType_GuitarHeroGuitar && !spi->protocol.config_responses[0x05][2])
-        {
-            spi->protocol.config_responses[0x05][2] = 1;
-            memcpy(spi->protocol.config_responses[0x01], init_resp_41_analog,
-                   sizeof(spi->protocol.config_responses[0x01]));
-            spi->protocol.report_mask[0] = 0x3F;
-            spi->protocol.report_mask[1] = 0;
-            spi->protocol.report_mask[2] = 0;
-        }
         restore_interrupts(irq_state);
         return;
     }
@@ -61,9 +45,9 @@ void PSXEmulation::begin(SubType type)
 
 void PSXEmulation::end()
 {
-    #if PSX_SPI_DEBUG_LOGGING
+#if PSX_SPI_DEBUG_LOGGING
     printf("PSXEmulation end\r\n");
-    #endif
+#endif
     if (spi)
     {
         pio_spi_stop(spi);
@@ -85,9 +69,9 @@ void PSXEmulation::tick()
 
 PSXEmulation::PSXEmulation(int8_t sck, int8_t cmd, int8_t dat, uint8_t attPin, uint8_t ackPin) : sck(sck), cmd(cmd), dat(dat), attPin(attPin), ackPin(ackPin)
 {
-    #if PSX_SPI_DEBUG_LOGGING
+#if PSX_SPI_DEBUG_LOGGING
     printf("PSXEmulation %d %d %d %d %d\r\n", sck, cmd, dat, attPin, ackPin);
-    #endif
+#endif
 }
 
 void PSXEmulation::sendData(uint8_t len, uint8_t *data)

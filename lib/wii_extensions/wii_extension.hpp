@@ -26,7 +26,8 @@ class WiiExtension: public I2CDMAInterface, public WiiExtensionDecoder
 {
 
 public:
-    WiiExtension(MidiDevice* midiDevice, uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock);
+    WiiExtension(MidiDevice* midiDevice, uint8_t block, uint8_t sda, uint8_t scl,
+                 uint32_t clock, uint32_t turntable_poll_interval_ms);
     ~WiiExtension();
     void begin();
     void end();
@@ -50,6 +51,9 @@ private:
     uint8_t wiiBytes;
     uint8_t wiiPointer = 0;
     uint8_t m_block = 0;
+    uint32_t m_turntable_poll_interval_ms = 0;
+    uint32_t m_last_turntable_poll_ms = 0;
+    bool m_has_turntable_poll = false;
     MidiDevice *m_device;
     alarm_id_t restart_alarm_id;
     int failCount = 0;

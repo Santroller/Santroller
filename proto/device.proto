@@ -55,6 +55,7 @@ message ADS1115Device {
 message WiiDevice {
   required I2CDevice i2c = 1;
   required MappingMode mappingMode = 2;
+  optional uint32 turntablePollIntervalMs = 3;
 }
 
 message CrazyGuitarNeckDevice { required I2CDevice i2c = 1; }

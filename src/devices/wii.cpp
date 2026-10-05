@@ -9,7 +9,8 @@
 #include "utils.h"
 WiiDevice::WiiDevice(const DeviceReloadState *state, proto_WiiDevice device, uint16_t id) :
     MidiDevice(state, id, false, m_midi_buffers.config()),
-    m_extension(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock),
+    m_extension(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock,
+                device.has_turntablePollIntervalMs ? device.turntablePollIntervalMs : 0),
     m_device(device)
 {
     if (state)
@@ -31,6 +32,9 @@ bool WiiDevice::matches_reload_config(const proto_Device &config) const
            m_device.i2c.sda == device.i2c.sda &&
            m_device.i2c.scl == device.i2c.scl &&
            m_device.i2c.clock == device.i2c.clock &&
+           m_device.has_turntablePollIntervalMs == device.has_turntablePollIntervalMs &&
+           (!device.has_turntablePollIntervalMs ||
+            m_device.turntablePollIntervalMs == device.turntablePollIntervalMs) &&
            m_device.mappingMode == device.mappingMode;
 }
 

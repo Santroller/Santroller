@@ -73,29 +73,30 @@ void HIDGamepadDevice::initialize()
 }
 void HIDGamepadDevice::process(bool full_poll, bool send_events)
 {
-    if (tud_suspended()) {
-        for (const auto &profile : profiles)
-        {
-            for (const auto &led : profile->leds)
-            {
-                led->off();
-            }
-        }
-        return;
-    }
-    if (!tud_ready())
+  if (tud_suspended())
+  {
+    for (const auto &profile : profiles)
     {
-        for (const auto &profile : profiles)
-        {
-            for (const auto &led : profile->leds)
-            {
-                led->update(full_poll, send_events);
-            }
-        }
-        return;
+      for (const auto &led : profile->leds)
+      {
+        led->off();
+      }
     }
+    return;
+  }
+  if (!tud_ready())
+  {
+    for (const auto &profile : profiles)
+    {
+      for (const auto &led : profile->leds)
+      {
+        led->update(full_poll, send_events);
+      }
+    }
+    return;
+  }
   // Deal with devices that don't have easy detection methods
-  auto& detection = UsbDetectionState::instance();
+  auto &detection = UsbDetectionState::instance();
   if (!mode_recently_changed() && detection.should_infer_console() && tud_connected())
   {
     // Switch 2 does read the hid descriptor
@@ -117,7 +118,8 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
   }
   // if usb stack isnt ready, then we want to update inputs
   // we want to limit updates to usb speed though if it is ready
-  if (tud_ready() && !ready()) {
+  if (tud_ready() && !ready())
+  {
     return;
   }
   PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
@@ -155,14 +157,15 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
     XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
     reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
   }
-  // if (memcmp(m_last_report, epin_buf, sizeof(XInputGamepad_Data_t)) != 0)
-  // {
-  if (!ready()) {
-    return;
+  if (memcmp(m_last_report, epin_buf, sizeof(XInputGamepad_Data_t)) != 0)
+  {
+    if (!ready())
+    {
+      return;
+    }
+    send_report(sizeof(XInputGamepad_Data_t), 0, epin_buf);
+    memcpy(m_last_report, epin_buf, sizeof(XInputGamepad_Data_t));
   }
-  send_report(sizeof(XInputGamepad_Data_t), 0, epin_buf);
-  //   memcpy(m_last_report, epin_buf, sizeof(XInputGamepad_Data_t));
-  // }
 }
 
 size_t HIDGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)

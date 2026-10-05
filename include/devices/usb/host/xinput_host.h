@@ -10,6 +10,7 @@ public:
     XInputGamepadHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
     bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+    void update(bool full_poll, bool send_events) override;
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
     bool tick_digital(proto_Output &type);
     uint16_t tick_analog(proto_Output &type);
@@ -23,6 +24,8 @@ public:
     void set_stagekit_led(uint8_t param, uint8_t command) override;
 
 private:
+    bool send_rumble_report();
+    bool send_player_led_report();
     uint8_t m_ep_in;
     uint8_t m_ep_out;
     uint8_t m_ep_in_size;
@@ -31,6 +34,15 @@ private:
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[32];
     uint8_t m_rumble_left = 0;
     uint8_t m_rumble_right = 0;
+    uint8_t m_player_led = 0x02;
+    bool m_rumble_dirty = false;
+    bool m_player_led_dirty = true;
+    bool m_last_output_was_led = false;
+    bool m_pending_player_led = false;
+    bool m_out_pending = false;
+    bool m_out_submit_failed = false;
+    std::atomic<bool> m_out_done{false};
+    xfer_result_t m_out_result = XFER_RESULT_SUCCESS;
     bool m_euphoria = false;
     bool m_wt = false;
 };

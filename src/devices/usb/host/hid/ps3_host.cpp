@@ -175,8 +175,6 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
         auto intf = std::make_shared<Ps3Host>(dev_addr, itf_desc->bInterfaceNumber, list->m_id, isThirdParty, rb2, ion, wt, subtype);
         intf->m_dancepad = dancepad;
         intf->m_switch_arcade = switch_arcade;
-        intf->m_vid = vid;
-        intf->m_pid = pid;
 
         if (!isThirdParty && vid == SONY_VID && pid == SONY_DS3_PID)
         {
@@ -184,20 +182,11 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
             uint8_t hid_command_enable[] = {0x42, 0x0c, 0x00, 0x00};
             intf->set_report(0xF4, HID_REPORT_TYPE_FEATURE, hid_command_enable, sizeof(hid_command_enable));
 
-            ps3_output_report report = {};
-            report.rumble.padding = 0x01;
-            report.rumble.right_duration = 0xFF;
-            report.rumble.left_duration = 0xFF;
-            report.leds_bitmap = 0x02; // LED 1
-            for (int i = 0; i < 4; i++)
-            {
-                report.led[i].time_enabled = 0xFF;
-                report.led[i].duty_length = 0x27;
-                report.led[i].enabled = 0x10;
-                report.led[i].duty_off = 0x00;
-                report.led[i].duty_on = 0x32;
-            }
-            intf->set_report(0x01, HID_REPORT_TYPE_OUTPUT, (uint8_t *)&report, sizeof(report));
+            intf->m_output_report.leds_bitmap = 0x02; // LED 1
+            intf->m_player = 1;
+            intf->set_report(PS3_RUMBLE_ID, HID_REPORT_TYPE_OUTPUT,
+                             reinterpret_cast<uint8_t *>(&intf->m_output_report),
+                             sizeof(intf->m_output_report));
         }
 
         if (subtype == ProKeys || subtype == ProGuitarMustang || subtype == ProGuitarSquire)
@@ -275,8 +264,24 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
 }
 void Ps3Host::set_stagekit_led(uint8_t param, uint8_t command)
 {
-    uint8_t packet[] = {PS3_RUMBLE_ID, SANTROLLER_LED_ID, param, command, 0x00};
-    set_report(PS3_RUMBLE_ID, HID_REPORT_TYPE_OUTPUT, packet, sizeof(packet));
+    if (!has_stagekit_led())
+        return;
+    std::array<uint8_t, 2> value = {param, command};
+    if (!m_stagekit_set || value != m_last_stagekit_command)
+    {
+        if (m_stagekit_queue_count == stagekit_queue_capacity)
+        {
+            if (!m_stagekit_queue_overflow_reported)
+                printf("PS3 stage-kit queue full: dev=%u\r\n", m_dev_addr);
+            m_stagekit_queue_overflow_reported = true;
+            return;
+        }
+        uint8_t tail = (m_stagekit_queue_head + m_stagekit_queue_count) % stagekit_queue_capacity;
+        m_stagekit_commands[tail] = value;
+        ++m_stagekit_queue_count;
+        m_last_stagekit_command = value;
+        m_stagekit_set = true;
+    }
 }
 bool Ps3Host::set_config()
 {
@@ -290,6 +295,11 @@ bool Ps3Host::set_config()
 
 bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
+    if (ep_addr == m_ep_out)
+    {
+        m_out_result = result;
+        m_out_done.store(true, std::memory_order_release);
+    }
     if (ep_addr & 0x80)
     {
         if (m_dancepad)
@@ -817,73 +827,142 @@ uint16_t Ps3Host::tick_button_pressure(proto_Output &type)
     return ps3_tick_button_pressure(m_ep_in_buf, m_subtype, m_third_party, type);
 }
 
+void Ps3Host::update(bool full_poll, bool send_events)
+{
+    UsbHostInterface::update(full_poll, send_events);
+    if (m_out_done.exchange(false, std::memory_order_acquire))
+    {
+        m_out_pending = false;
+        if (m_out_result != XFER_RESULT_SUCCESS)
+        {
+            if (m_pending_player_led)
+                m_player_led_dirty = true;
+            else
+                m_output_dirty = true;
+            printf("PS3 output failed: dev=%u ep=%u result=%u\r\n", m_dev_addr, m_ep_out, unsigned(m_out_result));
+        }
+        m_pending_player_led = false;
+    }
+    if (m_out_pending ||
+        (m_ep_out && m_third_party && usbh_edpt_busy(m_dev_addr, m_ep_out)))
+        return;
+
+    if (m_third_party && m_player_led_dirty && !m_switch_arcade)
+    {
+        if (!send_ps3_player_led())
+        {
+            if (!m_out_submit_failed)
+                printf("PS3 player LED submission failed: dev=%u ep=%u\r\n", m_dev_addr, m_ep_out);
+            m_out_submit_failed = true;
+            return;
+        }
+        m_out_submit_failed = false;
+        m_player_led_dirty = false;
+        m_pending_player_led = m_ep_out && m_third_party;
+        return;
+    }
+
+    if (m_output_dirty && !m_dancepad && !m_switch_arcade &&
+        (m_stagekit_queue_count == 0 || m_last_output_stagekit))
+    {
+        if (!send_ps3_output())
+        {
+            if (!m_out_submit_failed)
+                printf("PS3 output submission failed: dev=%u ep=%u\r\n", m_dev_addr, m_ep_out);
+            m_out_submit_failed = true;
+            return;
+        }
+        m_out_submit_failed = false;
+        m_output_dirty = false;
+        m_last_output_stagekit = false;
+        return;
+    }
+    if (m_stagekit_queue_count != 0)
+    {
+        const auto &command = m_stagekit_commands[m_stagekit_queue_head];
+        uint8_t packet[] = {PS3_RUMBLE_ID, SANTROLLER_LED_ID, command[0], command[1], 0x00};
+        if (set_report(PS3_RUMBLE_ID, HID_REPORT_TYPE_OUTPUT, packet, sizeof(packet)) != sizeof(packet))
+        {
+            if (!m_out_submit_failed)
+                printf("PS3 stage-kit submission failed: dev=%u\r\n", m_dev_addr);
+            m_out_submit_failed = true;
+            return;
+        }
+        m_out_submit_failed = false;
+        m_last_output_stagekit = true;
+        m_stagekit_queue_head = (m_stagekit_queue_head + 1) % stagekit_queue_capacity;
+        --m_stagekit_queue_count;
+        if (m_stagekit_queue_count < stagekit_queue_capacity)
+            m_stagekit_queue_overflow_reported = false;
+    }
+}
+
+bool Ps3Host::submit_ps3_output(uint8_t report_id, const void *report, uint8_t len)
+{
+    memcpy(m_ep_out_buf, report, len);
+    if (m_ep_out && m_third_party)
+    {
+        if (!send_intr_xfer(m_ep_out, m_ep_out_buf, len))
+            return false;
+        m_out_pending = true;
+        return true;
+    }
+    uint32_t result = set_report(report_id, HID_REPORT_TYPE_OUTPUT, m_ep_out_buf, len);
+    return result == len;
+}
+
+bool Ps3Host::send_ps3_player_led()
+{
+    PS3InstrumentOutput report = {};
+    report.output_type = 0x01;
+    report.data_length = 0x08;
+    report.player_led = m_player >= 1 && m_player <= 4
+                            ? static_cast<uint8_t>(1u << (m_player - 1))
+                            : 0;
+    return submit_ps3_output(PS3_LED_ID, &report, sizeof(report));
+}
+
 bool Ps3Host::send_ps3_output()
 {
     if (m_switch_arcade)
         return false;
-    if (m_dancepad)
-    {
-        PS3DancepadOutput report = {};
-        report.player_led = m_player & 0x0f;
-        return set_report(0, HID_REPORT_TYPE_OUTPUT, reinterpret_cast<uint8_t *>(&report), sizeof(report));
-    }
     if (m_subtype == DjHeroTurntable)
     {
         ps3_turntable_output_report_t rep = {};
         rep.outputType = 0x91;
         rep.enable = m_euphoria ? 1 : 0;
-        if (m_ep_out)
-        {
-            return send_intr_xfer(m_ep_out, &rep, sizeof(rep));
-        }
-        return set_report(rep.outputType, HID_REPORT_TYPE_OUTPUT, (uint8_t *)&rep, sizeof(rep));
+        return submit_ps3_output(rep.outputType, &rep, sizeof(rep));
     }
 
-    ps3_output_report rep = {};
-    rep.report_id = 0x01;
-    rep.rumble.right_duration = 0xFF;
-    rep.rumble.right_motor_on = m_rumble_right ? 1 : 0;
-    rep.rumble.left_duration = 0xFF;
-    rep.rumble.left_motor_force = m_rumble_left;
-
-    if (m_player >= 1 && m_player <= 4)
-    {
-        rep.leds_bitmap = (1 << m_player); // LED 1 = 0x02, LED 2 = 0x04, LED 3 = 0x08, LED 4 = 0x10
-    }
-    for (int i = 0; i < 4; i++)
-    {
-        rep.led[i].time_enabled = 0xFF;
-        rep.led[i].duty_length = 0;
-        rep.led[i].enabled = 1;
-        rep.led[i].duty_off = 0;
-        rep.led[i].duty_on = 0xFF;
-    }
-
-    if (m_ep_out)
-    {
-        return send_intr_xfer(m_ep_out, &rep, sizeof(rep));
-    }
-    return set_report(rep.report_id, HID_REPORT_TYPE_OUTPUT, (uint8_t *)&rep, sizeof(rep));
+    m_output_report.rumble.right_motor_on = m_rumble_right ? 1 : 0;
+    m_output_report.rumble.left_motor_force = m_rumble_left;
+    m_output_report.leds_bitmap = (m_player >= 1 && m_player <= 4) ? (1 << m_player) : 0;
+    return submit_ps3_output(PS3_RUMBLE_ID, &m_output_report, sizeof(m_output_report));
 }
 
 void Ps3Host::set_rumble(uint8_t left, uint8_t right)
 {
+    if (m_rumble_left != left || m_rumble_right != right)
+        m_output_dirty = true;
     m_rumble_left = left;
     m_rumble_right = right;
-    send_ps3_output();
 }
 
 void Ps3Host::set_player_led(uint8_t player)
 {
+    if (m_player != player)
+    {
+        if (m_third_party && !m_switch_arcade)
+            m_player_led_dirty = true;
+        else
+            m_output_dirty = true;
+    }
     m_player = player;
-    send_ps3_output();
 }
 
 void Ps3Host::set_euphoria_led(bool state)
 {
+    if (m_euphoria != state && m_subtype == DjHeroTurntable)
+        m_output_dirty = true;
     m_euphoria = state;
-    if (m_subtype == DjHeroTurntable)
-    {
-        send_ps3_output();
-    }
 }

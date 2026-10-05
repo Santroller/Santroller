@@ -217,6 +217,11 @@ bool Ps4Host::set_config()
 
 bool Ps4Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
+    if (ep_addr == m_ep_out)
+    {
+        m_out_result = result;
+        m_out_done.store(true, std::memory_order_release);
+    }
     if (ep_addr & 0x80)
     {
         if (m_subtype == LiveGuitar)
@@ -423,43 +428,75 @@ uint16_t Ps4Host::tick_analog(proto_Output &type)
     return ps4_tick_analog(m_ep_in_buf, m_subtype, m_third_party, type);
 }
 
+void Ps4Host::update(bool full_poll, bool send_events)
+{
+    UsbHostInterface::update(full_poll, send_events);
+    if (m_out_done.exchange(false, std::memory_order_acquire))
+    {
+        m_out_pending = false;
+        if (m_out_result != XFER_RESULT_SUCCESS)
+        {
+            m_output_dirty = true;
+            printf("PS4 output failed: dev=%u ep=%u result=%u\r\n", m_dev_addr, m_ep_out, unsigned(m_out_result));
+        }
+    }
+    if (!m_output_dirty || m_out_pending ||
+        (m_ep_out && usbh_edpt_busy(m_dev_addr, m_ep_out)))
+        return;
+    if (!send_ps4_output())
+    {
+        if (!m_out_submit_failed)
+            printf("PS4 output submission failed: dev=%u ep=%u\r\n", m_dev_addr, m_ep_out);
+        m_out_submit_failed = true;
+        return;
+    }
+    m_out_submit_failed = false;
+    m_output_dirty = false;
+    m_out_pending = m_ep_out != 0;
+}
+
 bool Ps4Host::send_ps4_output()
 {
-    ps4_output_report rep = {};
-    rep.report_id = 0x05;
-    rep.valid_flag0 = 0x07;
-    rep.motor_left = m_rumble_left;
-    rep.motor_right = m_rumble_right;
-    rep.lightbar_red = m_lightbar_r;
-    rep.lightbar_green = m_lightbar_g;
-    rep.lightbar_blue = m_lightbar_b;
-
+    memcpy(m_ep_out_buf, &m_output_report, sizeof(m_output_report));
     if (m_ep_out)
     {
-        return send_intr_xfer(m_ep_out, &rep, sizeof(rep));
+        return send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(m_output_report));
     }
-    return set_report(rep.report_id, HID_REPORT_TYPE_OUTPUT, (uint8_t *)&rep, sizeof(rep));
+    return set_report(m_output_report.report_id, HID_REPORT_TYPE_OUTPUT,
+                      m_ep_out_buf, sizeof(m_output_report)) == sizeof(m_output_report);
 }
 
 void Ps4Host::set_rumble(uint8_t left, uint8_t right)
 {
-    m_rumble_left = left;
-    m_rumble_right = right;
-    send_ps4_output();
+    if (m_output_report.motor_left == left && m_output_report.motor_right == right)
+        return;
+    m_output_report.motor_left = left;
+    m_output_report.motor_right = right;
+    m_output_dirty = true;
 }
 
 void Ps4Host::set_lightbar(uint8_t r, uint8_t g, uint8_t b)
 {
-    m_lightbar_r = r;
-    m_lightbar_g = g;
-    m_lightbar_b = b;
-    send_ps4_output();
+    if (m_output_report.lightbar_red == r &&
+        m_output_report.lightbar_green == g &&
+        m_output_report.lightbar_blue == b)
+        return;
+    m_output_report.lightbar_red = r;
+    m_output_report.lightbar_green = g;
+    m_output_report.lightbar_blue = b;
+    m_output_dirty = true;
 }
 
 void Ps4Host::set_player_led(uint8_t player)
 {
-    if (player >= 1 && player <= 4)
+    if (player == 0)
     {
-        set_lightbar(ps4_colors[player - 1][0], ps4_colors[player - 1][1], ps4_colors[player - 1][2]);
+        set_lightbar(0, 0, 0);
+    }
+    else if (player <= 4)
+    {
+        set_lightbar(ps4_colors[player - 1][0],
+                     ps4_colors[player - 1][1],
+                     ps4_colors[player - 1][2]);
     }
 }

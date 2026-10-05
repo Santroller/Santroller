@@ -28,7 +28,7 @@ public:
     std::vector<std::shared_ptr<Profile>> profiles;
     uint8_t rumble_left = 0;
     uint8_t rumble_right = 0;
-    uint8_t player_led = 0;
+    uint8_t player_led = 1;
     uint8_t euphoria_led = 0;
     uint8_t lightbar_red = 0;
     uint8_t lightbar_green = 0;

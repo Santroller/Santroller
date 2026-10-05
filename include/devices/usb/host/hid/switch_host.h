@@ -1,5 +1,6 @@
 #pragma once
 #include "devices/usb/host/hid/hid_host.h"
+#include <atomic>
 
 #include "protocols/switch2.hpp"
 
@@ -18,6 +19,7 @@ public:
 
     bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+    void update(bool full_poll, bool send_events) override;
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info);
     bool tick_digital(proto_Output& type);
     uint16_t tick_analog(proto_Output& type);
@@ -29,6 +31,15 @@ public:
 private:
     uint8_t m_rumble_left = 0;
     uint8_t m_rumble_right = 0;
+    uint8_t m_player = 0;
+    bool m_rumble_dirty = true;
+    bool m_player_dirty = true;
+    enum class OutputKind : uint8_t { None, Rumble, PlayerLed };
+    OutputKind m_pending_output = OutputKind::None;
+    OutputKind m_last_output = OutputKind::None;
+    std::atomic<bool> m_out_done{false};
+    xfer_result_t m_out_result = XFER_RESULT_SUCCESS;
+    bool m_out_submit_failed = false;
     uint8_t m_packet_counter = 0;
     void send_handshake_step();
 

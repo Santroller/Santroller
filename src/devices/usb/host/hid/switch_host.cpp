@@ -144,6 +144,11 @@ void SwitchHost::send_handshake_step()
 
 bool SwitchHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
+    if (!(ep_addr & 0x80))
+    {
+        m_out_result = result;
+        m_out_done.store(true, std::memory_order_release);
+    }
     if (ep_addr & 0x80)
     {
         if (m_is_switch2 && result == XFER_RESULT_SUCCESS && xferred_bytes > 0)
@@ -160,6 +165,72 @@ bool SwitchHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred
         }
     }
     return true;
+}
+
+static inline void encode_switch_rumble_data(uint8_t amp, uint8_t *data);
+
+void SwitchHost::update(bool full_poll, bool send_events)
+{
+    UsbHostInterface::update(full_poll, send_events);
+    if (m_out_done.exchange(false, std::memory_order_acquire))
+    {
+        if (m_out_result != XFER_RESULT_SUCCESS)
+        {
+            if (m_pending_output == OutputKind::Rumble)
+                m_rumble_dirty = true;
+            else if (m_pending_output == OutputKind::PlayerLed)
+                m_player_dirty = true;
+            if (!m_out_submit_failed)
+                printf("Switch output failed: dev=%u ep=%u result=%u\r\n", m_dev_addr, m_ep_out, unsigned(m_out_result));
+            m_out_submit_failed = true;
+        }
+        m_pending_output = OutputKind::None;
+    }
+    if (!m_ep_out || m_handshake_step < 3 || m_pending_output != OutputKind::None ||
+        usbh_edpt_busy(m_dev_addr, m_ep_out))
+        return;
+
+    // Alternate state reports so LED updates are not starved by rumble changes.
+    for (uint8_t i = 0; i < 2; ++i)
+    {
+        OutputKind kind = m_last_output == OutputKind::Rumble
+                              ? (i == 0 ? OutputKind::PlayerLed : OutputKind::Rumble)
+                              : (i == 0 ? OutputKind::Rumble : OutputKind::PlayerLed);
+        if ((kind == OutputKind::Rumble && !m_rumble_dirty) ||
+            (kind == OutputKind::PlayerLed && !m_player_dirty))
+            continue;
+
+        uint8_t report[12] = {};
+        report[0] = kind == OutputKind::Rumble ? 0x10 : 0x01;
+        report[1] = m_packet_counter & 0x0F;
+        encode_switch_rumble_data(m_rumble_left, report + 2);
+        encode_switch_rumble_data(m_rumble_right, report + 6);
+        uint8_t len = kind == OutputKind::Rumble ? 10 : 12;
+        if (kind == OutputKind::PlayerLed)
+        {
+            uint8_t mask = m_player >= 1 && m_player <= 4 ? (1 << m_player) - 1 : 0;
+            report[10] = 0x30;
+            report[11] = mask;
+        }
+        memcpy(m_ep_out_buf, report, len);
+        m_pending_output = kind;
+        if (!send_intr_xfer(m_ep_out, m_ep_out_buf, len))
+        {
+            m_pending_output = OutputKind::None;
+            if (!m_out_submit_failed)
+                printf("Switch output submission failed: dev=%u ep=%u\r\n", m_dev_addr, m_ep_out);
+            m_out_submit_failed = true;
+            return;
+        }
+        m_out_submit_failed = false;
+        ++m_packet_counter;
+        m_last_output = kind;
+        if (kind == OutputKind::Rumble)
+            m_rumble_dirty = false;
+        else
+            m_player_dirty = false;
+        return;
+    }
 }
 
 bool SwitchHost::set_config()
@@ -336,52 +407,15 @@ static inline void encode_switch_rumble_data(uint8_t amp, uint8_t *data)
 
 void SwitchHost::set_rumble(uint8_t left, uint8_t right)
 {
+    if (m_rumble_left != left || m_rumble_right != right)
+        m_rumble_dirty = true;
     m_rumble_left = left;
     m_rumble_right = right;
-    if (!m_ep_out) return;
-
-    uint8_t buf[10] = {};
-    buf[0] = 0x10;
-    buf[1] = m_packet_counter++ & 0x0F;
-    encode_switch_rumble_data(left, buf + 2);
-    encode_switch_rumble_data(right, buf + 6);
-
-    if (usbh_edpt_claim(m_dev_addr, m_ep_out))
-    {
-        memcpy(m_ep_out_buf, buf, sizeof(buf));
-        if (!usbh_edpt_xfer(m_dev_addr, m_ep_out, m_ep_out_buf, sizeof(buf)))
-        {
-            usbh_edpt_release(m_dev_addr, m_ep_out);
-            return;
-        }
-    }
 }
 
 void SwitchHost::set_player_led(uint8_t player)
 {
-    if (!m_ep_out) return;
-
-    uint8_t mask = 0;
-    if (player == 1) mask = 0x01;
-    else if (player == 2) mask = 0x03;
-    else if (player == 3) mask = 0x07;
-    else if (player == 4) mask = 0x0F;
-
-    uint8_t buf[12] = {};
-    buf[0] = 0x01;
-    buf[1] = m_packet_counter++ & 0x0F;
-    encode_switch_rumble_data(m_rumble_left, buf + 2);
-    encode_switch_rumble_data(m_rumble_right, buf + 6);
-    buf[10] = 0x30;
-    buf[11] = mask;
-
-    if (usbh_edpt_claim(m_dev_addr, m_ep_out))
-    {
-        memcpy(m_ep_out_buf, buf, sizeof(buf));
-        if (!usbh_edpt_xfer(m_dev_addr, m_ep_out, m_ep_out_buf, sizeof(buf)))
-        {
-            usbh_edpt_release(m_dev_addr, m_ep_out);
-            return;
-        }
-    }
+    if (m_player != player)
+        m_player_dirty = true;
+    m_player = player;
 }

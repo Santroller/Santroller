@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <stddef.h>
 
 #define PS3_STICK_CENTER 0x80
 #define PS3_ACCEL_CENTER 0x0200
@@ -40,7 +41,7 @@ typedef struct
 {
     uint8_t report_id;
     ps3_rumble_t rumble;
-    uint8_t padding[4];
+    uint8_t padding[3];
     uint8_t leds_bitmap; /* bitmap of enabled LEDs: LED_1 = 0x02, LED_2 = 0x04, ... */
     ps3_led_t led[4];    /* LEDx at (4 - x) */
     ps3_led_t _reserved; /* LED5, not actually soldered */

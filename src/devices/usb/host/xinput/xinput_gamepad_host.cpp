@@ -156,11 +156,64 @@ bool XInputGamepadHost::set_config()
 
 bool XInputGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
+    if (ep_addr == m_ep_out)
+    {
+        m_out_result = result;
+        m_out_done.store(true, std::memory_order_release);
+    }
     if (ep_addr & 0x80 && result != XFER_RESULT_FAILED)
     {
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;
+}
+
+void XInputGamepadHost::update(bool full_poll, bool send_events)
+{
+    UsbHostInterface::update(full_poll, send_events);
+
+    if (m_out_done.exchange(false, std::memory_order_acquire))
+    {
+        m_out_pending = false;
+        if (m_out_result != XFER_RESULT_SUCCESS)
+        {
+            if (m_pending_player_led)
+                m_player_led_dirty = true;
+            else
+                m_rumble_dirty = true;
+            printf("XInput output failed: dev=%u ep=%u result=%u\r\n",
+                   m_dev_addr, m_ep_out, unsigned(m_out_result));
+        }
+        m_pending_player_led = false;
+    }
+
+    if (!m_ep_out || m_out_pending ||
+        usbh_edpt_busy(m_dev_addr, m_ep_out))
+        return;
+
+    bool send_led = m_player_led_dirty &&
+                    (!m_rumble_dirty || !m_last_output_was_led);
+    if (!m_player_led_dirty && !m_rumble_dirty)
+        return;
+
+    bool submitted = send_led ? send_player_led_report() : send_rumble_report();
+    if (!submitted)
+    {
+        if (!m_out_submit_failed)
+            printf("XInput output submission failed: dev=%u ep=%u\r\n",
+                   m_dev_addr, m_ep_out);
+        m_out_submit_failed = true;
+        return;
+    }
+
+    m_out_submit_failed = false;
+    m_out_pending = true;
+    m_pending_player_led = send_led;
+    m_last_output_was_led = send_led;
+    if (send_led)
+        m_player_led_dirty = false;
+    else
+        m_rumble_dirty = false;
 }
 
 bool XInputGamepadHost::tick_digital(proto_Output &type)
@@ -174,34 +227,49 @@ uint16_t XInputGamepadHost::tick_analog(proto_Output &type)
 
 void XInputGamepadHost::set_rumble(uint8_t left, uint8_t right)
 {
+    if (m_rumble_left == left && m_rumble_right == right)
+        return;
     m_rumble_left = left;
     m_rumble_right = right;
-    if (!m_ep_out) return;
+    m_rumble_dirty = true;
+}
+
+bool XInputGamepadHost::send_rumble_report()
+{
     XInputRumbleReport_t report = {0x00, 0x08, 0x00, m_rumble_left, m_rumble_right, {0, 0, 0}};
     if (m_subtype == DjHeroTurntable)
     {
         report.leftRumble = m_euphoria ? 0xFF : 0x00;
     }
-    send_intr_xfer(m_ep_out, &report, sizeof(report));
+    memcpy(m_ep_out_buf, &report, sizeof(report));
+    return send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(report));
 }
 
 void XInputGamepadHost::set_player_led(uint8_t player)
 {
-    if (!m_ep_out) return;
-    uint8_t led = 0;
-    if (player == 1) led = 0x02;
-    else if (player == 2) led = 0x03;
-    else if (player == 3) led = 0x04;
-    else if (player == 4) led = 0x05;
-    XInputLEDReport_t report = {0x01, 0x03, led};
-    send_intr_xfer(m_ep_out, &report, sizeof(report));
+    if (player < 1 || player > 4)
+        return;
+    uint8_t led = static_cast<uint8_t>(player + 1);
+    if (m_player_led == led)
+        return;
+    m_player_led = led;
+    m_player_led_dirty = true;
+}
+
+bool XInputGamepadHost::send_player_led_report()
+{
+    XInputLEDReport_t report = {0x01, 0x03, m_player_led};
+    memcpy(m_ep_out_buf, &report, sizeof(report));
+    return send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(report));
 }
 
 void XInputGamepadHost::set_euphoria_led(bool state)
 {
+    if (m_euphoria == state)
+        return;
     m_euphoria = state;
     if (m_subtype == DjHeroTurntable)
     {
-        set_rumble(m_rumble_left, m_rumble_right);
+        m_rumble_dirty = true;
     }
 }

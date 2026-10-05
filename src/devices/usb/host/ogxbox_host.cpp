@@ -62,11 +62,47 @@ bool OGXboxHost::set_config()
 
 bool OGXboxHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
+    if (ep_addr == m_ep_out)
+    {
+        m_out_result = result;
+        m_out_done.store(true, std::memory_order_release);
+    }
     if (ep_addr & 0x80 && result != XFER_RESULT_FAILED)
     {
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;
+}
+
+void OGXboxHost::update(bool full_poll, bool send_events)
+{
+    UsbHostInterface::update(full_poll, send_events);
+    if (m_out_done.exchange(false, std::memory_order_acquire))
+    {
+        m_out_pending = false;
+        if (m_out_result != XFER_RESULT_SUCCESS)
+        {
+            m_rumble_dirty = true;
+            printf("OG Xbox output failed: dev=%u ep=%u result=%u\r\n", m_dev_addr, m_ep_out, unsigned(m_out_result));
+        }
+    }
+    if (!m_rumble_dirty || !m_ep_out || m_out_pending || usbh_edpt_busy(m_dev_addr, m_ep_out))
+        return;
+    OGXboxOutput_Report_t report = {
+        0x00, 0x06,
+        static_cast<uint16_t>((m_rumble_left << 8) | m_rumble_left),
+        static_cast<uint16_t>((m_rumble_right << 8) | m_rumble_right)};
+    memcpy(m_ep_out_buf, &report, sizeof(report));
+    if (!send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(report)))
+    {
+        if (!m_out_submit_failed)
+            printf("OG Xbox output submission failed: dev=%u ep=%u\r\n", m_dev_addr, m_ep_out);
+        m_out_submit_failed = true;
+        return;
+    }
+    m_out_submit_failed = false;
+    m_rumble_dirty = false;
+    m_out_pending = true;
 }
 
 bool OGXboxHost::tick_digital(proto_Output& type)
@@ -160,7 +196,8 @@ uint16_t OGXboxHost::tick_analog(proto_Output& type)
 
 void OGXboxHost::set_rumble(uint8_t left, uint8_t right)
 {
-    if (!m_ep_out) return;
-    OGXboxOutput_Report_t rep = {0x00, 0x06, (uint16_t)(left << 8 | left), (uint16_t)(right << 8 | right)};
-    send_intr_xfer(m_ep_out, &rep, sizeof(rep));
+    if (m_rumble_left != left || m_rumble_right != right)
+        m_rumble_dirty = true;
+    m_rumble_left = left;
+    m_rumble_right = right;
 }

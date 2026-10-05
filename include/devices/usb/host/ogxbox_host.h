@@ -1,6 +1,7 @@
 #pragma once
 #include "devices/usb/host/host.hpp"
 #include "protocols/og_xbox.hpp"
+#include <atomic>
 
 class OGXboxHost : public UsbHostInterface
 {
@@ -9,6 +10,7 @@ public:
     OGXboxHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
     bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+    void update(bool full_poll, bool send_events) override;
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t* out_len);
     bool tick_digital(proto_Output& type);
     uint16_t tick_analog(proto_Output& type);
@@ -22,4 +24,12 @@ private:
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[sizeof(OGXboxGamepad_Data_t)];
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[sizeof(OGXboxOutput_Report_t)];
+    uint8_t m_rumble_left = 0;
+    uint8_t m_rumble_right = 0;
+    bool m_rumble_dirty = true;
+    bool m_out_pending = false;
+    std::atomic<bool> m_out_done{false};
+    xfer_result_t m_out_result = XFER_RESULT_SUCCESS;
+    bool m_out_submit_failed = false;
 };

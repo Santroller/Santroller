@@ -22,12 +22,14 @@ static_assert(sizeof(PS3DancepadReport) == 27, "DanceCon2040 PS3 input is 27 byt
 static_assert(offsetof(PS3DancepadReport, vendor_right) == 7, "Vendor bytes start at byte 7");
 static_assert(offsetof(PS3DancepadReport, vendor_2c) == 19, "Vendor words start at byte 19");
 
-struct PS3DancepadOutput {
-    uint8_t unknown1[2];
+struct PS3InstrumentOutput {
+    uint8_t output_type;
+    uint8_t data_length;
     uint8_t player_led;
     uint8_t unknown2[5];
 } __attribute__((packed));
-static_assert(sizeof(PS3DancepadOutput) == 8, "DanceCon2040 PS3 output is 8 bytes");
+static_assert(sizeof(PS3InstrumentOutput) == 8, "PS3 instrument output is 8 bytes");
+static_assert(offsetof(PS3InstrumentOutput, player_led) == 2, "Player LED mask is output byte 2");
 
 constexpr bool ps3_dancepad_direction(uint8_t hat, uint8_t direction) {
     return hat < 8 && (direction == 0 ? (hat == 7 || hat == 0 || hat == 1) :

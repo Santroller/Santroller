@@ -48,6 +48,7 @@ void Ps2EmulationDeviceInstance::initialize()
         PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)m_initial_report;
         memset(report, 0, sizeof(PS2GuitarHeroGuitar_Data_t));
         m_size = sizeof(PS2GuitarHeroGuitar_Data_t);
+        report->whammy = 0x7f;
         break;
     }
     default:

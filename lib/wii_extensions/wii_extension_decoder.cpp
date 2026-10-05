@@ -567,7 +567,8 @@ bool WiiExtensionDecoder::tick_digital(proto_Output &type) const
         case WiiExtType::WiiNunchuk:
             switch (type.mapping.gamepadButton)
             {
-            case Gamepad_LeftShoulder: return read_button(WiiButtonNunchukC);
+            case Gamepad_A: return read_button(WiiButtonNunchukC);
+            case Gamepad_B: return read_button(WiiButtonNunchukZ);
             default:                   return false;
             }
 

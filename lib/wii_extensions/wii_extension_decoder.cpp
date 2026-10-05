@@ -111,16 +111,8 @@ uint16_t WiiExtensionDecoder::read_axis(proto_WiiAxisType type) const
             case WiiAxisType::WiiAxisClassicRightStickY:
                 return ((mBuffer[3]) << 8);
             case WiiAxisType::WiiAxisClassicLeftTrigger:
-                if (mType == WiiClassicControllerPro)
-                {
-                    return read_button(WiiButtonClassicZl) ? 65535 : 0;
-                }
                 return mBuffer[4] << 8;
             case WiiAxisType::WiiAxisClassicRightTrigger:
-                if (mType == WiiClassicControllerPro)
-                {
-                    return read_button(WiiButtonClassicZr) ? 65535 : 0;
-                }
                 return mBuffer[5] << 8;
             default:
                 return 0;
@@ -139,16 +131,8 @@ uint16_t WiiExtensionDecoder::read_axis(proto_WiiAxisType type) const
             case WiiAxisType::WiiAxisClassicRightStickY:
                 return (((mBuffer[2] & 0x1f)) << 11);
             case WiiAxisType::WiiAxisClassicLeftTrigger:
-                if (mType == WiiClassicControllerPro)
-                {
-                    return read_button(WiiButtonClassicZl) ? 65535 : 0;
-                }
                 return (((mBuffer[3] & 0xE0) >> 5 | (mBuffer[2] & 0x60) >> 2)) << 11;
             case WiiAxisType::WiiAxisClassicRightTrigger:
-                if (mType == WiiClassicControllerPro)
-                {
-                    return read_button(WiiButtonClassicZr) ? 65535 : 0;
-                }
                 return (mBuffer[3] & 0x1f) << 11;
             default:
                 return 0;

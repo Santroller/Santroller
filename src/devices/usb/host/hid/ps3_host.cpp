@@ -790,7 +790,7 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             switch (type.mapping.proKeyboardAxis)
             {
             case ProKeyboardPedal:
-                return data->pedalAnalog << 9;
+                return (0x7f - data->pedalAnalog) << 9;
             case ProKeyboardTouchPad:
                 return data->touchPad << 9;
             default:

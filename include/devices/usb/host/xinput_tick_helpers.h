@@ -307,7 +307,7 @@ inline uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtyp
             switch (type.mapping.proKeyboardAxis)
             {
             case ProKeyboardPedal:
-                return data->pedalAnalog << 9;
+                return (0x7f - data->pedalAnalog) << 9;
             case ProKeyboardTouchPad:
                 return data->touchPad << 9;
             default:

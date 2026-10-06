@@ -1770,7 +1770,7 @@ void ProKeysButtonMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-ProKeysAxisMapping::ProKeysAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
+ProKeysAxisMapping::ProKeysAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.proKeyboardAxis == ProKeyboardPedal)
 {
 }
 
@@ -1793,11 +1793,9 @@ void ProKeysAxisMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.mapping.proKeyboardAxis)
     {
     case ProKeyboardPedal:
-        if (!m_centered)
-        {
-            report->pedalAnalog = m_calibrated_value >> 9;
-            report->pedalDigital = 1;
-        }
+        report->pedalAnalog = 0x7f - (m_calibrated_value >> 9);
+        report->pedalDigital = m_calibrated_value != 0;
+        report->pedalConnection = true;
         break;
     case ProKeyboardTouchPad:
         report->touchPad = m_calibrated_value >> 9;
@@ -1818,11 +1816,9 @@ void ProKeysAxisMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.mapping.proKeyboardAxis)
     {
     case ProKeyboardPedal:
-        if (!m_centered)
-        {
-            report->pedalAnalog = m_calibrated_value >> 9;
-            report->pedalDigital = 1;
-        }
+        report->pedalAnalog = 0x7f - (m_calibrated_value >> 9);
+        report->pedalDigital = m_calibrated_value != 0;
+        report->pedalConnection = true;
         break;
     case ProKeyboardTouchPad:
         report->touchPad = m_calibrated_value >> 9;

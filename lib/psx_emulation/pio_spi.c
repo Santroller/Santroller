@@ -4,6 +4,7 @@
 #include "hardware/pio.h"
 #include "hardware/gpio.h"
 #include "hardware/dma.h"
+#include "hardware/sync.h"
 #include <string.h>
 #include <stdio.h>
 #include <pico/time.h>
@@ -64,9 +65,20 @@ void pio_spi_watchdog_tick(pio_spi_t *spi)
     if (!spi || !spi->allocated || !spi->watchdog_active)
         return;
 
+    // Read the IRQ-owned timestamp before now, and compare signed: if a transaction
+    // lands in between, last can otherwise end up ahead of now and the unsigned
+    // difference wraps, firing the watchdog right after a valid poll.
+    uint32_t last = spi->watchdog_last_activity_ms;
     uint32_t now = to_ms_since_boot(get_absolute_time());
-    if ((uint32_t)(now - spi->watchdog_last_activity_ms) >= PSX_SPI_WATCHDOG_TIMEOUT_MS)
-        psx_spi_watchdog_reset(spi);
+    if ((int32_t)(now - last) >= PSX_SPI_WATCHDOG_TIMEOUT_MS)
+    {
+        // re-check with the IRQ held off so a transaction completing right now isn't clobbered
+        uint32_t irq_state = save_and_disable_interrupts();
+        now = to_ms_since_boot(get_absolute_time());
+        if ((int32_t)(now - spi->watchdog_last_activity_ms) >= PSX_SPI_WATCHDOG_TIMEOUT_MS)
+            psx_spi_watchdog_reset(spi);
+        restore_interrupts(irq_state);
+    }
 
 #if PSX_SPI_DEBUG_LOGGING
     if (!spi->timing_dumped && (spi->timing_prepare_idx || spi->timing_send_idx))

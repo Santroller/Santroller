@@ -273,10 +273,18 @@ bool WiiExtensionEmulation::is_communicating() const
     {
         return true;
     }
-    if (!m_context || m_context->last_activity_ms == 0)
+    if (!m_context)
+    {
+        return false;
+    }
+    // Read the IRQ-owned timestamp before now, and compare signed: an I2C transfer
+    // landing in between can leave last ahead of now, and the unsigned difference
+    // would wrap and report the Wiimote as gone.
+    uint32_t last = m_context->last_activity_ms;
+    if (last == 0)
     {
         return false;
     }
     uint32_t now = to_ms_since_boot(get_absolute_time());
-    return (uint32_t)(now - m_context->last_activity_ms) < 1000;
+    return (int32_t)(now - last) < 1000;
 }

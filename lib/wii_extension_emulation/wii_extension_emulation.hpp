@@ -24,7 +24,8 @@ typedef struct
     bool djh_euphoria_led_state;
     ext_crypto_state state;
     SubType type;
-    uint32_t last_activity_ms;
+    // written from the I2C IRQ
+    volatile uint32_t last_activity_ms;
 } wii_extension_context_t;
 class WiiExtensionEmulation
 {

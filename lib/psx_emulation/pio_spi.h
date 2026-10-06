@@ -95,8 +95,9 @@ typedef struct pio_spi_t
     volatile uint8_t config_index_trace_reg[16];
     volatile uint8_t config_index_trace_idx;
     SubType type;
-    bool watchdog_active;
-    uint32_t watchdog_last_activity_ms;
+    // written from the PIO IRQ
+    volatile bool watchdog_active;
+    volatile uint32_t watchdog_last_activity_ms;
     uint8_t rumble_small;
     uint8_t rumble_large;
 } pio_spi_t;

@@ -55,6 +55,7 @@ public:
     BtDs3Host(uint16_t id) : BluetoothHostInterface(id)
     {
         m_subtype = SubType_Gamepad;
+        ps3_output_report_init(&m_output_report);
     }
     ~BtDs3Host() {}
 
@@ -62,11 +63,23 @@ public:
 
     // on_connected() sends the DS3 enable sequence via HID set-report
     void send_init_packets() override;
+    void update(bool full_poll, bool send_events) override;
+    void set_rumble(uint8_t left, uint8_t right) override;
+    void set_player_led(uint8_t player) override;
 
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
     bool tick_axis_digital(proto_Output &type) override;
     uint16_t tick_button_pressure(proto_Output &type) override;
+
+private:
+    ps3_output_report m_output_report;
+    uint8_t m_player = 0;
+    uint8_t m_rumble_left = 0;
+    uint8_t m_rumble_right = 0;
+    bool m_output_dirty = true;
+    bool m_output_sent = false;
+    uint32_t m_last_output_ms = 0;
 };
 
 // ---------------------------------------------------------------------------
@@ -293,6 +306,7 @@ public:
     void set_player_led(uint8_t player) override;
     bool has_rumble() const override { return true; }
     bool has_player_led() const override { return true; }
+    void update(bool full_poll, bool send_events) override;
 
     WiiExtensionDecoder m_decoder;
 
@@ -304,8 +318,13 @@ private:
     void send_report_mode(uint8_t mode);
     void send_player_led(uint8_t led);
     void send_feedback();
+    void retry_extension_init();
 
     bool m_is_pro;
+    // extension handshake retries, for an extension that isn't ready yet
+    uint8_t m_ext_init_attempts = 0;
+    bool m_ext_retry_pending = false;
+    uint32_t m_ext_retry_at = 0;
     uint8_t m_player = 0;
     bool m_rumble = false;
     uint8_t m_wii_buttons[2] = {};

@@ -3,6 +3,7 @@
 #include <pico/cyw43_arch.h>
 
 #include "btstack.h"
+#include <string.h>
 #include "devices/bt/bt_classic_rx.hpp"
 #include "devices/bt/ble_rx.hpp"
 #include "devices/bt/bt_tlv_storage.hpp"
@@ -22,6 +23,22 @@ void wiimote_led_on()
 void wiimote_led_off()
 {
 }
+}
+
+BtStackLock::BtStackLock() : m_context(cyw43_arch_async_context())
+{
+    if (m_context)
+    {
+        async_context_acquire_lock_blocking(m_context);
+    }
+}
+
+BtStackLock::~BtStackLock()
+{
+    if (m_context)
+    {
+        async_context_release_lock(m_context);
+    }
 }
 
 BluetoothStack& BluetoothStack::instance()
@@ -67,6 +84,7 @@ bool BluetoothStack::begin()
 
 void BluetoothStack::power_on()
 {
+    BtStackLock lock;
     if (m_initialized && !m_powered)
     {
         hci_power_control(HCI_POWER_ON);
@@ -76,6 +94,7 @@ void BluetoothStack::power_on()
 
 void BluetoothStack::power_off()
 {
+    BtStackLock lock;
     if (m_initialized && m_powered)
     {
         hci_power_control(HCI_POWER_OFF);
@@ -85,6 +104,7 @@ void BluetoothStack::power_off()
 
 void BluetoothStack::request_wiimote(void *report)
 {
+    BtStackLock lock;
     m_wiimote_report = report;
     btstack_classic_set_accept_incoming(false);
     if (m_initialized)
@@ -96,6 +116,7 @@ void BluetoothStack::request_wiimote(void *report)
 
 void BluetoothStack::update_wiimote_report(void *report)
 {
+    BtStackLock lock;
     m_wiimote_report = report;
     if (m_initialized)
     {
@@ -105,6 +126,7 @@ void BluetoothStack::update_wiimote_report(void *report)
 
 void BluetoothStack::release_wiimote()
 {
+    BtStackLock lock;
     if (m_wiimote_report)
     {
         wiimote_emulator_shutdown();
@@ -117,9 +139,23 @@ bool BluetoothStack::initialized() const
 {
     return m_initialized;
 }
+
+bool BluetoothStack::local_address(uint8_t addr[6]) const
+{
+    if (!m_initialized || !m_powered || hci_get_state() != HCI_STATE_WORKING)
+    {
+        return false;
+    }
+    bd_addr_t local;
+    gap_local_bd_addr(local);
+    memcpy(addr, local, sizeof(local));
+    return true;
+}
 void BluetoothStack::tick() {
     if (m_initialized)
     {
+        // creating hosts, sending reports etc. all go through BTstack
+        BtStackLock lock;
         btc_tick();
         ble_tick();
     }

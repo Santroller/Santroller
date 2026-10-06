@@ -158,6 +158,9 @@ void bt_host_save_pairing(const std::shared_ptr<BluetoothHostInterface> &device,
 {
     if (!device)
         return;
+    // a host that never learned its address would otherwise save a junk record
+    if (btstack_is_null_bd_addr(device->m_addr))
+        return;
 
     int32_t id = DeviceFactory::find_bluetooth_pairing_id_by_mac(device->m_addr);
     if (id < 0)

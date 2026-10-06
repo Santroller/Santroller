@@ -100,6 +100,7 @@ bool check_bluetooth_ready()
 }
 int get_bt_address(uint8_t *addr)
 {
+    BtStackLock lock;
     bd_addr_t local_addr;
     gap_local_bd_addr(local_addr);
     memcpy(addr, bd_addr_to_str(local_addr), SIZE_OF_BD_ADDRESS);
@@ -107,6 +108,7 @@ int get_bt_address(uint8_t *addr)
 }
 void send_report(uint8_t size, uint8_t *report)
 {
+    BtStackLock lock;
     if (con_handle != HCI_CON_HANDLE_INVALID)
     {
         if (size > 0 && report[0] == ReportIdSantrollerCapabilities)
@@ -137,6 +139,7 @@ const uint8_t adv_data_len = sizeof(adv_data_gamepad);
 
 void set_battery_state(uint8_t state)
 {
+    BtStackLock lock;
     battery_service_server_set_battery_value(state);
 }
 BTGamepadDevice::BTGamepadDevice()
@@ -149,6 +152,7 @@ BTGamepadDevice::~BTGamepadDevice()
 
 void BTGamepadDevice::deinitialize()
 {
+    BtStackLock lock;
     if (!m_initialized)
     {
         return;
@@ -171,6 +175,7 @@ void BTGamepadDevice::deinitialize()
 
 void BTGamepadDevice::initialize()
 {
+    BtStackLock lock;
     if (m_initialized)
     {
         return;

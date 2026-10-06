@@ -6,6 +6,9 @@
 #include "emulation/usb/usb_devices.h"
 #include "config/config.hpp"
 #include "managers/device_manager.hpp"
+#include "devices/bt/bluetooth_stack.hpp"
+#include "managers/config_manager.hpp"
+#include "config/device_factory.hpp"
 #include "hidparser.h"
 #include "protocols/ps3.hpp"
 #include "protocols/pro_keys.hpp"
@@ -845,6 +848,19 @@ uint16_t Ps3Host::tick_button_pressure(proto_Output &type)
 void Ps3Host::update(bool full_poll, bool send_events)
 {
     UsbHostInterface::update(full_poll, send_events);
+    if (!m_third_party && !m_bt_pair_done)
+    {
+        // Point a wired DS3 at us so pressing PS later connects it over bluetooth.
+        // Keeps checking until the BT stack is up, as it can start after USB enumerates.
+        uint8_t addr[6];
+        // the pairing store can't be written mid-reinit, so wait that out too
+        if (!ConfigManager::instance().get_reinit_time() &&
+            BluetoothStack::instance().local_address(addr))
+        {
+            pair_ds3_bluetooth(addr);
+            m_bt_pair_done = true;
+        }
+    }
     if (m_third_party && m_player_led_dirty && !m_switch_arcade)
     {
         if (!send_ps3_player_led())
@@ -912,6 +928,44 @@ bool Ps3Host::enable_pro_instrument_full_report()
     return set_report(0x00, HID_REPORT_TYPE_FEATURE, report, sizeof(report)) == sizeof(report);
 }
 
+bool Ps3Host::pair_ds3_bluetooth(const uint8_t addr[6])
+{
+    // Feature report 0xF5 holds the DS3's master address: 01 00 <BD_ADDR, MSB first>
+    // (same layout sixpair uses). Only write it if it differs, so replugging doesn't
+    // rewrite the controller's flash every time.
+    // Feature report 0xF2 has the DS3's own BD_ADDR at bytes 4-9. Record it as a DS3 so
+    // the bluetooth side lets it connect without authentication (it never pairs).
+    uint8_t info[17] = {};
+    if (get_report(0xF2, HID_REPORT_TYPE_FEATURE, info, sizeof(info)) == sizeof(info))
+    {
+        const uint8_t *mac = &info[4];
+        DeviceFactory::BluetoothPairingStateData existing = {};
+        if (!DeviceFactory::find_bluetooth_pairing_state_by_mac(mac, existing) ||
+            existing.vid != SONY_VID || existing.pid != SONY_DS3_PID)
+        {
+            int32_t id = DeviceFactory::find_bluetooth_pairing_id_by_mac(mac);
+            if (id < 0)
+            {
+                id = DeviceFactory::allocate_bluetooth_pairing_id();
+            }
+            update_aux_bluetooth_pairing(id, mac, "PLAYSTATION(R)3 Controller", false, Gamepad,
+                                         BtControllerType_BtControllerTypePS3, SONY_VID, SONY_DS3_PID, nullptr);
+        }
+    }
+
+    uint8_t current[8] = {};
+    if (get_report(0xF5, HID_REPORT_TYPE_FEATURE, current, sizeof(current)) == sizeof(current) &&
+        memcmp(&current[2], addr, 6) == 0)
+    {
+        return true;
+    }
+    uint8_t pair[8] = {0x01, 0x00, addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]};
+    bool ok = set_report(0xF5, HID_REPORT_TYPE_FEATURE, pair, sizeof(pair)) == sizeof(pair);
+    printf("DS3 bluetooth pairing to %02X:%02X:%02X:%02X:%02X:%02X %s\r\n",
+           addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], ok ? "ok" : "failed");
+    return ok;
+}
+
 bool Ps3Host::submit_ps3_output(uint8_t report_id, const void *report, uint8_t len)
 {
     memcpy(m_ep_out_buf, report, len);
@@ -944,7 +998,7 @@ bool Ps3Host::send_ps3_output()
 
     m_output_report.rumble.right_motor_on = m_rumble_right ? 1 : 0;
     m_output_report.rumble.left_motor_force = m_rumble_left;
-    m_output_report.leds_bitmap = (m_player >= 1 && m_player <= 4) ? (1 << m_player) : 0;
+    m_output_report.leds_bitmap = ps3_leds_bitmap_for_player(m_player);
     // only the DS3 numbers this report, and only via wValue
     return submit_ps3_output(m_third_party ? 0 : PS3_RUMBLE_ID, &m_output_report, sizeof(m_output_report));
 }

@@ -16,6 +16,8 @@
 #include "hidparser.h"
 #include "devices/bt/bt_host.hpp"
 #include "devices/bt/bt_classic_host.hpp"
+#include "devices/bt/ble_rx.hpp"
+#include "devices/bt/bt_classic_rx.hpp"
 #include "managers/device_manager.hpp"
 #include "config/device_factory.hpp"
 #include "devices/bluetooth.hpp"
@@ -56,7 +58,6 @@ static int deviceCount = 0;
 // --- Multiple-connection tracking -------------------------------------------
 // Maps hid_host_cid → BluetoothHostInterface
 #define MAX_BT_CLASSIC_CONNECTIONS 4
-#define MAX_BT_CLASSIC_RECONNECT_CANDIDATES 8
 
 enum class PendingAction
 {
@@ -73,6 +74,9 @@ struct BtClassicSlot
     uint16_t cid = 0;
     std::shared_ptr<BluetoothHostInterface> host;
     bool pending_destroy = false;
+    // Host still has to be created by btc_tick(). Kept apart from `action` so later
+    // events (descriptor, set protocol) can't overwrite it before the tick runs.
+    bool needs_host = false;
 
     PendingAction action = PendingAction::None;
     uint16_t vid = 0, pid = 0, version = 0;
@@ -103,6 +107,7 @@ static BtClassicSlot *bt_slot_alloc(uint16_t cid)
             s.cid = cid;
             s.pending_destroy = false;
             s.action = PendingAction::None;
+            s.needs_host = false;
             s.vid = 0;
             s.pid = 0;
             s.version = 0;
@@ -129,26 +134,34 @@ struct PendingConnection
     bool hid_descriptor_parsed = false;
     HID_ReportInfo_t *info = nullptr;
     bd_addr_t addr = {};
-    // device_id assigned when SDP query completes (before HID connect)
-    uint16_t device_id = 0;
+    // HID cid this entry belongs to; 0 means the entry is free
+    uint16_t cid = 0;
 };
 static PendingConnection s_pending_connections[MAX_BT_CLASSIC_CONNECTIONS];
 
 static PendingConnection *pending_connection_by_cid(uint16_t cid)
 {
     for (auto &s : s_pending_connections)
-        if (s.device_id == cid)
+        if (s.cid != 0 && s.cid == cid)
             return &s;
     return nullptr;
 }
 static PendingConnection *pending_connection_alloc(uint16_t cid)
 {
+    // BTstack reuses cids, so replace anything left over from an earlier connection
+    // on this cid rather than adding a second entry lookups could pick instead
+    if (auto *existing = pending_connection_by_cid(cid))
+    {
+        *existing = PendingConnection{};
+        existing->cid = cid;
+        return existing;
+    }
     for (auto &s : s_pending_connections)
     {
-        if (s.device_id == 0)
+        if (s.cid == 0)
         {
             s = PendingConnection{};
-            s.device_id = cid;
+            s.cid = cid;
             return &s;
         }
     }
@@ -172,8 +185,6 @@ static hid_protocol_mode_t hid_host_report_mode = HID_PROTOCOL_MODE_REPORT;
 
 static btstack_timer_source_t s_classic_reconnect_timer;
 static bool s_classic_reconnect_timer_active = false;
-static bool s_classic_connect_in_progress = false;
-static size_t s_reconnect_candidate_idx = 0;
 
 // Forward declaration needed by connect_to_discovered_device()
 static void handle_sdp_client_query_result(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
@@ -195,14 +206,11 @@ static bool is_already_connected_or_pending(const bd_addr_t addr)
     return false;
 }
 
-struct ClassicCandidate
+static bool is_ds3_pairing(const DeviceFactory::BluetoothPairingStateData &state)
 {
-    bd_addr_t addr = {};
-    char name[64] = {};
-    uint16_t vid = 0;
-    uint16_t pid = 0;
-    bool has_link_key = false;
-};
+    return !state.ble && state.vid == SONY_VID &&
+           (state.pid == SONY_DS3_PID || state.pid == SONY_PS3_NAV_PID);
+}
 
 static void classic_reconnect_timer_handler(btstack_timer_source_t *ts);
 
@@ -221,122 +229,32 @@ static void btc_schedule_reconnect(uint32_t delay_ms)
 
 static void btc_sync_reconnect(void)
 {
-    if (s_classic_connect_in_progress)
+    // This used to page every stored classic device that wasn't connected. Every
+    // controller we support reconnects to us by itself (only a Wii Remote paired with 1+2
+    // needs paging, and that goes through the config tool's sync), and paging an absent
+    // device kept the radio busy ~90% of the time, starving the controllers that are
+    // connected. All that's left is making sure stored link keys are in BTstack so
+    // devices can authenticate when they reconnect.
+    if (s_classic_reconnect_timer_active)
     {
-        return;
+        btstack_run_loop_remove_timer(&s_classic_reconnect_timer);
+        s_classic_reconnect_timer_active = false;
     }
-
-    static ClassicCandidate candidates[MAX_BT_CLASSIC_RECONNECT_CANDIDATES];
-    uint8_t candidate_count = 0;
-
-    // 1. Collect from DeviceFactory
     DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state)
                                                    {
         // Skip Wii remote emulation ID (when Pico acts as a Wiimote to a console)
         if (static_cast<uint32_t>(id) == 0xFFFFFFFEu) return;
-
-        if (!state.ble && !btstack_is_null_bd_addr(state.mac))
+        if (state.ble || btstack_is_null_bd_addr(state.mac)) return;
+        if (!state.has_link_key || btstack_is_null(state.link_key, 16)) return;
+        link_key_t fetched_key;
+        link_key_type_t key_type = INVALID_LINK_KEY;
+        if (!gap_get_link_key_for_bd_addr(const_cast<uint8_t *>(state.mac), fetched_key, &key_type))
         {
-            // Seed link key into BTstack link key DB if available and non-null
-            if (state.has_link_key && !btstack_is_null(state.link_key, 16))
-            {
-                link_key_t fetched_key;
-                link_key_type_t key_type = INVALID_LINK_KEY;
-                if (!gap_get_link_key_for_bd_addr(const_cast<uint8_t *>(state.mac), fetched_key, &key_type))
-                {
-                    gap_store_link_key_for_bd_addr(const_cast<uint8_t *>(state.mac),
-                                                   const_cast<uint8_t *>(state.link_key),
-                                                   COMBINATION_KEY);
-                    printf("Classic BT: Seeded stored link key into BTstack for %s\r\n", bd_addr_to_str(const_cast<uint8_t *>(state.mac)));
-                }
-            }
-
-            // Check if already connected
-            for (const auto &s : s_bt_slots)
-            {
-                if (s.in_use && s.host && bd_addr_cmp(s.host->m_addr, state.mac) == 0)
-                    return;
-            }
-
-            bool exists = false;
-            for (uint8_t i = 0; i < candidate_count; i++)
-            {
-                if (bd_addr_cmp(candidates[i].addr, state.mac) == 0)
-                {
-                    exists = true;
-                    break;
-                }
-            }
-            if (!exists)
-            {
-                ClassicCandidate cand = {};
-                memcpy(cand.addr, state.mac, 6);
-                strncpy(cand.name, state.name, sizeof(cand.name) - 1);
-                cand.vid = state.vid;
-                cand.pid = state.pid;
-                cand.has_link_key = state.has_link_key;
-
-                // Fallback detection from device name if VID/PID are not stored
-                if (!cand.vid && !cand.pid)
-                {
-                    if (strstr(cand.name, "RVL-CNT-01-UC") != nullptr)
-                    {
-                        cand.vid = 0x057E;
-                        cand.pid = 0x0330;
-                    }
-                    else if (strstr(cand.name, "RVL") != nullptr)
-                    {
-                        cand.vid = 0x057E;
-                        cand.pid = 0x0306;
-                    }
-                }
-
-                if (candidate_count < MAX_BT_CLASSIC_RECONNECT_CANDIDATES)
-                {
-                    candidates[candidate_count++] = cand;
-                }
-            }
+            gap_store_link_key_for_bd_addr(const_cast<uint8_t *>(state.mac),
+                                           const_cast<uint8_t *>(state.link_key),
+                                           COMBINATION_KEY);
+            printf("Classic BT: Seeded stored link key into BTstack for %s\r\n", bd_addr_to_str(const_cast<uint8_t *>(state.mac)));
         } });
-    if (candidate_count == 0)
-    {
-        if (s_classic_reconnect_timer_active)
-        {
-            btstack_run_loop_remove_timer(&s_classic_reconnect_timer);
-            s_classic_reconnect_timer_active = false;
-        }
-        return;
-    }
-
-    if (s_reconnect_candidate_idx >= candidate_count)
-    {
-        s_reconnect_candidate_idx = 0;
-    }
-
-    const auto &target = candidates[s_reconnect_candidate_idx];
-    s_reconnect_candidate_idx = (s_reconnect_candidate_idx + 1) % candidate_count;
-
-    if (is_already_connected_or_pending(target.addr))
-    {
-        btc_schedule_reconnect(2000);
-        return;
-    }
-
-    uint16_t cid = 0;
-    uint8_t status = hid_host_connect(const_cast<uint8_t *>(target.addr), hid_host_report_mode, &cid);
-    if (status == ERROR_CODE_SUCCESS)
-    {
-        s_classic_connect_in_progress = true;
-        PendingConnection &pending = *pending_connection_alloc(cid);
-        pending.vid = target.vid;
-        pending.pid = target.pid;
-        memcpy(pending.addr, target.addr, 6);
-        pending.device_id = BluetoothStack::instance().device_id();
-    }
-    else
-    {
-        printf("Classic BT: hid_host_connect failed, status 0x%02x\r\n", status);
-        btc_schedule_reconnect(3000);
-    }
 }
 
 static void classic_reconnect_timer_handler(btstack_timer_source_t *ts)
@@ -381,7 +299,6 @@ static void connect_to_discovered_device(const bd_addr_t addr, const char *name)
     {
         PendingConnection &pending = *pending_connection_alloc(cid);
         memcpy(pending.addr, addr, 6);
-        pending.device_id = BluetoothStack::instance().device_id();
         bt_discovery_on_device_found();
     }
     else
@@ -433,6 +350,23 @@ static bool is_wii_device(const bd_addr_t addr)
     return false;
 }
 
+// A DS3 never authenticates (a PS3 doesn't ask it to), so requiring LEVEL_2 on the HID
+// PSMs makes us demand a PIN it can't give and the connection dies. Let known DS3s in
+// without security; everything else keeps the configured level.
+static gap_security_level_t hid_incoming_security_level(const bd_addr_t address, uint16_t psm, gap_security_level_t required_level)
+{
+    if (psm != PSM_HID_CONTROL && psm != PSM_HID_INTERRUPT)
+    {
+        return required_level;
+    }
+    DeviceFactory::BluetoothPairingStateData state = {};
+    if (DeviceFactory::find_bluetooth_pairing_state_by_mac(address, state) && is_ds3_pairing(state))
+    {
+        return LEVEL_0;
+    }
+    return required_level;
+}
+
 static void hid_host_setup(void)
 {
 #ifdef ENABLE_BLE
@@ -440,10 +374,14 @@ static void hid_host_setup(void)
 #endif
     hid_host_init(hid_descriptor_storage, sizeof(hid_descriptor_storage));
     hid_host_register_packet_handler(packet_handler);
+    l2cap_set_classic_incoming_security_level_override(&hid_incoming_security_level);
 
     gap_set_default_link_policy_settings(LM_LINK_POLICY_ENABLE_SNIFF_MODE |
                                          LM_LINK_POLICY_ENABLE_ROLE_SWITCH);
-    hci_set_master_slave_policy(HCI_ROLE_MASTER);
+    // Stay slave on incoming connections, like BlueZ does. Forcing master left the DS3
+    // only transmitting when polled, which with the CYW43 meant one report every ~33ms
+    // instead of streaming. Connections we make ourselves (pairing) still make us master.
+    hci_set_master_slave_policy(HCI_ROLE_SLAVE);
     gap_ssp_set_io_capability(SSP_IO_CAPABILITY_DISPLAY_YES_NO);
 
     hid_host_set_accept_incoming(true);
@@ -456,6 +394,7 @@ static void hid_host_setup(void)
 
 void btc_start_scan(uint32_t lap)
 {
+    BtStackLock lock;
     printf("Starting inquiry scan (LAP 0x%06lx)..\r\n", (unsigned long)lap);
     if (s_classic_reconnect_timer_active)
     {
@@ -469,6 +408,7 @@ void btc_start_scan(uint32_t lap)
 
 void btc_stop_scan(void)
 {
+    BtStackLock lock;
     printf("Stopping inquiry scan..\r\n");
     gap_inquiry_stop();
     btc_schedule_reconnect(2000);
@@ -562,7 +502,6 @@ static void handle_sdp_client_query_result(uint8_t packet_type, uint16_t channel
                 pending.pid = pid;
                 pending.version = version;
                 memcpy(pending.addr, target_addr, 6);
-                pending.device_id = BluetoothStack::instance().device_id();
             }
             else
             {
@@ -612,7 +551,12 @@ static bool upgrade_to_ps4(uint16_t cid, std::shared_ptr<BluetoothHostInterface>
     }
 
     bt_host_remove_interface(old_host.get());
-    auto slot = bt_slot_alloc(cid);
+    // swap the host in the connection's existing slot rather than leaving a second slot on the same cid
+    auto slot = bt_slot_by_cid(cid);
+    if (!slot)
+        slot = bt_slot_alloc(cid);
+    if (!slot)
+        return false;
     slot->host = new_host;
     new_host->on_connected();
     bt_host_add_interface(new_host);
@@ -647,7 +591,11 @@ static bool upgrade_to_ps5(uint16_t cid, std::shared_ptr<BluetoothHostInterface>
     }
 
     bt_host_remove_interface(old_host.get());
-    auto slot = bt_slot_alloc(cid);
+    auto slot = bt_slot_by_cid(cid);
+    if (!slot)
+        slot = bt_slot_alloc(cid);
+    if (!slot)
+        return false;
     slot->host = new_host;
     new_host->on_connected();
     bt_host_add_interface(new_host);
@@ -804,6 +752,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             {
                 hci_con_handle_t handle = hci_event_connection_complete_get_connection_handle(packet);
                 printf("Classic ACL connection complete: %s, handle=0x%04x\r\n", bd_addr_to_str(event_addr), handle);
+                // Incoming connections (a DS3 connects to us) otherwise keep the controller's
+                // default packet types, which can force the remote into single-slot packets
+                // and several polls per input report.
+                gap_request_all_acl_packet_types(handle);
                 if (is_wii_device(event_addr))
                 {
                     printf("Requesting security LEVEL_2 for Wii device %s\r\n", bd_addr_to_str(event_addr));
@@ -898,7 +850,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 {
                     PendingConnection &pending = *pending_connection_alloc(cid);
                     memcpy(pending.addr, in_addr, 6);
-                    pending.device_id = BluetoothStack::instance().device_id();
                     DeviceFactory::BluetoothPairingStateData paired_state = {};
                     if (DeviceFactory::find_bluetooth_pairing_state_by_mac(in_addr, paired_state) && !paired_state.ble)
                     {
@@ -914,7 +865,6 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             {
                 uint16_t cid = hid_subevent_connection_opened_get_hid_cid(packet);
                 status = hid_subevent_connection_opened_get_status(packet);
-                s_classic_connect_in_progress = false;
                 if (status != ERROR_CODE_SUCCESS)
                 {
                     bd_addr_t fail_addr = {};
@@ -936,7 +886,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
                     PendingConnection *pending = pending_connection_by_cid(cid);
                     if (pending)
-                        pending->device_id = 0;
+                        pending->cid = 0;
                     btc_schedule_reconnect(2000);
                     return;
                 }
@@ -974,6 +924,15 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     known_controller_type = paired_state.controller_type;
                 }
                 auto slot = bt_slot_alloc(cid);
+                if (!slot)
+                {
+                    printf("Classic BT: no free slot for cid=0x%04x, disconnecting\r\n", cid);
+                    hid_host_disconnect(cid);
+                    break;
+                }
+                memcpy(slot->addr, connected_addr, sizeof(slot->addr));
+                // a classic controller is up: pause the BLE background reconnect
+                ble_resync_reconnect();
                 // Parse HID descriptor if available in storage (SDP populated this during hid_host_connect)
                 const uint8_t *desc = hid_descriptor_storage_get_descriptor_data(cid);
                 uint16_t desc_len = hid_descriptor_storage_get_descriptor_len(cid);
@@ -1035,12 +994,14 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 }
                 slot->vid = vid;
                 slot->pid = pid;
+                strncpy(slot->name, dev_name, sizeof(slot->name) - 1);
+                slot->name[sizeof(slot->name) - 1] = '\0';
                 slot->known_controller_type = known_controller_type;
                 slot->known_subtype = known_subtype;
                 slot->known_ready = known_ready;
-                slot->action = PendingAction::CreateHost;
+                slot->needs_host = true;
 
-                pending->device_id = 0;
+                pending->cid = 0;
                 btc_schedule_reconnect(1000);
                 break;
             }
@@ -1057,9 +1018,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     auto slot = bt_slot_by_cid(cid);
                     if (slot)
                     {
-                        memcpy(slot->desc_copy, desc, desc_len < sizeof(slot->desc_copy) ? desc_len : sizeof(slot->desc_copy));
+                        slot->desc_len = desc_len < sizeof(slot->desc_copy) ? desc_len : sizeof(slot->desc_copy);
+                        memcpy(slot->desc_copy, desc, slot->desc_len);
+                        slot->action = PendingAction::UpdateDescriptor;
                     }
-                    slot->action = PendingAction::UpdateDescriptor;
                 }
                 else
                 {
@@ -1081,7 +1043,8 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                         report++;
                         report_len--;
                     }
-                    slot->host->handle_report(report, report_len);
+                    // The host is only created later from btc_tick(), and controllers like the
+                    // DS5 start streaming as soon as the channel opens, so it can still be null.
                     if (slot->host)
                     {
                         if (!slot->host->init_packets_sent()) {
@@ -1102,13 +1065,16 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             {
                 uint16_t cid = hid_subevent_connection_closed_get_hid_cid(packet);
                 auto slot = bt_slot_by_cid(cid);
-                if (slot && slot->host)
+                if (slot)
                 {
+                    // Detach from the cid now: BTstack can hand the same cid to the next
+                    // connection before btc_tick() gets to free this slot.
+                    slot->cid = 0;
                     slot->action = PendingAction::Disconnected;
                 }
                 auto pending = pending_connection_by_cid(cid);
                 if (pending)
-                    pending->device_id = 0;
+                    pending->cid = 0;
                 printf("HID Host disconnected, cid=0x%04x\r\n", cid);
                 btc_schedule_reconnect(1000);
                 break;
@@ -1149,7 +1115,8 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 if (status != HID_HANDSHAKE_PARAM_TYPE_SUCCESSFUL)
                     printf("Error set protocol, status 0x%02x\r\n", status);
                 auto slot = bt_slot_by_cid(cid);
-                slot->action = PendingAction::SendInitPackets;
+                if (slot)
+                    slot->action = PendingAction::SendInitPackets;
                 break;
             }
 
@@ -1182,18 +1149,27 @@ int btstack_classic_main(bool enable_hid_host)
 
 void btstack_classic_set_accept_incoming(bool accept)
 {
+    BtStackLock lock;
     hid_host_set_accept_incoming(accept);
 }
+bool btc_has_connected_device()
+{
+    for (const auto &s : s_bt_slots)
+        if (s.in_use)
+            return true;
+    return false;
+}
+
 void btc_tick()
 {
     for (auto &s : s_bt_slots)
     {
         if (!s.in_use)
             continue;
-        switch (s.action)
+        // Create the host before acting on anything else queued for this connection
+        if (s.needs_host && s.action != PendingAction::Disconnected)
         {
-        case PendingAction::CreateHost:
-        {
+            s.needs_host = false;
             HID_ReportInfo_t *info = nullptr;
             if (s.desc_len > 0)
                 USB_ProcessHIDReport(s.desc_copy, s.desc_len, &info);
@@ -1208,14 +1184,23 @@ void btc_tick()
             s.host = host;
             host->on_connected();
             bt_host_add_interface(host);
-            break;
         }
+        switch (s.action)
+        {
+        case PendingAction::Disconnected:
+            if (s.host)
+                s.host->on_disconnected();
+            s.host.reset();
+            s.in_use = false;
+            // may have been the last classic controller, so BLE reconnect can resume
+            ble_resync_reconnect();
+            break;
         case PendingAction::SendInitPackets:
             if (s.host)
                 s.host->send_init_packets();
             break;
         case PendingAction::UpdateDescriptor: /* re-run USB_ProcessHIDReport + assign into s.host */
-            if (s.desc_len > 0)
+            if (s.host && s.desc_len > 0)
             {
                 HID_ReportInfo_t *info = nullptr;
                 USB_ProcessHIDReport(s.desc_copy, s.desc_len, &info);

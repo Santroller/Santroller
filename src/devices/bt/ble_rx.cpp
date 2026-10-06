@@ -20,6 +20,7 @@
 
 #include "devices/bt/bt_host.hpp"
 #include "devices/bt/bt_ble_host.hpp"
+#include "devices/bt/bt_classic_rx.hpp"
 #include "emulation/usb/usb_devices.h"
 #include "managers/device_manager.hpp"
 #include "config/device_factory.hpp"
@@ -229,6 +230,7 @@ static void bt_stop_scan_timer(btstack_timer_source_t *ts)
 
 void ble_stop_scan()
 {
+    BtStackLock lock;
     btstack_run_loop_remove_timer(&s_scan_timer);
     gap_stop_scan();
     s_ble_scanning = false;
@@ -237,6 +239,7 @@ void ble_stop_scan()
 
 void ble_start_scan()
 {
+    BtStackLock lock;
     printf("Scanning for LE HID devices...\r\n");
     devices_found = 0;
     if (s_direct_connect_pending)
@@ -280,10 +283,36 @@ bool ble_has_connected_device()
     return false;
 }
 
+// LE connection scan settings (units of 0.625ms). The CYW43 has one radio shared with
+// classic links, and BTstack's default 30ms-in-60ms connection scan running forever for
+// an absent BLE device starves e.g. a DS3 to one burst of reports every ~60ms. Background
+// reconnects scan at a low duty cycle instead; a direct connect (pairing) stays fast.
+static void ble_set_connection_scan(uint16_t interval, uint16_t window)
+{
+    gap_set_connection_parameters(interval, window,
+                                  0x0008, 0x0018, 4, 0x0048, 0, 0); // BTstack's defaults for the rest
+}
+#define BLE_BACKGROUND_SCAN_INTERVAL 0x0280 // 400ms
+#define BLE_BACKGROUND_SCAN_WINDOW 0x0030   // 30ms
+#define BLE_DIRECT_SCAN_INTERVAL 0x0060     // 60ms
+#define BLE_DIRECT_SCAN_WINDOW 0x0030       // 30ms
+
 static void ble_sync_reconnect(void)
 {
     if (s_ble_scanning || s_direct_connect_pending)
     {
+        return;
+    }
+    // The CYW43 shares its radio, and even a low duty background scan for an absent BLE
+    // device delays classic input reports (measured 60-70ms spikes on a DS3). Pause it
+    // while a classic controller is connected; btc resyncs us when that changes.
+    if (btc_has_connected_device())
+    {
+        if (s_whitelist_active)
+        {
+            gap_connect_cancel();
+            s_whitelist_active = false;
+        }
         return;
     }
 
@@ -356,6 +385,7 @@ static void ble_sync_reconnect(void)
 
     if (!s_whitelist_active)
     {
+        ble_set_connection_scan(BLE_BACKGROUND_SCAN_INTERVAL, BLE_BACKGROUND_SCAN_WINDOW);
         uint8_t status = gap_connect_with_whitelist();
         printf("gap_connect_with_whitelist status: 0x%02x\r\n", status);
         if (status == ERROR_CODE_SUCCESS)
@@ -793,6 +823,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 btstack_run_loop_set_timer(&s_direct_connect_timer, 10000);
                 btstack_run_loop_set_timer_handler(&s_direct_connect_timer, ble_direct_connect_timeout);
                 btstack_run_loop_add_timer(&s_direct_connect_timer);
+                ble_set_connection_scan(BLE_DIRECT_SCAN_INTERVAL, BLE_DIRECT_SCAN_WINDOW);
                 gap_connect(address, addr_type);
             }
             break;
@@ -1098,6 +1129,11 @@ int ble_main(void)
 
     return 0;
 }
+void ble_resync_reconnect()
+{
+    ble_sync_reconnect();
+}
+
 void ble_tick()
 {
     for (auto &ctx : s_context_pool)

@@ -23,19 +23,7 @@ public:
         input_report->leftStickY = 0x80;
         input_report->rightStickX = 0x80;
         input_report->rightStickY = 0x80;
-        // a PS3 sends 0 here, and Santroller's PS3 mode keys off data[0] == 0 to
-        // recognise this as a DS3 LED/rumble packet
-        m_output_report.rumble.padding = 0x00;
-        m_output_report.rumble.right_duration = 0xFF;
-        m_output_report.rumble.left_duration = 0xFF;
-        for (auto &led : m_output_report.led)
-        {
-            led.time_enabled = 0xFF;
-            led.duty_length = 0x27;
-            led.enabled = 0x10;
-            led.duty_off = 0;
-            led.duty_on = 0x32;
-        }
+        ps3_output_report_init(&m_output_report);
     }
 
     bool set_config();
@@ -57,6 +45,8 @@ public:
 
 private:
     bool send_ps3_output();
+    bool pair_ds3_bluetooth(const uint8_t addr[6]);
+    bool m_bt_pair_done = false;
     bool submit_ps3_output(uint8_t report_id, const void *report, uint8_t len);
     bool send_ps3_player_led();
     bool enable_pro_instrument_full_report();

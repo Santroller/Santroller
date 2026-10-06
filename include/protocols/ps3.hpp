@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
 
 #define PS3_STICK_CENTER 0x80
 #define PS3_ACCEL_CENTER 0x0200
@@ -60,6 +61,33 @@ typedef struct
 } __attribute__((packed)) ps3_output_report;
 static_assert(sizeof(ps3_output_report) == 35, "DS3 output report data stage is 35 bytes");
 static_assert(offsetof(ps3_output_report, leds_bitmap) == 9, "DS3 LED bitmap is data byte 9");
+
+// DS3 LED bitmap for a player number. 0 means nothing has assigned us a player (e.g. a
+// PC never does), so show LED 1 rather than leaving it flashing or dark.
+static inline uint8_t ps3_leds_bitmap_for_player(uint8_t player)
+{
+    return (player >= 1 && player <= 4) ? (uint8_t)(1u << player) : 0x02;
+}
+
+// Defaults for the DS3 output report: motors off, and every LED set to solid-on timing
+// (the bitmap picks which ones actually light).
+static inline void ps3_output_report_init(ps3_output_report *report)
+{
+    memset(report, 0, sizeof(*report));
+    // a PS3 sends 0 here, and Santroller's PS3 mode keys off data[0] == 0 to
+    // recognise this as a DS3 LED/rumble packet
+    report->rumble.padding = 0x00;
+    report->rumble.right_duration = 0xFF;
+    report->rumble.left_duration = 0xFF;
+    for (int i = 0; i < 4; i++)
+    {
+        report->led[i].time_enabled = 0xFF;
+        report->led[i].duty_length = 0x27;
+        report->led[i].enabled = 0x10;
+        report->led[i].duty_off = 0;
+        report->led[i].duty_on = 0x32;
+    }
+}
 
 typedef struct
 {

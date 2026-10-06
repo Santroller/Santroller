@@ -1,3 +1,4 @@
+#include "devices/bt/bluetooth_stack.hpp"
 #include "devices/bt/bt_classic_host.hpp"
 #include "devices/bt/bt_host.hpp"
 #include "managers/device_manager.hpp"
@@ -50,9 +51,63 @@ extern "C" {
 
 void BtDs3Host::send_init_packets()
 {
-    // Enable DS3 HID reports — the same command sent for USB DS3
-    static const uint8_t enable[] = {0x42, 0x0c, 0x00, 0x00};
+    // Enable DS3 HID reports. Over bluetooth this is 42 03 00 00 (Linux
+    // sixaxis_set_operational_bt), not the 42 0c 00 00 used over USB.
+    static const uint8_t enable[] = {0x42, 0x03, 0x00, 0x00};
     hid_host_send_set_report(m_cid, HID_REPORT_TYPE_FEATURE, 0xF4, enable, sizeof(enable));
+    // marks init done, otherwise every input report queues the enable again
+    BluetoothHostInterface::send_init_packets();
+}
+
+#define DS3_BT_OUTPUT_MIN_INTERVAL_MS 150
+
+void BtDs3Host::update(bool full_poll, bool send_events)
+{
+    BluetoothHostInterface::update(full_poll, send_events);
+    if (!m_output_dirty || !init_packets_sent())
+        return;
+    // Some DS3/SIXAXIS revisions lock up over bluetooth (ignoring rumble/LEDs for
+    // seconds, or needing a power cycle) if output reports come less than 150ms apart
+    // (see DsHidMini's output rate control). Changes in between just leave the output
+    // dirty, so the latest state goes out once the window passes.
+    if (m_output_sent && millis() - m_last_output_ms < DS3_BT_OUTPUT_MIN_INTERVAL_MS)
+        return;
+    m_output_report.rumble.right_motor_on = m_rumble_right ? 1 : 0;
+    m_output_report.rumble.left_motor_force = m_rumble_left;
+    m_output_report.leds_bitmap = ps3_leds_bitmap_for_player(m_player);
+    // Over bluetooth the DS3 does want the report id in front of the data (unlike USB,
+    // Linux only skips it there); BTstack sends 52 01 followed by the same 35 bytes.
+    // Only one control request can be outstanding, so if the enable is still in
+    // flight this fails and we retry next pass.
+    // update() runs from the main loop, outside BTstack's context
+    uint8_t status;
+    {
+        BtStackLock lock;
+        status = hid_host_send_set_report(m_cid, HID_REPORT_TYPE_OUTPUT, PS3_RUMBLE_ID,
+                                          reinterpret_cast<const uint8_t *>(&m_output_report),
+                                          sizeof(m_output_report));
+    }
+    if (status == ERROR_CODE_SUCCESS)
+    {
+        m_output_dirty = false;
+        m_output_sent = true;
+        m_last_output_ms = millis();
+    }
+}
+
+void BtDs3Host::set_rumble(uint8_t left, uint8_t right)
+{
+    if (m_rumble_left != left || m_rumble_right != right)
+        m_output_dirty = true;
+    m_rumble_left = left;
+    m_rumble_right = right;
+}
+
+void BtDs3Host::set_player_led(uint8_t player)
+{
+    if (m_player != player)
+        m_output_dirty = true;
+    m_player = player;
 }
 
 bool BtDs3Host::tick_digital(proto_Output &type)
@@ -361,6 +416,7 @@ void BtXboxOneHost::update(bool full_poll, bool send_events)
 
 void BtXboxOneHost::send_hid_output(const uint8_t *data, uint16_t len)
 {
+    BtStackLock lock;
     if (m_cid && len > 0 && len <= sizeof(m_out_buf))
     {
         memcpy(m_out_buf, data, len);
@@ -508,6 +564,7 @@ BtWiiHost::BtWiiHost(uint16_t id, bool is_pro_controller)
 
 void BtWiiHost::send_status_request()
 {
+    BtStackLock lock;
     m_cmd_buf[0] = 0x00;
     uint8_t res = hid_host_send_report(m_cid, WIIPROTO_REQ_SREQ, m_cmd_buf, 1);
     printf("Wiimote send_status_request: cid=0x%04x status=0x%02x\r\n", m_cid, res);
@@ -515,6 +572,7 @@ void BtWiiHost::send_status_request()
 
 void BtWiiHost::send_init_extension()
 {
+    BtStackLock lock;
     memset(m_cmd_buf, 0, 21);
     m_cmd_buf[0] = 0x04;
     m_cmd_buf[1] = 0xa4;
@@ -528,6 +586,7 @@ void BtWiiHost::send_init_extension()
 
 void BtWiiHost::send_disable_encryption()
 {
+    BtStackLock lock;
     memset(m_cmd_buf, 0, 21);
     m_cmd_buf[0] = 0x04;
     m_cmd_buf[1] = 0xa4;
@@ -541,6 +600,7 @@ void BtWiiHost::send_disable_encryption()
 
 void BtWiiHost::send_read_extension_id()
 {
+    BtStackLock lock;
     static const uint8_t req[6] = {0x04, 0xa4, 0x00, 0xfa, 0x00, 0x06};
     memcpy(m_cmd_buf, req, sizeof(req));
     uint8_t res = hid_host_send_report(m_cid, WIIPROTO_REQ_RMEM, m_cmd_buf, sizeof(req));
@@ -549,6 +609,7 @@ void BtWiiHost::send_read_extension_id()
 
 void BtWiiHost::send_report_mode(uint8_t mode)
 {
+    BtStackLock lock;
     m_cmd_buf[0] = 0x00;
     m_cmd_buf[1] = mode;
     uint8_t res = hid_host_send_report(m_cid, WIIPROTO_REQ_DRM, m_cmd_buf, 2);
@@ -557,6 +618,7 @@ void BtWiiHost::send_report_mode(uint8_t mode)
 
 void BtWiiHost::send_player_led(uint8_t led)
 {
+    BtStackLock lock;
     m_cmd_buf[0] = led;
     uint8_t res = hid_host_send_report(m_cid, WIIPROTO_REQ_LED, m_cmd_buf, 1);
     printf("Wiimote send_player_led(0x%02x): status=0x%02x\r\n", led, res);
@@ -564,6 +626,7 @@ void BtWiiHost::send_player_led(uint8_t led)
 
 void BtWiiHost::send_feedback()
 {
+    BtStackLock lock;
     uint8_t val = (m_rumble ? 0x01 : 0x00);
     if (m_player == 1) val |= 0x10;
     else if (m_player == 2) val |= 0x20;
@@ -630,6 +693,8 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
         if (ext_connected)
         {
             m_has_ext = true;
+            m_ext_init_attempts = 1;
+            m_ext_retry_pending = false;
             m_fsm_state = WII_FSM_W4_INIT_ACK;
             send_init_extension();
         }
@@ -656,6 +721,20 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
 
     case WIIPROTO_REQ_RETURN: // 0x22
     {
+        // 0x22 acknowledges a specific output report (byte 3) with an error code (byte 4).
+        // Only our memory writes drive the extension handshake, and only if they worked;
+        // advancing on anything else reads the ID before the extension is set up.
+        if (len < 5 || data[3] != WIIPROTO_REQ_WMEM)
+            break;
+        if (data[4] != 0)
+        {
+            if (m_fsm_state == WII_FSM_W4_INIT_ACK || m_fsm_state == WII_FSM_W4_ENC_ACK)
+            {
+                printf("Wiimote extension write failed: 0x%02x\r\n", data[4]);
+                retry_extension_init();
+            }
+            break;
+        }
         if (m_fsm_state == WII_FSM_W4_INIT_ACK)
         {
             m_fsm_state = WII_FSM_W4_ENC_ACK;
@@ -673,6 +752,17 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
     {
         if (len >= 12 && m_fsm_state == WII_FSM_W4_EXT_ID)
         {
+            // byte 3 low nibble is the read error, bytes 4-5 the address read from. A
+            // failed read has zeroed data, which would otherwise decode as a Nunchuk.
+            uint8_t read_error = data[3] & 0x0F;
+            uint16_t read_addr = (uint16_t)((data[4] << 8) | data[5]);
+            if (read_error != 0 || read_addr != 0x00FA)
+            {
+                printf("Wiimote extension ID read failed: err=%u addr=0x%04x\r\n", read_error, read_addr);
+                retry_extension_init();
+                break;
+            }
+            m_ext_init_attempts = 0;
             m_decoder.decode_id(data + 6);
             m_led_sent = false;
             if (data[10] == 0x01 && data[11] == 0x20)
@@ -768,6 +858,31 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
 
     default:
         break;
+    }
+}
+
+void BtWiiHost::retry_extension_init()
+{
+    if (m_ext_init_attempts >= 5)
+    {
+        printf("Wiimote extension init gave up after %u attempts\r\n", m_ext_init_attempts);
+        m_fsm_state = WII_FSM_READY;
+        return;
+    }
+    // give a freshly inserted extension a moment before trying again
+    m_fsm_state = WII_FSM_W4_INIT_ACK;
+    m_ext_retry_pending = true;
+    m_ext_retry_at = millis() + 100;
+}
+
+void BtWiiHost::update(bool full_poll, bool send_events)
+{
+    BluetoothHostInterface::update(full_poll, send_events);
+    if (m_ext_retry_pending && (int32_t)(millis() - m_ext_retry_at) >= 0)
+    {
+        m_ext_retry_pending = false;
+        m_ext_init_attempts++;
+        send_init_extension();
     }
 }
 

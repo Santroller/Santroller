@@ -35,6 +35,7 @@ public:
     USBButtonInput(proto_USBButtonInput input, std::shared_ptr<UsbHostInterface> device, Profile *profile);
     bool tick_digital();
     uint16_t tick_analog();
+    bool tick_pro_key_range(uint32_t &active_keys, uint8_t *velocities, uint8_t key_count) override;
     bool has_independent_analog_value() const override { return true; }
     uint64_t hardware_id() const override
     {

@@ -117,6 +117,15 @@ inline bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, 
             }
         }
         return false;
+    case ProGuitarMustang:
+    case ProGuitarSquire:
+        if (type.which_mapping == proto_Output_proButton_tag &&
+            type.mapping.proButton == ProGuitar_Pedal)
+        {
+            const auto *data = reinterpret_cast<const XInputRockBandProGuitar_Data_t *>(ep_in_buf);
+            return data->pedal;
+        }
+        return false;
     case LiveGuitar:
         if (type.which_mapping == proto_Output_ghlButton_tag)
         {
@@ -145,6 +154,17 @@ inline bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, 
         }
         return false;
     case ProKeys:
+        if (type.which_mapping == proto_Output_proKeyboardButton_tag)
+        {
+            const auto *data = reinterpret_cast<const XInputRockBandKeyboard_Data_t *>(ep_in_buf);
+            switch (type.mapping.proKeyboardButton)
+            {
+            case ProKeyboardOverdrive:
+                return data->overdrive;
+            default:
+                return false;
+            }
+        }
         if (type.which_mapping == proto_Output_proKeySingle_tag ||
             type.which_mapping == proto_Output_proKeyMultiple_tag)
         {
@@ -270,7 +290,7 @@ inline uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtyp
             case ProGuitar_HighEFretVelocity:
                 return data->highEFretVelocity << 9;
             case ProGuitar_Tilt:
-                return data->tilt << 8;
+                return data->tilt << 9;
             case ProGuitar_AutoCalibrationMicrophone:
                 return data->autoCal_Microphone << 8;
             case ProGuitar_AutoCalibrationLight:

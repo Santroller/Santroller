@@ -527,6 +527,15 @@ bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
             }
         }
         return false;
+    case ProGuitarSquire:
+    case ProGuitarMustang:
+        if (type.which_mapping == proto_Output_proButton_tag &&
+            type.mapping.proButton == ProGuitar_Pedal)
+        {
+            const auto *data = reinterpret_cast<const PS3RockBandProGuitar_Data_t *>(m_ep_in_buf);
+            return data->pedal;
+        }
+        return false;
     case LiveGuitar:
         if (type.which_mapping == proto_Output_ghlButton_tag)
         {
@@ -567,6 +576,17 @@ bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
             return pro_keyboard_any_key_pressed(data->key1, data->key2, data->key3,
                                                 data->velocities, type.mapping.proKeyMultiple);
         }
+        if (type.which_mapping == proto_Output_proKeyboardButton_tag)
+            {
+                const auto *data = reinterpret_cast<const PS3RockBandProKeyboard_Data_t *>(m_ep_in_buf);
+                switch (type.mapping.proKeyboardButton)
+                {
+                case ProKeyboardOverdrive:
+                    return data->overdrive;
+                default:
+                    return false;
+                }
+            }
         return false;
     default:
         return false;
@@ -753,7 +773,7 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             case ProGuitar_HighEFretVelocity:
                 return data->highEFretVelocity << 9;
             case ProGuitar_Tilt:
-                return data->tilt << 8;
+                return data->tilt << 9;
             case ProGuitar_AutoCalibrationMicrophone:
                 return data->autoCal_Microphone << 8;
             case ProGuitar_AutoCalibrationLight:

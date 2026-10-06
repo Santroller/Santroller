@@ -32,6 +32,43 @@ uint16_t USBButtonInput::tick_analog()
     if (!m_device) return 0;
     return m_device->tick_button_pressure(m_input.button);
 }
+bool USBButtonInput::tick_pro_key_range(uint32_t &active_keys, uint8_t *velocities, uint8_t key_count)
+{
+    if (!m_device || m_input.button.which_mapping != proto_Output_proKeyMultiple_tag)
+    {
+        return false;
+    }
+
+    if (key_count > 25)
+    {
+        key_count = 25;
+    }
+    if (m_input.button.mapping.proKeyMultiple < 0)
+    {
+        key_count = 0;
+    }
+    else if (key_count > m_input.button.mapping.proKeyMultiple)
+    {
+        key_count = static_cast<uint8_t>(m_input.button.mapping.proKeyMultiple);
+    }
+    active_keys = 0;
+    for (uint8_t i = 0; i < key_count; ++i)
+    {
+        proto_Output key_output = {};
+        key_output.which_mapping = proto_Output_proKeySingle_tag;
+        key_output.mapping.proKeySingle = i + 1;
+        if (m_device->tick_digital(key_output))
+        {
+            active_keys |= uint32_t(1) << i;
+            velocities[i] = static_cast<uint8_t>(m_device->tick_button_pressure(key_output) >> 9);
+        }
+        else
+        {
+            velocities[i] = 0;
+        }
+    }
+    return true;
+}
 void USBButtonInput::setup()
 {
 }

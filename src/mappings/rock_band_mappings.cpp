@@ -1352,6 +1352,7 @@ void ProGuitarButtonMapping::update_ps3(uint8_t *buf)
         break;
     case ProGuitar_Pedal:
         report->pedal |= m_last_value;
+        report->pedalConnection = true;
         break;
     default:
         break;
@@ -1411,6 +1412,7 @@ void ProGuitarButtonMapping::update_xinput(uint8_t *buf)
         break;
     case ProGuitar_Pedal:
         report->pedal |= m_last_value;
+        report->pedalConnection = true;
         break;
     default:
         break;
@@ -1465,6 +1467,12 @@ void ProGuitarButtonMapping::update_xboxone(uint8_t *buf)
 {
 }
 
+static uint8_t pro_guitar_tilt_report_value(uint16_t value)
+{
+    const uint32_t report_value = (uint32_t(value) + 0x100) >> 9;
+    return static_cast<uint8_t>(report_value > 0x7f ? 0x7f : report_value);
+}
+
 ProGuitarAxisMapping::ProGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.proAxis != ProGuitar_Tilt)
 {
 }
@@ -1490,51 +1498,56 @@ void ProGuitarAxisMapping::update_ps2(uint8_t *buf)
 
 void ProGuitarAxisMapping::update_ps3(uint8_t *buf)
 {
+    PS3RockBandProGuitar_Data_t *report = (PS3RockBandProGuitar_Data_t *)buf;
+    if (m_mapping.mapping.mapping.proAxis == ProGuitar_Tilt)
+    {
+        const uint8_t tilt = pro_guitar_tilt_report_value(m_calibrated_value);
+        report->autoCal_Microphone = tilt;
+        report->autoCal_Light = tilt;
+        report->tilt = tilt;
+        return;
+    }
     if (m_centered)
     {
         return;
     }
-    PS3RockBandProGuitar_Data_t *report = (PS3RockBandProGuitar_Data_t *)buf;
     switch (m_mapping.mapping.mapping.proAxis)
     {
     case ProGuitar_LowEFret:
-        report->lowEFret = m_calibrated_value;
+        report->lowEFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_AFret:
-        report->aFret = m_calibrated_value;
+        report->aFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_DFret:
-        report->dFret = m_calibrated_value;
+        report->dFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_GFret:
-        report->gFret = m_calibrated_value;
+        report->gFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_BFret:
-        report->bFret = m_calibrated_value;
+        report->bFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_HighEFret:
-        report->highEFret = m_calibrated_value;
+        report->highEFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_LowEFretVelocity:
-        report->lowEFretVelocity = m_calibrated_value >> 8;
+        report->lowEFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_AFretVelocity:
-        report->aFretVelocity = m_calibrated_value >> 8;
+        report->aFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_DFretVelocity:
-        report->dFretVelocity = m_calibrated_value >> 8;
+        report->dFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_GFretVelocity:
-        report->gFretVelocity = m_calibrated_value >> 8;
+        report->gFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_BFretVelocity:
-        report->bFretVelocity = m_calibrated_value >> 8;
+        report->bFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_HighEFretVelocity:
-        report->highEFretVelocity = m_calibrated_value >> 8;
-        break;
-    case ProGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->highEFretVelocity = m_calibrated_value >> 9;
         break;
     default:
         break;
@@ -1551,51 +1564,56 @@ void ProGuitarAxisMapping::update_ps5(uint8_t *buf)
 
 void ProGuitarAxisMapping::update_xinput(uint8_t *buf)
 {
+    XInputRockBandProGuitar_Data_t *report = (XInputRockBandProGuitar_Data_t *)buf;
+    if (m_mapping.mapping.mapping.proAxis == ProGuitar_Tilt)
+    {
+        const uint8_t tilt = pro_guitar_tilt_report_value(m_calibrated_value);
+        report->autoCal_Microphone = tilt;
+        report->autoCal_Light = tilt;
+        report->tilt = tilt;
+        return;
+    }
     if (m_centered)
     {
         return;
     }
-    XInputRockBandProGuitar_Data_t *report = (XInputRockBandProGuitar_Data_t *)buf;
     switch (m_mapping.mapping.mapping.proAxis)
     {
     case ProGuitar_LowEFret:
-        report->lowEFret = m_calibrated_value;
+        report->lowEFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_AFret:
-        report->aFret = m_calibrated_value;
+        report->aFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_DFret:
-        report->dFret = m_calibrated_value;
+        report->dFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_GFret:
-        report->gFret = m_calibrated_value;
+        report->gFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_BFret:
-        report->bFret = m_calibrated_value;
+        report->bFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_HighEFret:
-        report->highEFret = m_calibrated_value;
+        report->highEFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_LowEFretVelocity:
-        report->lowEFretVelocity = m_calibrated_value >> 8;
+        report->lowEFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_AFretVelocity:
-        report->aFretVelocity = m_calibrated_value >> 8;
+        report->aFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_DFretVelocity:
-        report->dFretVelocity = m_calibrated_value >> 8;
+        report->dFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_GFretVelocity:
-        report->gFretVelocity = m_calibrated_value >> 8;
+        report->gFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_BFretVelocity:
-        report->bFretVelocity = m_calibrated_value >> 8;
+        report->bFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_HighEFretVelocity:
-        report->highEFretVelocity = m_calibrated_value >> 8;
-        break;
-    case ProGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->highEFretVelocity = m_calibrated_value >> 9;
         break;
     default:
         break;
@@ -1611,40 +1629,40 @@ void ProGuitarAxisMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.mapping.proAxis)
     {
     case ProGuitar_LowEFret:
-        report->lowEFret = m_calibrated_value >> 8;
+        report->lowEFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_AFret:
-        report->aFret = m_calibrated_value >> 8;
+        report->aFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_DFret:
-        report->dFret = m_calibrated_value >> 8;
+        report->dFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_GFret:
-        report->gFret = m_calibrated_value >> 8;
+        report->gFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_BFret:
-        report->bFret = m_calibrated_value >> 8;
+        report->bFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_HighEFret:
-        report->highEFret = m_calibrated_value >> 8;
+        report->highEFret = m_calibrated_value >> 11;
         break;
     case ProGuitar_LowEFretVelocity:
-        report->lowEFretVelocity = m_calibrated_value >> 8;
+        report->lowEFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_AFretVelocity:
-        report->aFretVelocity = m_calibrated_value >> 8;
+        report->aFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_DFretVelocity:
-        report->dFretVelocity = m_calibrated_value >> 8;
+        report->dFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_GFretVelocity:
-        report->gFretVelocity = m_calibrated_value >> 8;
+        report->gFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_BFretVelocity:
-        report->bFretVelocity = m_calibrated_value >> 8;
+        report->bFretVelocity = m_calibrated_value >> 9;
         break;
     case ProGuitar_HighEFretVelocity:
-        report->highEFretVelocity = m_calibrated_value >> 8;
+        report->highEFretVelocity = m_calibrated_value >> 9;
         break;
     default:
         break;
@@ -1831,16 +1849,20 @@ void ProKeysKeyMapping::update(bool full_poll, bool send_events)
     if (m_is_multiple)
     {
         m_active_keys = 0;
+        int count = m_mapping.mapping.mapping.proKeyMultiple;
+        if (count < 0)
+        {
+            count = 0;
+        }
+        if (count > 25)
+        {
+            count = 25;
+        }
         auto midi = m_input->as_midi_note();
         if (midi && midi->device())
         {
             uint8_t channel = midi->channel() - 1;
             uint8_t root_note = midi->note();
-            int count = m_mapping.mapping.mapping.proKeyMultiple;
-            if (count > 25)
-            {
-                count = 25;
-            }
             for (int i = 0; i < count; i++)
             {
                 uint8_t vel = midi->device()->read_midi_note(channel, root_note + i);
@@ -1855,13 +1877,17 @@ void ProKeysKeyMapping::update(bool full_poll, bool send_events)
                 }
             }
         }
-        else
+        else if (!m_input->tick_pro_key_range(m_active_keys, m_key_velocities, count))
         {
             bool pressed = m_input->tick_digital();
             if (pressed)
             {
                 m_active_keys |= 1;
-                m_key_velocities[0] = 127;
+                m_key_velocities[0] = m_input->tick_analog() >> 9;
+            }
+            else
+            {
+                m_key_velocities[0] = 0;
             }
         }
 
@@ -1887,12 +1913,20 @@ void ProKeysKeyMapping::update(bool full_poll, bool send_events)
         }
         else
         {
-            pressed = m_input->tick_digital();
+            const bool input_pressed = m_input->tick_digital();
+            pressed = input_pressed;
+            if (input_pressed)
+            {
+                vel = m_input->tick_analog() >> 9;
+            }
             if (m_mapping.inverted)
             {
                 pressed = !pressed;
             }
-            vel = pressed ? 127 : 0;
+            if (pressed && !input_pressed)
+            {
+                vel = 127;
+            }
         }
 
         if (m_mapping.has_debounce)

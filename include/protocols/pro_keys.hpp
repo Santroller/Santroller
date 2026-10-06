@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+constexpr uint8_t PRO_KEYBOARD_DEFAULT_VELOCITY = 64;
+
 inline bool pro_keyboard_key_pressed(uint8_t key1, uint8_t key2, uint8_t key3,
                                     const uint8_t *velocities, int32_t key)
 {
@@ -34,20 +36,17 @@ inline uint16_t pro_keyboard_key_pressure(uint8_t key1, uint8_t key2, uint8_t ke
         return 0;
 
     int32_t velocity_index = 0;
-    for (int32_t held_key = 1; held_key <= 25; ++held_key)
+    for (int32_t held_key = 1; held_key <= key; ++held_key)
     {
         if (!pro_keyboard_key_pressed(key1, key2, key3, velocities, held_key))
             continue;
-        if (held_key == key)
-        {
-            if (velocity_index >= 5)
-                return UINT16_MAX;
-            const uint8_t velocity = velocities[velocity_index] & 0x7f;
-            return velocity ? uint16_t(velocity) << 9 : UINT16_MAX;
-        }
-        ++velocity_index;
+        if (held_key < key)
+            ++velocity_index;
     }
-    return 0;
+
+    if (velocity_index >= 5)
+        return uint16_t(PRO_KEYBOARD_DEFAULT_VELOCITY) << 9;
+    return uint16_t(velocities[velocity_index] & 0x7f) << 9;
 }
 
 inline uint16_t pro_keyboard_key_range_pressure(uint8_t key1, uint8_t key2, uint8_t key3,

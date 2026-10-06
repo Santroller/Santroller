@@ -42,6 +42,13 @@ public:
     virtual bool peek_event(uint16_t &value) { (void)value; return false; }
     virtual MidiNoteInput* as_midi_note() { return nullptr; }
     virtual ShortcutInput* as_shortcut() { return nullptr; }
+    virtual bool tick_pro_key_range(uint32_t &active_keys, uint8_t *velocities, uint8_t key_count)
+    {
+        (void)active_keys;
+        (void)velocities;
+        (void)key_count;
+        return false;
+    }
     virtual uint64_t hardware_id() const { return 0; }
     virtual void link_device(bool claim_devices) {}
 };

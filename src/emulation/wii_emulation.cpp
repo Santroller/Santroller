@@ -17,17 +17,33 @@ WiiExtensionEmulationDeviceInstance::WiiExtensionEmulationDeviceInstance(proto_W
     auto wii_dev = DeviceManager::instance().get_wii_emulation_device();
     if (wii_dev)
     {
+        m_wii_dev = wii_dev;
         m_controller = &wii_dev->get_controller();
     }
 }
 WiiExtensionEmulationDeviceInstance::~WiiExtensionEmulationDeviceInstance()
 {
+    if (!m_acquired)
+    {
+        return;
+    }
+    // Only release if the Wii device we acquired from still exists; if it was rewired or
+    // removed, its controller is already gone and m_controller would be dangling.
+    if (auto wii_dev = m_wii_dev.lock())
+    {
+        wii_dev->get_controller().release(WiiExtensionEmulationDevice::idle_type);
+    }
 }
 void WiiExtensionEmulationDeviceInstance::initialize()
 {
     if (!m_controller)
     {
         return;
+    }
+    if (!m_acquired)
+    {
+        m_controller->acquire();
+        m_acquired = true;
     }
     m_controller->begin(subtype);
     uint8_t format = wii_extension_format_for_subtype(subtype, m_controller->wii_data_format());

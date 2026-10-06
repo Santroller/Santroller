@@ -7,6 +7,15 @@
 
 #include "../lib/psx_emulation/psx_spi_protocol.h"
 
+// Stand-ins for the SubType values PSX_SPI_PROTOCOL_INIT checks; the real enum
+// lives in the generated enums.pb.h, which would drag nanopb into this harness.
+enum
+{
+    SubType_Gamepad,
+    SubType_GuitarHeroGuitar,
+    SubType_Taiko
+};
+
 typedef struct {
     unsigned capture_id;
     uint8_t tx;
@@ -23,7 +32,7 @@ typedef enum {
 static void init_test_controller(psx_test_state_t *s,
                                  psx_test_controller_t controller)
 {
-    PSX_SPI_PROTOCOL_INIT(s, controller == PSX_TEST_GUITAR_HERO_GUITAR);
+    PSX_SPI_PROTOCOL_INIT(s, controller == PSX_TEST_GUITAR_HERO_GUITAR ? SubType_GuitarHeroGuitar : SubType_Gamepad);
 
 }
 

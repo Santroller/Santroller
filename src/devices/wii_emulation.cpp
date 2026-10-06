@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <cstring>
 WiiExtensionEmulationDevice::WiiExtensionEmulationDevice(const DeviceReloadState *state, proto_WiiEmulationDevice device, uint16_t id)
-    : Device(id), m_device(device), m_controller(device.i2c.block, device.i2c.sda, device.i2c.scl)
+    : Device(id), m_device(device), m_controller(device.i2c.block, device.i2c.sda, device.i2c.scl, device.has_detectPin ? device.detectPin : -1)
 {
     if (state && state->valid)
     {
@@ -31,7 +31,7 @@ void WiiExtensionEmulationDevice::save_reload_state(DeviceReloadState &state) co
 
 void WiiExtensionEmulationDevice::begin()
 {
-    m_controller.begin(GuitarHeroGuitar);
+    m_controller.begin(idle_type);
 }
 void WiiExtensionEmulationDevice::end(bool full)
 {
@@ -58,7 +58,8 @@ void WiiExtensionEmulationDevice::update(bool full_poll, bool send_events)
 
 bool WiiExtensionEmulationDevice::using_pin(uint8_t pin)
 {
-    return pin == m_device.i2c.sda || pin == m_device.i2c.scl;
+    return pin == m_device.i2c.sda || pin == m_device.i2c.scl ||
+           (m_device.has_detectPin && pin == m_device.detectPin);
 }
 uint16_t WiiExtensionEmulationDevice::read_axis(proto_PS2AxisType type)
 {

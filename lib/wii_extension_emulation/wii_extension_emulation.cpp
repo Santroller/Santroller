@@ -100,8 +100,24 @@ static void i2c_slave_handler1(i2c_inst_t *i2c, i2c_slave_event_t event)
 void WiiExtensionEmulation::begin(SubType type)
 {
     printf("WiiExtensionEmulation begin %d %d %d\r\n", m_sda, m_scl, m_block);
+    if (m_reconnecting)
+    {
+        // already mid-swap, just reconnect as the latest subtype
+        m_reconnect_type = type;
+        return;
+    }
     if (m_context && m_context->type == type)
     {
+        return;
+    }
+    if (m_context && m_detect >= 0)
+    {
+        // Simulate an unplug: drop detect and stop answering on I2C. When detect comes
+        // back the Wiimote re-runs extension init and reads the new ID.
+        end();
+        m_reconnecting = true;
+        m_reconnect_type = type;
+        m_reconnect_at_ms = to_ms_since_boot(get_absolute_time()) + WII_SWAP_DISCONNECT_MS;
         return;
     }
     if (m_context)
@@ -119,6 +135,11 @@ void WiiExtensionEmulation::begin(SubType type)
         restore_interrupts(irq_state);
         return;
     }
+    start(type);
+}
+
+void WiiExtensionEmulation::start(SubType type)
+{
     if (m_block == 0)
     {
         m_context = &context_0;
@@ -128,6 +149,8 @@ void WiiExtensionEmulation::begin(SubType type)
         m_context = &context_1;
     }
     m_context->type = type;
+    m_context->mem_address_written = false;
+    m_context->transfer_length = 0;
     init(m_context);
     gpio_init(m_sda);
     gpio_set_function(m_sda, GPIO_FUNC_I2C);
@@ -148,9 +171,43 @@ void WiiExtensionEmulation::begin(SubType type)
         // configure I2C1 for slave mode
         i2c_slave_init(i2c1, WII_ADDR, &i2c_slave_handler1);
     }
+    if (m_detect >= 0)
+    {
+        // only raise detect once I2C is ready, as the Wiimote starts talking straight away
+        gpio_put(m_detect, true);
+    }
 }
-WiiExtensionEmulation::WiiExtensionEmulation(uint8_t block, uint8_t sda, uint8_t scl) : m_block(block), m_sda(sda), m_scl(scl), m_context(nullptr)
+
+void WiiExtensionEmulation::acquire()
 {
+    m_users++;
+    m_release_pending = false;
+}
+
+void WiiExtensionEmulation::release(SubType idle_type)
+{
+    if (m_users == 0)
+    {
+        return;
+    }
+    m_users--;
+    if (m_users == 0)
+    {
+        m_release_pending = true;
+        m_idle_type = idle_type;
+        m_release_at_ms = to_ms_since_boot(get_absolute_time()) + WII_RELEASE_GRACE_MS;
+    }
+}
+
+WiiExtensionEmulation::WiiExtensionEmulation(uint8_t block, uint8_t sda, uint8_t scl, int8_t detect) : m_block(block), m_sda(sda), m_scl(scl), m_detect(detect), m_context(nullptr)
+{
+    if (m_detect >= 0)
+    {
+        // no extension until begin()
+        gpio_init(m_detect);
+        gpio_set_dir(m_detect, GPIO_OUT);
+        gpio_put(m_detect, false);
+    }
 }
 WiiExtensionEmulation::~WiiExtensionEmulation()
 {
@@ -176,6 +233,12 @@ uint8_t WiiExtensionEmulation::wii_data_format()
 
 void WiiExtensionEmulation::end()
 {
+    m_reconnecting = false;
+    m_release_pending = false;
+    if (m_detect >= 0)
+    {
+        gpio_put(m_detect, false);
+    }
     if (m_context)
     {
         i2c_slave_deinit(m_block == 0 ? i2c0 : i2c1);
@@ -185,10 +248,31 @@ void WiiExtensionEmulation::end()
 
 void WiiExtensionEmulation::update()
 {
+    uint32_t now = to_ms_since_boot(get_absolute_time());
+    if (m_reconnecting && (int32_t)(now - m_reconnect_at_ms) >= 0)
+    {
+        m_reconnecting = false;
+        start(m_reconnect_type);
+        // the Wiimote is still there, so count it as communicating until it actually
+        // goes quiet rather than flapping the activation trigger before its first read
+        m_context->last_activity_ms = now;
+    }
+    if (m_release_pending && (int32_t)(now - m_release_at_ms) >= 0)
+    {
+        // nothing picked the extension back up, so go back to the idle subtype
+        m_release_pending = false;
+        begin(m_idle_type);
+    }
 }
 
 bool WiiExtensionEmulation::is_communicating() const
 {
+    // Stay "communicating" through a deliberate swap disconnect, otherwise the Wii
+    // profile's activation trigger drops out and nothing would bring us back.
+    if (m_reconnecting)
+    {
+        return true;
+    }
     if (!m_context || m_context->last_activity_ms == 0)
     {
         return false;

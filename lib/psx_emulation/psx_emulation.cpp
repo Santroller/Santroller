@@ -17,19 +17,72 @@ void PSXEmulation::begin(SubType type)
 #if PSX_SPI_DEBUG_LOGGING
     printf("PSXEmulation begin\r\n");
 #endif
+    if (m_reconnecting)
+    {
+        // already mid-swap, just reconnect as the latest subtype
+        m_reconnect_type = type;
+        return;
+    }
     if (spi)
     {
         if (spi->type == type)
         {
             return;
         }
-        uint32_t irq_state = save_and_disable_interrupts();
-        PSX_SPI_PROTOCOL_INIT(&spi->protocol, type);
-        spi->watchdog_active = false;
-        spi->type = type;
-        restore_interrupts(irq_state);
+        // Simulate an unplug: stop acking and release the bus. The console's pad driver
+        // treats missing ACKs as a disconnected controller, and on reconnect the game
+        // re-runs its setup (analog mode, pressure mask, rumble mapping) for the new subtype.
+        end();
+        m_reconnecting = true;
+        m_reconnect_type = type;
+        m_reconnect_at_ms = to_ms_since_boot(get_absolute_time()) + PSX_SWAP_DISCONNECT_MS;
         return;
     }
+    start(type, is_communicating());
+}
+
+void PSXEmulation::listen()
+{
+    if (spi || m_reconnecting || m_listening)
+    {
+        return;
+    }
+    // ACK and DAT float so the console sees an empty port. ATT gets a pull-up so a
+    // disconnected cable can't float low and look like the console polling.
+    gpio_init(ackPin);
+    gpio_init(dat);
+    gpio_set_pulls(ackPin, false, false);
+    gpio_set_pulls(dat, false, false);
+    gpio_init(attPin);
+    gpio_set_pulls(attPin, true, false);
+    gpio_acknowledge_irq(attPin, GPIO_IRQ_EDGE_FALL);
+    m_att_seen = false;
+    m_listening = true;
+}
+
+void PSXEmulation::acquire()
+{
+    m_users++;
+    m_release_pending = false;
+}
+
+void PSXEmulation::release()
+{
+    if (m_users == 0)
+    {
+        return;
+    }
+    m_users--;
+    if (m_users == 0)
+    {
+        m_release_pending = true;
+        m_release_at_ms = to_ms_since_boot(get_absolute_time()) + PSX_RELEASE_GRACE_MS;
+    }
+}
+
+void PSXEmulation::start(SubType type, bool console_present)
+{
+    m_listening = false;
     pio_spi_config_t config = {
         .pio_idx = 1,
         .cs_pin = attPin,
@@ -41,6 +94,13 @@ void PSXEmulation::begin(SubType type)
 
     spi = pio_spi_init(&config);
     pio_spi_start(spi);
+    if (console_present)
+    {
+        // the console is still there, so count it as communicating until the watchdog
+        // says otherwise rather than flapping the activation trigger before the first poll
+        spi->watchdog_active = true;
+        spi->watchdog_last_activity_ms = to_ms_since_boot(get_absolute_time());
+    }
 }
 
 void PSXEmulation::end()
@@ -48,11 +108,20 @@ void PSXEmulation::end()
 #if PSX_SPI_DEBUG_LOGGING
     printf("PSXEmulation end\r\n");
 #endif
+    m_reconnecting = false;
+    m_release_pending = false;
+    m_listening = false;
+    m_att_seen = false;
     if (spi)
     {
         pio_spi_stop(spi);
         pio_spi_free(spi);
         spi = nullptr;
+        // hand the pins back as plain inputs so ACK and DAT float, which reads as "no controller"
+        gpio_init(ackPin);
+        gpio_init(dat);
+        gpio_set_pulls(ackPin, false, false);
+        gpio_set_pulls(dat, false, false);
     }
 }
 
@@ -61,6 +130,34 @@ void PSXEmulation::load_state(PSXEmulation *state)
 }
 void PSXEmulation::tick()
 {
+    uint32_t now = to_ms_since_boot(get_absolute_time());
+    if (m_listening)
+    {
+        // Edge events latch in the raw INTR register even with the interrupt disabled,
+        // so this catches every ATT poll between ticks without needing an IRQ handler.
+        uint32_t events = (io_bank0_hw->intr[attPin / 8] >> (4 * (attPin % 8))) & 0xF;
+        if (events & GPIO_IRQ_EDGE_FALL)
+        {
+            gpio_acknowledge_irq(attPin, GPIO_IRQ_EDGE_FALL);
+            m_last_att_ms = now;
+            m_att_seen = true;
+        }
+        else if (m_att_seen && now - m_last_att_ms >= PSX_LISTEN_TIMEOUT_MS)
+        {
+            m_att_seen = false;
+        }
+    }
+    if (m_reconnecting && (int32_t)(now - m_reconnect_at_ms) >= 0)
+    {
+        m_reconnecting = false;
+        start(m_reconnect_type, true);
+    }
+    if (m_release_pending && (int32_t)(now - m_release_at_ms) >= 0)
+    {
+        // nothing picked the controller back up, so unplug it and go back to watching ATT
+        end();
+        listen();
+    }
     if (spi)
     {
         pio_spi_watchdog_tick(spi);
@@ -91,6 +188,9 @@ void PSXEmulation::sendData(uint8_t len, uint8_t *data)
     memcpy((void *)spi->protocol.config_responses[0x02],
            (const void *)spi->protocol.resp_42,
            sizeof(spi->protocol.config_responses[0x02]));
+    // config mode DMAs this straight to the wire, so it has to be stored active low
+    spi->protocol.config_responses[0x02][0] = ~spi->protocol.config_responses[0x02][0];
+    spi->protocol.config_responses[0x02][1] = ~spi->protocol.config_responses[0x02][1];
 
     memcpy((void *)spi->raw_report, (const void *)spi->protocol.resp_42,
            sizeof(spi->protocol.resp_42));

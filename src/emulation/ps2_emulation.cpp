@@ -16,16 +16,32 @@ Ps2EmulationDeviceInstance::Ps2EmulationDeviceInstance(proto_PSXEmulationDevice 
     auto psx_dev = DeviceManager::instance().get_psx_emulation_device();
     if (psx_dev)
     {
+        m_psx_dev = psx_dev;
         m_controller = &psx_dev->get_controller();
     }
 }
 Ps2EmulationDeviceInstance::~Ps2EmulationDeviceInstance()
 {
+    if (!m_acquired)
+    {
+        return;
+    }
+    // Only release if the PSX device we acquired from still exists; if it was rewired or
+    // removed, its controller is already gone and m_controller would be dangling.
+    if (auto psx_dev = m_psx_dev.lock())
+    {
+        psx_dev->get_controller().release();
+    }
 }
 void Ps2EmulationDeviceInstance::initialize()
 {
     if (m_controller)
     {
+        if (!m_acquired)
+        {
+            m_controller->acquire();
+            m_acquired = true;
+        }
         m_controller->begin(subtype);
     }
     switch (subtype)
@@ -58,8 +74,6 @@ void Ps2EmulationDeviceInstance::initialize()
 
 void Ps2EmulationDeviceInstance::process(bool full_poll, bool send_events)
 {
-    // TODO: do we need to limit poll rate with this
-    // m_device->ready();
     memcpy(m_buffer, m_initial_report, sizeof(m_initial_report));
     for (const auto &profile : profiles)
     {
@@ -78,8 +92,6 @@ void Ps2EmulationDeviceInstance::process(bool full_poll, bool send_events)
         PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)m_buffer;
         report->dpad = guitar_dpad_bindings[report->dpad];
     }
-    m_buffer[0] = ~m_buffer[0];
-    m_buffer[1] = ~m_buffer[1];
     uint8_t small = 0, large = 0;
     if (m_controller)
     {

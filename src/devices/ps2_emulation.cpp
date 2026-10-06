@@ -31,7 +31,8 @@ void PSXEmulationDevice::save_reload_state(DeviceReloadState &state) const
 
 void PSXEmulationDevice::begin()
 {
-    m_controller.begin(Gamepad);
+    // Don't present a controller until a profile picks a subtype, just watch for the console
+    m_controller.listen();
 }
 void PSXEmulationDevice::end(bool full)
 {

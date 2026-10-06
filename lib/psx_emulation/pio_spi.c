@@ -261,21 +261,21 @@ static inline __attribute__((always_inline)) void format_next_response(pio_spi_t
     }
     else
     {
+        // raw_report holds buttons active high; the PSX wants them active low.
+        // Inverting here means the wire is always right no matter where raw_report came from.
         if (!is_analog(spi))
         {
-            memcpy((void *)&spi->response_buf[2],
-                   (const void *)spi->raw_report,
-                   2);
-            response_len += 2;
+            spi->response_buf[response_len++] = ~spi->raw_report[0];
+            spi->response_buf[response_len++] = ~spi->raw_report[1];
         }
         else
         {
             uint8_t mask = spi->protocol.report_mask[0];
 
             if (mask & 0x01)
-                spi->response_buf[response_len++] = spi->raw_report[0];
+                spi->response_buf[response_len++] = ~spi->raw_report[0];
             if (mask & 0x02)
-                spi->response_buf[response_len++] = spi->raw_report[1];
+                spi->response_buf[response_len++] = ~spi->raw_report[1];
             if (mask & 0x04)
                 spi->response_buf[response_len++] = spi->raw_report[2];
             if (mask & 0x08)

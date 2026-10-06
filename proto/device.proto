@@ -118,7 +118,12 @@ message JoybusDevice {
   required MappingMode mappingMode = 2;
 }
 
-message WiiEmulationDevice { required I2CDevice i2c = 1; }
+message WiiEmulationDevice {
+  required I2CDevice i2c = 1;
+  // Wiimote extension detect line. When set, it is driven low to simulate unplugging
+  // the extension so the Wiimote re-reads its ID; leave unset if detect is hardwired high.
+  optional int32 detectPin = 2;
+}
 message PSXEmulationDevice {
   required int32 dataPin = 1;
   required int32 commandPin = 2;

@@ -22,6 +22,8 @@ public:
     void save_reload_state(DeviceReloadState &state) const override;
     bool matches_reload_config(const proto_Device &config) const override;
     bool is_communicating() const { return m_controller.is_communicating(); }
+    // What we present as with no profile loaded, just so the Wiimote talks to us
+    static constexpr SubType idle_type = GuitarHeroGuitar;
     WiiExtensionEmulation &get_controller() { return m_controller; }
     const proto_WiiEmulationDevice &get_config() const { return m_device; }
 

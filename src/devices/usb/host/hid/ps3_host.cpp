@@ -945,7 +945,8 @@ bool Ps3Host::send_ps3_output()
     m_output_report.rumble.right_motor_on = m_rumble_right ? 1 : 0;
     m_output_report.rumble.left_motor_force = m_rumble_left;
     m_output_report.leds_bitmap = (m_player >= 1 && m_player <= 4) ? (1 << m_player) : 0;
-    return submit_ps3_output(PS3_RUMBLE_ID, &m_output_report, sizeof(m_output_report));
+    // only the DS3 numbers this report, and only via wValue
+    return submit_ps3_output(m_third_party ? 0 : PS3_RUMBLE_ID, &m_output_report, sizeof(m_output_report));
 }
 
 void Ps3Host::set_rumble(uint8_t left, uint8_t right)

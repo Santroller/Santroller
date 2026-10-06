@@ -23,8 +23,9 @@ public:
         input_report->leftStickY = 0x80;
         input_report->rightStickX = 0x80;
         input_report->rightStickY = 0x80;
-        m_output_report.report_id = PS3_RUMBLE_ID;
-        m_output_report.rumble.padding = 0x01;
+        // a PS3 sends 0 here, and Santroller's PS3 mode keys off data[0] == 0 to
+        // recognise this as a DS3 LED/rumble packet
+        m_output_report.rumble.padding = 0x00;
         m_output_report.rumble.right_duration = 0xFF;
         m_output_report.rumble.left_duration = 0xFF;
         for (auto &led : m_output_report.led)

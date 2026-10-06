@@ -47,15 +47,19 @@ typedef struct
     uint8_t duty_on;  /* % of duty_length the led is on (0xff mean 100%) */
 } __attribute__((packed)) ps3_led_t;
 
+// Data stage of the DS3 rumble/LED output report. There is no report id byte: the DS3
+// only takes it in SET_REPORT's wValue (Linux sets HID_QUIRK_SKIP_OUTPUT_REPORT_ID for
+// it), and third-party PS3 devices don't use report ids at all.
 typedef struct
 {
-    uint8_t report_id;
     ps3_rumble_t rumble;
-    uint8_t padding[3];
+    uint8_t padding[4];
     uint8_t leds_bitmap; /* bitmap of enabled LEDs: LED_1 = 0x02, LED_2 = 0x04, ... */
     ps3_led_t led[4];    /* LEDx at (4 - x) */
     ps3_led_t _reserved; /* LED5, not actually soldered */
 } __attribute__((packed)) ps3_output_report;
+static_assert(sizeof(ps3_output_report) == 35, "DS3 output report data stage is 35 bytes");
+static_assert(offsetof(ps3_output_report, leds_bitmap) == 9, "DS3 LED bitmap is data byte 9");
 
 typedef struct
 {

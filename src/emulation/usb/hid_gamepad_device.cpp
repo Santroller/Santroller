@@ -122,6 +122,18 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
   {
     return;
   }
+  if (m_capabilities_pending)
+  {
+    epin_buf[0] = ReportIdSantrollerCapabilities;
+    epin_buf[1] = subtype;
+    epin_buf[2] = capabilities;
+    // only clear once it is actually queued, so a failed send retries next loop
+    if (send_report(3, 0, epin_buf))
+    {
+      m_capabilities_pending = false;
+    }
+    return;
+  }
   PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
   memcpy(epin_buf, m_initial_report, sizeof(epin_buf));
   report->rid = ReportIdGamepad;
@@ -250,15 +262,9 @@ void HIDGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
     // if the host is asking for capabilities, send them
     if (report_id == ReportIdSantrollerCapabilities)
     {
-      epin_buf[0] = ReportIdSantrollerCapabilities;
-      epin_buf[1] = subtype;
-      epin_buf[2] = capabilities;
-      // Make sure this packet isn't dropped
-      while (!ready())
-      {
-        tud_task();
-      }
-      send_report(3, 0, epin_buf);
+      // Sent from process() once the endpoint is free, so this packet isn't dropped.
+      // Waiting here would re-enter tud_task() and hang if the host stops polling.
+      m_capabilities_pending = true;
     }
   }
   if (report_type == HID_REPORT_TYPE_FEATURE)

@@ -71,22 +71,16 @@ public:
   uint16_t report_desc_len();
   uint16_t get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
   void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
+  bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
   static bool send_event(proto_Event event, bool now);
   // Non-blocking: true if an event can be queued without waiting on the host.
   static bool has_event_space();
-  static constexpr uint32_t max_event_flush_wait_us = 2000;
   // Waits (servicing tud_task) until every queued event has been read by the tool, or the tool goes away
   static void flush_events(uint32_t timeout_us);
   static std::shared_ptr<HIDConfigDevice> instance;
 
 private:
   void process_events();
-  void drain_pending();
-  // Important (now=true) events that didn't fit in list; never dropped while the tool is open
-  static constexpr uint8_t max_pending_events = 16;
-  proto_Event m_pending[max_pending_events];
-  uint8_t m_pending_head = 0;
-  uint8_t m_pending_count = 0;
   void handle_command(proto_Command command);
   proto_EventList list;
   proto_PinDetectType m_detect_type;
@@ -99,7 +93,6 @@ private:
   uint32_t selected_instance = 0;
   uint8_t current_pos = 1;
   uint32_t m_valid_pins;
-  bool processing = false;
   bool tool_seen = false;
   bool just_loaded = false;
   bool profile_selected = false;
@@ -127,6 +120,7 @@ public:
   void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
 
 private:
+  bool m_capabilities_pending = false;
   int _FFB_effect_index;
   int _FFB_effect_duration;
   int _loop_count;

@@ -196,16 +196,6 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
   process_events();
 }
 
-void HIDConfigDevice::drain_pending()
-{
-  while (m_pending_count && list.event_count < TU_ARRAY_SIZE(list.event))
-  {
-    list.event[list.event_count++] = m_pending[m_pending_head];
-    m_pending_head = (m_pending_head + 1) % max_pending_events;
-    m_pending_count--;
-  }
-}
-
 void HIDConfigDevice::process_events()
 {
   // safety net in case event_count was ever pushed past the array's capacity
@@ -213,13 +203,11 @@ void HIDConfigDevice::process_events()
   {
     list.event_count = TU_ARRAY_SIZE(list.event);
   }
-  drain_pending();
   if (list.event_count == 0 || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
   {
     return;
   }
 
-  processing = true;
   epin_buf[0] = ReportId::ReportIdConfig;
 
   // A full batch (up to max_count events) can overflow the 63 byte report once a
@@ -253,7 +241,6 @@ void HIDConfigDevice::process_events()
     list.event[i - sent_count] = list.event[i];
   }
   list.event_count = total_count - sent_count;
-  processing = false;
 }
 
 size_t HIDConfigDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -693,6 +680,17 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
   return 0;
 }
 
+bool HIDConfigDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
+{
+  // The host reading an event is proof the tool is alive, even if its keepalive timer
+  // is being throttled (e.g. a backgrounded browser tab)
+  if (tu_edpt_dir(ep_addr) == TUSB_DIR_IN && result == XFER_RESULT_SUCCESS && tool_seen)
+  {
+    lastKeepAlive = millis();
+  }
+  return HIDDevice::interrupt_xfer(ep_addr, result, xferred_bytes);
+}
+
 bool HIDConfigDevice::tool_closed()
 {
   auto dev = HIDConfigDevice::instance;
@@ -700,7 +698,7 @@ bool HIDConfigDevice::tool_closed()
   {
     return true;
   }
-  return millis() - dev->lastKeepAlive > 1000 && !dev->processing;
+  return millis() - dev->lastKeepAlive > 1000;
 }
 
 bool HIDConfigDevice::has_event_space()
@@ -711,7 +709,7 @@ bool HIDConfigDevice::has_event_space()
     return false;
   }
   dev->process_events();
-  return !dev->m_pending_count && dev->list.event_count < TU_ARRAY_SIZE(dev->list.event);
+  return dev->list.event_count < TU_ARRAY_SIZE(dev->list.event);
 }
 
 void HIDConfigDevice::flush_events(uint32_t timeout_us)
@@ -722,7 +720,7 @@ void HIDConfigDevice::flush_events(uint32_t timeout_us)
     return;
   }
   const uint32_t started_us = micros();
-  while ((dev->list.event_count || dev->m_pending_count || (tud_ready() && usbd_edpt_busy(TUD_OPT_RHPORT, dev->m_epin))) &&
+  while ((dev->list.event_count || (tud_ready() && usbd_edpt_busy(TUD_OPT_RHPORT, dev->m_epin))) &&
          !tool_closed() && micros() - started_us < timeout_us)
   {
     tud_task();
@@ -741,17 +739,13 @@ bool HIDConfigDevice::send_event(proto_Event event, bool now)
   {
     return false;
   }
-  dev->processing = true;
-  // Flush the queue for important events, but bound the wait: tuh_task() is not
-  // serviced here, so blocking on a slow PC reader would starve host devices.
-  if (now)
+  // flush queue if event is important. Bounded by tool_closed(): if the host stops
+  // reading (tool closed, USB suspended) this gives up after the keepalive timeout
+  // instead of spinning forever, and the event is still queued below if there is room.
+  while (dev->list.event_count && now && !tool_closed())
   {
-    const uint32_t started_us = micros();
-    while (dev->list.event_count && !tool_closed() && micros() - started_us < max_event_flush_wait_us)
-    {
-      dev->process_events();
-      tud_task();
-    }
+    dev->process_events();
+    tud_task();
   }
   // Check if the event is an axis event and update the existing event in the list if it exists.
   if (event.which_event == proto_Event_axis_tag) {
@@ -782,24 +776,11 @@ bool HIDConfigDevice::send_event(proto_Event event, bool now)
     }
   }
   bool sent = false;
-  dev->drain_pending();
-  if (!dev->m_pending_count && dev->list.event_count < TU_ARRAY_SIZE(dev->list.event))
+  if (dev->list.event_count < TU_ARRAY_SIZE(dev->list.event))
   {
     dev->list.event[dev->list.event_count++] = event;
     sent = true;
   }
-  else if (now && dev->m_pending_count < max_pending_events)
-  {
-    dev->m_pending[(dev->m_pending_head + dev->m_pending_count) % max_pending_events] = event;
-    dev->m_pending_count++;
-    sent = true;
-  }
-  else if (now)
-  {
-    printf("cfg event overflow t=%d\r\n", event.which_event);
-  }
-  dev->lastKeepAlive = millis();
-  dev->processing = false;
   if (!sent)
   {
     return false;
@@ -812,8 +793,6 @@ void HIDConfigDevice::reset_keepalive()
   auto dev = HIDConfigDevice::instance;
   dev->lastKeepAlive = 0;
   dev->tool_seen = false;
-  dev->m_pending_count = 0;
-  dev->m_pending_head = 0;
   dev->selected_profile = 0;
   dev->profile_selected = false;
   dev->profile_changed = false;

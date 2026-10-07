@@ -88,6 +88,9 @@ message UsbHostDevice {
 message BluetoothDevice {
   // optional button that starts pairing a controller (active low)
   optional int32 syncPin = 1;
+  // Turn bluetooth off after this many seconds without input, while acting as a bluetooth
+  // controller and with no controllers connected to it (0 disables). Any input turns it back on.
+  optional uint32 timeoutSec = 2;
 }
 message MultiplexerDevice {
   required int32 inputPin = 1;
@@ -194,6 +197,32 @@ message Xbox360RfDevice {
   optional int32 syncPin = 4;
 }
 
+// Drives the power button / load pins of a battery module (eg a TP4056 charger with a boost
+// converter), based on how long it has been since the last input
+message PowerManagementDevice {
+  // Heartbeat: while there has been an input in the last heartbeatTimeoutMs, pulse heartbeatPin
+  // for heartbeatPulseMs every heartbeatPeriodMs (with no heartbeatTimeoutMs it always pulses).
+  // Drawing a little extra current every so often stops power banks with a low load shutdown
+  // from turning off while the controller is in use.
+  optional int32 heartbeatPin = 1;
+  optional bool heartbeatInvert = 2;
+  optional uint32 heartbeatPeriodMs = 3;
+  optional uint32 heartbeatPulseMs = 4;
+  optional uint32 heartbeatTimeoutMs = 5;
+  // Inactivity output: once there has been no input for inactivityTimeoutMs, drive inactivityPin
+  // until there is an input again. With inactivityPulseCount set, send that many pulses instead
+  // (inactivityPulseMs long, starting inactivityPulsePeriodMs apart), for modules that need their
+  // power button pressed, or double pressed, to turn off.
+  optional int32 inactivityPin = 6;
+  optional bool inactivityInvert = 7;
+  optional uint32 inactivityTimeoutMs = 8;
+  optional uint32 inactivityPulseCount = 9;
+  optional uint32 inactivityPulsePeriodMs = 10;
+  optional uint32 inactivityPulseMs = 11;
+  // Only drive the inactivity output while not connected over USB
+  optional bool inactivityNotOnUsb = 12;
+}
+
 message DMXDevice {
   required int32 pin = 1;
   required int32 channelCount = 2;
@@ -240,6 +269,7 @@ message Device {
     InfiniumFaderDevice infiniumFader = 38;
     XboxOneAuthDevice xboxOneAuth = 39;
     Xbox360RfDevice xbox360Rf = 40;
+    PowerManagementDevice powerManagement = 41;
   }
 }
 message InfiniumFaderDevice {

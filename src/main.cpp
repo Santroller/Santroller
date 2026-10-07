@@ -8,6 +8,7 @@
 #include "managers/config_manager.hpp"
 #include "managers/profile_manager.hpp"
 #include "managers/device_manager.hpp"
+#include "managers/inactivity_manager.hpp"
 
 #include "config.pb.h"
 #include "pico/stdlib.h"
@@ -175,6 +176,12 @@ void hid_task(void)
         config_mgr.finish_reinit(millis());
         return;
     }
+    if (config_mgr.take_device_stack_restart())
+    {
+        printf("restarting device stack\r\n");
+        reinitialize_device_stack();
+        return;
+    }
     update();
 }
 
@@ -209,6 +216,7 @@ void update()
 {
     DeviceManager::instance().update(false, false);
     ProfileManager::instance().update(false, false);
+    InactivityManager::instance().tick();
 }
 
 void initDebug()

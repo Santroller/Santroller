@@ -62,4 +62,5 @@ private:
     // the frame an unchanged report was skipped in, so the next isn't built until a new frame
     uint16_t m_unchanged_frame = 0;
     bool m_has_unchanged_frame = false;
+    bool m_bus_suspended = false;
 };

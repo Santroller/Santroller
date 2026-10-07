@@ -3,7 +3,7 @@
 #include "utils.h"
 #include "hardware/pwm.h"
 #include <stdio.h>
-void RgbLedDevice::set_val(uint16_t val)
+void RgbLedDevice::write_val(uint16_t val)
 {
     uint16_t r = ((float)val * scaleR) + startR;
     uint16_t g = ((float)val * scaleG) + startG;
@@ -18,7 +18,7 @@ void RgbLedDevice::set_val(uint16_t val)
         m_led_device->set_led(m_device.activeLed[i], r, g, b, w);
     }
 }
-void RgbLedDevice::set_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
+void RgbLedDevice::write_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
     m_led_device->set_led(m_device.activeLed[i], r, g, b, brightness);
 }
@@ -71,14 +71,14 @@ void RgbLedDevice::off()
         m_led_device->set_led(m_device.activeLed[i], 0, 0, 0, 0);
     }
 }
-void STP16CPCLedDevice::set_val(uint16_t val)
+void STP16CPCLedDevice::write_val(uint16_t val)
 {
     for (int i = 0; i < m_device.activeLed_count; i++)
     {
         m_led_device->set_led(m_device.activeLed[i], val, val, val, 0);
     }
 }
-void STP16CPCLedDevice::set_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
+void STP16CPCLedDevice::write_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
     m_led_device->set_led(m_device.activeLed[i], r, g, b, brightness);
 }
@@ -101,7 +101,7 @@ void STP16CPCLedDevice::off()
     }
 }
 
-void VTechGuitarIoExpanderLedDevice::set_val(uint16_t val)
+void VTechGuitarIoExpanderLedDevice::write_val(uint16_t val)
 {
     for (int i = 0; i < 8; i++)
     {
@@ -117,7 +117,7 @@ void VTechGuitarIoExpanderLedDevice::set_val(uint16_t val)
         }
     }
 }
-void VTechGuitarIoExpanderLedDevice::set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
+void VTechGuitarIoExpanderLedDevice::write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
     m_led_device->set_led(index, r || g || b);
 }
@@ -169,7 +169,7 @@ void GpioLedDevice::setup()
         gpio_set_dir(m_device.pin, true);
     }
 }
-void GpioLedDevice::set_val(uint16_t val)
+void GpioLedDevice::write_val(uint16_t val)
 {
     if (m_device.analog)
     {
@@ -178,7 +178,7 @@ void GpioLedDevice::set_val(uint16_t val)
     }
     gpio_put(m_device.pin, val);
 }
-void GpioLedDevice::set_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
+void GpioLedDevice::write_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
     if (m_device.analog)
     {
@@ -214,11 +214,11 @@ void StaticLedMapping::reload()
 void DMXLedDevice::setup()
 {
 }
-void DMXLedDevice::set_val(uint16_t val)
+void DMXLedDevice::write_val(uint16_t val)
 {
     m_led_device->set_led(m_device.channel, val, val, val, 0);
 }
-void DMXLedDevice::set_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
+void DMXLedDevice::write_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
     m_led_device->set_led(m_device.channel, r, g, b, brightness);
 }

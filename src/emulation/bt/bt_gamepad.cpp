@@ -348,6 +348,23 @@ void BTGamepadDevice::process_keyboard_mouse(bool full_poll, bool send_events)
 
 void BTGamepadDevice::process(bool full_poll, bool send_events)
 {
+    if (con_handle == HCI_CON_HANDLE_INVALID)
+    {
+        // Nothing to send to, but the inputs still need reading so presses count as activity,
+        // which is what turns bluetooth back on after it times out
+        for (const auto &profile : profiles)
+        {
+            for (const auto &mapping : profile->mappings)
+            {
+                mapping->update(full_poll, send_events);
+            }
+            for (const auto &led : profile->leds)
+            {
+                led->update(full_poll, send_events);
+            }
+        }
+        return;
+    }
     if (subtype == SubType_KeyboardMouse)
     {
         if (con_handle != HCI_CON_HANDLE_INVALID)

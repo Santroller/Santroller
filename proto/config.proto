@@ -26,6 +26,9 @@ message ProfileOpts {
   // Jump to PS3 mode when RPCS3 probes the controller, so it can use USB passthrough.
   // Defaults to on when unset, and only applies to the controller types passthrough supports.
   optional bool ps3OnRpcs3 = 19;
+  // Disconnect bluetooth controllers using this profile when its USB connection is suspended
+  // (eg the PC going to sleep), so they turn off instead of running their batteries down
+  optional bool disconnectBluetoothOnSuspend = 20;
 }
 
 message Profile {
@@ -217,12 +220,25 @@ message PeripheralBootConfig {
   required int32 idPin = 2;
 }
 
+// Timeouts are measured from the last time a button changed state
+message InactivityConfig {
+  // Go to sleep after this many seconds without input, while not connected over USB (0 disables).
+  // Pressing the button on wakePin wakes the controller back up, so sleep needs a wakePin.
+  optional uint32 sleepTimeoutSec = 1;
+  optional int32 wakePin = 2;
+  // Wake on a rising edge instead of a falling one
+  optional bool wakeActiveHigh = 3;
+  // Turn the LEDs off after this many seconds without input (0 disables)
+  optional uint32 ledTimeoutSec = 4;
+}
+
 message Config {
   repeated Device devices = 2;
   repeated Profile profiles = 3;
   repeated GuiConfig guiConfig = 4;
   optional bool syncCalibrations = 5;
   optional PeripheralBootConfig peripheralBoot = 6;
+  optional InactivityConfig inactivity = 7;
 }
 
 message ConfigInfo {

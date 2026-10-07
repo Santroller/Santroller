@@ -169,6 +169,12 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
     // A 360 going into standby resets the bus before idling it, which leaves tinyusb
     // unconnected and never reporting the suspend, so read the bus state from the SIE.
     bool bus_suspended = is_360 && (usb_hw->sie_status & USB_SIE_STATUS_SUSPENDED_BITS);
+    // tud_suspend_cb never runs for this, so count it as a new suspend here
+    if (bus_suspended && !m_bus_suspended && !tud_suspended())
+    {
+        suspend_generation++;
+    }
+    m_bus_suspended = bus_suspended;
     if (tud_suspended() || bus_suspended)
     {
         process_suspended(full_poll, send_events);

@@ -568,3 +568,10 @@ enum EncoderInputType {
   EncoderDelta = 1;
   EncoderPosition = 2;
 }
+// Things a button can do to the controller itself, rather than send to the host
+enum ActionType {
+  // Disconnect and reconnect the USB and bluetooth device stack, keeping the current console mode
+  ActionRestartDeviceStack = 1;
+  // Reboot into the USB bootloader (BOOTSEL), eg for flashing firmware without opening the controller
+  ActionBootloader = 2;
+}

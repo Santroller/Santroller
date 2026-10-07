@@ -14,6 +14,7 @@
 // Forward declarations to avoid circular dependencies
 class Mapping;
 class ButtonMapping;
+class ActionMapping;
 class LedMapping;
 
 enum class DeviceSlotKind : uint8_t
@@ -45,6 +46,7 @@ public:
     bool cymbal_glitch_fix;
     bool full_range_turntable_on_pc = false;
     bool ps3_on_rpcs3 = true;
+    bool disconnect_bluetooth_on_suspend = false;
     bool per_kind_slot_ids = false;
     ConsoleMode mode;
     uint32_t profile_id;
@@ -93,6 +95,8 @@ public:
     InputQueue input_queue;
     std::vector<ButtonMapping *> queued_mappings;
     std::vector<bool> queued_last_live;
+    std::vector<ActionMapping *> action_mappings;
+    void update_actions();
     DrumState drum_state;
     KeyboardState keyboard_state;
     MouseState mouse_state;

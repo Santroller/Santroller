@@ -14,7 +14,9 @@ public:
     {
         return config.which_device == proto_Device_bt_tag &&
                config.device.bt.has_syncPin == m_device.has_syncPin &&
-               (!m_device.has_syncPin || config.device.bt.syncPin == m_device.syncPin);
+               (!m_device.has_syncPin || config.device.bt.syncPin == m_device.syncPin) &&
+               config.device.bt.has_timeoutSec == m_device.has_timeoutSec &&
+               (!m_device.has_timeoutSec || config.device.bt.timeoutSec == m_device.timeoutSec);
     }
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
@@ -26,8 +28,10 @@ public:
 
 private:
     void start_discovery();
+    void update_timeout();
     proto_BluetoothDevice m_device;
     SyncButton m_sync;
+    bool m_timed_out = false;
 };
 
 void bt_discovery_stop();

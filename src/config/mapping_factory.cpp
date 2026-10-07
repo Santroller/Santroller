@@ -160,6 +160,9 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
     case proto_Output_proKeyboardAxis_tag:
         return std::make_unique<ProKeysAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         
+    case proto_Output_action_tag:
+        return std::make_unique<ActionMapping>(proto_mapping, std::move(input), mapping_id, profile);
+
     case proto_Output_proKeyboardButton_tag:
         return std::make_unique<ProKeysButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         

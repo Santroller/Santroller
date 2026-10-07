@@ -37,6 +37,8 @@ public:
     // Call from process() while tud_suspended(): turns the LEDs off and keeps polling
     // the mappings so a button press can remote-wake the host.
     void process_suspended(bool full_poll, bool send_events);
+    // Disconnects the bluetooth controllers of profiles that ask for it, once per suspend
+    void disconnect_bluetooth_controllers();
     static inline uint8_t next_epin()
     {
         return m_last_epin++;

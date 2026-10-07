@@ -207,6 +207,82 @@ static bool ble_is_mac_connected(const bd_addr_t mac)
 
 static void ble_sync_reconnect(void);
 
+// Controllers disconnected on purpose aren't reconnected to for a while, as some keep
+// advertising for a bit afterwards and would just be reconnected instead of turning off
+#define BLE_DISCONNECT_HOLD_OFF_MS 15000
+struct BleHoldOff
+{
+    bool active = false;
+    bd_addr_t addr = {};
+    uint32_t until = 0;
+};
+static BleHoldOff s_hold_offs[MAX_BLE_RECONNECT_CANDIDATES];
+
+static bool ble_is_held_off(const bd_addr_t addr)
+{
+    for (const auto &hold_off : s_hold_offs)
+    {
+        if (hold_off.active && bd_addr_cmp(hold_off.addr, addr) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void ble_hold_off(const bd_addr_t addr)
+{
+    BleHoldOff *slot = nullptr;
+    for (auto &hold_off : s_hold_offs)
+    {
+        if (hold_off.active && bd_addr_cmp(hold_off.addr, addr) == 0)
+        {
+            slot = &hold_off;
+            break;
+        }
+        if (!hold_off.active && !slot)
+        {
+            slot = &hold_off;
+        }
+    }
+    if (!slot)
+    {
+        slot = &s_hold_offs[0];
+    }
+    slot->active = true;
+    bd_addr_copy(slot->addr, addr);
+    slot->until = millis() + BLE_DISCONNECT_HOLD_OFF_MS;
+}
+
+static void ble_expire_hold_offs()
+{
+    bool expired = false;
+    for (auto &hold_off : s_hold_offs)
+    {
+        if (hold_off.active && (int32_t)(millis() - hold_off.until) >= 0)
+        {
+            hold_off.active = false;
+            expired = true;
+        }
+    }
+    if (expired)
+    {
+        ble_sync_reconnect();
+    }
+}
+
+void ble_disconnect(const bd_addr_t addr)
+{
+    for (const auto &ctx : s_context_pool)
+    {
+        if (ctx.in_use && bd_addr_cmp(ctx.addr, addr) == 0 && ctx.con_handle != HCI_CON_HANDLE_INVALID)
+        {
+            ble_hold_off(addr);
+            gap_disconnect(ctx.con_handle);
+        }
+    }
+}
+
 static void ble_direct_connect_timeout(btstack_timer_source_t *ts)
 {
     UNUSED(ts);
@@ -336,7 +412,7 @@ static void ble_sync_reconnect(void)
     {
         if (candidate_count >= MAX_BLE_RECONNECT_CANDIDATES)
             return;
-        if (candidate_exists(addr))
+        if (candidate_exists(addr) || ble_is_held_off(addr))
             return;
         bd_addr_copy(candidates[candidate_count].addr, addr);
         candidates[candidate_count].addr_type = addr_type;
@@ -1136,6 +1212,7 @@ void ble_resync_reconnect()
 
 void ble_tick()
 {
+    ble_expire_hold_offs();
     for (auto &ctx : s_context_pool)
     {
         if (ctx.in_use && ctx.pending_host_create)

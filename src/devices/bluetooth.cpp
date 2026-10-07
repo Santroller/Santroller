@@ -4,6 +4,8 @@
 #include "emulation/usb/hid_device.h"
 #include "config/config.hpp"
 #include "managers/config_manager.hpp"
+#include "managers/inactivity_manager.hpp"
+#include "managers/profile_manager.hpp"
 #include "devices/bt/bt_classic_rx.hpp"
 #include "devices/bt/ble_rx.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
@@ -49,6 +51,12 @@ void BluetoothDevice::rescan(bool first)
 void BluetoothDevice::end(bool full)
 {
     m_sync.end();
+    if (m_timed_out)
+    {
+        // Whatever replaces this device decides whether bluetooth stays off
+        m_timed_out = false;
+        BluetoothStack::instance().power_on();
+    }
     if (full)
     {
         BluetoothStack::instance().power_off();
@@ -69,8 +77,51 @@ void BluetoothDevice::update(bool full_poll, bool send_events)
     bt_host_update_interfaces(full_poll, send_events);
     if (m_sync.pressed())
     {
+        InactivityManager::instance().input_activity(millis());
         start_discovery();
     }
+    if (m_device.has_timeoutSec && m_device.timeoutSec)
+    {
+        update_timeout();
+    }
+}
+
+void BluetoothDevice::update_timeout()
+{
+    auto &stack = BluetoothStack::instance();
+    if (!stack.initialized())
+    {
+        return;
+    }
+    bool idle = InactivityManager::instance().idle_ms(millis()) >= m_device.timeoutSec * 1000;
+    if (!idle)
+    {
+        if (m_timed_out)
+        {
+            printf("bt timeout over, powering on\r\n");
+            m_timed_out = false;
+            stack.power_on();
+        }
+        return;
+    }
+    if (m_timed_out)
+    {
+        return;
+    }
+    // Only time out when acting as a bluetooth controller, as inputs on this controller are
+    // what turn bluetooth back on, and connected controllers would be cut off
+    bool bluetooth_output = false;
+    ProfileManager::instance().for_each_instance([&](const std::shared_ptr<Instance> &instance) {
+        bluetooth_output |= instance->is_bluetooth();
+    });
+    if (!bluetooth_output || bt_host_assignable_interface_count())
+    {
+        return;
+    }
+    printf("bt timed out, powering off\r\n");
+    m_timed_out = true;
+    bt_discovery_stop();
+    stack.power_off();
 }
 
 bool BluetoothDevice::using_pin(uint8_t pin)

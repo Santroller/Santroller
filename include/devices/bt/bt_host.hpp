@@ -81,6 +81,8 @@ public:
 
     // Called when the connection drops (fires the device-removed event)
     virtual void on_disconnected();
+    // Drop the connection, eg so the controller turns off while the host is asleep
+    void disconnect();
 
     // Tick interface — same as UsbHostInterface
     virtual bool tick_digital(proto_Output &type) = 0;

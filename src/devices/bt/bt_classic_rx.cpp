@@ -1160,6 +1160,11 @@ bool btc_has_connected_device()
     return false;
 }
 
+void btc_disconnect(uint16_t hid_cid)
+{
+    hid_host_disconnect(hid_cid);
+}
+
 void btc_tick()
 {
     for (auto &s : s_bt_slots)

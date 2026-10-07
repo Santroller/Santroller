@@ -8,6 +8,9 @@
 #include <stdint.h>
 #include "emulation/usb/hid_device.h"
 #include "input/shortcut.hpp"
+#include "managers/inactivity_manager.hpp"
+#include "managers/config_manager.hpp"
+#include "pico/bootrom.h"
 
 uint16_t Mapping::sample_ui_event()
 {
@@ -209,6 +212,7 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
             }
         }
     }
+    bool was_live = m_live_value;
     if (calcVal)
     {
         m_last_poll = time_us_64();
@@ -220,7 +224,33 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
         m_live_value = calcVal;
         m_live_pressure = 0;
     }
+    // Changes rather than held buttons count, so an input stuck on (like a toggle) can't keep the controller awake
+    if (m_live_value != was_live)
+    {
+        InactivityManager::instance().input_activity(millis());
+    }
 }
+void ActionMapping::update_action()
+{
+    sample(false, false);
+    bool pressed = live_value();
+    bool was_pressed = m_was_pressed;
+    m_was_pressed = pressed;
+    if (!pressed || was_pressed)
+    {
+        return;
+    }
+    switch (m_mapping.mapping.mapping.action)
+    {
+    case ActionRestartDeviceStack:
+        ConfigManager::instance().request_device_stack_restart();
+        break;
+    case ActionBootloader:
+        reset_usb_boot(0, 0);
+        break;
+    }
+}
+
 void ButtonMapping::update(bool full_poll, bool send_events)
 {
     sample(full_poll, send_events);

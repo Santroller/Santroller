@@ -17,6 +17,7 @@ namespace
         {
             for (auto &profile : profile_pair.second)
             {
+                profile->action_mappings.clear();
                 profile->mappings.clear();
                 profile->triggers.clear();
                 profile->leds.clear();
@@ -268,6 +269,7 @@ void ProfileManager::update(bool full_poll, bool send_events)
         for (const auto &profile : instance->profiles)
         {
             profile->sample_input_queue();
+            profile->update_actions();
         }
     }
     for (const auto &instance : m_instances)

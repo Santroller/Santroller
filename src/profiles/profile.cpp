@@ -10,6 +10,7 @@
 Profile::~Profile()
 {
     queued_mappings.clear();
+    action_mappings.clear();
     mappings.clear();
     triggers.clear();
     leds.clear();
@@ -79,6 +80,14 @@ void Profile::resolve_shortcuts()
                 }
             }
         }
+    }
+}
+
+void Profile::update_actions()
+{
+    for (auto *mapping : action_mappings)
+    {
+        mapping->update_action();
     }
 }
 

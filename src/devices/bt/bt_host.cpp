@@ -1,4 +1,7 @@
 #include "devices/bt/bt_host.hpp"
+#include "devices/bt/ble_rx.hpp"
+#include "devices/bt/bt_classic_rx.hpp"
+#include "devices/bt/bluetooth_stack.hpp"
 #include "managers/device_manager.hpp"
 #include "emulation/usb/hid_device.h"
 #include "events.pb.h"
@@ -218,6 +221,20 @@ void bt_host_save_pairing(const std::shared_ptr<BluetoothHostInterface> &device,
 // ------------------------------------------------------------------
 // BluetoothHostInterface member implementations
 // ------------------------------------------------------------------
+
+void BluetoothHostInterface::disconnect()
+{
+    BtStackLock lock;
+    printf("disconnecting bt controller %s\r\n", m_name);
+    if (m_is_ble)
+    {
+        ble_disconnect(m_addr);
+    }
+    else
+    {
+        btc_disconnect(m_cid);
+    }
+}
 
 void BluetoothHostInterface::on_disconnected()
 {

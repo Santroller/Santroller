@@ -294,6 +294,7 @@ message Output {
     BeatManiaButtonType bmButton = 33;
     // Consumer page usage, e.g. 0xE9 for volume up
     uint32 consumerKey = 34;
+    ActionType action = 35;
   }
 }
 

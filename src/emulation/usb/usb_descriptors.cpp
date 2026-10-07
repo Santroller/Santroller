@@ -20,6 +20,7 @@
 #include "managers/config_manager.hpp"
 #include "main.hpp"
 #include "mappings/base_mapping.hpp"
+#include "devices/bt/bt_host.hpp"
 
 bool usb_device_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
                         uint32_t xferred_bytes);
@@ -417,6 +418,31 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
 
 volatile uint32_t UsbDevice::suspend_generation = 0;
 
+void UsbDevice::disconnect_bluetooth_controllers()
+{
+  auto disconnect = [](const std::shared_ptr<Device> &device) {
+    if (device && device->is_bluetooth_host_interface())
+    {
+      std::static_pointer_cast<BluetoothHostInterface>(device)->disconnect();
+    }
+  };
+  for (const auto &profile : profiles)
+  {
+    if (!profile->disconnect_bluetooth_on_suspend)
+    {
+      continue;
+    }
+    for (const auto &device : profile->devices)
+    {
+      disconnect(device.second);
+    }
+    for (const auto &device : profile->claimed_devices)
+    {
+      disconnect(device.second);
+    }
+  }
+}
+
 void tud_suspend_cb(bool remote_wakeup_en)
 {
   (void)remote_wakeup_en;
@@ -429,6 +455,7 @@ void UsbDevice::process_suspended(bool full_poll, bool send_events)
   {
     m_wake_generation = suspend_generation;
     m_wake_armed = false;
+    disconnect_bluetooth_controllers();
   }
   bool pressed = false;
   for (const auto &profile : profiles)

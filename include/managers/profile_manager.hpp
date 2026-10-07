@@ -97,6 +97,17 @@ public:
     
     void add_instance(std::shared_ptr<Instance> instance);
     size_t instance_count() const;
+    template <typename Func>
+    void for_each_instance(Func func) const
+    {
+        for (const auto &instance : m_instances)
+        {
+            if (instance)
+            {
+                func(instance);
+            }
+        }
+    }
     size_t usb_instance_count() const;
     std::shared_ptr<UsbDevice> get_usb_instance(uint8_t id);
     void set_usb_instance(uint8_t id, std::shared_ptr<UsbDevice> instance);

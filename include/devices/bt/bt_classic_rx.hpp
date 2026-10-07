@@ -7,3 +7,4 @@ void btc_stop_scan(void);
 void btc_tick();
 // true while any classic HID connection is open
 bool btc_has_connected_device();
+void btc_disconnect(uint16_t hid_cid);

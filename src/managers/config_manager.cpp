@@ -35,6 +35,7 @@ void ConfigManager::clear_all()
     m_has_bluetooth = false;
     m_reloading = false;
     m_reinitialize_device_stack = false;
+    m_restart_device_stack = false;
     m_reinit_time = 0;
     m_time_since_mode = 0;
     m_seen_masks = 0;

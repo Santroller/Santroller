@@ -1,7 +1,6 @@
 # Things to work on
 
 ## Firmware features
-- [ ] bluetooth timeout
 - [ ] input to put controller to sleep
 - [ ] When a bt receivers USB is suspended, we should give users the option to suspend BT itself as well.
 
@@ -45,8 +44,6 @@
 
 Missing: power and timing
 
-Sleep after inactivity, with a wake pin. This is the "put controller to sleep" and "bluetooth timeout" items in todo.md, and the old firmware already did it.
-LED inactivity timeout. The new LED guide in the configurator already tells users to set an inactivity timer, but nothing implements one.
 Global poll rate.
 Global button and strum debounce. Debounce is per mapping only now.
 Combined strum debounce, where up and down share one window.
@@ -66,5 +63,4 @@ Accelerometer low-pass filter.
 MAX1704x battery level reported over Bluetooth.
 A drum sensitivity knob, setting the hit threshold live.
 
-Heartbeat/inactivity pulse outputs.
 The old USB-host detection of Xbox One controllers running in XInput-compatible mode.

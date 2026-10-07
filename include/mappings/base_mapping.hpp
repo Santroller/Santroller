@@ -143,6 +143,21 @@ protected:
     uint64_t m_last_poll = 0;
 };
 
+// Runs an action on the controller itself when pressed. Actions are checked every loop from
+// the profile rather than when a report is built, so they work even when the host isn't
+// listening, which is exactly when restarting the device stack is needed.
+class ActionMapping : public ButtonMapping
+{
+public:
+    ~ActionMapping() {}
+    ActionMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : ButtonMapping(mapping, std::move(input), id, profile) {}
+    void update_action();
+
+private:
+    // Starts as held, so a button still held after a restart (or at boot) needs releasing first
+    bool m_was_pressed = true;
+};
+
 class AxisMapping : public Mapping
 {
 public:

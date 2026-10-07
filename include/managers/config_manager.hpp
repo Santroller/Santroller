@@ -37,6 +37,14 @@ public:
     void set_full_reload(bool full_reload) { m_full_reload = full_reload; }
     bool should_reinitialize_device_stack() const { return m_reinitialize_device_stack; }
     void request_device_stack_reinit() { m_reinitialize_device_stack = true; }
+    // Restart just the device stack from the main loop, without reloading the config
+    void request_device_stack_restart() { m_restart_device_stack = true; }
+    bool take_device_stack_restart()
+    {
+        bool requested = m_restart_device_stack;
+        m_restart_device_stack = false;
+        return requested;
+    }
     void finish_reinit(uint32_t now);
     uint32_t get_reinit_time() const { return m_reinit_time; }
     void schedule_reinit(uint32_t when) { m_reinit_time = when; }
@@ -78,6 +86,7 @@ private:
     bool m_reloading;
     bool m_full_reload;
     bool m_reinitialize_device_stack;
+    bool m_restart_device_stack = false;
     uint32_t m_reinit_time;
     uint32_t m_time_since_mode;
     uint32_t m_seen_masks;

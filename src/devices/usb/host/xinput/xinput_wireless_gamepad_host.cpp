@@ -141,7 +141,6 @@ XInputWirelessGamepadHost::XInputWirelessGamepadHost(uint8_t dev_addr, uint8_t i
 
 void XInputWirelessGamepadHost::update(bool full_poll, bool send_events)
 {
-    UsbHostInterface::update(full_poll, send_events);
     const uint32_t now_us = time_us_32();
     if (m_last_update_us && now_us - m_last_update_us > m_max_update_gap_us)
     {
@@ -149,6 +148,7 @@ void XInputWirelessGamepadHost::update(bool full_poll, bool send_events)
     }
     m_last_update_us = now_us;
     process_events();
+    UsbHostInterface::update(full_poll, send_events);
     flush_out_queue();
     wireless_trace_dump_tick();
     const uint32_t now = millis();
@@ -157,7 +157,7 @@ void XInputWirelessGamepadHost::update(bool full_poll, bool send_events)
         XINPUT_WIRELESS_DEBUG_PRINT("w %lu %u DISC after %lu\r\n",
                                     static_cast<unsigned long>(now), m_interface,
                                     static_cast<unsigned long>(now - m_link_lost_ms));
-        disconnect();
+        disconnect_controller();
     }
     if (m_found && static_cast<int32_t>(now - m_next_input_stats_ms) >= 0)
     {
@@ -196,6 +196,11 @@ void XInputWirelessGamepadHost::link_restored(const char *why)
 
 void XInputWirelessGamepadHost::disconnect()
 {
+    UsbHostInterface::disconnect();
+}
+
+void XInputWirelessGamepadHost::disconnect_controller()
+{
     m_link_lost = false;
     m_input_count = 0;
     m_last_input_ms = 0;
@@ -217,6 +222,8 @@ void XInputWirelessGamepadHost::disconnect()
     m_request_caps_on_input = false;
     m_led_set = false;
     process_delayed_init();
+    // the slot is still there, just empty again
+    send_hotplug_event(true);
 }
 
 bool XInputWirelessGamepadHost::send_out(const char *reason, const uint8_t *packet, uint8_t len)
@@ -555,6 +562,7 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                     usb_host_add_assignable_interface(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
                     process_delayed_init();
                     set_player_led(m_last_player_led);
+                    send_hotplug_event(true);
                 }
                 else if (!m_led_set)
                 {

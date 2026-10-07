@@ -29,6 +29,9 @@ public:
     void begin() {};
     void end(bool full) {};
     virtual void disconnect();
+    // Tell the config tool about this interface, e.g. when a wireless controller links
+    // to or drops from a receiver slot after enumeration
+    void send_hotplug_event(bool connected);
     virtual bool tick_digital(proto_Output& type) = 0;
     virtual uint16_t tick_analog(proto_Output& type) = 0;
     virtual bool tick_axis_digital(proto_Output& type) { return tick_analog(type) != 0; }

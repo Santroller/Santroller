@@ -141,10 +141,12 @@ void SantrollerHost::handle_report(const uint8_t *data, uint16_t len)
             usb_host_remove_enumerating_interface(this);
             usb_host_add_assignable_interface(host_devices[m_dev_addr]->host_devices_by_itf[m_interface]);
             process_delayed_init();
+            send_hotplug_event(true);
         }
         else if (changed)
         {
             process_delayed_init();
+            send_hotplug_event(true);
         }
         return;
     }

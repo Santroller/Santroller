@@ -4,6 +4,8 @@
 
 class XboxWirelessHost;
 
+#define XBOX_WIRELESS_CONTROLLER_INTERFACE(idx) (0x80 | (idx))
+
 class XboxWirelessController : public UsbHostInterface
 {
 public:

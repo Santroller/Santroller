@@ -35,7 +35,9 @@ static const gip_device_interface_t wireless_gip_interface = {
 };
 
 XboxWirelessController::XboxWirelessController(XboxWirelessHost* adapter, uint8_t controller_idx, uint8_t dev_addr, uint16_t id)
-    : UsbHostInterface(dev_addr, controller_idx, id)
+    // Virtual interface number, kept clear of the adapter's real interfaces so the config
+    // tool doesn't confuse controller 0 with the adapter itself
+    : UsbHostInterface(dev_addr, XBOX_WIRELESS_CONTROLLER_INTERFACE(controller_idx), id)
     , m_controller_idx(controller_idx)
     , m_adapter(adapter)
 {
@@ -155,6 +157,7 @@ void XboxWirelessController::on_device_descriptor(SubType subtype)
     usb_host_add_assignable_interface(m_adapter->get_controller_interface(m_controller_idx));
     gip_send_power_on_sequence(&m_controller.gip_device);
     process_delayed_init();
+    send_hotplug_event(true);
     if (!auth_broker.has_handler(ModeXboxOne))
     {
         auth_broker.register_handler(ModeXboxOne, [this](XGIPProtocol* packet) {

@@ -270,6 +270,7 @@ void XboxWirelessHost::remove_controller_interface(uint8_t controller_idx)
 
     usb_host_remove_assignable_interface(controller_intf.get());
     DeviceManager::instance().remove_device(controller_intf.get());
+    controller_intf->send_hotplug_event(false);
     clear_queued_packets(controller_idx + 1);
 
     m_controller_interfaces[controller_idx].reset();

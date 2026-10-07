@@ -107,6 +107,7 @@ public:
     bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
     void update(bool full_poll, bool send_events) override;
+    void disconnect() override;
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
     bool tick_digital(proto_Output &type);
     uint16_t tick_analog(proto_Output &type);
@@ -121,7 +122,7 @@ private:
     void flush_out_queue();
     void process_events();
     void link_restored(const char *why);
-    void disconnect();
+    void disconnect_controller();
     void process_in(const uint8_t *buf, uint32_t len);
     void process_out(xfer_result_t result);
     // IN transfers captured in xfer_cb (producer) and serviced from update (consumer)

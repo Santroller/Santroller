@@ -494,9 +494,17 @@ void UsbHostInterface::update(bool full_poll, bool send_events)
     if (send_events && full_poll)
     {
         m_sent_type = true;
-        proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, m_subtype, m_dev_addr, m_interface, true}}};
-        event.event.usb.has_sourceId = true;
-        event.event.usb.sourceId = source_id();
+        send_hotplug_event(true);
+    }
+}
+
+void UsbHostInterface::send_hotplug_event(bool connected)
+{
+    proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, connected ? m_subtype : SubType_Gamepad, m_dev_addr, m_interface, connected}}};
+    event.event.usb.has_sourceId = true;
+    event.event.usb.sourceId = source_id();
+    if (connected)
+    {
         // name is a nanopb static "string" field (nul-terminated, no length
         // counter) - always leave room for the terminator or encoding reads
         // past the array looking for one.
@@ -507,8 +515,8 @@ void UsbHostInterface::update(bool full_poll, bool send_events)
             event.event.usb.name[i] = m_name[(i + 1) * 2];
         }
         event.event.usb.name[max_len] = '\0';
-        HIDConfigDevice::send_event(event, true);
     }
+    HIDConfigDevice::send_event(event, true);
 }
 
 bool UsbHostInterface::send_intr_xfer(uint8_t endpoint, const void *buffer, uint8_t len)
@@ -703,10 +711,7 @@ void UsbHostDevice::disconnect()
 void UsbHostInterface::disconnect()
 {
     still_connected = false;
-    proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, SubType_Gamepad, m_dev_addr, m_interface, false}}};
-    event.event.usb.has_sourceId = true;
-    event.event.usb.sourceId = source_id();
-    HIDConfigDevice::send_event(event, true);
+    send_hotplug_event(false);
 }
 
 static const usbh_class_driver_t driver_host[] = {

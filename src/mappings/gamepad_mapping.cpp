@@ -900,6 +900,11 @@ void GamepadButtonMapping::update_ps4(uint8_t *buf)
         report->start |= m_last_value;
         break;
     case Gamepad_Back:
+        if (m_profile->select_as_dpad_left())
+        {
+            report->dpadLeft |= m_last_value;
+            break;
+        }
         report->back |= m_last_value;
         break;
     case Gamepad_Guide:
@@ -957,6 +962,11 @@ void GamepadButtonMapping::update_ps5(uint8_t *buf)
         report->start |= m_last_value;
         break;
     case Gamepad_Back:
+        if (m_profile->select_as_dpad_left())
+        {
+            report->dpadLeft |= m_last_value;
+            break;
+        }
         report->back |= m_last_value;
         break;
     case Gamepad_Guide:
@@ -1123,6 +1133,11 @@ void GamepadButtonMapping::update_xboxone(uint8_t *buf)
         report->start |= m_last_value;
         break;
     case Gamepad_Back:
+        if (m_profile->select_as_dpad_left())
+        {
+            report->dpadLeft |= m_last_value;
+            break;
+        }
         report->back |= m_last_value;
         break;
     case Gamepad_Guide:

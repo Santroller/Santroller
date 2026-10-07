@@ -47,6 +47,11 @@ public:
     bool full_range_turntable_on_pc = false;
     bool ps3_on_rpcs3 = true;
     bool disconnect_bluetooth_on_suspend = false;
+    bool select_to_dpad_left = false;
+    bool select_as_dpad_left() const
+    {
+        return select_to_dpad_left && (subtype == GuitarHeroGuitar || subtype == RockBandGuitar);
+    }
     bool per_kind_slot_ids = false;
     ConsoleMode mode;
     uint32_t profile_id;
@@ -96,6 +101,10 @@ public:
     std::vector<ButtonMapping *> queued_mappings;
     std::vector<bool> queued_last_live;
     std::vector<ActionMapping *> action_mappings;
+    bool combined_strum_debounce = false;
+    std::vector<ButtonMapping *> strum_mappings;
+    // Whether a strum in a direction other than strum_bit is held or still debouncing
+    bool other_strum_live(int8_t strum_bit) const;
     void update_actions();
     DrumState drum_state;
     KeyboardState keyboard_state;

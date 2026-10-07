@@ -29,6 +29,13 @@ message ProfileOpts {
   // Disconnect bluetooth controllers using this profile when its USB connection is suspended
   // (eg the PC going to sleep), so they turn off instead of running their batteries down
   optional bool disconnectBluetoothOnSuspend = 20;
+  // 5-fret guitars only: on Xbox One / Series and PS4 / 5, send Select as D-pad Left instead,
+  // which Rock Band 4 and Fortnite Festival can use to activate star power
+  optional bool selectToDpadLeft = 21;
+  // Guitars only: strum up and down share one debounce window, so a strum is ignored while
+  // the other direction is still held or debouncing. The config tool keeps both strums'
+  // debounce times the same while this is on.
+  optional bool combinedStrumDebounce = 22;
 }
 
 message Profile {

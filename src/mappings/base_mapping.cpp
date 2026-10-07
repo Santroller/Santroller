@@ -212,6 +212,13 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
             }
         }
     }
+    // With combined strum debounce, a new strum can't start while the other direction is
+    // still held or debouncing, so a bouncing strum switch can't register both ways
+    if (calcVal && !m_live_value && m_strum_bit >= 0 && m_profile->combined_strum_debounce &&
+        m_profile->other_strum_live(m_strum_bit))
+    {
+        calcVal = false;
+    }
     bool was_live = m_live_value;
     if (calcVal)
     {

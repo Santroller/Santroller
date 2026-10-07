@@ -11,6 +11,7 @@ Profile::~Profile()
 {
     queued_mappings.clear();
     action_mappings.clear();
+    strum_mappings.clear();
     mappings.clear();
     triggers.clear();
     leds.clear();
@@ -81,6 +82,18 @@ void Profile::resolve_shortcuts()
             }
         }
     }
+}
+
+bool Profile::other_strum_live(int8_t strum_bit) const
+{
+    for (auto *mapping : strum_mappings)
+    {
+        if (mapping->strum_bit() != strum_bit && mapping->live_value())
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Profile::update_actions()

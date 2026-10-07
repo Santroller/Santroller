@@ -399,6 +399,12 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
             button->set_queue_bit(bit);
             profile->queued_mappings.push_back(button);
         }
+        // bits 10 and 11 are strum up and down
+        if (button && (bit == 10 || bit == 11))
+        {
+            button->set_strum_bit(bit);
+            profile->strum_mappings.push_back(button);
+        }
         if (proto_mapping.mapping.which_mapping == proto_Output_action_tag)
         {
             profile->action_mappings.push_back(static_cast<ActionMapping *>(mapping.get()));
@@ -618,6 +624,8 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->cymbal_glitch_fix = opts.has_cymbalGlitchFix && opts.cymbalGlitchFix;
     profile->full_range_turntable_on_pc = opts.has_fullRangeTurntableOnPc && opts.fullRangeTurntableOnPc;
     profile->ps3_on_rpcs3 = rpcs3_passthrough_supported(opts.deviceToEmulate) && (!opts.has_ps3OnRpcs3 || opts.ps3OnRpcs3);
+    profile->select_to_dpad_left = opts.has_selectToDpadLeft && opts.selectToDpadLeft;
+    profile->combined_strum_debounce = opts.has_combinedStrumDebounce && opts.combinedStrumDebounce;
     profile->disconnect_bluetooth_on_suspend = opts.has_disconnectBluetoothOnSuspend && opts.disconnectBluetoothOnSuspend;
     profile->per_kind_slot_ids = opts.has_deviceSlotIdVersion && opts.deviceSlotIdVersion >= 1;
     profile->subtype = opts.deviceToEmulate;

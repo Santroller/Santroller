@@ -128,6 +128,8 @@ public:
     bool live_value() const { return m_live_value; }
     int8_t queue_bit() const { return m_queue_bit; }
     void set_queue_bit(int8_t bit) { m_queue_bit = bit; }
+    int8_t strum_bit() const { return m_strum_bit; }
+    void set_strum_bit(int8_t bit) { m_strum_bit = bit; }
     ButtonMapping *as_button_mapping() override { return this; }
 
 protected:
@@ -137,6 +139,7 @@ protected:
     bool m_live_value = false;
     uint16_t m_live_pressure = 0;
     int8_t m_queue_bit = -1;
+    int8_t m_strum_bit = -1;
     bool m_last_sent_value = false;
     uint16_t m_last_sent_pressure = 0;
     bool m_calibrated_value = false;

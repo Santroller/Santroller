@@ -18,6 +18,7 @@ namespace
             for (auto &profile : profile_pair.second)
             {
                 profile->action_mappings.clear();
+                profile->strum_mappings.clear();
                 profile->mappings.clear();
                 profile->triggers.clear();
                 profile->leds.clear();

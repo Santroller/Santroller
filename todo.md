@@ -46,11 +46,9 @@ Missing: power and timing
 
 Global poll rate.
 Global button and strum debounce. Debounce is per mapping only now.
-Combined strum debounce, where up and down share one window.
 
 The reset/reboot binding: a button that reboots the controller and keeps the console type.
 
-"Select → D-pad Left on Xbox One / PS4" for 5-fret guitars.
 
 Num/Caps/Scroll Lock LEDs.
 Missing: LEDs

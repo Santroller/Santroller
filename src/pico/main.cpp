@@ -737,7 +737,7 @@ void tuh_xinput_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t c
                         {
                             // request capabilities
                             send_report_to_controller(dev_addr, instance, capabilitiesRequest, sizeof(capabilitiesRequest));
-                            usb_host_devices[i].type.drum_type == DRUM_UNKNOWN;
+                            usb_host_devices[i].type.drum_type = DRUM_UNKNOWN;
                         }
                     }
                     // Link report

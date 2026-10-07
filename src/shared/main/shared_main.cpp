@@ -94,7 +94,7 @@ uint32_t last_queue = 0;
 uint8_t brightness = LED_BRIGHTNESS;
 uint8_t queue_size = 0;
 uint8_t led_tmp;
-uint8_t queue_tail = 0;
+uint8_t queue_head = 0;
 Buffer_Report_t queue[BUFFER_SIZE_QUEUE];
 #define TURNTABLE_BUFFER_SIZE 16
 #ifdef INPUT_DJ_TURNTABLE_SMOOTHING
@@ -3039,15 +3039,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
     // if input queues are enabled, then we just tick as often as possible
     if (INPUT_QUEUE)
     {
-        if (current_queue_report.val != last_queue_report.val)
+        if (current_queue_report.val != last_queue_report.val && queue_size < BUFFER_SIZE_QUEUE)
         {
-            queue[queue_tail] = current_queue_report;
+            queue[(queue_head + queue_size) % BUFFER_SIZE_QUEUE] = current_queue_report;
             last_queue_report = current_queue_report;
-            if (queue_size < BUFFER_SIZE_QUEUE)
-            {
-                queue_size++;
-                queue_tail++;
-            }
+            queue_size++;
         }
     }
     if (!buf)
@@ -3057,7 +3053,8 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 
     if (INPUT_QUEUE && queue_size)
     {
-        current_queue_report = queue[queue_tail - queue_size];
+        current_queue_report = queue[queue_head];
+        queue_head = (queue_head + 1) % BUFFER_SIZE_QUEUE;
         queue_size--;
     }
     // Tick all three reports, and then go for the first one that has changes

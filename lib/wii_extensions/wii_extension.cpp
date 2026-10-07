@@ -317,7 +317,7 @@ WiiExtension::WiiExtension(MidiDevice *midiDevice, uint8_t block, uint8_t sda, u
     : mInterface(block, sda, scl, clock),
       mFound(false),
       m_block(block),
-      m_turntable_poll_interval_us(turntable_poll_interval_ms * 1000),
+      m_turntable_poll_interval_us((turntable_poll_interval_ms < WII_TURNTABLE_MIN_POLL_INTERVAL_MS ? WII_TURNTABLE_MIN_POLL_INTERVAL_MS : turntable_poll_interval_ms) * 1000),
       m_device(midiDevice)
 {
     printf("WiiExtension::WiiExtension\r\n");

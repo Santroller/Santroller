@@ -558,6 +558,12 @@ enum ProKeyboardAxisType {
 enum ProKeyboardButtonType {
   ProKeyboardOverdrive = 1;
 }
+enum DJHeroPlatterInputType {
+  DJHeroPlatterGreen = 1;
+  DJHeroPlatterRed = 2;
+  DJHeroPlatterBlue = 3;
+  DJHeroPlatterVelocity = 4;
+}
 enum EncoderInputType {
   EncoderDelta = 1;
   EncoderPosition = 2;

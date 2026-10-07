@@ -65,6 +65,8 @@ message GuitarHero5NeckDevice { required I2CDevice i2c = 1; }
 message DJHeroTurntableDevice {
   required I2CDevice i2c = 1;
   required bool left = 2;
+  // the platter reports how far it moved since the last read, so this sets the velocity range (minimum 1)
+  optional uint32 pollIntervalMs = 3;
 }
 
 message BandHeroDrumDevice { required I2CDevice i2c = 1; }

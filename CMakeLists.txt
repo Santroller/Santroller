@@ -283,6 +283,7 @@ add_executable(
   src/input/multiplexer.cpp
   src/input/encoder.cpp
   src/input/crazy_guitar_neck.cpp
+  src/input/djh_platter.cpp
   src/emulation/keyboard_mouse.cpp
   src/leds/led_devices.cpp
   src/leds/led_mappings.cpp

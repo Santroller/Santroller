@@ -27,6 +27,7 @@ enum InputHardwareType : uint8_t {
     InputHw_InfiniumFader = 18,
     InputHw_Peripheral = 19,
     InputHw_CrazyGuitarNeck = 20,
+    InputHw_DJHeroPlatter = 21,
 };
 
 class Input

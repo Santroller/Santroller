@@ -11,9 +11,9 @@ public:
     void end(bool full);
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
+    DJHeroTurntable m_turntable;
 
 private:
-    DJHeroTurntable m_turntable;
     proto_DJHeroTurntableDevice m_device;
     uint32_t m_last_value = 0;
 };

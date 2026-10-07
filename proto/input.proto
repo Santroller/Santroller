@@ -69,6 +69,10 @@ message CrkdDrumAxisInput {
   required CrkdDrumAxisType axis = 2;
 }
 
+message DJHeroPlatterInput {
+  required int32 deviceid = 1;
+  required DJHeroPlatterInputType type = 2;
+}
 message CrazyGuitarNeckButtonInput {
   required int32 deviceid = 1;
   required CrazyGuitarNeckButtonType button = 2;
@@ -235,6 +239,7 @@ message Input {
     InfiniumFaderInput infiniumFader = 39;
     PeripheralInput peripheral = 40;
     CrazyGuitarNeckButtonInput crazyGuitarNeck = 41;
+    DJHeroPlatterInput djhPlatter = 42;
   }
 }
 message InfiniumFaderInput {

@@ -9,6 +9,8 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     }
     return 0;
 }
+// How long to wait before asking the platter again when it had nothing new
+#define DJH_STATUS_RETRY_US 500
 void DJHeroTurntable::tick()
 {
     interface.tick();
@@ -17,26 +19,49 @@ void DJHeroTurntable::tick()
         process_data(address, false, false, false, false);
     }
 }
-void DJHeroTurntable::begin() {
+void DJHeroTurntable::begin()
+{
     interface.dmaInit(address, this);
     status = DJH_CHECK_STATUS;
     process_data(0, false, false, false, false);
 }
-void DJHeroTurntable::end() {
-    cancel_alarm(restart_alarm_id);
+void DJHeroTurntable::end()
+{
+    if (restart_alarm_id)
+    {
+        cancel_alarm(restart_alarm_id);
+        restart_alarm_id = 0;
+    }
     interface.dmaDeinit(address);
+    connected = false;
+    clear();
+}
+void DJHeroTurntable::clear()
+{
+    velocity = 0;
+    green = red = blue = false;
+}
+void DJHeroTurntable::schedule(uint32_t delay_us)
+{
+    restart_alarm_id = add_alarm_in_us(delay_us, restart_handler, this, true);
 }
 void DJHeroTurntable::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     lastPoll = to_ms_since_boot(get_absolute_time());
-    cancel_alarm(restart_alarm_id);
+    if (restart_alarm_id)
+    {
+        cancel_alarm(restart_alarm_id);
+        restart_alarm_id = 0;
+    }
     if (timeout || abort_detected)
     {
         status = DJH_CHECK_STATUS;
         restart_alarm_id = add_alarm_in_ms(500, restart_handler, this, true);
         failCount++;
-        if (failCount > 10) {
+        if (failCount > 10)
+        {
             connected = false;
+            clear();
         }
         return;
     }
@@ -47,6 +72,7 @@ void DJHeroTurntable::process_data(uint8_t addr, bool running, bool timeout, boo
         switch (status)
         {
         case DJH_CHECK_STATUS:
+            // the platter says whether it has a new reading, which follows on from the status
             if (bufferRx[1])
             {
                 status = DJH_READ_DATA;
@@ -55,15 +81,18 @@ void DJHeroTurntable::process_data(uint8_t addr, bool running, bool timeout, boo
             }
             break;
         case DJH_READ_DATA:
+        {
             status = DJH_CHECK_STATUS;
             velocity = (int8_t)bufferRx[2];
             green = bufferRx[0] & (1 << 4);
             red = bufferRx[0] & (1 << 5);
             blue = bufferRx[0] & (1 << 6);
-            break;
+            // the reading is movement since the last one, so space reads out by the poll interval
+            schedule(pollIntervalUs);
+            return;
         }
-        // TODO: for DJH, we do need to make the configurable as the poll rate dictates the range
-        restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+        }
+        schedule(DJH_STATUS_RETRY_US);
         return;
     }
     switch (status)

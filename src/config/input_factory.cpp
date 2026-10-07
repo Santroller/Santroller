@@ -11,6 +11,7 @@
 #include "input/accelerometer.hpp"
 #include "input/gh5.hpp"
 #include "input/crazy_guitar_neck.hpp"
+#include "input/djh_platter.hpp"
 #include "input/fixed.hpp"
 #include "input/ps2.hpp"
 #include "input/mpr121.hpp"
@@ -87,6 +88,8 @@ std::unique_ptr<Input> InputFactory::create_input(
     case proto_Input_gh5Neck_tag:
         return create_device_input<Gh5ButtonInput, GH5NeckDevice>(profile, proto_input.input.gh5Neck.deviceid, proto_input.input.gh5Neck);
 
+    case proto_Input_djhPlatter_tag:
+        return create_device_input<DJHeroPlatterInput, DjHeroTurntableDevice>(profile, proto_input.input.djhPlatter.deviceid, proto_input.input.djhPlatter);
     case proto_Input_crazyGuitarNeck_tag:
         return create_device_input<CrazyGuitarNeckButtonInput, CrazyGuitarNeckDevice>(profile, proto_input.input.crazyGuitarNeck.deviceid, proto_input.input.crazyGuitarNeck);
             

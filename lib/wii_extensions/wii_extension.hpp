@@ -24,6 +24,8 @@
 
 // Minimum poll interval for a DJ Hero turntable when the config does not set one
 #define WII_TURNTABLE_DEFAULT_POLL_INTERVAL_MS 5
+// The table velocities are movement since the last read, so polling too often shrinks them towards nothing
+#define WII_TURNTABLE_MIN_POLL_INTERVAL_MS 1
 
 class WiiExtension: public I2CDMAInterface, public WiiExtensionDecoder
 {

@@ -125,7 +125,7 @@ long lastSentPacket = 0;
 long lastLed = 0;
 long lastSentGHLPoke = 0;
 long input_start = 0;
-long lastDebounce = 0;
+uint32_t lastDebounce = 0;
 long lastInputActivity = 0; // used for inactivity timeout(s)
 long lastHeartbeat = 0;
 long lastInactivityPulse = 0;
@@ -2959,6 +2959,29 @@ void bluetooth_connected()
 {
     input_start = millis();
 }
+// Count down the debounce timers by every whole interval that has passed since the last call,
+// so that a slow loop doesn't stretch out the debounce time
+bool tick_debounce(uint32_t *last, uint16_t interval)
+{
+    uint32_t elapsed = (micros() - *last) / interval;
+    if (!elapsed)
+    {
+        return false;
+    }
+    *last += elapsed * interval;
+    uint8_t ticks = elapsed > 0xFF ? 0xFF : elapsed;
+    for (int i = 0; i < DIGITAL_COUNT; i++)
+    {
+        debounce[i] = debounce[i] > ticks ? debounce[i] - ticks : 0;
+    }
+#if REQUIRE_LED_DEBOUNCE
+    for (int i = 0; i < LED_DEBOUNCE_COUNT; i++)
+    {
+        ledDebounce[i] = ledDebounce[i] > ticks ? ledDebounce[i] - ticks : 0;
+    }
+#endif
+    return true;
+}
 uint8_t rbcount = 0;
 uint8_t lastrbcount = 0;
 uint8_t hadCymbal = 0;
@@ -2978,26 +3001,7 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
     if (INPUT_QUEUE)
     {
-        if (micros() - last_queue > 100)
-        {
-            last_queue = micros();
-            for (int i = 0; i < DIGITAL_COUNT; i++)
-            {
-                if (debounce[i])
-                {
-                    debounce[i]--;
-                }
-            }
-#if REQUIRE_LED_DEBOUNCE
-            for (int i = 0; i < LED_DEBOUNCE_COUNT; i++)
-            {
-                if (ledDebounce[i])
-                {
-                    ledDebounce[i]--;
-                }
-            }
-#endif
-        }
+        tick_debounce(&last_queue, 100);
     }
 // Tick Inputs
 #include "inputs/accel.h"
@@ -4244,28 +4248,11 @@ void tick(void)
 #ifdef TICK_PS2
     tick_ps2output();
 #endif
-    if (!INPUT_QUEUE && micros() - lastDebounce > 1000)
+    if (!INPUT_QUEUE && tick_debounce(&lastDebounce, 1000))
     {
         // No benefit to ticking bluetooth faster than this!
 #ifdef BLUETOOTH_TX
         tick_bluetooth();
-#endif
-        lastDebounce = micros();
-        for (int i = 0; i < DIGITAL_COUNT; i++)
-        {
-            if (debounce[i])
-            {
-                debounce[i]--;
-            }
-        }
-#if REQUIRE_LED_DEBOUNCE
-        for (int i = 0; i < LED_DEBOUNCE_COUNT; i++)
-        {
-            if (ledDebounce[i])
-            {
-                ledDebounce[i]--;
-            }
-        }
 #endif
     }
 #if DEVICE_TYPE_IS_GUITAR

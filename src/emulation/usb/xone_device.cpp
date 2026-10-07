@@ -30,7 +30,9 @@ static bool is_drum_subtype(SubType subtype)
 }
 static bool is_guitar_subtype(SubType subtype)
 {
-    return subtype == GuitarHeroGuitar || subtype == RockBandGuitar || subtype == PowerGigGuitar;
+    // pro guitars don't exist on Xbox One, so they are reported as a standard Rock Band guitar
+    return subtype == GuitarHeroGuitar || subtype == RockBandGuitar || subtype == PowerGigGuitar ||
+           subtype == ProGuitarMustang || subtype == ProGuitarSquire;
 }
 
 static GipLegacyWirelessDeviceType get_legacy_wireless_device_type(SubType subtype)
@@ -316,6 +318,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 case BeatMania:
                 case DJMax:
                 case ProjectDiva:
+                case GuitarFreaks:
                     xboxOneDescriptor = xb1_descriptor_gamepad;
                     len = sizeof(xb1_descriptor_gamepad);
                     break;
@@ -323,7 +326,6 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 case RockBandGuitar:
                 case ProGuitarMustang:
                 case ProGuitarSquire:
-                case GuitarFreaks:
                 case PowerGigGuitar:
                 case RockRevolutionGuitar:
                     xboxOneDescriptor = xb1_descriptor_guitar;
@@ -646,6 +648,7 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
                 case BeatMania:
                 case DJMax:
                 case ProjectDiva:
+                case GuitarFreaks:
                     announcePacket = announce_gamepad;
                     input_report_length = sizeof(XboxOneGamepad_Data_t);
                     break;
@@ -653,7 +656,6 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
                 case RockBandGuitar:
                 case ProGuitarMustang:
                 case ProGuitarSquire:
-                case GuitarFreaks:
                 case PowerGigGuitar:
                 case RockRevolutionGuitar:
                     announcePacket = announce_guitar;
@@ -971,7 +973,7 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
         size_t i = (legacy_poll_start_player + p) % num_profiles;
         const auto &profile = profiles[i];
         bool is_drums = is_drum_subtype(profile->subtype);
-        bool is_gamepad = profile->subtype == Gamepad;
+        bool is_gamepad = get_legacy_wireless_device_type(profile->subtype) == GipLegacyWirelessDeviceType::Gamepad;
 
         // Buffer to accumulate mapping outputs for this profile
         uint8_t profile_buf[sizeof(XboxOneRockBandGuitar_Data_t)] = {};

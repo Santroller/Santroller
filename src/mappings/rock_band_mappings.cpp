@@ -307,18 +307,23 @@ void RockBandGuitarButtonMapping::update_xboxone(uint8_t *buf)
     {
     case RockBandGuitar_Green:
         report->a |= m_last_value;
+        report->green |= m_last_value;
         break;
     case RockBandGuitar_Red:
         report->b |= m_last_value;
+        report->red |= m_last_value;
         break;
     case RockBandGuitar_Yellow:
         report->y |= m_last_value;
+        report->yellow |= m_last_value;
         break;
     case RockBandGuitar_Blue:
         report->x |= m_last_value;
+        report->blue |= m_last_value;
         break;
     case RockBandGuitar_Orange:
         report->leftShoulder |= m_last_value;
+        report->orange |= m_last_value;
         break;
     case RockBandGuitar_Pedal:
         report->rightShoulder |= m_last_value;
@@ -326,22 +331,27 @@ void RockBandGuitarButtonMapping::update_xboxone(uint8_t *buf)
     case RockBandGuitar_SoloGreen:
         report->a |= m_last_value;
         report->solo |= m_last_value;
+        report->soloGreen |= m_last_value;
         break;
     case RockBandGuitar_SoloRed:
         report->b |= m_last_value;
         report->solo |= m_last_value;
+        report->soloRed |= m_last_value;
         break;
     case RockBandGuitar_SoloYellow:
         report->y |= m_last_value;
         report->solo |= m_last_value;
+        report->soloYellow |= m_last_value;
         break;
     case RockBandGuitar_SoloBlue:
         report->x |= m_last_value;
         report->solo |= m_last_value;
+        report->soloBlue |= m_last_value;
         break;
     case RockBandGuitar_SoloOrange:
         report->leftShoulder |= m_last_value;
         report->solo |= m_last_value;
+        report->soloOrange |= m_last_value;
         break;
     }
 }
@@ -1424,23 +1434,23 @@ void ProGuitarButtonMapping::update_xinput(uint8_t *buf)
         break;
     case ProGuitar_SoloGreen:
         report->green |= m_last_value;
-        report->solo |= m_last_value;
+        report->soloFlag |= m_last_value;
         break;
     case ProGuitar_SoloRed:
         report->red |= m_last_value;
-        report->solo |= m_last_value;
+        report->soloFlag |= m_last_value;
         break;
     case ProGuitar_SoloYellow:
         report->yellow |= m_last_value;
-        report->solo |= m_last_value;
+        report->soloFlag |= m_last_value;
         break;
     case ProGuitar_SoloBlue:
         report->blue |= m_last_value;
-        report->solo |= m_last_value;
+        report->soloFlag |= m_last_value;
         break;
     case ProGuitar_SoloOrange:
         report->orange |= m_last_value;
-        report->solo |= m_last_value;
+        report->soloFlag |= m_last_value;
         break;
     case ProGuitar_Pedal:
         report->pedal |= m_last_value;
@@ -1497,6 +1507,61 @@ void ProGuitarButtonMapping::update_ogxbox(uint8_t *buf)
 }
 void ProGuitarButtonMapping::update_xboxone(uint8_t *buf)
 {
+    // Pro guitars don't exist on Xbox One, so report as a standard Rock Band guitar
+    XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.proButton)
+    {
+    case ProGuitar_Green:
+        report->a |= m_last_value;
+        report->green |= m_last_value;
+        break;
+    case ProGuitar_Red:
+        report->b |= m_last_value;
+        report->red |= m_last_value;
+        break;
+    case ProGuitar_Yellow:
+        report->y |= m_last_value;
+        report->yellow |= m_last_value;
+        break;
+    case ProGuitar_Blue:
+        report->x |= m_last_value;
+        report->blue |= m_last_value;
+        break;
+    case ProGuitar_Orange:
+        report->leftShoulder |= m_last_value;
+        report->orange |= m_last_value;
+        break;
+    case ProGuitar_Pedal:
+        report->rightShoulder |= m_last_value;
+        break;
+    case ProGuitar_SoloGreen:
+        report->a |= m_last_value;
+        report->solo |= m_last_value;
+        report->soloGreen |= m_last_value;
+        break;
+    case ProGuitar_SoloRed:
+        report->b |= m_last_value;
+        report->solo |= m_last_value;
+        report->soloRed |= m_last_value;
+        break;
+    case ProGuitar_SoloYellow:
+        report->y |= m_last_value;
+        report->solo |= m_last_value;
+        report->soloYellow |= m_last_value;
+        break;
+    case ProGuitar_SoloBlue:
+        report->x |= m_last_value;
+        report->solo |= m_last_value;
+        report->soloBlue |= m_last_value;
+        break;
+    case ProGuitar_SoloOrange:
+        report->leftShoulder |= m_last_value;
+        report->solo |= m_last_value;
+        report->soloOrange |= m_last_value;
+        break;
+    default:
+        break;
+    }
 }
 
 static uint8_t pro_guitar_tilt_report_value(uint16_t value)
@@ -1702,6 +1767,13 @@ void ProGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 }
 void ProGuitarAxisMapping::update_xboxone(uint8_t *buf)
 {
+    // Pro guitars don't exist on Xbox One, so only tilt carries over to the standard Rock Band guitar
+    if (m_centered || m_mapping.mapping.mapping.proAxis != ProGuitar_Tilt)
+    {
+        return;
+    }
+    XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)buf;
+    report->tilt = m_calibrated_value >> 8;
 }
 
 static inline void set_keyboard_key(uint8_t &key1, uint8_t &key2, uint8_t &key3, uint8_t *velocities, uint8_t key, uint8_t velocity)

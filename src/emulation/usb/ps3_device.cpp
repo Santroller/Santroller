@@ -229,7 +229,10 @@ void PS3GamepadDevice::initialize()
     switch (subtype)
     {
     case ProKeys:
+    case ProGuitarMustang:
+    case ProGuitarSquire:
     {
+        // the pro instruments use the right stick bytes for keys / frets
         gamepad->rightStickX = 0;
         gamepad->rightStickY = 0;
         break;

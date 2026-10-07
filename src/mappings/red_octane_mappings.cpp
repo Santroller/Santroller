@@ -357,18 +357,23 @@ void GuitarHeroGuitarButtonMapping::update_xboxone(uint8_t *buf)
     {
     case GuitarHeroGuitar_Green:
         report->a |= m_last_value;
+        report->green |= m_last_value;
         break;
     case GuitarHeroGuitar_Red:
         report->b |= m_last_value;
+        report->red |= m_last_value;
         break;
     case GuitarHeroGuitar_Yellow:
         report->y |= m_last_value;
+        report->yellow |= m_last_value;
         break;
     case GuitarHeroGuitar_Blue:
         report->x |= m_last_value;
+        report->blue |= m_last_value;
         break;
     case GuitarHeroGuitar_Orange:
         report->leftShoulder |= m_last_value;
+        report->orange |= m_last_value;
         break;
     case GuitarHeroGuitar_Pedal:
         report->rightShoulder |= m_last_value;

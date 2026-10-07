@@ -119,11 +119,36 @@ inline bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, 
         return false;
     case ProGuitarMustang:
     case ProGuitarSquire:
-        if (type.which_mapping == proto_Output_proButton_tag &&
-            type.mapping.proButton == ProGuitar_Pedal)
+        if (type.which_mapping == proto_Output_proButton_tag)
         {
             const auto *data = reinterpret_cast<const XInputRockBandProGuitar_Data_t *>(ep_in_buf);
-            return data->pedal;
+            switch (type.mapping.proButton)
+            {
+            case ProGuitar_Green:
+                return data->green;
+            case ProGuitar_Red:
+                return data->red;
+            case ProGuitar_Yellow:
+                return data->yellow;
+            case ProGuitar_Blue:
+                return data->blue;
+            case ProGuitar_Orange:
+                return data->orange;
+            case ProGuitar_SoloGreen:
+                return data->green && data->soloFlag;
+            case ProGuitar_SoloRed:
+                return data->red && data->soloFlag;
+            case ProGuitar_SoloYellow:
+                return data->yellow && data->soloFlag;
+            case ProGuitar_SoloBlue:
+                return data->blue && data->soloFlag;
+            case ProGuitar_SoloOrange:
+                return data->orange && data->soloFlag;
+            case ProGuitar_Pedal:
+                return data->pedal;
+            default:
+                return false;
+            }
         }
         return false;
     case LiveGuitar:

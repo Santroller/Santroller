@@ -1,7 +1,7 @@
 #include "mappings/powergig_mappings.hpp"
 #include "protocols/ps3.hpp"
 
-PowerGigGuitarButtonMapping::PowerGigGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+PowerGigGuitarButtonMapping::PowerGigGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : RockBandGuitarButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -51,7 +51,7 @@ void PowerGigGuitarButtonMapping::update_ps3(uint8_t *buf)
     }
 }
 
-PowerGigGuitarAxisMapping::PowerGigGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.rbAxis == RockBandGuitar_Whammy)
+PowerGigGuitarAxisMapping::PowerGigGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : RockBandGuitarAxisMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -77,7 +77,7 @@ void PowerGigGuitarAxisMapping::update_ps3(uint8_t *buf)
     }
 }
 
-PowerGigDrumsButtonMapping::PowerGigDrumsButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+PowerGigDrumsButtonMapping::PowerGigDrumsButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : RockBandDrumsButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -93,7 +93,7 @@ void PowerGigDrumsButtonMapping::update_ps3(uint8_t *buf)
     }
 }
 
-PowerGigDrumsAxisMapping::PowerGigDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
+PowerGigDrumsAxisMapping::PowerGigDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : RockBandDrumsAxisMapping(mapping, std::move(input), id, profile)
 {
 }
 

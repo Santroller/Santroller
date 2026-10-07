@@ -235,6 +235,31 @@ bool DMXLedDevice::supports_brightness()
     return true;
 }
 
+void MPR121LedDevice::setup()
+{
+    m_led_device->use_gpio_output(m_device.pin);
+}
+void MPR121LedDevice::write_val(uint16_t val)
+{
+    m_led_device->set_output(m_device.pin, val);
+}
+void MPR121LedDevice::write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
+{
+    m_led_device->set_output(m_device.pin, r || g || b);
+}
+void MPR121LedDevice::off()
+{
+    m_led_device->set_output(m_device.pin, false);
+}
+bool MPR121LedDevice::supports_brightness()
+{
+    return false;
+}
+uint8_t MPR121LedDevice::led_count()
+{
+    return 1;
+}
+
 void LedMapping::off()
 {
     m_device->off();

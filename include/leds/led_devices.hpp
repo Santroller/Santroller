@@ -5,6 +5,7 @@
 #include "devices/dmx.hpp"
 #include "devices/stp16cpc.hpp"
 #include "devices/vtechexpander.hpp"
+#include "devices/mpr121.hpp"
 #include <memory>
 
 class RgbLedDevice : public LedMappingDevice
@@ -111,4 +112,23 @@ public:
 protected:
     proto_DMXLedDevice m_device;
     std::shared_ptr<DMXDevice> m_led_device;
+};
+
+class MPR121LedDevice : public LedMappingDevice
+{
+public:
+    MPR121LedDevice(proto_MPR121LedDevice device, std::shared_ptr<MPR121Device> led_device) : LedMappingDevice(), m_device(device), m_led_device(std::move(led_device))
+    {
+        setup();
+    }
+    void off();
+    void write_val(uint16_t val);
+    void write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
+    void setup();
+    bool supports_brightness();
+    uint8_t led_count();
+
+protected:
+    proto_MPR121LedDevice m_device;
+    std::shared_ptr<MPR121Device> m_led_device;
 };

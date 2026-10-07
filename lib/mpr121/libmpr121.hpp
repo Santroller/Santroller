@@ -4,44 +4,17 @@
 #define MPR121_I2CADDR_DEFAULT 0x5A        ///< default I2C address
 #define MPR121_TOUCH_THRESHOLD_DEFAULT 5   ///< default touch threshold value
 #define MPR121_RELEASE_THRESHOLD_DEFAULT 1 ///< default relese threshold value
+// Electrodes 4 to 11 can be used as GPIO instead, bit 0 of the GPIO registers is electrode 4
+#define MPR121_FIRST_GPIO 4
+#define MPR121_ELECTRODES 12
 typedef enum
 {
-    MPR121_INIT_SOFTRESET,
-    MPR121_INIT_ECR_CLEAR,
-    MPR121_INIT_CONFIG2_READ,
-    MPR121_INIT_TOUCHTH_N,
-    MPR121_INIT_RELEASETH_N,
-    MPR121_INIT_MHDR,
-    MPR121_INIT_NHDR,
-    MPR121_INIT_NCLR,
-    MPR121_INIT_FDLR,
-
-    MPR121_INIT_MHDF,
-    MPR121_INIT_NHDF,
-    MPR121_INIT_NCLF,
-    MPR121_INIT_FDLF,
-
-    MPR121_INIT_NHDT,
-    MPR121_INIT_NCLT,
-    MPR121_INIT_FDLT,
-
-    MPR121_INIT_DEBOUNCE,
-    MPR121_INIT_CONFIG1,
-    MPR121_INIT_CONFIG2,
-
-    MPR121_INIT_AUTOCONFIG0,
-
-    MPR121_INIT_UPLIMIT,
-    MPR121_INIT_TARGETLIMIT,
-    MPR121_INIT_LOWLIMIT,
-
-    MPR121_INIT_GPIODIR,
-    MPR121_INIT_GPIOEN,
-    MPR121_INIT_GPIOCTL1,
-    MPR121_INIT_GPIOCTL2,
-    MPR121_INIT_ECR_START,
-    MPR121_POLL
-
+    MPR121_RESET,
+    MPR121_CHECK,
+    MPR121_INIT,
+    MPR121_POLL_TOUCH,
+    MPR121_POLL_GPIO,
+    MPR121_WRITE_GPIO,
 } mpr121_status_e;
 enum
 {
@@ -104,20 +77,38 @@ public:
     void process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
     inline bool is_connected()
     {
-        return status < MPR121_INIT_TOUCHTH_N;
+        return status >= MPR121_POLL_TOUCH;
     }
-    uint16_t inputs;
+    // How the pins are used, one bit per GPIO (electrode 4 upwards). Pins used as GPIO are
+    // left out of touch sensing. Restarts the chip so the new setup takes effect.
+    void configure(uint8_t touchpad_count, uint8_t gpio_inputs, uint8_t gpio_outputs, uint8_t pull_ups, uint8_t pull_downs);
+    void set_outputs(uint8_t outputs);
+    // Touched electrodes, one bit each
+    volatile uint16_t inputs = 0;
+    // Levels of the GPIO pins, bit 0 is electrode 4
+    volatile uint8_t gpio = 0;
 
 private:
-    void init();
+    void start();
+    void schedule(uint32_t us);
+    void build_init();
+    void after_poll();
     I2CMasterInterface interface;
-    int initTouchpad;
-    int touchpadCount;
-    int ddr;    // pin data direction register
-    int enable; // pin enable
-    mpr121_status_e status = MPR121_INIT_SOFTRESET;
+    uint8_t touchpadCount = 0;
+    uint8_t gpioInputs = 0;
+    uint8_t gpioOutputs = 0;
+    uint8_t pullUps = 0;
+    uint8_t pullDowns = 0;
+    volatile uint8_t outputs = 0;
+    volatile bool outputsDirty = false;
+    volatile bool restartRequested = false;
+    // register / value pairs written in order after a reset
+    uint8_t initWrites[64][2];
+    uint8_t initCount = 0;
+    uint8_t initIndex = 0;
+    mpr121_status_e status = MPR121_RESET;
     uint8_t bufferTx[32];
     uint8_t bufferRx[32];
-    alarm_id_t restart_alarm_id;
+    alarm_id_t restart_alarm_id = 0;
     int failCount = 0;
 };

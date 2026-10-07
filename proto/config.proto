@@ -113,6 +113,11 @@ message VTechGuitarIOExpanderLedDevice {
   required int32 deviceId = 1;
   required int32 activeLed = 2;
 }
+// A GPIO on an MPR121 (electrodes 4 to 11)
+message MPR121LedDevice {
+  required int32 deviceId = 1;
+  required int32 pin = 2;
+}
 message STP16CPCLedDevice {
   required int32 deviceId = 1;
   repeated int32 activeLed = 2;
@@ -124,6 +129,7 @@ message LedDevice {
     STP16CPCLedDevice stp16 = 6;
     VTechGuitarIOExpanderLedDevice vtechExpander = 7;
     DMXLedDevice dmx = 8;
+    MPR121LedDevice mpr121 = 9;
   }
 }
 message LedMapping {

@@ -14,240 +14,216 @@ void MPR121::tick()
     interface.tick();
 }
 
-void MPR121::init()
-{
-}
 void MPR121::begin()
 {
     interface.dmaInit(MPR121_I2CADDR_DEFAULT, this);
-    status = MPR121_INIT_SOFTRESET;
-    process_data(0, false, false, false, false);
+    start();
 }
 void MPR121::end()
 {
     cancel_alarm(restart_alarm_id);
     interface.dmaDeinit(MPR121_I2CADDR_DEFAULT);
 }
+
+void MPR121::configure(uint8_t touchpad_count, uint8_t gpio_inputs, uint8_t gpio_outputs, uint8_t pull_ups, uint8_t pull_downs)
+{
+    // An electrode can't be sensing touch and be a GPIO at the same time, and touch sensing
+    // always runs from electrode 0 up, so stop before the first GPIO
+    uint8_t gpio = gpio_inputs | gpio_outputs;
+    for (uint8_t i = 0; i < 8; i++)
+    {
+        if (gpio & (1 << i) && touchpad_count > MPR121_FIRST_GPIO + i)
+        {
+            touchpad_count = MPR121_FIRST_GPIO + i;
+            break;
+        }
+    }
+    if (touchpad_count > MPR121_ELECTRODES)
+    {
+        touchpad_count = MPR121_ELECTRODES;
+    }
+    if (touchpadCount == touchpad_count && gpioInputs == gpio_inputs && gpioOutputs == gpio_outputs &&
+        pullUps == pull_ups && pullDowns == pull_downs)
+    {
+        return;
+    }
+    touchpadCount = touchpad_count;
+    gpioInputs = gpio_inputs;
+    gpioOutputs = gpio_outputs;
+    pullUps = pull_ups;
+    pullDowns = pull_downs;
+    restartRequested = true;
+}
+
+void MPR121::set_outputs(uint8_t new_outputs)
+{
+    if (outputs == new_outputs)
+    {
+        return;
+    }
+    outputs = new_outputs;
+    outputsDirty = true;
+}
+
+void MPR121::build_init()
+{
+    initCount = 0;
+    auto add = [this](uint8_t reg, uint8_t value)
+    {
+        initWrites[initCount][0] = reg;
+        initWrites[initCount][1] = value;
+        initCount++;
+    };
+    for (uint8_t i = 0; i < MPR121_ELECTRODES; i++)
+    {
+        add(MPR121_TOUCHTH_0 + 2 * i, MPR121_TOUCH_THRESHOLD_DEFAULT);
+        add(MPR121_RELEASETH_0 + 2 * i, MPR121_RELEASE_THRESHOLD_DEFAULT);
+    }
+    add(MPR121_MHDR, 0x01);
+    add(MPR121_NHDR, 0x01);
+    add(MPR121_NCLR, 0x0E);
+    add(MPR121_FDLR, 0x00);
+    add(MPR121_MHDF, 0x01);
+    add(MPR121_NHDF, 0x05);
+    add(MPR121_NCLF, 0x01);
+    add(MPR121_FDLF, 0x00);
+    add(MPR121_NHDT, 0x00);
+    add(MPR121_NCLT, 0x00);
+    add(MPR121_FDLT, 0x00);
+    add(MPR121_DEBOUNCE, 0);
+    add(MPR121_CONFIG1, 0x10); // default, 16uA charge current
+    add(MPR121_CONFIG2, 0x20);
+    add(MPR121_AUTOCONFIG0, 0x0B);
+    add(MPR121_UPLIMIT, 200);
+    add(MPR121_TARGETLIMIT, 180); // UPLIMIT * 0.9
+    add(MPR121_LOWLIMIT, 130);    // UPLIMIT * 0.65
+    uint8_t enabled = gpioInputs | gpioOutputs;
+    if (enabled)
+    {
+        // CTL0 CTL1 DIR: 0 0 0 input, 1 0 0 input with pull down, 1 1 0 input with pull up,
+        // 0 0 1 push-pull output
+        add(MPR121_GPIOCTL1, (pullUps | pullDowns) & gpioInputs);
+        add(MPR121_GPIOCTL2, pullUps & gpioInputs);
+        add(MPR121_GPIODIR, gpioOutputs);
+        add(MPR121_GPIODATA, outputs);
+        add(MPR121_GPIOEN, enabled);
+    }
+    // baseline tracking enabled, proximity disabled, and the electrodes used for touch
+    add(MPR121_ECR, 0b10000000 + touchpadCount);
+}
+
+void MPR121::start()
+{
+    cancel_alarm(restart_alarm_id);
+    restartRequested = false;
+    status = MPR121_RESET;
+    bufferTx[0] = MPR121_SOFTRESET;
+    bufferTx[1] = 0x63;
+    interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
+}
+
+void MPR121::schedule(uint32_t us)
+{
+    restart_alarm_id = add_alarm_in_us(us, restart_handler, this, true);
+}
+
+void MPR121::after_poll()
+{
+    if (restartRequested)
+    {
+        start();
+        return;
+    }
+    if (outputsDirty && gpioOutputs)
+    {
+        outputsDirty = false;
+        status = MPR121_WRITE_GPIO;
+        bufferTx[0] = MPR121_GPIODATA;
+        bufferTx[1] = outputs;
+        interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
+        return;
+    }
+    status = MPR121_POLL_TOUCH;
+    schedule(500);
+}
+
 void MPR121::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     cancel_alarm(restart_alarm_id);
     if (timeout || abort_detected)
     {
+        // start from scratch once it shows up again
         failCount++;
-        if (failCount > 10)
-        {
-            status = MPR121_INIT_SOFTRESET;
-        }
+        status = MPR121_RESET;
         restart_alarm_id = add_alarm_in_ms(500, restart_handler, this, true);
         return;
     }
-    if (stop_detected)
+    if (!stop_detected)
     {
-        failCount = 0;
+        // a scheduled step
         switch (status)
         {
-        case MPR121_INIT_SOFTRESET:
-            status = MPR121_INIT_ECR_CLEAR;
-            bufferTx[0] = MPR121_SOFTRESET;
-            bufferTx[1] = 0x63;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-        case MPR121_INIT_ECR_CLEAR:
-            status = MPR121_INIT_CONFIG2_READ;
-            bufferTx[0] = MPR121_CONFIG2;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 1, bufferRx, 1);
-            return;
-        case MPR121_INIT_CONFIG2_READ:
-            if (bufferRx[0] != 0x24)
-            {
-                status = MPR121_INIT_SOFTRESET;
-                restart_alarm_id = add_alarm_in_ms(500, restart_handler, this, true);
-            }
-            initTouchpad = 0;
-            status = MPR121_INIT_TOUCHTH_N;
-            bufferTx[0] = MPR121_TOUCHTH_0;
-            bufferTx[1] = MPR121_TOUCH_THRESHOLD_DEFAULT;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 1, bufferRx, 1);
-            return;
-        case MPR121_INIT_TOUCHTH_N:
-            status = MPR121_INIT_RELEASETH_N;
-            bufferTx[0] = MPR121_RELEASETH_0 + 2 * initTouchpad;
-            bufferTx[1] = MPR121_RELEASE_THRESHOLD_DEFAULT;
-            initTouchpad++;
-            if (initTouchpad == touchpadCount)
-            {
-                status = MPR121_INIT_MHDR;
-                bufferTx[0] = MPR121_MHDR;
-                bufferTx[1] = 0x01;
-                interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-                return;
-            }
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 1, bufferRx, 1);
-            return;
-        case MPR121_INIT_RELEASETH_N:
-            status = MPR121_INIT_TOUCHTH_N;
-            bufferTx[0] = MPR121_TOUCHTH_0 + 2 * initTouchpad;
-            bufferTx[1] = MPR121_TOUCH_THRESHOLD_DEFAULT;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 1, bufferRx, 1);
-            return;
-        case MPR121_INIT_MHDR:
-            status = MPR121_INIT_NHDR;
-            bufferTx[0] = MPR121_NHDR;
-            bufferTx[1] = 0x01;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-        case MPR121_INIT_NHDR:
-            status = MPR121_INIT_NCLR;
-            bufferTx[0] = MPR121_NCLR;
-            bufferTx[1] = 0x0E;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-        case MPR121_INIT_NCLR:
-            status = MPR121_INIT_FDLR;
-            bufferTx[0] = MPR121_FDLR;
-            bufferTx[1] = 0x00;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-
-        case MPR121_INIT_FDLR:
-            status = MPR121_INIT_MHDF;
-            bufferTx[0] = MPR121_MHDF;
-            bufferTx[1] = 0x01;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-        case MPR121_INIT_MHDF:
-            status = MPR121_INIT_NCLF;
-            bufferTx[0] = MPR121_NCLF;
-            bufferTx[1] = 0x01;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-        case MPR121_INIT_NCLF:
-            status = MPR121_INIT_FDLF;
-            bufferTx[0] = MPR121_FDLF;
-            bufferTx[1] = 0x00;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-        case MPR121_INIT_FDLF:
-            status = MPR121_INIT_NHDT;
-            bufferTx[0] = MPR121_NHDT;
-            bufferTx[1] = 0x00;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-
-        case MPR121_INIT_NHDT:
-            status = MPR121_INIT_NCLT;
-            bufferTx[0] = MPR121_NCLT;
-            bufferTx[1] = 0x00;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-        case MPR121_INIT_NCLT:
-            status = MPR121_INIT_FDLT;
-            bufferTx[0] = MPR121_FDLT;
-            bufferTx[1] = 0x00;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-        case MPR121_INIT_FDLT:
-            status = MPR121_INIT_DEBOUNCE;
-            bufferTx[0] = MPR121_DEBOUNCE;
-            bufferTx[1] = 0;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-
-        case MPR121_INIT_DEBOUNCE:
-            status = MPR121_INIT_CONFIG1;
-            bufferTx[0] = MPR121_CONFIG1; // default, 16uA charge current
-            bufferTx[1] = 0x10;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-        case MPR121_INIT_CONFIG1:
-            status = MPR121_INIT_CONFIG2;
-            bufferTx[0] = MPR121_CONFIG2;
-            bufferTx[1] = 0x20;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-        case MPR121_INIT_CONFIG2:
-            status = MPR121_INIT_AUTOCONFIG0;
-            bufferTx[0] = MPR121_AUTOCONFIG0;
-            bufferTx[1] = 0x0B;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-
-        case MPR121_INIT_AUTOCONFIG0:
-            status = MPR121_INIT_TARGETLIMIT;
-            bufferTx[0] = MPR121_TARGETLIMIT;
-            bufferTx[1] = 180; // UPLIMIT * 0.9
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-
-        case MPR121_INIT_TARGETLIMIT:
-            status = MPR121_INIT_LOWLIMIT;
-            bufferTx[0] = MPR121_LOWLIMIT;
-            bufferTx[1] = 130; // UPLIMIT * 0.65
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-        case MPR121_INIT_LOWLIMIT:
-            if (enable)
-            {
-                status = MPR121_INIT_GPIODIR;
-                bufferTx[0] = MPR121_GPIODIR;
-                bufferTx[1] = ddr;
-                interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            }
-            else
-            {
-                status = MPR121_INIT_ECR_START;
-                bufferTx[0] = MPR121_ECR;
-                // 5 bits for baseline tracking & proximity disabled + X amount of electrodes running
-                bufferTx[1] = 0b10000000 + touchpadCount;
-                interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            }
-            return;
-
-        case MPR121_INIT_GPIODIR:
-            status = MPR121_INIT_GPIOEN;
-            bufferTx[0] = MPR121_GPIOEN;
-            bufferTx[1] = enable;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-        case MPR121_INIT_GPIOEN:
-            status = MPR121_INIT_GPIOCTL1;
-            bufferTx[0] = MPR121_GPIOCTL1;
-            bufferTx[1] = 0xFF;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-        case MPR121_INIT_GPIOCTL1:
-            status = MPR121_INIT_GPIOCTL2;
-            bufferTx[0] = MPR121_GPIOCTL2;
-            bufferTx[1] = 0xFF;
-            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-            return;
-
-        case MPR121_INIT_ECR_START:
-            status = MPR121_POLL;
-            break;
-        case MPR121_POLL:
-            inputs = bufferRx[0] << 8 | bufferRx[1];
+        case MPR121_POLL_TOUCH:
+            bufferTx[0] = MPR121_TOUCHSTATUS_L;
+            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 1, bufferRx, 2);
             break;
         default:
+            start();
             break;
         }
-
-        restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
         return;
     }
+    failCount = 0;
     switch (status)
     {
-    case MPR121_POLL:
-        bufferTx[0] = MPR121_TOUCHSTATUS_L;
+    case MPR121_RESET:
+        status = MPR121_CHECK;
+        bufferTx[0] = MPR121_CONFIG2;
         interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 1, bufferRx, 1);
-        break;
-    case MPR121_INIT_SOFTRESET:
-        bufferTx[0] = MPR121_SOFTRESET;
-        bufferTx[1] = 0x63;
-        interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
-        break;
-    default:
-        printf("unknown status: %d\r\n", status);
-        break;
+        return;
+    case MPR121_CHECK:
+        // CONFIG2 reads 0x24 after a reset
+        if (bufferRx[0] != 0x24)
+        {
+            status = MPR121_RESET;
+            schedule(500000);
+            return;
+        }
+        build_init();
+        initIndex = 0;
+        status = MPR121_INIT;
+        // fall through to send the first write
+    case MPR121_INIT:
+        if (initIndex < initCount)
+        {
+            bufferTx[0] = initWrites[initIndex][0];
+            bufferTx[1] = initWrites[initIndex][1];
+            initIndex++;
+            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
+            return;
+        }
+        outputsDirty = false;
+        status = MPR121_POLL_TOUCH;
+        schedule(500);
+        return;
+    case MPR121_POLL_TOUCH:
+        inputs = (bufferRx[0] | bufferRx[1] << 8) & 0x0FFF;
+        if (gpioInputs)
+        {
+            status = MPR121_POLL_GPIO;
+            bufferTx[0] = MPR121_GPIODATA;
+            interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 1, bufferRx, 1);
+            return;
+        }
+        after_poll();
+        return;
+    case MPR121_POLL_GPIO:
+        gpio = bufferRx[0];
+        after_poll();
+        return;
+    case MPR121_WRITE_GPIO:
+        status = MPR121_POLL_TOUCH;
+        schedule(500);
+        return;
     }
 }

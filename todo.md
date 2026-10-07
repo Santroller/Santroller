@@ -43,10 +43,6 @@
 # things missing from S1
 
 
-Missing: LEDs
-
-LEDs on MPR121 GPIO pins.
-
 Accelerometer low-pass filter.
 MAX1704x battery level reported over Bluetooth.
 A drum sensitivity knob, setting the hit threshold live.

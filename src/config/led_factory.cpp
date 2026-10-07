@@ -32,6 +32,15 @@ std::unique_ptr<LedMappingDevice> LedFactory::create_led_device(
             std::static_pointer_cast<DMXDevice>(profile->devices[proto_led_device.device.dmx.deviceId])
         );
         
+    case proto_LedDevice_mpr121_tag:
+        if (profile->devices.find(proto_led_device.device.mpr121.deviceId) == profile->devices.end()) {
+            return nullptr;
+        }
+        return std::make_unique<MPR121LedDevice>(
+            proto_led_device.device.mpr121,
+            std::static_pointer_cast<MPR121Device>(profile->devices[proto_led_device.device.mpr121.deviceId])
+        );
+
     case proto_LedDevice_stp16_tag:
         if (profile->devices.find(proto_led_device.device.stp16.deviceId) == profile->devices.end()) {
             return nullptr;

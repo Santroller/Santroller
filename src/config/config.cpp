@@ -10,6 +10,7 @@
 #include "config/device_factory.hpp"
 #include "config/input_factory.hpp"
 #include "config/mapping_factory.hpp"
+#include "mappings/base_mapping.hpp"
 #include "config/trigger_factory.hpp"
 #include "config/led_factory.hpp"
 #include "config/config_storage.hpp"
@@ -391,6 +392,13 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     auto mapping = MappingFactory::create_mapping(proto_mapping, profile, std::move(input), mapping_id);
     if (mapping)
     {
+        auto *button = mapping->as_button_mapping();
+        int8_t bit = InputQueue::bit_for_output(proto_mapping.mapping, profile->subtype);
+        if (profile->input_queue.enabled && button && bit >= 0)
+        {
+            button->set_queue_bit(bit);
+            profile->queued_mappings.push_back(button);
+        }
         profile->mappings.push_back(std::move(mapping));
     }
     return true;
@@ -584,6 +592,8 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->cymbal_glitch_fix = opts.has_cymbalGlitchFix && opts.cymbalGlitchFix;
     profile->per_kind_slot_ids = opts.has_deviceSlotIdVersion && opts.deviceSlotIdVersion >= 1;
     profile->subtype = opts.deviceToEmulate;
+    profile->input_queue.enabled = opts.has_queueInputs && opts.queueInputs;
+    profile->input_queue.interval_us = (opts.has_dequeueInterval100us ? opts.dequeueInterval100us : 10) * 100;
     return true;
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)

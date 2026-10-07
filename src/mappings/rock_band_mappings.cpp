@@ -748,7 +748,7 @@ bool RockBandDrumsAxisMapping::should_emit_cymbal_hit(RockBandDrumsAxisType axis
 
     auto &drum_state = m_profile->drum_state;
     auto now = millis();
-    uint32_t debounce = m_mapping.has_debounce ? m_mapping.debounce : 25;
+    uint32_t debounce = m_mapping.has_debounce ? m_mapping.debounce_us / 1000 : 25;
     auto can_emit_next = (now - drum_state.last_global_poll) > debounce;
 
     if (drum_state.buffered_cymbal == axis && drum_state.last_drum != axis)
@@ -1929,10 +1929,10 @@ void ProKeysKeyMapping::update(bool full_poll, bool send_events)
         {
             if (pressed)
             {
-                m_last_poll = millis();
+                m_last_poll = time_us_64();
                 m_single_pressed = pressed;
             }
-            else if ((millis() - m_last_poll) > m_mapping.debounce)
+            else if ((time_us_64() - m_last_poll) > m_mapping.debounce_us)
             {
                 m_single_pressed = pressed;
             }

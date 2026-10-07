@@ -17,7 +17,7 @@ uint16_t Mapping::sample_ui_event()
         m_ui_event_value = value;
         m_ui_event_time = millis();
     }
-    const uint32_t hold = (m_mapping.has_debounce && m_mapping.debounce) ? m_mapping.debounce : 100;
+    const uint32_t hold = (m_mapping.has_debounce && m_mapping.debounce_us >= 1000) ? m_mapping.debounce_us / 1000 : 100;
     return (millis() - m_ui_event_time <= hold) ? m_ui_event_value : 0;
 }
 
@@ -98,7 +98,7 @@ uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, flo
     return val;
 }
 
-void ButtonMapping::update(bool full_poll, bool send_events)
+void ButtonMapping::sample(bool full_poll, bool send_events)
 {
     uint16_t event_value = 0;
     uint16_t trigger_value = 0;
@@ -175,8 +175,8 @@ void ButtonMapping::update(bool full_poll, bool send_events)
     if (m_suppressed || m_waiting_for_release)
     {
         calcVal = false;
-        m_last_value = false;
-        m_last_pressure = 0;
+        m_live_value = false;
+        m_live_pressure = 0;
     }
 
     m_suppressed = false;
@@ -211,15 +211,28 @@ void ButtonMapping::update(bool full_poll, bool send_events)
     }
     if (calcVal)
     {
-        m_last_poll = millis();
-        m_last_value = calcVal;
-        m_last_pressure = m_mapping.inverted && !m_mapping.has_trigger ? UINT16_MAX : pressure;
+        m_last_poll = time_us_64();
+        m_live_value = calcVal;
+        m_live_pressure = m_mapping.inverted && !m_mapping.has_trigger ? UINT16_MAX : pressure;
     }
-    else if (!m_mapping.has_debounce || (millis() - m_last_poll) > m_mapping.debounce)
+    else if (!m_mapping.has_debounce || (time_us_64() - m_last_poll) > m_mapping.debounce_us)
     {
-        m_last_value = calcVal;
-        m_last_pressure = 0;
+        m_live_value = calcVal;
+        m_live_pressure = 0;
     }
+}
+void ButtonMapping::update(bool full_poll, bool send_events)
+{
+    sample(full_poll, send_events);
+    if (m_queue_bit >= 0)
+    {
+        bool pressed = m_profile->input_queue.presented(m_queue_bit);
+        m_last_value = pressed;
+        m_last_pressure = pressed ? (m_live_value ? m_live_pressure : UINT16_MAX) : 0;
+        return;
+    }
+    m_last_value = m_live_value;
+    m_last_pressure = m_live_pressure;
 }
 void AxisMapping::update(bool full_poll, bool send_events)
 {
@@ -288,13 +301,13 @@ void AxisMapping::update(bool full_poll, bool send_events)
 
     if (val != (uint32_t)m_mapping.center)
     {
-        m_last_poll = millis();
+        m_last_poll = time_us_64();
         if ((!m_mapping.has_peakBased && !m_mapping.peakBased) || val > m_calibrated_value)
         {
             m_calibrated_value = val;
         }
     }
-    else if (!m_mapping.has_debounce || (millis() - m_last_poll) > m_mapping.debounce)
+    else if (!m_mapping.has_debounce || (time_us_64() - m_last_poll) > m_mapping.debounce_us)
     {
         m_calibrated_value = val;
     }

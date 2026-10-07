@@ -299,4 +299,6 @@ message Mapping {
   optional uint32 debounce = 61;
   optional int32 maxTriggerValue = 62;
   optional bool peakBased = 63;
+  // Debounce in 100us units, takes priority over the older millisecond debounce field
+  optional uint32 debounce100us = 64;
 }

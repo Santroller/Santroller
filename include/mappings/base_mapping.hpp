@@ -23,8 +23,8 @@ struct MappingConfig
           center(source.center),
           deadzone(source.deadzone),
           triggerValue(source.triggerValue),
-          has_debounce(source.has_debounce),
-          debounce(source.debounce),
+          has_debounce(source.has_debounce100us || source.has_debounce),
+          debounce_us(source.has_debounce100us ? source.debounce100us * 100 : source.debounce * 1000),
           maxTriggerValue(source.maxTriggerValue),
           has_peakBased(source.has_peakBased),
           peakBased(source.peakBased)
@@ -45,11 +45,13 @@ struct MappingConfig
     int32_t deadzone;
     int32_t triggerValue;
     bool has_debounce;
-    uint32_t debounce;
+    uint32_t debounce_us;
     int32_t maxTriggerValue;
     bool has_peakBased;
     bool peakBased;
 };
+
+class ButtonMapping;
 
 class Mapping
 {
@@ -76,6 +78,7 @@ public:
     virtual void update_xboxone(uint8_t *report) { (void)report; }
     // Whether this mapping is currently held as a button, used to wake a suspended host
     virtual bool wake_pressed() const { return false; }
+    virtual ButtonMapping *as_button_mapping() { return nullptr; }
     void update_digital(bool full_poll);
     uint16_t sample_ui_event();
     uint16_t calibrate(float val, float max, float min, float deadzone, float center, bool trigger);
@@ -117,11 +120,21 @@ public:
     ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile) : Mapping(mapping, std::move(input), id, profile) {}
     ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : Mapping(mapping, std::move(input), id, profile) {}
     void update(bool full_poll, bool send_events);
-    bool wake_pressed() const override { return m_last_value; }
+    // Read and debounce the input without touching the value outputs report
+    void sample(bool full_poll, bool send_events);
+    bool wake_pressed() const override { return m_live_value; }
+    bool live_value() const { return m_live_value; }
+    int8_t queue_bit() const { return m_queue_bit; }
+    void set_queue_bit(int8_t bit) { m_queue_bit = bit; }
+    ButtonMapping *as_button_mapping() override { return this; }
 
 protected:
+    // What outputs report: the live value, or the queued state for queued mappings
     bool m_last_value = false;
     uint16_t m_last_pressure = 0;
+    bool m_live_value = false;
+    uint16_t m_live_pressure = 0;
+    int8_t m_queue_bit = -1;
     bool m_last_sent_value = false;
     uint16_t m_last_sent_pressure = 0;
     bool m_calibrated_value = false;

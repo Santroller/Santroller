@@ -9,9 +9,11 @@
 #include "devices/base.hpp"
 #include "input/input.hpp"
 #include "triggers/activation_trigger_list.hpp"
+#include "profiles/input_queue.hpp"
 
 // Forward declarations to avoid circular dependencies
 class Mapping;
+class ButtonMapping;
 class LedMapping;
 
 enum class DeviceSlotKind : uint8_t
@@ -32,6 +34,8 @@ public:
     virtual ~Profile();
     void resolve_shortcuts();
     void reset_drum_state() { drum_state.reset(); }
+    // Sample the queued fret / strum mappings and advance the input queue
+    void sample_input_queue();
     char name[32];
     SubType subtype;
     bool xinput_on_windows;
@@ -84,6 +88,8 @@ public:
         return it != devices.end() && supports_midi(it->second) ? it->second : nullptr;
     }
 
+    InputQueue input_queue;
+    std::vector<ButtonMapping *> queued_mappings;
     DrumState drum_state;
     KeyboardState keyboard_state;
 };

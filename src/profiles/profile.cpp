@@ -5,9 +5,11 @@
 #include "input/shortcut.hpp"
 #include <algorithm>
 #include <cstdio>
+#include "utils.h"
 
 Profile::~Profile()
 {
+    queued_mappings.clear();
     mappings.clear();
     triggers.clear();
     leds.clear();
@@ -78,4 +80,76 @@ void Profile::resolve_shortcuts()
             }
         }
     }
+}
+
+void Profile::sample_input_queue()
+{
+    if (!input_queue.enabled)
+    {
+        return;
+    }
+    uint16_t mask = 0;
+    for (auto *mapping : queued_mappings)
+    {
+        mapping->sample(false, false);
+        if (mapping->live_value())
+        {
+            mask |= 1u << mapping->queue_bit();
+        }
+    }
+    input_queue.push(mask);
+    input_queue.tick(micros());
+}
+
+int8_t InputQueue::bit_for_output(const proto_Output &output, SubType subtype)
+{
+    // bits 0-9 are frets (RB solo frets use 5-9), 10 / 11 are strum up / down
+    switch (subtype)
+    {
+    case GuitarHeroGuitar:
+        if (output.which_mapping == proto_Output_ghButton_tag &&
+            output.mapping.ghButton >= GuitarHeroGuitar_Green && output.mapping.ghButton <= GuitarHeroGuitar_Orange)
+        {
+            return output.mapping.ghButton - GuitarHeroGuitar_Green;
+        }
+        break;
+    case RockBandGuitar:
+        if (output.which_mapping == proto_Output_rbButton_tag &&
+            output.mapping.rbButton >= RockBandGuitar_Green && output.mapping.rbButton <= RockBandGuitar_SoloOrange)
+        {
+            return output.mapping.rbButton - RockBandGuitar_Green;
+        }
+        break;
+    case LiveGuitar:
+        if (output.which_mapping == proto_Output_ghlButton_tag)
+        {
+            if (output.mapping.ghlButton >= GuitarHeroLiveGuitar_White1 && output.mapping.ghlButton <= GuitarHeroLiveGuitar_Black3)
+            {
+                return output.mapping.ghlButton - GuitarHeroLiveGuitar_White1;
+            }
+            if (output.mapping.ghlButton == GuitarHeroLiveGuitar_StrumUp)
+            {
+                return 10;
+            }
+            if (output.mapping.ghlButton == GuitarHeroLiveGuitar_StrumDown)
+            {
+                return 11;
+            }
+        }
+        break;
+    default:
+        return -1;
+    }
+    if (output.which_mapping == proto_Output_gamepadButton_tag)
+    {
+        if (output.mapping.gamepadButton == Gamepad_DpadUp)
+        {
+            return 10;
+        }
+        if (output.mapping.gamepadButton == Gamepad_DpadDown)
+        {
+            return 11;
+        }
+    }
+    return -1;
 }

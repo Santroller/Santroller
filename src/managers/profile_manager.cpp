@@ -262,6 +262,14 @@ bool ProfileManager::assign_profile_to_devices(
 
 void ProfileManager::update(bool full_poll, bool send_events)
 {
+    // Queued inputs are sampled every loop, not just when an output is ready to report
+    for (const auto &instance : m_active_instances)
+    {
+        for (const auto &profile : instance->profiles)
+        {
+            profile->sample_input_queue();
+        }
+    }
     for (const auto &instance : m_instances)
     {
         instance->process(full_poll, send_events);

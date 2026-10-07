@@ -16,6 +16,10 @@ message ProfileOpts {
   optional bool supportsSlider = 13;
   optional bool cymbalGlitchFix = 14;
   optional uint32 deviceSlotIdVersion = 15;
+  // Guitars only: queue fret / strum changes and present each one for at least
+  // dequeueInterval100us, so a game polling at a fixed rate sees every transition.
+  optional bool queueInputs = 16;
+  optional uint32 dequeueInterval100us = 17;
 }
 
 message Profile {

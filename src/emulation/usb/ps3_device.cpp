@@ -1,4 +1,5 @@
 #include "emulation/usb/ps3_device.h"
+#include "pico/time.h"
 #include <memory>
 #include "managers/profile_manager.hpp"
 #include "protocols/ps4.hpp"
@@ -269,6 +270,8 @@ void PS3GamepadDevice::initialize()
         break;
     }
 }
+#define PS3_TURNTABLE_REPORT_INTERVAL_US 10000
+
 void PS3GamepadDevice::process(bool full_poll, bool send_events)
 {
     if (tud_suspended())
@@ -280,6 +283,23 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
     {
         for (const auto &profile : profiles)
         {
+            for (const auto &led : profile->leds)
+            {
+                led->update(full_poll, send_events);
+            }
+        }
+        return;
+    }
+    // The PS3 DJ Hero game doesn't like turntable reports any faster than this, so Santroller 1
+    // throttled them too. Inputs keep being read in between.
+    if (subtype == DjHeroTurntable && time_us_32() - m_last_report_us < PS3_TURNTABLE_REPORT_INTERVAL_US)
+    {
+        for (const auto &profile : profiles)
+        {
+            for (const auto &mapping : profile->mappings)
+            {
+                mapping->update(full_poll, send_events);
+            }
             for (const auto &led : profile->leds)
             {
                 led->update(full_poll, send_events);
@@ -326,7 +346,10 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
             PS3GuitarHeroGuitar_Data_t *reportGh = (PS3GuitarHeroGuitar_Data_t *)epin_buf;
             reportGh->slider = GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider];
         }
-        send_report(sizeof(PS3Dpad_Data_t), 0, epin_buf);
+        if (send_report(sizeof(PS3Dpad_Data_t), 0, epin_buf))
+        {
+            m_last_report_us = time_us_32();
+        }
     }
 }
 

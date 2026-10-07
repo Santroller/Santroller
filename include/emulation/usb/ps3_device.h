@@ -26,4 +26,5 @@ private:
     bool m_enabled = false;
     uint8_t m_pro_id = 4;
     uint8_t m_pg_id = 2;
+    uint32_t m_last_report_us = 0;
 };

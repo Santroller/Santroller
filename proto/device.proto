@@ -180,6 +180,14 @@ message CycleDevice {
 message ToggleDevice {
 }
 
+message Xbox360RfDevice {
+  required Xbox360RfModuleType type = 1;
+  required int32 dataPin = 2;
+  required int32 clockPin = 3;
+  // optional button that starts syncing a controller (active low)
+  optional int32 syncPin = 4;
+}
+
 message DMXDevice {
   required int32 pin = 1;
   required int32 channelCount = 2;
@@ -225,6 +233,7 @@ message Device {
     DMXDevice dmx = 36;
     InfiniumFaderDevice infiniumFader = 38;
     XboxOneAuthDevice xboxOneAuth = 39;
+    Xbox360RfDevice xbox360Rf = 40;
   }
 }
 message InfiniumFaderDevice {

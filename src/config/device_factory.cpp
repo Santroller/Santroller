@@ -35,6 +35,7 @@
 #include "devices/toggle.hpp"
 #include "devices/dmx.hpp"
 #include "devices/encoder.hpp"
+#include "devices/xbox360_rf.hpp"
 
 // Static storage for emulation devices and state
 static std::map<int32_t, int32_t> s_cycle_states;
@@ -359,6 +360,10 @@ std::shared_ptr<Device> DeviceFactory::create_device(
 
     case proto_Device_encoder_tag:
         device = std::make_shared<EncoderDevice>(proto_device.device.encoder, device_id);
+        break;
+
+    case proto_Device_xbox360Rf_tag:
+        device = std::make_shared<Xbox360RfDevice>(proto_device.device.xbox360Rf, device_id);
         break;
     }
     

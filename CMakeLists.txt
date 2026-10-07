@@ -325,6 +325,7 @@ add_executable(
   src/devices/wii_emulation.cpp
   src/devices/crkd.cpp
   src/devices/encoder.cpp
+  src/devices/xbox360_rf.cpp
   src/devices/crkd_drum.cpp
   src/devices/infinium_fader.cpp
   src/devices/secondary_pico.cpp
@@ -486,6 +487,7 @@ target_link_libraries(
   SNESpad
   n64_gamecube_controller
   ws2812
+  xbox360_rf
   apa102
   stp16cpc
   nanopb

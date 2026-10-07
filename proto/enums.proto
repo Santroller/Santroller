@@ -277,6 +277,11 @@ enum BluetoothMode {
     BTWiimote=2;
 }
 
+enum Xbox360RfModuleType {
+  Xbox360RfFat = 1;
+  Xbox360RfSlim = 2;
+}
+
 enum CycleType {
   custom=1;
   pickup=2;

@@ -3,8 +3,6 @@
 ## Firmware features
 - [ ] bluetooth timeout
 - [ ] input to put controller to sleep
-- [ ] input for waking the controller up from sleep
-- [ ] xbox 360 wakeup
 - [ ] When a bt receivers USB is suspended, we should give users the option to suspend BT itself as well.
 
 ## Emulation
@@ -44,6 +42,5 @@
 - [ ] Xbox 360 slim RF module - https://github.com/ginokgx/xbox360slimRF
 - [ ] Xbox 360 fat RF module - https://github.com/blackfin/xbox360RFmodule
 - [ ] Sound for PS4/5, XInput and GIP
-- [ ] Port over logic for waking up 360s
 - [ ] max1704x
 - [ ] battery level estimate via ADC pin

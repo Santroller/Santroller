@@ -91,6 +91,16 @@ SubType WiiExtensionDecoder::get_subtype() const
     }
 }
 
+// Turntable velocity is a 6 bit two's complement value, split into 5 bits and a sign bit.
+// Centred on 32768, with spinning in the positive direction lowering the value.
+static uint16_t turntable_velocity(uint8_t bits, bool negative)
+{
+    int8_t velocity = negative ? (int8_t)bits - 32 : (int8_t)bits;
+    // -32 would be 65536, so clamp that end
+    int32_t value = (32 - velocity) << 10;
+    return value > UINT16_MAX ? UINT16_MAX : value;
+}
+
 uint16_t WiiExtensionDecoder::read_axis(proto_WiiAxisType type) const
 {
     switch (mType)
@@ -153,11 +163,11 @@ uint16_t WiiExtensionDecoder::read_axis(proto_WiiAxisType type) const
         case WiiAxisType::WiiAxisDjStickY:
             return ((mBuffer[1] & 0x3F)) << 10;
         case WiiAxisType::WiiAxisDjTurntableLeft:
-            return ((mBuffer[4] & 1) ? 32 + (0x1F - (mBuffer[3] & 0x1F)) : 32 - (mBuffer[3] & 0x1F)) << 10;
+            return turntable_velocity(mBuffer[3] & 0x1F, mBuffer[4] & 1);
         case WiiAxisType::WiiAxisDjTurntableRight:
         {
             uint8_t rtt = (mBuffer[2] & 0x80) >> 7 | (mBuffer[1] & 0xC0) >> 5 | (mBuffer[0] & 0xC0) >> 3;
-            return ((mBuffer[2] & 1) ? 32 + (0x1F - rtt) : 32 - rtt);
+            return turntable_velocity(rtt, mBuffer[2] & 1);
         }
         default:
             return 0;

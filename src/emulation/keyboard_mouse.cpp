@@ -2,6 +2,9 @@
 #include <string.h>
 #include "pico/time.h"
 
+static_assert(sizeof(KeyboardState::last_seen_keys) >= KEYBOARD_REPORT_KEYS, "key history must cover the whole report");
+static_assert(ConsumerState::MAX_KEYS == CONSUMER_REPORT_KEYS, "media key state must match the report");
+
 // first of the 8 modifier keys (left ctrl), which are reported as bits instead of keycodes
 #define KEY_MODIFIER_FIRST 0xE0
 
@@ -17,6 +20,7 @@ void KeyboardMouseReports::reset()
 {
     memset(&m_last_keyboard, 0, sizeof(m_last_keyboard));
     m_sent_keyboard = false;
+    memset(&m_last_consumer, 0, sizeof(m_last_consumer));
     m_last_mouse_buttons = 0;
     memset(m_mouse_acc, 0, sizeof(m_mouse_acc));
     m_last_mouse_us = time_us_32();
@@ -26,6 +30,8 @@ void KeyboardMouseReports::collect(const std::vector<std::shared_ptr<Profile>> &
 {
     KeyboardReport *report = &m_keyboard;
     memset(report, 0, sizeof(*report));
+    memset(&m_consumer, 0, sizeof(m_consumer));
+    uint8_t consumer_count = 0;
     m_mouse_buttons = 0;
     int32_t mouse_axes[MouseState::AxisCount] = {0};
     for (const auto &profile : profiles)
@@ -82,6 +88,20 @@ void KeyboardMouseReports::collect(const std::vector<std::shared_ptr<Profile>> &
             }
             memcpy(state.last_seen_keys, report->keycode, sizeof(report->keycode));
         }
+        // media keys from every profile, ignoring repeats and anything past what the report holds
+        for (uint8_t i = 0; i < profile->consumer_state.count; i++)
+        {
+            uint16_t usage = profile->consumer_state.keys[i];
+            bool seen = false;
+            for (uint8_t j = 0; j < consumer_count; j++)
+            {
+                seen |= m_consumer.usage[j] == usage;
+            }
+            if (!seen && consumer_count < CONSUMER_REPORT_KEYS)
+            {
+                m_consumer.usage[consumer_count++] = usage;
+            }
+        }
         m_mouse_buttons |= profile->mouse_state.buttons;
         for (uint8_t i = 0; i < MouseState::AxisCount; i++)
         {
@@ -115,6 +135,17 @@ void KeyboardMouseReports::keyboard_sent(const KeyboardReport &report)
 {
     m_last_keyboard = report;
     m_sent_keyboard = true;
+}
+
+bool KeyboardMouseReports::consumer_pending(ConsumerReport &report) const
+{
+    report = m_consumer;
+    return memcmp(&m_last_consumer, &m_consumer, sizeof(m_consumer)) != 0;
+}
+
+void KeyboardMouseReports::consumer_sent(const ConsumerReport &report)
+{
+    m_last_consumer = report;
 }
 
 bool KeyboardMouseReports::mouse_pending(MouseReport &report) const

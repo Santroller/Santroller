@@ -101,9 +101,33 @@ class MouseState {
     }
 };
 
+// Media keys (consumer control usages) the mappings want held this report
+class ConsumerState {
+    public:
+    static constexpr uint8_t MAX_KEYS = 4;
+    uint16_t keys[MAX_KEYS] = {0};
+    uint8_t count = 0;
+
+    void set_key(uint16_t usage) {
+        for (uint8_t i = 0; i < count; i++) {
+            if (keys[i] == usage) {
+                return;
+            }
+        }
+        if (count < MAX_KEYS) {
+            keys[count++] = usage;
+        }
+    }
+
+    void clear_all() {
+        count = 0;
+    }
+};
+
 class KeyboardState {
     public:
     uint8_t pressed_keys[32] = {0};
+    // as many as the keyboard report holds
     uint8_t last_seen_keys[10] = {0};
 
     void set_key(uint8_t keycode) {

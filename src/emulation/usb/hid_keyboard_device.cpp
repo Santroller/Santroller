@@ -15,9 +15,9 @@
 #include <class/hid/hid_device.h>
 #include "emulation/keyboard_mouse.hpp"
 
-// TODO: we dont really need to support nkro, we could just have our kro be like 10kro or something
-uint8_t const desc_hid_keyboard_report[] = {TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(KEYBOARD_REPORT_ID)),
-                                            TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(MOUSE_REPORT_ID))};
+uint8_t const desc_hid_keyboard_report[] = {TUD_HID_REPORT_DESC_KEYBOARD_10KRO(HID_REPORT_ID(KEYBOARD_REPORT_ID)),
+                                            TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(MOUSE_REPORT_ID)),
+                                            TUD_HID_REPORT_DESC_CONSUMER_MULTI(HID_REPORT_ID(CONSUMER_REPORT_ID))};
 
 HIDKeyboardDevice::HIDKeyboardDevice()
 {
@@ -57,6 +57,7 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
     profile->reset_drum_state();
     profile->keyboard_state.clear_all();
     profile->mouse_state.clear_all();
+    profile->consumer_state.clear_all();
     for (const auto &mapping : profile->mappings)
     {
       mapping->update(full_poll, send_events);
@@ -81,6 +82,15 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
     }
     return;
   }
+  ConsumerReport consumer;
+  if (m_reports.consumer_pending(consumer))
+  {
+    if (send_report(sizeof(consumer), CONSUMER_REPORT_ID, &consumer))
+    {
+      m_reports.consumer_sent(consumer);
+    }
+    return;
+  }
   MouseReport mouse;
   if (m_reports.mouse_pending(mouse) && send_report(sizeof(mouse), MOUSE_REPORT_ID, &mouse))
   {
@@ -96,7 +106,7 @@ size_t HIDKeyboardDevice::compatible_section_descriptor(uint8_t *dest, size_t re
 size_t HIDKeyboardDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
   // the keyboard report (plus its id) is the larger of the two
-  uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_keyboard_report), m_epout, m_epin, sizeof(hid_keyboard_report_t) + 1, 1)};
+  uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_keyboard_report), m_epout, m_epin, sizeof(KeyboardReport) + 1, 1)};
   assert(sizeof(desc) <= remaining);
   memcpy(dest, desc, sizeof(desc));
   return sizeof(desc);

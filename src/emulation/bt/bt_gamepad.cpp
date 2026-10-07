@@ -298,6 +298,7 @@ void BTGamepadDevice::process_keyboard_mouse(bool full_poll, bool send_events)
         profile->reset_drum_state();
         profile->keyboard_state.clear_all();
         profile->mouse_state.clear_all();
+        profile->consumer_state.clear_all();
         for (const auto &mapping : profile->mappings)
         {
             mapping->update(full_poll, send_events);
@@ -320,10 +321,20 @@ void BTGamepadDevice::process_keyboard_mouse(bool full_poll, bool send_events)
     {
         uint8_t status = protocol_mode
                              ? hids_device_send_input_report_for_id(con_handle, KEYBOARD_REPORT_ID, (const uint8_t *)&keyboard, sizeof(keyboard))
-                             : hids_device_send_boot_keyboard_input_report(con_handle, (const uint8_t *)&keyboard, sizeof(keyboard));
+                             : hids_device_send_boot_keyboard_input_report(con_handle, (const uint8_t *)&keyboard, KEYBOARD_BOOT_REPORT_SIZE);
         if (status == ERROR_CODE_SUCCESS)
         {
             m_reports.keyboard_sent(keyboard);
+        }
+        return;
+    }
+    // boot protocol only has a keyboard and mouse, so media keys need report protocol
+    ConsumerReport consumer;
+    if (protocol_mode && m_reports.consumer_pending(consumer))
+    {
+        if (hids_device_send_input_report_for_id(con_handle, CONSUMER_REPORT_ID, (const uint8_t *)&consumer, sizeof(consumer)) == ERROR_CODE_SUCCESS)
+        {
+            m_reports.consumer_sent(consumer);
         }
         return;
     }

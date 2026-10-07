@@ -115,7 +115,12 @@ KeyboardButtonMapping::KeyboardButtonMapping(proto_Mapping mapping, std::unique_
 
 void KeyboardButtonMapping::update_hid(uint8_t *buf)
 {
-    if (m_last_value) {
+    if (!m_last_value) {
+        return;
+    }
+    if (m_mapping.mapping.which_mapping == proto_Output_consumerKey_tag) {
+        m_profile->consumer_state.set_key(m_mapping.mapping.mapping.consumerKey);
+    } else {
         m_profile->keyboard_state.set_key(m_mapping.mapping.mapping.keycode);
     }
 }

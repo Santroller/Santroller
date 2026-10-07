@@ -95,4 +95,5 @@ public:
     DrumState drum_state;
     KeyboardState keyboard_state;
     MouseState mouse_state;
+    ConsumerState consumer_state;
 };

@@ -287,6 +287,8 @@ message Output {
     ProKeyboardButtonType proKeyboardButton = 31;
     PopNMusicButtonType popnButton = 32;
     BeatManiaButtonType bmButton = 33;
+    // Consumer page usage, e.g. 0xE9 for volume up
+    uint32 consumerKey = 34;
   }
 }
 

@@ -2,6 +2,7 @@
 #include "base.hpp"
 #include "device.pb.h"
 #include "libxbox360_rf.hpp"
+#include "sync_button.hpp"
 
 // An Xbox 360 RF module wired up as a wireless receiver. Controller inputs arrive over
 // USB host like any other receiver, this just initialises the module and sends sync.
@@ -20,5 +21,5 @@ public:
 private:
     proto_Xbox360RfDevice m_device;
     Xbox360Rf m_rf;
-    bool m_sync_pressed = false;
+    SyncButton m_sync;
 };

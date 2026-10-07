@@ -84,6 +84,8 @@ message UsbHostDevice {
   optional uint32 noteHoldTime = 5;
 }
 message BluetoothDevice {
+  // optional button that starts pairing a controller (active low)
+  optional int32 syncPin = 1;
 }
 message MultiplexerDevice {
   required int32 inputPin = 1;

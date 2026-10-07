@@ -8,11 +8,12 @@
 #include "devices/bt/ble_rx.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
 #include "devices/bt/bt_host.hpp"
-BluetoothDevice::BluetoothDevice(proto_BluetoothDevice device, uint16_t id) : Device(id), m_device(device)
+BluetoothDevice::BluetoothDevice(proto_BluetoothDevice device, uint16_t id) : Device(id), m_device(device), m_sync(device.has_syncPin ? device.syncPin : -1)
 {
 }
 void BluetoothDevice::begin()
 {
+    m_sync.begin();
     BluetoothStack::instance().set_device_id(m_id);
     // TODO: if we add support for swapping pins, then we gotta deinit here if the pins change
     if (BluetoothStack::instance().initialized())
@@ -47,6 +48,7 @@ void BluetoothDevice::rescan(bool first)
 
 void BluetoothDevice::end(bool full)
 {
+    m_sync.end();
     if (full)
     {
         BluetoothStack::instance().power_off();
@@ -65,11 +67,15 @@ void BluetoothDevice::update(bool full_poll, bool send_events)
         HIDConfigDevice::send_event(event, true);
     }
     bt_host_update_interfaces(full_poll, send_events);
+    if (m_sync.pressed())
+    {
+        start_discovery();
+    }
 }
 
 bool BluetoothDevice::using_pin(uint8_t pin)
 {
-    return pin == 23 || pin == 24 || pin == 25 || pin == 29;
+    return pin == 23 || pin == 24 || pin == 25 || pin == 29 || m_sync.using_pin(pin);
 }
 
 #include "bluetooth.h"
@@ -128,15 +134,20 @@ void BluetoothDevice::handle_command(proto_Command command)
 {
     if (command.which_command == proto_Command_scan_tag)
     {
-        printf("Starting Bluetooth discovery scan cycle (powered=%d)...\r\n", (int)BluetoothStack::instance().is_powered());
-        bt_discovery_stop();
-
-        s_scan_phase = SCAN_PHASE_CLASSIC_GIAC;
-        btc_start_scan(GAP_IAC_GENERAL_INQUIRY);
-        ble_start_scan();
-
-        btstack_run_loop_set_timer(&s_scan_timer, 25000);
-        btstack_run_loop_set_timer_handler(&s_scan_timer, scan_timer_callback);
-        btstack_run_loop_add_timer(&s_scan_timer);
+        start_discovery();
     }
+}
+
+void BluetoothDevice::start_discovery()
+{
+    printf("Starting Bluetooth discovery scan cycle (powered=%d)...\r\n", (int)BluetoothStack::instance().is_powered());
+    bt_discovery_stop();
+
+    s_scan_phase = SCAN_PHASE_CLASSIC_GIAC;
+    btc_start_scan(GAP_IAC_GENERAL_INQUIRY);
+    ble_start_scan();
+
+    btstack_run_loop_set_timer(&s_scan_timer, 25000);
+    btstack_run_loop_set_timer_handler(&s_scan_timer, scan_timer_callback);
+    btstack_run_loop_add_timer(&s_scan_timer);
 }

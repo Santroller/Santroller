@@ -19,6 +19,7 @@
 #include "config/config.hpp"
 #include "managers/config_manager.hpp"
 #include "main.hpp"
+#include "mappings/base_mapping.hpp"
 
 bool usb_device_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result,
                         uint32_t xferred_bytes);
@@ -412,6 +413,55 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     return dev->control_transfer(stage, request);
   }
   return false;
+}
+
+volatile uint32_t UsbDevice::suspend_generation = 0;
+
+void tud_suspend_cb(bool remote_wakeup_en)
+{
+  (void)remote_wakeup_en;
+  UsbDevice::suspend_generation++;
+}
+
+void UsbDevice::process_suspended(bool full_poll, bool send_events)
+{
+  if (m_wake_generation != suspend_generation)
+  {
+    m_wake_generation = suspend_generation;
+    m_wake_armed = false;
+  }
+  bool pressed = false;
+  for (const auto &profile : profiles)
+  {
+    for (const auto &led : profile->leds)
+    {
+      led->off();
+    }
+    for (const auto &mapping : profile->mappings)
+    {
+      mapping->update(full_poll, send_events);
+      pressed |= mapping->wake_pressed();
+    }
+  }
+  if (!pressed)
+  {
+    m_wake_armed = true;
+    return;
+  }
+  if (!m_wake_armed)
+  {
+    return;
+  }
+  m_wake_armed = false;
+  if (ConfigManager::instance().get_current_mode() == ModeXbox360)
+  {
+    // The 360 suspends without ever sending SET_FEATURE(DEVICE_REMOTE_WAKEUP), but still
+    // powers on when a wired controller signals resume, so ignore the host's setting.
+    dcd_remote_wakeup(TUD_OPT_RHPORT);
+    return;
+  }
+  // fails harmlessly if the host didn't enable remote wakeup before suspending
+  tud_remote_wakeup();
 }
 
 uint8_t UsbDevice::m_last_epin = 0x81;

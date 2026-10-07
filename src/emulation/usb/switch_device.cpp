@@ -116,13 +116,7 @@ bool SwitchGamepadDevice::sendReport(uint8_t reportID, void const *reportData, u
 void SwitchGamepadDevice::process(bool full_poll, bool send_events)
 {
     if (tud_suspended()) {
-        for (const auto &profile : profiles)
-        {
-            for (const auto &led : profile->leds)
-            {
-                led->off();
-            }
-        }
+        process_suspended(full_poll, send_events);
         return;
     }
     if (!tud_ready())
@@ -247,8 +241,7 @@ void SwitchArcadeDevice::process(bool full_poll, bool send_events)
 {
     if (tud_suspended())
     {
-        for (const auto &profile : profiles)
-            for (const auto &led : profile->leds) led->off();
+        process_suspended(full_poll, send_events);
         return;
     }
     if (tud_ready() && !ready()) return;

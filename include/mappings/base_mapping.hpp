@@ -74,6 +74,8 @@ public:
     virtual void update_pdloader(uint8_t *report) { (void)report; }
     virtual void update_ogxbox(uint8_t *report) { (void)report; }
     virtual void update_xboxone(uint8_t *report) { (void)report; }
+    // Whether this mapping is currently held as a button, used to wake a suspended host
+    virtual bool wake_pressed() const { return false; }
     void update_digital(bool full_poll);
     uint16_t sample_ui_event();
     uint16_t calibrate(float val, float max, float min, float deadzone, float center, bool trigger);
@@ -115,6 +117,7 @@ public:
     ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile) : Mapping(mapping, std::move(input), id, profile) {}
     ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : Mapping(mapping, std::move(input), id, profile) {}
     void update(bool full_poll, bool send_events);
+    bool wake_pressed() const override { return m_last_value; }
 
 protected:
     bool m_last_value = false;

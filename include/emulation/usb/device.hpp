@@ -34,6 +34,9 @@ public:
     virtual bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) = 0;
     virtual bool control_transfer(uint8_t stage, tusb_control_request_t const *request) = 0;
     virtual uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len) = 0;
+    // Call from process() while tud_suspended(): turns the LEDs off and keeps polling
+    // the mappings so a button press can remote-wake the host.
+    void process_suspended(bool full_poll, bool send_events);
     static inline uint8_t next_epin()
     {
         return m_last_epin++;
@@ -53,7 +56,14 @@ public:
         m_last_strid = STRID_COUNT;
     }
 
+    // Bumped by tud_suspend_cb so every instance disarms wakeup at the start of a suspend
+    static volatile uint32_t suspend_generation;
+
 private:
+    // Only wake on a fresh press, so a button held as the host suspends doesn't wake it
+    // straight back up, and one press doesn't keep re-signalling resume.
+    bool m_wake_armed = false;
+    uint32_t m_wake_generation = 0;
     static uint8_t m_last_epin;
     static uint8_t m_last_epout;
     static uint8_t m_last_strid;

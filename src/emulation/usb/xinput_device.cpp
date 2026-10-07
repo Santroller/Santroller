@@ -16,6 +16,7 @@
 #include <pico/unique_id.h>
 #include "emulation/usb/usb_devices.h"
 #include "config/config.hpp"
+#include "hardware/structs/usb.h"
 static const char str_xb360_auth[] = "Xbox Security Method 3, Version 1.00, \xa9 2005 Microsoft Corporation. All rights reserved.";
 static const uint8_t xbox_players[] = {
     0, // 0x00	 All off
@@ -168,25 +169,13 @@ uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16
 }
 void XInputGamepadDevice::process(bool full_poll, bool send_events)
 {
-    if (tud_suspended())
+    bool is_360 = ConfigManager::instance().get_current_mode() == ModeXbox360;
+    // A 360 going into standby resets the bus before idling it, which leaves tinyusb
+    // unconnected and never reporting the suspend, so read the bus state from the SIE.
+    bool bus_suspended = is_360 && (usb_hw->sie_status & USB_SIE_STATUS_SUSPENDED_BITS);
+    if (tud_suspended() || bus_suspended)
     {
-        for (const auto &profile : profiles)
-        {
-            for (const auto &led : profile->leds)
-            {
-                led->off();
-            }
-            for (const auto &mapping : profile->mappings)
-            {
-                mapping->update(full_poll, send_events);
-                mapping->update_xinput(epin_buf);
-            }
-            XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)epin_buf;
-            if (report->guide)
-            {
-                tud_remote_wakeup();
-            }
-        }
+        process_suspended(full_poll, send_events);
         return;
     }
     if (!tud_ready())
@@ -217,10 +206,6 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
         {
             led->update(full_poll, send_events);
         }
-    }
-    if (report->guide)
-    {
-        tud_remote_wakeup();
     }
     if (subtype == GuitarHeroGuitar && m_has_slider)
     {

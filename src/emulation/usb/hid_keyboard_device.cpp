@@ -36,14 +36,8 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
 {
   if (tud_suspended())
   {
-    for (const auto &profile : profiles)
-    {
-      for (const auto &led : profile->leds)
-      {
-        led->off();
-      }
-    }
-    return;
+      process_suspended(full_poll, send_events);
+      return;
   }
   if (!tud_ready())
   {

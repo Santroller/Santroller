@@ -43,6 +43,7 @@ public:
     bool supports_ps4;
     bool supports_slider;
     bool cymbal_glitch_fix;
+    bool full_range_turntable_on_pc = false;
     bool per_kind_slot_ids = false;
     ConsoleMode mode;
     uint32_t profile_id;

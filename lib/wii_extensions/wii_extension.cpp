@@ -277,17 +277,17 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
         mInterface.dmaWriteRead(WII_ADDR, nullptr, 0, bufferRx, WII_ID_LEN);
         break;
     case WII_INPUTS_WRITE_PTR:
-        if (mType == WiiDjHeroTurntable && m_turntable_poll_interval_ms)
+        if (mType == WiiDjHeroTurntable && m_turntable_poll_interval_us)
         {
-            const uint32_t now = to_ms_since_boot(get_absolute_time());
-            const uint32_t elapsed = now - m_last_turntable_poll_ms;
-            if (m_has_turntable_poll && elapsed < m_turntable_poll_interval_ms)
+            const uint32_t now = time_us_32();
+            const uint32_t elapsed = now - m_last_turntable_poll_us;
+            if (m_has_turntable_poll && elapsed < m_turntable_poll_interval_us)
             {
-                restart_alarm_id = add_alarm_in_ms(
-                    m_turntable_poll_interval_ms - elapsed, restart_handler, this, true);
+                restart_alarm_id = add_alarm_in_us(
+                    m_turntable_poll_interval_us - elapsed, restart_handler, this, true);
                 return;
             }
-            m_last_turntable_poll_ms = now;
+            m_last_turntable_poll_us = now;
             m_has_turntable_poll = true;
         }
         bufferTx[0] = wiiPointer;
@@ -317,7 +317,7 @@ WiiExtension::WiiExtension(MidiDevice *midiDevice, uint8_t block, uint8_t sda, u
     : mInterface(block, sda, scl, clock),
       mFound(false),
       m_block(block),
-      m_turntable_poll_interval_ms(turntable_poll_interval_ms),
+      m_turntable_poll_interval_us(turntable_poll_interval_ms * 1000),
       m_device(midiDevice)
 {
     printf("WiiExtension::WiiExtension\r\n");
@@ -382,10 +382,10 @@ void WiiExtension::tick()
     const uint32_t now = to_ms_since_boot(get_absolute_time());
     const bool waiting_for_turntable_poll =
         mType == WiiDjHeroTurntable &&
-        m_turntable_poll_interval_ms &&
+        m_turntable_poll_interval_us &&
         status == WII_INPUTS_WRITE_PTR &&
         m_has_turntable_poll &&
-        now - m_last_turntable_poll_ms < m_turntable_poll_interval_ms;
+        time_us_32() - m_last_turntable_poll_us < m_turntable_poll_interval_us;
     if (lastPoll && now - lastPoll > 500 && !waiting_for_turntable_poll)
     {
         process_data(WII_ADDR, false, false, false, false);

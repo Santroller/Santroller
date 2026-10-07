@@ -20,6 +20,9 @@ message ProfileOpts {
   // dequeueInterval100us, so a game polling at a fixed rate sees every transition.
   optional bool queueInputs = 16;
   optional uint32 dequeueInterval100us = 17;
+  // Turntables only: in XInput mode on a PC, send table velocities across the full axis
+  // instead of the 360's tiny -64 to +64, which XInput's default deadzones swallow.
+  optional bool fullRangeTurntableOnPc = 18;
 }
 
 message Profile {

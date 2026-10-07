@@ -92,13 +92,12 @@ SubType WiiExtensionDecoder::get_subtype() const
 }
 
 // Turntable velocity is a 6 bit two's complement value, split into 5 bits and a sign bit.
-// Centred on 32768, with spinning in the positive direction lowering the value.
+// Centred on 32768, positive velocities raise the value (same direction as santroller v1,
+// which sent the raw value straight through to every console).
 static uint16_t turntable_velocity(uint8_t bits, bool negative)
 {
     int8_t velocity = negative ? (int8_t)bits - 32 : (int8_t)bits;
-    // -32 would be 65536, so clamp that end
-    int32_t value = (32 - velocity) << 10;
-    return value > UINT16_MAX ? UINT16_MAX : value;
+    return (32 + velocity) << 10;
 }
 
 uint16_t WiiExtensionDecoder::read_axis(proto_WiiAxisType type) const

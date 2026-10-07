@@ -662,6 +662,9 @@ typedef struct
     int16_t crossfader;
     uint8_t reserved_1[6];
 } __attribute__((packed)) XInputDJHTurntable_Data_t;
+// Real turntables only send a tiny range for table velocity (about +-64), this maps it to / from
+// a full axis. Santroller v1 used +-128 (256), which made menu scrolling twice as fast.
+#define XINPUT_TURNTABLE_VELOCITY_SCALE 512
 
 typedef struct {
     uint8_t bLength; // Length of this descriptor.

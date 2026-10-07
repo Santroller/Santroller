@@ -10,7 +10,7 @@
 WiiDevice::WiiDevice(const DeviceReloadState *state, proto_WiiDevice device, uint16_t id) :
     MidiDevice(state, id, false, m_midi_buffers.config()),
     m_extension(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock,
-                device.has_turntablePollIntervalMs ? device.turntablePollIntervalMs : 0),
+                device.has_turntablePollIntervalMs ? device.turntablePollIntervalMs : WII_TURNTABLE_DEFAULT_POLL_INTERVAL_MS),
     m_device(device)
 {
     if (state)

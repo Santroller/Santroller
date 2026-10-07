@@ -176,11 +176,40 @@ inline bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, 
                                                 data->velocities, type.mapping.proKeyMultiple);
         }
         return false;
+    case DjHeroTurntable:
+        if (type.which_mapping == proto_Output_djhButton_tag)
+        {
+            auto data = (XInputDJHTurntable_Data_t *)ep_in_buf;
+            switch (type.mapping.djhButton)
+            {
+            case DJHTurntable_LeftGreen:
+                return data->leftGreen;
+            case DJHTurntable_LeftRed:
+                return data->leftRed;
+            case DJHTurntable_LeftBlue:
+                return data->leftBlue;
+            case DJHTurntable_RightGreen:
+                return data->rightGreen;
+            case DJHTurntable_RightRed:
+                return data->rightRed;
+            case DJHTurntable_RightBlue:
+                return data->rightBlue;
+            default:
+                return false;
+            }
+        }
+        return false;
     default:
         return false;
     }
 
     return false;
+}
+
+inline uint16_t xinput_turntable_velocity(int16_t velocity)
+{
+    int32_t value = (int32_t)velocity * XINPUT_TURNTABLE_VELOCITY_SCALE + 32768;
+    return value < 0 ? 0 : value > UINT16_MAX ? UINT16_MAX : value;
 }
 
 inline uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtype, proto_Output &type)
@@ -209,6 +238,25 @@ inline uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtyp
     }
     switch (subtype)
     {
+    case DjHeroTurntable:
+        if (type.which_mapping == proto_Output_djhAxis_tag)
+        {
+            auto data = (XInputDJHTurntable_Data_t *)ep_in_buf;
+            switch (type.mapping.djhAxis)
+            {
+            case DJHTurntable_LeftVelocity:
+                return xinput_turntable_velocity(data->leftTableVelocity);
+            case DJHTurntable_RightVelocity:
+                return xinput_turntable_velocity(data->rightTableVelocity);
+            case DJHTurntable_EffectsKnob:
+                return (uint16_t)data->effectsKnob ^ 0x8000;
+            case DJHTurntable_Crossfader:
+                return (uint16_t)data->crossfader ^ 0x8000;
+            default:
+                return 0;
+            }
+        }
+        break;
     case GuitarHeroGuitar:
         if (type.which_mapping == proto_Output_ghAxis_tag)
         {

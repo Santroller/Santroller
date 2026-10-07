@@ -22,6 +22,9 @@
 #define FIRST_PARTY_SBOX 0x97
 #define THIRD_PARTY_SBOX 0x4D
 
+// Minimum poll interval for a DJ Hero turntable when the config does not set one
+#define WII_TURNTABLE_DEFAULT_POLL_INTERVAL_MS 5
+
 class WiiExtension: public I2CDMAInterface, public WiiExtensionDecoder
 {
 
@@ -51,8 +54,9 @@ private:
     uint8_t wiiBytes;
     uint8_t wiiPointer = 0;
     uint8_t m_block = 0;
-    uint32_t m_turntable_poll_interval_ms = 0;
-    uint32_t m_last_turntable_poll_ms = 0;
+    // in us, so the interval is steady rather than jittering by up to a ms
+    uint32_t m_turntable_poll_interval_us = 0;
+    uint32_t m_last_turntable_poll_us = 0;
     bool m_has_turntable_poll = false;
     MidiDevice *m_device;
     alarm_id_t restart_alarm_id;

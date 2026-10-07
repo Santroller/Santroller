@@ -1,4 +1,5 @@
 #include "config/config.hpp"
+#include "managers/config_manager.hpp"
 #include "events.pb.h"
 #include "instance.hpp"
 #include "main.hpp"
@@ -1477,8 +1478,30 @@ DJHTurntableAxisMapping::DJHTurntableAxisMapping(proto_Mapping mapping, std::uni
 
 void DJHTurntableAxisMapping::update_hid(uint8_t *buf)
 {
-    // santroller hid uses an xinput style report descriptor for compatibility reasons
-    return update_xinput(buf);
+    // santroller hid uses an xinput style report layout, but its descriptor reports full
+    // range axes, so unlike real xinput the table velocities aren't scaled down
+    if (m_centered)
+    {
+        return;
+    }
+    XInputDJHTurntable_Data_t *report = (XInputDJHTurntable_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.djhAxis)
+    {
+    case DJHTurntable_LeftVelocity:
+        report->leftTableVelocity = m_calibrated_value - 32768;
+        break;
+    case DJHTurntable_RightVelocity:
+        report->rightTableVelocity = m_calibrated_value - 32768;
+        break;
+    case DJHTurntable_EffectsKnob:
+        report->effectsKnob = m_calibrated_value - 32768;
+        break;
+    case DJHTurntable_Crossfader:
+        report->crossfader = m_calibrated_value - 32768;
+        break;
+    default:
+        break;
+    }
 }
 void DJHTurntableAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 {
@@ -1490,13 +1513,14 @@ void DJHTurntableAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     WiiTurntableDataFormat3_t *report = (WiiTurntableDataFormat3_t *)buf;
     switch (m_mapping.mapping.mapping.djhAxis)
     {
+    // velocities are signed 6 bit, centred on 0 rather than the axis centre
     case DJHTurntable_LeftVelocity:
-        intermediate.leftTableVelocity = m_calibrated_value >> 10;
+        intermediate.leftTableVelocity = (int32_t)(m_calibrated_value >> 10) - 32;
         report->leftTableVelocity40 = intermediate.leftTableVelocity40;
         report->leftTableVelocity5 = intermediate.leftTableVelocity5;
         break;
     case DJHTurntable_RightVelocity:
-        intermediate.rightTableVelocity = m_calibrated_value >> 10;
+        intermediate.rightTableVelocity = (int32_t)(m_calibrated_value >> 10) - 32;
         report->rightTableVelocity0 = intermediate.rightTableVelocity0;
         report->rightTableVelocity21 = intermediate.rightTableVelocity21;
         report->rightTableVelocity43 = intermediate.rightTableVelocity43;
@@ -1565,13 +1589,20 @@ void DJHTurntableAxisMapping::update_xinput(uint8_t *buf)
         return;
     }
     XInputDJHTurntable_Data_t *report = (XInputDJHTurntable_Data_t *)buf;
+    // Real 360 turntables only use -64 to +64 for the tables, presumably so scratching
+    // doesn't register as stick movement in the 360 menus. XInput on a PC deadzones that
+    // out by default, so optionally use the full range there.
+    int32_t velocity_scale = m_profile->full_range_turntable_on_pc &&
+                                     ConfigManager::instance().get_current_mode() != ModeXbox360
+                                 ? 1
+                                 : XINPUT_TURNTABLE_VELOCITY_SCALE;
     switch (m_mapping.mapping.mapping.djhAxis)
     {
     case DJHTurntable_LeftVelocity:
-        report->leftTableVelocity = m_calibrated_value - 32768;
+        report->leftTableVelocity = ((int32_t)m_calibrated_value - 32768) / velocity_scale;
         break;
     case DJHTurntable_RightVelocity:
-        report->rightTableVelocity = m_calibrated_value - 32768;
+        report->rightTableVelocity = ((int32_t)m_calibrated_value - 32768) / velocity_scale;
         break;
     case DJHTurntable_EffectsKnob:
         report->effectsKnob = m_calibrated_value - 32768;

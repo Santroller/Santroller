@@ -21,25 +21,25 @@ public:
     {
         return connected;
     }
-    bool green;
-    bool red;
-    bool yellow;
-    bool blue;
-    bool orange;
-    bool soloGreen;
-    bool soloRed;
-    bool soloYellow;
-    bool soloBlue;
-    bool soloOrange;
+    bool green = false;
+    bool red = false;
+    bool yellow = false;
+    bool blue = false;
+    bool orange = false;
+    bool soloGreen = false;
+    bool soloRed = false;
+    bool soloYellow = false;
+    bool soloBlue = false;
+    bool soloOrange = false;
 
 private:
+    void clear_buttons();
     I2CMasterInterface interface;
-    bool connected;
-    bool reading;
+    bool connected = false;
     clone_status_e status = CLONE_NECK_CHECK_STATUS;
     uint8_t bufferTx[32];
     uint8_t bufferRx[32];
-    alarm_id_t restart_alarm_id;
+    alarm_id_t restart_alarm_id = 0;
     int failCount = 0;
     uint32_t lastPoll = 0;
 };

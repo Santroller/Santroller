@@ -63,20 +63,21 @@ void Instance::process_stagekit_command(uint8_t command, uint8_t param)
     case RUMBLE_STAGEKIT_FOG_OFF:
         stagekit_fog = 0x00;
         break;
+    // ms between flashes, the same as santroller v1
     case RUMBLE_STAGEKIT_SLOW_STROBE:
         stagekit_strobe_speed = 150;
         stagekit_last_strobe = millis();
         break;
     case RUMBLE_STAGEKIT_MEDIUM_STROBE:
-        stagekit_strobe_speed = 200;
+        stagekit_strobe_speed = 125;
         stagekit_last_strobe = millis();
         break;
     case RUMBLE_STAGEKIT_FAST_STROBE:
-        stagekit_strobe_speed = 300;
+        stagekit_strobe_speed = 100;
         stagekit_last_strobe = millis();
         break;
     case RUMBLE_STAGEKIT_FASTEST_STROBE:
-        stagekit_strobe_speed = 400;
+        stagekit_strobe_speed = 75;
         stagekit_last_strobe = millis();
         break;
     case RUMBLE_STAGEKIT_NO_STROBE:

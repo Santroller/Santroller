@@ -9,6 +9,7 @@
 #include "tusb.h"
 #include "device.pb.h"
 #include "instance.hpp"
+#include "emulation/keyboard_mouse.hpp"
 #include <vector>
 #include <memory>
 
@@ -23,6 +24,8 @@ public:
     void process(bool full_poll, bool send_events) override;
 
 private:
+    void process_keyboard_mouse(bool full_poll, bool send_events);
+    KeyboardMouseReports m_reports;
     bool m_initialized = false;
     uint8_t m_initial_report[CFG_TUD_XINPUT_TX_BUFSIZE];
     uint8_t m_last_report[CFG_TUD_XINPUT_TX_BUFSIZE];

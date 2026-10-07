@@ -52,12 +52,13 @@ bool HIDDevice::send_report(uint8_t len, uint8_t report_id, void const *report)
 {
   if (report_id)
   {
-    memcpy(epin_buf + 1, report, len);
+    memmove(epin_buf + 1, report, len);
+    epin_buf[0] = report_id;
     len += 1;
   }
   else
   {
-    memcpy(epin_buf, report, len);
+    memmove(epin_buf, report, len);
   }
   if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
   {

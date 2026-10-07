@@ -227,6 +227,15 @@ enum MidiTriggerType {
   Drum = 2;
 }
 
+// Which part of an axis a mapping drives. A half uses the input's whole range (min = rest,
+// max = fully pressed) to move the axis from its centre towards one end, so two inputs can
+// share an axis, e.g. two analog triggers driving one stick axis.
+enum AxisSection {
+  AxisSectionFull = 0;
+  AxisSectionPositive = 1;
+  AxisSectionNegative = 2;
+}
+
 enum AnalogToDigitalTriggerType {
   JoyHigh = 1;
   JoyLow = 2;
@@ -455,6 +464,19 @@ enum CrkdDrumAxisType {
   CrkdGreenCymbal = 7;
   CrkdKick1 = 8;
   CrkdKick2 = 9;
+}
+
+enum CrazyGuitarNeckButtonType {
+  CrazyGuitarNeckGreen = 1;
+  CrazyGuitarNeckRed = 2;
+  CrazyGuitarNeckYellow = 3;
+  CrazyGuitarNeckBlue = 4;
+  CrazyGuitarNeckOrange = 5;
+  CrazyGuitarNeckSoloGreen = 6;
+  CrazyGuitarNeckSoloRed = 7;
+  CrazyGuitarNeckSoloYellow = 8;
+  CrazyGuitarNeckSoloBlue = 9;
+  CrazyGuitarNeckSoloOrange = 10;
 }
 
 enum Gh5NeckButtonType {

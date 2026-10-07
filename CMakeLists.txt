@@ -282,6 +282,8 @@ add_executable(
   src/input/ads1115.cpp
   src/input/multiplexer.cpp
   src/input/encoder.cpp
+  src/input/crazy_guitar_neck.cpp
+  src/emulation/keyboard_mouse.cpp
   src/leds/led_devices.cpp
   src/leds/led_mappings.cpp
   src/triggers/activation_trigger_list.cpp

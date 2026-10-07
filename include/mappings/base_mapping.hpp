@@ -27,7 +27,8 @@ struct MappingConfig
           debounce_us(source.has_debounce100us ? source.debounce100us * 100 : source.debounce * 1000),
           maxTriggerValue(source.maxTriggerValue),
           has_peakBased(source.has_peakBased),
-          peakBased(source.peakBased)
+          peakBased(source.peakBased),
+          section(source.has_section ? source.section : AxisSectionFull)
     {
     }
 
@@ -49,6 +50,7 @@ struct MappingConfig
     int32_t maxTriggerValue;
     bool has_peakBased;
     bool peakBased;
+    AxisSection section;
 };
 
 class ButtonMapping;

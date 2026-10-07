@@ -11,7 +11,8 @@ void MultiplexerInput::setup()
 }
 bool MultiplexerInput::tick_digital()
 {
-    return m_device->read(m_channel) > 0;
+    // the ADC is never exactly 0, so treat it as pressed past half way
+    return m_device->read(m_channel) > UINT16_MAX / 2;
 }
 uint16_t MultiplexerInput::tick_analog()
 {

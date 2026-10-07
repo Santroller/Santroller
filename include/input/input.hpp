@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <string.h>
 #include "input_enums.pb.h"
 class MidiNoteInput;
 class ShortcutInput;
@@ -25,6 +26,7 @@ enum InputHardwareType : uint8_t {
     InputHw_SwitchNetwork = 17,
     InputHw_InfiniumFader = 18,
     InputHw_Peripheral = 19,
+    InputHw_CrazyGuitarNeck = 20,
 };
 
 class Input
@@ -82,6 +84,20 @@ public:
     bool has_hits() const
     {
         return red_pad || yellow_cymbal || yellow_pad || blue_cymbal || blue_pad || green_cymbal || green_pad;
+    }
+};
+
+// What the mouse mappings want this report, gathered like KeyboardState
+class MouseState {
+    public:
+    enum Axis { X, Y, Wheel, Pan, AxisCount };
+    uint8_t buttons = 0;
+    // signed deflection, -32768 to 32767, which the keyboard device turns into movement
+    int32_t axes[AxisCount] = {0};
+
+    void clear_all() {
+        buttons = 0;
+        memset(axes, 0, sizeof(axes));
     }
 };
 

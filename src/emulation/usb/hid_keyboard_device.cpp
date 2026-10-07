@@ -13,11 +13,12 @@
 #include "utils.h"
 #include <stdint.h>
 #include <class/hid/hid_device.h>
+#include "emulation/keyboard_mouse.hpp"
 
 // TODO: we dont really need to support nkro, we could just have our kro be like 10kro or something
-uint8_t const desc_hid_keyboard_report[] = {TUD_HID_REPORT_DESC_KEYBOARD()};
+uint8_t const desc_hid_keyboard_report[] = {TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(KEYBOARD_REPORT_ID)),
+                                            TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(MOUSE_REPORT_ID))};
 
-uint8_t const desc_hid_mouse_report[] = {TUD_HID_REPORT_DESC_MOUSE()};
 HIDKeyboardDevice::HIDKeyboardDevice()
 {
 }
@@ -31,6 +32,7 @@ void HIDKeyboardDevice::initialize()
   memset(&m_initial_report, 0, sizeof(m_initial_report));
   memset(m_last_report, 0, sizeof(m_last_report));
   m_sent_first_report = false;
+  m_reports.reset();
 }
 void HIDKeyboardDevice::process(bool full_poll, bool send_events)
 {
@@ -50,13 +52,11 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
     }
     return;
   }
-  hid_keyboard_report_t *report = (hid_keyboard_report_t *)epin_buf;
-  memcpy(epin_buf, m_initial_report, sizeof(epin_buf));
   for (const auto &profile : profiles)
   {
     profile->reset_drum_state();
-    auto &state = profile->keyboard_state;
-    state.clear_all();
+    profile->keyboard_state.clear_all();
+    profile->mouse_state.clear_all();
     for (const auto &mapping : profile->mappings)
     {
       mapping->update(full_poll, send_events);
@@ -66,66 +66,25 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
     {
       led->update(full_poll, send_events);
     }
-    // Modifier keys (left / right ctrl, shift, alt, gui) go in the modifier byte, not the key array
-    for (uint8_t i = 0; i < 8; i++)
-    {
-      if (state.is_key_pressed(HID_KEY_CONTROL_LEFT + i))
-      {
-        report->modifier |= 1 << i;
-        state.clear_key(HID_KEY_CONTROL_LEFT + i);
-      }
-    }
-    size_t total_pressed = 0;
-    for (size_t i = 0; i < 256; i++)
-    {
-      if (state.is_key_pressed(i))
-      {
-        total_pressed++;
-      }
-    }
-    if (total_pressed > sizeof(report->keycode))
-    {
-      memset(report->keycode, 0x01, sizeof(report->keycode));
-      memset(state.last_seen_keys, 0, sizeof(state.last_seen_keys));
-    }
-    else
-    {
-      size_t current = 0;
-      for (size_t i = 0; i < sizeof(state.last_seen_keys); i++)
-      {
-        uint8_t key = state.last_seen_keys[i];
-        if (key && state.is_key_pressed(key))
-        {
-          if (current < sizeof(report->keycode))
-          {
-            report->keycode[current++] = key;
-          }
-          state.clear_key(key);
-        }
-      }
-      for (size_t i = 0; i < 256; i++)
-      {
-        if (current >= sizeof(report->keycode))
-        {
-          break;
-        }
-        if (state.is_key_pressed(i))
-        {
-          report->keycode[current++] = i;
-        }
-      }
-      memcpy(state.last_seen_keys, report->keycode, sizeof(report->keycode));
-    }
   }
-  if (!m_sent_first_report || memcmp(m_last_report, epin_buf, sizeof(hid_keyboard_report_t)) != 0)
+  m_reports.collect(profiles);
+  if (!ready())
   {
-    if (!ready())
+    return;
+  }
+  KeyboardReport keyboard;
+  if (m_reports.keyboard_pending(keyboard))
+  {
+    if (send_report(sizeof(keyboard), KEYBOARD_REPORT_ID, &keyboard))
     {
-      return;
+      m_reports.keyboard_sent(keyboard);
     }
-    send_report(sizeof(hid_keyboard_report_t), 0, epin_buf);
-    memcpy(m_last_report, epin_buf, sizeof(hid_keyboard_report_t));
-    m_sent_first_report = true;
+    return;
+  }
+  MouseReport mouse;
+  if (m_reports.mouse_pending(mouse) && send_report(sizeof(mouse), MOUSE_REPORT_ID, &mouse))
+  {
+    m_reports.mouse_sent(mouse);
   }
 }
 
@@ -136,7 +95,8 @@ size_t HIDKeyboardDevice::compatible_section_descriptor(uint8_t *dest, size_t re
 
 size_t HIDKeyboardDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-  uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_keyboard_report), m_epout, m_epin, sizeof(hid_keyboard_report_t), 1)};
+  // the keyboard report (plus its id) is the larger of the two
+  uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_keyboard_report), m_epout, m_epin, sizeof(hid_keyboard_report_t) + 1, 1)};
   assert(sizeof(desc) <= remaining);
   memcpy(dest, desc, sizeof(desc));
   return sizeof(desc);

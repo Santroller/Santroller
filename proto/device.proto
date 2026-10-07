@@ -94,6 +94,8 @@ message MultiplexerDevice {
   required int32 s1Pin = 4;
   required int32 s2Pin = 5;
   required int32 s3Pin = 6;
+  // CD4051 style multiplexers need time to settle after switching channels
+  optional bool slow = 7;
 }
 message WorldTourDrumDevice {
   required SPIDevice spi = 1;

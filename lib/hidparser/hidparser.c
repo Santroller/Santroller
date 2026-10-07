@@ -206,6 +206,7 @@ bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem)
 		case HID_USAGE_DESKTOP_RY:
 		case HID_USAGE_DESKTOP_RZ:
 		case HID_USAGE_DESKTOP_SLIDER:
+		case HID_USAGE_DESKTOP_WHEEL:
 		case HID_USAGE_DESKTOP_HAT_SWITCH:
 		case HID_USAGE_DESKTOP_DPAD_UP:
 		case HID_USAGE_DESKTOP_DPAD_DOWN:
@@ -228,6 +229,7 @@ bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem)
 		{
 		case HID_USAGE_CONSUMER_AC_HOME:
 		case HID_USAGE_CONSUMER_AC_BACK:
+		case HID_USAGE_CONSUMER_AC_PAN:
 		case HID_USAGE_CONSUMER_RECORD:
 			return true;
 		}

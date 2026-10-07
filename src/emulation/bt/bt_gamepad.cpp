@@ -211,7 +211,7 @@ void BTGamepadDevice::initialize()
     switch (subtype)
     {
     case SubType_KeyboardMouse:
-        hids_device_init_with_storage(0, desc_hid_report_keyboard, sizeof(desc_hid_report_keyboard), num_reports, report_storage);
+        hids_device_init_with_storage(0, desc_hid_report_keyboard, desc_hid_report_keyboard_len, num_reports, report_storage);
         break;
     case SubType_Dancepad:
         hids_device_init_with_storage(0, desc_hid_report_buttons, sizeof(desc_hid_report_buttons), num_reports, report_storage);
@@ -287,10 +287,64 @@ void BTGamepadDevice::initialize()
     }
     XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)m_initial_report;
     gamepad->rsize = sizeof(XInputGamepad_Data_t);
+    m_reports.reset();
     m_initialized = true;
 }
+
+void BTGamepadDevice::process_keyboard_mouse(bool full_poll, bool send_events)
+{
+    for (const auto &profile : profiles)
+    {
+        profile->reset_drum_state();
+        profile->keyboard_state.clear_all();
+        profile->mouse_state.clear_all();
+        for (const auto &mapping : profile->mappings)
+        {
+            mapping->update(full_poll, send_events);
+            mapping->update_hid(m_epin_buffer);
+        }
+        for (const auto &led : profile->leds)
+        {
+            led->update(full_poll, send_events);
+        }
+    }
+    m_reports.collect(profiles);
+    BtStackLock lock;
+    if (con_handle == HCI_CON_HANDLE_INVALID)
+    {
+        return;
+    }
+    // Reports that can't go out yet (no ACL buffers) stay pending and are retried next loop
+    KeyboardReport keyboard;
+    if (m_reports.keyboard_pending(keyboard))
+    {
+        uint8_t status = protocol_mode
+                             ? hids_device_send_input_report_for_id(con_handle, KEYBOARD_REPORT_ID, (const uint8_t *)&keyboard, sizeof(keyboard))
+                             : hids_device_send_boot_keyboard_input_report(con_handle, (const uint8_t *)&keyboard, sizeof(keyboard));
+        if (status == ERROR_CODE_SUCCESS)
+        {
+            m_reports.keyboard_sent(keyboard);
+        }
+        return;
+    }
+    MouseReport mouse;
+    if (protocol_mode && m_reports.mouse_pending(mouse) &&
+        hids_device_send_input_report_for_id(con_handle, MOUSE_REPORT_ID, (const uint8_t *)&mouse, sizeof(mouse)) == ERROR_CODE_SUCCESS)
+    {
+        m_reports.mouse_sent(mouse);
+    }
+}
+
 void BTGamepadDevice::process(bool full_poll, bool send_events)
 {
+    if (subtype == SubType_KeyboardMouse)
+    {
+        if (con_handle != HCI_CON_HANDLE_INVALID)
+        {
+            process_keyboard_mouse(full_poll, send_events);
+        }
+        return;
+    }
     if (con_handle != HCI_CON_HANDLE_INVALID)
     {
         PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)m_epin_buffer;

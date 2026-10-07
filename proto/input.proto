@@ -69,6 +69,11 @@ message CrkdDrumAxisInput {
   required CrkdDrumAxisType axis = 2;
 }
 
+message CrazyGuitarNeckButtonInput {
+  required int32 deviceid = 1;
+  required CrazyGuitarNeckButtonType button = 2;
+}
+
 message Gh5NeckButtonInput {
   required int32 deviceid = 1;
   required Gh5NeckButtonType button = 2;
@@ -229,6 +234,7 @@ message Input {
     ShiftedInput shifted = 38;
     InfiniumFaderInput infiniumFader = 39;
     PeripheralInput peripheral = 40;
+    CrazyGuitarNeckButtonInput crazyGuitarNeck = 41;
   }
 }
 message InfiniumFaderInput {
@@ -307,4 +313,5 @@ message Mapping {
   // the last one is notch 5. Real 5-way switches aren't evenly spaced, so these let an
   // analog pickup be calibrated. Without them, the range is split into 5 equal bands.
   repeated uint32 pickupThresholds = 65;
+  optional AxisSection section = 66;
 }

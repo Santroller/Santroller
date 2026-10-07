@@ -170,20 +170,22 @@ void MouseAxisMapping::update_hid(uint8_t *buf)
     {
         return;
     }
-    hid_mouse_report_t *report = (hid_mouse_report_t *)buf;
+    auto &axes = m_profile->mouse_state.axes;
+    int32_t deflection = static_cast<int32_t>(m_calibrated_value) - 32768;
     switch (m_mapping.mapping.mapping.mouseAxis)
     {
     case Mouse_MoveX:
-        report->x = (m_calibrated_value - 32768) >> 8;
+        axes[MouseState::X] = deflection;
         break;
     case Mouse_MoveY:
-        report->y = (m_calibrated_value - 32768) >> 8;
+        axes[MouseState::Y] = deflection;
         break;
+    // the wheel is vertical scrolling, pan is horizontal
     case Mouse_ScrollX:
-        report->wheel = (m_calibrated_value - 32768) >> 8;
+        axes[MouseState::Pan] = deflection;
         break;
     case Mouse_ScrollY:
-        report->pan = (m_calibrated_value - 32768) >> 8;
+        axes[MouseState::Wheel] = deflection;
         break;
     }
 }
@@ -235,17 +237,21 @@ MouseButtonMapping::MouseButtonMapping(proto_Mapping mapping, std::unique_ptr<In
 
 void MouseButtonMapping::update_hid(uint8_t *buf)
 {
-    hid_mouse_report_t *report = (hid_mouse_report_t *)buf;
+    if (!m_last_value)
+    {
+        return;
+    }
+    auto &buttons = m_profile->mouse_state.buttons;
     switch (m_mapping.mapping.mapping.mouseButton)
     {
     case Mouse_Left:
-        report->buttons |= MOUSE_BUTTON_LEFT;
+        buttons |= MOUSE_BUTTON_LEFT;
         break;
     case Mouse_Middle:
-        report->buttons |= MOUSE_BUTTON_MIDDLE;
+        buttons |= MOUSE_BUTTON_MIDDLE;
         break;
     case Mouse_Right:
-        report->buttons |= MOUSE_BUTTON_RIGHT;
+        buttons |= MOUSE_BUTTON_RIGHT;
         break;
     }
 }

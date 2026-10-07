@@ -78,12 +78,11 @@ KeyboardKeyInput::KeyboardKeyInput(proto_KeyboardKeyInput input, std::shared_ptr
 bool KeyboardKeyInput::tick_digital()
 {
     if (!m_device) return false;
-    return 0;
+    return m_device->key_pressed(m_input.key);
 }
 uint16_t KeyboardKeyInput::tick_analog()
 {
-    if (!m_device) return 0;
-    return 0;
+    return tick_digital() ? UINT16_MAX : 0;
 }
 void KeyboardKeyInput::setup()
 {
@@ -94,12 +93,11 @@ MouseButtonInput::MouseButtonInput(proto_MouseButtonInput input, std::shared_ptr
 bool MouseButtonInput::tick_digital()
 {
     if (!m_device) return false;
-    return 0;
+    return m_device->mouse_button(m_input.button);
 }
 uint16_t MouseButtonInput::tick_analog()
 {
-    if (!m_device) return 0;
-    return 0;
+    return tick_digital() ? UINT16_MAX : 0;
 }
 void MouseButtonInput::setup()
 {
@@ -109,13 +107,12 @@ MouseAxisInput::MouseAxisInput(proto_MouseAxisInput input, std::shared_ptr<UsbHo
 }
 bool MouseAxisInput::tick_digital()
 {
-    if (!m_device) return false;
-    return 0;
+    return tick_analog() != UINT16_MAX / 2;
 }
 uint16_t MouseAxisInput::tick_analog()
 {
-    if (!m_device) return 0;
-    return 0;
+    if (!m_device) return UINT16_MAX / 2;
+    return m_device->mouse_axis(m_input.axis);
 }
 void MouseAxisInput::setup()
 {

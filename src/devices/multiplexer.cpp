@@ -3,7 +3,7 @@
 #include "config/config.hpp"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
-MultiplexerDevice::MultiplexerDevice(proto_MultiplexerDevice device, uint16_t id) : Device(id), m_device(device), m_multiplexer(device.s0Pin, device.s1Pin, device.s2Pin, device.s3Pin, device.inputPin, device.sixteenChannel)
+MultiplexerDevice::MultiplexerDevice(proto_MultiplexerDevice device, uint16_t id) : Device(id), m_device(device), m_multiplexer(device.s0Pin, device.s1Pin, device.s2Pin, device.s3Pin, device.inputPin, device.sixteenChannel, device.has_slow && device.slow)
 {
 }
 
@@ -12,9 +12,11 @@ void MultiplexerDevice::update(bool full_poll, bool send_events)
 }
 void MultiplexerDevice::begin()
 {
+    m_multiplexer.begin();
 }
 void MultiplexerDevice::end(bool full)
 {
+    m_multiplexer.end();
 }
 
 uint16_t MultiplexerDevice::read(uint8_t channel) {

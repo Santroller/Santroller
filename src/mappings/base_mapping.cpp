@@ -278,12 +278,20 @@ void AxisMapping::update(bool full_poll, bool send_events)
             val = m_mapping.center;
         }
     }
+    else if (m_mapping.section != AxisSectionFull)
+    {
+        // calibrate like a trigger, then use that to push the axis from its centre to one end
+        uint32_t amount = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, true) / 2;
+        val = m_mapping.section == AxisSectionPositive ? UINT16_MAX / 2 + amount : UINT16_MAX / 2 - amount;
+    }
     else
     {
         val = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
     }
+    // A half axis rests at the axis centre, so it can leave the axis to the other half's mapping
+    const uint32_t rest = m_mapping.section != AxisSectionFull ? UINT16_MAX / 2 : (uint32_t)m_mapping.center;
 
-    bool physical_pressed = (val != (uint32_t)m_mapping.center);
+    bool physical_pressed = (val != rest);
     if (m_waiting_for_release)
     {
         if (!physical_pressed)
@@ -294,12 +302,12 @@ void AxisMapping::update(bool full_poll, bool send_events)
 
     if (m_suppressed || m_waiting_for_release)
     {
-        val = m_mapping.center;
-        m_calibrated_value = m_mapping.center;
+        val = rest;
+        m_calibrated_value = rest;
     }
     m_suppressed = false;
 
-    if (val != (uint32_t)m_mapping.center)
+    if (val != rest)
     {
         m_last_poll = time_us_64();
         if ((!m_mapping.has_peakBased && !m_mapping.peakBased) || val > m_calibrated_value)
@@ -311,7 +319,7 @@ void AxisMapping::update(bool full_poll, bool send_events)
     {
         m_calibrated_value = val;
     }
-    m_centered = m_calibrated_value == (uint32_t)m_mapping.center || !m_input->valid();
+    m_centered = m_calibrated_value == rest || !m_input->valid();
 
     if (send_events && (uncalibrated != m_last_sent_value || m_calibrated_value != m_last_sent_calibrated_value || full_poll))
     {

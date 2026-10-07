@@ -14,7 +14,7 @@ std::shared_ptr<UsbHostInterface> KeyboardHost::open(std::shared_ptr<UsbHostDevi
     uint8_t dev_addr = list->dev_addr();
     uint8_t const *p_desc = (uint8_t const *)itf_desc;
 
-    if (itf_desc->bInterfaceProtocol == HID_ITF_PROTOCOL_MOUSE)
+    if (itf_desc->bInterfaceProtocol == HID_ITF_PROTOCOL_KEYBOARD)
     {
         auto intf = std::make_shared<KeyboardHost>(dev_addr, itf_desc->bInterfaceNumber, list->m_id);
         uint8_t endpoints = itf_desc->bNumEndpoints;
@@ -56,25 +56,55 @@ bool KeyboardHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferr
 {
     if (ep_addr & 0x80)
     {
+        if (result == XFER_RESULT_SUCCESS && xferred_bytes >= sizeof(m_keys))
+        {
+            memcpy(m_keys, m_ep_in_buf, sizeof(m_keys));
+        }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;
 }
 
+bool KeyboardHost::key_pressed(uint8_t keycode)
+{
+    // modifiers (left ctrl 0xE0 to right gui 0xE7) are bits in the first byte
+    if (keycode >= 0xE0 && keycode <= 0xE7)
+    {
+        return m_keys[0] & (1 << (keycode - 0xE0));
+    }
+    for (uint8_t i = 2; i < sizeof(m_keys); i++)
+    {
+        if (m_keys[i] == keycode)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool KeyboardHost::set_config()
 {
     UsbHostInterface::set_config();
+    // Boot protocol keeps the report a fixed 8 bytes, whatever the keyboard's own layout is
+    tusb_control_request_t set_protocol = {
+        .bmRequestType = 0x21,
+        .bRequest = HID_REQ_CONTROL_SET_PROTOCOL,
+        .wValue = HID_PROTOCOL_BOOT,
+        .wIndex = m_interface,
+        .wLength = 0};
+    send_ctrl_xfer(set_protocol, nullptr, nullptr);
     if (m_ep_in)
     {
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;
 }
+// Inputs picked in the config tool as a USB button carry the key as the type
 bool KeyboardHost::tick_digital(proto_Output& type)
 {
-    return false;
+    return type.which_mapping == proto_Output_keycode_tag && key_pressed(type.mapping.keycode);
 }
 uint16_t KeyboardHost::tick_analog(proto_Output& type)
 {
-    return 0;
+    return tick_digital(type) ? UINT16_MAX : 0;
 }

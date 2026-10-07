@@ -94,4 +94,5 @@ public:
     std::vector<bool> queued_last_live;
     DrumState drum_state;
     KeyboardState keyboard_state;
+    MouseState mouse_state;
 };

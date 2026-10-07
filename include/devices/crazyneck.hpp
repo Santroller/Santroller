@@ -11,9 +11,9 @@ public:
     void end(bool full);
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
+    CrazyGuitarNeck m_crazy_guitar_neck;
 
 private:
-    CrazyGuitarNeck m_crazy_guitar_neck;
     proto_CrazyGuitarNeckDevice m_device;
     uint32_t m_last_value = 0;
 };

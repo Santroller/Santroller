@@ -9,9 +9,11 @@ CrazyGuitarNeckDevice::CrazyGuitarNeckDevice(proto_CrazyGuitarNeckDevice device,
 
 void CrazyGuitarNeckDevice::begin()
 {
+    m_crazy_guitar_neck.begin();
 }
 void CrazyGuitarNeckDevice::end(bool full)
 {
+    m_crazy_guitar_neck.end();
 }
 void CrazyGuitarNeckDevice::update(bool full_poll, bool send_events)
 {

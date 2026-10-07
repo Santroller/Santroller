@@ -1,18 +1,24 @@
 .program psx_ack_pacer
 ; Hybrid ACK Pacer with Timeout Fallback for PS2 Controller SPI DMA
 ; Listens on ACK pin (idles HIGH, pulses LOW on ACK).
-; If ACK pulses LOW, pushes 1 to RX FIFO immediately.
-; If ACK times out (~35 us), pushes 1 to RX FIFO on timeout.
+; If ACK pulses LOW, waits for it to release plus ~9 us, then pushes 1 to RX FIFO.
+; If ACK times out (~140 us), pushes 1 to RX FIFO on timeout.
+; The timeout starts when the byte starts, so it has to cover a whole byte at the
+; slowest bus speed (32 us at 250 kHz, 80 us at 100 kHz) plus the ACK delay.
 
 .wrap_target
 start:
     set x, 1
     mov isr, x
     push block              ; Push 1 to RX FIFO to trigger DMA transfer
-    set y, 31               ; Load 35 us timeout counter (31 iterations)
+    set x, 3                ; 4 windows of ~35 us
+window:
+    set y, 31               ; Load 35 us window counter (31 iterations)
 poll_loop:
     jmp pin ack_not_low     ; If ACK pin is HIGH (1), jump to ack_not_low
-    jmp start               ; ACK pin is LOW (0)! Controller ACKed!
+    wait 1 pin 0 [7]        ; ACK is LOW! Wait for it to release, so a long ACK pulse isn't seen twice
+    jmp start [7]           ; ~9 us of idle bus after ACK before the next byte, slow PS1 pads need it
 ack_not_low:
-    jmp y-- poll_loop       ; Decrement timeout counter; loop if y > 0
+    jmp y-- poll_loop       ; Decrement window counter; loop if y > 0
+    jmp x-- window          ; Next window; fall through to start once all have expired
 .wrap

@@ -127,6 +127,8 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
     case proto_Output_divaTouch_tag:
         return std::make_unique<ProjectDivaButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         
+    case proto_Output_popnButton_tag:
+        return std::make_unique<PopNMusicButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
     case proto_Output_gfButton_tag:
         return std::make_unique<GuitarFreaksButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         

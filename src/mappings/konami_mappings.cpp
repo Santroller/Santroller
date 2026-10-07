@@ -168,106 +168,83 @@ void DrumManiaAxisMapping::update_xboxone(uint8_t *buf)
     // not a thing
 }
 
-PopNMusicAxisMapping::PopNMusicAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
+static proto_Mapping popn_as_gamepad(proto_Mapping mapping)
 {
+    GamepadButtonType button = Gamepad_A;
+    switch (mapping.mapping.mapping.popnButton)
+    {
+    case PopNMusic_Button1:
+        button = Gamepad_Y;
+        break;
+    case PopNMusic_Button2:
+        button = Gamepad_B;
+        break;
+    case PopNMusic_Button3:
+        button = Gamepad_RightShoulder;
+        break;
+    case PopNMusic_Button4:
+        button = Gamepad_A;
+        break;
+    case PopNMusic_Button5:
+        button = Gamepad_LeftShoulder;
+        break;
+    case PopNMusic_Button6:
+        button = Gamepad_X;
+        break;
+    // L2 and R2 are triggers on gamepads, so use the stick clicks
+    case PopNMusic_Button7:
+        button = Gamepad_LeftThumbClick;
+        break;
+    case PopNMusic_Button8:
+        button = Gamepad_DpadUp;
+        break;
+    case PopNMusic_Button9:
+        button = Gamepad_RightThumbClick;
+        break;
+    }
+    mapping.mapping.which_mapping = proto_Output_gamepadButton_tag;
+    mapping.mapping.mapping.gamepadButton = button;
+    return mapping;
 }
 
-void PopNMusicAxisMapping::update_hid(uint8_t *buf)
+PopNMusicButtonMapping::PopNMusicButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadButtonMapping(popn_as_gamepad(mapping), std::move(input), id, profile), m_button(mapping.mapping.mapping.popnButton)
 {
-    // TODO: how does this work for hid
-    // https://github.com/whowechina/popn_pico
-
-    // https://github.com/CrazyRedMachine/UltimatePopnController
-}
-void PopNMusicAxisMapping::update_wii(uint8_t format, uint8_t *buf)
-{
-    // would need to emulate a remote here as it was motion based
-}
-void PopNMusicAxisMapping::update_switch(uint8_t *buf)
-{
-}
-
-void PopNMusicAxisMapping::update_ps2(uint8_t *buf)
-{
-    // https://psx-spx.consoledev.net/controllersandmemorycards/#controllers-popn-controllers
-    // holds left right and down
-}
-
-void PopNMusicAxisMapping::update_ps3(uint8_t *buf)
-{
-    // not a thing
-}
-
-void PopNMusicAxisMapping::update_ps4(uint8_t *buf)
-{
-    // not a thing
-}
-
-void PopNMusicAxisMapping::update_ps5(uint8_t *buf)
-{
-    // not a thing
-}
-
-void PopNMusicAxisMapping::update_xinput(uint8_t *buf)
-{
-    // not a thing
-}
-void PopNMusicAxisMapping::update_ogxbox(uint8_t *buf)
-{
-    // not a thing
-}
-void PopNMusicAxisMapping::update_xboxone(uint8_t *buf)
-{
-}
-
-PopNMusicButtonMapping::PopNMusicButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
-{
-    
-}
-
-void PopNMusicButtonMapping::update_hid(uint8_t *buf)
-{
-    // TODO: how does this work for hid
-}
-void PopNMusicButtonMapping::update_wii(uint8_t format, uint8_t *buf)
-{
-    // TODO: how does this work on wii
-}
-void PopNMusicButtonMapping::update_switch(uint8_t *buf)
-{
-    
 }
 
 void PopNMusicButtonMapping::update_ps2(uint8_t *buf)
 {
-    // TODO: how does this work on ps2
-}
-
-void PopNMusicButtonMapping::update_ps3(uint8_t *buf)
-{
-    // not a thing
-}
-
-void PopNMusicButtonMapping::update_ps4(uint8_t *buf)
-{
-    // not a thing
-}
-
-void PopNMusicButtonMapping::update_ps5(uint8_t *buf)
-{
-    // not a thing
-}
-
-void PopNMusicButtonMapping::update_xinput(uint8_t *buf)
-{
-   // not a thing
-}
-void PopNMusicButtonMapping::update_ogxbox(uint8_t *buf)
-{
-    // not a thing
-}
-void PopNMusicButtonMapping::update_xboxone(uint8_t *buf)
-{
+    // https://github.com/PCSX2/pcsx2/blob/master/pcsx2/SIO/Pad/PadPopn.cpp
+    PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)buf;
+    switch (m_button)
+    {
+    case PopNMusic_Button1:
+        report->y |= m_last_value;
+        break;
+    case PopNMusic_Button2:
+        report->b |= m_last_value;
+        break;
+    case PopNMusic_Button3:
+        report->rightShoulder |= m_last_value;
+        break;
+    case PopNMusic_Button4:
+        report->a |= m_last_value;
+        break;
+    case PopNMusic_Button5:
+        report->leftShoulder |= m_last_value;
+        break;
+    case PopNMusic_Button6:
+        report->x |= m_last_value;
+        break;
+    case PopNMusic_Button7:
+        report->r2 |= m_last_value;
+        break;
+    case PopNMusic_Button8:
+        report->dpadUp |= m_last_value;
+        break;
+    case PopNMusic_Button9:
+        report->l2 |= m_last_value;
+        break;
+    }
 }
 
 BeatManiaButtonMapping::BeatManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)

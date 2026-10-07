@@ -72,7 +72,7 @@ typedef struct psx_spi_protocol_state_t
     (s)->configMode = false; \
     if ((type) == SubType_GuitarHeroGuitar) \
         memcpy((s)->config_responses[0x05], init_resp_45_gh, 6); \
-    (s)->digitalOnly = (type) == SubType_Taiko; \
+    (s)->digitalOnly = (type) == SubType_Taiko || (type) == SubType_PopNMusic; \
 } while (0)
 
 #define PSX_SPI_PROCESS_COMMAND(s, b) do { \

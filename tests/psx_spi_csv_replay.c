@@ -13,7 +13,8 @@ enum
 {
     SubType_Gamepad,
     SubType_GuitarHeroGuitar,
-    SubType_Taiko
+    SubType_Taiko,
+    SubType_PopNMusic
 };
 
 typedef struct {

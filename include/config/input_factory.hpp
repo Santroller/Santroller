@@ -69,6 +69,17 @@ public:
             if (auto claimed = profile->get_claimed_device(slot_kind, static_cast<uint16_t>(device_id))) {
                 return cast_device(claimed);
             }
+            // Legacy profiles store the root device id rather than a slot id, so fall back to
+            // whatever of this kind the profile claimed, as firmware before slots did
+            if (!profile->per_kind_slot_ids) {
+                for (const auto &claimed : profile->claimed_devices) {
+                    if (claimed.first.first == slot_kind) {
+                        if (auto device = cast_device(claimed.second)) {
+                            return device;
+                        }
+                    }
+                }
+            }
         }
         auto s_it = profile->devices.find(device_id);
         if (s_it != profile->devices.end()) {

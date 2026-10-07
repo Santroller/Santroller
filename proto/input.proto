@@ -279,6 +279,7 @@ message Output {
     int32 proKeyMultiple = 29;
     ProKeyboardAxisType proKeyboardAxis = 30;
     ProKeyboardButtonType proKeyboardButton = 31;
+    PopNMusicButtonType popnButton = 32;
   }
 }
 

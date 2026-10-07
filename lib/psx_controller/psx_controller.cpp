@@ -161,7 +161,7 @@ void PSXController::begin()
     controller = this;
 
     spi = (m_block == 0) ? spi0 : spi1;
-    spi_init(spi, m_clock);
+    spi_init(spi, handshake_clock());
     spi_set_format(spi, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
 
     if (m_sckPin != -1)
@@ -255,8 +255,7 @@ void PSXController::begin()
             dma_timer = dma_claim_unused_timer(false);
             if (dma_timer >= 0)
             {
-                uint16_t denom = (uint16_t)(clock_get_hz(clk_sys) / 28571);
-                dma_timer_set_fraction(dma_timer, 1, denom);
+                update_timer_pacing();
                 uint timer_dreq = dma_get_timer_dreq(dma_timer);
 
                 dma_channel_config tx_cfg = dma_channel_get_default_config(dma_tx);
@@ -278,6 +277,25 @@ void PSXController::begin()
     status = DISCONNECTED;
     packet_delay = 200000;
     no_attention();
+}
+uint32_t PSXController::handshake_clock() const
+{
+    return m_clock < PS1_CLOCK ? m_clock : PS1_CLOCK;
+}
+void PSXController::set_bus_clock(uint32_t clock)
+{
+    spi_set_baudrate(spi, clock);
+    update_timer_pacing();
+}
+void PSXController::update_timer_pacing()
+{
+    if (dma_timer < 0)
+        return;
+    // Without the PIO pacer there is no ACK detection, so pace bytes at a whole byte
+    // at the current bus speed plus ~20 us for the controller to ACK
+    uint32_t interval_us = 8000000 / spi_get_baudrate(spi) + 20;
+    uint32_t denom = (uint32_t)((uint64_t)clock_get_hz(clk_sys) * interval_us / 1000000);
+    dma_timer_set_fraction(dma_timer, 1, denom > UINT16_MAX ? UINT16_MAX : denom);
 }
 static inline void abort_dma_if_active(int channel)
 {
@@ -623,7 +641,10 @@ void PSXController::process_data(bool ack, bool timeout)
             if (valid)
             {
                 status = CONNECTION_DELAY;
+                // Every pad is enumerated at PS1 speed, only DS2s get bumped up once identified
+                set_bus_clock(handshake_clock());
                 m_config_retries = 0;
+                m_enter_config_attempts = 0;
                 packet_delay = 300000;
                 no_attention();
                 return;
@@ -641,22 +662,18 @@ void PSXController::process_data(bool ack, bool timeout)
             packet_delay = 10000;
             break;
         case ENTER_CONFIG:
-            if (valid)
+            // Digital pads answer enter config with a valid non-config reply forever, so cap attempts
+            // regardless of validity and fall through to plain polling.
+            if (m_enter_config_attempts < 5)
             {
-                m_config_retries = 0;
+                m_enter_config_attempts++;
+                if (valid)
+                    m_config_retries = 0;
                 status = FIRST_INPUTS;
             }
             else
             {
-                if (m_config_retries < 5)
-                {
-                    m_config_retries++;
-                    status = FIRST_INPUTS;
-                }
-                else
-                {
-                    status = SECOND_INPUTS;
-                }
+                status = SECOND_INPUTS;
             }
             packet_delay = 10000;
             break;
@@ -723,17 +740,19 @@ void PSXController::process_data(bool ack, bool timeout)
             break;
         case SECOND_INPUTS:
             status = ENUMERATED;
+            // Left over from the previous connection otherwise, so one bad poll would drop it again
+            missing = 0;
             packet_delay = 5000;
             if (isDualShock2Reply(ps2Data))
             {
-                if ((~ps2Data[3]) & (1 << 7) && (~ps2Data[3]) & (1 << 5) && (~ps2Data[3]) & (1 << 6))
-                    type = PS2ControllerTypePopNMusic;
-                else if ((~ps2Data[3]) & (1 << 7))
+                if ((~ps2Data[3]) & (1 << 7))
                     type = PS2ControllerTypeGuitar;
                 else
                 {
                     packet_delay = 1000;
                     type = PS2ControllerTypeDualshock2;
+                    // A PS2 runs DS2s at 500 kHz, older pads only handle the PS1's 250 kHz
+                    set_bus_clock(m_clock);
                 }
             }
             else if (isDualShockReply(ps2Data))
@@ -754,7 +773,13 @@ void PSXController::process_data(bool ack, bool timeout)
             else if (isMouseReply(ps2Data))
                 type = PS2ControllerTypeMouse;
             else if (isDigitalReply(ps2Data))
-                type = PS2ControllerTypeDigital;
+            {
+                // pop'n pads are digital and hold dpad left, right and down
+                if ((~ps2Data[3]) & (1 << 7) && (~ps2Data[3]) & (1 << 5) && (~ps2Data[3]) & (1 << 6))
+                    type = PS2ControllerTypePopNMusic;
+                else
+                    type = PS2ControllerTypeDigital;
+            }
             break;
         case ENUMERATED:
             PS2_PRINT("[PS2] state ENUMERATED valid=%d\r\n", valid);
@@ -779,8 +804,10 @@ void PSXController::process_data(bool ack, bool timeout)
         m_poll_cmd[0] = 0x01;
         m_poll_cmd[1] = 0x42;
         m_poll_cmd[2] = 0x00;
-        m_poll_cmd[3] = m_rumble_small ? 0x01 : 0x00;
-        m_poll_cmd[4] = m_rumble_large;
+        // Only pads that went through the rumble mapping handshake understand motor bytes
+        bool rumble = type == PS2ControllerTypeDualshock || type == PS2ControllerTypeDualshock2;
+        m_poll_cmd[3] = rumble && m_rumble_small ? 0x01 : 0x00;
+        m_poll_cmd[4] = rumble ? m_rumble_large : 0x00;
 
         if (valid && status == ENUMERATED &&
             (ps2Data[2] == 0x5A || ps2Data[2] == 0x00))
@@ -951,6 +978,38 @@ uint16_t PSXController::read_axis(PS2AxisType axisType)
 
 bool PSXController::read_button(PS2ButtonType buttonType)
 {
+    if (type == PS2ControllerTypePopNMusic)
+    {
+        switch (buttonType)
+        {
+        // pop'n pads hold dpad left, right and down permanently as an identifier
+        case PS2ButtonDpadLeft:
+        case PS2ButtonDpadRight:
+        case PS2ButtonDpadDown:
+            return false;
+        // the nine play buttons, left to right
+        case PS2ButtonPopN1:
+            return read_button(PS2ButtonTriangle);
+        case PS2ButtonPopN2:
+            return read_button(PS2ButtonCircle);
+        case PS2ButtonPopN3:
+            return read_button(PS2ButtonR1);
+        case PS2ButtonPopN4:
+            return read_button(PS2ButtonCross);
+        case PS2ButtonPopN5:
+            return read_button(PS2ButtonL1);
+        case PS2ButtonPopN6:
+            return read_button(PS2ButtonSquare);
+        case PS2ButtonPopN7:
+            return read_button(PS2ButtonR2);
+        case PS2ButtonPopN8:
+            return read_button(PS2ButtonDpadUp);
+        case PS2ButtonPopN9:
+            return read_button(PS2ButtonL2);
+        default:
+            break;
+        }
+    }
     switch (type)
     {
     case PS2ControllerTypeUnknown:

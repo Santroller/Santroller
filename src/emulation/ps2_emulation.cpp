@@ -67,7 +67,25 @@ void Ps2EmulationDeviceInstance::initialize()
         report->whammy = 0x7f;
         break;
     }
+    // Digital only pads, the protocol layer only sends the first two bytes
+    case Taiko:
+    case PopNMusic:
+    {
+        PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)m_initial_report;
+        memset(m_initial_report, 0, sizeof(m_initial_report));
+        m_size = 2;
+        if (subtype == PopNMusic)
+        {
+            // pop'n pads hold dpad left, right and down permanently as an identifier
+            report->dpadLeft = 1;
+            report->dpadRight = 1;
+            report->dpadDown = 1;
+        }
+        break;
+    }
     default:
+        memset(m_initial_report, 0, sizeof(m_initial_report));
+        m_size = 0;
         break;
     }
 }

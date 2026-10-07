@@ -1,5 +1,6 @@
 #pragma once
 #include "mappings/base_mapping.hpp"
+#include "mappings/gamepad_mapping.hpp"
 
 class GuitarFreaksButtonMapping : public ButtonMapping
 {
@@ -69,38 +70,17 @@ public:
     void update_xboxone(uint8_t *report);
 };
 
-class PopNMusicButtonMapping : public ButtonMapping
+// pop'n buttons are just PS buttons on a digital pad, so everywhere other than PS2 emulation
+// they behave as the equivalent gamepad button
+class PopNMusicButtonMapping : public GamepadButtonMapping
 {
 public:
     ~PopNMusicButtonMapping() {}
     PopNMusicButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
-    void update_hid(uint8_t *report);
-    void update_wii(uint8_t format, uint8_t *buf);
-    void update_switch(uint8_t *report);
     void update_ps2(uint8_t *report);
-    void update_ps3(uint8_t *report);
-    void update_ps4(uint8_t *report);
-    void update_ps5(uint8_t *report);
-    void update_xinput(uint8_t *report);
-    void update_ogxbox(uint8_t *report);
-    void update_xboxone(uint8_t *report);
-};
 
-class PopNMusicAxisMapping : public AxisMapping
-{
-public:
-    ~PopNMusicAxisMapping() {}
-    PopNMusicAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
-    void update_hid(uint8_t *report);
-    void update_wii(uint8_t format, uint8_t *buf);
-    void update_switch(uint8_t *report);
-    void update_ps2(uint8_t *report);
-    void update_ps3(uint8_t *report);
-    void update_ps4(uint8_t *report);
-    void update_ps5(uint8_t *report);
-    void update_xinput(uint8_t *report);
-    void update_ogxbox(uint8_t *report);
-    void update_xboxone(uint8_t *report);
+private:
+    PopNMusicButtonType m_button;
 };
 
 class BeatManiaButtonMapping : public ButtonMapping

@@ -59,6 +59,8 @@
  * edge (us).
  */
 #define ATTN_DELAY 100
+// Clock a PS1 drives its pads at, used until a pad identifies as a DualShock 2
+#define PS1_CLOCK 250000
 
 typedef enum 
 {
@@ -98,6 +100,9 @@ private:
     bool auto_shift_data(const uint8_t *out, const uint8_t len);
     void no_attention();
     void signal_attention();
+    uint32_t handshake_clock() const;
+    void set_bus_clock(uint32_t clock);
+    void update_timer_pacing();
     spi_inst_t *spi = nullptr;
     uint8_t m_block;
     uint32_t m_clock;
@@ -140,4 +145,5 @@ private:
     PSXControllerState status = DISCONNECTED;
     uint32_t packet_delay = 10000;
     uint8_t m_config_retries = 0;
+    uint8_t m_enter_config_attempts = 0;
 };

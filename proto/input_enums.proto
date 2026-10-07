@@ -177,11 +177,6 @@ enum PopNMusicButtonType {
   PopNMusic_Button8 = 8;
   PopNMusic_Button9 = 9;
 }
-enum PopNMusicAxisType {
-  PopNMusic_LeftStickX = 1;
-  PopNMusic_LeftStickY = 2;
-}
-
 enum ProGuitarButtonType {
   ProGuitar_Green = 12;
   ProGuitar_Red = 13;
@@ -402,6 +397,16 @@ enum PS2ButtonType {
   PS2ButtonTaikoRimRight = 43;
   PS2ButtonTaikoCenterLeft = 44;
   PS2ButtonTaikoCenterRight = 45;
+  // pop'n music buttons, numbered left to right
+  PS2ButtonPopN1 = 46;
+  PS2ButtonPopN2 = 47;
+  PS2ButtonPopN3 = 48;
+  PS2ButtonPopN4 = 49;
+  PS2ButtonPopN5 = 50;
+  PS2ButtonPopN6 = 51;
+  PS2ButtonPopN7 = 52;
+  PS2ButtonPopN8 = 53;
+  PS2ButtonPopN9 = 54;
 }
 
 enum CrkdNeckButtonType {

@@ -1,5 +1,6 @@
 #include "devices/bt/bt_ble_host.hpp"
 #include "devices/bt/bt_host.hpp"
+#include "devices/bt/bluetooth_stack.hpp"
 #include "managers/device_manager.hpp"
 #include "hidparser.h"
 #include "btstack.h"
@@ -13,6 +14,7 @@
 #include "protocols/hid.hpp"
 #include "protocols/xinput.hpp"
 #include "protocols/santroller_v1.hpp"
+#include "protocols/santroller_v2.hpp"
 #include "protocols/switch.hpp"
 
 bool switch_tick_digital(const uint8_t *buf, proto_Output &type);
@@ -172,6 +174,7 @@ uint16_t BleGhlIosHost::tick_analog(proto_Output &type)
 BleSantrollerHost::BleSantrollerHost(uint16_t id, bool is_v2, uint16_t version, SubType known_subtype)
     : BluetoothHostInterface(id), m_is_v2(is_v2)
 {
+    m_output.is_v2 = is_v2;
     if (m_is_v2)
     {
         if (known_subtype != SubType_Unknown)
@@ -208,19 +211,18 @@ BleSantrollerHost::BleSantrollerHost(uint16_t id, bool is_v2, uint16_t version, 
 void BleSantrollerHost::on_connected()
 {
     BluetoothHostInterface::on_connected();
+    m_output.mark_all_dirty();
     if (m_is_v2)
     {
         if (m_subtype != SubType_Unknown)
         {
             set_ready(true);
         }
-        else
-        {
-            // Query Santroller capabilities (Report 0x10) over GATT
-            hids_host_send_get_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_INPUT);
-            static const uint8_t cmd[2] = {ReportIdSantrollerCapabilities, 0};
-            hids_host_send_write_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_OUTPUT, cmd, sizeof(cmd));
-        }
+        // Query Santroller capabilities (Report 0x10) over GATT. Even with the subtype
+        // already known from pairing, the capability bits decide which outputs to send.
+        hids_host_send_get_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_INPUT);
+        static const uint8_t cmd[2] = {ReportIdSantrollerCapabilities, 0};
+        hids_host_send_write_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_OUTPUT, cmd, sizeof(cmd));
     }
     else
     {
@@ -253,6 +255,9 @@ void BleSantrollerHost::handle_report_v2(const uint8_t *data, uint16_t len)
             {
                 m_capabilities = data[2];
             }
+            m_output.subtype = m_subtype;
+            m_output.capabilities = m_capabilities;
+            m_output.mark_all_dirty();
             if (!m_ready)
             {
                 set_ready(true);
@@ -276,26 +281,7 @@ void BleSantrollerHost::handle_report_v2(const uint8_t *data, uint16_t len)
 
     uint16_t copy_len = len < sizeof(m_report_buf) ? len : sizeof(m_report_buf);
     memcpy(m_report_buf, data, copy_len);
-
-    // If not Dancepad, convert hat (bits 0..3 of data[2]) to XInput dpad bitmask
-    if (m_subtype != Dancepad && copy_len >= 3)
-    {
-        uint8_t hat = data[2] & 0x0F;
-        uint8_t dpad_bits = 0;
-        switch (hat)
-        {
-        case 0: dpad_bits = 0x01; break; // Up
-        case 1: dpad_bits = 0x09; break; // Up + Right
-        case 2: dpad_bits = 0x08; break; // Right
-        case 3: dpad_bits = 0x0A; break; // Down + Right
-        case 4: dpad_bits = 0x02; break; // Down
-        case 5: dpad_bits = 0x06; break; // Down + Left
-        case 6: dpad_bits = 0x04; break; // Left
-        case 7: dpad_bits = 0x05; break; // Up + Left
-        default: dpad_bits = 0; break;
-        }
-        m_report_buf[2] = (m_report_buf[2] & 0xF0) | dpad_bits;
-    }
+    santroller_v2_normalize_report(m_report_buf, copy_len, m_subtype);
 }
 
 void BleSantrollerHost::handle_report_v1(const uint8_t *data, uint16_t len)
@@ -305,13 +291,34 @@ void BleSantrollerHost::handle_report_v1(const uint8_t *data, uint16_t len)
     memcpy(m_report_buf, data, copy_len);
 }
 
+void BleSantrollerHost::update(bool full_poll, bool send_events)
+{
+    BluetoothHostInterface::update(full_poll, send_events);
+    if (!m_ready || !m_cid)
+        return;
+    sync_output();
+    // one pending rumble / LED / stage kit command per pass. A HOGP report write carries
+    // the report id in the characteristic, so the payload starts at the command byte.
+    uint8_t buf[8];
+    uint8_t len = m_output.peek(buf, sizeof(buf));
+    if (!len)
+        return;
+    uint8_t status;
+    {
+        BtStackLock lock;
+        status = hids_host_send_write_report(m_cid, ReportIdGamepad, HID_REPORT_TYPE_OUTPUT, buf + 1, len - 1);
+    }
+    if (status == ERROR_CODE_SUCCESS)
+        m_output.commit(buf[1]);
+}
+
 bool BleSantrollerHost::tick_digital(proto_Output &type)
 {
     if (m_is_v2)
     {
         return xinput_tick_digital_impl(m_report_buf, m_subtype, type);
     }
-    return tick_digital_v1(type);
+    return santroller_v1_tick_digital(m_report_buf, m_subtype, type);
 }
 
 uint16_t BleSantrollerHost::tick_analog(proto_Output &type)
@@ -320,7 +327,7 @@ uint16_t BleSantrollerHost::tick_analog(proto_Output &type)
     {
         return xinput_tick_analog_impl(m_report_buf, m_subtype, type);
     }
-    return tick_analog_v1(type);
+    return santroller_v1_tick_analog(m_report_buf, m_subtype, type);
 }
 
 uint16_t BleSantrollerHost::tick_button_pressure(proto_Output &type)
@@ -330,321 +337,6 @@ uint16_t BleSantrollerHost::tick_button_pressure(proto_Output &type)
     return tick_digital(type) ? UINT16_MAX : 0;
 }
 
-bool BleSantrollerHost::tick_digital_v1(proto_Output &type)
-{
-    uint8_t hat = m_report_buf[3] & 0x0F;
-    bool up    = (hat == 0 || hat == 1 || hat == 7);
-    bool down  = (hat == 3 || hat == 4 || hat == 5);
-    bool left  = (hat == 5 || hat == 6 || hat == 7);
-    bool right = (hat == 1 || hat == 2 || hat == 3);
-
-    if (type.which_mapping == proto_Output_gamepadButton_tag)
-    {
-        switch (m_subtype)
-        {
-        case Dancepad:
-        {
-            auto data = (const Santroller1Gamepad_Data_t *)m_report_buf;
-            switch (type.mapping.gamepadButton)
-            {
-            case Gamepad_DpadUp:    return (data->dpad & 1) != 0;
-            case Gamepad_DpadDown:  return ((data->dpad >> 1) & 1) != 0;
-            case Gamepad_DpadLeft:  return ((data->dpad >> 2) & 1) != 0;
-            case Gamepad_DpadRight: return ((data->dpad >> 3) & 1) != 0;
-            case Gamepad_Back:      return data->back;
-            case Gamepad_Start:     return data->start;
-            default:                return false;
-            }
-        }
-        case GuitarHeroGuitar:
-        {
-            auto data = (const Santroller1GuitarHeroGuitar_Data_t *)m_report_buf;
-            switch (type.mapping.gamepadButton)
-            {
-            case Gamepad_A:             return data->a;
-            case Gamepad_B:             return data->b;
-            case Gamepad_X:             return data->x;
-            case Gamepad_Y:             return data->y;
-            case Gamepad_LeftShoulder:  return data->leftShoulder;
-            case Gamepad_RightShoulder: return data->rightShoulder;
-            case Gamepad_Back:          return data->back;
-            case Gamepad_Start:         return data->start;
-            case Gamepad_Guide:         return data->guide;
-            case Gamepad_DpadUp:        return up;
-            case Gamepad_DpadDown:      return down;
-            case Gamepad_DpadLeft:      return left;
-            case Gamepad_DpadRight:     return right;
-            default:                    return false;
-            }
-        }
-        case RockBandGuitar:
-        {
-            auto data = (const Santroller1RockBandGuitar_Data_t *)m_report_buf;
-            switch (type.mapping.gamepadButton)
-            {
-            case Gamepad_A:             return data->a || data->soloGreen;
-            case Gamepad_B:             return data->b || data->soloRed;
-            case Gamepad_X:             return data->x || data->soloBlue;
-            case Gamepad_Y:             return data->y || data->soloYellow;
-            case Gamepad_LeftShoulder:  return data->leftShoulder || data->soloOrange;
-            case Gamepad_Back:          return data->back;
-            case Gamepad_Start:         return data->start;
-            case Gamepad_Guide:         return data->guide;
-            case Gamepad_DpadUp:        return up;
-            case Gamepad_DpadDown:      return down;
-            case Gamepad_DpadLeft:      return left;
-            case Gamepad_DpadRight:     return right;
-            default:                    return false;
-            }
-        }
-        case LiveGuitar:
-        {
-            auto data = (const Santroller1GHLGuitar_Data_t *)m_report_buf;
-            switch (type.mapping.gamepadButton)
-            {
-            case Gamepad_A:              return data->a;
-            case Gamepad_B:              return data->b;
-            case Gamepad_X:              return data->x;
-            case Gamepad_Y:              return data->y;
-            case Gamepad_LeftShoulder:   return data->leftShoulder;
-            case Gamepad_RightShoulder:  return data->rightShoulder;
-            case Gamepad_Back:           return data->back;
-            case Gamepad_Start:          return data->start;
-            case Gamepad_LeftThumbClick: return data->leftThumbClick;
-            case Gamepad_Guide:          return data->guide;
-            case Gamepad_DpadUp:         return up;
-            case Gamepad_DpadDown:       return down;
-            case Gamepad_DpadLeft:       return left;
-            case Gamepad_DpadRight:      return right;
-            default:                     return false;
-            }
-        }
-        case GuitarHeroDrums:
-        {
-            auto data = (const Santroller1GuitarHeroDrums_Data_t *)m_report_buf;
-            switch (type.mapping.gamepadButton)
-            {
-            case Gamepad_A:             return data->a;
-            case Gamepad_B:             return data->b;
-            case Gamepad_X:             return data->x;
-            case Gamepad_Y:             return data->y;
-            case Gamepad_LeftShoulder:  return data->leftShoulder;
-            case Gamepad_RightShoulder: return data->rightShoulder;
-            case Gamepad_Back:          return data->back;
-            case Gamepad_Start:         return data->start;
-            case Gamepad_Guide:         return data->guide;
-            case Gamepad_DpadUp:        return up;
-            case Gamepad_DpadDown:      return down;
-            case Gamepad_DpadLeft:      return left;
-            case Gamepad_DpadRight:     return right;
-            default:                    return false;
-            }
-        }
-        case RockBandDrums:
-        {
-            auto data = (const Santroller1RockBandDrums_Data_t *)m_report_buf;
-            switch (type.mapping.gamepadButton)
-            {
-            case Gamepad_A:             return data->a;
-            case Gamepad_B:             return data->b;
-            case Gamepad_X:             return data->x;
-            case Gamepad_Y:             return data->y;
-            case Gamepad_LeftShoulder:  return data->leftShoulder;
-            case Gamepad_RightShoulder: return data->rightShoulder;
-            case Gamepad_Back:          return data->back;
-            case Gamepad_Start:         return data->start;
-            case Gamepad_Guide:         return data->guide;
-            case Gamepad_DpadUp:        return up;
-            case Gamepad_DpadDown:      return down;
-            case Gamepad_DpadLeft:      return left;
-            case Gamepad_DpadRight:     return right;
-            default:                    return false;
-            }
-        }
-        case DjHeroTurntable:
-        {
-            auto data = (const Santroller1Turntable_Data_t *)m_report_buf;
-            switch (type.mapping.gamepadButton)
-            {
-            case Gamepad_A:         return data->a;
-            case Gamepad_B:         return data->b;
-            case Gamepad_X:         return data->x;
-            case Gamepad_Y:         return data->y;
-            case Gamepad_Back:      return data->back;
-            case Gamepad_Start:     return data->start;
-            case Gamepad_Guide:     return data->guide;
-            case Gamepad_DpadUp:    return up;
-            case Gamepad_DpadDown:  return down;
-            case Gamepad_DpadLeft:  return left;
-            case Gamepad_DpadRight: return right;
-            default:                return false;
-            }
-        }
-        default: // Gamepad and others
-        {
-            auto data = (const Santroller1Gamepad_Data_t *)m_report_buf;
-            switch (type.mapping.gamepadButton)
-            {
-            case Gamepad_A:               return data->a;
-            case Gamepad_B:               return data->b;
-            case Gamepad_X:               return data->x;
-            case Gamepad_Y:               return data->y;
-            case Gamepad_LeftShoulder:    return data->leftShoulder;
-            case Gamepad_RightShoulder:   return data->rightShoulder;
-            case Gamepad_Back:            return data->back;
-            case Gamepad_Start:           return data->start;
-            case Gamepad_LeftThumbClick:  return data->leftThumbClick;
-            case Gamepad_RightThumbClick: return data->rightThumbClick;
-            case Gamepad_Guide:           return data->guide;
-            case Gamepad_Capture:         return data->capture;
-            case Gamepad_DpadUp:          return up;
-            case Gamepad_DpadDown:        return down;
-            case Gamepad_DpadLeft:        return left;
-            case Gamepad_DpadRight:       return right;
-            default:                      return false;
-            }
-        }
-        }
-    }
-
-    if (type.which_mapping == proto_Output_ghButton_tag && m_subtype == GuitarHeroGuitar)
-    {
-        auto data = (const Santroller1GuitarHeroGuitar_Data_t *)m_report_buf;
-        switch (type.mapping.ghButton)
-        {
-        case GuitarHeroGuitar_Green:  return data->a;
-        case GuitarHeroGuitar_Red:    return data->b;
-        case GuitarHeroGuitar_Yellow: return data->y;
-        case GuitarHeroGuitar_Blue:   return data->x;
-        case GuitarHeroGuitar_Orange: return data->leftShoulder;
-        case GuitarHeroGuitar_Pedal:  return data->rightShoulder;
-        default:                      return false;
-        }
-    }
-
-    if (type.which_mapping == proto_Output_rbButton_tag && m_subtype == RockBandGuitar)
-    {
-        auto data = (const Santroller1RockBandGuitar_Data_t *)m_report_buf;
-        switch (type.mapping.rbButton)
-        {
-        case RockBandGuitar_Green:      return data->a;
-        case RockBandGuitar_Red:        return data->b;
-        case RockBandGuitar_Yellow:     return data->y;
-        case RockBandGuitar_Blue:       return data->x;
-        case RockBandGuitar_Orange:     return data->leftShoulder;
-        case RockBandGuitar_SoloGreen:  return data->soloGreen;
-        case RockBandGuitar_SoloRed:    return data->soloRed;
-        case RockBandGuitar_SoloYellow: return data->soloYellow;
-        case RockBandGuitar_SoloBlue:   return data->soloBlue;
-        case RockBandGuitar_SoloOrange: return data->soloOrange;
-        default:                        return false;
-        }
-    }
-
-    if (type.which_mapping == proto_Output_ghlButton_tag && m_subtype == LiveGuitar)
-    {
-        auto data = (const Santroller1GHLGuitar_Data_t *)m_report_buf;
-        switch (type.mapping.ghlButton)
-        {
-        case GuitarHeroLiveGuitar_Black1:    return data->a;
-        case GuitarHeroLiveGuitar_Black2:    return data->b;
-        case GuitarHeroLiveGuitar_Black3:    return data->y;
-        case GuitarHeroLiveGuitar_White1:    return data->x;
-        case GuitarHeroLiveGuitar_White2:    return data->leftShoulder;
-        case GuitarHeroLiveGuitar_White3:    return data->rightShoulder;
-        case GuitarHeroLiveGuitar_StrumUp:   return up;
-        case GuitarHeroLiveGuitar_StrumDown: return down;
-        default:                             return false;
-        }
-    }
-
-    if (type.which_mapping == proto_Output_djhButton_tag && m_subtype == DjHeroTurntable)
-    {
-        auto data = (const Santroller1Turntable_Data_t *)m_report_buf;
-        switch (type.mapping.djhButton)
-        {
-        case DJHTurntable_LeftGreen:  return data->leftGreen;
-        case DJHTurntable_LeftRed:    return data->leftRed;
-        case DJHTurntable_LeftBlue:   return data->leftBlue;
-        case DJHTurntable_RightGreen: return data->rightGreen;
-        case DJHTurntable_RightRed:   return data->rightRed;
-        case DJHTurntable_RightBlue:  return data->rightBlue;
-        default:                      return false;
-        }
-    }
-
-    return false;
-}
-
-uint16_t BleSantrollerHost::tick_analog_v1(proto_Output &type)
-{
-    if (type.which_mapping == proto_Output_gamepadAxis_tag)
-    {
-        if (m_subtype == Gamepad)
-        {
-            auto data = (const Santroller1Gamepad_Data_t *)m_report_buf;
-            switch (type.mapping.gamepadAxis)
-            {
-            case Gamepad_LeftStickX:   return (uint16_t)data->leftStickX * 0x101;
-            case Gamepad_LeftStickY:   return (uint16_t)(255 - data->leftStickY) * 0x101;
-            case Gamepad_RightStickX:  return (uint16_t)data->rightStickX * 0x101;
-            case Gamepad_RightStickY:  return (uint16_t)(255 - data->rightStickY) * 0x101;
-            case Gamepad_LeftTrigger:  return (uint16_t)data->leftTrigger * 0x101;
-            case Gamepad_RightTrigger: return (uint16_t)data->rightTrigger * 0x101;
-            default:                   return 0;
-            }
-        }
-    }
-
-    if (type.which_mapping == proto_Output_ghAxis_tag && m_subtype == GuitarHeroGuitar)
-    {
-        auto data = (const Santroller1GuitarHeroGuitar_Data_t *)m_report_buf;
-        switch (type.mapping.ghAxis)
-        {
-        case GuitarHeroGuitar_Whammy: return (uint16_t)data->whammy * 0x101;
-        case GuitarHeroGuitar_Tilt:   return (uint16_t)data->tilt * 0x101;
-        default:                      return 0;
-        }
-    }
-
-    if (type.which_mapping == proto_Output_rbAxis_tag && m_subtype == RockBandGuitar)
-    {
-        auto data = (const Santroller1RockBandGuitar_Data_t *)m_report_buf;
-        switch (type.mapping.rbAxis)
-        {
-        case RockBandGuitar_Whammy: return (uint16_t)data->whammy * 0x101;
-        case RockBandGuitar_Tilt:   return (uint16_t)data->tilt * 0x101;
-        case RockBandGuitar_Pickup: return (uint16_t)data->pickup * 0x101;
-        default:                    return 0;
-        }
-    }
-
-    if (type.which_mapping == proto_Output_ghlAxis_tag && m_subtype == LiveGuitar)
-    {
-        auto data = (const Santroller1GHLGuitar_Data_t *)m_report_buf;
-        switch (type.mapping.ghlAxis)
-        {
-        case GuitarHeroLiveGuitar_Whammy: return (uint16_t)data->whammy * 0x101;
-        case GuitarHeroLiveGuitar_Tilt:   return (uint16_t)data->tilt * 0x101;
-        default:                          return 0;
-        }
-    }
-
-    if (type.which_mapping == proto_Output_djhAxis_tag && m_subtype == DjHeroTurntable)
-    {
-        auto data = (const Santroller1Turntable_Data_t *)m_report_buf;
-        switch (type.mapping.djhAxis)
-        {
-        case DJHTurntable_LeftVelocity:  return (uint16_t)data->leftTableVelocity * 0x101;
-        case DJHTurntable_RightVelocity: return (uint16_t)data->rightTableVelocity * 0x101;
-        case DJHTurntable_Crossfader:    return (uint16_t)data->crossfader * 0x101;
-        case DJHTurntable_EffectsKnob:   return (uint16_t)data->effectsKnob * 0x101;
-        default:                         return 0;
-        }
-    }
-
-    return 0;
-}
 
 // ============================================================================
 // BleSteamHost (Valve Steam Controller BLE)

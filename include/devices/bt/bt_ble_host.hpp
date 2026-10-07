@@ -1,4 +1,5 @@
 #pragma once
+#include "protocols/santroller_output.hpp"
 #include "devices/bt/bt_host.hpp"
 #include "hidparser.h"
 #include "protocols/steam_controller.hpp"
@@ -66,11 +67,23 @@ public:
     uint16_t tick_analog(proto_Output &type) override;
     uint16_t tick_button_pressure(proto_Output &type) override;
 
+    void update(bool full_poll, bool send_events) override;
+    void set_rumble(uint8_t left, uint8_t right) override { sync_output(); m_output.set_rumble(left, right); }
+    void set_player_led(uint8_t player) override { m_output.set_player(player); }
+    void set_lightbar(uint8_t r, uint8_t g, uint8_t b) override { m_output.set_rgb(r, g, b); }
+    void set_euphoria_led(bool state) override { sync_output(); m_output.set_euphoria(state); }
+    void set_stagekit_led(uint8_t param, uint8_t command) override { sync_output(); m_output.set_stagekit(param, command); }
+    bool has_rumble() const override { return m_output.has_rumble(); }
+    bool has_player_led() const override { return m_output.supports(CapabilityHasStandardPlayerLeds); }
+    bool has_lightbar() const override { return m_output.supports(CapabilityHasRGBIndicatorLed); }
+    bool has_euphoria_led() const override { return m_output.has_euphoria(); }
+    bool has_stagekit_led() const override { return m_output.has_stagekit(); }
+
 private:
+    void sync_output() { m_output.subtype = m_subtype; }
+    SantrollerOutputState m_output;
     void handle_report_v1(const uint8_t *data, uint16_t len);
     void handle_report_v2(const uint8_t *data, uint16_t len);
-    bool tick_digital_v1(proto_Output &type);
-    uint16_t tick_analog_v1(proto_Output &type);
 
     bool m_is_v2 = false;
     uint8_t m_capabilities = 0;

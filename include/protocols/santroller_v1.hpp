@@ -195,3 +195,12 @@ typedef struct
     uint8_t crossfader;
 } __attribute__((packed)) Santroller1Turntable_Data_t;
 
+
+#ifdef __cplusplus
+#include "enums.pb.h"
+#include "input.pb.h"
+// Santroller 1 report decoding (report id 1, layout depends on subtype), shared by the
+// BLE and USB hosts. Implemented in src/devices/santroller_v1_decode.cpp.
+bool santroller_v1_tick_digital(const uint8_t *report, SubType subtype, proto_Output &type);
+uint16_t santroller_v1_tick_analog(const uint8_t *report, SubType subtype, proto_Output &type);
+#endif

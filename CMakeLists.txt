@@ -241,6 +241,9 @@ add_executable(
   src/devices/usb/host/pdloader_host.cpp
   src/devices/usb/host/hid/raphnet_host.cpp
   src/devices/usb/host/hid/stadia_host.cpp
+  src/devices/usb/host/hid/santroller_host.cpp
+  src/devices/santroller_v1_decode.cpp
+  src/emulation/santroller_commands.cpp
   src/devices/usb/host/hid/stepmania_host.cpp
   src/devices/usb/host/hid/streamdeck_host.cpp
   src/devices/usb/host/hid/switch_host.cpp

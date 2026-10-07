@@ -12,7 +12,9 @@
 // How long to go silent when the subtype changes, so the console's pad driver sees
 // an unplug and the game re-runs its controller setup against the new subtype.
 #define PSX_SWAP_DISCONNECT_MS 500
-// While listening, the console counts as present if it pulled ATT low this recently.
+// The console counts as present if it pulled ATT low / ran a transaction this recently,
+// both while listening and once active (a console that hasn't adopted the controller
+// only probes the port, so the 1s DualShock watchdog alone would flap the profile).
 // A PS2 only probes an empty port every 1280ms (measured), not every frame like it
 // does once a pad answers, so this has to cover a couple of those probes.
 #define PSX_LISTEN_TIMEOUT_MS 3000
@@ -47,7 +49,7 @@ public:
     void get_rumble(uint8_t &small, uint8_t &large);
     // Stay "communicating" through a deliberate swap disconnect, otherwise the PS2
     // profile's activation trigger drops out and nothing would bring us back.
-    bool is_communicating() const { return m_reconnecting || (m_listening && m_att_seen) || (spi != nullptr && spi->watchdog_active); }
+    bool is_communicating() const;
 
 private:
     void start(SubType type, bool console_present);

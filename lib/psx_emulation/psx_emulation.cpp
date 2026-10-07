@@ -41,6 +41,27 @@ void PSXEmulation::begin(SubType type)
     start(type, is_communicating());
 }
 
+bool PSXEmulation::is_communicating() const
+{
+    if (m_reconnecting || (m_listening && m_att_seen))
+    {
+        return true;
+    }
+    if (spi == nullptr)
+    {
+        return false;
+    }
+    // Every completed transaction updates this, including the console's slow probes of a
+    // port it hasn't adopted; it's 0 until the first one (or the pre-arm in start()).
+    uint32_t last = spi->watchdog_last_activity_ms;
+    if (last == 0)
+    {
+        return false;
+    }
+    uint32_t now = to_ms_since_boot(get_absolute_time());
+    return (int32_t)(now - last) < PSX_LISTEN_TIMEOUT_MS;
+}
+
 void PSXEmulation::listen()
 {
     if (spi || m_reconnecting || m_listening)

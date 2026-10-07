@@ -1,3 +1,4 @@
+#include "emulation/santroller_commands.hpp"
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -439,7 +440,12 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
             if (report_type == HID_REPORT_TYPE_OUTPUT)
             {
-                if (report_id == ReportIdGamepad && s_instance)
+                if (report_id == ReportIdGamepad && s_instance &&
+                    santroller_handle_output_command(*s_instance, report_data, report_len))
+                {
+                    // rumble / player LED / RGB / stage kit command
+                }
+                else if (report_id == ReportIdGamepad && s_instance)
                 {
                     if (report_len >= 5)
                     {

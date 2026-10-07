@@ -1,3 +1,4 @@
+#include "emulation/santroller_commands.hpp"
 #include "tusb_option.h"
 #include <memory>
 #include "managers/profile_manager.hpp"
@@ -246,7 +247,11 @@ void HIDGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
   // printf("set report %d %d %d\r\n", report_id, report_type, bufsize);
   if (report_type == HID_REPORT_TYPE_OUTPUT)
   {
-    if (report_id == ReportIdGamepad)
+    if (report_id == ReportIdGamepad && santroller_handle_output_command(*this, buffer, bufsize))
+    {
+      // rumble / player LED / RGB / stage kit command, as sent by SDL and Santroller hosts
+    }
+    else if (report_id == ReportIdGamepad)
     {
       if (bufsize >= 5)
       {

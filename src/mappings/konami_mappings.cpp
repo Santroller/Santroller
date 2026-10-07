@@ -8,79 +8,6 @@
 #include <stdint.h>
 #include <utils.h>
 
-// TODO: this
-// TODO: need to do some special handling of strum here, since there is one strum button
-GuitarFreaksButtonMapping::GuitarFreaksButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
-{
-    
-}
-
-void GuitarFreaksButtonMapping::update_hid(uint8_t *buf)
-{
-    // PCGuitarFreaks_Data_t *report = (PCGuitarFreaks_Data_t *)buf;
-    // switch (m_mapping.mapping.mapping.gfButton)
-    // {
-    // case GuitarFreaksGreen:
-    //     report->a |= m_last_value;
-    //     break;
-    // case GuitarFreaksRed:
-    //     report->b |= m_last_value;
-    //     break;
-    // case GuitarFreaksBlue:
-    //     report->y |= m_last_value;
-    //     break;
-    // case GuitarFreaksBack:
-    //     report->back |= m_last_value;
-    //     break;
-    // case GuitarFreaksStart:
-    //     report->start |= m_last_value;
-    //     break;
-    // case GuitarFreaksGuide:
-    //     report->guide |= m_last_value;
-    //     break;
-    // case GuitarFreaksStrum:
-    //     report->dpadUp |= m_last_value;
-    //     break;
-    // }
-}
-void GuitarFreaksButtonMapping::update_wii(uint8_t format, uint8_t *buf)
-{
-    // no mapping for wii
-}
-void GuitarFreaksButtonMapping::update_switch(uint8_t *buf)
-{
-    // todo
-}
-
-void GuitarFreaksButtonMapping::update_ps2(uint8_t *buf)
-{
-    // TODO: this is a thing
-}
-
-void GuitarFreaksButtonMapping::update_ps3(uint8_t *buf)
-{
-    // in the ps3 case, we would actually need to emulate a ds3 that has right+left held at all times,
-    // since that would then let us use this with pademu and should work with ps2 on ps3 too.
-}
-
-void GuitarFreaksButtonMapping::update_ps4(uint8_t *buf)
-{
-}
-
-void GuitarFreaksButtonMapping::update_ps5(uint8_t *buf)
-{
-}
-
-void GuitarFreaksButtonMapping::update_xinput(uint8_t *buf)
-{
-}
-void GuitarFreaksButtonMapping::update_ogxbox(uint8_t *buf)
-{
-}
-void GuitarFreaksButtonMapping::update_xboxone(uint8_t *buf)
-{
-}
-
 DrumManiaButtonMapping::DrumManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
@@ -270,6 +197,37 @@ proto_Mapping beatmania_as_gamepad(proto_Mapping mapping)
     // Foot Pedal: R2
     case BeatMania_Pedal:
         return as_gamepad_trigger(mapping, Gamepad_RightTrigger);
+    }
+    mapping.mapping.which_mapping = proto_Output_gamepadButton_tag;
+    mapping.mapping.mapping.gamepadButton = button;
+    return mapping;
+}
+
+// GuitarFreaks controllers are PS digital pads holding dpad left and right as an identifier,
+// so they are handled as the equivalent gamepad output.
+proto_Mapping guitarfreaks_as_gamepad(proto_Mapping mapping)
+{
+    GamepadButtonType button = Gamepad_A;
+    switch (mapping.mapping.mapping.gfButton)
+    {
+    // R2
+    case GuitarFreaks_Red:
+        return as_gamepad_trigger(mapping, Gamepad_RightTrigger);
+    // Circle
+    case GuitarFreaks_Green:
+        button = Gamepad_B;
+        break;
+    // Triangle
+    case GuitarFreaks_Blue:
+        button = Gamepad_Y;
+        break;
+    // L2
+    case GuitarFreaks_Tilt:
+        return as_gamepad_trigger(mapping, Gamepad_LeftTrigger);
+    // Dpad up, the pick is a single input
+    case GuitarFreaks_Strum:
+        button = Gamepad_DpadUp;
+        break;
     }
     mapping.mapping.which_mapping = proto_Output_gamepadButton_tag;
     mapping.mapping.mapping.gamepadButton = button;

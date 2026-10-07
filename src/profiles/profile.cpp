@@ -88,14 +88,30 @@ void Profile::sample_input_queue()
     {
         return;
     }
+    queued_last_live.resize(queued_mappings.size());
     uint16_t mask = 0;
-    for (auto *mapping : queued_mappings)
+    uint16_t retrigger = 0;
+    for (size_t i = 0; i < queued_mappings.size(); i++)
     {
+        auto *mapping = queued_mappings[i];
         mapping->sample(false, false);
-        if (mapping->live_value())
+        bool live = mapping->live_value();
+        uint16_t bit = 1u << mapping->queue_bit();
+        if (live)
         {
-            mask |= 1u << mapping->queue_bit();
+            mask |= bit;
+            // Several inputs can share one output (eg both strums on a GuitarFreaks pick), so a new
+            // press while another is still holding it needs a release first or it would be missed
+            if (!queued_last_live[i] && (input_queue.last_pushed() & bit))
+            {
+                retrigger |= bit;
+            }
         }
+        queued_last_live[i] = live;
+    }
+    if (retrigger)
+    {
+        input_queue.push(input_queue.last_pushed() & ~retrigger);
     }
     input_queue.push(mask);
     input_queue.tick(micros());
@@ -120,6 +136,12 @@ int8_t InputQueue::bit_for_output(const proto_Output &output, SubType subtype)
             return output.mapping.rbButton - RockBandGuitar_Green;
         }
         break;
+    case GuitarFreaks:
+        if (output.which_mapping == proto_Output_gfButton_tag && output.mapping.gfButton == GuitarFreaks_Strum)
+        {
+            return 10;
+        }
+        return -1;
     case LiveGuitar:
         if (output.which_mapping == proto_Output_ghlButton_tag)
         {

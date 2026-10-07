@@ -593,8 +593,12 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->full_range_turntable_on_pc = opts.has_fullRangeTurntableOnPc && opts.fullRangeTurntableOnPc;
     profile->per_kind_slot_ids = opts.has_deviceSlotIdVersion && opts.deviceSlotIdVersion >= 1;
     profile->subtype = opts.deviceToEmulate;
-    profile->input_queue.enabled = opts.has_queueInputs && opts.queueInputs;
-    profile->input_queue.interval_us = (opts.has_dequeueInterval100us ? opts.dequeueInterval100us : 10) * 100;
+    // GuitarFreaks has a single strum, so it always queues to turn quick re-strums into separate picks
+    bool guitar_freaks = profile->subtype == GuitarFreaks;
+    profile->input_queue.enabled = (opts.has_queueInputs && opts.queueInputs) || guitar_freaks;
+    // a frame, so a game polling once per frame sees the release between picks
+    uint32_t default_interval = guitar_freaks ? 170 : 10;
+    profile->input_queue.interval_us = (opts.has_dequeueInterval100us ? opts.dequeueInterval100us : default_interval) * 100;
     return true;
 }
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)

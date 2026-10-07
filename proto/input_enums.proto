@@ -44,6 +44,7 @@ enum GuitarFreaksButtonType {
   GuitarFreaks_Red = 1;
   GuitarFreaks_Green = 2;
   GuitarFreaks_Blue = 3;
+  GuitarFreaks_Tilt = 4;
 
   GuitarFreaks_Strum = 7;
 }
@@ -419,6 +420,12 @@ enum PS2ButtonType {
   PS2ButtonPopN7 = 52;
   PS2ButtonPopN8 = 53;
   PS2ButtonPopN9 = 54;
+  // GuitarFreaks guitars
+  PS2ButtonGuitarFreaksRed = 55;
+  PS2ButtonGuitarFreaksGreen = 56;
+  PS2ButtonGuitarFreaksBlue = 57;
+  PS2ButtonGuitarFreaksPick = 58;
+  PS2ButtonGuitarFreaksTilt = 59;
 }
 
 enum CrkdNeckButtonType {

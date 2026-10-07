@@ -91,6 +91,7 @@ public:
 
     InputQueue input_queue;
     std::vector<ButtonMapping *> queued_mappings;
+    std::vector<bool> queued_last_live;
     DrumState drum_state;
     KeyboardState keyboard_state;
 };

@@ -15,7 +15,8 @@ enum
     SubType_GuitarHeroGuitar,
     SubType_Taiko,
     SubType_PopNMusic,
-    SubType_BeatMania
+    SubType_BeatMania,
+    SubType_GuitarFreaks
 };
 
 typedef struct {

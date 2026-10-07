@@ -71,6 +71,7 @@ void Ps2EmulationDeviceInstance::initialize()
     case Taiko:
     case PopNMusic:
     case BeatMania:
+    case GuitarFreaks:
     {
         PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)m_initial_report;
         memset(m_initial_report, 0, sizeof(m_initial_report));
@@ -81,6 +82,12 @@ void Ps2EmulationDeviceInstance::initialize()
             report->dpadLeft = 1;
             report->dpadRight = 1;
             report->dpadDown = 1;
+        }
+        if (subtype == GuitarFreaks)
+        {
+            // GuitarFreaks pads hold dpad left and right permanently as an identifier
+            report->dpadLeft = 1;
+            report->dpadRight = 1;
         }
         break;
     }

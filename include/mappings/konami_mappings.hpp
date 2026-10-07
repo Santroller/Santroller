@@ -1,40 +1,6 @@
 #pragma once
 #include "mappings/base_mapping.hpp"
 
-class GuitarFreaksButtonMapping : public ButtonMapping
-{
-public:
-    ~GuitarFreaksButtonMapping() {}
-    GuitarFreaksButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
-    void update_hid(uint8_t *report);
-    void update_wii(uint8_t format, uint8_t *buf);
-    void update_switch(uint8_t *report);
-    void update_ps2(uint8_t *report);
-    void update_ps3(uint8_t *report);
-    void update_ps4(uint8_t *report);
-    void update_ps5(uint8_t *report);
-    void update_xinput(uint8_t *report);
-    void update_ogxbox(uint8_t *report);
-    void update_xboxone(uint8_t *report);
-};
-
-class GuitarFreaksAxisMapping : public AxisMapping
-{
-public:
-    ~GuitarFreaksAxisMapping() {}
-    GuitarFreaksAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
-    void update_hid(uint8_t *report);
-    void update_wii(uint8_t format, uint8_t *buf);
-    void update_switch(uint8_t *report);
-    void update_ps2(uint8_t *report);
-    void update_ps3(uint8_t *report);
-    void update_ps4(uint8_t *report);
-    void update_ps5(uint8_t *report);
-    void update_xinput(uint8_t *report);
-    void update_ogxbox(uint8_t *report);
-    void update_xboxone(uint8_t *report);
-};
-
 class DrumManiaButtonMapping : public ButtonMapping
 {
 public:
@@ -137,6 +103,7 @@ public:
     void update_xboxone(uint8_t *report);
 };
 
-// pop'n and beatmania buttons have no output of their own, they are converted to the equivalent gamepad mapping
+// pop'n, beatmania and GuitarFreaks buttons have no output of their own, they are converted to the equivalent gamepad mapping
 proto_Mapping popn_as_gamepad(proto_Mapping mapping);
 proto_Mapping beatmania_as_gamepad(proto_Mapping mapping);
+proto_Mapping guitarfreaks_as_gamepad(proto_Mapping mapping);

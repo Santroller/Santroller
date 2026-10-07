@@ -61,6 +61,8 @@ public:
         }
     }
 
+    uint16_t last_pushed() const { return m_last_pushed; }
+
     // Called by queued mappings while an output builds a report from them
     bool presented(int8_t bit)
     {

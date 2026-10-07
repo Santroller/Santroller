@@ -774,9 +774,15 @@ void PSXController::process_data(bool ack, bool timeout)
                 type = PS2ControllerTypeMouse;
             else if (isDigitalReply(ps2Data))
             {
-                // pop'n pads are digital and hold dpad left, right and down
-                if ((~ps2Data[3]) & (1 << 7) && (~ps2Data[3]) & (1 << 5) && (~ps2Data[3]) & (1 << 6))
+                bool left = (~ps2Data[3]) & (1 << 7);
+                bool right = (~ps2Data[3]) & (1 << 5);
+                bool down = (~ps2Data[3]) & (1 << 6);
+                // pop'n pads are digital and hold dpad left, right and down,
+                // GuitarFreaks guitars hold just left and right
+                if (left && right && down)
                     type = PS2ControllerTypePopNMusic;
+                else if (left && right)
+                    type = PS2ControllerTypeGuitarFreaks;
                 else
                     type = PS2ControllerTypeDigital;
             }
@@ -969,6 +975,7 @@ uint16_t PSXController::read_axis(PS2AxisType axisType)
     case PS2ControllerTypeTaiko:
         return 0;
     case PS2ControllerTypePopNMusic:
+    case PS2ControllerTypeGuitarFreaks:
         return 0;
     case PS2ControllerTypeDigital:
         return 0;
@@ -978,6 +985,28 @@ uint16_t PSXController::read_axis(PS2AxisType axisType)
 
 bool PSXController::read_button(PS2ButtonType buttonType)
 {
+    if (type == PS2ControllerTypeGuitarFreaks)
+    {
+        switch (buttonType)
+        {
+        // GuitarFreaks guitars hold dpad left and right permanently as an identifier
+        case PS2ButtonDpadLeft:
+        case PS2ButtonDpadRight:
+            return false;
+        case PS2ButtonGuitarFreaksRed:
+            return read_button(PS2ButtonR2);
+        case PS2ButtonGuitarFreaksGreen:
+            return read_button(PS2ButtonCircle);
+        case PS2ButtonGuitarFreaksBlue:
+            return read_button(PS2ButtonTriangle);
+        case PS2ButtonGuitarFreaksPick:
+            return read_button(PS2ButtonDpadUp);
+        case PS2ButtonGuitarFreaksTilt:
+            return read_button(PS2ButtonL2);
+        default:
+            break;
+        }
+    }
     if (type == PS2ControllerTypePopNMusic)
     {
         switch (buttonType)
@@ -1018,6 +1047,7 @@ bool PSXController::read_button(PS2ButtonType buttonType)
     case PS2ControllerTypeJogCon:
     case PS2ControllerTypeDigital:
     case PS2ControllerTypePopNMusic:
+    case PS2ControllerTypeGuitarFreaks:
     case PS2ControllerTypeFlightStick:
     case PS2ControllerTypeDualshock:
     case PS2ControllerTypeDualshock2:

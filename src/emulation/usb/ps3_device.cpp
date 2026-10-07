@@ -398,6 +398,7 @@ void PS3GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
     case FlightStick:
     case GuitarFreaks:
     case PopNMusic:
+    case BeatMania:
     case DJMax:
     case ProjectDiva:
     case RockRevolutionGuitar:

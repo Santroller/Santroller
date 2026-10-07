@@ -168,8 +168,26 @@ void DrumManiaAxisMapping::update_xboxone(uint8_t *buf)
     // not a thing
 }
 
+// L2 and R2 are triggers on gamepads, so buttons on them become trigger axes driven fully by the button
+static proto_Mapping as_gamepad_trigger(proto_Mapping mapping, GamepadAxisType axis)
+{
+    mapping.mapping.which_mapping = proto_Output_gamepadAxis_tag;
+    mapping.mapping.mapping.gamepadAxis = axis;
+    mapping.has_pressed = true;
+    mapping.pressed = UINT16_MAX;
+    mapping.has_released = true;
+    mapping.released = 0;
+    mapping.has_center = true;
+    mapping.center = 0;
+    mapping.has_min = true;
+    mapping.min = 0;
+    mapping.has_max = true;
+    mapping.max = UINT16_MAX;
+    return mapping;
+}
+
 // pop'n buttons are just PS buttons on a digital pad, so they are handled as the equivalent
-// gamepad output. L2 and R2 are triggers, so those become trigger axes driven fully by the button.
+// gamepad output.
 // https://github.com/PCSX2/pcsx2/blob/master/pcsx2/SIO/Pad/PadPopn.cpp
 proto_Mapping popn_as_gamepad(proto_Mapping mapping)
 {
@@ -195,20 +213,9 @@ proto_Mapping popn_as_gamepad(proto_Mapping mapping)
         button = Gamepad_X;
         break;
     case PopNMusic_Button7:
+        return as_gamepad_trigger(mapping, Gamepad_RightTrigger);
     case PopNMusic_Button9:
-        mapping.mapping.which_mapping = proto_Output_gamepadAxis_tag;
-        mapping.mapping.mapping.gamepadAxis = mapping.mapping.mapping.popnButton == PopNMusic_Button7 ? Gamepad_RightTrigger : Gamepad_LeftTrigger;
-        mapping.has_pressed = true;
-        mapping.pressed = UINT16_MAX;
-        mapping.has_released = true;
-        mapping.released = 0;
-        mapping.has_center = true;
-        mapping.center = 0;
-        mapping.has_min = true;
-        mapping.min = 0;
-        mapping.has_max = true;
-        mapping.max = UINT16_MAX;
-        return mapping;
+        return as_gamepad_trigger(mapping, Gamepad_LeftTrigger);
     case PopNMusic_Button8:
         button = Gamepad_DpadUp;
         break;
@@ -218,125 +225,55 @@ proto_Mapping popn_as_gamepad(proto_Mapping mapping)
     return mapping;
 }
 
-BeatManiaButtonMapping::BeatManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+// beatmania IIDX controllers are also PS digital pads, so they are handled as the equivalent gamepad output.
+// https://github.com/PCSX2/pcsx2/issues/10176
+proto_Mapping beatmania_as_gamepad(proto_Mapping mapping)
 {
-}
-
-void BeatManiaButtonMapping::update_hid(uint8_t *buf)
-{
-    // not a thing
-   
-}
-void BeatManiaButtonMapping::update_wii(uint8_t format, uint8_t *buf)
-{
-    // not a thing
-    
-}
-void BeatManiaButtonMapping::update_switch(uint8_t *buf)
-{
-    // not a thing
-    
-}
-
-void BeatManiaButtonMapping::update_ps2(uint8_t *buf)
-{
-    // TODO: https://github.com/PCSX2/pcsx2/issues/10176
-    // beatmaniaIIDX Controller 	PlayStation Digital Controller
-    // Scratch Clockwise 	D-Pad Up
-    // Scratch Counterclockwise 	D-Pad Down
-    // Button 1 (F, White 1) 	Square
-    // Button 2 (F#, Black 1) 	L1
-    // Button 3 (G, White 2) 	Cross
-    // Button 4 (G#, Black 2) 	R1
-    // Button 5 (A, White 3) 	Circle
-    // Button 6 (A#, Black 3) 	L2
-    // Button 7 (B, White 4) 	D-Pad Left
-    // Foot Pedal 	R2
-    // Select 	Select
-    // Start 	Start
-}
-
-void BeatManiaButtonMapping::update_ps3(uint8_t *buf)
-{
-    // not a thing
-    
-}
-
-void BeatManiaButtonMapping::update_ps4(uint8_t *buf)
-{
-    // not a thing
-    
-}
-
-void BeatManiaButtonMapping::update_ps5(uint8_t *buf)
-{
-    // not a thing
-    
-}
-
-void BeatManiaButtonMapping::update_xinput(uint8_t *buf)
-{
-    // not a thing
-    
-}
-void BeatManiaButtonMapping::update_ogxbox(uint8_t *buf)
-{
-    // not a thing
-    
-}
-void BeatManiaButtonMapping::update_xboxone(uint8_t *buf)
-{
-    // not a thing
-}
-
-BeatManiaAxisMapping::BeatManiaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
-{
-}
-
-void BeatManiaAxisMapping::update_hid(uint8_t *buf)
-{
-    // not a thing
-}
-void BeatManiaAxisMapping::update_wii(uint8_t format, uint8_t *buf)
-{
-    // not a thing
-}
-void BeatManiaAxisMapping::update_switch(uint8_t *buf)
-{
-    // not a thing
-}
-
-void BeatManiaAxisMapping::update_ps2(uint8_t *buf)
-{
-    // TODO: https://github.com/PCSX2/pcsx2/issues/10176
-}
-
-void BeatManiaAxisMapping::update_ps3(uint8_t *buf)
-{
-    // not a thing
-}
-
-void BeatManiaAxisMapping::update_ps4(uint8_t *buf)
-{
-    // not a thing
-}
-
-void BeatManiaAxisMapping::update_ps5(uint8_t *buf)
-{
-    // not a thing
-}
-
-void BeatManiaAxisMapping::update_xinput(uint8_t *buf)
-{
-    // not a thing
-}
-void BeatManiaAxisMapping::update_ogxbox(uint8_t *buf)
-{
-    // not a thing
-}
-void BeatManiaAxisMapping::update_xboxone(uint8_t *buf)
-{
-    // not a thing
+    GamepadButtonType button = Gamepad_A;
+    switch (mapping.mapping.mapping.bmButton)
+    {
+    // Button 1 (F, White 1): Square
+    case BeatMania_Button1:
+        button = Gamepad_X;
+        break;
+    // Button 2 (F#, Black 1): L1
+    case BeatMania_Button2:
+        button = Gamepad_LeftShoulder;
+        break;
+    // Button 3 (G, White 2): Cross
+    case BeatMania_Button3:
+        button = Gamepad_A;
+        break;
+    // Button 4 (G#, Black 2): R1
+    case BeatMania_Button4:
+        button = Gamepad_RightShoulder;
+        break;
+    // Button 5 (A, White 3): Circle
+    case BeatMania_Button5:
+        button = Gamepad_B;
+        break;
+    // Button 6 (A#, Black 3): L2
+    case BeatMania_Button6:
+        return as_gamepad_trigger(mapping, Gamepad_LeftTrigger);
+    // Button 7 (B, White 4): D-Pad Left
+    case BeatMania_Button7:
+        button = Gamepad_DpadLeft;
+        break;
+    // Scratch Clockwise: D-Pad Up
+    case BeatMania_ScratchClockwise:
+        button = Gamepad_DpadUp;
+        break;
+    // Scratch Counterclockwise: D-Pad Down
+    case BeatMania_ScratchCounterClockwise:
+        button = Gamepad_DpadDown;
+        break;
+    // Foot Pedal: R2
+    case BeatMania_Pedal:
+        return as_gamepad_trigger(mapping, Gamepad_RightTrigger);
+    }
+    mapping.mapping.which_mapping = proto_Output_gamepadButton_tag;
+    mapping.mapping.mapping.gamepadButton = button;
+    return mapping;
 }
 
 KeyboardManiaButtonMapping::KeyboardManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)

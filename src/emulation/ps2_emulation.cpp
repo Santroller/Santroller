@@ -70,6 +70,7 @@ void Ps2EmulationDeviceInstance::initialize()
     // Digital only pads, the protocol layer only sends the first two bytes
     case Taiko:
     case PopNMusic:
+    case BeatMania:
     {
         PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)m_initial_report;
         memset(m_initial_report, 0, sizeof(m_initial_report));

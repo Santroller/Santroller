@@ -129,6 +129,8 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
         
     case proto_Output_popnButton_tag:
         return create_mapping(popn_as_gamepad(proto_mapping), profile, std::move(input), mapping_id);
+    case proto_Output_bmButton_tag:
+        return create_mapping(beatmania_as_gamepad(proto_mapping), profile, std::move(input), mapping_id);
     case proto_Output_gfButton_tag:
         return std::make_unique<GuitarFreaksButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         

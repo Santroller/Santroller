@@ -280,6 +280,7 @@ message Output {
     ProKeyboardAxisType proKeyboardAxis = 30;
     ProKeyboardButtonType proKeyboardButton = 31;
     PopNMusicButtonType popnButton = 32;
+    BeatManiaButtonType bmButton = 33;
   }
 }
 

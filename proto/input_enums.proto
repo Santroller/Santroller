@@ -166,6 +166,18 @@ enum DJMaxTurntableAxisType {
   DJMaxTurntable_RightVelocity = 2;
 }
 
+enum BeatManiaButtonType {
+  BeatMania_Button1 = 1;
+  BeatMania_Button2 = 2;
+  BeatMania_Button3 = 3;
+  BeatMania_Button4 = 4;
+  BeatMania_Button5 = 5;
+  BeatMania_Button6 = 6;
+  BeatMania_Button7 = 7;
+  BeatMania_ScratchClockwise = 8;
+  BeatMania_ScratchCounterClockwise = 9;
+  BeatMania_Pedal = 10;
+}
 enum PopNMusicButtonType {
   PopNMusic_Button1 = 1;
   PopNMusic_Button2 = 2;

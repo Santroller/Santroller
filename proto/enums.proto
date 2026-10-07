@@ -124,6 +124,7 @@ enum SubType {
   PowerGigGuitar = 26;
   RockRevolutionGuitar = 27;
   Midi = 28;
+  BeatMania = 29;
   Unknown = 255;
 }
 

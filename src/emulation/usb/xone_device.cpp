@@ -313,6 +313,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 case FlightStick:
                 case FightStick:
                 case PopNMusic:
+                case BeatMania:
                 case DJMax:
                 case ProjectDiva:
                     xboxOneDescriptor = xb1_descriptor_gamepad;
@@ -642,6 +643,7 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
                 case FlightStick:
                 case FightStick:
                 case PopNMusic:
+                case BeatMania:
                 case DJMax:
                 case ProjectDiva:
                     announcePacket = announce_gamepad;

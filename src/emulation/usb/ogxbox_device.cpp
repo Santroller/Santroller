@@ -160,11 +160,6 @@ void OGXboxGamepadDevice::initialize()
     }
     case GuitarHeroGuitar:
     {
-        // TODO: santroller 1 has, we should replicate that logic
-        // if (seen_rpcs3)
-        // {
-        //     report->whammy = (INT16_MAX + (uint32_t)(report->whammy)) >> 1;
-        // }
         OGXboxGuitarHeroGuitar_Data_t *report = (OGXboxGuitarHeroGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;

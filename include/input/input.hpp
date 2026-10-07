@@ -59,8 +59,6 @@ public:
 
 class DrumState {
 public:
-    RockBandDrumsAxisType last_drum = (RockBandDrumsAxisType)0;
-    RockBandDrumsAxisType buffered_cymbal = (RockBandDrumsAxisType)0;
     uint32_t red_pad = 0;
     uint32_t yellow_cymbal = 0;
     uint32_t yellow_pad = 0;
@@ -68,8 +66,38 @@ public:
     uint32_t blue_pad = 0;
     uint32_t green_cymbal = 0;
     uint32_t green_pad = 0;
-    uint32_t buffered_cymbal_value = 0;
-    uint64_t last_global_poll = 0;
+
+    // Cymbal glitch fix state (as in Santroller 1), which lasts across reports. A cymbal stays on
+    // until a report goes out with no cymbal at all, and the green pad until one goes out with no
+    // pad at all, then the next conflicting hit waits a debounce from that point.
+    bool green_cymbal_on = false;
+    bool yellow_cymbal_on = false;
+    bool blue_cymbal_on = false;
+    bool green_pad_on = false;
+    bool cymbal_this_report = false;
+    bool pad_this_report = false;
+    uint32_t last_cymbal_off = 0;
+    uint32_t last_green_off = 0;
+
+    // Call before building each report, to account for the one before it
+    void end_report(uint32_t now)
+    {
+        if (!cymbal_this_report && (green_cymbal_on || yellow_cymbal_on || blue_cymbal_on))
+        {
+            if (green_cymbal_on)
+            {
+                last_green_off = now;
+            }
+            green_cymbal_on = yellow_cymbal_on = blue_cymbal_on = false;
+            last_cymbal_off = now;
+        }
+        if (!pad_this_report && green_pad_on)
+        {
+            green_pad_on = false;
+            last_green_off = now;
+        }
+        cymbal_this_report = pad_this_report = false;
+    }
 
     void reset()
     {

@@ -33,7 +33,7 @@ class Profile
 public:
     virtual ~Profile();
     void resolve_shortcuts();
-    void reset_drum_state() { drum_state.reset(); }
+    void reset_drum_state();
     // Sample the queued fret / strum mappings and advance the input queue
     void sample_input_queue();
     char name[32];
@@ -44,6 +44,7 @@ public:
     bool supports_slider;
     bool cymbal_glitch_fix;
     bool full_range_turntable_on_pc = false;
+    bool ps3_on_rpcs3 = true;
     bool per_kind_slot_ids = false;
     ConsoleMode mode;
     uint32_t profile_id;

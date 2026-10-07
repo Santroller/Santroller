@@ -23,6 +23,9 @@ message ProfileOpts {
   // Turntables only: in XInput mode on a PC, send table velocities across the full axis
   // instead of the 360's tiny -64 to +64, which XInput's default deadzones swallow.
   optional bool fullRangeTurntableOnPc = 18;
+  // Jump to PS3 mode when RPCS3 probes the controller, so it can use USB passthrough.
+  // Defaults to on when unset, and only applies to the controller types passthrough supports.
+  optional bool ps3OnRpcs3 = 19;
 }
 
 message Profile {

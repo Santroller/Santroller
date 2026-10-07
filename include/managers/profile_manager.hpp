@@ -111,6 +111,8 @@ public:
             }
         }
     }
+    // Whether any profile on USB wants to jump to PS3 mode when RPCS3 probes it
+    bool ps3_on_rpcs3() const;
     std::shared_ptr<UsbDevice> get_usb_instance_by_epin(uint8_t ep);
     void set_usb_instance_by_epin(uint8_t ep, std::shared_ptr<UsbDevice> instance);
     std::shared_ptr<UsbDevice> get_usb_instance_by_epout(uint8_t ep);

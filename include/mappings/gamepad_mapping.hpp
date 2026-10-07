@@ -27,7 +27,23 @@ public:
     void update_ps3(uint8_t *report);
 };
 
-class RockBandDrumsGamepadAxisMapping : public GamepadAxisMapping
+// Drum reports keep the pad velocities where the sticks go (on HID, 360 and OG Xbox), so
+// gamepad sticks can't be written there (e.g. a passed through controller's stick noise
+// would overwrite every hit's velocity). Triggers are unused on drums, so they still pass.
+class DrumsGamepadAxisMapping : public GamepadAxisMapping
+{
+public:
+    ~DrumsGamepadAxisMapping() {}
+    DrumsGamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile) {}
+    void update_hid(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+
+private:
+    bool is_stick() const;
+};
+
+class RockBandDrumsGamepadAxisMapping : public DrumsGamepadAxisMapping
 {
 public:
     ~RockBandDrumsGamepadAxisMapping();

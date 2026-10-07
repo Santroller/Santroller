@@ -53,8 +53,6 @@ Combined strum debounce, where up and down share one window.
 
 The reset/reboot binding: a button that reboots the controller and keeps the console type.
 
-RPCS3: switching to PS3 mode for RPCS3 is now always on, with no opt-out, and the RPCS3 whammy fix is a TODO.
-
 "Select → D-pad Left on Xbox One / PS4" for 5-fret guitars.
 
 Num/Caps/Scroll Lock LEDs.
@@ -63,13 +61,10 @@ Missing: LEDs
 Santroller game-feedback LED commands: note hit and miss, star power, multiplier, solo. The handlers are commented out in instance.cpp.
 Status LEDs: Bluetooth connected, console auth complete, and current mode.
 LEDs on MPR121 GPIO pins.
-Missing: inputs and peripherals
 
-Standalone DJ Hero platters: the device exists but there's no input type, so they can't be mapped. Also missing are platter smoothing (a 16-sample average) and a platter poll rate.
 Accelerometer low-pass filter.
 MAX1704x battery level reported over Bluetooth.
 A drum sensitivity knob, setting the hit threshold live.
 
 Heartbeat/inactivity pulse outputs.
-A 10ms report throttle for PS3 DJ Hero.
 The old USB-host detection of Xbox One controllers running in XInput-compatible mode.

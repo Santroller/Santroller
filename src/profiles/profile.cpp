@@ -82,6 +82,12 @@ void Profile::resolve_shortcuts()
     }
 }
 
+void Profile::reset_drum_state()
+{
+    drum_state.end_report(millis());
+    drum_state.reset();
+}
+
 void Profile::sample_input_queue()
 {
     if (!input_queue.enabled)

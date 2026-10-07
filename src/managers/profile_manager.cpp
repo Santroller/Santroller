@@ -487,6 +487,25 @@ size_t ProfileManager::instance_count() const
     return m_instances.size();
 }
 
+bool ProfileManager::ps3_on_rpcs3() const
+{
+    for (const auto &instance : m_usb_instances)
+    {
+        if (!instance)
+        {
+            continue;
+        }
+        for (const auto &profile : instance->profiles)
+        {
+            if (profile->ps3_on_rpcs3)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 size_t ProfileManager::usb_instance_count() const
 {
     size_t count = 0;

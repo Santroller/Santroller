@@ -2,6 +2,7 @@
 #include "tusb_option.h"
 #include <memory>
 #include "managers/profile_manager.hpp"
+#include <algorithm>
 #include "emulation/usb/hid_device.h"
 #include "managers/config_manager.hpp"
 #include "usb/auth_broker.h"
@@ -290,7 +291,11 @@ uint16_t HIDGamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
   switch (report_id)
   {
   case ReportId::ReportIdPs3F2:
-    ConfigManager::instance().request_mode(ModePs3);
+    // RPCS3 sends this when probing the controller
+    if (std::any_of(profiles.begin(), profiles.end(), [](const auto &profile) { return profile->ps3_on_rpcs3; }))
+    {
+      ConfigManager::instance().request_mode(ModePs3);
+    }
     return 0;
   case ReportId::ReportIdPs4Feature:
     if (supports_ps4 && reqlen == 0x30)

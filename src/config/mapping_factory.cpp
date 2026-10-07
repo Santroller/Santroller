@@ -39,6 +39,9 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
         if (profile->subtype == RockBandDrums) {
             return std::make_unique<RockBandDrumsGamepadAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
+        if (profile->subtype == GuitarHeroDrums) {
+            return std::make_unique<DrumsGamepadAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
+        }
         if (profile->subtype == DjHeroTurntable) {
             return std::make_unique<DJHTurntableGamepadAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }

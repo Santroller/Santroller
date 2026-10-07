@@ -735,99 +735,61 @@ static bool is_rock_band_drum_cymbal(RockBandDrumsAxisType axis)
     return axis == RockBandDrums_YellowCymbal || axis == RockBandDrums_BlueCymbal || axis == RockBandDrums_GreenCymbal;
 }
 
-static bool is_conflict_capable_drum(RockBandDrumsAxisType axis)
+// Rock Band can't take two cymbals at once (the cymbal glitch), or the green pad and green
+// cymbal together (the lefty glitch), so those are staggered with a gap between them. A hit
+// that has to wait stays held, so it's shown for a whole debounce once it's let through.
+bool RockBandDrumsAxisMapping::should_emit_cymbal_hit(RockBandDrumsAxisType axis)
 {
-    return is_rock_band_drum_cymbal(axis) || axis == RockBandDrums_GreenPad;
-}
-
-static bool drums_conflict(RockBandDrumsAxisType a, RockBandDrumsAxisType b)
-{
-    if (a == b || a == 0 || b == 0)
+    if (!m_profile->cymbal_glitch_fix)
     {
+        return true;
+    }
+    auto &state = m_profile->drum_state;
+    const uint32_t now = millis();
+    const uint32_t debounce = m_mapping.has_debounce ? m_mapping.debounce_us / 1000 : 25;
+    const bool cymbal_gap = now - state.last_cymbal_off > debounce;
+    const bool green_gap = now - state.last_green_off > debounce;
+    bool allowed;
+    switch (axis)
+    {
+    case RockBandDrums_GreenPad:
+        allowed = !state.green_cymbal_on && green_gap;
+        break;
+    case RockBandDrums_GreenCymbal:
+        allowed = !state.yellow_cymbal_on && !state.blue_cymbal_on && !state.green_pad_on && green_gap && cymbal_gap;
+        break;
+    case RockBandDrums_BlueCymbal:
+        allowed = !state.green_cymbal_on && !state.yellow_cymbal_on && cymbal_gap;
+        break;
+    case RockBandDrums_YellowCymbal:
+        allowed = !state.green_cymbal_on && !state.blue_cymbal_on && cymbal_gap;
+        break;
+    default:
+        return true;
+    }
+    if (!allowed)
+    {
+        m_last_poll = time_us_64();
         return false;
     }
-
-    bool a_cymbal = is_rock_band_drum_cymbal(a);
-    bool b_cymbal = is_rock_band_drum_cymbal(b);
-
-    // Any two cymbals conflict (Rock Band cymbal glitch)
-    if (a_cymbal && b_cymbal)
+    switch (axis)
     {
-        return true;
+    case RockBandDrums_GreenPad:
+        state.green_pad_on = true;
+        break;
+    case RockBandDrums_GreenCymbal:
+        state.green_cymbal_on = true;
+        break;
+    case RockBandDrums_BlueCymbal:
+        state.blue_cymbal_on = true;
+        break;
+    case RockBandDrums_YellowCymbal:
+        state.yellow_cymbal_on = true;
+        break;
+    default:
+        break;
     }
-
-    // Green Pad + Green Cymbal conflict (Rock band Lefty Glitch).
-    if ((a == RockBandDrums_GreenPad && b == RockBandDrums_GreenCymbal) ||
-        (a == RockBandDrums_GreenCymbal && b == RockBandDrums_GreenPad))
-    {
-        return true;
-    }
-
-    return false;
-}
-
-bool RockBandDrumsAxisMapping::should_emit_cymbal_hit(RockBandDrumsAxisType axis, uint32_t &calibrated_value)
-{
-    if (!m_profile->cymbal_glitch_fix || !is_conflict_capable_drum(axis))
-    {
-        return true;
-    }
-
-    auto &drum_state = m_profile->drum_state;
-    auto now = millis();
-    uint32_t debounce = m_mapping.has_debounce ? m_mapping.debounce_us / 1000 : 25;
-    auto can_emit_next = (now - drum_state.last_global_poll) > debounce;
-
-    if (drum_state.buffered_cymbal == axis && drum_state.last_drum != axis)
-    {
-        if (can_emit_next)
-        {
-            calibrated_value = drum_state.buffered_cymbal_value;
-            drum_state.buffered_cymbal = (RockBandDrumsAxisType)0;
-            drum_state.buffered_cymbal_value = 0;
-            drum_state.last_global_poll = now;
-            drum_state.last_drum = axis;
-            return true;
-        }
-
-        if (calibrated_value > drum_state.buffered_cymbal_value)
-        {
-            drum_state.buffered_cymbal_value = calibrated_value;
-        }
-        return false;
-    }
-
-    if (drum_state.buffered_cymbal != 0 && drum_state.buffered_cymbal != axis)
-    {
-        if (drums_conflict(axis, drum_state.buffered_cymbal) || drums_conflict(axis, drum_state.last_drum))
-        {
-            if (can_emit_next)
-            {
-                m_calibrated_value = m_mapping.center;
-                m_centered = true;
-            }
-            return false;
-        }
-    }
-
-    if (drum_state.last_drum == 0 || can_emit_next || !drums_conflict(axis, drum_state.last_drum))
-    {
-        drum_state.last_global_poll = now;
-        drum_state.last_drum = axis;
-        return true;
-    }
-
-    if (drum_state.last_drum == axis)
-    {
-        return true;
-    }
-
-    drum_state.buffered_cymbal = axis;
-    if (calibrated_value > drum_state.buffered_cymbal_value)
-    {
-        drum_state.buffered_cymbal_value = calibrated_value;
-    }
-    return false;
+    return true;
 }
 
 void RockBandDrumsAxisMapping::update_hid(uint8_t *buf)
@@ -853,13 +815,17 @@ void RockBandDrumsAxisMapping::update_ps3(uint8_t *buf)
 {
     auto axis = m_mapping.mapping.mapping.rbDrumAxis;
     auto calibrated_value = m_calibrated_value;
-    if (m_centered && (!m_profile->cymbal_glitch_fix || m_profile->drum_state.buffered_cymbal != axis))
+    if (m_centered || !should_emit_cymbal_hit(axis))
     {
         return;
     }
-    if (!should_emit_cymbal_hit(axis, calibrated_value))
+    if (is_rock_band_drum_cymbal(axis))
     {
-        return;
+        m_profile->drum_state.cymbal_this_report = true;
+    }
+    else
+    {
+        m_profile->drum_state.pad_this_report = true;
     }
     switch (axis)
     {
@@ -1060,13 +1026,17 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
 {
     auto axis = m_mapping.mapping.mapping.rbDrumAxis;
     auto calibrated_value = m_calibrated_value;
-    if (m_centered && (!m_profile->cymbal_glitch_fix || m_profile->drum_state.buffered_cymbal != axis))
+    if (m_centered || !should_emit_cymbal_hit(axis))
     {
         return;
     }
-    if (!should_emit_cymbal_hit(axis, calibrated_value))
+    if (is_rock_band_drum_cymbal(axis))
     {
-        return;
+        m_profile->drum_state.cymbal_this_report = true;
+    }
+    else
+    {
+        m_profile->drum_state.pad_this_report = true;
     }
     switch (axis)
     {
@@ -1277,9 +1247,44 @@ void RockBandDrumsAxisMapping::update_xboxone(uint8_t *buf)
         break;
     }
 }
+bool DrumsGamepadAxisMapping::is_stick() const
+{
+    switch (m_mapping.mapping.mapping.gamepadAxis)
+    {
+    case Gamepad_LeftStickX:
+    case Gamepad_LeftStickY:
+    case Gamepad_RightStickX:
+    case Gamepad_RightStickY:
+        return true;
+    default:
+        return false;
+    }
+}
+void DrumsGamepadAxisMapping::update_hid(uint8_t *buf)
+{
+    if (!is_stick())
+    {
+        GamepadAxisMapping::update_hid(buf);
+    }
+}
+void DrumsGamepadAxisMapping::update_xinput(uint8_t *buf)
+{
+    if (!is_stick())
+    {
+        GamepadAxisMapping::update_xinput(buf);
+    }
+}
+void DrumsGamepadAxisMapping::update_ogxbox(uint8_t *buf)
+{
+    if (!is_stick())
+    {
+        GamepadAxisMapping::update_ogxbox(buf);
+    }
+}
+
 RockBandDrumsGamepadAxisMapping::~RockBandDrumsGamepadAxisMapping() {}
 
-RockBandDrumsGamepadAxisMapping::RockBandDrumsGamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile)
+RockBandDrumsGamepadAxisMapping::RockBandDrumsGamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : DrumsGamepadAxisMapping(mapping, std::move(input), id, profile)
 {
 }
 void RockBandDrumsGamepadAxisMapping::update_xboxone(uint8_t *buf)

@@ -706,6 +706,7 @@ void GuitarHeroDrumsAxisMapping::update_ps2(uint8_t *buf)
 
 void GuitarHeroDrumsAxisMapping::update_ps3(uint8_t *buf)
 {
+    // Guitar Hero kits report standard 7 bit MIDI velocities here
     if (m_centered)
     {
         return;
@@ -714,27 +715,27 @@ void GuitarHeroDrumsAxisMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghDrumAxis)
     {
     case GuitarHeroDrums_RedPad:
-        report->redVelocity = m_calibrated_value >> 8;
+        report->redVelocity = m_calibrated_value >> 9;
         report->b = true;
         break;
     case GuitarHeroDrums_YellowPad:
-        report->yellowVelocity = m_calibrated_value >> 8;
+        report->yellowVelocity = m_calibrated_value >> 9;
         report->y = true;
         break;
     case GuitarHeroDrums_BluePad:
-        report->blueVelocity = m_calibrated_value >> 8;
+        report->blueVelocity = m_calibrated_value >> 9;
         report->x = true;
         break;
     case GuitarHeroDrums_OrangePad:
-        report->orangeVelocity = m_calibrated_value >> 8;
+        report->orangeVelocity = m_calibrated_value >> 9;
         report->rightShoulder = true;
         break;
     case GuitarHeroDrums_GreenPad:
-        report->greenVelocity = m_calibrated_value >> 8;
+        report->greenVelocity = m_calibrated_value >> 9;
         report->a = true;
         break;
     case GuitarHeroDrums_KickPedal:
-        report->kickVelocity = m_calibrated_value >> 8;
+        report->kickVelocity = m_calibrated_value >> 9;
         report->leftShoulder = true;
         break;
     }
@@ -752,6 +753,7 @@ void GuitarHeroDrumsAxisMapping::update_ps5(uint8_t *buf)
 
 void GuitarHeroDrumsAxisMapping::update_xinput(uint8_t *buf)
 {
+    // Guitar Hero kits report standard 7 bit MIDI velocities here
     if (m_centered)
     {
         return;
@@ -761,27 +763,27 @@ void GuitarHeroDrumsAxisMapping::update_xinput(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghDrumAxis)
     {
     case GuitarHeroDrums_RedPad:
-        report->redVelocity = m_calibrated_value >> 8;
+        report->redVelocity = m_calibrated_value >> 9;
         report->b = true;
         break;
     case GuitarHeroDrums_YellowPad:
-        report->yellowVelocity = m_calibrated_value >> 8;
+        report->yellowVelocity = m_calibrated_value >> 9;
         report->y = true;
         break;
     case GuitarHeroDrums_BluePad:
-        report->blueVelocity = m_calibrated_value >> 8;
+        report->blueVelocity = m_calibrated_value >> 9;
         report->x = true;
         break;
     case GuitarHeroDrums_OrangePad:
-        report->orangeVelocity = m_calibrated_value >> 8;
+        report->orangeVelocity = m_calibrated_value >> 9;
         report->rightShoulder = true;
         break;
     case GuitarHeroDrums_GreenPad:
-        report->greenVelocity = m_calibrated_value >> 8;
+        report->greenVelocity = m_calibrated_value >> 9;
         report->a = true;
         break;
     case GuitarHeroDrums_KickPedal:
-        report->kickVelocity = m_calibrated_value >> 8;
+        report->kickVelocity = m_calibrated_value >> 9;
         report->leftShoulder = true;
         break;
     }

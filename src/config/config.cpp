@@ -575,6 +575,28 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
 
     return true;
 }
+
+// The controller types RPCS3's USB passthrough knows about
+static bool rpcs3_passthrough_supported(SubType subtype)
+{
+    switch (subtype)
+    {
+    case Gamepad:
+    case GuitarHeroGuitar:
+    case RockBandGuitar:
+    case RockBandDrums:
+    case LiveGuitar:
+    case DjHeroTurntable:
+    case StageKit:
+    case ProKeys:
+    case ProGuitarMustang:
+    case ProGuitarSquire:
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto *context = static_cast<ConfigDecodeContext *>(*arg);
@@ -591,6 +613,7 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->supports_slider = opts.has_supportsSlider && opts.supportsSlider;
     profile->cymbal_glitch_fix = opts.has_cymbalGlitchFix && opts.cymbalGlitchFix;
     profile->full_range_turntable_on_pc = opts.has_fullRangeTurntableOnPc && opts.fullRangeTurntableOnPc;
+    profile->ps3_on_rpcs3 = rpcs3_passthrough_supported(opts.deviceToEmulate) && (!opts.has_ps3OnRpcs3 || opts.ps3OnRpcs3);
     profile->per_kind_slot_ids = opts.has_deviceSlotIdVersion && opts.deviceSlotIdVersion >= 1;
     profile->subtype = opts.deviceToEmulate;
     // GuitarFreaks has a single strum, so it always queues to turn quick re-strums into separate picks

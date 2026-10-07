@@ -60,6 +60,7 @@ void XInputGamepadDevice::initialize()
     memset(&m_initial_report, 0, sizeof(m_initial_report));
     memset(&m_last_report, 0, sizeof(m_last_report));
     m_has_last_report = false;
+    m_has_unchanged_frame = false;
     m_report_generation = report_generation;
     m_initial_report.leftStickX = 0;
     m_initial_report.leftStickY = 0;
@@ -78,11 +79,6 @@ void XInputGamepadDevice::initialize()
     }
     case GuitarHeroGuitar:
     {
-        // TODO: santroller 1 has, we should replicate that logic
-        // if (seen_rpcs3)
-        // {
-        //     report->whammy = (INT16_MAX + (uint32_t)(report->whammy)) >> 1;
-        // }
         XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
@@ -191,6 +187,12 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
     }
     if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
+    // Build at most one report per frame (the host polls every frame), even when an unchanged
+    // report isn't sent. Otherwise the mappings would run every loop instead of once per poll,
+    // which time based logic like the cymbal glitch fix isn't written for.
+    uint16_t frame = usb_hw->sof_rd & USB_SOF_RD_BITS;
+    if (m_has_unchanged_frame && frame == m_unchanged_frame)
+        return;
     update_stagekit();
     memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)epin_buf;
@@ -223,8 +225,12 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
     if (m_has_last_report &&
         memcmp(&m_last_report, epin_buf, sizeof(XInputGamepad_Data_t)) == 0)
     {
+        // Nothing to send, so wait for the next frame before building another report
+        m_unchanged_frame = frame;
+        m_has_unchanged_frame = true;
         return;
     }
+    m_has_unchanged_frame = false;
 
     if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
     {
@@ -487,12 +493,12 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
     {
         switch (request->bRequest)
         {
-        // RPCS3 will send this, so jump to PS3 mode
+        // RPCS3 will send this, so jump to PS3 mode if the profile wants passthrough there
         case HID_REQ_CONTROL_GET_REPORT:
             if (stage == CONTROL_STAGE_SETUP)
             {
                 uint8_t const report_id = tu_u16_low(request->wValue);
-                if (report_id == 0xF2)
+                if (report_id == 0xF2 && ProfileManager::instance().ps3_on_rpcs3())
                     ConfigManager::instance().request_mode(ModePs3);
             }
             break;

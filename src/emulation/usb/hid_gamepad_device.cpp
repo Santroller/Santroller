@@ -18,6 +18,7 @@
 #include "device/usbd_pvt.h"
 #include "pico/bootrom.h"
 #include "utils.h"
+#include "managers/battery_manager.hpp"
 
 // Dance pads really need simultaneous directions, so they emulate buttons instead of hats
 static uint8_t const desc_hid_report_buttons[] =
@@ -27,11 +28,18 @@ static uint8_t const desc_hid_report_buttons[] =
 static uint8_t const desc_hid_report_hat[] =
     {TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(ReportIdGamepad), TUD_HID_REPORT_DESC_GAME_CONTROLLER_HAT_SWITCH)};
 
+// The same, plus a battery report for controllers with a battery device
+static uint8_t const desc_hid_report_buttons_battery[] =
+    {TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(ReportIdGamepad), TUD_HID_REPORT_DESC_GAME_CONTROLLER_BUTTONS, TUD_HID_REPORT_DESC_BATTERY())};
+static uint8_t const desc_hid_report_hat_battery[] =
+    {TUD_HID_REPORT_DESC_GAME_CONTROLLER(HID_REPORT_ID(ReportIdGamepad), TUD_HID_REPORT_DESC_GAME_CONTROLLER_HAT_SWITCH, TUD_HID_REPORT_DESC_BATTERY())};
+
 HIDGamepadDevice::HIDGamepadDevice()
 {
 }
 void HIDGamepadDevice::initialize()
 {
+  m_battery = BatteryManager::instance().present();
   m_epin = next_epin();
   m_epout = next_epout();
   m_strid = next_strid();
@@ -130,6 +138,17 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
     }
     return;
   }
+  if (m_battery && tud_ready() && BatteryManager::instance().level() != m_sent_battery)
+  {
+    uint8_t level = BatteryManager::instance().level();
+    epin_buf[0] = ReportIdBattery;
+    epin_buf[1] = level;
+    if (send_report(2, 0, epin_buf))
+    {
+      m_sent_battery = level;
+    }
+    return;
+  }
   PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
   memcpy(epin_buf, m_initial_report, sizeof(epin_buf));
   report->rid = ReportIdGamepad;
@@ -183,20 +202,10 @@ size_t HIDGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t rem
 
 size_t HIDGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-  if (subtype == Dancepad)
-  {
-    uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_buttons), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
-    assert(sizeof(desc) <= remaining);
-    memcpy(dest, desc, sizeof(desc));
-    return sizeof(desc);
-  }
-  else
-  {
-    uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_hat), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
-    assert(sizeof(desc) <= remaining);
-    memcpy(dest, desc, sizeof(desc));
-    return sizeof(desc);
-  }
+  uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, report_desc_len(), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+  assert(sizeof(desc) <= remaining);
+  memcpy(dest, desc, sizeof(desc));
+  return sizeof(desc);
 }
 
 size_t HIDGamepadDevice::device_name(uint8_t idx, char *desc)
@@ -217,24 +226,18 @@ const uint8_t *HIDGamepadDevice::report_descriptor()
   UsbDetectionState::instance().mark_hid_descriptor_read();
   if (subtype == Dancepad)
   {
-    return desc_hid_report_buttons;
+    return m_battery ? desc_hid_report_buttons_battery : desc_hid_report_buttons;
   }
-  else
-  {
-    return desc_hid_report_hat;
-  }
+  return m_battery ? desc_hid_report_hat_battery : desc_hid_report_hat;
 }
 
 uint16_t HIDGamepadDevice::report_desc_len()
 {
   if (subtype == Dancepad)
   {
-    return sizeof(desc_hid_report_buttons);
+    return m_battery ? sizeof(desc_hid_report_buttons_battery) : sizeof(desc_hid_report_buttons);
   }
-  else
-  {
-    return sizeof(desc_hid_report_hat);
-  }
+  return m_battery ? sizeof(desc_hid_report_hat_battery) : sizeof(desc_hid_report_hat);
 }
 
 void HIDGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)

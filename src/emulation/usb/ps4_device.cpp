@@ -1,4 +1,8 @@
 #include "emulation/usb/ps4_device.h"
+#include "managers/battery_manager.hpp"
+
+// Battery level and cable state, as a DualShock 4 reports them
+#define PS4_STATUS_BYTE 30
 #include "usb/auth_broker.h"
 
 class UsbHostInterface;
@@ -102,6 +106,8 @@ void PS4GamepadDevice::process(bool full_poll, bool send_events)
     }
     // convert bitmask dpad to actual hid dpad
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
+    // every PS4 report puts the battery and cable state at the same byte as a DualShock 4
+    epin_buf[PS4_STATUS_BYTE] = BatteryManager::instance().ps4_status();
     send_report(sizeof(PS4Dpad_Data_t), 0, epin_buf);
     PS4Dpad_Data_t *initial = (PS4Dpad_Data_t *)m_initial_report;
     initial->reportCounter++;

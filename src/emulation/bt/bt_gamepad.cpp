@@ -1,5 +1,6 @@
 #include "emulation/santroller_commands.hpp"
 #include "devices/bt/bluetooth_status.hpp"
+#include "managers/battery_manager.hpp"
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -142,6 +143,7 @@ const uint8_t adv_data_len = sizeof(adv_data_gamepad);
 void set_battery_state(uint8_t state)
 {
     BtStackLock lock;
+    battery = state;
     battery_service_server_set_battery_value(state);
 }
 BTGamepadDevice::BTGamepadDevice()
@@ -354,6 +356,12 @@ bool bt_gamepad_connected()
 
 void BTGamepadDevice::process(bool full_poll, bool send_events)
 {
+    // the battery service starts with the current level, so only changes after that need sending
+    uint8_t level = BatteryManager::instance().level();
+    if (m_initialized && level != battery)
+    {
+        set_battery_state(level);
+    }
     if (con_handle == HCI_CON_HANDLE_INVALID)
     {
         // Nothing to send to, but the inputs still need reading so presses count as activity,

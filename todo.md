@@ -37,14 +37,13 @@
 
 ## Devices
 - [ ] Sound for PS4/5, XInput and GIP
-- [ ] max1704x
-- [ ] battery level estimate via ADC pin
+- [x] max1704x
+- [x] battery level estimate via ADC pin
 
 # things missing from S1
 
 
 Accelerometer low-pass filter.
-MAX1704x battery level reported over Bluetooth.
 A drum sensitivity knob, setting the hit threshold live.
 
 The old USB-host detection of Xbox One controllers running in XInput-compatible mode.

@@ -1,4 +1,5 @@
 #include "emulation/usb/switch_device.h"
+#include "managers/battery_manager.hpp"
 #include <memory>
 #include "managers/profile_manager.hpp"
 #include "protocols/ps4.hpp"
@@ -145,6 +146,7 @@ void SwitchGamepadDevice::process(bool full_poll, bool send_events)
     if (isReady && !reportSent)
     {
         switchReport.inputs = m_initial_report.inputs;
+        switchReport.inputs.batteryLevel = BatteryManager::instance().switch_level();
         for (const auto &profile : profiles)
         {
             for (const auto &mapping : profile->mappings)

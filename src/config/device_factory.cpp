@@ -37,6 +37,7 @@
 #include "devices/encoder.hpp"
 #include "devices/xbox360_rf.hpp"
 #include "devices/power_management.hpp"
+#include "devices/adc_battery.hpp"
 
 // Static storage for emulation devices and state
 static std::map<int32_t, int32_t> s_cycle_states;
@@ -369,6 +370,10 @@ std::shared_ptr<Device> DeviceFactory::create_device(
 
     case proto_Device_powerManagement_tag:
         device = std::make_shared<PowerManagementDevice>(proto_device.device.powerManagement, device_id);
+        break;
+
+    case proto_Device_adcBattery_tag:
+        device = std::make_shared<AdcBatteryDevice>(proto_device.device.adcBattery, device_id);
         break;
     }
     

@@ -122,6 +122,9 @@ public:
 
 private:
   bool m_capabilities_pending = false;
+  // Whether the descriptor has a battery report, and the last level sent in it
+  bool m_battery = false;
+  int16_t m_sent_battery = -1;
   int _FFB_effect_index;
   int _FFB_effect_duration;
   int _loop_count;

@@ -8,6 +8,8 @@ enum ReportId {
   ReportIdMouse = 3;
   ReportIdConsumer = 4;
   ReportIdSantrollerCapabilities = 0x10;
+  // HID battery strength, 0 to 100
+  ReportIdBattery = 0x20;
   ReportIdConfig = 0x22;
   ReportIdConfigInfo = 0x23;
   ReportIdLoaded = 0x24;

@@ -7,6 +7,7 @@
 #include "leds/led_mappings.hpp"
 #include "triggers/activation_trigger.hpp"
 #include "emulation/usb/xone_device.h"
+#include "managers/battery_manager.hpp"
 #include <algorithm>
 
 namespace
@@ -356,6 +357,11 @@ std::shared_ptr<UsbDevice> ProfileManager::reuse_usb_instance(uint8_t id, Consol
         return nullptr;
     }
     const auto &identity = m_previous_usb_reload_identities[id];
+    // descriptors depend on whether there is a battery
+    if (BatteryManager::instance().present_changed())
+    {
+        return nullptr;
+    }
     if (!identity.valid || identity.mode != mode || identity.subtype != subtype ||
         identity.auxiliary != auxiliary || !m_previous_usb_instances[id])
     {

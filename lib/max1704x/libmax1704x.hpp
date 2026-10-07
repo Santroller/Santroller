@@ -10,15 +10,13 @@
 #define REGISTER_CONFIG 0x0C
 #define REGISTER_COMMAND 0xFE
 
-#define RESET_COMMAND 0x5400
-#define QUICKSTART_MODE 0x4000
 typedef enum
 {
-    MAX710X_RESET,
-    MAX710X_CHECK_CONFIG,
-    MAX710X_QUICKSTART,
+    MAX710X_DETECT,
     MAX710X_POLL
 } max1704x_status_e;
+// MAX17043 / MAX17044 / MAX17048 / MAX17049 fuel gauge. These work out the state of charge
+// themselves, so this just reads it.
 class Max1704X : public I2CDMAInterface
 {
 public:
@@ -30,17 +28,17 @@ public:
     void process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
     inline bool is_connected()
     {
-        return status != MAX710X_RESET;
+        return connected;
     }
+    // Battery percentage, 0 to 100
+    volatile uint8_t batteryLevel = 0;
 
 private:
-    bool init();
+    void schedule(uint32_t ms);
     I2CMasterInterface interface;
-    max1704x_status_e status = MAX710X_RESET;
-    uint8_t bufferTx[32];
-    uint8_t bufferRx[32];
-    alarm_id_t restart_alarm_id;
-    int failCount = 0;
-    uint8_t batteryLevel;
-    uint32_t lastPoll = 0;
+    max1704x_status_e status = MAX710X_DETECT;
+    volatile bool connected = false;
+    uint8_t bufferTx[4];
+    uint8_t bufferRx[4];
+    alarm_id_t restart_alarm_id = 0;
 };

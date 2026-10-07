@@ -36,6 +36,18 @@ message AccelerometerDevice { required I2CDevice i2c = 1; }
 
 message Max1704xDevice { required I2CDevice i2c = 1; }
 
+// Estimates the battery level from its voltage on an ADC pin (GP26 to GP29). On a Pico, GP29
+// reads VSYS through the board's own divide by 3. On a Pico W GP29 is shared with the wireless
+// chip, so it can only be read there while bluetooth is set up.
+message AdcBatteryDevice {
+  required int32 pin = 1;
+  // How much the battery voltage is divided down before the pin, times 1000 (3000 for VSYS)
+  required uint32 dividerX1000 = 2;
+  // Battery voltages read as 0% and 100%, in mV. The level goes linearly between them.
+  required uint32 emptyMv = 3;
+  required uint32 fullMv = 4;
+}
+
 message XboxOneAuthDevice {
   required I2CDevice i2c = 1;
   optional int32 resetPin = 2;
@@ -270,6 +282,7 @@ message Device {
     XboxOneAuthDevice xboxOneAuth = 39;
     Xbox360RfDevice xbox360Rf = 40;
     PowerManagementDevice powerManagement = 41;
+    AdcBatteryDevice adcBattery = 42;
   }
 }
 message InfiniumFaderDevice {

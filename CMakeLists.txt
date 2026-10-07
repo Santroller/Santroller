@@ -296,6 +296,7 @@ add_executable(
   src/managers/config_manager.cpp
   src/managers/inactivity_manager.cpp
   src/devices/power_management.cpp
+  src/devices/adc_battery.cpp
   src/profiles/profile.cpp
   src/config/device_factory.cpp
   src/config/input_factory.cpp

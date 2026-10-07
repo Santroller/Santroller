@@ -75,6 +75,8 @@ message DeviceHotplugEvent {
     optional bool updating = 3;
     optional int32 progress = 4;
     optional bool rebooting = 5;
+    // Battery devices: the battery percentage
+    optional uint32 battery = 6;
 }
 
 message UsbDeviceHotplugEvent {

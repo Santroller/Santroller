@@ -827,7 +827,18 @@
         HID_USAGE(BTN_LEFT),                        \
         HID_USAGE(BTN_RIGHT)
 
-#define TUD_HID_REPORT_DESC_GAME_CONTROLLER(rid, button_style) \
+// Battery Strength from the Generic Device Controls page, which Linux shows as the device's battery
+#define TUD_HID_REPORT_DESC_BATTERY()                       \
+    HID_REPORT_ID(ReportIdBattery)                          \
+    HID_USAGE_PAGE(0x06),                                   \
+        HID_USAGE(0x20),                                    \
+        HID_LOGICAL_MIN(0),                                 \
+        HID_LOGICAL_MAX(100),                               \
+        HID_REPORT_SIZE(8),                                 \
+        HID_REPORT_COUNT(1),                                \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),
+
+#define TUD_HID_REPORT_DESC_GAME_CONTROLLER(rid, button_style, ...) \
     HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                    \
         HID_USAGE(HID_USAGE_DESKTOP_GAMEPAD),                  \
         HID_COLLECTION(HID_COLLECTION_APPLICATION),            \
@@ -883,6 +894,7 @@
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),     \
         TUD_HID_REPORT_DESC_PS3_4_5(),                         \
         TUD_HID_REPORT_DESC_SANTROLLER_DESC(),                 \
+        __VA_ARGS__                                            \
         HID_COLLECTION_END
 
 #define TUD_HID_REPORT_DESC_PS3_COMPAT_BUTTON_BOUNDS()        \

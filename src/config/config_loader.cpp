@@ -9,6 +9,7 @@
 #include "managers/profile_manager.hpp"
 #include "managers/config_manager.hpp"
 #include "managers/inactivity_manager.hpp"
+#include "managers/battery_manager.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
 #include "secondary_pico.hpp"
 #include "main.hpp"
@@ -39,6 +40,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     config.profiles.funcs.decode = &load_profile;
     config.guiConfig.funcs.decode = nullptr;
     config_mgr.clear_seen_masks();
+    BatteryManager::instance().begin_config_reload();
     device_mgr.clear_active_devices();
     device_mgr.mark_root_devices_disconnected();
     profile_mgr.prepare_for_config_reload();
@@ -115,6 +117,11 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     }
     }
     device_mgr.remove_disconnected_root_devices();
+    // the HID descriptor gains or loses its battery report, so the host has to see it again
+    if (BatteryManager::instance().present_changed())
+    {
+        config_mgr.request_device_stack_reinit();
+    }
     if (config_mgr.should_reinitialize_device_stack() || resolved_mode != current_mode || profile_mgr.changed_types())
     {
         reinitialize_device_stack();

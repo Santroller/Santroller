@@ -1,4 +1,5 @@
 #include "emulation/usb/ps3_device.h"
+#include "managers/battery_manager.hpp"
 #include "pico/time.h"
 #include <memory>
 #include "managers/profile_manager.hpp"
@@ -325,6 +326,11 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
 
     if (uses_ps3_gamepad_report(subtype))
     {
+        if (subtype == Taiko)
+        {
+            // the Taiko drum reports like a DualShock 3, which only says charging or charged on USB
+            ((PS3Gamepad_Data_t *)epin_buf)->battery_status = BatteryManager::instance().ps3_status();
+        }
         send_report(sizeof(PS3Gamepad_Data_t), 0, epin_buf);
     }
     else

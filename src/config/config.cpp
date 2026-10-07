@@ -116,6 +116,8 @@ struct ConfigDecodeContext
     Input *last_special = nullptr;
     bool matched = false;
     bool changed = false;
+    // Building an inactive profile for the config tool: load everything, but never activate it
+    bool preview = false;
     std::array<uint16_t, 5> slot_counts{};
 };
 
@@ -380,6 +382,11 @@ bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto *context = static_cast<ConfigDecodeContext *>(*arg);
+    // Inactive profiles skip their mappings, nanopb skips whatever we leave unread
+    if (!context->matched && !context->preview)
+    {
+        return true;
+    }
     auto profile = context->profile;
     proto_Mapping proto_mapping = proto_Mapping_init_default;
     proto_mapping.input.cb_input.funcs.decode = load_input_dev;
@@ -512,6 +519,10 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_assignment.assignments.funcs.decode = &load_assignment_info;
     proto_assignment.assignments.arg = *arg;
     pb_decode_ex(stream, proto_ProfileAssignment_fields, &proto_assignment, PB_DECODE_NOINIT);
+    if (context->preview)
+    {
+        return true;
+    }
     // Assign triggers before building the profile
     if (!context->matched && list->validate(true, false, false))
     {
@@ -552,6 +563,10 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
 bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto *context = static_cast<ConfigDecodeContext *>(*arg);
+    if (!context->matched && !context->preview)
+    {
+        return true;
+    }
     auto profile = context->profile;
     proto_Led proto_led = proto_Led_init_default;
     proto_led.mapping.led.inputMapping.input.cb_input.funcs.decode = load_input_dev;
@@ -637,6 +652,31 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->input_queue.interval_us = (opts.has_dequeueInterval100us ? opts.dequeueInterval100us : default_interval) * 100;
     return true;
 }
+static std::shared_ptr<Profile> decode_profile(pb_istream_t stream, ConfigDecodeContext &context)
+{
+    auto profile = std::make_shared<Profile>();
+    device_mgr.for_each_active_device([profile](const auto &device)
+                                      {
+                                          if (!device->is_assignable())
+                                          {
+                                              profile->devices.emplace(device->m_id, device);
+                                          }
+                                      });
+    context.profile = profile;
+    proto_Profile proto_profile = proto_Profile_init_default;
+    proto_profile.assignments.funcs.decode = &load_assignments;
+    proto_profile.assignments.arg = &context;
+    proto_profile.mappings.funcs.decode = &load_mapping;
+    proto_profile.mappings.arg = &context;
+    proto_profile.opts.funcs.decode = &load_opts;
+    proto_profile.opts.arg = &context;
+    proto_profile.leds.funcs.decode = &load_leds;
+    proto_profile.leds.arg = &context;
+    pb_decode_ex(&stream, proto_Profile_fields, &proto_profile, PB_DECODE_NOINIT);
+    profile->triggers_only = !context.matched && !context.preview;
+    return profile;
+}
+
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     // printf("load_profile\r\n");
@@ -649,29 +689,10 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 
     while (true)
     {
-        auto profile = std::make_shared<Profile>();
-        device_mgr.for_each_active_device([profile](const auto &device)
-                                          {
-                                              if (!device->is_assignable())
-                                              {
-                                                  profile->devices.emplace(device->m_id, device);
-                                              }
-                                          });
-        ConfigDecodeContext context{profile};
-        context.matched = false;
-        proto_Profile proto_profile = proto_Profile_init_default;
-        proto_profile.assignments.funcs.decode = &load_assignments;
-        proto_profile.assignments.arg = &context;
-        proto_profile.mappings.funcs.decode = &load_mapping;
-        proto_profile.mappings.arg = &context;
-        proto_profile.opts.funcs.decode = &load_opts;
-        proto_profile.opts.arg = &context;
-        proto_profile.leds.funcs.decode = &load_leds;
-        proto_profile.leds.arg = &context;
+        ConfigDecodeContext context;
         // Make sure to deal with triggers that don't assign any devices
         size_t assignable_before = device_mgr.assignable_device_count();
-        pb_istream_t decode_stream = profile_bytes;
-        pb_decode_ex(&decode_stream, proto_Profile_fields, &proto_profile, PB_DECODE_NOINIT);
+        auto profile = decode_profile(profile_bytes, context);
 
         bool added = false;
         if (context.matched)
@@ -703,6 +724,71 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
     // printf("load_profile: finished processing profile bytes\r\n");
     return true;
 }
+
+struct PreviewProfileSearch
+{
+    uint32_t profile_id;
+    std::shared_ptr<Profile> profile;
+};
+
+struct ProfileUid
+{
+    uint32_t uid = 0;
+    bool found = false;
+};
+
+static bool read_profile_uid(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto *result = static_cast<ProfileUid *>(*arg);
+    proto_ProfileOpts opts = proto_ProfileOpts_init_default;
+    if (!pb_decode_ex(stream, proto_ProfileOpts_fields, &opts, PB_DECODE_NOINIT))
+        return false;
+    result->uid = opts.uid;
+    result->found = true;
+    return true;
+}
+
+static bool find_preview_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto *search = static_cast<PreviewProfileSearch *>(*arg);
+    if (search->profile)
+    {
+        return true;
+    }
+    // Only the opts are decoded while searching, everything else is skipped
+    ProfileUid uid;
+    proto_Profile proto_profile = proto_Profile_init_zero;
+    proto_profile.opts.funcs.decode = &read_profile_uid;
+    proto_profile.opts.arg = &uid;
+    pb_istream_t opts_stream = *stream;
+    pb_decode_ex(&opts_stream, proto_Profile_fields, &proto_profile, PB_DECODE_NOINIT);
+    if (!uid.found || uid.uid != search->profile_id)
+    {
+        return true;
+    }
+    ConfigDecodeContext context;
+    context.preview = true;
+    search->profile = decode_profile(*stream, context);
+    return true;
+}
+
+std::shared_ptr<Profile> load_preview_profile(uint32_t profile_id)
+{
+    // Read the image again rather than keeping offsets around, as the tool rewrites the cache while uploading
+    ConfigImage image;
+    if (!config_storage.read_flash(image, true))
+    {
+        return nullptr;
+    }
+    PreviewProfileSearch search{profile_id, nullptr};
+    proto_Config config = proto_Config_init_zero;
+    config.profiles.funcs.decode = &find_preview_profile;
+    config.profiles.arg = &search;
+    pb_istream_t stream = pb_istream_from_buffer(image.data, image.main_size);
+    pb_decode(&stream, proto_Config_fields, &config);
+    return search.profile;
+}
+
 bool load_empty()
 {
     config_storage.initialize_empty();

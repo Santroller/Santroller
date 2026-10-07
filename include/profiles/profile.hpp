@@ -34,6 +34,8 @@ class Profile
 public:
     virtual ~Profile();
     void resolve_shortcuts();
+    // Drop mappings and LEDs, leaving just what is needed to notice the profile activating
+    void release_to_triggers();
     void reset_drum_state();
     // Sample the queued fret / strum mappings and advance the input queue
     void sample_input_queue();
@@ -55,6 +57,8 @@ public:
     bool per_kind_slot_ids = false;
     ConsoleMode mode;
     uint32_t profile_id;
+    // Inactive profiles only load their opts and triggers; the config tool loads the rest on demand
+    bool triggers_only = false;
     std::vector<std::unique_ptr<Mapping>> mappings;
     std::vector<std::unique_ptr<ActivationTriggerList>> triggers;
     std::vector<std::unique_ptr<LedMapping>> leds;

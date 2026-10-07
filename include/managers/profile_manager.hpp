@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <stdint.h>
 #include <algorithm>
+#include <optional>
 #include "profiles/profile.hpp"
 #include "instance.hpp"
 #include "emulation/usb/device.hpp"
@@ -27,6 +28,10 @@ public:
     void add_profile(uint32_t profile_id, std::shared_ptr<Profile> profile);
     void remove_profile(uint32_t profile_id);
     std::shared_ptr<Profile> get_profile(uint32_t profile_id, size_t instance_id = 0);
+    // Like get_profile, but builds the whole profile if it is inactive so the config tool can poll it
+    std::shared_ptr<Profile> load_tool_profile(uint32_t profile_id, size_t instance_id);
+    // Put the profile loaded for the tool back to only its triggers
+    void release_tool_profile();
     
     void update_device_assignments(bool full_poll, bool send_events);
     void update_active_instances();
@@ -146,6 +151,8 @@ private:
     bool m_subtypes_changed = false;
     bool m_was_legacy_adapter = false;
     std::unordered_map<uint32_t, std::vector<std::shared_ptr<Instance>>> m_profile_to_instance;
+    // The inactive profile load_tool_profile last tried to build, even if that failed
+    std::optional<uint32_t> m_tool_profile_id;
     
     std::vector<std::shared_ptr<Instance>> m_instances;
     std::shared_ptr<UsbDevice> m_usb_instances[32];

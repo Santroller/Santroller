@@ -73,6 +73,7 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
   if (tool_closed())
   {
     profile_selected = false;
+    ProfileManager::instance().release_tool_profile();
     return;
   }
   bool profile_just_changed = profile_changed;
@@ -95,7 +96,7 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
   }
   if (profile_selected)
   {
-    auto selected_ptr = ProfileManager::instance().get_profile(selected_profile, selected_instance);
+    auto selected_ptr = ProfileManager::instance().load_tool_profile(selected_profile, selected_instance);
     if (!selected_ptr)
     {
       return;

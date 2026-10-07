@@ -18,7 +18,10 @@
 #include "CRC32.h"
 #include "emulation/usb/device.hpp"
 #include "devices/usb/host/host.hpp"
+class Profile;
 bool load_empty();
+// Build a profile that isn't currently active so the config tool can poll it
+std::shared_ptr<Profile> load_preview_profile(uint32_t profile_id);
 bool load();
 uint32_t copy_config(uint8_t *buffer, uint32_t start, bool cached);
 uint32_t copy_config_info(uint8_t *buffer, bool cached);

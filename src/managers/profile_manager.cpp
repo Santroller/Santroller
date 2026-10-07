@@ -104,6 +104,59 @@ std::shared_ptr<Profile> ProfileManager::get_profile(uint32_t profile_id, size_t
     return it->second.front();
 }
 
+std::shared_ptr<Profile> ProfileManager::load_tool_profile(uint32_t profile_id, size_t instance_id)
+{
+    auto profile = get_profile(profile_id, instance_id);
+    if (profile && !profile->triggers_only)
+    {
+        if (m_tool_profile_id != profile_id)
+        {
+            release_tool_profile();
+        }
+        return profile;
+    }
+    // Already tried this one, don't rescan the config every loop
+    if (m_tool_profile_id == profile_id)
+    {
+        return nullptr;
+    }
+    release_tool_profile();
+    m_tool_profile_id = profile_id;
+    profile = load_preview_profile(profile_id);
+    if (!profile)
+    {
+        return nullptr;
+    }
+    printf("tool loaded inactive p=%u\r\n", profile_id);
+    profile->resolve_shortcuts();
+    m_profiles[profile_id] = {profile};
+    return profile;
+}
+
+void ProfileManager::release_tool_profile()
+{
+    if (!m_tool_profile_id)
+    {
+        return;
+    }
+    uint32_t profile_id = *m_tool_profile_id;
+    m_tool_profile_id.reset();
+    // It may have been activated by a reload since
+    if (is_profile_active(profile_id))
+    {
+        return;
+    }
+    auto it = m_profiles.find(profile_id);
+    if (it == m_profiles.end())
+    {
+        return;
+    }
+    for (auto &profile : it->second)
+    {
+        profile->release_to_triggers();
+    }
+}
+
 void ProfileManager::register_instance(std::shared_ptr<Instance> instance, std::shared_ptr<Profile> profile, bool usb_instance)
 {
     // Only USB instances affect descriptors; PS2/Wii/Bluetooth assignments must not reset the PC link.
@@ -320,6 +373,7 @@ void ProfileManager::prepare_for_config_reload()
     release_profile_contents(m_profiles);
     m_profiles.clear();
     m_profile_to_instance.clear();
+    m_tool_profile_id.reset();
     m_emulated_devices.clear();
     std::fill(std::begin(m_usb_instances), std::end(m_usb_instances), nullptr);
     std::fill(std::begin(m_usb_instances_by_epin), std::end(m_usb_instances_by_epin), nullptr);
@@ -451,6 +505,7 @@ void ProfileManager::clear_all()
     release_profile_contents(m_profiles);
     m_profiles.clear();
     m_profile_to_instance.clear();
+    m_tool_profile_id.reset();
     m_last_subtypes.clear();
     m_current_subtypes.clear();
     m_subtypes_changed = false;

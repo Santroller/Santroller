@@ -18,6 +18,21 @@ Profile::~Profile()
     devices.clear();
 }
 
+void Profile::release_to_triggers()
+{
+    for (const auto &led : leds)
+    {
+        led->off();
+    }
+    queued_mappings.clear();
+    queued_last_live.clear();
+    action_mappings.clear();
+    strum_mappings.clear();
+    mappings.clear();
+    leds.clear();
+    triggers_only = true;
+}
+
 void Profile::resolve_shortcuts()
 {
     for (auto &mapping : mappings)

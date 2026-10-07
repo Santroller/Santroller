@@ -35,12 +35,9 @@
 
 ## Led / rumble features
 - [ ] Allow mapping stage kit led count to brightness
-- [ ] Support Spice2X serial API for games that run on that
 - [ ] Support directoutput (if we want to start supporting pinball cabs)
 
 ## Devices
-- [ ] Xbox 360 slim RF module - https://github.com/ginokgx/xbox360slimRF
-- [ ] Xbox 360 fat RF module - https://github.com/blackfin/xbox360RFmodule
 - [ ] Sound for PS4/5, XInput and GIP
 - [ ] max1704x
 - [ ] battery level estimate via ADC pin

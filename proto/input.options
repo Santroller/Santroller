@@ -4,3 +4,4 @@ proto.Input.cycle type:FT_CALLBACK
 proto.Input.toggle type:FT_CALLBACK
 proto.Input.shifted type:FT_CALLBACK
 proto.Input.* submsg_callback:true
+proto.Mapping.pickupThresholds max_count:4

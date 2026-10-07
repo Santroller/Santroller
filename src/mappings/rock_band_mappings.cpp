@@ -1,3 +1,5 @@
+#include <string.h>
+#include "protocols/rb_pickup.hpp"
 #include "events.pb.h"
 #include "instance.hpp"
 #include "main.hpp"
@@ -344,10 +346,33 @@ void RockBandGuitarButtonMapping::update_xboxone(uint8_t *buf)
     }
 }
 
-static uint8_t pickupUniversal[] = {0x19, 0x4c, 0x96, 0xb2, 0xe5};
-static uint8_t pickupXb1[] = {0x00, 0x10, 0x20, 0x30, 0x40};
-RockBandGuitarAxisMapping::RockBandGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.rbAxis == RockBandGuitar_Whammy)
+// The pickup is calibrated like a trigger, so min / max maps linearly onto the full range
+// rather than being split around a centre point like a stick
+RockBandGuitarAxisMapping::RockBandGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.rbAxis == RockBandGuitar_Whammy || mapping.mapping.mapping.rbAxis == RockBandGuitar_Pickup)
 {
+    if (mapping.pickupThresholds_count == 4)
+    {
+        m_has_pickup_thresholds = true;
+        memcpy(m_pickup_thresholds, mapping.pickupThresholds, sizeof(m_pickup_thresholds));
+    }
+}
+
+uint8_t RockBandGuitarAxisMapping::pickup_notch() const
+{
+    if (!m_has_pickup_thresholds)
+    {
+        // equal bands, which also lines up with the cycle device's pickup values
+        uint32_t notch = m_calibrated_value * 5 / 65536;
+        return notch > 4 ? 4 : notch;
+    }
+    for (uint8_t i = 0; i < 4; i++)
+    {
+        if (m_calibrated_value <= m_pickup_thresholds[i])
+        {
+            return i;
+        }
+    }
+    return 4;
 }
 
 void RockBandGuitarAxisMapping::update_hid(uint8_t *buf)
@@ -417,7 +442,7 @@ void RockBandGuitarAxisMapping::update_ps2(uint8_t *buf)
 
 void RockBandGuitarAxisMapping::update_ps3(uint8_t *buf)
 {
-    if (m_centered)
+    if (m_centered && !is_pickup())
     {
         return;
     }
@@ -431,14 +456,14 @@ void RockBandGuitarAxisMapping::update_ps3(uint8_t *buf)
         report->tilt = m_calibrated_value >> 8;
         break;
     case RockBandGuitar_Pickup:
-        report->pickup = pickupUniversal[m_calibrated_value];
+        report->pickup = rb_pickup_universal[pickup_notch()];
         break;
     }
 }
 
 void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
 {
-    if (m_centered)
+    if (m_centered && !is_pickup())
     {
         return;
     }
@@ -452,7 +477,8 @@ void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
         report->tilt = abs(int32_t(m_calibrated_value - 32768)) >> 7;
         break;
     case RockBandGuitar_Pickup:
-        report->pickup = m_calibrated_value;
+        // RB4 guitars report the notch directly, 0 - 4
+        report->pickup = pickup_notch();
         break;
     default:
         break;
@@ -461,7 +487,7 @@ void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
 
 void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
 {
-    if (m_centered)
+    if (m_centered && !is_pickup())
     {
         return;
     }
@@ -475,7 +501,8 @@ void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
         report->tilt = abs(int32_t(m_calibrated_value - 32768)) >> 7;
         break;
     case RockBandGuitar_Pickup:
-        report->pickup = m_calibrated_value;
+        // RB4 guitars report the notch directly, 0 - 4
+        report->pickup = pickup_notch();
         break;
     default:
         break;
@@ -484,7 +511,7 @@ void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
 
 void RockBandGuitarAxisMapping::update_xinput(uint8_t *buf)
 {
-    if (m_centered)
+    if (m_centered && !is_pickup())
     {
         return;
     }
@@ -498,7 +525,7 @@ void RockBandGuitarAxisMapping::update_xinput(uint8_t *buf)
         report->tilt = m_calibrated_value - 32768;
         break;
     case RockBandGuitar_Pickup:
-        report->pickup = pickupUniversal[m_calibrated_value];
+        report->pickup = rb_pickup_universal[pickup_notch()];
         break;
     default:
         break;
@@ -506,7 +533,7 @@ void RockBandGuitarAxisMapping::update_xinput(uint8_t *buf)
 }
 void RockBandGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 {
-    if (m_centered)
+    if (m_centered && !is_pickup())
     {
         return;
     }
@@ -520,7 +547,7 @@ void RockBandGuitarAxisMapping::update_ogxbox(uint8_t *buf)
         report->tilt = m_calibrated_value >> 8;
         break;
     case RockBandGuitar_Pickup:
-        report->pickup = pickupUniversal[m_calibrated_value];
+        report->pickup = rb_pickup_universal[pickup_notch()];
         break;
     default:
         break;
@@ -528,7 +555,7 @@ void RockBandGuitarAxisMapping::update_ogxbox(uint8_t *buf)
 }
 void RockBandGuitarAxisMapping::update_xboxone(uint8_t *buf)
 {
-    if (m_centered)
+    if (m_centered && !is_pickup())
     {
         return;
     }
@@ -542,7 +569,7 @@ void RockBandGuitarAxisMapping::update_xboxone(uint8_t *buf)
         report->tilt = m_calibrated_value >> 8;
         break;
     case RockBandGuitar_Pickup:
-        report->pickup = pickupXb1[m_calibrated_value];
+        report->pickup = rb_pickup_xbox_one[pickup_notch()];
         break;
     default:
         break;

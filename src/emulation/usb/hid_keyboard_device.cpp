@@ -66,6 +66,15 @@ void HIDKeyboardDevice::process(bool full_poll, bool send_events)
     {
       led->update(full_poll, send_events);
     }
+    // Modifier keys (left / right ctrl, shift, alt, gui) go in the modifier byte, not the key array
+    for (uint8_t i = 0; i < 8; i++)
+    {
+      if (state.is_key_pressed(HID_KEY_CONTROL_LEFT + i))
+      {
+        report->modifier |= 1 << i;
+        state.clear_key(HID_KEY_CONTROL_LEFT + i);
+      }
+    }
     size_t total_pressed = 0;
     for (size_t i = 0; i < 256; i++)
     {

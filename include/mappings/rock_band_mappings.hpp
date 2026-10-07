@@ -34,6 +34,14 @@ public:
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
+
+private:
+    // 0-4, which pickup selector notch the input is in
+    uint8_t pickup_notch() const;
+    // the lowest notch is a real position, so the pickup is reported even when "centred"
+    bool is_pickup() const { return m_mapping.mapping.mapping.rbAxis == RockBandGuitar_Pickup; }
+    uint32_t m_pickup_thresholds[4] = {};
+    bool m_has_pickup_thresholds = false;
 };
 
 class RockBandDrumsButtonMapping : public ButtonMapping

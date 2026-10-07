@@ -1,4 +1,5 @@
 #include "tusb_option.h"
+#include "protocols/rb_pickup.hpp"
 #include "devices/usb/host/hid/ps4_host.h"
 #include "protocols/ps4.hpp"
 #include "usb/auth_broker.h"
@@ -402,7 +403,9 @@ uint16_t ps4_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             case RockBandGuitar_Tilt:
                 return data->tilt << 8;
             case RockBandGuitar_Pickup:
-                return data->pickup << 8;
+                // RB4 guitars report the notch directly (0 - 4), convert it to the same
+                // values the other consoles' guitars use so it lands in the right notch
+                return rb_pickup_notch_value(data->pickup);
             default:
                 return 0;
             }

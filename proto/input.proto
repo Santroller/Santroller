@@ -303,4 +303,8 @@ message Mapping {
   optional bool peakBased = 63;
   // Debounce in 100us units, takes priority over the older millisecond debounce field
   optional uint32 debounce100us = 64;
+  // Pickup selector only: the upper bound of notches 1-4 (calibrated value), anything above
+  // the last one is notch 5. Real 5-way switches aren't evenly spaced, so these let an
+  // analog pickup be calibrated. Without them, the range is split into 5 equal bands.
+  repeated uint32 pickupThresholds = 65;
 }

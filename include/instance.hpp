@@ -45,12 +45,17 @@ public:
     uint32_t stagekit_last_strobe = 0;
     uint8_t capabilities = 0;
     bool side = 0;
+    GameFeedback game_feedback;
+    uint8_t keyboard_leds = 0;
 
     void set_rumble(uint8_t left, uint8_t right);
     void set_player_led(uint8_t player);
     void set_lightbar(uint8_t r, uint8_t g, uint8_t b);
     void set_euphoria_led(uint8_t val);
     void process_stagekit_command(uint8_t command, uint8_t param);
+    // The batched Santroller LED report (0x5B), starting at its type byte
+    void process_feedback_report(const uint8_t *data, uint16_t len);
+    void set_keyboard_leds(uint8_t leds);
     void update_stagekit();
     void update_feedback(bool force = false);
     void update_capabilities();

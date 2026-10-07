@@ -42,19 +42,9 @@
 
 # things missing from S1
 
-Missing: power and timing
 
-Global poll rate.
-Global button and strum debounce. Debounce is per mapping only now.
-
-The reset/reboot binding: a button that reboots the controller and keeps the console type.
-
-
-Num/Caps/Scroll Lock LEDs.
 Missing: LEDs
 
-Santroller game-feedback LED commands: note hit and miss, star power, multiplier, solo. The handlers are commented out in instance.cpp.
-Status LEDs: Bluetooth connected, console auth complete, and current mode.
 LEDs on MPR121 GPIO pins.
 
 Accelerometer low-pass filter.

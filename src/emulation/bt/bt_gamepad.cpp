@@ -1,4 +1,5 @@
 #include "emulation/santroller_commands.hpp"
+#include "devices/bt/bluetooth_status.hpp"
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -346,6 +347,11 @@ void BTGamepadDevice::process_keyboard_mouse(bool full_poll, bool send_events)
     }
 }
 
+bool bt_gamepad_connected()
+{
+    return con_handle != HCI_CON_HANDLE_INVALID;
+}
+
 void BTGamepadDevice::process(bool full_poll, bool send_events)
 {
     if (con_handle == HCI_CON_HANDLE_INVALID)
@@ -522,6 +528,15 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
             if (report_type == HID_REPORT_TYPE_OUTPUT)
             {
+                if (s_instance && s_instance->subtype == SubType_KeyboardMouse)
+                {
+                    // the lock lights, with or without the report id in front
+                    if (report_len >= 2 && report_data[0] == KEYBOARD_REPORT_ID)
+                        s_instance->set_keyboard_leds(report_data[1]);
+                    else if (report_len >= 1)
+                        s_instance->set_keyboard_leds(report_data[0]);
+                    break;
+                }
                 if (report_id == ReportIdGamepad && s_instance &&
                     santroller_handle_output_command(*s_instance, report_data, report_len))
                 {

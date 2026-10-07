@@ -1,6 +1,7 @@
 #ifndef _WIIMOTE_BTSTACK_H_
 #define _WIIMOTE_BTSTACK_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 void wiimote_emulator_set_led(void (*led_on)(), void (*led_off)());
@@ -18,5 +19,7 @@ void wiimote_emulator(void *report);
 // wiimote_emulator() this does not redo connection/SSP setup.
 void wiimote_emulator_update_report(void *report);
 void wiimote_emulator_shutdown(void);
+// Whether a console is connected
+bool wiimote_emulator_connected(void);
 
 #endif // _WIIMOTE_BTSTACK_H_

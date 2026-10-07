@@ -10,6 +10,7 @@
 #define SANTROLLER_COMMAND_RUMBLE 0x5A     // left, right (stage kit param, command on instruments)
 #define SANTROLLER_COMMAND_PLAYER_LED 0x5C // player index, 0 based (0xFF = none)
 #define SANTROLLER_COMMAND_RGB_LED 0x5D    // r, g, b
+#define SANTROLLER_COMMAND_FEEDBACK 0x5B   // stage kit and game state in one report, see Instance::process_feedback_report
 
 // Capability bits in the Santroller 2 capabilities report (0x10, byte 2) are the
 // Capability* values from enums.pb.h. A turntable reports its euphoria LED as the RGB
@@ -17,7 +18,8 @@
 
 static inline bool santroller_is_command(uint8_t b)
 {
-    return b == SANTROLLER_COMMAND_RUMBLE || b == SANTROLLER_COMMAND_PLAYER_LED || b == SANTROLLER_COMMAND_RGB_LED;
+    return b == SANTROLLER_COMMAND_RUMBLE || b == SANTROLLER_COMMAND_PLAYER_LED || b == SANTROLLER_COMMAND_RGB_LED ||
+           b == SANTROLLER_COMMAND_FEEDBACK;
 }
 
 // Host side: tracks what a connected Santroller should be showing and hands out one

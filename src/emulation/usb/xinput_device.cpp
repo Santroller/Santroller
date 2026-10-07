@@ -13,6 +13,10 @@
 #include "emulation/usb/hid_device.h"
 #include "emulation/usb/usb_descriptors.h"
 #include <xsm3.h>
+#include "usb/auth_broker.h"
+
+// Set once the console has sent its verify challenge, for spotting when auth finishes
+static bool s_security_verified = false;
 #include <pico/unique_id.h>
 #include "emulation/usb/usb_devices.h"
 #include "config/config.hpp"
@@ -524,6 +528,9 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
                 xsm3_initialise_state();
                 xsm3_set_identification_data(xsm3_id_data_ms_controller);
                 tud_control_xfer(TUD_OPT_RHPORT, request, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
+                // a new handshake starting
+                s_security_verified = false;
+                auth_broker.set_auth_completed(ModeXbox360, false);
             }
                     ConfigManager::instance().request_mode(ModeXbox360);
             return true;
@@ -539,12 +546,18 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
             {
                 tud_control_xfer(TUD_OPT_RHPORT, request, buf, request->wLength);
                 xsm3_do_challenge_verify(buf);
+                s_security_verified = true;
             }
             return true;
         case 0x83:
             if (stage == CONTROL_STAGE_SETUP)
             {
                 tud_control_xfer(TUD_OPT_RHPORT, request, xsm3_challenge_response, sizeof(xsm3_challenge_response));
+                // the console reading the response to its verify challenge is the last step
+                if (s_security_verified)
+                {
+                    auth_broker.set_auth_completed(ModeXbox360, true);
+                }
             }
             return true;
         case 0x86:
@@ -576,6 +589,7 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
                 if (stage == CONTROL_STAGE_DATA)
                 {
                     xsm3_do_challenge_verify(buf);
+                    s_security_verified = true;
                 }
                 else
                 {

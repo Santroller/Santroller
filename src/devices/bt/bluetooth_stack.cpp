@@ -1,4 +1,5 @@
 #include "devices/bt/bluetooth_stack.hpp"
+#include "devices/bt/bluetooth_status.hpp"
 
 #include <pico/cyw43_arch.h>
 
@@ -159,4 +160,14 @@ void BluetoothStack::tick() {
         btc_tick();
         ble_tick();
     }
+}
+
+bool bluetooth_connected()
+{
+    if (!BluetoothStack::instance().initialized())
+    {
+        return false;
+    }
+    BtStackLock lock;
+    return bt_gamepad_connected() || wiimote_emulator_connected() || btc_has_connected_device() || ble_has_connected_device();
 }

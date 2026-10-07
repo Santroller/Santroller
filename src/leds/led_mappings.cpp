@@ -5,6 +5,21 @@
 #include <stdio.h>
 #include "emulation/usb/hid_device.h"
 #include "enums.pb.h"
+#include "managers/config_manager.hpp"
+#include "usb/auth_broker.h"
+#include "devices/bt/bluetooth_status.hpp"
+// Host values are 8 bit, LED values span the full 16 bit range
+static uint16_t scale8(uint8_t val)
+{
+    return val * 257;
+}
+
+RumbleLedMapping::RumbleLedMapping(std::unique_ptr<LedMappingDevice> device, proto_RumbleLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
+StageKitLedMapping::StageKitLedMapping(std::unique_ptr<LedMappingDevice> device, proto_StageKitLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
+PlaystationLedMapping::PlaystationLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PlaystationLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
+EuphoriaLedMapping::EuphoriaLedMapping(std::unique_ptr<LedMappingDevice> device, proto_EuphoriaLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
+PlayerLedMapping::PlayerLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PlayerLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
+
 void RumbleLedMapping::update(bool full_poll, bool send_events)
 {
 }
@@ -12,11 +27,11 @@ void RumbleLedMapping::set_rumble(uint8_t left, uint8_t right)
 {
     if (m_mapping.type == RumbleLeft)
     {
-        m_device->set_val(left);
+        m_device->set_val(scale8(left));
     }
     else if (m_mapping.type == RumbleRight)
     {
-        m_device->set_val(right);
+        m_device->set_val(scale8(right));
     }
 }
 
@@ -35,10 +50,10 @@ void StageKitLedMapping::set_stagekit_led(uint8_t fog, uint8_t strobe, uint8_t b
     switch (m_mapping.type)
     {
     case StageKitFog:
-        m_device->set_val(fog);
+        m_device->set_val(scale8(fog));
         break;
     case StageKitStrobe:
-        m_device->set_val(strobe);
+        m_device->set_val(scale8(strobe));
         break;
     default:
         // Sequential mapping - when a user picks leds they are mapped directly to the device's LED indices
@@ -115,22 +130,82 @@ void EuphoriaLedMapping::reload()
 }
 void EuphoriaLedMapping::set_euphoria_led(uint8_t val)
 {
-    m_device->set_val(val);
+    m_device->set_val(scale8(val));
 }
 void PlayerLedMapping::update(bool full_poll, bool send_events)
 {
 }
 void PlayerLedMapping::set_player_led(uint8_t player)
 {
-    if (player == m_mapping.playerId)
-    {
-        m_device->set_val(0xFF);
-    }
+    m_device->set_val(player == m_mapping.playerId ? UINT16_MAX : 0);
 }
 
 void PlayerLedMapping::reload()
 {
 }
+void KeyboardLedMapping::set_keyboard_leds(uint8_t leds)
+{
+    // HID keyboard LED bits: num lock, caps lock, scroll lock
+    uint8_t bit = 0;
+    switch (m_mapping.type)
+    {
+    case KeyboardLedNumLock:
+        bit = 1 << 0;
+        break;
+    case KeyboardLedCapsLock:
+        bit = 1 << 1;
+        break;
+    case KeyboardLedScrollLock:
+        bit = 1 << 2;
+        break;
+    }
+    m_device->set_val(leds & bit ? UINT16_MAX : 0);
+}
+
+void GameFeedbackLedMapping::set_game_feedback(const GameFeedback &feedback)
+{
+    switch (m_mapping.type)
+    {
+    case FeedbackStarPowerGauge:
+        m_device->set_val(feedback.star_power_active ? 0 : scale8(feedback.star_power_fill));
+        break;
+    case FeedbackStarPowerActive:
+        m_device->set_val(feedback.star_power_active ? scale8(feedback.star_power_fill) : 0);
+        break;
+    case FeedbackMultiplier:
+        m_device->set_val(feedback.multiplier && feedback.multiplier >= m_mapping.value ? UINT16_MAX : 0);
+        break;
+    case FeedbackSolo:
+        m_device->set_val(feedback.solo ? UINT16_MAX : 0);
+        break;
+    case FeedbackNoteMiss:
+        m_device->set_val(feedback.note_miss ? UINT16_MAX : 0);
+        break;
+    case FeedbackNoteHit:
+        m_device->set_val(m_mapping.value < 8 && (feedback.note_hits & (1 << m_mapping.value)) ? UINT16_MAX : 0);
+        break;
+    }
+}
+
+void StatusLedMapping::update(bool full_poll, bool send_events)
+{
+    auto mode = ConfigManager::instance().get_current_mode();
+    bool on = false;
+    switch (m_mapping.type)
+    {
+    case StatusBluetoothConnected:
+        on = bluetooth_connected();
+        break;
+    case StatusAuthenticated:
+        on = auth_broker.is_auth_completed(mode);
+        break;
+    case StatusConsoleMode:
+        on = m_mapping.has_mode && mode == m_mapping.mode;
+        break;
+    }
+    m_device->set_val(on ? UINT16_MAX : 0);
+}
+
 void InputLedMapping::update(bool full_poll, bool send_events)
 {
     uint16_t raw = m_input->tick_analog();

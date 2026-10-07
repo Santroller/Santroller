@@ -94,6 +94,30 @@ std::unique_ptr<LedMapping> LedFactory::create_led_mapping(
             led_id
         );
         
+    case proto_LedMapping_rumbleMapping_tag:
+        return std::make_unique<RumbleLedMapping>(std::move(device), proto_led_mapping.led.rumbleMapping, profile, led_id);
+
+    case proto_LedMapping_stageKitMapping_tag:
+        return std::make_unique<StageKitLedMapping>(std::move(device), proto_led_mapping.led.stageKitMapping, profile, led_id);
+
+    case proto_LedMapping_playstationMapping_tag:
+        return std::make_unique<PlaystationLedMapping>(std::move(device), proto_led_mapping.led.playstationMapping, profile, led_id);
+
+    case proto_LedMapping_euphoriaMapping_tag:
+        return std::make_unique<EuphoriaLedMapping>(std::move(device), proto_led_mapping.led.euphoriaMapping, profile, led_id);
+
+    case proto_LedMapping_playerMapping_tag:
+        return std::make_unique<PlayerLedMapping>(std::move(device), proto_led_mapping.led.playerMapping, profile, led_id);
+
+    case proto_LedMapping_keyboardMapping_tag:
+        return std::make_unique<KeyboardLedMapping>(std::move(device), proto_led_mapping.led.keyboardMapping, profile, led_id);
+
+    case proto_LedMapping_gameFeedbackMapping_tag:
+        return std::make_unique<GameFeedbackLedMapping>(std::move(device), proto_led_mapping.led.gameFeedbackMapping, profile, led_id);
+
+    case proto_LedMapping_statusMapping_tag:
+        return std::make_unique<StatusLedMapping>(std::move(device), proto_led_mapping.led.statusMapping, profile, led_id);
+
     default:
         return nullptr;
     }

@@ -32,6 +32,9 @@ bool santroller_handle_output_command(Instance &instance, const uint8_t *data, u
         if (len >= 2)
             instance.set_player_led(data[1] < 4 ? data[1] + 1 : 0);
         break;
+    case SANTROLLER_COMMAND_FEEDBACK:
+        instance.process_feedback_report(data, len);
+        break;
     case SANTROLLER_COMMAND_RGB_LED:
         if (len >= 4)
             instance.set_lightbar(data[1], data[2], data[3]);

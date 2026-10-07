@@ -138,6 +138,19 @@ uint16_t HIDKeyboardDevice::report_desc_len()
 
 void HIDKeyboardDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
+  if (report_type != HID_REPORT_TYPE_OUTPUT || !bufsize)
+  {
+    return;
+  }
+  // The lock lights, after the report id (boot protocol hosts leave the id out)
+  if (bufsize >= 2 && buffer[0] == KEYBOARD_REPORT_ID)
+  {
+    set_keyboard_leds(buffer[1]);
+  }
+  else if (bufsize == 1)
+  {
+    set_keyboard_leds(buffer[0]);
+  }
 }
 
 uint16_t HIDKeyboardDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)

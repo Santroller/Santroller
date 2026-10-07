@@ -75,6 +75,19 @@ message PlaystationLedMapping {
 message PlayerLedMapping {
   required int32 playerId = 1;
 }
+message KeyboardLedMapping {
+  required KeyboardLedType type = 1;
+}
+message GameFeedbackLedMapping {
+  required GameFeedbackLedType type = 1;
+  // The multiplier for FeedbackMultiplier, or the note for FeedbackNoteHit
+  optional uint32 value = 2;
+}
+message StatusLedMapping {
+  required StatusLedType type = 1;
+  // For StatusConsoleMode
+  optional ConsoleMode mode = 2;
+}
 message RGBLedDevice {
   required int32 deviceId = 1;
   required int32 startR = 2;
@@ -123,6 +136,9 @@ message LedMapping {
     StageKitLedMapping stageKitMapping = 6;
     PlaystationLedMapping playstationMapping = 7;
     PlayerLedMapping playerMapping = 8;
+    KeyboardLedMapping keyboardMapping = 9;
+    GameFeedbackLedMapping gameFeedbackMapping = 10;
+    StatusLedMapping statusMapping = 11;
   }
 }
 message Led {

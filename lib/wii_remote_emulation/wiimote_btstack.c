@@ -570,3 +570,6 @@ void wiimote_emulator_set_led(void (*led_on)(), void (*led_off)()){
     btstack_run_loop_add_timer(&led_state); 
 }
 
+bool wiimote_emulator_connected(void) {
+    return hid_cid != 0;
+}

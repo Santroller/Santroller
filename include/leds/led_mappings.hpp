@@ -6,6 +6,17 @@
 
 class Profile;
 
+// What the game has reported through the Santroller LED commands
+struct GameFeedback
+{
+    uint8_t star_power_fill = 0;
+    bool star_power_active = false;
+    uint8_t multiplier = 0;
+    bool solo = false;
+    bool note_miss = false;
+    uint8_t note_hits = 0;
+};
+
 class LedMapping
 {
 public:
@@ -20,6 +31,8 @@ public:
     virtual void set_lightbar(uint8_t r, uint8_t g, uint8_t b) {};
     virtual void set_euphoria_led(uint8_t val) {};
     virtual void set_stagekit_led(uint8_t fog, uint8_t strobe, uint8_t blue, uint8_t green, uint8_t yellow, uint8_t red) {};
+    virtual void set_game_feedback(const GameFeedback &feedback) {};
+    virtual void set_keyboard_leds(uint8_t leds) {};
 
 protected:
     std::unique_ptr<LedMappingDevice> m_device;
@@ -82,6 +95,42 @@ public:
 protected:
     proto_PlayerLedMapping m_mapping;
 };
+class KeyboardLedMapping : public LedMapping
+{
+public:
+    KeyboardLedMapping(std::unique_ptr<LedMappingDevice> device, proto_KeyboardLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
+    void update(bool full_poll, bool send_events) {}
+    void reload() {}
+    void set_keyboard_leds(uint8_t leds) override;
+
+protected:
+    proto_KeyboardLedMapping m_mapping;
+};
+
+class GameFeedbackLedMapping : public LedMapping
+{
+public:
+    GameFeedbackLedMapping(std::unique_ptr<LedMappingDevice> device, proto_GameFeedbackLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
+    void update(bool full_poll, bool send_events) {}
+    void reload() {}
+    void set_game_feedback(const GameFeedback &feedback) override;
+
+protected:
+    proto_GameFeedbackLedMapping m_mapping;
+};
+
+// Shows the controller's own state, so it is checked every update rather than pushed by the host
+class StatusLedMapping : public LedMapping
+{
+public:
+    StatusLedMapping(std::unique_ptr<LedMappingDevice> device, proto_StatusLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
+    void update(bool full_poll, bool send_events);
+    void reload() {}
+
+protected:
+    proto_StatusLedMapping m_mapping;
+};
+
 class InputLedMapping : public LedMapping
 {
 public:

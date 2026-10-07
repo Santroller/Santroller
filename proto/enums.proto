@@ -56,6 +56,37 @@ enum LedRumbleType {
   RumbleLeft = 1;
   RumbleRight = 2;
 }
+
+// The host's keyboard lock lights, for keyboard profiles
+enum KeyboardLedType {
+  KeyboardLedNumLock = 1;
+  KeyboardLedCapsLock = 2;
+  KeyboardLedScrollLock = 3;
+}
+
+// What the game reports through the Santroller LED commands (eg YARG)
+enum GameFeedbackLedType {
+  // Brightness follows the star power gauge while star power isn't active
+  FeedbackStarPowerGauge = 1;
+  // Brightness follows the star power gauge while star power is active (as it drains)
+  FeedbackStarPowerActive = 2;
+  // On while the multiplier is at least the mapping's value, so a row of these fills up
+  FeedbackMultiplier = 3;
+  FeedbackSolo = 4;
+  FeedbackNoteMiss = 5;
+  // On while the note numbered by the mapping's value is hit, numbered as the Santroller
+  // protocol does for the controller type (eg on 5-fret guitars 0 = open, 1 = green ... 5 = orange)
+  FeedbackNoteHit = 6;
+}
+
+enum StatusLedType {
+  // On while connected to anything over bluetooth, as a controller or as a receiver
+  StatusBluetoothConnected = 1;
+  // On once the console has finished authenticating the controller (Xbox 360 / Xbox One)
+  StatusAuthenticated = 2;
+  // On while running in the mapping's console mode
+  StatusConsoleMode = 3;
+}
 enum StageKitIndexMappingMode {
   StageKitIndexSequential = 1;
   StageKitIndexIntensity = 2;

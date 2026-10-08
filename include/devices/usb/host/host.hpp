@@ -9,6 +9,7 @@
 #include <array>
 
 #include "protocols/stagekit.hpp"
+class KeyboardHost;
 class UsbHostInterface : public MidiDevice
 {
 public:
@@ -156,6 +157,8 @@ public:
     std::array<std::shared_ptr<UsbHostInterface>,30> host_devices_by_itf;
     std::array<std::shared_ptr<UsbHostInterface>,16> host_devices_by_endpoint_in;
     std::array<std::shared_ptr<UsbHostInterface>,16> host_devices_by_endpoint_out;
+    // the device's first keyboard interface, which any later ones (e.g. an NKRO interface) report through
+    std::weak_ptr<KeyboardHost> keyboard;
 
 protected:
     uint8_t m_dev_addr;

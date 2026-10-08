@@ -30,9 +30,12 @@ static std::shared_ptr<UsbHostInterface> (*hid_device_types[])(std::shared_ptr<U
     SteamHost::open,
     StadiaHost::open,
     XboxHidHost::open,
+    KeyboardHost::open_report, // non boot keyboards, e.g. NKRO interfaces, after the vid / pid matchers
     MouseHost::open,
     GenericHost::open};
 static CFG_TUSB_MEM_ALIGN uint8_t temp_buf[512];
+const uint8_t *HidHost::s_report_desc = temp_buf;
+uint16_t HidHost::s_report_desc_len = 0;
 std::shared_ptr<UsbHostInterface> HidHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
     TU_VERIFY(TUSB_CLASS_HID == desc_itf->bInterfaceClass && desc_itf->bAlternateSetting == 0, nullptr);
@@ -49,9 +52,10 @@ std::shared_ptr<UsbHostInterface> HidHost::open(std::shared_ptr<UsbHostDevice> l
     uint16_t vid, pid;
     tuh_vid_pid_get(dev_addr, &vid, &pid);
     printf("hid %04x:%04x itf=%d len=%d\r\n", vid, pid, desc_itf->bInterfaceNumber, x_desc->wReportLength);
-    tuh_descriptor_get_hid_report_sync(dev_addr, desc_itf->bInterfaceNumber, x_desc->bReportType, 0, temp_buf, x_desc->wReportLength);
+    s_report_desc_len = tu_min16(x_desc->wReportLength, sizeof(temp_buf));
+    tuh_descriptor_get_hid_report_sync(dev_addr, desc_itf->bInterfaceNumber, x_desc->bReportType, 0, temp_buf, s_report_desc_len);
     HID_ReportInfo_t *info = nullptr;
-    auto parse_res = USB_ProcessHIDReport(temp_buf, x_desc->wReportLength, &info);
+    auto parse_res = USB_ProcessHIDReport(temp_buf, s_report_desc_len, &info);
     if (parse_res == HID_PARSE_Successful || parse_res == HID_PARSE_NoUnfilteredReportItems)
     {
         tusb_desc_device_t desc;

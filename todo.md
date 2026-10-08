@@ -29,7 +29,6 @@
 - [ ] Mapping an analog input as the calibration instead of only being able to do it from the ui
 
 ## Led / rumble features
-- [ ] Allow mapping stage kit led count to brightness
 - [ ] Support directoutput (if we want to start supporting pinball cabs)
 
 ## Devices

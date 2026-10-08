@@ -100,6 +100,38 @@ static const uint8_t adv_data_gamepad[] = {
     0xC4,
     0x03,
 };
+// While only the configurator can connect, show up as a generic HID device rather than a gamepad
+static const uint8_t adv_data_config[] = {
+    // Flags general discoverable, BR/EDR not supported
+    0x02,
+    BLUETOOTH_DATA_TYPE_FLAGS,
+    0x06,
+    // Name
+    0x0d,
+    BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME,
+    'S',
+    'a',
+    'n',
+    't',
+    'r',
+    'o',
+    'l',
+    'l',
+    'e',
+    'r',
+    'B',
+    'T',
+    // 16-bit Service UUIDs
+    0x03,
+    BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS,
+    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE & 0xff,
+    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE >> 8,
+    0x03,
+    BLUETOOTH_DATA_TYPE_APPEARANCE,
+    // Appearance HID - Generic (Category 15)
+    0xC0,
+    0x03,
+};
 bool check_bluetooth_ready()
 {
     return con_handle != HCI_CON_HANDLE_INVALID;
@@ -149,7 +181,7 @@ void set_battery_state(uint8_t state)
     battery = state;
     battery_service_server_set_battery_value(state);
 }
-BTGamepadDevice::BTGamepadDevice()
+BTGamepadDevice::BTGamepadDevice(bool config_only) : m_config_only(config_only)
 {
 }
 BTGamepadDevice::~BTGamepadDevice()
@@ -164,11 +196,17 @@ void BTGamepadDevice::deinitialize()
     {
         return;
     }
-    if (con_handle != HCI_CON_HANDLE_INVALID)
+    // The GATT database may be about to change, so drop the host even if it never subscribed to reports
+    if (peripheral_handle != HCI_CON_HANDLE_INVALID)
+    {
+        gap_disconnect(peripheral_handle);
+    }
+    else if (con_handle != HCI_CON_HANDLE_INVALID)
     {
         gap_disconnect(con_handle);
-        con_handle = HCI_CON_HANDLE_INVALID;
     }
+    con_handle = HCI_CON_HANDLE_INVALID;
+    peripheral_handle = HCI_CON_HANDLE_INVALID;
     s_instance = nullptr;
     hids_device_register_get_report_callback(nullptr);
     hids_device_register_packet_handler(nullptr);
@@ -176,6 +214,9 @@ void BTGamepadDevice::deinitialize()
     gap_advertisements_set_data(0, nullptr);
     hci_remove_event_handler(&hci_event_callback_registration);
     sm_remove_event_handler(&sm_event_callback_registration);
+    // clears every registered service handler, so the next init starts clean, possibly with the other database
+    bt_config_service_deinit();
+    att_server_deinit();
     m_initialized = false;
     printf("btgamepaddevice deinit\r\n");
 }
@@ -192,7 +233,7 @@ void BTGamepadDevice::initialize()
         printf("BT: gamepad not started, bluetooth isn't enabled in the config\r\n");
         return;
     }
-    printf("btgamepaddevice init\r\n");
+    printf("btgamepaddevice init%s\r\n", m_config_only ? " (config only)" : "");
     if (!BluetoothStack::instance().begin())
     {
         printf("BT: gamepad not started, the bluetooth stack failed to start\r\n");
@@ -203,7 +244,10 @@ void BTGamepadDevice::initialize()
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_MITM_PROTECTION | SM_AUTHREQ_BONDING);
 
     // setup ATT server
-    att_server_init(profile_data, NULL, NULL);
+    uint16_t config_start = ATT_SERVICE_ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE_02_START_HANDLE;
+    uint16_t config_end = ATT_SERVICE_ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE_02_END_HANDLE;
+    const uint8_t *db = m_config_only ? bt_config_only_profile(&config_start, &config_end) : profile_data;
+    att_server_init(db, NULL, NULL);
     att_server_register_packet_handler(packet_handler);
 
     // setup battery service
@@ -217,8 +261,11 @@ void BTGamepadDevice::initialize()
     device_information_service_server_set_serial_number(id);
     memset(report_storage, 0, sizeof(report_storage));
     uint16_t num_reports = sizeof(report_storage) / sizeof(report_storage[0]);
-    switch (subtype)
+    // the config only database has no gamepad HID service
+    switch (m_config_only ? SubType_Unknown : subtype)
     {
+    case SubType_Unknown:
+        break;
     case SubType_KeyboardMouse:
         hids_device_init_with_storage(0, desc_hid_report_keyboard, desc_hid_report_keyboard_len, num_reports, report_storage);
         break;
@@ -229,21 +276,27 @@ void BTGamepadDevice::initialize()
         hids_device_init_with_storage(0, desc_hid_report_hat, sizeof(desc_hid_report_hat), num_reports, report_storage);
         break;
     }
-    hids_device_register_get_report_callback(get_report_callback);
+    if (!m_config_only)
+    {
+        hids_device_register_get_report_callback(get_report_callback);
+    }
 
     // lets the configurator talk to us over bluetooth
-    bt_config_service_init();
+    bt_config_service_init(config_start, config_end);
 
-    // setup advertisements
-    uint16_t adv_int_min = 0x0030;
-    uint16_t adv_int_max = 0x0030;
+    // setup advertisements, every 30ms, or about once a second when only the configurator needs to find us
+    uint16_t adv_int_min = m_config_only ? 0x0664 : 0x0030;
+    uint16_t adv_int_max = adv_int_min;
     uint8_t adv_type = 0;
     bd_addr_t null_addr;
     memset(null_addr, 0, 6);
     gap_advertisements_set_params(adv_int_min, adv_int_max, adv_type, 0, null_addr, 0x07, 0x00);
 
-    switch (subtype)
+    switch (m_config_only ? SubType_Unknown : subtype)
     {
+    case SubType_Unknown:
+        gap_advertisements_set_data(sizeof(adv_data_config), (uint8_t *)adv_data_config);
+        break;
     case SubType_KeyboardMouse:
         gap_advertisements_set_data(adv_data_len, (uint8_t *)adv_data_keyboard);
         break;
@@ -255,7 +308,7 @@ void BTGamepadDevice::initialize()
     {
         bd_addr_t local_addr;
         gap_local_bd_addr(local_addr);
-        printf("BT: advertising as SantrollerBT from %s, subtype %d\r\n", bd_addr_to_str(local_addr), subtype);
+        printf("BT: advertising as SantrollerBT from %s, %s %d\r\n", bd_addr_to_str(local_addr), m_config_only ? "config only, subtype" : "subtype", subtype);
     }
 
     // register for HCI events
@@ -267,7 +320,10 @@ void BTGamepadDevice::initialize()
     sm_add_event_handler(&sm_event_callback_registration);
 
     // register for HIDS
-    hids_device_register_packet_handler(packet_handler);
+    if (!m_config_only)
+    {
+        hids_device_register_packet_handler(packet_handler);
+    }
 
     memset(&m_initial_report, 0, sizeof(m_initial_report));
     switch (subtype)
@@ -386,6 +442,10 @@ void BTGamepadDevice::process(bool full_poll, bool send_events)
     if (m_initialized && level != battery)
     {
         set_battery_state(level);
+    }
+    if (m_config_only)
+    {
+        return;
     }
     if (con_handle == HCI_CON_HANDLE_INVALID)
     {

@@ -301,6 +301,34 @@ void ProfileManager::update(bool full_poll, bool send_events)
     }
 
     update_device_assignments(full_poll, send_events);
+    update_bt_config_instance(full_poll, send_events);
+}
+
+void ProfileManager::update_bt_config_instance(bool full_poll, bool send_events)
+{
+    auto &config_mgr = ConfigManager::instance();
+    bool wanted = config_mgr.has_bluetooth() &&
+                  !config_mgr.has_seen_assignment(ProfileAssignMask_AssignBluetoothGamepad) &&
+                  !config_mgr.has_seen_assignment(ProfileAssignMask_AssignBluetoothWiimote);
+    if (!wanted)
+    {
+        stop_bt_config_instance();
+        return;
+    }
+    if (!m_bt_config_instance)
+    {
+        m_bt_config_instance = InstanceFactory::create_bt_config_instance();
+    }
+    m_bt_config_instance->process(full_poll, send_events);
+}
+
+void ProfileManager::stop_bt_config_instance()
+{
+    if (m_bt_config_instance)
+    {
+        // deinitializes it, the bluetooth gamepad shares the stack's static registrations
+        m_bt_config_instance.reset();
+    }
 }
 
 bool ProfileManager::is_profile_active(uint32_t profile_id) const
@@ -467,6 +495,7 @@ void ProfileManager::update_profile_components(uint32_t profile_id, size_t insta
 
 void ProfileManager::clear_all()
 {
+    stop_bt_config_instance();
     m_instances.clear();
     m_active_instances.clear();
     release_profile_contents(m_profiles);

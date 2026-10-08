@@ -382,6 +382,7 @@ add_executable(
   src/config/config_storage.cpp
   src/emulation/bt/bt_gamepad.cpp
   src/emulation/bt/bt_config_service.cpp
+  src/emulation/bt/bt_config_profile.cpp
   src/emulation/bt/wii_remote_emulation.cpp
   src/emulation/wii_extension_input.cpp
   src/emulation/bt/bt_descriptors.cpp

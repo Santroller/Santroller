@@ -5,8 +5,13 @@
 // HID service over BLE. ATT requests are queued from the bluetooth stack and handed to
 // HIDConfigDevice from the main loop, with the ATT response held back until they are handled.
 
-// Registers the service with the ATT server. Call with the bluetooth stack lock held, after att_server_init
-void bt_config_service_init();
+// Registers the service with the ATT server. Call with the bluetooth stack lock held, after att_server_init.
+// hid_start / hid_end is the config HID service in the current GATT database, the Web Bluetooth service is found by UUID
+void bt_config_service_init(uint16_t hid_start, uint16_t hid_end);
+// Forgets the registration, call before att_server_deinit so the next init can use a different GATT database
+void bt_config_service_deinit();
+// The GATT database used while no profile is using bluetooth, and its config HID service
+const uint8_t *bt_config_only_profile(uint16_t *hid_start, uint16_t *hid_end);
 // Services queued requests, call from the main loop
 void bt_config_service_process(bool full_poll, bool send_events);
 // Call from the bluetooth stack when the connection drops

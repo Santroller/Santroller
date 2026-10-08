@@ -18,6 +18,9 @@ public:
         ConsoleMode mode,
         SubType subtype
     );
+
+    // A bluetooth peripheral serving only the config service, for when no profile uses bluetooth
+    static std::shared_ptr<Instance> create_bt_config_instance();
     
 private:
     static void setup_instance_from_profile(

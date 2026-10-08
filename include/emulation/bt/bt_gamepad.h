@@ -17,7 +17,9 @@ class BTGamepadDevice : public Instance
 {
 public:
     virtual ~BTGamepadDevice();
-    BTGamepadDevice();
+    // config_only: no profile is using bluetooth, so only the config service is served, letting the
+    // configurator still connect over bluetooth. Advertises slowly, as the radio may be shared with other links.
+    BTGamepadDevice(bool config_only = false);
     void initialize() override;
     void deinitialize() override;
     bool is_bluetooth() const override { return true; }
@@ -26,6 +28,7 @@ public:
 private:
     void process_keyboard_mouse(bool full_poll, bool send_events);
     KeyboardMouseReports m_reports;
+    bool m_config_only = false;
     bool m_initialized = false;
     uint8_t m_initial_report[CFG_TUD_XINPUT_TX_BUFSIZE];
     uint8_t m_last_report[CFG_TUD_XINPUT_TX_BUFSIZE];

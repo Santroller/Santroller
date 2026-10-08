@@ -47,6 +47,7 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
         {
             return nullptr;
         }
+        profile_mgr.stop_bt_config_instance();
         instance = std::make_shared<BTGamepadDevice>();
     }
     else if (assignment_mask & ProfileAssignMask_AssignBluetoothWiimote)
@@ -55,6 +56,7 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
         {
             return nullptr;
         }
+        profile_mgr.stop_bt_config_instance();
         instance = std::make_shared<WiiRemoteEmulationDeviceInstance>();
     }
     else if (assignment_mask & ProfileAssignMask_AssignPsx)
@@ -145,6 +147,14 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
         profile_mgr.finish_usb_instance_initialization(std::static_pointer_cast<UsbDevice>(instance)->interface_id);
     }
 
+    return instance;
+}
+
+std::shared_ptr<Instance> InstanceFactory::create_bt_config_instance()
+{
+    auto instance = std::make_shared<BTGamepadDevice>(true);
+    instance->subtype = SubType_Gamepad;
+    instance->initialize();
     return instance;
 }
 

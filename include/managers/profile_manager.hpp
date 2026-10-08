@@ -98,6 +98,8 @@ public:
     void finish_usb_instance_initialization(uint8_t id);
     void initialize_device_bluetooth();
     void deinitialize_device_bluetooth();
+    // Stops the config only bluetooth peripheral, so a bluetooth instance can take over the stack
+    void stop_bt_config_instance();
     
     void add_instance(std::shared_ptr<Instance> instance);
     size_t instance_count() const;
@@ -138,6 +140,9 @@ public:
     void set_emulated_device(ConsoleMode mode, std::shared_ptr<UsbDevice> device);
 
 private:
+    // Keeps the bluetooth config service reachable while no profile is using bluetooth
+    void update_bt_config_instance(bool full_poll, bool send_events);
+
     ProfileManager() = default;
     ~ProfileManager() = default;
     ProfileManager(const ProfileManager&) = delete;
@@ -154,6 +159,7 @@ private:
     std::optional<uint32_t> m_tool_profile_id;
     
     std::vector<std::shared_ptr<Instance>> m_instances;
+    std::shared_ptr<Instance> m_bt_config_instance;
     std::shared_ptr<UsbDevice> m_usb_instances[32];
     std::shared_ptr<UsbDevice> m_usb_instances_by_epin[16];
     std::shared_ptr<UsbDevice> m_usb_instances_by_epout[16];

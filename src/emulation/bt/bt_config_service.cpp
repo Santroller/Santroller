@@ -1,6 +1,5 @@
 #include "emulation/bt/bt_config_service.h"
 #include "devices/bt/bluetooth_stack.hpp"
-#include "emulation/bt/bt_profile.h"
 #include "btstack.h"
 #include <string.h>
 #include <stdio.h>
@@ -19,24 +18,17 @@
 // completed once the main loop has passed them to HIDConfigDevice.
 // The same reports are also served from a plain GATT service for Web Bluetooth, which blocks HID services.
 
-#define CONFIG_SERVICE_START ATT_SERVICE_ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE_02_START_HANDLE
-#define CONFIG_SERVICE_END ATT_SERVICE_ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE_02_END_HANDLE
-#define WEB_SERVICE_START ATT_SERVICE_53414E54_524F_4C4C_4552_000000000000_START_HANDLE
-#define WEB_SERVICE_END ATT_SERVICE_53414E54_524F_4C4C_4552_000000000000_END_HANDLE
-#define WEB_REPORT(id) {0x##id, ATT_CHARACTERISTIC_53414E54_524F_4C4C_4552_0000000000##id##_01_VALUE_HANDLE}
-#define WEB_EVENTS_CLIENT_CONFIGURATION ATT_CHARACTERISTIC_53414E54_524F_4C4C_4552_000000000022_01_CLIENT_CONFIGURATION_HANDLE
 #define MAX_CONFIG_REPORTS 32
 #define MAX_PENDING_WRITES 4
 // largest config report, without the report id
 #define MAX_REPORT_SIZE 64
 
-// Web Bluetooth characteristics, by report id
-static const struct
-{
-    uint8_t id;
-    uint16_t value_handle;
-} s_web_reports[] = {WEB_REPORT(22), WEB_REPORT(23), WEB_REPORT(24), WEB_REPORT(25), WEB_REPORT(26), WEB_REPORT(27),
-                     WEB_REPORT(28), WEB_REPORT(29), WEB_REPORT(30), WEB_REPORT(31), WEB_REPORT(32)};
+// Web Bluetooth service 53414E54-524F-4C4C-4552-000000000000, with one characteristic per report id
+// (the last byte of the UUID). Looked up by UUID, as the handles differ between the GATT databases.
+static const uint8_t s_web_service_uuid[16] = {0x53, 0x41, 0x4E, 0x54, 0x52, 0x4F, 0x4C, 0x4C,
+                                               0x45, 0x52, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t s_web_report_ids[] = {0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x30, 0x31, 0x32};
+#define WEB_EVENTS_REPORT_ID 0x22
 
 // Somewhere config events can be notified to
 struct EventTarget
@@ -288,7 +280,7 @@ static int att_write_callback(hci_con_handle_t con_handle, uint16_t att_handle, 
     return ATT_ERROR_WRITE_RESPONSE_PENDING;
 }
 
-void bt_config_service_init()
+void bt_config_service_init(uint16_t start, uint16_t end)
 {
     if (s_registered)
     {
@@ -296,8 +288,7 @@ void bt_config_service_init()
     }
     uint16_t len;
     const uint8_t *desc = hid_config_report_descriptor(&len);
-    uint16_t start = CONFIG_SERVICE_START;
-    uint16_t end = CONFIG_SERVICE_END;
+    memset(s_event_targets, 0, sizeof(s_event_targets));
     s_report_map_handle = gatt_server_get_value_handle_for_characteristic_with_uuid16(start, end, ORG_BLUETOOTH_CHARACTERISTIC_REPORT_MAP);
     s_control_point_handle = gatt_server_get_value_handle_for_characteristic_with_uuid16(start, end, ORG_BLUETOOTH_CHARACTERISTIC_HID_CONTROL_POINT);
 
@@ -337,22 +328,37 @@ void bt_config_service_init()
     }
 
     // Web Bluetooth reads and writes are always feature reports
-    for (const auto &web : s_web_reports)
+    uint16_t web_start = 0;
+    uint16_t web_end = 0;
+    if (!gatt_server_get_handle_range_for_service_with_uuid128(s_web_service_uuid, &web_start, &web_end))
     {
-        if (s_report_count >= MAX_CONFIG_REPORTS)
+        printf("BT: web bluetooth config service missing\r\n");
+    }
+    for (uint8_t id : s_web_report_ids)
+    {
+        if (!web_start || s_report_count >= MAX_CONFIG_REPORTS)
         {
             break;
         }
+        uint8_t uuid[16];
+        memcpy(uuid, s_web_service_uuid, sizeof(uuid));
+        uuid[15] = id;
+        uint16_t value_handle = gatt_server_get_value_handle_for_characteristic_with_uuid128(web_start, web_end, uuid);
+        if (!value_handle)
+        {
+            continue;
+        }
         ConfigReport &report = s_reports[s_report_count++];
-        report.value_handle = web.value_handle;
-        report.id = web.id;
+        report.value_handle = value_handle;
+        report.id = id;
         report.type = HID_REPORT_TYPE_FEATURE;
         report.size = btstack_min(btstack_hid_get_report_size_for_id(report.id, report.type, desc, len), MAX_REPORT_SIZE);
         report.service = ServiceWeb;
-        if (web.id == 0x22)
+        if (id == WEB_EVENTS_REPORT_ID)
         {
-            s_event_targets[ServiceWeb].value_handle = web.value_handle;
-            s_event_targets[ServiceWeb].client_configuration_handle = WEB_EVENTS_CLIENT_CONFIGURATION;
+            s_event_targets[ServiceWeb].value_handle = value_handle;
+            s_event_targets[ServiceWeb].client_configuration_handle =
+                gatt_server_get_client_configuration_handle_for_characteristic_with_uuid128(web_start, web_end, uuid);
         }
     }
 
@@ -361,14 +367,24 @@ void bt_config_service_init()
     s_service_handler.read_callback = &att_read_callback;
     s_service_handler.write_callback = &att_write_callback;
     att_server_register_service_handler(&s_service_handler);
-    s_web_service_handler.start_handle = WEB_SERVICE_START;
-    s_web_service_handler.end_handle = WEB_SERVICE_END;
-    s_web_service_handler.read_callback = &att_read_callback;
-    s_web_service_handler.write_callback = &att_write_callback;
-    att_server_register_service_handler(&s_web_service_handler);
+    if (web_start)
+    {
+        s_web_service_handler.start_handle = web_start;
+        s_web_service_handler.end_handle = web_end;
+        s_web_service_handler.read_callback = &att_read_callback;
+        s_web_service_handler.write_callback = &att_write_callback;
+        att_server_register_service_handler(&s_web_service_handler);
+    }
     s_registered = true;
     printf("BT: config service 0x%04x-0x%04x, web bluetooth 0x%04x-0x%04x, report map 0x%04x, %u reports, events %s\r\n",
-           start, end, WEB_SERVICE_START, WEB_SERVICE_END, s_report_map_handle, s_report_count, s_event_targets[ServiceHid].value_handle ? "ok" : "missing");
+           start, end, web_start, web_end, s_report_map_handle, s_report_count, s_event_targets[ServiceHid].value_handle ? "ok" : "missing");
+}
+
+void bt_config_service_deinit()
+{
+    bt_config_service_disconnected();
+    s_registered = false;
+    s_report_count = 0;
 }
 
 void bt_config_service_disconnected()

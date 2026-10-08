@@ -17,6 +17,8 @@
 #include "managers/config_manager.hpp"
 #include "emulation/usb/hid_device.h"
 #include "hardware/dma.h"
+#include "hardware/irq.h"
+#include "hardware/timer.h"
 #include <algorithm>
 #include <vector>
 #include "utils.h"
@@ -267,6 +269,12 @@ void USBHostHardwareDevice::begin()
         return;
     }
     m_initialized = true;
+    // pio-usb takes ownership of this and destroys it in hcd_deinit
+    alarm_pool_t *sof_alarm_pool = alarm_pool_create_with_unused_hardware_alarm(1);
+    // SOF is sent from this pool's timer IRQ. At the default priority the native USB device IRQ can't be
+    // preempted by it and SOF goes out late, which seems to make the 360 wireless receiver drop controllers
+    irq_set_priority(hardware_alarm_get_irq_num(alarm_pool_hardware_alarm_num(sof_alarm_pool)),
+                     PICO_HIGHEST_IRQ_PRIORITY);
     pio_usb_configuration_t host_config = {
         pin_dp : (uint8_t)(m_device.firstPin + m_device.dmFirst),
         pio_tx_num : 0,
@@ -275,7 +283,7 @@ void USBHostHardwareDevice::begin()
         pio_rx_num : 0,
         sm_rx : (uint8_t)rx_sm,
         sm_eop : (uint8_t)eop_sm,
-        alarm_pool : NULL,
+        alarm_pool : sof_alarm_pool,
         debug_pin_rx : -1,
         debug_pin_eop : -1,
         skip_alarm_pool : false,

@@ -17,7 +17,13 @@
 #define ENABLE_LE_DATA_LENGTH_EXTENSION
 #define ENABLE_LE_PERIPHERAL
 #define ENABLE_LE_PRIVACY_ADDRESS_RESOLUTION
+// With address resolution the controller reports a bonded peer by its identity address. Pairing has to
+// use the address actually used over the air (e.g. an Android phone's private address), which only the
+// enhanced connection complete event carries. Without it re-pairing a bonded phone fails the DHKey check.
+#define ENABLE_LE_ENHANCED_CONNECTION_COMPLETE_EVENT
 #define ENABLE_LE_SECURE_CONNECTIONS
+// lets the config service answer ATT requests from the main loop
+#define ENABLE_ATT_DELAYED_RESPONSE
 #else
 #error "BP32: ENABLE_BLE should be defined"
 #endif
@@ -29,9 +35,9 @@
 #error "BP32: ENABLE_CLASSIC should be defined"
 #endif
 
-#if defined(ENABLE_CLASSIC) && defined(ENABLE_BLE)
-#define ENABLE_CROSS_TRANSPORT_KEY_DERIVATION
-#endif
+// Cross transport key derivation is deliberately off. Controllers are read over the transport they
+// pair on, and as a BLE gamepad a derived classic key makes hosts try classic connections we don't
+// serve (Android fails authentication and drops the LE link, BlueZ tries BR/EDR when reconnecting)
 
 // BTstack configuration. buffers, sizes, ...
 #define HCI_OUTGOING_PRE_BUFFER_SIZE 4
@@ -93,5 +99,8 @@
 
 // To get the audio demos working even with HCI dump at 115200, this truncates long ACL packets
 // #define HCI_DUMP_STDOUT_MAX_SIZE_ACL 100
+
+// Uncomment to log every HCI packet, for debugging bluetooth startup and pairing
+// #define BT_HCI_DUMP
 
 #endif  // _PICO_BTSTACK_BTSTACK_CONFIG_H

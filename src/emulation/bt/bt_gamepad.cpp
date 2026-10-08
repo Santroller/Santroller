@@ -14,6 +14,7 @@
 #include "emulation/bt/bt_profile.h"
 #include "emulation/bt/bt_descriptors.h"
 #include "emulation/bt/bt_gamepad.h"
+#include "emulation/bt/bt_config_service.h"
 #include "managers/config_manager.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
 #include "btstack.h"
@@ -186,11 +187,13 @@ void BTGamepadDevice::initialize()
     }
     if (!ConfigManager::instance().has_bluetooth())
     {
+        printf("BT: gamepad not started, bluetooth isn't enabled in the config\r\n");
         return;
     }
     printf("btgamepaddevice init\r\n");
     if (!BluetoothStack::instance().begin())
     {
+        printf("BT: gamepad not started, the bluetooth stack failed to start\r\n");
         return;
     }
     s_instance = this;
@@ -199,6 +202,7 @@ void BTGamepadDevice::initialize()
 
     // setup ATT server
     att_server_init(profile_data, NULL, NULL);
+    att_server_register_packet_handler(packet_handler);
 
     // setup battery service
     battery_service_server_init(battery);
@@ -225,6 +229,9 @@ void BTGamepadDevice::initialize()
     }
     hids_device_register_get_report_callback(get_report_callback);
 
+    // lets the configurator talk to us over bluetooth
+    bt_config_service_init();
+
     // setup advertisements
     uint16_t adv_int_min = 0x0030;
     uint16_t adv_int_max = 0x0030;
@@ -243,6 +250,11 @@ void BTGamepadDevice::initialize()
         break;
     }
     gap_advertisements_enable(1);
+    {
+        bd_addr_t local_addr;
+        gap_local_bd_addr(local_addr);
+        printf("BT: advertising as SantrollerBT from %s, subtype %d\r\n", bd_addr_to_str(local_addr), subtype);
+    }
 
     // register for HCI events
     hci_event_callback_registration.callback = &packet_handler;
@@ -356,6 +368,10 @@ bool bt_gamepad_connected()
 
 void BTGamepadDevice::process(bool full_poll, bool send_events)
 {
+    if (m_initialized)
+    {
+        bt_config_service_process(full_poll, send_events);
+    }
     // the battery service starts with the current level, so only changes after that need sending
     uint8_t level = BatteryManager::instance().level();
     if (m_initialized && level != battery)
@@ -442,9 +458,73 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         return;
     switch (hci_event_packet_get_type(packet))
     {
+    case BTSTACK_EVENT_STATE:
+        if (btstack_event_state_get_state(packet) == HCI_STATE_WORKING)
+        {
+            bd_addr_t local_addr;
+            gap_local_bd_addr(local_addr);
+            printf("BT: stack up, address %s\r\n", bd_addr_to_str(local_addr));
+        }
+        break;
     case HCI_EVENT_DISCONNECTION_COMPLETE:
         con_handle = HCI_CON_HANDLE_INVALID;
-        printf("Disconnected\r\n");
+        bt_config_service_disconnected();
+        // 0x05 auth failure, 0x08 supervision timeout, 0x13 remote closed, 0x16 we closed, 0x3d MIC failure (bad keys)
+        printf("BT: disconnected handle 0x%04x reason 0x%02x\r\n", hci_event_disconnection_complete_get_connection_handle(packet), hci_event_disconnection_complete_get_reason(packet));
+        break;
+    case HCI_EVENT_ENCRYPTION_CHANGE:
+        printf("BT: encryption change handle 0x%04x status 0x%02x enabled %u\r\n", hci_event_encryption_change_get_connection_handle(packet), hci_event_encryption_change_get_status(packet), hci_event_encryption_change_get_encryption_enabled(packet));
+        break;
+    case SM_EVENT_PAIRING_STARTED:
+    {
+        bd_addr_t addr;
+        sm_event_pairing_started_get_address(packet, addr);
+        printf("BT: pairing started with %s\r\n", bd_addr_to_str(addr));
+        break;
+    }
+    case SM_EVENT_REENCRYPTION_STARTED:
+    {
+        bd_addr_t addr;
+        sm_event_reencryption_started_get_address(packet, addr);
+        printf("BT: re-encryption started with %s\r\n", bd_addr_to_str(addr));
+        break;
+    }
+    case SM_EVENT_REENCRYPTION_COMPLETE:
+        // a failure here usually means one side lost the bond, remove the device on the host and pair again
+        printf("BT: re-encryption complete status 0x%02x\r\n", sm_event_reencryption_complete_get_status(packet));
+        break;
+    case SM_EVENT_IDENTITY_RESOLVING_SUCCEEDED:
+    {
+        bd_addr_t addr;
+        sm_event_identity_resolving_succeeded_get_address(packet, addr);
+        printf("BT: resolved bonded identity %s\r\n", bd_addr_to_str(addr));
+        break;
+    }
+    case SM_EVENT_IDENTITY_RESOLVING_FAILED:
+    {
+        bd_addr_t addr;
+        sm_event_identity_resolving_failed_get_address(packet, addr);
+        printf("BT: %s is not bonded\r\n", bd_addr_to_str(addr));
+        break;
+    }
+    case SM_EVENT_IDENTITY_CREATED:
+    {
+        bd_addr_t addr;
+        sm_event_identity_created_get_address(packet, addr);
+        printf("BT: bond stored for %s\r\n", bd_addr_to_str(addr));
+        break;
+    }
+    case SM_EVENT_AUTHORIZATION_RESULT:
+        printf("BT: authorization result %u\r\n", sm_event_authorization_result_get_authorization_result(packet));
+        break;
+    case ATT_EVENT_CONNECTED:
+        printf("BT: ATT connected handle 0x%04x\r\n", att_event_connected_get_handle(packet));
+        break;
+    case ATT_EVENT_DISCONNECTED:
+        printf("BT: ATT disconnected handle 0x%04x\r\n", att_event_disconnected_get_handle(packet));
+        break;
+    case ATT_EVENT_MTU_EXCHANGE_COMPLETE:
+        printf("BT: MTU %u\r\n", att_event_mtu_exchange_complete_get_MTU(packet));
         break;
     case SM_EVENT_JUST_WORKS_REQUEST:
         printf("Just Works requested\r\n");
@@ -470,17 +550,39 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             printf("Pairing failed, disconnected\r\n");
             break;
         case ERROR_CODE_AUTHENTICATION_FAILURE:
-            printf("Pairing failed, authentication failure with reason = %u\r\n", sm_event_pairing_complete_get_reason(packet));
+            // reason is an SM_REASON_* code, e.g. 0x05 pairing not supported, 0x08 unspecified, 0x0b DHKey check failed
+            printf("Pairing failed, authentication failure with reason = 0x%02x\r\n", sm_event_pairing_complete_get_reason(packet));
             break;
         default:
+            printf("Pairing failed, status 0x%02x reason 0x%02x\r\n", sm_event_pairing_complete_get_status(packet), sm_event_pairing_complete_get_reason(packet));
             break;
         }
         break;
     case HCI_EVENT_LE_META:
         switch (hci_event_le_meta_get_subevent_code(packet))
         {
+        case HCI_SUBEVENT_LE_ENHANCED_CONNECTION_COMPLETE_V1:
+        {
+            // used instead of LE_CONNECTION_COMPLETE when address resolution is enabled
+            bd_addr_t addr;
+            hci_subevent_le_enhanced_connection_complete_v1_get_peer_addresss(packet, addr);
+            printf("BT: LE connection status 0x%02x handle 0x%04x role %u peer %s (type %u)\r\n",
+                   hci_subevent_le_enhanced_connection_complete_v1_get_status(packet),
+                   hci_subevent_le_enhanced_connection_complete_v1_get_connection_handle(packet),
+                   hci_subevent_le_enhanced_connection_complete_v1_get_role(packet),
+                   bd_addr_to_str(addr),
+                   hci_subevent_le_enhanced_connection_complete_v1_get_peer_address_type(packet));
+            break;
+        }
         case HCI_SUBEVENT_LE_CONNECTION_COMPLETE:
         {
+            bd_addr_t addr;
+            hci_subevent_le_connection_complete_get_peer_address(packet, addr);
+            printf("BT: LE connection status 0x%02x handle 0x%04x role %u peer %s\r\n",
+                   hci_subevent_le_connection_complete_get_status(packet),
+                   hci_subevent_le_connection_complete_get_connection_handle(packet),
+                   hci_subevent_le_connection_complete_get_role(packet),
+                   bd_addr_to_str(addr));
             // print connection parameters (without using float operations)
             uint16_t conn_interval = hci_subevent_le_connection_complete_get_conn_interval(packet);
             printf("LE Connection Complete:\r\n");

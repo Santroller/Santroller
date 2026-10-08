@@ -419,7 +419,7 @@ static void ble_sync_reconnect(void)
         candidate_count++;
     };
 
-    // 1. Check paired BLE devices from DeviceFactory
+    // Only reconnect to controllers we have actually set up
     DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state)
                                                    {
         UNUSED(id);
@@ -428,18 +428,8 @@ static void ble_sync_reconnect(void)
             try_add_candidate(state.mac, ble_resolve_addr_type(state.mac));
         } });
 
-    // 2. Check le_device_db as fallback
-    int max_entries = le_device_db_max_count();
-    for (int i = 0; i < max_entries; i++)
-    {
-        int db_addr_type = 0;
-        bd_addr_t db_addr = {};
-        le_device_db_info(i, &db_addr_type, db_addr, nullptr);
-        if (!btstack_is_null_bd_addr(db_addr) && !ble_is_mac_connected(db_addr))
-        {
-            try_add_candidate(db_addr, (bd_addr_type_t)db_addr_type);
-        }
-    }
+    // le_device_db isn't used as a fallback here: it also holds hosts (e.g. a PC) that bonded with
+    // our bluetooth gamepad, and connecting out to those collides with them connecting to us
 
     if (candidate_count == 0)
     {
@@ -925,6 +915,16 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         case HCI_EVENT_META_GAP:
             if (hci_event_gap_meta_get_subevent_code(packet) != GAP_SUBEVENT_LE_CONNECTION_COMPLETE)
                 break;
+
+            // Connections where we are the peripheral are hosts (e.g. a PC) connecting to our
+            // bluetooth gamepad, not controllers for us to read from, so leave those to the gamepad
+            if (gap_subevent_le_connection_complete_get_status(packet) == ERROR_CODE_SUCCESS &&
+                gap_subevent_le_connection_complete_get_role(packet) != HCI_ROLE_MASTER)
+            {
+                printf("BLE connection 0x%04x is incoming, not handling it as a controller\r\n",
+                       gap_subevent_le_connection_complete_get_connection_handle(packet));
+                break;
+            }
 
             if (s_direct_connect_pending)
             {

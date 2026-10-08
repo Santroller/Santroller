@@ -8,6 +8,7 @@
 #include "enums.pb.h"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
+#include "emulation/bt/bt_config_service.h"
 #include "emulation/usb/ps3_device.h"
 #include "emulation/usb/ps4_device.h"
 #include "devices/crkd_drum.hpp"
@@ -204,12 +205,18 @@ void HIDConfigDevice::process_events()
   {
     list.event_count = TU_ARRAY_SIZE(list.event);
   }
-  if (list.event_count == 0 || !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
+  if (list.event_count == 0 || events_busy())
   {
     return;
   }
 
   epin_buf[0] = ReportId::ReportIdConfig;
+  // bluetooth can only notify as much as fits in its MTU
+  uint16_t max_size = 63;
+  if (m_transport == ConfigTransport::Bluetooth)
+  {
+    max_size = std::min<uint16_t>(max_size, bt_config_max_event_size());
+  }
 
   // A full batch (up to max_count events) can overflow the 63 byte report once a
   // large event (e.g. UsbDeviceHotplugEvent's name) is in it - shrink the batch
@@ -221,10 +228,24 @@ void HIDConfigDevice::process_events()
   while (sent_count > 0)
   {
     list.event_count = sent_count;
-    pb_ostream_t outputStream = pb_ostream_from_buffer(epin_buf + 1, 63);
+    pb_ostream_t outputStream = pb_ostream_from_buffer(epin_buf + 1, max_size);
     if (pb_encode_delimited(&outputStream, proto_EventList_fields, &list))
     {
-      usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, 64, false);
+      if (m_transport == ConfigTransport::Bluetooth)
+      {
+        // zero the unused tail, so the report always matches its declared size
+        memset(epin_buf + 1 + outputStream.bytes_written, 0, max_size - outputStream.bytes_written);
+        if (!bt_config_send_event(epin_buf + 1, max_size))
+        {
+          // couldn't queue the notification, try again later
+          list.event_count = total_count;
+          return;
+        }
+      }
+      else
+      {
+        usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, 64, false);
+      }
       encoded = true;
       break;
     }
@@ -242,6 +263,15 @@ void HIDConfigDevice::process_events()
     list.event[i - sent_count] = list.event[i];
   }
   list.event_count = total_count - sent_count;
+}
+
+bool HIDConfigDevice::events_busy()
+{
+  if (m_transport == ConfigTransport::Bluetooth)
+  {
+    return !bt_config_can_send_event();
+  }
+  return !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin);
 }
 
 size_t HIDConfigDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -382,6 +412,49 @@ void HIDConfigDevice::handle_command(proto_Command command)
 }
 
 void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
+{
+  set_report_from(ConfigTransport::Usb, report_id, report_type, buffer, bufsize);
+}
+
+void HIDConfigDevice::set_report_from(ConfigTransport transport, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
+{
+  if (transport != m_transport)
+  {
+    // events queued for the old transport are of no use on the new one
+    list.event_count = 0;
+    m_transport = transport;
+  }
+  handle_set_report(report_id, report_type, buffer, bufsize);
+}
+
+uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
+{
+  return get_report_from(ConfigTransport::Usb, report_id, report_type, buffer, reqlen);
+}
+
+uint16_t HIDConfigDevice::get_report_from(ConfigTransport transport, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
+{
+  if (transport != m_transport)
+  {
+    list.event_count = 0;
+    m_transport = transport;
+  }
+  return handle_get_report(report_id, report_type, buffer, reqlen);
+}
+
+bool HIDConfigDevice::is_registered()
+{
+  bool found = false;
+  ProfileManager::instance().for_each_instance([this, &found](const auto &instance)
+                                               {
+    if (instance.get() == this)
+    {
+      found = true;
+    } });
+  return found;
+}
+
+void HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
   if (report_type == HID_REPORT_TYPE_FEATURE ||
       (report_type == HID_REPORT_TYPE_OUTPUT && report_id == ReportId::ReportIdUploadFirmware))
@@ -621,7 +694,7 @@ bool decode_firmware_update(const uint8_t *buffer, uint16_t bufsize, proto_Firmw
   return false;
 }
 
-uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
+uint16_t HIDConfigDevice::handle_get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
 {
   (void)report_id;
   (void)report_type;
@@ -721,7 +794,7 @@ void HIDConfigDevice::flush_events(uint32_t timeout_us)
     return;
   }
   const uint32_t started_us = micros();
-  while ((dev->list.event_count || (tud_ready() && usbd_edpt_busy(TUD_OPT_RHPORT, dev->m_epin))) &&
+  while ((dev->list.event_count || (dev->m_transport == ConfigTransport::Usb && tud_ready() && usbd_edpt_busy(TUD_OPT_RHPORT, dev->m_epin))) &&
          !tool_closed() && micros() - started_us < timeout_us)
   {
     tud_task();
@@ -800,3 +873,27 @@ void HIDConfigDevice::reset_keepalive()
 }
 
 std::shared_ptr<HIDConfigDevice> HIDConfigDevice::instance = std::make_shared<HIDConfigDevice>();
+const uint8_t *hid_config_report_descriptor(uint16_t *len)
+{
+  *len = sizeof(desc_hid_report_config);
+  return desc_hid_report_config;
+}
+
+uint16_t hid_config_bt_get_report(uint8_t report_id, uint8_t report_type, uint8_t *buffer, uint16_t reqlen)
+{
+  return HIDConfigDevice::instance->get_report_from(ConfigTransport::Bluetooth, report_id, static_cast<hid_report_type_t>(report_type), buffer, reqlen);
+}
+
+void hid_config_bt_set_report(uint8_t report_id, uint8_t report_type, const uint8_t *buffer, uint16_t len)
+{
+  HIDConfigDevice::instance->set_report_from(ConfigTransport::Bluetooth, report_id, static_cast<hid_report_type_t>(report_type), buffer, len);
+}
+
+void hid_config_bt_process(bool full_poll, bool send_events)
+{
+  auto dev = HIDConfigDevice::instance;
+  if (!dev->is_registered())
+  {
+    dev->process(full_poll, send_events);
+  }
+}

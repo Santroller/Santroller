@@ -4,7 +4,11 @@
 #include <pico/cyw43_arch.h>
 
 #include "btstack.h"
+#ifdef BT_HCI_DUMP
+#include "hci_dump_embedded_stdout.h"
+#endif
 #include <string.h>
+#include <stdio.h>
 #include "devices/bt/bt_classic_rx.hpp"
 #include "devices/bt/ble_rx.hpp"
 #include "devices/bt/bt_tlv_storage.hpp"
@@ -57,8 +61,14 @@ bool BluetoothStack::begin()
 
     if (cyw43_arch_init() != 0)
     {
+        printf("BT: cyw43_arch_init failed\r\n");
         return false;
     }
+    printf("BT: stack initialised\r\n");
+#ifdef BT_HCI_DUMP
+    // very verbose, logs every HCI packet, including the controller's startup sequence
+    hci_dump_init(hci_dump_embedded_stdout_get_instance());
+#endif
 
     l2cap_init();
 
@@ -88,7 +98,8 @@ void BluetoothStack::power_on()
     BtStackLock lock;
     if (m_initialized && !m_powered)
     {
-        hci_power_control(HCI_POWER_ON);
+        int err = hci_power_control(HCI_POWER_ON);
+        printf("BT: power on (%d)\r\n", err);
         m_powered = true;
     }
 }
@@ -98,6 +109,7 @@ void BluetoothStack::power_off()
     BtStackLock lock;
     if (m_initialized && m_powered)
     {
+        printf("BT: power off\r\n");
         hci_power_control(HCI_POWER_OFF);
         m_powered = false;
     }
@@ -155,6 +167,30 @@ bool BluetoothStack::local_address(uint8_t addr[6]) const
 void BluetoothStack::tick() {
     if (m_initialized)
     {
+        // log HCI state changes from here, so they show up even if nothing was registered for the event yet
+        static HCI_STATE last_state = HCI_STATE_OFF;
+        static bool logged = false;
+        HCI_STATE state;
+        {
+            BtStackLock lock;
+            state = hci_get_state();
+        }
+        if (!logged || state != last_state)
+        {
+            static const char *const names[] = {"off", "initializing", "working", "halting", "sleeping", "falling asleep"};
+            printf("BT: HCI state %s, powered %d\r\n", state < 6 ? names[state] : "?", m_powered);
+            if (state == HCI_STATE_WORKING)
+            {
+                bd_addr_t local;
+                {
+                    BtStackLock lock;
+                    gap_local_bd_addr(local);
+                }
+                printf("BT: address %s\r\n", bd_addr_to_str(local));
+            }
+            last_state = state;
+            logged = true;
+        }
         // creating hosts, sending reports etc. all go through BTstack
         BtStackLock lock;
         btc_tick();

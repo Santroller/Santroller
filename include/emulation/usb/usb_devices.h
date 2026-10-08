@@ -89,8 +89,13 @@
 #define XBOX_VID 0x045E
 #define XBOX_ONE_CONTROLLER_VID 0x045e
 #define XBOX_ONE_CONTROLLER_PID 0x02ea
+// Xbox controllers in HID mode, see protocols/xbox_hid.hpp
+#define XBOX_ONE_S_LEGACY_BT_PID 0x02E0
 #define XBOX_BT_PID 0x02FD
+#define XBOX_ELITE_2_BT_PID 0x0B05
 #define XBOX_SERIES_BT_PID 0x0B13
+#define XBOX_ONE_S_BLE_PID 0x0B20
+#define XBOX_ELITE_2_BLE_PID 0x0B22
 #define NINDENDO_VID 0x057E
 #define PRO_CONTROLLER_PID 0x2009
 #define GUITAR_PRAISE_VID 0x0314

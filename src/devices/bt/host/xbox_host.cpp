@@ -10,16 +10,17 @@
 // BtXboxHost (Xbox One S / Elite 2 / Series over BT Classic)
 // ============================================================================
 
-BtXboxHost::BtXboxHost(uint16_t id, uint16_t pid) : BluetoothHostInterface(id)
+BtXboxHost::BtXboxHost(uint16_t id, uint16_t pid, HID_ReportInfo_t *info) : BluetoothHostInterface(id)
 {
     m_subtype = SubType_Gamepad;
     m_pid = pid;
+    m_desc.init(info, pid);
 }
 
 void BtXboxHost::handle_report(const uint8_t *data, uint16_t len)
 {
     BluetoothHostInterface::handle_report(data, len);
-    xbox_bt_parse_report(data, len, m_pid == XBOX_BT_SERIES_PID, m_state);
+    xbox_hid_parse_report(data, len, m_desc, m_state);
 }
 
 void BtXboxHost::update(bool full_poll, bool send_events)
@@ -28,11 +29,11 @@ void BtXboxHost::update(bool full_poll, bool send_events)
     uint32_t now = millis();
     if (!m_cid || !m_rumble.should_send(now))
         return;
-    xbox_bt_build_rumble(m_rumble.left, m_rumble.right, m_out_buf);
+    xbox_hid_build_rumble(m_rumble.left, m_rumble.right, m_out_buf);
     uint8_t status;
     {
         BtStackLock lock;
-        status = hid_host_send_report(m_cid, XBOX_BT_RUMBLE_REPORT_ID, m_out_buf, sizeof(m_out_buf));
+        status = hid_host_send_report(m_cid, XBOX_HID_RUMBLE_REPORT_ID, m_out_buf, sizeof(m_out_buf));
     }
     if (status == ERROR_CODE_SUCCESS)
         m_rumble.sent(now);
@@ -40,12 +41,12 @@ void BtXboxHost::update(bool full_poll, bool send_events)
 
 bool BtXboxHost::tick_digital(proto_Output &type)
 {
-    return xbox_bt_tick_digital(m_state, type);
+    return xbox_hid_tick_digital(m_state, type);
 }
 
 uint16_t BtXboxHost::tick_analog(proto_Output &type)
 {
-    return xbox_bt_tick_analog(m_state, type);
+    return xbox_hid_tick_analog(m_state, type);
 }
 
 // ============================================================================
@@ -55,7 +56,7 @@ uint16_t BtXboxHost::tick_analog(proto_Output &type)
 void BleXboxHost::handle_report(const uint8_t *data, uint16_t len)
 {
     BluetoothHostInterface::handle_report(data, len);
-    xbox_bt_parse_report(data, len, m_pid == XBOX_BT_SERIES_PID, m_state);
+    xbox_hid_parse_report(data, len, m_desc, m_state);
 }
 
 void BleXboxHost::update(bool full_poll, bool send_events)
@@ -64,11 +65,11 @@ void BleXboxHost::update(bool full_poll, bool send_events)
     uint32_t now = millis();
     if (!m_cid || !m_rumble.should_send(now))
         return;
-    xbox_bt_build_rumble(m_rumble.left, m_rumble.right, m_out_buf);
+    xbox_hid_build_rumble(m_rumble.left, m_rumble.right, m_out_buf);
     uint8_t status;
     {
         BtStackLock lock;
-        status = hids_host_send_write_report(m_cid, XBOX_BT_RUMBLE_REPORT_ID, HID_REPORT_TYPE_OUTPUT,
+        status = hids_host_send_write_report(m_cid, XBOX_HID_RUMBLE_REPORT_ID, HID_REPORT_TYPE_OUTPUT,
                                              m_out_buf, sizeof(m_out_buf));
     }
     if (status == ERROR_CODE_SUCCESS)
@@ -77,10 +78,10 @@ void BleXboxHost::update(bool full_poll, bool send_events)
 
 bool BleXboxHost::tick_digital(proto_Output &type)
 {
-    return xbox_bt_tick_digital(m_state, type);
+    return xbox_hid_tick_digital(m_state, type);
 }
 
 uint16_t BleXboxHost::tick_analog(proto_Output &type)
 {
-    return xbox_bt_tick_analog(m_state, type);
+    return xbox_hid_tick_analog(m_state, type);
 }

@@ -95,10 +95,9 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
         host = std::make_shared<BtWiiHost>(device_id, true);
     }
     // Xbox Wireless Controllers, plain HID over Bluetooth
-    else if (is_xbox_bt_controller(vid, pid) || known_controller_type == BtControllerType_BtControllerTypeXboxOne)
+    else if (is_xbox_hid_controller(vid, pid) || known_controller_type == BtControllerType_BtControllerTypeXboxOne)
     {
-        if (info) USB_FreeReportInfo(info);
-        host = std::make_shared<BtXboxHost>(device_id, pid);
+        host = std::make_shared<BtXboxHost>(device_id, pid, info);
     }
     else
     {

@@ -49,10 +49,9 @@ std::shared_ptr<BluetoothHostInterface> ble_create_host(uint16_t vid, uint16_t p
     }
 
     // Xbox Wireless Controllers, plain HID over GATT with their own button layout
-    if (is_xbox_bt_controller(vid, pid))
+    if (is_xbox_hid_controller(vid, pid))
     {
-        if (info) USB_FreeReportInfo(info);
-        auto host = std::make_shared<BleXboxHost>(device_id, pid);
+        auto host = std::make_shared<BleXboxHost>(device_id, pid, info);
         host->m_vid = vid;
         return host;
     }

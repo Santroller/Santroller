@@ -1051,7 +1051,9 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     // DS5 start streaming as soon as the channel opens, so it can still be null.
                     if (slot->host)
                     {
-                        if (!slot->host->init_packets_sent()) {
+                        // Don't clobber a pending action (eg a descriptor that just arrived), the next
+                        // report asks for the init packets again
+                        if (!slot->host->init_packets_sent() && slot->action == PendingAction::None) {
                             slot->action = PendingAction::SendInitPackets;
                         }
                         slot->host->handle_report(report, report_len);
@@ -1237,6 +1239,11 @@ void btc_tick()
                             static_cast<BtGenericHost *>(s.host.get())->set_report_info(info);
                             bt_host_promote_if_ready(s.host);
                         }
+                    }
+                    else if (s.host->controller_type() == BtControllerType_BtControllerTypeXboxOne)
+                    {
+                        // Decides whether the controller has a Share button
+                        static_cast<BtXboxHost *>(s.host.get())->set_report_info(info);
                     }
                     else
                     {

@@ -241,7 +241,7 @@ add_executable(
   src/devices/usb/host/pdloader_host.cpp
   src/devices/usb/host/hid/raphnet_host.cpp
   src/devices/usb/host/hid/stadia_host.cpp
-  src/devices/usb/host/hid/xinput_compat_host.cpp
+  src/devices/usb/host/hid/xbox_hid_host.cpp
   src/devices/usb/host/hid/santroller_host.cpp
   src/devices/santroller_v1_decode.cpp
   src/emulation/santroller_commands.cpp

@@ -6,6 +6,7 @@
 #include "devices/usb/host/hid/steam_host.h"
 #include "devices/usb/host/hid/spice2x_host.h"
 #include "devices/usb/host/hid/santroller_host.h"
+#include "devices/usb/host/hid/xbox_hid_host.h"
 #include "class/hid/hid.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
@@ -28,7 +29,7 @@ static std::shared_ptr<UsbHostInterface> (*hid_device_types[])(std::shared_ptr<U
     SwitchHost::open,
     SteamHost::open,
     StadiaHost::open,
-    XInputCompatHost::open,
+    XboxHidHost::open,
     MouseHost::open,
     GenericHost::open};
 static CFG_TUSB_MEM_ALIGN uint8_t temp_buf[512];

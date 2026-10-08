@@ -34,8 +34,3 @@
 
 ## Devices
 - [ ] Sound for PS4/5, XInput and GIP
-
-# things missing from S1
-
-
-The old USB-host detection of Xbox One controllers running in XInput-compatible mode.

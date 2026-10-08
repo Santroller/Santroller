@@ -100,6 +100,9 @@
 // To get the audio demos working even with HCI dump at 115200, this truncates long ACL packets
 // #define HCI_DUMP_STDOUT_MAX_SIZE_ACL 100
 
+// Uncomment to use a USB bluetooth adapter on the host port even on a Pico W, for testing adapters
+#define BT_FORCE_USB_DONGLE
+
 // Uncomment to log every HCI packet, for debugging bluetooth startup and pairing
 // #define BT_HCI_DUMP
 

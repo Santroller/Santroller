@@ -319,6 +319,8 @@ add_executable(
   src/devices/bt/ble_rx.cpp
   src/devices/bt/bt_classic_rx.cpp
   src/devices/bt/bluetooth_stack.cpp
+  src/devices/bt/usb_dongle_transport.cpp
+  src/devices/usb/host/bt_dongle_host.cpp
   src/devices/bt/bt_host.cpp
   src/devices/bt/bt_classic_host.cpp
   src/devices/bt/bt_ble_host.cpp
@@ -457,6 +459,7 @@ target_link_libraries(
   pico_btstack_classic
   pico_btstack_ble
   pico_cyw43_arch_threadsafe_background
+  pico_async_context_poll
   ring_buffer
   CRC32
   protar_neck

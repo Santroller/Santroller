@@ -80,7 +80,7 @@ void InactivityManager::go_to_sleep()
     DeviceManager::instance().update(false, false);
     busy_wait_ms(10);
     tud_disconnect();
-    if (BluetoothStack::instance().initialized())
+    if (BluetoothStack::instance().initialized() && !BluetoothStack::instance().uses_usb_dongle())
     {
         cyw43_arch_deinit();
     }

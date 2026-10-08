@@ -2,6 +2,8 @@
 #include "devices/bt/bluetooth_status.hpp"
 
 #include <pico/cyw43_arch.h>
+#include <pico/async_context_poll.h>
+#include "pico/btstack_run_loop_async_context.h"
 
 #include "btstack.h"
 #ifdef BT_HCI_DUMP
@@ -12,6 +14,7 @@
 #include "devices/bt/bt_classic_rx.hpp"
 #include "devices/bt/ble_rx.hpp"
 #include "devices/bt/bt_tlv_storage.hpp"
+#include "devices/bt/usb_dongle_transport.hpp"
 #include "classic/btstack_link_key_db_tlv.h"
 #include "ble/le_device_db_tlv.h"
 extern "C"
@@ -30,7 +33,11 @@ void wiimote_led_off()
 }
 }
 
-BtStackLock::BtStackLock() : m_context(cyw43_arch_async_context())
+// The context BTstack runs on: the CYW43's, or our own when using a USB bluetooth adapter
+static async_context_t *s_context = nullptr;
+static async_context_poll_t s_poll_context;
+
+BtStackLock::BtStackLock() : m_context(s_context)
 {
     if (m_context)
     {
@@ -59,10 +66,31 @@ bool BluetoothStack::begin()
         return true;
     }
 
-    if (cyw43_arch_init() != 0)
+#ifdef BT_FORCE_USB_DONGLE
+    if (false)
+#else
+    if (cyw43_arch_init() == 0)
+#endif
     {
-        printf("BT: cyw43_arch_init failed\r\n");
-        return false;
+        s_context = cyw43_arch_async_context();
+    }
+    else
+    {
+        // No CYW43, so use a USB bluetooth adapter on the host port instead. BTstack gets its own
+        // context, polled from the main loop like TinyUSB, so the two never run at the same time.
+        printf("BT: no CYW43, using a USB bluetooth adapter instead\r\n");
+        if (!async_context_poll_init_with_defaults(&s_poll_context))
+        {
+            printf("BT: couldn't create the bluetooth context\r\n");
+            return false;
+        }
+        s_context = &s_poll_context.core;
+        m_usb_dongle = true;
+        btstack_memory_init();
+        btstack_run_loop_init(btstack_run_loop_async_context_get_instance(s_context));
+        hci_init(usb_dongle_transport_instance(), NULL);
+        // BTstack's own hardware error handling leaves HCI off, so restart it properly instead
+        hci_set_hardware_error_callback(usb_dongle_hardware_error);
     }
     printf("BT: stack initialised\r\n");
 #ifdef BT_HCI_DUMP
@@ -167,6 +195,30 @@ bool BluetoothStack::local_address(uint8_t addr[6]) const
 void BluetoothStack::tick() {
     if (m_initialized)
     {
+        if (m_usb_dongle)
+        {
+            async_context_poll(s_context);
+            BtStackLock lock;
+            if (usb_dongle_take_restart())
+            {
+                m_restarting = true;
+            }
+            // Restart HCI: power off (which gives up on an unplugged adapter after a second), then once
+            // it is off, power on again so it waits for an adapter to reset
+            if (m_restarting && m_powered)
+            {
+                if (hci_get_state() == HCI_STATE_OFF)
+                {
+                    printf("BT dongle: restarting bluetooth\r\n");
+                    hci_power_control(HCI_POWER_ON);
+                    m_restarting = false;
+                }
+                else if (hci_get_state() != HCI_STATE_HALTING)
+                {
+                    hci_power_control(HCI_POWER_OFF);
+                }
+            }
+        }
         // log HCI state changes from here, so they show up even if nothing was registered for the event yet
         static HCI_STATE last_state = HCI_STATE_OFF;
         static bool logged = false;

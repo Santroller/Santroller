@@ -434,14 +434,14 @@ void bt_config_service_process(bool full_poll, bool send_events)
     {
         uint8_t buf[MAX_REPORT_SIZE + 1] = {};
         uint16_t len = hid_config_bt_get_report(read_report->id, read_report->type, buf, read_report->size + 1);
+        config_debug("BT config: read 0x%02x (%s) -> %u bytes: %02x %02x %02x %02x\r\n", read_report->id,
+                     read_report->service == ServiceWeb ? "web" : "hid", len, buf[1], buf[2], buf[3], buf[4]);
         BtStackLock lock;
-        // drop the report id, and pad out to the declared size
-        memset(s_read_buf, 0, sizeof(s_read_buf));
-        if (len > 1)
-        {
-            memcpy(s_read_buf, buf + 1, btstack_min(len - 1, sizeof(s_read_buf)));
-        }
-        s_read_len = read_report->size;
+        // drop the report id. Only send what was actually returned, the same as USB does: padding it out
+        // to the declared size breaks the configurator decoding reports like ConfigInfo, which are plain
+        // protobuf (an odd number of trailing zeros reads as a truncated field)
+        s_read_len = len > 1 ? btstack_min(len - 1, sizeof(s_read_buf)) : 0;
+        memcpy(s_read_buf, buf + 1, s_read_len);
         // the request may have been dropped by a disconnect while it was fetched
         if (s_read_state == ReadQueued && s_read_report == read_report)
         {

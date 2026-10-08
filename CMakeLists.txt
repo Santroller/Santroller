@@ -324,6 +324,16 @@ add_executable(
   src/devices/bt/bt_host.cpp
   src/devices/bt/bt_classic_host.cpp
   src/devices/bt/bt_ble_host.cpp
+  src/devices/bt/host/ds3_host.cpp
+  src/devices/bt/host/ds4_host.cpp
+  src/devices/bt/host/ds5_host.cpp
+  src/devices/bt/host/switch_host.cpp
+  src/devices/bt/host/xbox_host.cpp
+  src/devices/bt/host/generic_host.cpp
+  src/devices/bt/host/wii_host.cpp
+  src/devices/bt/host/ghl_ios_host.cpp
+  src/devices/bt/host/santroller_host.cpp
+  src/devices/bt/host/steam_host.cpp
   src/devices/bt/bt_tlv_storage.cpp
   src/input/bt.cpp
   src/devices/usb.cpp

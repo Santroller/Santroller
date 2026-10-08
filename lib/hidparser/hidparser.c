@@ -146,6 +146,12 @@ uint16_t GetAxis(HID_ReportItem_t *item)
 	return (uint16_t)(((uint64_t)(val - min) * UINT16_MAX) / (uint32_t)(max - min));
 }
 
+// Buttons that come from system / consumer usages, kept apart from the button page so they can't
+// clash with whatever the device puts on buttons 11 and 12
+#define GENERIC_EXTRA_GUIDE (1 << 0)
+#define GENERIC_EXTRA_BACK (1 << 1)
+#define GENERIC_EXTRA_CAPTURE (1 << 2)
+
 static void SetButton(uint16_t bit, bool pressed, uint16_t *touched, uint16_t *buttons)
 {
 	*touched |= bit;
@@ -162,6 +168,8 @@ void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host
     }
     uint16_t touched = 0;
     uint16_t buttons = 0;
+    uint16_t extra_touched = 0;
+    uint16_t extra = 0;
     HID_ReportItem_t *item = info->FirstReportItem;
     while (item) {
         if (USB_GetHIDReportItemInfoWithReportId(report, item)) {
@@ -225,7 +233,7 @@ void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host
                             out->dpadLeft = item->Value != 0;
                             break;
                         case HID_USAGE_DESKTOP_SYSTEM_MAIN_MENU:
-                            SetButton(1 << 10, item->Value, &touched, &buttons);
+                            SetButton(GENERIC_EXTRA_GUIDE, item->Value, &extra_touched, &extra);
                             break;
                     }
                     break;
@@ -244,11 +252,13 @@ void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host
                 case HID_USAGE_PAGE_CONSUMER:
                     switch (item->Attributes.Usage.Usage) {
                         case HID_USAGE_CONSUMER_AC_HOME:
+                            SetButton(GENERIC_EXTRA_GUIDE, item->Value, &extra_touched, &extra);
+                            break;
                         case HID_USAGE_CONSUMER_AC_BACK:
-                            SetButton(1 << 10, item->Value, &touched, &buttons);
+                            SetButton(GENERIC_EXTRA_BACK, item->Value, &extra_touched, &extra);
                             break;
                         case HID_USAGE_CONSUMER_RECORD:
-                            SetButton(1 << 11, item->Value, &touched, &buttons);
+                            SetButton(GENERIC_EXTRA_CAPTURE, item->Value, &extra_touched, &extra);
                             break;
                     }
                     break;
@@ -264,6 +274,15 @@ void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host
         item = item->Next;
     }
     out->genericButtons = (out->genericButtons & ~touched) | buttons;
+    if (extra_touched & GENERIC_EXTRA_GUIDE) {
+        out->guide = (extra & GENERIC_EXTRA_GUIDE) != 0;
+    }
+    if (extra_touched & GENERIC_EXTRA_BACK) {
+        out->back = (extra & GENERIC_EXTRA_BACK) != 0;
+    }
+    if (extra_touched & GENERIC_EXTRA_CAPTURE) {
+        out->capture = (extra & GENERIC_EXTRA_CAPTURE) != 0;
+    }
 }
 
 bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem)

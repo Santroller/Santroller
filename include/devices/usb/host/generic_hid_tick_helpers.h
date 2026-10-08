@@ -20,12 +20,13 @@ inline bool generic_hid_tick_digital_impl(const USB_Host_Data_t &data, proto_Out
         case Gamepad_Y:               return (data.genericButtons & (1 << 3)) != 0;
         case Gamepad_LeftShoulder:    return (data.genericButtons & (1 << 4)) != 0;
         case Gamepad_RightShoulder:   return (data.genericButtons & (1 << 5)) != 0;
-        case Gamepad_Back:            return (data.genericButtons & (1 << 6)) != 0;
+        case Gamepad_Back:            return (data.genericButtons & (1 << 6)) != 0 || data.back;
         case Gamepad_Start:           return (data.genericButtons & (1 << 7)) != 0;
         case Gamepad_LeftThumbClick:  return (data.genericButtons & (1 << 8)) != 0;
         case Gamepad_RightThumbClick: return (data.genericButtons & (1 << 9)) != 0;
-        case Gamepad_Guide:           return (data.genericButtons & (1 << 10)) != 0;
-        case Gamepad_Capture:         return (data.genericButtons & (1 << 11)) != 0;
+        // Guide / Capture may come from a button or a system / consumer usage (AC Home, Record)
+        case Gamepad_Guide:           return (data.genericButtons & (1 << 10)) != 0 || data.guide;
+        case Gamepad_Capture:         return (data.genericButtons & (1 << 11)) != 0 || data.capture;
         case Gamepad_DpadUp:          return data.dpadUp != 0;
         case Gamepad_DpadDown:        return data.dpadDown != 0;
         case Gamepad_DpadLeft:        return data.dpadLeft != 0;

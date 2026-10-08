@@ -149,10 +149,12 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     DeviceReloadState previous_state;
     auto previous_device = device_mgr.get_root_device(device_id);
 
-    // Console links must survive even full reloads when their wiring is unchanged.
-    const bool console_emulation = proto_device.which_device == proto_Device_psxEmulation_tag ||
-                                   proto_device.which_device == proto_Device_wiiEmulation_tag;
-    if (previous_device && (console_emulation || !config_mgr.is_full_reload()) &&
+    // Console links must survive even full reloads when their wiring is unchanged. So must the USB
+    // host, since restarting it disconnects everything plugged into it.
+    const bool keep_on_full_reload = proto_device.which_device == proto_Device_psxEmulation_tag ||
+                                     proto_device.which_device == proto_Device_wiiEmulation_tag ||
+                                     proto_device.which_device == proto_Device_usbHost_tag;
+    if (previous_device && (keep_on_full_reload || !config_mgr.is_full_reload()) &&
         previous_device->matches_reload_config(proto_device))
     {
         device_mgr.add_active_device(previous_device);

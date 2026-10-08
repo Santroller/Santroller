@@ -16,6 +16,7 @@
 #include "CRC32.h"
 #include "pico/multicore.h"
 #include "hardware/clocks.h"
+#include "hardware/vreg.h"
 #include "hardware/adc.h"
 #include "hardware/pwm.h"
 #include "config/config.hpp"
@@ -232,10 +233,9 @@ void deinitDebug()
 
 void core1()
 {
+    // Still needed for firmware updates, which lock core1 out
     multicore_lockout_victim_init();
-    while (1)
-    {
-    }
+    flash_core1_loop();
 }
 
 int main()
@@ -250,7 +250,13 @@ int main()
     }
     pfb_firmware_commit();
     ConfigManager::instance().sync_requested_mode_to_current();
-    set_sys_clock_khz(180000, true);
+    // 1.15V is what the SDK uses for its 200MHz RP2040 preset, so this keeps us inside the rated range
+    vreg_set_voltage(VREG_VOLTAGE_1_15);
+    // Let the regulator settle before raising the clock, like the SDK does
+    busy_wait_us(1000);
+    // A multiple of 96MHz, so PIO-USB's 48MHz TX and 96MHz RX clocks divide evenly. A fractional divider
+    // jitters every bit edge, which some devices (like the 360 wireless receiver) seem sensitive to
+    set_sys_clock_khz(192000, true);
     multicore_launch_core1(core1);
     adc_init();
     HidConsoleBridge::instance().init();

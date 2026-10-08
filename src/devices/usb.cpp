@@ -220,7 +220,7 @@ void USBHostHardwareDevice::begin()
     }
     if (m_initialized)
     {
-        if (m_last_dp_first == m_device.dmFirst && m_last_first_pin == m_device.firstPin && !ConfigManager::instance().is_full_reload())
+        if (m_last_dp_first == m_device.dmFirst && m_last_first_pin == m_device.firstPin)
         {
             printf("usbhost init already done\r\n");
             return;

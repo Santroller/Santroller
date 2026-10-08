@@ -2,6 +2,68 @@
 #include <stdio.h>
 #include "tusb.h"
 #include "utils.h"
+#include "pio_usb.h"
+
+// A flash erase stalls core0 with interrupts off for tens of ms. USB devices suspend after 3ms
+// without SOF, so core1 sends SOF in the meantime instead of being locked out.
+static volatile bool core1_ready = false;
+static volatile bool sof_requested = false;
+static volatile bool sof_running = false;
+
+void __not_in_flash_func(flash_core1_loop)()
+{
+	core1_ready = true;
+	while (true)
+	{
+		if (!sof_requested)
+		{
+			continue;
+		}
+		sof_running = true;
+		uint32_t next = pio_usb_host_last_frame_us() + 1000;
+		while (sof_requested)
+		{
+			uint32_t now = timer_hw->timerawl;
+			if (static_cast<int32_t>(now - next) < 0)
+			{
+				continue;
+			}
+			pio_usb_host_sof_only_frame();
+			next += 1000;
+			// Don't burst SOFs to catch up if we started late
+			if (static_cast<int32_t>(now - next) >= 0)
+			{
+				next = now + 1000;
+			}
+		}
+		sof_running = false;
+	}
+}
+
+static void flash_write_begin()
+{
+	while (!core1_ready)
+	{
+		tight_loop_contents();
+	}
+	// Stop core0's frames first so only one core drives the bus
+	pio_usb_host_set_sof_only(true);
+	sof_requested = true;
+	while (!sof_running)
+	{
+		tight_loop_contents();
+	}
+}
+
+static void flash_write_end()
+{
+	sof_requested = false;
+	while (sof_running)
+	{
+		tight_loop_contents();
+	}
+	pio_usb_host_set_sof_only(false);
+}
 
 alignas(uint32_t) uint8_t FlashPROM::writeCache[EEPROM_SIZE_BYTES];
 
@@ -16,7 +78,7 @@ int64_t writeToFlash(alarm_id_t id, void *flashCache)
 		return 0;
 	}
 
-	multicore_lockout_start_blocking();
+	flash_write_begin();
 
 	for (uint32_t sector_offset = 0; sector_offset < EEPROM_SIZE_BYTES; sector_offset += FLASH_SECTOR_SIZE)
 	{
@@ -64,7 +126,7 @@ int64_t writeToFlash(alarm_id_t id, void *flashCache)
 		}
 	}
 
-	multicore_lockout_end_blocking();
+	flash_write_end();
 
 	return 0;
 }

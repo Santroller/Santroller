@@ -185,6 +185,7 @@ static hid_protocol_mode_t hid_host_report_mode = HID_PROTOCOL_MODE_REPORT;
 
 static btstack_timer_source_t s_classic_reconnect_timer;
 static bool s_classic_reconnect_timer_active = false;
+static bool s_inquiry_active = false;
 
 // Forward declaration needed by connect_to_discovered_device()
 static void handle_sdp_client_query_result(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
@@ -404,6 +405,7 @@ void btc_start_scan(uint32_t lap)
     deviceCount = 0;
     gap_inquiry_set_lap(lap);
     gap_inquiry_start(INQUIRY_INTERVAL);
+    s_inquiry_active = true;
 }
 
 void btc_stop_scan(void)
@@ -411,6 +413,7 @@ void btc_stop_scan(void)
     BtStackLock lock;
     printf("Stopping inquiry scan..\r\n");
     gap_inquiry_stop();
+    s_inquiry_active = false;
     btc_schedule_reconnect(2000);
 }
 
@@ -679,6 +682,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
 
         case GAP_EVENT_INQUIRY_COMPLETE:
+            s_inquiry_active = false;
             printf("Inquiry complete, found %d devices\r\n", deviceCount);
             for (int i = 0; i < deviceCount; i++)
                 if (devices[i].state == REMOTE_NAME_INQUIRED)
@@ -1152,6 +1156,11 @@ void btstack_classic_set_accept_incoming(bool accept)
     BtStackLock lock;
     hid_host_set_accept_incoming(accept);
 }
+bool btc_inquiry_active()
+{
+    return s_inquiry_active;
+}
+
 bool btc_has_connected_device()
 {
     for (const auto &s : s_bt_slots)

@@ -15,6 +15,10 @@
 #include <cstring>
 #include <stdio.h>
 #include "hardware/timer.h"
+#include "devices/bt/ble_rx.hpp"
+#include "devices/bt/bt_classic_rx.hpp"
+#include "devices/bt/bluetooth_status.hpp"
+#include "devices/usb/host/xinput_wireless_status.hpp"
 #define XINPUT_WIRELESS_DEBUG 0
 #if XINPUT_WIRELESS_DEBUG
 #define XINPUT_WIRELESS_DEBUG_PRINT(...) printf(__VA_ARGS__)
@@ -152,6 +156,13 @@ void XInputWirelessGamepadHost::update(bool full_poll, bool send_events)
     flush_out_queue();
     wireless_trace_dump_tick();
     const uint32_t now = millis();
+    // Bluetooth discovery (pressing pair) hops across the whole 2.4GHz band for several seconds, which
+    // knocks 360 wireless controllers off every time. Hold the slot until discovery is over, so they just
+    // relink afterwards instead of being torn down
+    if (m_found && m_link_lost && (btc_inquiry_active() || ble_discovery_active()))
+    {
+        m_link_lost_ms = now;
+    }
     if (m_found && m_link_lost && now - m_link_lost_ms >= link_loss_grace_ms)
     {
         XINPUT_WIRELESS_DEBUG_PRINT("w %lu %u DISC after %lu\r\n",
@@ -180,6 +191,30 @@ void XInputWirelessGamepadHost::update(bool full_poll, bool send_events)
     }
 }
 
+static uint8_t s_linked_slots = 0;
+
+bool xinput_wireless_controller_linked()
+{
+    return s_linked_slots > 0;
+}
+
+void XInputWirelessGamepadHost::set_linked(bool linked)
+{
+    if (linked == m_linked)
+    {
+        return;
+    }
+    m_linked = linked;
+    if (linked)
+    {
+        s_linked_slots++;
+    }
+    else if (s_linked_slots)
+    {
+        s_linked_slots--;
+    }
+}
+
 void XInputWirelessGamepadHost::link_restored(const char *why)
 {
     if (!m_link_lost)
@@ -190,17 +225,21 @@ void XInputWirelessGamepadHost::link_restored(const char *why)
                                 static_cast<unsigned long>(millis()), m_interface, why,
                                 static_cast<unsigned long>(millis() - m_link_lost_ms));
     m_link_lost = false;
+    m_link_up_ms = millis();
+    set_linked(true);
     // The controller re-linked, so its LED state was reset
     m_led_set = false;
 }
 
 void XInputWirelessGamepadHost::disconnect()
 {
+    set_linked(false);
     UsbHostInterface::disconnect();
 }
 
 void XInputWirelessGamepadHost::disconnect_controller()
 {
+    set_linked(false);
     m_link_lost = false;
     m_input_count = 0;
     m_last_input_ms = 0;
@@ -465,9 +504,19 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
             if (m_found && !m_link_lost)
             {
 #if XINPUT_WIRELESS_TRACE
-                printf("w %lu %u drop n=%lu age=%lu\r\n", static_cast<unsigned long>(millis()), m_interface,
+                // What our own 2.4GHz radio is doing, and how this drop relates to the previous one, to tell
+                // drops caused by bluetooth activity apart from ones caused by relinking or interference.
+                // prev: ms since the previous drop on this slot, up: ms the link had been up for
+                const uint32_t now = millis();
+                printf("w %lu %u drop n=%lu age=%lu adv=%d scan=%d disc=%d inq=%d btc=%d ble=%d prev=%lu up=%lu\r\n",
+                       static_cast<unsigned long>(now), m_interface,
                        static_cast<unsigned long>(m_input_count),
-                       static_cast<unsigned long>(m_last_input_ms ? millis() - m_last_input_ms : 0));
+                       static_cast<unsigned long>(m_last_input_ms ? now - m_last_input_ms : 0),
+                       bt_gamepad_advertising(), ble_background_scan_active(), ble_discovery_active(),
+                       btc_inquiry_active(), btc_has_connected_device(), ble_has_connected_device(),
+                       static_cast<unsigned long>(m_last_drop_ms ? now - m_last_drop_ms : 0),
+                       static_cast<unsigned long>(m_link_up_ms ? now - m_link_up_ms : 0));
+                m_last_drop_ms = now;
                 wireless_trace_dump();
 #endif
                 XINPUT_WIRELESS_DEBUG_PRINT("w %lu %u DOWN %02x pend=%u q=%lu n=%lu age=%lu\r\n",
@@ -479,6 +528,7 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                 // slot instead of tearing it down; update() disconnects if the grace period expires
                 m_link_lost = true;
                 m_link_lost_ms = millis();
+                // still counts as linked while the slot is held, so bluetooth stays quiet while it relinks
                 memset(m_report_buf, 0, sizeof(m_report_buf));
             }
         }
@@ -549,6 +599,8 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                     m_name[(sizeof(xinput_wireless_gamepad_slot_name) - 1) * 2] = '1' + (m_ep_out / 2);
                     memset(m_report_buf, 0, sizeof(m_report_buf));
                     m_found = true;
+                    m_link_up_ms = millis();
+                    set_linked(true);
                     m_wt = false;
                     m_led_set = false;
                     m_input_count = 0;

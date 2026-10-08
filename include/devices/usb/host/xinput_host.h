@@ -102,7 +102,7 @@ private:
 class XInputWirelessGamepadHost : public UsbHostInterface
 {
 public:
-    ~XInputWirelessGamepadHost() {}
+    ~XInputWirelessGamepadHost() { set_linked(false); }
     XInputWirelessGamepadHost(uint8_t dev_addr, uint8_t interface, uint16_t id);
     bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
@@ -122,6 +122,9 @@ private:
     void flush_out_queue();
     void process_events();
     void link_restored(const char *why);
+    // tracks how many slots have a controller linked, see xinput_wireless_status.hpp
+    void set_linked(bool linked);
+    bool m_linked = false;
     void disconnect_controller();
     void process_in(const uint8_t *buf, uint32_t len);
     void process_out(xfer_result_t result);
@@ -163,6 +166,9 @@ private:
     // Set while the data link is down but the slot is still held
     bool m_link_lost = false;
     uint32_t m_link_lost_ms = 0;
+    // for the drop trace: when the link last dropped, and last came back up
+    uint32_t m_last_drop_ms = 0;
+    uint32_t m_link_up_ms = 0;
     static constexpr uint32_t link_loss_grace_ms = 3000;
     bool m_led_set = false;
     bool m_wt = false;

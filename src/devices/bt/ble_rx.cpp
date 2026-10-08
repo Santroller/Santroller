@@ -17,6 +17,7 @@
 #include "hidparser.h"
 #include "hci_dump_embedded_stdout.h"
 #include "devices/bt/bluetooth_stack.hpp"
+#include "devices/usb/host/xinput_wireless_status.hpp"
 
 #include "devices/bt/bt_host.hpp"
 #include "devices/bt/bt_ble_host.hpp"
@@ -160,6 +161,11 @@ static uint8_t devices_found = 0;
 static bool s_ble_scanning = false;
 static bool s_whitelist_active = false;
 static bool s_direct_connect_pending = false;
+// background reconnect state, see ble_sync_reconnect / ble_tick
+static uint32_t s_fast_reconnect_until = 0;
+static bool s_whitelist_fast = false;
+static bool s_want_whitelist = false;
+static bool s_paused_for_360 = false;
 
 static btstack_timer_source_t s_scan_timer;
 static btstack_timer_source_t s_direct_connect_timer;
@@ -349,6 +355,16 @@ bool ble_is_connecting()
     return false;
 }
 
+bool ble_background_scan_active()
+{
+    return s_whitelist_active;
+}
+
+bool ble_discovery_active()
+{
+    return s_ble_scanning;
+}
+
 bool ble_has_connected_device()
 {
     for (const auto &ctx : s_context_pool)
@@ -370,6 +386,12 @@ static void ble_set_connection_scan(uint16_t interval, uint16_t window)
 }
 #define BLE_BACKGROUND_SCAN_INTERVAL 0x0280 // 400ms
 #define BLE_BACKGROUND_SCAN_WINDOW 0x0030   // 30ms
+// Controllers advertise hardest just after they are switched on, so background reconnects only scan at
+// the rate above for a while after something likely brings one back (the stack starting, a controller
+// disconnecting, or scanning resuming), then drop to a much lower duty cycle
+#define BLE_SLOW_SCAN_INTERVAL 0x0640 // 1s
+#define BLE_SLOW_SCAN_WINDOW 0x0018   // 15ms
+#define BLE_FAST_RECONNECT_MS 60000
 #define BLE_DIRECT_SCAN_INTERVAL 0x0060     // 60ms
 #define BLE_DIRECT_SCAN_WINDOW 0x0030       // 30ms
 
@@ -382,7 +404,10 @@ static void ble_sync_reconnect(void)
     // The CYW43 shares its radio, and even a low duty background scan for an absent BLE
     // device delays classic input reports (measured 60-70ms spikes on a DS3). Pause it
     // while a classic controller is connected; btc resyncs us when that changes.
-    if (btc_has_connected_device())
+    // 360 wireless controllers share 2.4GHz with us and drop their link when we scan over them, so
+    // don't scan in the background while one is linked. ble_tick resumes it afterwards.
+    s_paused_for_360 = xinput_wireless_controller_linked();
+    if (btc_has_connected_device() || s_paused_for_360)
     {
         if (s_whitelist_active)
         {
@@ -431,6 +456,7 @@ static void ble_sync_reconnect(void)
     // le_device_db isn't used as a fallback here: it also holds hosts (e.g. a PC) that bonded with
     // our bluetooth gamepad, and connecting out to those collides with them connecting to us
 
+    s_want_whitelist = candidate_count > 0;
     if (candidate_count == 0)
     {
         if (s_whitelist_active)
@@ -438,6 +464,15 @@ static void ble_sync_reconnect(void)
             gap_connect_cancel();
             s_whitelist_active = false;
         }
+        return;
+    }
+
+    const bool fast = (int32_t)(s_fast_reconnect_until - millis()) > 0;
+    if (s_whitelist_active && s_whitelist_fast != fast)
+    {
+        // switch scan rate: cancel now, ble_tick starts it again with the new rate
+        gap_connect_cancel();
+        s_whitelist_active = false;
         return;
     }
 
@@ -451,12 +486,20 @@ static void ble_sync_reconnect(void)
 
     if (!s_whitelist_active)
     {
-        ble_set_connection_scan(BLE_BACKGROUND_SCAN_INTERVAL, BLE_BACKGROUND_SCAN_WINDOW);
+        if (fast)
+        {
+            ble_set_connection_scan(BLE_BACKGROUND_SCAN_INTERVAL, BLE_BACKGROUND_SCAN_WINDOW);
+        }
+        else
+        {
+            ble_set_connection_scan(BLE_SLOW_SCAN_INTERVAL, BLE_SLOW_SCAN_WINDOW);
+        }
         uint8_t status = gap_connect_with_whitelist();
-        printf("gap_connect_with_whitelist status: 0x%02x\r\n", status);
+        printf("gap_connect_with_whitelist status: 0x%02x (%s)\r\n", status, fast ? "fast" : "slow");
         if (status == ERROR_CODE_SUCCESS)
         {
             s_whitelist_active = true;
+            s_whitelist_fast = fast;
         }
     }
 }
@@ -789,6 +832,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             printf("BLE BTstack state: %d (WORKING=%d)\r\n", state, HCI_STATE_WORKING);
             if (state != HCI_STATE_WORKING)
                 break;
+            s_fast_reconnect_until = millis() + BLE_FAST_RECONNECT_MS;
             ble_sync_reconnect();
             break;
         }
@@ -902,6 +946,8 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             if (ctx)
             {
                 printf("BLE device disconnected (handle 0x%04x, addr %s)\r\n", handle, bd_addr_to_str(ctx->addr));
+                // it is likely to come back soon, so look for it quickly for a while
+                s_fast_reconnect_until = millis() + BLE_FAST_RECONNECT_MS;
                 if (ctx->hids_cid != 0)
                 {
                     hids_host_disconnect(ctx->hids_cid);
@@ -1213,6 +1259,30 @@ void ble_resync_reconnect()
 void ble_tick()
 {
     ble_expire_hold_offs();
+    // Keep the background reconnect scan in step with things that change outside of BTstack events: a
+    // 360 wireless controller linking or going away, the fast reconnect window running out, or an
+    // earlier attempt to start the scan not taking
+    static uint32_t next_check = 0;
+    const uint32_t now = millis();
+    if ((int32_t)(now - next_check) >= 0)
+    {
+        next_check = now + 250;
+        const bool paused = xinput_wireless_controller_linked();
+        const bool fast = (int32_t)(s_fast_reconnect_until - now) > 0;
+        if (paused != s_paused_for_360)
+        {
+            if (!paused)
+            {
+                // controllers may have been switched on while we weren't looking
+                s_fast_reconnect_until = now + BLE_FAST_RECONNECT_MS;
+            }
+            ble_sync_reconnect();
+        }
+        else if (!paused && s_want_whitelist && (!s_whitelist_active || s_whitelist_fast != fast))
+        {
+            ble_sync_reconnect();
+        }
+    }
     for (auto &ctx : s_context_pool)
     {
         if (ctx.in_use && ctx.pending_host_create)

@@ -5,3 +5,5 @@
 bool bluetooth_connected();
 // Whether the bluetooth gamepad is connected to a host
 bool bt_gamepad_connected();
+// Whether the bluetooth gamepad is advertising, waiting for a host to connect
+bool bt_gamepad_advertising();

@@ -26,6 +26,8 @@ static btstack_packet_callback_registration_t hci_event_callback_registration;
 static btstack_packet_callback_registration_t sm_event_callback_registration;
 static uint8_t battery = 100;
 static hci_con_handle_t con_handle = HCI_CON_HANDLE_INVALID;
+// a host connected to us, from the moment it connects (con_handle is only set once it subscribes to reports)
+static hci_con_handle_t peripheral_handle = HCI_CON_HANDLE_INVALID;
 static uint8_t protocol_mode = 1;
 static BTGamepadDevice *s_instance = nullptr;
 static hids_device_report_t report_storage[6];
@@ -366,6 +368,13 @@ bool bt_gamepad_connected()
     return con_handle != HCI_CON_HANDLE_INVALID;
 }
 
+bool bt_gamepad_advertising()
+{
+    // BTstack advertises while it has room for another peripheral connection, which is only ever one here
+    return s_instance && peripheral_handle == HCI_CON_HANDLE_INVALID && BluetoothStack::instance().is_powered() &&
+           hci_get_state() == HCI_STATE_WORKING;
+}
+
 void BTGamepadDevice::process(bool full_poll, bool send_events)
 {
     if (m_initialized)
@@ -466,7 +475,19 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             printf("BT: stack up, address %s\r\n", bd_addr_to_str(local_addr));
         }
         break;
+    case HCI_EVENT_META_GAP:
+        if (hci_event_gap_meta_get_subevent_code(packet) == GAP_SUBEVENT_LE_CONNECTION_COMPLETE &&
+            gap_subevent_le_connection_complete_get_status(packet) == ERROR_CODE_SUCCESS &&
+            gap_subevent_le_connection_complete_get_role(packet) != HCI_ROLE_MASTER)
+        {
+            peripheral_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
+        }
+        break;
     case HCI_EVENT_DISCONNECTION_COMPLETE:
+        if (hci_event_disconnection_complete_get_connection_handle(packet) == peripheral_handle)
+        {
+            peripheral_handle = HCI_CON_HANDLE_INVALID;
+        }
         con_handle = HCI_CON_HANDLE_INVALID;
         bt_config_service_disconnected();
         // 0x05 auth failure, 0x08 supervision timeout, 0x13 remote closed, 0x16 we closed, 0x3d MIC failure (bad keys)

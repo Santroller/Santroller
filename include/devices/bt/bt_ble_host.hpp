@@ -3,6 +3,7 @@
 #include "devices/bt/host/generic_host.hpp"
 #include "devices/bt/host/xbox_host.hpp"
 #include "devices/bt/host/ghl_ios_host.hpp"
+#include "devices/bt/host/midi_host.hpp"
 #include "devices/bt/host/santroller_host.hpp"
 #include "devices/bt/host/steam_host.hpp"
 #include "devices/bt/host/switch_host.hpp"

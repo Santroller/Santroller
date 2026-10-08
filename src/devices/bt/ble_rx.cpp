@@ -46,6 +46,14 @@ static const uint8_t ghl_ios_char_uuid[16] = {
 static const uint8_t steam_ble_char_uuid[16] = {
     0x10, 0x0F, 0x6C, 0x34, 0x17, 0x35, 0x43, 0x13,
     0xB4, 0x02, 0x38, 0x56, 0x71, 0x31, 0xE5, 0xF3};
+// BLE MIDI I/O characteristic UUID: 7772e5db-3868-4112-a1a9-f2669d106bf3
+static const uint8_t midi_char_uuid[16] = {
+    0x77, 0x72, 0xE5, 0xDB, 0x38, 0x68, 0x41, 0x12,
+    0xA1, 0xA9, 0xF2, 0x66, 0x9D, 0x10, 0x6B, 0xF3};
+// BLE MIDI service UUID 03b80e5a-ede8-4b33-a751-6ce34ec4c700, little-endian as it is advertised
+static const uint8_t midi_service_uuid_le[16] = {
+    0x00, 0xC7, 0xC4, 0x4E, 0xE3, 0x6C, 0x51, 0xA7,
+    0x33, 0x4B, 0xE8, 0xED, 0x5A, 0x0E, 0xB8, 0x03};
 #define MAX_BLE_CONNECTIONS 4
 #ifndef MAX_BLE_RECONNECT_CANDIDATES
 #define MAX_BLE_RECONNECT_CANDIDATES 8 // match/exceed NVM_NUM_DEVICE_DB_ENTRIES
@@ -67,12 +75,16 @@ struct BleConnectionContext
     bool found_ghl_char = false;
     bool is_steam_controller = false;
     bool found_steam_char = false;
+    bool is_midi = false;
+    bool found_midi_char = false;
     SubType known_subtype = SubType_Unknown;
     char paired_name[32] = {};
     gatt_client_characteristic_t ghl_characteristic = {};
     gatt_client_notification_t ghl_notification = {};
     gatt_client_characteristic_t steam_characteristic = {};
     gatt_client_notification_t steam_notification = {};
+    gatt_client_characteristic_t midi_characteristic = {};
+    gatt_client_notification_t midi_notification = {};
 
     bool pending_host_create = false;
     bool host_create_queued = false;
@@ -109,12 +121,16 @@ static BleConnectionContext *ble_context_alloc()
             ctx.found_ghl_char = false;
             ctx.is_steam_controller = false;
             ctx.found_steam_char = false;
+            ctx.is_midi = false;
+            ctx.found_midi_char = false;
             ctx.known_subtype = SubType_Unknown;
             ctx.paired_name[0] = '\0';
             memset(&ctx.ghl_characteristic, 0, sizeof(ctx.ghl_characteristic));
             memset(&ctx.ghl_notification, 0, sizeof(ctx.ghl_notification));
             memset(&ctx.steam_characteristic, 0, sizeof(ctx.steam_characteristic));
             memset(&ctx.steam_notification, 0, sizeof(ctx.steam_notification));
+            memset(&ctx.midi_characteristic, 0, sizeof(ctx.midi_characteristic));
+            memset(&ctx.midi_notification, 0, sizeof(ctx.midi_notification));
 
             ctx.pending_host_create = false;
             ctx.host_create_queued = false;
@@ -152,6 +168,7 @@ typedef struct
     bd_addr_t addr;
     bd_addr_type_t addr_type;
     char name_buffer[100];
+    bool is_midi;
 } scan_data_t;
 
 static scan_data_t scan_devices[MAX_DEVICES_TO_SCAN];
@@ -569,7 +586,14 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
         auto ctx = ble_context_by_handle(handle);
         if (ctx)
         {
-            if (ctx->is_steam_controller)
+            if (ctx->is_midi)
+            {
+                gatt_event_characteristic_query_result_get_characteristic(packet, &ctx->midi_characteristic);
+                ctx->found_midi_char = true;
+                printf("BLE MIDI characteristic found for handle 0x%04x, value_handle=0x%04x\r\n",
+                       handle, ctx->midi_characteristic.value_handle);
+            }
+            else if (ctx->is_steam_controller)
             {
                 gatt_event_characteristic_query_result_get_characteristic(packet, &ctx->steam_characteristic);
                 ctx->found_steam_char = true;
@@ -593,7 +617,39 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
         if (!ctx)
             return;
 
-        if (ctx->found_steam_char)
+        if (ctx->host)
+        {
+            // the CCCD write completing, nothing more to do
+        }
+        else if (ctx->found_midi_char)
+        {
+            printf("BLE MIDI query complete, subscribing to notifications for handle 0x%04x\r\n", handle);
+            gatt_client_listen_for_characteristic_value_updates(
+                &ctx->midi_notification,
+                handle_gatt_client_event,
+                handle,
+                &ctx->midi_characteristic);
+
+            gatt_client_write_client_characteristic_configuration(
+                handle_gatt_client_event,
+                handle,
+                &ctx->midi_characteristic,
+                GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
+
+            uint16_t device_id = BluetoothStack::instance().device_id();
+            auto host = std::make_shared<BleMidiHost>(device_id);
+            host->set_ble(true);
+            memcpy(host->m_addr, ctx->addr, 6);
+            host->m_addr_type = ctx->addr_type;
+            host->m_cid = handle;
+            strncpy(host->m_name, ctx->paired_name[0] ? ctx->paired_name : "BLE MIDI Device", sizeof(host->m_name) - 1);
+
+            ctx->host = host;
+            host->on_connected();
+            bt_host_add_interface(host);
+            bt_host_save_pairing(host, true);
+        }
+        else if (ctx->found_steam_char)
         {
             printf("Steam Controller query complete, subscribing to notifications for handle 0x%04x\r\n", handle);
             gatt_client_listen_for_characteristic_value_updates(
@@ -850,6 +906,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             ad_context_t context;
 
             bool is_hid = false;
+            bool is_midi = false;
             char dev_name[100] = {};
 
             for (ad_iterator_init(&context, adv_size, adv_data);
@@ -883,6 +940,11 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                         if (memcmp(data + i, steam_srv_le, 16) == 0)
                         {
                             is_hid = true;
+                        }
+                        if (memcmp(data + i, midi_service_uuid_le, 16) == 0)
+                        {
+                            is_hid = true;
+                            is_midi = true;
                         }
                     }
                     break;
@@ -926,7 +988,8 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 devices_found = 1;
                 memcpy(scan_devices[0].addr, address, sizeof(bd_addr_t));
                 scan_devices[0].addr_type = addr_type;
-                strncpy(scan_devices[0].name_buffer, dev_name[0] ? dev_name : "BLE HID Device", sizeof(scan_devices[0].name_buffer) - 1);
+                strncpy(scan_devices[0].name_buffer, dev_name[0] ? dev_name : is_midi ? "BLE MIDI Device" : "BLE HID Device", sizeof(scan_devices[0].name_buffer) - 1);
+                scan_devices[0].is_midi = is_midi;
 
                 printf("Connecting to BLE device %s (type %d)...\r\n", bd_addr_to_str(address), addr_type);
                 s_direct_connect_pending = true;
@@ -1015,6 +1078,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     {
                         ctx->is_ghl_guitar = true;
                     }
+                    if (paired_state.subtype == SubType_Midi)
+                    {
+                        ctx->is_midi = true;
+                    }
                 }
 
                 // Check if the connecting device was scanned as GHL guitar
@@ -1024,7 +1091,13 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     {
                         memcpy(ctx->paired_name, scan_devices[i].name_buffer, sizeof(ctx->paired_name) - 1);
                         ctx->paired_name[sizeof(ctx->paired_name) - 1] = '\0';
-                        if (strstr(scan_devices[i].name_buffer, "Ble Guitar") != nullptr)
+                        if (scan_devices[i].is_midi)
+                        {
+                            ctx->is_midi = true;
+                            printf("Connecting device identified as BLE MIDI\r\n");
+                            break;
+                        }
+                        else if (strstr(scan_devices[i].name_buffer, "Ble Guitar") != nullptr)
                         {
                             ctx->is_ghl_guitar = true;
                             printf("Connecting device identified as GHL BLE Guitar\r\n");
@@ -1108,10 +1181,20 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel,
 
         uint8_t status = sm_event_pairing_complete_get_status(packet);
         uint8_t reason = sm_event_pairing_complete_get_reason(packet);
-        if (status == ERROR_CODE_SUCCESS || ctx->is_ghl_guitar || ctx->is_steam_controller || reason == SM_REASON_PAIRING_NOT_SUPPORTED)
+        if (status == ERROR_CODE_SUCCESS || ctx->is_ghl_guitar || ctx->is_steam_controller || ctx->is_midi || reason == SM_REASON_PAIRING_NOT_SUPPORTED)
         {
             printf("Pairing complete for handle 0x%04x (status=0x%02x, reason=0x%02x)\r\n", handle, status, reason);
-            if (ctx->is_steam_controller)
+            if (ctx->is_midi)
+            {
+                printf("Connecting to BLE MIDI GATT characteristic...\r\n");
+                gatt_client_discover_characteristics_for_handle_range_by_uuid128(
+                    handle_gatt_client_event,
+                    handle,
+                    0x0001,
+                    0xffff,
+                    midi_char_uuid);
+            }
+            else if (ctx->is_steam_controller)
             {
                 printf("Connecting to Steam Controller GATT characteristic...\r\n");
                 gatt_client_discover_characteristics_for_handle_range_by_uuid128(
@@ -1182,7 +1265,17 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel,
         }
 
         printf("Re-encryption complete for handle 0x%04x\r\n", handle);
-        if (ctx->is_steam_controller)
+        if (ctx->is_midi)
+        {
+            printf("Connecting to BLE MIDI GATT characteristic...\r\n");
+            gatt_client_discover_characteristics_for_handle_range_by_uuid128(
+                handle_gatt_client_event,
+                handle,
+                0x0001,
+                0xffff,
+                midi_char_uuid);
+        }
+        else if (ctx->is_steam_controller)
         {
             printf("Connecting to Steam Controller GATT characteristic...\r\n");
             gatt_client_discover_characteristics_for_handle_range_by_uuid128(

@@ -31,7 +31,7 @@ void MidiDevice::init_buffers(const MidiBufferConfig &buffer_config)
     cable_status = new cable_state_t[m_max_cables]();
 }
 
-MidiDevice::MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased, const MidiBufferConfig &buffer_config) : Device(id), usbBased(usbBased)
+MidiDevice::MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased, const MidiBufferConfig &buffer_config) : Device(id), usbBased(usbBased), usbPackets(usbBased)
 {
     init_buffers(buffer_config);
     memset(midiNoteEvents, 0, sizeof(midiNoteEvents));
@@ -123,7 +123,7 @@ void MidiDevice::update(bool full_poll, bool send_events)
     uint8_t usb_packet[4];
     while (tu_edpt_stream_peek(&ep_stream.rx, &one_byte))
     {
-        if (!usb_pos && usbBased)
+        if (!usb_pos && usbPackets)
         {
             tu_fifo_peek_n(&ep_stream.rx.ff, usb_packet, 4);
             if (tu_mem_is_zero(usb_packet, 4))
@@ -384,7 +384,7 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 }
             }
             // at this point we can look at the state and process the message.
-            if (usb_pos < USB_PACKET_SIZE && usbBased)
+            if (usb_pos < USB_PACKET_SIZE && usbPackets)
             {
                 // discard the unused bytes in the USB packet if we haven't already read them
                 tu_edpt_stream_read(&ep_stream.rx, cable_state->data, USB_PACKET_SIZE - usb_pos);

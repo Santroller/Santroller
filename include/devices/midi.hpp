@@ -97,6 +97,8 @@ public:
 
 protected:
     virtual bool mark_channel_seen(uint8_t channel);
+    // Whether data arrives as 4 byte USB MIDI packets rather than a plain MIDI byte stream
+    void set_usb_packets(bool usb_packets) { usbPackets = usb_packets; }
 
 private:
     // Endpoint stream
@@ -126,6 +128,7 @@ private:
     bool seenChannels[18];
     ProGuitar_Sysex_Buttons_t midiButtons;
     bool usbBased;
+    bool usbPackets;
     cable_state_t *cable_status = nullptr;
     uint8_t m_max_cables = 1;
     uint8_t usb_pos = 0;

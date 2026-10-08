@@ -6,7 +6,6 @@
 - [ ] Emulation of SNES controllers
 - [ ] Emulation of NES controllers
 - [ ] Emulation of MIDI devices
-- [ ] Emulation of xinput over bt
 - [ ] Emulation of fight sticks
 - [ ] Emulation of flight sticks
 - [ ] Emulation of wheels
@@ -18,7 +17,6 @@
 - [ ] Input from gamecube controllers
 - [ ] Input from SNES controllers
 - [ ] Input from NES controllers
-- [ ] Inputs from NKRO keyboards over usb host
 
 ## Mapping features
 - [ ] Reverse debounce - https://github.com/Santroller/Santroller/issues/101

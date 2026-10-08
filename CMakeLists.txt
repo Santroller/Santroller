@@ -332,6 +332,7 @@ add_executable(
   src/devices/bt/host/generic_host.cpp
   src/devices/bt/host/wii_host.cpp
   src/devices/bt/host/ghl_ios_host.cpp
+  src/devices/bt/host/midi_host.cpp
   src/devices/bt/host/santroller_host.cpp
   src/devices/bt/host/steam_host.cpp
   src/devices/bt/bt_tlv_storage.cpp

@@ -34,7 +34,6 @@ public:
     void release_tool_profile();
     
     void update_device_assignments(bool full_poll, bool send_events);
-    void update_active_instances();
     void update(bool full_poll, bool send_events);
     bool assign_profile_to_devices(
         std::shared_ptr<Profile> profile,

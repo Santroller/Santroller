@@ -238,38 +238,6 @@ void ProfileManager::update_device_assignments(bool full_poll, bool send_events)
     }
 }
 
-void ProfileManager::update_active_instances()
-{
-    auto it = m_active_instances.begin();
-    while (it != m_active_instances.end())
-    {
-        auto &instance = *it;
-        bool has_devices = false;
-
-        for (const auto &profile : instance->profiles)
-        {
-            if (!profile->devices.empty() || !profile->claimed_devices.empty())
-            {
-                has_devices = true;
-                break;
-            }
-        }
-
-        if (!has_devices)
-        {
-            for (const auto &profile : instance->profiles)
-            {
-                m_profile_to_instance.erase(profile->profile_id);
-            }
-            it = m_active_instances.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
-}
-
 bool ProfileManager::assign_profile_to_devices(
     std::shared_ptr<Profile> profile,
     int assigned_devices,
@@ -333,7 +301,6 @@ void ProfileManager::update(bool full_poll, bool send_events)
     }
 
     update_device_assignments(full_poll, send_events);
-    update_active_instances();
 }
 
 bool ProfileManager::is_profile_active(uint32_t profile_id) const

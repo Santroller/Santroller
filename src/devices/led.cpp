@@ -17,7 +17,7 @@ void LedDevice::set_led(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brig
     }
     else if (r || g || b)
     {
-        led_state[i / 32] = 1 << (i % 32);
+        led_state[i / 32] |= 1 << (i % 32);
     }
     else
     {

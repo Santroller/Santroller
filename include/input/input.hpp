@@ -76,11 +76,11 @@ public:
     bool green_pad_on = false;
     bool cymbal_this_report = false;
     bool pad_this_report = false;
-    uint32_t last_cymbal_off = 0;
-    uint32_t last_green_off = 0;
+    uint64_t last_cymbal_off = 0;
+    uint64_t last_green_off = 0;
 
     // Call before building each report, to account for the one before it
-    void end_report(uint32_t now)
+    void end_report(uint64_t now)
     {
         if (!cymbal_this_report && (green_cymbal_on || yellow_cymbal_on || blue_cymbal_on))
         {

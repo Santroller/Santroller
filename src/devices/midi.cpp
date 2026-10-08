@@ -35,7 +35,11 @@ MidiDevice::MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBase
 {
     init_buffers(buffer_config);
     memset(midiNoteEvents, 0, sizeof(midiNoteEvents));
-    memset(midiPitchWheel, 0, sizeof(midiPitchWheel));
+    // the pitch wheel rests in the middle of its 14 bit range
+    for (auto &pitch : midiPitchWheel)
+    {
+        pitch = MIDI_PITCH_BEND_CENTER;
+    }
     memset(midiControlChanges, 0, sizeof(midiControlChanges));
     memset(midiNoteVelocity, 0, sizeof(midiNoteVelocity));
     memset(midiFrets, 0, sizeof(midiFrets));
@@ -465,7 +469,7 @@ bool MidiDevice::is_midi_note_pressed(uint8_t channel, uint8_t note) const
 {
     return read_midi_note(channel, note) > 0;
 }
-int16_t MidiDevice::read_midi_pitch_bend(uint8_t channel)
+uint16_t MidiDevice::read_midi_pitch_bend(uint8_t channel)
 {
     return midiPitchWheel[channel];
 }

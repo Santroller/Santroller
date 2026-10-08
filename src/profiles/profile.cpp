@@ -121,7 +121,7 @@ void Profile::update_actions()
 
 void Profile::reset_drum_state()
 {
-    drum_state.end_report(millis());
+    drum_state.end_report(time_us_64());
     drum_state.reset();
 }
 

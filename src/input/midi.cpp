@@ -60,12 +60,13 @@ MidiPitchBendInput::MidiPitchBendInput(proto_MidiInput input, std::shared_ptr<Mi
 bool MidiPitchBendInput::tick_digital()
 {
     if (!m_device) return false;
-    return m_device->read_midi_pitch_bend(m_input.channel - 1) != 0;
+    return m_device->read_midi_pitch_bend(m_input.channel - 1) != MIDI_PITCH_BEND_CENTER;
 }
 uint16_t MidiPitchBendInput::tick_analog()
 {
-    if (!m_device) return 0;
-    return m_device->read_midi_pitch_bend(m_input.channel - 1);
+    if (!m_device) return UINT16_MAX / 2 + 1;
+    // scale the 14 bit pitch wheel up to the full range like every other analog input
+    return m_device->read_midi_pitch_bend(m_input.channel - 1) << 2;
 }
 void MidiPitchBendInput::setup()
 {

@@ -56,58 +56,60 @@ void StageKitLedMapping::set_stagekit_led(uint8_t fog, uint8_t strobe, uint8_t b
         m_device->set_val(scale8(strobe));
         break;
     default:
-        // Sequential mapping - when a user picks leds they are mapped directly to the device's LED indices
+    {
+        // The stage kit LEDs (0 - 7) this mapping shows, none picked means all of them
+        const uint8_t selected = m_mapping.index ? m_mapping.index : 0xFF;
+        // Which stage kit LEDs light each colour channel, yellow being red and green
+        uint8_t mask_r = 0, mask_g = 0, mask_b = 0;
+        switch (m_mapping.type)
+        {
+        case StageKitBlue:
+            mask_b = blue;
+            break;
+        case StageKitGreen:
+            mask_g = green;
+            break;
+        case StageKitYellow:
+            mask_r = mask_g = yellow;
+            break;
+        case StageKitRed:
+            mask_r = red;
+            break;
+        case StageKitRGBY:
+            mask_r = red | yellow;
+            mask_g = green | yellow;
+            mask_b = blue;
+            break;
+        default:
+            return;
+        }
         if (m_mapping.indexMappingMode == StageKitIndexSequential)
         {
-            for (int i = 0; i < 8; i++)
+            // Each picked stage kit LED drives the next LED of this mapping, in order
+            uint8_t led = 0;
+            for (int bit = 0; bit < 8 && led < m_device->led_count(); bit++)
             {
-                switch (m_mapping.type)
+                if (!(selected & (1 << bit)))
                 {
-                case StageKitBlue:
-                    m_device->set_val_raw(i, 0, 0, blue & (1 << i) ? 0xFF : 0, 255);
-                    break;
-                case StageKitGreen:
-                    m_device->set_val_raw(i, 0, green & (1 << i) ? 0xFF : 0, 0, 255);
-                    break;
-                case StageKitYellow:
-                    m_device->set_val_raw(i, yellow & (1 << i) ? 0xFF : 0, yellow & (1 << i) ? 0xFF : 0, 0, 255);
-                    break;
-                case StageKitRed:
-                    m_device->set_val_raw(i, red & (1 << i) ? 0xFF : 0, 0, 0, 255);
-                    break;
-                case StageKitRGBY:
-                    m_device->set_val_raw(i, (red & (1 << i) || yellow & (1 << i)) ? 0xFF : 0, (green & (1 << i) || yellow & (1 << i)) ? 0xFF : 0, blue & (1 << i) ? 0xFF : 0, 255);
-                    break;
-                default:
-                    break;
+                    continue;
                 }
+                m_device->set_val_raw(led++, mask_r & (1 << bit) ? 0xFF : 0, mask_g & (1 << bit) ? 0xFF : 0, mask_b & (1 << bit) ? 0xFF : 0, 255);
             }
-            break;
         }
-        // Intensity mapping - the LED brightness is determined by the index
-        if (m_mapping.indexMappingMode == StageKitIndexIntensity)
+        else if (m_mapping.indexMappingMode == StageKitIndexIntensity)
         {
+            // Every LED of this mapping is as bright as the share of the picked stage kit LEDs that are on
+            const uint8_t total = __builtin_popcount(selected);
+            const uint8_t r = __builtin_popcount(mask_r & selected) * 0xFF / total;
+            const uint8_t g = __builtin_popcount(mask_g & selected) * 0xFF / total;
+            const uint8_t b = __builtin_popcount(mask_b & selected) * 0xFF / total;
             for (int i = 0; i < m_device->led_count(); i++)
             {
-                switch (m_mapping.type)
-                {
-                case StageKitBlue:
-                    m_device->set_val_raw(i, 0, 0, blue << 5, 255);
-                    break;
-                case StageKitGreen:
-                    m_device->set_val_raw(i, 0, green << 5, 0, 255);
-                    break;
-                case StageKitYellow:
-                    m_device->set_val_raw(i, yellow << 5, yellow << 5, 0, 255);
-                    break;
-                case StageKitRed:
-                    m_device->set_val_raw(i, red << 5, 0, 0, 255);
-                    break;
-                default:
-                    break;
-                }
+                m_device->set_val_raw(i, r, g, b, 255);
             }
         }
+        break;
+    }
     }
 }
 void PlaystationLedMapping::update(bool full_poll, bool send_events)
@@ -119,7 +121,10 @@ void PlaystationLedMapping::reload()
 }
 void PlaystationLedMapping::set_lightbar(uint8_t r, uint8_t g, uint8_t b)
 {
-    m_device->set_val_raw(0, r, g, b, 255);
+    for (int i = 0; i < m_device->led_count(); i++)
+    {
+        m_device->set_val_raw(i, r, g, b, 255);
+    }
 }
 void EuphoriaLedMapping::update(bool full_poll, bool send_events)
 {
@@ -209,7 +214,7 @@ void StatusLedMapping::update(bool full_poll, bool send_events)
 void InputLedMapping::update(bool full_poll, bool send_events)
 {
     uint16_t raw = m_input->tick_analog();
-    uint16_t curr = (raw - m_mapping.min) * m_multiplier;
+    uint16_t curr = scale(raw);
     if (send_events && ((full_poll || (raw != m_last_val)) && (millis() - m_last_poll) > 10))
     {
         m_last_val = raw;
@@ -252,7 +257,29 @@ void InputLedMapping::update(bool full_poll, bool send_events)
 }
 InputLedMapping::InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_input(std::move(input)), m_mapping(mapping)
 {
-    m_multiplier = (UINT16_MAX) / (m_mapping.max - m_mapping.min);
+    // Without a range set, the LED follows the whole input range
+    if (m_mapping.has_min || m_mapping.has_max)
+    {
+        m_min = m_mapping.min;
+        m_max = m_mapping.max;
+    }
+}
+uint16_t InputLedMapping::scale(uint16_t raw) const
+{
+    if (m_max == m_min)
+    {
+        return raw >= m_max ? UINT16_MAX : 0;
+    }
+    float amount = (float)((int32_t)raw - m_min) / (float)(m_max - m_min);
+    if (amount <= 0)
+    {
+        return 0;
+    }
+    if (amount >= 1)
+    {
+        return UINT16_MAX;
+    }
+    return amount * UINT16_MAX;
 }
 PatternLedMapping::PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping), m_speed(mapping.speed ? mapping.speed : 1), m_brightness(mapping.brightness ? mapping.brightness : 1)
 {
@@ -266,6 +293,7 @@ void PatternLedMapping::update(bool full_poll, bool send_events)
     }
     uint32_t speed = m_speed;
     uint8_t leds = m_device->led_count();
+    // If the led doesn't support brightness, then we just stop each channel at a lower brightness
     uint8_t pos_per_chan = m_device->supports_brightness() ? 255 : m_brightness;
     if (m_mapping.pattern == PatternRainbow)
     {

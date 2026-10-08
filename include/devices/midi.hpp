@@ -8,6 +8,9 @@
 #include "class/midi/midi.h"
 #include "protocols/controller_reports.hpp"
 #include <memory>
+
+// Where a 14 bit MIDI pitch wheel rests
+#define MIDI_PITCH_BEND_CENTER 0x2000
 #include <vector>
 
 #define MIDI_CONTROL_COMMAND_MOD_WHEEL 1
@@ -75,7 +78,8 @@ public:
     uint8_t read_midi_note(uint8_t channel, uint8_t note) const;
     bool is_midi_note_pressed(uint8_t channel, uint8_t note) const;
     uint16_t read_midi_control_change(uint8_t channel, uint8_t cc);
-    int16_t read_midi_pitch_bend(uint8_t channel);
+    // 14 bit, 0 - 16383 with MIDI_PITCH_BEND_CENTER at rest
+    uint16_t read_midi_pitch_bend(uint8_t channel);
     bool read_pro_guitar_button(proto_ProGuitarMidiButtonType button);
     uint16_t read_pro_guitar_axis(proto_ProGuitarAxisType axis);
     bool has_midi_channel(uint8_t channel) { return seenChannels[channel]; }
@@ -114,7 +118,7 @@ private:
     uint8_t midiNoteEventHead = 0;
     uint8_t midiNoteEventCount = 0;
     uint16_t midiNoteEventSequence = 0;
-    int16_t midiPitchWheel[16];
+    uint16_t midiPitchWheel[16];
     uint8_t *midiControlChanges[16] = {};
     uint8_t *midiNoteVelocity[16] = {};
     uint8_t midiFrets[6];

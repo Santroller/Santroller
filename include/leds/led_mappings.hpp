@@ -145,7 +145,10 @@ protected:
 private:
     uint16_t m_last_val = 0;
     uint32_t m_last_poll = 0;
-    float m_multiplier = 0;
+    // the input range that drives the LED from off to fully on, min can be above max to invert it
+    int32_t m_min = 0;
+    int32_t m_max = UINT16_MAX;
+    uint16_t scale(uint16_t raw) const;
     uint32_t m_pos = 0;
     uint32_t m_last_increase = 0;
     uint32_t m_last_decay = 0;

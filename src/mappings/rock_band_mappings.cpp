@@ -755,8 +755,8 @@ bool RockBandDrumsAxisMapping::should_emit_cymbal_hit(RockBandDrumsAxisType axis
         return true;
     }
     auto &state = m_profile->drum_state;
-    const uint32_t now = millis();
-    const uint32_t debounce = m_mapping.has_debounce ? m_mapping.debounce_us / 1000 : 25;
+    const uint64_t now = time_us_64();
+    const uint32_t debounce = m_mapping.has_debounce ? m_mapping.debounce_us : 25000;
     const bool cymbal_gap = now - state.last_cymbal_off > debounce;
     const bool green_gap = now - state.last_green_off > debounce;
     bool allowed;

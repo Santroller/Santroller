@@ -21,5 +21,5 @@ private:
     uint8_t m_ep_out_size;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
     HID_ReportInfo_t *m_info;
-    USB_Host_Data_t m_data;
+    USB_Host_Data_t m_data = {};
 };

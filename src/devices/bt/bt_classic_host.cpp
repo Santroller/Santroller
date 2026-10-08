@@ -10,6 +10,7 @@
 #include "protocols/switch.hpp"
 #include "utils.h"
 #include "emulation/usb/usb_devices.h"
+#include "devices/usb/host/generic_hid_tick_helpers.h"
 
 void reload();
 
@@ -480,54 +481,17 @@ BtGenericHost::~BtGenericHost()
 void BtGenericHost::handle_report(const uint8_t *data, uint16_t len)
 {
     BluetoothHostInterface::handle_report(data, len);
-    m_data = {};
     fill_generic_report(m_info, m_report_buf, &m_data);
 }
 
 bool BtGenericHost::tick_digital(proto_Output &type)
 {
-    if (type.which_mapping == proto_Output_gamepadButton_tag)
-    {
-        switch (type.mapping.gamepadButton)
-        {
-        case Gamepad_A:               return (m_data.genericButtons & (1 << 0)) != 0;
-        case Gamepad_B:               return (m_data.genericButtons & (1 << 1)) != 0;
-        case Gamepad_X:               return (m_data.genericButtons & (1 << 2)) != 0;
-        case Gamepad_Y:               return (m_data.genericButtons & (1 << 3)) != 0;
-        case Gamepad_LeftShoulder:    return (m_data.genericButtons & (1 << 4)) != 0;
-        case Gamepad_RightShoulder:   return (m_data.genericButtons & (1 << 5)) != 0;
-        case Gamepad_Back:            return (m_data.genericButtons & (1 << 6)) != 0;
-        case Gamepad_Start:           return (m_data.genericButtons & (1 << 7)) != 0;
-        case Gamepad_LeftThumbClick:  return (m_data.genericButtons & (1 << 8)) != 0;
-        case Gamepad_RightThumbClick: return (m_data.genericButtons & (1 << 9)) != 0;
-        case Gamepad_Guide:           return (m_data.genericButtons & (1 << 10)) != 0;
-        case Gamepad_Capture:         return (m_data.genericButtons & (1 << 11)) != 0;
-        case Gamepad_DpadUp:          return m_data.dpadUp != 0;
-        case Gamepad_DpadDown:        return m_data.dpadDown != 0;
-        case Gamepad_DpadLeft:        return m_data.dpadLeft != 0;
-        case Gamepad_DpadRight:       return m_data.dpadRight != 0;
-        default:                      return false;
-        }
-    }
-    return false;
+    return generic_hid_tick_digital_impl(m_data, type);
 }
 
 uint16_t BtGenericHost::tick_analog(proto_Output &type)
 {
-    if (type.which_mapping == proto_Output_gamepadAxis_tag)
-    {
-        switch (type.mapping.gamepadAxis)
-        {
-        case Gamepad_LeftStickX:   return m_data.genericAxisX;
-        case Gamepad_LeftStickY:   return m_data.genericAxisY;
-        case Gamepad_RightStickX:  return m_data.genericAxisRx;
-        case Gamepad_RightStickY:  return m_data.genericAxisRy;
-        case Gamepad_LeftTrigger:  return m_data.genericAxisZ;
-        case Gamepad_RightTrigger: return m_data.genericAxisRz;
-        default:                   return 0;
-        }
-    }
-    return 0;
+    return generic_hid_tick_analog_impl(m_data, type);
 }
 
 // ============================================================================

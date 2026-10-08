@@ -7,6 +7,7 @@
 #include "config/config.hpp"
 #include "managers/device_manager.hpp"
 #include "hidparser.h"
+#include "devices/usb/host/generic_hid_tick_helpers.h"
 
 std::shared_ptr<UsbHostInterface> GenericHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
@@ -76,7 +77,10 @@ bool GenericHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
 {
     if (ep_addr & 0x80)
     {
-        fill_generic_report(m_info, m_ep_in_buf, &m_data);
+        if (result == XFER_RESULT_SUCCESS)
+        {
+            fill_generic_report(m_info, m_ep_in_buf, &m_data);
+        }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;
@@ -91,112 +95,12 @@ bool GenericHost::set_config()
     }
     return true;
 }
-bool GenericHost::tick_digital(proto_Output& type)
+bool GenericHost::tick_digital(proto_Output &type)
 {
-    // switch (type)
-    // {
-    // case UsbButtonX:
-    //     return m_data.x;
-    // case UsbButtonA:
-    //     return m_data.a;
-    // case UsbButtonB:
-    //     return m_data.b;
-    // case UsbButtonY:
-    //     return m_data.y;
-    // case UsbButtonLeftShoulder:
-    //     return m_data.leftShoulder;
-    // case UsbButtonRightShoulder:
-    //     return m_data.rightShoulder;
-    // case UsbButtonBack:
-    //     return m_data.back;
-    // case UsbButtonStart:
-    //     return m_data.start;
-    // case UsbButtonLeftThumbClick:
-    //     return m_data.leftThumbClick;
-    // case UsbButtonRightThumbClick:
-    //     return m_data.rightThumbClick;
-    // case UsbButtonGuide:
-    //     return m_data.guide;
-    // case UsbButtonCapture:
-    //     return m_data.capture;
-    // case UsbButtonDpadUp:
-    //     return m_data.dpadUp;
-    // case UsbButtonDpadDown:
-    //     return m_data.dpadDown;
-    // case UsbButtonDpadLeft:
-    //     return m_data.dpadLeft;
-    // case UsbButtonDpadRight:
-    //     return m_data.dpadRight;
-    // case UsbButtonGenericButton1:
-    //     return m_data.genericButton1;
-    // case UsbButtonGenericButton2:
-    //     return m_data.genericButton2;
-    // case UsbButtonGenericButton3:
-    //     return m_data.genericButton3;
-    // case UsbButtonGenericButton4:
-    //     return m_data.genericButton4;
-    // case UsbButtonGenericButton5:
-    //     return m_data.genericButton5;
-    // case UsbButtonGenericButton6:
-    //     return m_data.genericButton6;
-    // case UsbButtonGenericButton7:
-    //     return m_data.genericButton7;
-    // case UsbButtonGenericButton8:
-    //     return m_data.genericButton8;
-    // case UsbButtonGenericButton9:
-    //     return m_data.genericButton9;
-    // case UsbButtonGenericButton10:
-    //     return m_data.genericButton10;
-    // case UsbButtonGenericButton11:
-    //     return m_data.genericButton11;
-    // case UsbButtonGenericButton12:
-    //     return m_data.genericButton12;
-    // case UsbButtonGenericButton13:
-    //     return m_data.genericButton13;
-    // case UsbButtonGenericButton14:
-    //     return m_data.genericButton14;
-    // case UsbButtonGenericButton15:
-    //     return m_data.genericButton15;
-    // case UsbButtonGenericButton16:
-    //     return m_data.genericButton16;
-    // default:
-    //     return false;
-    // }
-    return false;
+    return generic_hid_tick_digital_impl(m_data, type);
 }
 
-uint16_t GenericHost::tick_analog(proto_Output& type)
+uint16_t GenericHost::tick_analog(proto_Output &type)
 {
-    // switch (type)
-    // {
-    // case UsbAxisLeftTrigger:
-    //     return m_data.leftTrigger;
-    // case UsbAxisRightTrigger:
-    //     return m_data.rightTrigger;
-    // case UsbAxisLeftStickX:
-    //     return m_data.leftStickX;
-    // case UsbAxisLeftStickY:
-    //     return m_data.leftStickY;
-    // case UsbAxisRightStickX:
-    //     return m_data.rightStickX;
-    // case UsbAxisRightStickY:
-    //     return m_data.rightStickY;
-    // case UsbAxisGenericAxisX:
-    //     return m_data.genericAxisX;
-    // case UsbAxisGenericAxisY:
-    //     return m_data.genericAxisY;
-    // case UsbAxisGenericAxisZ:
-    //     return m_data.genericAxisZ;
-    // case UsbAxisGenericAxisRx:
-    //     return m_data.genericAxisRx;
-    // case UsbAxisGenericAxisRy:
-    //     return m_data.genericAxisRy;
-    // case UsbAxisGenericAxisRz:
-    //     return m_data.genericAxisRz;
-    // case UsbAxisGenericAxisSlider:
-    //     return m_data.genericAxisSlider;
-    // default:
-    //     return 0;
-    // }
-    return 0;
+    return generic_hid_tick_analog_impl(m_data, type);
 }

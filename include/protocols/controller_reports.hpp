@@ -284,7 +284,21 @@ typedef struct
     uint16_t genericAxisRy;
     uint16_t genericAxisRz;
     uint16_t genericAxisSlider;
+    uint16_t genericAxisBrake;
+    uint16_t genericAxisAccelerator;
+    // GENERIC_AXIS_* bits for every axis the device has reported
+    uint16_t genericAxesPresent;
 } __attribute__((packed)) USB_Host_Data_t;
+
+#define GENERIC_AXIS_X (1 << 0)
+#define GENERIC_AXIS_Y (1 << 1)
+#define GENERIC_AXIS_Z (1 << 2)
+#define GENERIC_AXIS_RX (1 << 3)
+#define GENERIC_AXIS_RY (1 << 4)
+#define GENERIC_AXIS_RZ (1 << 5)
+#define GENERIC_AXIS_SLIDER (1 << 6)
+#define GENERIC_AXIS_BRAKE (1 << 7)
+#define GENERIC_AXIS_ACCELERATOR (1 << 8)
 
 typedef struct
 {

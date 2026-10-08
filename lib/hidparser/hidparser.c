@@ -53,7 +53,6 @@
 				return &structure##s[i];                      \
 			}                                                 \
 		}                                                     \
-		assert(false);                                        \
 		return NULL;                                          \
 	}                                                         \
 	static void release_##structure(structure##_t *pointer)   \
@@ -79,113 +78,192 @@ static inline bool USB_GetHIDReportItemInfoWithReportId(const uint8_t *ReportDat
 	return USB_GetHIDReportItemInfo(ReportItem->ReportID, ReportData, ReportItem);
 }
 
-uint16_t GetAxis(HID_ReportItem_t *item)
+static int32_t SignExtend(uint32_t val, uint8_t bits)
 {
-	uint8_t size = item->Attributes.BitSize;
-	uint32_t val = item->Value;
-	if (size > 16)
+	if (bits == 0 || bits >= 32)
 	{
-		val >>= size - 16;
+		return (int32_t)val;
 	}
-	else if (size < 16)
-	{
-		val <<= 16 - size;
-	}
-	return val;
+	uint32_t sign = 1u << (bits - 1);
+	val &= (sign << 1) - 1;
+	return (int32_t)((val ^ sign) - sign);
 }
 
+// Logical min/max are stored as raw item data, so a negative minimum shows up as a large unsigned value
+static bool IsSignedRange(HID_ReportItem_t *item)
+{
+	return item->Attributes.Logical.Minimum > item->Attributes.Logical.Maximum;
+}
 
+static int32_t LogicalMinimum(HID_ReportItem_t *item)
+{
+	uint32_t min = item->Attributes.Logical.Minimum;
+	if (!IsSignedRange(item))
+	{
+		return (int32_t)min;
+	}
+	return SignExtend(min, min <= 0xFF ? 8 : min <= 0xFFFF ? 16 : 32);
+}
+
+static int32_t LogicalValue(HID_ReportItem_t *item)
+{
+	if (IsSignedRange(item))
+	{
+		return SignExtend(item->Value, item->Attributes.BitSize);
+	}
+	return (int32_t)item->Value;
+}
+
+// Scale an axis to 0 - UINT16_MAX using its logical range
+uint16_t GetAxis(HID_ReportItem_t *item)
+{
+	int32_t min = LogicalMinimum(item);
+	int32_t max = (int32_t)item->Attributes.Logical.Maximum;
+	if (max <= min)
+	{
+		// No usable logical range, fall back to the bit size
+		uint8_t size = item->Attributes.BitSize;
+		uint32_t val = item->Value;
+		if (size > 16)
+		{
+			val >>= size - 16;
+		}
+		else if (size < 16)
+		{
+			val <<= 16 - size;
+		}
+		return val;
+	}
+	int32_t val = LogicalValue(item);
+	if (val < min)
+	{
+		val = min;
+	}
+	if (val > max)
+	{
+		val = max;
+	}
+	return (uint16_t)(((uint64_t)(val - min) * UINT16_MAX) / (uint32_t)(max - min));
+}
+
+static void SetButton(uint16_t bit, bool pressed, uint16_t *touched, uint16_t *buttons)
+{
+	*touched |= bit;
+	if (pressed)
+	{
+		*buttons |= bit;
+	}
+}
+
+// Only fields present in this report are updated, so devices that split their inputs over multiple report ids work
 void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host_Data_t *out) {
-    if (info != NULL) {
-        HID_ReportItem_t *item = info->FirstReportItem;
-        while (item) {
-            if (USB_GetHIDReportItemInfoWithReportId(report, item)) {
-                switch (item->Attributes.Usage.Page) {
-                    case HID_USAGE_PAGE_DESKTOP:
-                        switch (item->Attributes.Usage.Usage) {
-                            case HID_USAGE_DESKTOP_X:
-                                out->genericAxisX = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_Y:
-                                out->genericAxisY = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_Z:
-                                out->genericAxisZ = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_RX:
-                                out->genericAxisRx = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_RY:
-                                out->genericAxisRy = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_RZ:
-                                out->genericAxisRz = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_SLIDER:
-                                out->genericAxisSlider = GetAxis(item);
-                                break;
-                            case HID_USAGE_DESKTOP_HAT_SWITCH:
-                                out->dpadLeft = item->Value == 6 || item->Value == 5 || item->Value == 7;
-                                out->dpadRight = item->Value == 3 || item->Value == 2 || item->Value == 1;
-                                out->dpadUp = item->Value == 0 || item->Value == 1 || item->Value == 7;
-                                out->dpadDown = item->Value == 5 || item->Value == 4 || item->Value == 3;
-                                break;
-                            case HID_USAGE_DESKTOP_DPAD_UP:
-                                out->dpadUp = 1;
-                                break;
-                            case HID_USAGE_DESKTOP_DPAD_RIGHT:
-                                out->dpadRight = 1;
-                                break;
-                            case HID_USAGE_DESKTOP_DPAD_DOWN:
-                                out->dpadDown = 1;
-                                break;
-                            case HID_USAGE_DESKTOP_DPAD_LEFT:
-                                out->dpadLeft = 1;
-                                break;
-                            case HID_USAGE_DESKTOP_SYSTEM_MAIN_MENU:
-                                if (item->Value) {
-                                    out->genericButtons |= (1 << 10);
-                                }
-                                break;
+    if (info == NULL) {
+        return;
+    }
+    uint16_t touched = 0;
+    uint16_t buttons = 0;
+    HID_ReportItem_t *item = info->FirstReportItem;
+    while (item) {
+        if (USB_GetHIDReportItemInfoWithReportId(report, item)) {
+            switch (item->Attributes.Usage.Page) {
+                case HID_USAGE_PAGE_DESKTOP:
+                    switch (item->Attributes.Usage.Usage) {
+                        case HID_USAGE_DESKTOP_X:
+                            out->genericAxisX = GetAxis(item);
+                            out->genericAxesPresent |= GENERIC_AXIS_X;
+                            break;
+                        case HID_USAGE_DESKTOP_Y:
+                            out->genericAxisY = GetAxis(item);
+                            out->genericAxesPresent |= GENERIC_AXIS_Y;
+                            break;
+                        case HID_USAGE_DESKTOP_Z:
+                            out->genericAxisZ = GetAxis(item);
+                            out->genericAxesPresent |= GENERIC_AXIS_Z;
+                            break;
+                        case HID_USAGE_DESKTOP_RX:
+                            out->genericAxisRx = GetAxis(item);
+                            out->genericAxesPresent |= GENERIC_AXIS_RX;
+                            break;
+                        case HID_USAGE_DESKTOP_RY:
+                            out->genericAxisRy = GetAxis(item);
+                            out->genericAxesPresent |= GENERIC_AXIS_RY;
+                            break;
+                        case HID_USAGE_DESKTOP_RZ:
+                            out->genericAxisRz = GetAxis(item);
+                            out->genericAxesPresent |= GENERIC_AXIS_RZ;
+                            break;
+                        case HID_USAGE_DESKTOP_SLIDER:
+                            out->genericAxisSlider = GetAxis(item);
+                            out->genericAxesPresent |= GENERIC_AXIS_SLIDER;
+                            break;
+                        case HID_USAGE_DESKTOP_HAT_SWITCH: {
+                            // Hats may start at 0 or 1, anything outside the logical range is neutral
+                            int32_t min = LogicalMinimum(item);
+                            int32_t max = (int32_t)item->Attributes.Logical.Maximum;
+                            int32_t hat = LogicalValue(item) - min;
+                            if (max - min == 3) {
+                                // 4 way hat
+                                hat *= 2;
+                            }
+                            bool valid = LogicalValue(item) >= min && LogicalValue(item) <= max && hat <= 7;
+                            out->dpadLeft = valid && (hat == 6 || hat == 5 || hat == 7);
+                            out->dpadRight = valid && (hat == 3 || hat == 2 || hat == 1);
+                            out->dpadUp = valid && (hat == 0 || hat == 1 || hat == 7);
+                            out->dpadDown = valid && (hat == 5 || hat == 4 || hat == 3);
+                            break;
                         }
-                        break;
-                    case HID_USAGE_PAGE_SIMULATE:
-                        switch (item->Attributes.Usage.Usage) {
-                            case HID_USAGE_SIMULATION_CONTROLS_ACCELERATOR:
-                                out->genericAxisRz = GetAxis(item);
-                                break;
-                            case HID_USAGE_SIMULATION_CONTROLS_BRAKE:
-                                out->genericAxisZ = GetAxis(item);
-                                break;
-                        }
-                        break;
-                    case HID_USAGE_PAGE_CONSUMER:
-                        switch (item->Attributes.Usage.Usage) {
-                            case HID_USAGE_CONSUMER_AC_HOME:
-                            case HID_USAGE_CONSUMER_AC_BACK:
-                                if (item->Value) {
-                                    out->genericButtons |= (1 << 10);
-                                }
-                                break;
-                            case HID_USAGE_CONSUMER_RECORD:
-                                if (item->Value) {
-                                    out->genericButtons |= (1 << 11);
-                                }
-                                break;
-                        }
-                        break;
-                    case HID_USAGE_PAGE_BUTTON: {
-                        uint8_t usage = item->Attributes.Usage.Usage;
-                        if (usage <= 16 && item->Value) {
-							out->genericButtons |= 1 << (usage - 1);
-                        }
-                        break;
+                        case HID_USAGE_DESKTOP_DPAD_UP:
+                            out->dpadUp = item->Value != 0;
+                            break;
+                        case HID_USAGE_DESKTOP_DPAD_RIGHT:
+                            out->dpadRight = item->Value != 0;
+                            break;
+                        case HID_USAGE_DESKTOP_DPAD_DOWN:
+                            out->dpadDown = item->Value != 0;
+                            break;
+                        case HID_USAGE_DESKTOP_DPAD_LEFT:
+                            out->dpadLeft = item->Value != 0;
+                            break;
+                        case HID_USAGE_DESKTOP_SYSTEM_MAIN_MENU:
+                            SetButton(1 << 10, item->Value, &touched, &buttons);
+                            break;
                     }
+                    break;
+                case HID_USAGE_PAGE_SIMULATE:
+                    switch (item->Attributes.Usage.Usage) {
+                        case HID_USAGE_SIMULATION_CONTROLS_ACCELERATOR:
+                            out->genericAxisAccelerator = GetAxis(item);
+                            out->genericAxesPresent |= GENERIC_AXIS_ACCELERATOR;
+                            break;
+                        case HID_USAGE_SIMULATION_CONTROLS_BRAKE:
+                            out->genericAxisBrake = GetAxis(item);
+                            out->genericAxesPresent |= GENERIC_AXIS_BRAKE;
+                            break;
+                    }
+                    break;
+                case HID_USAGE_PAGE_CONSUMER:
+                    switch (item->Attributes.Usage.Usage) {
+                        case HID_USAGE_CONSUMER_AC_HOME:
+                        case HID_USAGE_CONSUMER_AC_BACK:
+                            SetButton(1 << 10, item->Value, &touched, &buttons);
+                            break;
+                        case HID_USAGE_CONSUMER_RECORD:
+                            SetButton(1 << 11, item->Value, &touched, &buttons);
+                            break;
+                    }
+                    break;
+                case HID_USAGE_PAGE_BUTTON: {
+                    uint16_t usage = item->Attributes.Usage.Usage;
+                    if (usage >= 1 && usage <= 16) {
+                        SetButton(1 << (usage - 1), item->Value, &touched, &buttons);
+                    }
+                    break;
                 }
             }
-            item = item->Next;
         }
+        item = item->Next;
     }
+    out->genericButtons = (out->genericButtons & ~touched) | buttons;
 }
 
 bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem)
@@ -235,7 +313,8 @@ bool CALLBACK_HIDParser_FilterHIDReportItem(HID_ReportItem_t *const CurrentItem)
 		}
 		return false;
 	case HID_USAGE_PAGE_BUTTON:
-		return true;
+		// Only the first 16 buttons are used, so don't waste report items on the rest
+		return CurrentItem->Attributes.Usage.Usage >= 1 && CurrentItem->Attributes.Usage.Usage <= 16;
 	}
 	return false;
 }
@@ -261,8 +340,18 @@ uint8_t USB_ProcessHIDReport(const uint8_t *ReportData,
 {
 	HID_ReportSizeInfo_t *FirstReportIDSize = acquire_HID_ReportSizeInfo();
 	HID_CollectionPath_t *FirstCollectionPath = acquire_HID_CollectionPath();
-	memset(FirstCollectionPath, 0, sizeof(HID_CollectionPath_t));
 	HID_ReportInfo_t *ParserData = acquire_HID_ReportInfo();
+	if (!FirstReportIDSize || !FirstCollectionPath || !ParserData)
+	{
+		if (FirstReportIDSize)
+			release_HID_ReportSizeInfo(FirstReportIDSize);
+		if (FirstCollectionPath)
+			release_HID_CollectionPath(FirstCollectionPath);
+		if (ParserData)
+			release_HID_ReportInfo(ParserData);
+		return HID_PARSE_OutOfMemory;
+	}
+	memset(FirstCollectionPath, 0, sizeof(HID_CollectionPath_t));
 	HID_StateTable_t StateTable[HID_STATETABLE_STACK_DEPTH];
 	HID_StateTable_t *CurrStateTable = &StateTable[0];
 	HID_CollectionPath_t *CurrCollectionPath = NULL;
@@ -396,6 +485,11 @@ uint8_t USB_ProcessHIDReport(const uint8_t *ReportData,
 				{
 					ParserData->TotalDeviceReports++;
 					iterator->Next = CurrReportIDInfo = acquire_HID_ReportSizeInfo();
+					if (!CurrReportIDInfo)
+					{
+						Result = HID_PARSE_OutOfMemory;
+						break;
+					}
 					memset(CurrReportIDInfo, 0x00, sizeof(HID_ReportSizeInfo_t));
 				}
 			}
@@ -441,6 +535,11 @@ uint8_t USB_ProcessHIDReport(const uint8_t *ReportData,
 					CurrCollectionPath = CurrCollectionPath->Next;
 				}
 				HID_CollectionPath_t *NewCollectionPath = acquire_HID_CollectionPath();
+				if (!NewCollectionPath)
+				{
+					Result = HID_PARSE_OutOfMemory;
+					break;
+				}
 				CurrCollectionPath->Next = NewCollectionPath;
 				CurrCollectionPath = NewCollectionPath;
 				memset(CurrCollectionPath, 0, sizeof(HID_CollectionPath_t));
@@ -542,16 +641,21 @@ uint8_t USB_ProcessHIDReport(const uint8_t *ReportData,
 				}
 				if (!(ReportItemData & HID_IOF_CONSTANT) && CALLBACK_HIDParser_FilterHIDReportItem(&NewReportItem))
 				{
+					// The item pool is shared between all devices, once it runs out just keep what we have parsed so far
+					HID_ReportItem_t *NewItem = acquire_HID_ReportItem();
+					if (!NewItem)
+					{
+						break;
+					}
 					if (!ParserData->FirstReportItem)
 					{
-						ParserData->FirstReportItem = acquire_HID_ReportItem();
-						ParserData->LastReportItem = ParserData->FirstReportItem;
+						ParserData->FirstReportItem = NewItem;
 					}
 					else
 					{
-						ParserData->LastReportItem->Next = acquire_HID_ReportItem();
-						ParserData->LastReportItem = ParserData->LastReportItem->Next;
+						ParserData->LastReportItem->Next = NewItem;
 					}
+					ParserData->LastReportItem = NewItem;
 					memcpy(ParserData->LastReportItem, &NewReportItem, sizeof(HID_ReportItem_t));
 					ParserData->LastReportItem->Next = NULL;
 					ParserData->TotalReportItems++;

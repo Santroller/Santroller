@@ -28,6 +28,7 @@ static std::shared_ptr<UsbHostInterface> (*hid_device_types[])(std::shared_ptr<U
     SwitchHost::open,
     SteamHost::open,
     StadiaHost::open,
+    XInputCompatHost::open,
     MouseHost::open,
     GenericHost::open};
 static CFG_TUSB_MEM_ALIGN uint8_t temp_buf[512];

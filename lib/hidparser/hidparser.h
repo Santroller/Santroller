@@ -164,6 +164,7 @@ extern "C"
 		HID_PARSE_UnexpectedEndCollection = 3,	   /**< An END COLLECTION item found without matching COLLECTION item. */
 		HID_PARSE_UsageListOverflow = 4,		   /**< More than \ref HID_USAGE_STACK_DEPTH usages listed in a row. */
 		HID_PARSE_NoUnfilteredReportItems = 5,	   /**< All report items from the device were filtered by the filtering callback routine. */
+		HID_PARSE_OutOfMemory = 6,				   /**< The shared parser pools ran out of space. */
 	};
 
 	/* Private Interface - For use in library only: */

@@ -225,6 +225,31 @@ enum PS2ControllerType {
   PS2ControllerTypeGuitarFreaks = 13;
 }
 
+enum SNESControllerType {
+  SNESControllerNone = 1;
+  SNESControllerSNES = 2;
+  SNESControllerNES = 3;
+  SNESControllerMouse = 4;
+}
+
+enum JoybusControllerType {
+  JoybusControllerNone = 1;
+  JoybusControllerN64 = 2;
+  JoybusControllerGameCube = 3;
+}
+
+// Which console a joybus emulation device presents to
+enum JoybusConsole {
+  JoybusConsoleGameCube = 1;
+  JoybusConsoleN64 = 2;
+}
+
+// Which console a SNES emulation device presents to
+enum SNESConsole {
+  SNESConsoleSNES = 1;
+  SNESConsoleNES = 2;
+}
+
 enum APA102Type {
   Apa102Rgb=1;
   Apa102Rbg=2;
@@ -305,6 +330,8 @@ enum ProfileAssignMask {
     AssignPsx=4; /* Profile is assignable to PSX emulation */
     AssignBluetoothWiimote=8; /* Profile is assignable to Wiimote emulation */
     AssignWiimoteExtension=16; /* Profile is assignable to Wiimote extension emulation */
+    AssignJoybus=32; /* Profile is assignable to GameCube / N64 emulation */
+    AssignSnes=64; /* Profile is assignable to SNES / NES emulation */
 }
 
 enum BluetoothMode {

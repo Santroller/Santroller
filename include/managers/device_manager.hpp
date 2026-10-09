@@ -95,8 +95,14 @@ public:
     std::shared_ptr<class WiiExtensionEmulationDevice> get_wii_emulation_device() const { return m_wii_emulation_device; }
     void set_psx_emulation_device(std::shared_ptr<class PSXEmulationDevice> device) { m_psx_emulation_device = device; }
     void set_wii_emulation_device(std::shared_ptr<class WiiExtensionEmulationDevice> device) { m_wii_emulation_device = device; }
+    std::shared_ptr<class JoybusEmulationDevice> get_joybus_emulation_device() const { return m_joybus_emulation_device; }
+    std::shared_ptr<class SNESEmulationDevice> get_snes_emulation_device() const { return m_snes_emulation_device; }
+    void set_joybus_emulation_device(std::shared_ptr<class JoybusEmulationDevice> device) { m_joybus_emulation_device = device; }
+    void set_snes_emulation_device(std::shared_ptr<class SNESEmulationDevice> device) { m_snes_emulation_device = device; }
     bool is_psx_communicating() const;
     bool is_wii_communicating() const;
+    bool is_joybus_communicating() const;
+    bool is_snes_communicating() const;
 
 private:
     DeviceManager() = default;
@@ -110,4 +116,6 @@ private:
     std::map<ConsoleMode, std::shared_ptr<UsbHostInterface>> m_auth_devices;
     std::shared_ptr<class PSXEmulationDevice> m_psx_emulation_device;
     std::shared_ptr<class WiiExtensionEmulationDevice> m_wii_emulation_device;
+    std::shared_ptr<class JoybusEmulationDevice> m_joybus_emulation_device;
+    std::shared_ptr<class SNESEmulationDevice> m_snes_emulation_device;
 };

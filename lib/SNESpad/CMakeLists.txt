@@ -1,4 +1,5 @@
 add_library(SNESpad INTERFACE)
-target_link_libraries(SNESpad INTERFACE pico_stdlib)
-target_include_directories(SNESpad INTERFACE .)
-target_sources(SNESpad INTERFACE SNESpad.cpp)
+target_link_libraries(SNESpad INTERFACE pico_stdlib hardware_pio)
+target_include_directories(SNESpad INTERFACE ${CMAKE_CURRENT_LIST_DIR})
+target_sources(SNESpad INTERFACE ${CMAKE_CURRENT_LIST_DIR}/SNESpad.cpp)
+pico_generate_pio_header(SNESpad ${CMAKE_CURRENT_LIST_DIR}/SNESpad.pio)

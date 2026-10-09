@@ -14,6 +14,8 @@
 #include "input/djh_platter.hpp"
 #include "input/fixed.hpp"
 #include "input/ps2.hpp"
+#include "input/snes.hpp"
+#include "input/joybus.hpp"
 #include "input/mpr121.hpp"
 #include "input/midi.hpp"
 #include "input/protar_neck.hpp"
@@ -102,6 +104,18 @@ std::unique_ptr<Input> InputFactory::create_input(
     case proto_Input_ps2Button_tag:
         return create_device_input<PS2ButtonInput, PS2Device>(profile, proto_input.input.ps2Button.deviceid, proto_input.input.ps2Button);
             
+    case proto_Input_snesAxis_tag:
+        return create_device_input<SNESAxisInput, SNESDevice>(profile, proto_input.input.snesAxis.deviceid, proto_input.input.snesAxis);
+
+    case proto_Input_snesButton_tag:
+        return create_device_input<SNESButtonInput, SNESDevice>(profile, proto_input.input.snesButton.deviceid, proto_input.input.snesButton);
+
+    case proto_Input_joybusAxis_tag:
+        return create_device_input<JoybusAxisInput, JoybusDevice>(profile, proto_input.input.joybusAxis.deviceid, proto_input.input.joybusAxis);
+
+    case proto_Input_joybusButton_tag:
+        return create_device_input<JoybusButtonInput, JoybusDevice>(profile, proto_input.input.joybusButton.deviceid, proto_input.input.joybusButton);
+
     case proto_Input_mpr121_tag:
         return create_device_input<MPR121Input, MPR121Device>(profile, proto_input.input.mpr121.deviceid, proto_input.input.mpr121);
             

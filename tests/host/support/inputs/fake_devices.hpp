@@ -2,12 +2,16 @@
 // State behind the DeviceManager functions faked in fakes.cpp
 namespace fake_devices
 {
-// Whether a console is talking to the Wii extension / PS2 controller port emulation
+// Whether a console is talking to the Wii extension / PS2 / joybus / SNES controller port emulation
 inline bool wii_communicating = false;
 inline bool psx_communicating = false;
+inline bool joybus_communicating = false;
+inline bool snes_communicating = false;
 inline void reset()
 {
     wii_communicating = false;
     psx_communicating = false;
+    joybus_communicating = false;
+    snes_communicating = false;
 }
 }

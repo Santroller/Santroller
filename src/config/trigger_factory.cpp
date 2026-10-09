@@ -116,6 +116,22 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             list_id
         );
         
+    case proto_ProfileAssignmentInfo_joybusEmulation_tag:
+        return std::make_unique<JoybusEmulationActivationTrigger>(
+            proto_assignment.assignment.joybusEmulation,
+            profile,
+            trigger_id,
+            list_id
+        );
+
+    case proto_ProfileAssignmentInfo_snesEmulation_tag:
+        return std::make_unique<SNESEmulationActivationTrigger>(
+            proto_assignment.assignment.snesEmulation,
+            profile,
+            trigger_id,
+            list_id
+        );
+
     case proto_ProfileAssignmentInfo_wiiEmulation_tag:
         return std::make_unique<WiiExtensionEmulationActivationTrigger>(
             proto_assignment.assignment.wiiEmulation,

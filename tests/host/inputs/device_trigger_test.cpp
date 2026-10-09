@@ -302,3 +302,36 @@ TEST_F(DeviceTriggerTest, Ps2EmulationNeedsAConsoleTalking)
     ConfigManager::instance().mark_seen_assignment(AssignWiimoteExtension);
     EXPECT_TRUE(trigger.validate(true, false, false));
 }
+
+TEST_F(DeviceTriggerTest, JoybusEmulationNeedsAConsoleTalking)
+{
+    proto_JoybusAssignment config = proto_JoybusAssignment_init_default;
+    JoybusEmulationActivationTrigger trigger(config, profile, 1, 0);
+    EXPECT_EQ(trigger.assignedDevices(), AssignJoybus);
+    EXPECT_FALSE(trigger.validate(false, false, false));
+    fake_devices::psx_communicating = true;
+    EXPECT_FALSE(trigger.validate(false, false, false));
+    fake_devices::joybus_communicating = true;
+    EXPECT_TRUE(trigger.validate(true, false, false));
+    ConfigManager::instance().mark_seen_assignment(AssignJoybus);
+    EXPECT_FALSE(trigger.validate(true, false, false));
+    EXPECT_TRUE(trigger.validate(false, false, false));
+}
+
+TEST_F(DeviceTriggerTest, SnesEmulationNeedsAConsoleTalking)
+{
+    proto_SNESAssignment config = proto_SNESAssignment_init_default;
+    SNESEmulationActivationTrigger trigger(config, profile, 1, 0);
+    EXPECT_EQ(trigger.assignedDevices(), AssignSnes);
+    EXPECT_FALSE(trigger.validate(false, false, false));
+    fake_devices::joybus_communicating = true;
+    EXPECT_FALSE(trigger.validate(false, false, false));
+    fake_devices::snes_communicating = true;
+    EXPECT_TRUE(trigger.validate(true, false, false));
+    ConfigManager::instance().mark_seen_assignment(AssignSnes);
+    EXPECT_FALSE(trigger.validate(true, false, false));
+    // Seen on another port type doesn't matter
+    ConfigManager::instance().clear_seen_masks();
+    ConfigManager::instance().mark_seen_assignment(AssignJoybus);
+    EXPECT_TRUE(trigger.validate(true, false, false));
+}

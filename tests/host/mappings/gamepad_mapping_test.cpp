@@ -579,3 +579,121 @@ TEST_F(GamepadAxis, PS3AccelAtRestKeepsTheDefault)
     axis(Gamepad_AccelZ, UINT16_MAX / 2)->update_ps3(report.buf());
     EXPECT_EQ(report->accelZ, PS3_ACCEL_CENTER);
 }
+
+// GameCube, N64, SNES and NES: the expected bytes are what goes out on the wire, MSB first
+
+TEST_F(GamepadAxis, GameCubeSticksAreEightBitWithUpHigh)
+{
+    Report<GameCubeGamepad_Data_t> report;
+    axis(Gamepad_LeftStickX, 0)->update_gamecube(report.buf());
+    axis(Gamepad_LeftStickY, UINT16_MAX)->update_gamecube(report.buf());
+    axis(Gamepad_RightStickX, UINT16_MAX)->update_gamecube(report.buf());
+    axis(Gamepad_RightStickY, 0)->update_gamecube(report.buf());
+    EXPECT_EQ(report.bytes()[2], 0x00);
+    EXPECT_EQ(report.bytes()[3], 0xFF);
+    EXPECT_EQ(report.bytes()[4], 0xFF);
+    EXPECT_EQ(report.bytes()[5], 0x00);
+}
+
+TEST_F(GamepadAxis, GameCubeTriggersClickAtTheEndOfTheirTravel)
+{
+    Report<GameCubeGamepad_Data_t> report;
+    axis(Gamepad_LeftTrigger, 0x8000)->update_gamecube(report.buf());
+    axis(Gamepad_RightTrigger, UINT16_MAX)->update_gamecube(report.buf());
+    EXPECT_EQ(report.bytes()[6], 0x80);
+    EXPECT_EQ(report.bytes()[7], 0xFF);
+    // L is 0x40 and R is 0x20 in the second byte
+    EXPECT_EQ(report.bytes()[1], 0x20);
+}
+
+TEST_F(GamepadAxis, N64StickIsSignedAndLimitedToARealSticksRange)
+{
+    Report<N64Gamepad_Data_t> report;
+    axis(Gamepad_LeftStickX, 0)->update_n64(report.buf());
+    axis(Gamepad_LeftStickY, UINT16_MAX)->update_n64(report.buf());
+    EXPECT_EQ((int8_t)report.bytes()[2], -N64_STICK_RANGE);
+    EXPECT_EQ((int8_t)report.bytes()[3], 84);
+}
+
+TEST_F(GamepadAxis, N64RightStickPressesCButtons)
+{
+    Report<N64Gamepad_Data_t> report;
+    axis(Gamepad_RightStickX, UINT16_MAX)->update_n64(report.buf());
+    axis(Gamepad_RightStickY, 0)->update_n64(report.buf());
+    // C right is 0x01 and C down 0x04
+    EXPECT_EQ(report.bytes()[1], 0x05);
+}
+
+TEST_F(GamepadAxis, N64TriggersAreZ)
+{
+    Report<N64Gamepad_Data_t> report;
+    axis(Gamepad_LeftTrigger, 0x8000)->update_n64(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x00);
+    axis(Gamepad_RightTrigger, UINT16_MAX)->update_n64(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x20);
+}
+
+TEST_F(GamepadButton, GameCubeFaceButtonsGoByPosition)
+{
+    Report<GameCubeGamepad_Data_t> report;
+    pressed(Gamepad_A)->update_gamecube(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x01);
+    // X is the left button, which is B on a GameCube pad
+    pressed(Gamepad_X)->update_gamecube(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x03);
+    pressed(Gamepad_B)->update_gamecube(report.buf());
+    pressed(Gamepad_Y)->update_gamecube(report.buf());
+    pressed(Gamepad_Start)->update_gamecube(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x1F);
+}
+
+TEST_F(GamepadButton, GameCubeDpadAndZ)
+{
+    Report<GameCubeGamepad_Data_t> report;
+    pressed(Gamepad_DpadUp)->update_gamecube(report.buf());
+    pressed(Gamepad_DpadLeft)->update_gamecube(report.buf());
+    pressed(Gamepad_RightShoulder)->update_gamecube(report.buf());
+    EXPECT_EQ(report.bytes()[1], 0x19);
+}
+
+TEST_F(GamepadButton, N64Buttons)
+{
+    Report<N64Gamepad_Data_t> report;
+    pressed(Gamepad_A)->update_n64(report.buf());
+    pressed(Gamepad_X)->update_n64(report.buf());
+    pressed(Gamepad_Start)->update_n64(report.buf());
+    pressed(Gamepad_DpadRight)->update_n64(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0xD1);
+    pressed(Gamepad_LeftShoulder)->update_n64(report.buf());
+    pressed(Gamepad_RightShoulder)->update_n64(report.buf());
+    EXPECT_EQ(report.bytes()[1], 0x30);
+}
+
+TEST_F(GamepadButton, SnesFaceButtonsGoByPosition)
+{
+    Report<SNESGamepad_Data_t> report;
+    // A is the bottom button, which is B on a SNES pad and the first bit clocked out
+    pressed(Gamepad_A)->update_snes(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x01);
+    EXPECT_EQ(report.bytes()[1], 0x00);
+    pressed(Gamepad_B)->update_snes(report.buf());
+    pressed(Gamepad_Y)->update_snes(report.buf());
+    pressed(Gamepad_RightShoulder)->update_snes(report.buf());
+    EXPECT_EQ(report.bytes()[1], 0x0B);
+    pressed(Gamepad_X)->update_snes(report.buf());
+    pressed(Gamepad_Back)->update_snes(report.buf());
+    pressed(Gamepad_DpadRight)->update_snes(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x87);
+}
+
+TEST_F(GamepadButton, NesButtons)
+{
+    Report<NESGamepad_Data_t> report;
+    // B (the right button) is A on a NES pad, the first bit clocked out
+    pressed(Gamepad_B)->update_nes(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x01);
+    pressed(Gamepad_A)->update_nes(report.buf());
+    pressed(Gamepad_Start)->update_nes(report.buf());
+    pressed(Gamepad_DpadUp)->update_nes(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x1B);
+}

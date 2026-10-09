@@ -71,6 +71,10 @@ public:
     virtual void update_wiimote_core(wiimote_buttons *buttons) { (void)buttons; }
     virtual void update_switch(uint8_t *report) { (void)report; }
     virtual void update_ps2(uint8_t *report) { (void)report; }
+    virtual void update_gamecube(uint8_t *report) { (void)report; }
+    virtual void update_n64(uint8_t *report) { (void)report; }
+    virtual void update_snes(uint8_t *report) { (void)report; }
+    virtual void update_nes(uint8_t *report) { (void)report; }
     virtual void update_ps3(uint8_t *report) { (void)report; }
     virtual void update_ps4(uint8_t *report) { (void)report; }
     virtual void update_ps5(uint8_t *report) { (void)report; }

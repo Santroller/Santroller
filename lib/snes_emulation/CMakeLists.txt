@@ -1,0 +1,5 @@
+add_library(snes_emulation INTERFACE)
+target_include_directories(snes_emulation INTERFACE ${CMAKE_CURRENT_LIST_DIR})
+target_link_libraries(snes_emulation INTERFACE pico_stdlib hardware_pio hardware_gpio)
+target_sources(snes_emulation INTERFACE ${CMAKE_CURRENT_LIST_DIR}/libsnes_emulation.cpp)
+pico_generate_pio_header(snes_emulation ${CMAKE_CURRENT_LIST_DIR}/snes_device.pio)

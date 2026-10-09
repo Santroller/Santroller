@@ -181,3 +181,49 @@ bool PS2ControllerEmulationActivationTrigger::validate(bool claim_device, bool f
     }
     return true;
 }
+
+JoybusEmulationActivationTrigger::JoybusEmulationActivationTrigger(proto_JoybusAssignment config, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_config(config)
+{
+}
+
+bool JoybusEmulationActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+{
+    if (!DeviceManager::instance().is_joybus_communicating())
+    {
+        return false;
+    }
+    if (claim_device && ConfigManager::instance().has_seen_assignment(AssignJoybus))
+    {
+        return false;
+    }
+    if (send_events && (!m_last_val || full_poll))
+    {
+        m_last_val = true;
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
+        HIDConfigDevice::send_event(event, true);
+    }
+    return true;
+}
+
+SNESEmulationActivationTrigger::SNESEmulationActivationTrigger(proto_SNESAssignment config, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_config(config)
+{
+}
+
+bool SNESEmulationActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+{
+    if (!DeviceManager::instance().is_snes_communicating())
+    {
+        return false;
+    }
+    if (claim_device && ConfigManager::instance().has_seen_assignment(AssignSnes))
+    {
+        return false;
+    }
+    if (send_events && (!m_last_val || full_poll))
+    {
+        m_last_val = true;
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, true}}};
+        HIDConfigDevice::send_event(event, true);
+    }
+    return true;
+}

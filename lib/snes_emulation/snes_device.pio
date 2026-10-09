@@ -1,0 +1,33 @@
+; Device side of a SNES / NES controller port, acting like the pad's 4021 shift registers.
+; in_base = clock, jmp_pin = latch, out_base / set_base = data
+; The CPU pushes the button state (active low, bit 0 first) whenever it changes. The output
+; shift threshold is how many bits one latch shifts out (16 for a SNES pad, 8 for NES).
+.program snes_device
+PUBLIC idle:
+    pull noblock            ; drain the FIFO down to the newest state (or keep X if it is empty)
+    mov x, osr
+    jmp pin latched
+    jmp idle
+latched:
+    pull noblock            ; while latch is high the pad keeps loading its inputs, with bit 0 on the line
+    mov x, osr
+    out pins, 1
+    jmp pin latched
+wait_low:
+    jmp pin latched
+    mov isr, null
+    in pins, 1
+    mov y, isr
+    jmp y-- wait_low        ; clock still high
+wait_high:
+    jmp pin latched
+    mov isr, null
+    in pins, 1
+    mov y, isr
+    jmp !y wait_high        ; clock still low
+    jmp !osre shift         ; every rising edge shifts the next bit out
+    set pins, 0             ; past the last bit a real pad shifts out its grounded serial input
+    jmp idle
+shift:
+    out pins, 1
+    jmp wait_low

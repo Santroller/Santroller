@@ -68,6 +68,8 @@ struct DeviceReloadState
     // Emulation State
     bool psx_emulation_communicating = false;
     bool wii_emulation_communicating = false;
+    bool joybus_emulation_communicating = false;
+    bool snes_emulation_communicating = false;
 };
 
 class Device
@@ -91,6 +93,8 @@ public:
     virtual bool is_usb_host_interface() const { return false; }
     virtual bool is_bluetooth_host_interface() const { return false; }
     virtual bool is_ps2_controller() const { return false; }
+    virtual bool is_snes_device() const { return false; }
+    virtual bool is_joybus_device() const { return false; }
     virtual bool has_midi_channel(uint8_t channel);
     virtual bool is_assignable() const { return false; }
     virtual bool using_pin(uint8_t pin) = 0;

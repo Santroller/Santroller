@@ -14,8 +14,8 @@ This library allows for the reading of button states from a SNES controller conn
 
 1. Include the SNESpad.h header in your program.
 2. Create a SNESpad object, specifying the clock, latch, and data pin numbers.
-3. Use the `begin()` and `start()` function to initialize the SNESpad.
-4. Use the `poll()` function to update the state of the SNESpad.
+3. Use the `begin()` function to initialize the SNESpad. It claims a PIO state machine that reads the pad on its own about every millisecond, falling back to bit-banging if none is free.
+4. Use the `poll()` function to update the state of the SNESpad. With a state machine this just picks up its newest read, so it never blocks.
 5. You can then read the state of the buttons and the direction pad using the appropriate members of the SNESpad class.
 
 ## Button Variables
@@ -55,7 +55,6 @@ SNESpad snespad(CLOCK, LATCH, DATA);
 
 void setup() {
     snespad.begin();
-    snespad.start();
 }
 
 void loop() {

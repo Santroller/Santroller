@@ -3,6 +3,8 @@
 #include "xbox_dongle_firmware.h"
 #include "devices/bt/bt_tlv_storage.hpp"
 #include "devices/ps2_emulation.hpp"
+#include "devices/joybus_emulation.hpp"
+#include "devices/snes_emulation.hpp"
 #include "devices/wii_emulation.hpp"
 #include "managers/profile_manager.hpp"
 #include "managers/device_manager.hpp"
@@ -155,6 +157,8 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     // host, since restarting it disconnects everything plugged into it.
     const bool keep_on_full_reload = proto_device.which_device == proto_Device_psxEmulation_tag ||
                                      proto_device.which_device == proto_Device_wiiEmulation_tag ||
+                                     proto_device.which_device == proto_Device_joybusEmulation_tag ||
+                                     proto_device.which_device == proto_Device_snesEmulation_tag ||
                                      proto_device.which_device == proto_Device_usbHost_tag;
     if (previous_device && (keep_on_full_reload || !config_mgr.is_full_reload()) &&
         previous_device->matches_reload_config(proto_device))
@@ -190,6 +194,14 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     else if (proto_device.which_device == proto_Device_wiiEmulation_tag)
     {
         device_mgr.set_wii_emulation_device(std::static_pointer_cast<WiiExtensionEmulationDevice>(device));
+    }
+    else if (proto_device.which_device == proto_Device_joybusEmulation_tag)
+    {
+        device_mgr.set_joybus_emulation_device(std::static_pointer_cast<JoybusEmulationDevice>(device));
+    }
+    else if (proto_device.which_device == proto_Device_snesEmulation_tag)
+    {
+        device_mgr.set_snes_emulation_device(std::static_pointer_cast<SNESEmulationDevice>(device));
     }
     device_mgr.add_active_device(device);
     device->still_connected = true;

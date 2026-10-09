@@ -152,7 +152,17 @@ message PSXEmulationDevice {
   required int32 clockPin = 4;
   required int32 acknowledgePin = 5;
 }
-message JoybusEmulationDevice { required int32 dataPin = 1; }
+message JoybusEmulationDevice {
+  required int32 dataPin = 1;
+  // Defaults to GameCube
+  optional JoybusConsole console = 2;
+}
+message SNESEmulationDevice {
+  required int32 clockPin = 1;
+  required int32 latchPin = 2;
+  required int32 dataPin = 3;
+  required SNESConsole console = 4;
+}
 message EncoderDevice {
   required int32 dataPin = 1;
   optional int32 deltaRate = 2;
@@ -283,6 +293,7 @@ message Device {
     Xbox360RfDevice xbox360Rf = 40;
     PowerManagementDevice powerManagement = 41;
     AdcBatteryDevice adcBattery = 42;
+    SNESEmulationDevice snesEmulation = 43;
   }
 }
 message InfiniumFaderDevice {

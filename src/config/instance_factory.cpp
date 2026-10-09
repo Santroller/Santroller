@@ -4,9 +4,13 @@
 #include "managers/device_manager.hpp"
 #include "devices/ps2_emulation.hpp"
 #include "devices/wii_emulation.hpp"
+#include "devices/joybus_emulation.hpp"
+#include "devices/snes_emulation.hpp"
 #include "emulation/bt/bt_gamepad.h"
 #include "emulation/ps2_emulation.hpp"
 #include "emulation/wii_emulation.hpp"
+#include "emulation/joybus_emulation.hpp"
+#include "emulation/snes_emulation.hpp"
 #include "emulation/bt/wii_remote_emulation.hpp"
 #include "emulation/usb/hid_device.h"
 #include "emulation/usb/ogxbox_device.h"
@@ -68,6 +72,26 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
         }
         instance = std::make_shared<Ps2EmulationDeviceInstance>(
             psx_dev->get_config());
+    }
+    else if (assignment_mask & ProfileAssignMask_AssignJoybus)
+    {
+        auto joybus_dev = DeviceManager::instance().get_joybus_emulation_device();
+        if (!joybus_dev)
+        {
+            return nullptr;
+        }
+        instance = std::make_shared<JoybusEmulationDeviceInstance>(
+            joybus_dev->get_config());
+    }
+    else if (assignment_mask & ProfileAssignMask_AssignSnes)
+    {
+        auto snes_dev = DeviceManager::instance().get_snes_emulation_device();
+        if (!snes_dev)
+        {
+            return nullptr;
+        }
+        instance = std::make_shared<SNESEmulationDeviceInstance>(
+            snes_dev->get_config());
     }
     else if (assignment_mask & ProfileAssignMask_AssignWiimoteExtension)
     {

@@ -55,6 +55,16 @@ bool DeviceManager::is_wii_communicating() const
     return fake_devices::wii_communicating;
 }
 
+bool DeviceManager::is_joybus_communicating() const
+{
+    return fake_devices::joybus_communicating;
+}
+
+bool DeviceManager::is_snes_communicating() const
+{
+    return fake_devices::snes_communicating;
+}
+
 // Same as src/leds/led_devices.cpp
 void LedMapping::off()
 {

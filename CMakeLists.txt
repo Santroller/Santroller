@@ -106,7 +106,7 @@ set(PICO_SDK_FETCH_FROM_GIT TRUE)
 set(PICO_PIO_USB_PATH ${CMAKE_SOURCE_DIR}/lib/pico_pio_usb)
 set(PICO_TINYUSB_PATH ${CMAKE_SOURCE_DIR}/lib/tinyusb)
 set(PICO_BTSTACK_PATH ${CMAKE_SOURCE_DIR}/lib/btstack)
-set(PICO_BOARD pico2_w_compat CACHE STRING "Board type")
+set(PICO_BOARD pico_w_compat CACHE STRING "Board type")
 list(PREPEND PICO_BOARD_HEADER_DIRS ${CMAKE_SOURCE_DIR}/boards)
 set(PICO_BOARD_HEADER_DIRS ${PICO_BOARD_HEADER_DIRS} CACHE STRING "PICO board header directories" FORCE)
 set(PFB_WITH_IMAGE_ENCRYPTION OFF)
@@ -257,6 +257,8 @@ add_executable(
   src/devices/usb/host/xinput/xinput_plugin_module_host.cpp
   src/devices/usb/host/xinput/xinput_security_host.cpp
   src/emulation/ps2_emulation.cpp
+  src/emulation/joybus_emulation.cpp
+  src/emulation/snes_emulation.cpp
   src/emulation/wii_emulation.cpp
   src/input/accelerometer.cpp
   src/input/crkd.cpp
@@ -271,6 +273,8 @@ add_executable(
   src/input/shortcut.cpp
   src/input/usb.cpp
   src/input/ps2.cpp
+  src/input/snes.cpp
+  src/input/joybus.cpp
   src/input/midi.cpp
   src/input/mpr121.cpp
   src/input/protar_neck.cpp
@@ -342,6 +346,10 @@ add_executable(
   src/devices/wii.cpp
   src/devices/ps2.cpp
   src/devices/ps2_emulation.cpp
+  src/devices/snes.cpp
+  src/devices/snes_emulation.cpp
+  src/devices/joybus.cpp
+  src/devices/joybus_emulation.cpp
   src/devices/wii_emulation.cpp
   src/devices/crkd.cpp
   src/devices/encoder.cpp
@@ -509,6 +517,8 @@ target_link_libraries(
   wii_remote_emulation
   SNESpad
   n64_gamecube_controller
+  joybus_emulation
+  snes_emulation
   ws2812
   xbox360_rf
   apa102

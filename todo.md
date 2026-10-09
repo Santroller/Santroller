@@ -1,22 +1,12 @@
 # Things to work on
 
 ## Emulation
-- [ ] Emulation of N64 controllers
-- [ ] Emulation of gamecube controllers
-- [ ] Emulation of SNES controllers
-- [ ] Emulation of NES controllers
 - [ ] Emulation of MIDI devices
 - [ ] Emulation of fight sticks
 - [ ] Emulation of flight sticks
 - [ ] Emulation of wheels
 - [ ] Emulation of microphones
 - [ ] Emulation of GCN adapters
-
-## Inputs
-- [ ] Input from N64 controllers
-- [ ] Input from gamecube controllers
-- [ ] Input from SNES controllers
-- [ ] Input from NES controllers
 
 ## Mapping features
 - [ ] Reverse debounce - https://github.com/Santroller/Santroller/issues/101

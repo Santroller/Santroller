@@ -52,3 +52,27 @@ public:
 private:
     proto_PSXAssignment m_config;
 };
+
+class JoybusEmulationActivationTrigger : public ActivationTrigger
+{
+public:
+    JoybusEmulationActivationTrigger(proto_JoybusAssignment config, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
+    ~JoybusEmulationActivationTrigger() {}
+    bool validate(bool claim_device, bool full_poll, bool send_events);
+    int assignedDevices() { return AssignJoybus; }
+
+private:
+    proto_JoybusAssignment m_config;
+};
+
+class SNESEmulationActivationTrigger : public ActivationTrigger
+{
+public:
+    SNESEmulationActivationTrigger(proto_SNESAssignment config, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
+    ~SNESEmulationActivationTrigger() {}
+    bool validate(bool claim_device, bool full_poll, bool send_events);
+    int assignedDevices() { return AssignSnes; }
+
+private:
+    proto_SNESAssignment m_config;
+};

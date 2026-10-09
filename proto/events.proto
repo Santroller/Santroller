@@ -99,6 +99,16 @@ message PS2DeviceHotplugEvent {
     required int32 type = 2;
 }
 
+message SNESDeviceHotplugEvent {
+    required int32 id = 1;
+    required SNESControllerType type = 2;
+}
+
+message JoybusDeviceHotplugEvent {
+    required int32 id = 1;
+    required JoybusControllerType type = 2;
+}
+
 message DebugEvent {
     required bytes data = 1; 
 }
@@ -135,6 +145,8 @@ message Event {
         ReloadEvent reload = 17;
         ActivationListEvent activationList = 18;
         BtDeviceHotplugEvent bt = 19;
+        SNESDeviceHotplugEvent snes = 20;
+        JoybusDeviceHotplugEvent joybus = 21;
     };
 }
 

@@ -12,6 +12,8 @@ class BluetoothHostInterface;
 class WiiDevice;
 class MidiDevice;
 class ProGuitarMidiDevice;
+class SNESDevice;
+class JoybusDevice;
 
 class InputFactory {
 public:
@@ -59,6 +61,14 @@ public:
                 }
             } else if constexpr (std::is_same_v<T, ProGuitarMidiDevice>) {
                 if (!device->is_pro_guitar_midi_device()) {
+                    return nullptr;
+                }
+            } else if constexpr (std::is_same_v<T, SNESDevice>) {
+                if (!device->is_snes_device()) {
+                    return nullptr;
+                }
+            } else if constexpr (std::is_same_v<T, JoybusDevice>) {
+                if (!device->is_joybus_device()) {
                     return nullptr;
                 }
             }

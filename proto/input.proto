@@ -128,6 +128,26 @@ message PS2ButtonInput {
   required PS2ButtonType button = 2;
 }
 
+message SNESButtonInput {
+  required int32 deviceid = 1;
+  required SNESButtonType button = 2;
+}
+
+message SNESAxisInput {
+  required int32 deviceid = 1;
+  required SNESAxisType axis = 2;
+}
+
+message JoybusButtonInput {
+  required int32 deviceid = 1;
+  required JoybusButtonType button = 2;
+}
+
+message JoybusAxisInput {
+  required int32 deviceid = 1;
+  required JoybusAxisType axis = 2;
+}
+
 message USBButtonInput {
   required int32 deviceid = 1;
   required Output button = 2;
@@ -240,6 +260,10 @@ message Input {
     PeripheralInput peripheral = 40;
     CrazyGuitarNeckButtonInput crazyGuitarNeck = 41;
     DJHeroPlatterInput djhPlatter = 42;
+    SNESButtonInput snesButton = 43;
+    SNESAxisInput snesAxis = 44;
+    JoybusButtonInput joybusButton = 45;
+    JoybusAxisInput joybusAxis = 46;
   }
 }
 message InfiniumFaderInput {

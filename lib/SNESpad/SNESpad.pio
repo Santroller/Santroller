@@ -1,0 +1,31 @@
+; Reads a SNES pad, NES pad or SNES mouse on its own, roughly every millisecond.
+; Runs at 1MHz so each cycle is 1us, with the same timing as a console.
+; side-set = clock (idles high), set_base = latch, in_base = data
+; Each read pushes 32 bits, first bit in bit 0, active low (an empty port reads all ones).
+.program snes_pad
+.side_set 1
+.wrap_target
+    set x, 0            side 1
+    pull noblock        side 1          ; a word in the TX FIFO asks for a mouse speed change (OSR = X = 0 when empty)
+    mov y, osr          side 1
+    set pins, 1         side 1 [11]     ; latch for 12us
+    jmp !y latch_done   side 1
+    nop                 side 0 [5]      ; a clock pulse during latch cycles a SNES mouse's speed
+    nop                 side 1 [11]
+latch_done:
+    set pins, 0         side 1 [5]
+    set x, 15           side 1
+first_half:
+    nop                 side 0 [4]      ; clock low for 6us, sampling at the end
+    in pins, 1          side 0
+    jmp x-- first_half  side 1 [5]      ; the pad shifts out the next bit as clock rises
+    set x, 15           side 1 [11]     ; a SNES mouse needs a gap before its second half
+second_half:
+    nop                 side 0 [4]
+    in pins, 1          side 0
+    jmp x-- second_half side 1 [5]
+    set y, 31           side 1          ; autopush has sent the 32 bits
+wait_loop:
+    nop                 side 1 [15]     ; about 1ms until the next read
+    jmp y-- wait_loop   side 1 [15]
+.wrap

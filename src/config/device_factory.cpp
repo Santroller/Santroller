@@ -8,6 +8,10 @@
 #include "devices/ps2.hpp"
 #include "devices/ps2_emulation.hpp"
 #include "devices/wii_emulation.hpp"
+#include "devices/snes.hpp"
+#include "devices/snes_emulation.hpp"
+#include "devices/joybus.hpp"
+#include "devices/joybus_emulation.hpp"
 #include "devices/protar_neck.hpp"
 #include "devices/bhdrum.hpp"
 #include "devices/wtdrum.hpp"
@@ -247,6 +251,22 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         
     case proto_Device_wiiEmulation_tag:
         device = std::make_shared<WiiExtensionEmulationDevice>(previous_state, proto_device.device.wiiEmulation, device_id);
+        break;
+
+    case proto_Device_snes_tag:
+        device = std::make_shared<SNESDevice>(proto_device.device.snes, device_id);
+        break;
+
+    case proto_Device_joybus_tag:
+        device = std::make_shared<JoybusDevice>(proto_device.device.joybus, device_id);
+        break;
+
+    case proto_Device_joybusEmulation_tag:
+        device = std::make_shared<JoybusEmulationDevice>(previous_state, proto_device.device.joybusEmulation, device_id);
+        break;
+
+    case proto_Device_snesEmulation_tag:
+        device = std::make_shared<SNESEmulationDevice>(previous_state, proto_device.device.snesEmulation, device_id);
         break;
         
     case proto_Device_peripheral_tag:

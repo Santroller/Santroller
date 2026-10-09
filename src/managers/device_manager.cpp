@@ -1,6 +1,8 @@
 #include "managers/device_manager.hpp"
 #include "devices/base.hpp"
 #include "devices/ps2_emulation.hpp"
+#include "devices/joybus_emulation.hpp"
+#include "devices/snes_emulation.hpp"
 #include "devices/wii_emulation.hpp"
 #include <algorithm>
 
@@ -149,6 +151,8 @@ void DeviceManager::clear_all()
     m_auth_devices.clear();
     m_psx_emulation_device.reset();
     m_wii_emulation_device.reset();
+    m_joybus_emulation_device.reset();
+    m_snes_emulation_device.reset();
 }
 
 bool DeviceManager::is_psx_communicating() const
@@ -159,4 +163,14 @@ bool DeviceManager::is_psx_communicating() const
 bool DeviceManager::is_wii_communicating() const
 {
     return m_wii_emulation_device ? m_wii_emulation_device->is_communicating() : false;
+}
+
+bool DeviceManager::is_joybus_communicating() const
+{
+    return m_joybus_emulation_device ? m_joybus_emulation_device->is_communicating() : false;
+}
+
+bool DeviceManager::is_snes_communicating() const
+{
+    return m_snes_emulation_device ? m_snes_emulation_device->is_communicating() : false;
 }

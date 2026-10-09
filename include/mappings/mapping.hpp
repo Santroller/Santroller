@@ -12,6 +12,7 @@
 #include "protocols/wii.hpp"
 #include "protocols/og_xbox.hpp"
 #include "protocols/ps2.hpp"
+#include "protocols/nintendo.hpp"
 #include "protocols/ps3.hpp"
 #include "protocols/ps4.hpp"
 #include "protocols/ps5.hpp"

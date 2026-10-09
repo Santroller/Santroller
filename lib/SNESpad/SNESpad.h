@@ -3,13 +3,14 @@
 
   github.com/RobertDaleSmith/SNESpad
 
+  Version: 2.1 - Reads the pad with a PIO state machine (Santroller), Pico SDK only
   Version: 2.0 (2023) - Extended to Pico SDK (Robert Dale Smith)
                       - Mouse and NES controller support (Robert Dale Smith)
   Version: 1.3 (11/12/2010) - get rid of shortcut constructor - seems to be broken
   Version: 1.2 (05/25/2009) - put pin numbers in constructor (Pascal Hahn)
   Version: 1.1 (09/22/2008) - fixed compilation errors in arduino 0012 (Rob Duarte)
   Version: 1.0 (09/20/2007) - Created (Rob Duarte)
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
@@ -21,20 +22,15 @@
   GNU Lesser General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.  
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef _SNESPAD_H_
 #define _SNESPAD_H_
 
 #include <inttypes.h>
-// Try to include Arduino.h
-#ifdef ARDUINO
-    #include <Arduino.h>
-#else
-    // If we aren't compiling on Arduino, include the Pico SDK standard library
-    #include "pico/stdlib.h"
-#endif
+#include "pico/stdlib.h"
+#include "hardware/pio.h"
 
 #define SNES_PAD_NONE   -1
 #define SNES_PAD_BASIC  0
@@ -75,10 +71,8 @@
 #endif
 
 class SNESpad {
-  protected:
-  // uint8_t address;
   public:
-    int8_t type = SNES_PAD_NONE; 
+    int8_t type = SNES_PAD_NONE;
 
     uint16_t mouseX        = 0;
     uint16_t mouseY        = 0;
@@ -97,23 +91,37 @@ class SNESpad {
     bool directionLeft   = false;
     bool directionRight  = false;
 
-    // Constructor 
+    // Constructor
     SNESpad(int clock, int latch, int data);
+    ~SNESpad();
 
     // Methods
     void begin();
-    void start();
+    void end();
+    // With a PIO state machine this only picks up the newest read and never blocks.
+    // Without one (none free) it falls back to bit-banging, which takes ~200us.
     void poll();
+    bool using_pio() const { return pio != nullptr; }
+
+    // Decode one read (active high, first bit in bit 0, 0 = nothing plugged in).
+    // Public so it can be tested without hardware.
+    void decode(uint32_t state);
   private:
-  
+
     uint8_t latchPin; // output: latch
     uint8_t clockPin; // output: clock
     uint8_t dataPin;  // input:  data
-    uint8_t mouseSpeed;   // mouse speed (0=SLOW|1=MEDIUM|2=FAST)
+    uint8_t mouseSpeed = 0;   // mouse speed (0=SLOW|1=MEDIUM|2=FAST)
     uint8_t mouseSpeedFails = 0;
     uint32_t _lastRead;
+    bool started = false;
 
-    void init();
+    PIO pio = nullptr;
+    uint sm = 0;
+    uint offset = 0;
+
+    bool wantsSpeedChange() const;
+    void initGpio();
     void speed();
     void latch();
     uint32_t read();

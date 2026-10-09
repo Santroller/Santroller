@@ -249,6 +249,8 @@ bool ProfileManager::assign_profile_to_devices(
         ProfileAssignMask_AssignBluetoothGamepad,
         ProfileAssignMask_AssignBluetoothWiimote,
         ProfileAssignMask_AssignPsx,
+        ProfileAssignMask_AssignJoybus,
+        ProfileAssignMask_AssignSnes,
         ProfileAssignMask_AssignWiimoteExtension,
         ProfileAssignMask_AssignUsb};
 

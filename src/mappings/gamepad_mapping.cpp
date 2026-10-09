@@ -248,6 +248,80 @@ void GamepadAxisMapping::update_ps2(uint8_t *buf)
     }
 }
 
+void GamepadAxisMapping::update_gamecube(uint8_t *buf)
+{
+    if (m_centered)
+    {
+        return;
+    }
+    GameCubeGamepad_Data_t *report = (GameCubeGamepad_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadAxis)
+    {
+    case Gamepad_LeftStickX:
+        report->leftStickX = m_calibrated_value >> 8;
+        break;
+    case Gamepad_LeftStickY:
+        report->leftStickY = m_calibrated_value >> 8;
+        break;
+    case Gamepad_RightStickX:
+        report->cStickX = m_calibrated_value >> 8;
+        break;
+    case Gamepad_RightStickY:
+        report->cStickY = m_calibrated_value >> 8;
+        break;
+    // The triggers are analog, with a digital click at the end of their travel
+    case Gamepad_LeftTrigger:
+        report->leftTrigger = std::max<uint8_t>(report->leftTrigger, m_calibrated_value >> 8);
+        report->l |= m_calibrated_value > 60000;
+        break;
+    case Gamepad_RightTrigger:
+        report->rightTrigger = std::max<uint8_t>(report->rightTrigger, m_calibrated_value >> 8);
+        report->r |= m_calibrated_value > 60000;
+        break;
+    default:
+        break;
+    }
+}
+
+static int8_t n64_stick(uint32_t value)
+{
+    return ((int32_t)(value >> 8) - 128) * N64_STICK_RANGE / 128;
+}
+
+void GamepadAxisMapping::update_n64(uint8_t *buf)
+{
+    if (m_centered)
+    {
+        return;
+    }
+    N64Gamepad_Data_t *report = (N64Gamepad_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadAxis)
+    {
+    case Gamepad_LeftStickX:
+        report->stickX = n64_stick(m_calibrated_value);
+        break;
+    case Gamepad_LeftStickY:
+        report->stickY = n64_stick(m_calibrated_value);
+        break;
+    // The C buttons sit where the right stick would be
+    case Gamepad_RightStickX:
+        report->cRight |= m_calibrated_value > 0xC000;
+        report->cLeft |= m_calibrated_value < 0x4000;
+        break;
+    case Gamepad_RightStickY:
+        report->cUp |= m_calibrated_value > 0xC000;
+        report->cDown |= m_calibrated_value < 0x4000;
+        break;
+    // Z is the N64's only trigger
+    case Gamepad_LeftTrigger:
+    case Gamepad_RightTrigger:
+        report->z |= m_calibrated_value > 60000;
+        break;
+    default:
+        break;
+    }
+}
+
 void GamepadAxisMapping::update_ps3(uint8_t *buf)
 {
     PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)buf;
@@ -818,6 +892,166 @@ void GamepadButtonMapping::update_ps2(uint8_t *buf)
     case Gamepad_DpadRight:
         report->dpadRight |= m_last_value;
         report->pressureDpadRight = std::max(report->pressureDpadRight, pressure);
+        break;
+    default:
+        break;
+    }
+}
+// Face buttons on the Nintendo consoles go by position rather than legend, so A (the bottom
+// button) presses whichever button sits at the bottom of that console's pad
+void GamepadButtonMapping::update_gamecube(uint8_t *buf)
+{
+    GameCubeGamepad_Data_t *report = (GameCubeGamepad_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadButton)
+    {
+    case Gamepad_A:
+        report->a |= m_last_value;
+        break;
+    case Gamepad_B:
+        report->x |= m_last_value;
+        break;
+    case Gamepad_X:
+        report->b |= m_last_value;
+        break;
+    case Gamepad_Y:
+        report->y |= m_last_value;
+        break;
+    case Gamepad_Start:
+        report->start |= m_last_value;
+        break;
+    case Gamepad_LeftShoulder:
+    case Gamepad_RightShoulder:
+        report->z |= m_last_value;
+        break;
+    case Gamepad_DpadUp:
+        report->dpadUp |= m_last_value;
+        break;
+    case Gamepad_DpadDown:
+        report->dpadDown |= m_last_value;
+        break;
+    case Gamepad_DpadLeft:
+        report->dpadLeft |= m_last_value;
+        break;
+    case Gamepad_DpadRight:
+        report->dpadRight |= m_last_value;
+        break;
+    default:
+        break;
+    }
+}
+
+void GamepadButtonMapping::update_n64(uint8_t *buf)
+{
+    N64Gamepad_Data_t *report = (N64Gamepad_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadButton)
+    {
+    case Gamepad_A:
+        report->a |= m_last_value;
+        break;
+    case Gamepad_B:
+    case Gamepad_X:
+        report->b |= m_last_value;
+        break;
+    case Gamepad_Start:
+        report->start |= m_last_value;
+        break;
+    case Gamepad_LeftShoulder:
+        report->l |= m_last_value;
+        break;
+    case Gamepad_RightShoulder:
+        report->r |= m_last_value;
+        break;
+    case Gamepad_DpadUp:
+        report->dpadUp |= m_last_value;
+        break;
+    case Gamepad_DpadDown:
+        report->dpadDown |= m_last_value;
+        break;
+    case Gamepad_DpadLeft:
+        report->dpadLeft |= m_last_value;
+        break;
+    case Gamepad_DpadRight:
+        report->dpadRight |= m_last_value;
+        break;
+    default:
+        break;
+    }
+}
+
+void GamepadButtonMapping::update_snes(uint8_t *buf)
+{
+    SNESGamepad_Data_t *report = (SNESGamepad_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadButton)
+    {
+    case Gamepad_A:
+        report->b |= m_last_value;
+        break;
+    case Gamepad_B:
+        report->a |= m_last_value;
+        break;
+    case Gamepad_X:
+        report->y |= m_last_value;
+        break;
+    case Gamepad_Y:
+        report->x |= m_last_value;
+        break;
+    case Gamepad_Start:
+        report->start |= m_last_value;
+        break;
+    case Gamepad_Back:
+        report->select |= m_last_value;
+        break;
+    case Gamepad_LeftShoulder:
+        report->l |= m_last_value;
+        break;
+    case Gamepad_RightShoulder:
+        report->r |= m_last_value;
+        break;
+    case Gamepad_DpadUp:
+        report->dpadUp |= m_last_value;
+        break;
+    case Gamepad_DpadDown:
+        report->dpadDown |= m_last_value;
+        break;
+    case Gamepad_DpadLeft:
+        report->dpadLeft |= m_last_value;
+        break;
+    case Gamepad_DpadRight:
+        report->dpadRight |= m_last_value;
+        break;
+    default:
+        break;
+    }
+}
+
+void GamepadButtonMapping::update_nes(uint8_t *buf)
+{
+    NESGamepad_Data_t *report = (NESGamepad_Data_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadButton)
+    {
+    case Gamepad_A:
+        report->b |= m_last_value;
+        break;
+    case Gamepad_B:
+        report->a |= m_last_value;
+        break;
+    case Gamepad_Start:
+        report->start |= m_last_value;
+        break;
+    case Gamepad_Back:
+        report->select |= m_last_value;
+        break;
+    case Gamepad_DpadUp:
+        report->dpadUp |= m_last_value;
+        break;
+    case Gamepad_DpadDown:
+        report->dpadDown |= m_last_value;
+        break;
+    case Gamepad_DpadLeft:
+        report->dpadLeft |= m_last_value;
+        break;
+    case Gamepad_DpadRight:
+        report->dpadRight |= m_last_value;
         break;
     default:
         break;

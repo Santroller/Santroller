@@ -1,0 +1,48 @@
+; Device side of the joybus line (GameCube and N64 controller ports)
+; The state machine runs at 25MHz (the clock divider is derived from clk_sys), so each cycle is 40ns.
+;
+; Receiving: every bit is sampled ~2.5us after its falling edge, and bytes are autopushed. Within a
+; command the line is never high for more than 3.75us (a 1 bit from a GameCube, whose bits are 5us),
+; so once it has been high for ~4.5us the command (including its stop bit) is over. The program then
+; drops the stop bit it sampled, pushes 0xFFFFFFFF (which a byte never is) to mark the end of the
+; command, and waits for the CPU's reply.
+;
+; Replying: the reply is a succession of (value, enable) bit pairs, LSB first. A pair with enable
+; clear ends the reply, so a first word of 0 means "don't reply". The CPU can queue the reply as soon
+; as it has seen the whole command, so it normally goes out at a fixed time after the stop bit.
+.program joybus
+.wrap_target
+PUBLIC outmode:
+    pull block              ; the reply, or 0 for none
+    out x, 1                ; x = what should we output
+    out y, 1                ; y = should we output something
+    jmp !y inmode
+    set pins, 1             ; set the level first so taking the line doesn't glitch it low
+    set pindirs, 1
+bit:                        ; 4us a bit
+    set pins, 0 [24]
+    mov pins, x [24]
+    mov pins, x [24]
+    set pins, 1 [20]
+    pull ifempty block
+    out x, 1
+    out y, 1
+    jmp y-- bit             ; falls through to inmode after the stop bit
+PUBLIC inmode:
+    set pindirs, 0
+    mov isr, null
+    wait 0 pin 0 [2]        ; about as late as the idle loop below notices a falling edge
+bit_low:
+    nop [31]
+    nop [25]
+    in pins, 1              ; ~2.5us after the falling edge
+    wait 1 pin 0
+    set x, 27
+idle:
+    jmp pin still_high      ; 4 cycles a loop, 28 loops is ~4.5us
+    jmp bit_low             ; the next bit started
+still_high:
+    jmp x-- idle [2]
+    mov isr, ~null          ; the line stayed high, so the command is over
+    push block
+.wrap

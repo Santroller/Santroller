@@ -1,0 +1,26 @@
+name: Host tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  host-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      # Only TinyUSB is needed (for its portable HID / MIDI headers), not every submodule
+      - name: Checkout TinyUSB
+        run: git submodule update --init --depth 1 lib/tinyusb
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y ninja-build python3-venv
+      - name: Configure
+        run: cmake -S tests/host -B build-tests -G Ninja
+      - name: Build
+        run: cmake --build build-tests
+      - name: Test
+        run: ctest --test-dir build-tests --output-on-failure

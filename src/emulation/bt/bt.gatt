@@ -17,6 +17,14 @@ CHARACTERISTIC, ORG_BLUETOOTH_CHARACTERISTIC_REPORT, DYNAMIC | READ | WRITE | WR
 // SantrollerCapabilities, type = Output (2)
 REPORT_REFERENCE, READ, 10, 2
 
+// Keyboard profiles' mouse (MOUSE_REPORT_ID 2) and media keys (CONSUMER_REPORT_ID 3), type = Input (1).
+// hids_device only sends reports that have a characteristic here (hids_device_send_input_report_for_id)
+CHARACTERISTIC, ORG_BLUETOOTH_CHARACTERISTIC_REPORT, DYNAMIC | READ | WRITE | NOTIFY | ENCRYPTION_KEY_SIZE_16,
+REPORT_REFERENCE, READ, 2, 1
+
+CHARACTERISTIC, ORG_BLUETOOTH_CHARACTERISTIC_REPORT, DYNAMIC | READ | WRITE | NOTIFY | ENCRYPTION_KEY_SIZE_16,
+REPORT_REFERENCE, READ, 3, 1
+
 // Second HID service carrying only the vendor config collection, so the configurator can talk to the
 // device over bluetooth the same way it does over USB. Handled by bt_config_service, not hids_device.
 PRIMARY_SERVICE, ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE

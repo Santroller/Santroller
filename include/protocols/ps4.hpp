@@ -164,8 +164,7 @@ typedef struct
     uint8_t soloOrange : 1;
     uint8_t : 3;
 
-    uint8_t unused4[26];
-    uint32_t crc32;
+    uint8_t unused4[16];
 } __attribute__((packed)) PS4RockBandGuitar_Data_t;
 
 typedef struct
@@ -222,8 +221,7 @@ typedef struct
     uint8_t blueCymbalVelocity;
     uint8_t greenCymbalVelocity;
 
-    uint8_t unused4[24];
-    uint32_t crc32;
+    uint8_t unused4[14];
 } __attribute__((packed)) PS4RockBandDrums_Data_t;
 typedef struct
 {

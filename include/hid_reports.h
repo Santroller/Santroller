@@ -181,10 +181,14 @@
         HID_REPORT_COUNT(2),                                \
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE)
 
+// Output report 1 (rumble, LEDs and the Santroller commands) is 10 bytes after the id: the longest
+// command, feedback (0x5B), is the command byte, 8 bytes of game state and the note hits
+// (Instance::process_feedback_report)
+#define SANTROLLER_OUTPUT_REPORT_SIZE 10
 #define TUD_HID_REPORT_DESC_PS3_4_5()                        \
     HID_USAGE_N(0x2621, 2),                                  \
         HID_REPORT_SIZE(8),                                  \
-        HID_REPORT_COUNT(8),                                 \
+        HID_REPORT_COUNT(SANTROLLER_OUTPUT_REPORT_SIZE),     \
         HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),  \
         HID_REPORT_ID(ReportIdPs4Feature)                    \
             HID_USAGE_N(0x2821, 2),                          \
@@ -1011,9 +1015,15 @@
         HID_REPORT_SIZE(1),                                    \
         HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),            \
         HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE), \
+        /* sticks and pressures are full bytes: 0 - 255, as on \
+           a real DS3 (15 00 26 FF 00 ... 35 00 46 FF 00) */    \
+        HID_LOGICAL_MIN(0),                                    \
+        HID_LOGICAL_MAX_N(255, 2),                             \
         HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                \
         HID_USAGE(HID_USAGE_DESKTOP_POINTER),                  \
         HID_COLLECTION(HID_COLLECTION_PHYSICAL),               \
+        HID_PHYSICAL_MIN(0),                                   \
+        HID_PHYSICAL_MAX_N(255, 2),                            \
         HID_USAGE(HID_USAGE_DESKTOP_X),                        \
         HID_USAGE(HID_USAGE_DESKTOP_Y),                        \
         HID_USAGE(HID_USAGE_DESKTOP_Z),                        \
@@ -1273,9 +1283,11 @@
         HID_REPORT_SIZE(1),                                                      \
         HID_REPORT_COUNT(4),                                                     \
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
+        /* the rest of the 64 byte 0x30 report, as Input (Constant) like a real   \
+           Pro Controller (75 08 95 34 81 03) */                                  \
         HID_REPORT_SIZE(8),                                                      \
         HID_REPORT_COUNT(52),                                                    \
-        HID_OUTPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                  \
+        HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                   \
         HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),                              \
         HID_REPORT_ID(ReportSwitchOutput21)                                      \
             HID_USAGE(0x01),                                                     \

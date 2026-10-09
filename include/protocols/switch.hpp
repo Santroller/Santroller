@@ -27,8 +27,8 @@ typedef struct
 
     uint8_t back : 1;            // minus
     uint8_t start : 1;           // plus
-    uint8_t leftThumbClick : 1;  // l3
     uint8_t rightThumbClick : 1; // r3
+    uint8_t leftThumbClick : 1;  // l3
     uint8_t guide : 1;           // home
     uint8_t capture : 1;
     uint8_t dummy2 : 1;
@@ -39,8 +39,8 @@ typedef struct
     uint8_t dpadRight : 1;
     uint8_t dpadLeft : 1;
 
-    uint8_t buttonLeftSL : 1;
     uint8_t buttonLeftSR : 1;
+    uint8_t buttonLeftSL : 1;
     uint8_t leftShoulder : 1;
     uint8_t leftTrigger : 1;
 

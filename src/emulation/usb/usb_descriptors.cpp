@@ -259,6 +259,7 @@ uint16_t tud_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
 
 void tud_init(void)
 {
+  XInputGamepadDevice::mounted_since_init = false;
   tud_reset(TUD_OPT_RHPORT);
 }
 void tud_reset(uint8_t rhport)

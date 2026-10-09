@@ -35,11 +35,15 @@ public:
 
     bool initialize_empty() const;
     bool read_flash(ConfigImage &image, bool cached) const;
+    // Copy up to max_size bytes of the stored image, starting start bytes in. Returns how many were copied
+    uint32_t read_chunk(uint8_t *buffer, uint32_t start, uint32_t max_size, bool cached) const;
     void commit_after_write();
     ConfigMetadata read_metadata(bool cached) const;
-    bool write_info(const uint8_t *buffer, uint16_t bufsize) const;
+    bool write_info(const uint8_t *buffer, uint16_t bufsize);
     WriteResult write_chunk(const uint8_t *buffer, uint16_t bufsize, uint32_t start);
     bool update_auxiliary(AuxiliaryWriter writer, void *context = nullptr) const;
 private:
     bool m_should_commit = false;
+    // Set while write_info's upload is waiting for its data
+    bool m_upload_active = false;
 };

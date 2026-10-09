@@ -44,7 +44,8 @@ typedef struct
     uint8_t headphone_volume;
     uint8_t speaker_volume;
     uint8_t microphone_volume;
-    uint8_t reserved[31];
+    // audio flags, mute LED, power save, adaptive triggers, LED flags / setup / brightness
+    uint8_t reserved[36];
     uint8_t player_indicator;
     uint8_t lightbar_red;
     uint8_t lightbar_green;
@@ -93,10 +94,11 @@ typedef struct
     uint16_t data_28_29;
 
     uint16_t data_30_31_0x001a;
+    uint8_t data_32;
 
     TouchpadData touchpad_data;
 
-    uint8_t data_40_55[16];
+    uint8_t data_41_55[15];
 
     uint8_t hash[8];
 
@@ -222,6 +224,9 @@ typedef struct
     uint8_t leftTrigger : 8;
     uint8_t rightTrigger : 8;
 
+    // the vendor byte before the buttons (PS5Dpad_Data_t::reserved)
+    uint8_t reserved;
+
     //     0
     //   7   1
     // 6   8   2
@@ -276,7 +281,8 @@ typedef struct
     uint8_t whammy;
     uint8_t tilt;
 
-    uint8_t unused1[2];
+    // the triggers and the vendor byte before the buttons (PS5Dpad_Data_t bytes 5 - 7)
+    uint8_t unused1[3];
 
     //     0
     //   7   1

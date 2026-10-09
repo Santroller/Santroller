@@ -1,5 +1,7 @@
 #pragma once
 #include "devices/usb/host/hid/hid_host.h"
+#include "protocols/hid_keyboard.hpp"
+#include "protocols/hid_mouse.hpp"
 
 class KeyboardHost : public HidHost
 {
@@ -22,33 +24,9 @@ public:
     bool key_pressed(uint8_t keycode) override;
 
 private:
-    // A run of keys in a report, either one bit per key (NKRO bitmaps, modifiers) or an array of
-    // pressed keycodes (6KRO)
-    struct KeyField
-    {
-        uint8_t report_id;
-        // keyboard keys, or media keys from the consumer page
-        bool consumer;
-        bool variable;
-        uint8_t size;
-        uint8_t count;
-        uint16_t bit_offset;
-        uint16_t usage_min;
-        uint16_t usage_max;
-        int32_t logical_min;
-    };
-    static constexpr uint8_t MAX_KEY_FIELDS = 24;
-    // consumer usages past this aren't media keys anyone binds
-    static constexpr uint16_t MAX_CONSUMER_USAGE = 0x3FF;
     static std::shared_ptr<KeyboardHost> open_common(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc);
-    bool parse_report_descriptor(const uint8_t *desc, uint16_t len);
-    void add_field(const KeyField &field);
-    bool own_key_pressed(uint8_t keycode) const { return m_keys[keycode >> 5] & (1u << (keycode & 31)); }
-    bool own_consumer_pressed(uint16_t usage) const { return usage <= MAX_CONSUMER_USAGE && (m_consumer[usage >> 5] & (1u << (usage & 31))); }
     bool consumer_pressed(uint16_t usage);
-    KeyField m_fields[MAX_KEY_FIELDS];
-    uint8_t m_field_count = 0;
-    bool m_report_ids = false;
+    HidKeyboardDecoder m_decoder;
     bool m_boot_protocol = false;
     bool m_boot_subclass = false;
     // further keyboard interfaces on the same device, whose keys show up through this one
@@ -58,10 +36,6 @@ private:
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
-    // one bit per keycode, currently held
-    uint32_t m_keys[8] = {0};
-    // one bit per consumer usage, currently held
-    uint32_t m_consumer[(MAX_CONSUMER_USAGE + 1) / 32] = {0};
 };
 
 class MouseHost : public HidHost
@@ -80,16 +54,8 @@ public:
     uint16_t mouse_axis(MouseAxisType axis) override;
 
 private:
-    void find_items();
-    // The mouse's report layout, parsed from its report descriptor (report protocol, so the
-    // wheel is available, unlike in boot protocol)
     HID_ReportInfo_t *m_info;
-    HID_ReportItem_t *m_axis_items[4] = {nullptr};
-    HID_ReportItem_t *m_button_items[3] = {nullptr};
-    // latest movement, and when it arrived (mice only send reports while something changes)
-    int32_t m_movement[4] = {0};
-    uint8_t m_buttons = 0;
-    uint32_t m_last_report_us = 0;
+    HidMouseDecoder m_decoder;
     uint8_t m_ep_in = 0;
     uint8_t m_ep_out = 0;
     uint8_t m_ep_in_size;

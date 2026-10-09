@@ -394,6 +394,13 @@ uint8_t USB_ProcessHIDReport(const uint8_t *ReportData,
 		ReportData++;
 		ReportSize--;
 
+		// A truncated descriptor can end partway through an item, stop rather than read past the end
+		static const uint8_t ItemDataSizes[] = {0, 1, 2, 4};
+		if (ItemDataSizes[HIDReportItem & HID_RI_DATA_SIZE_MASK] > ReportSize)
+		{
+			break;
+		}
+
 		switch (HIDReportItem & HID_RI_DATA_SIZE_MASK)
 		{
 		case HID_RI_DATA_BITS_32:

@@ -172,7 +172,13 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
     bool is_360 = ConfigManager::instance().get_current_mode() == ModeXbox360;
     // A 360 going into standby resets the bus before idling it, which leaves tinyusb
     // unconnected and never reporting the suspend, so read the bus state from the SIE.
-    bool bus_suspended = is_360 && (usb_hw->sie_status & USB_SIE_STATUS_SUSPENDED_BITS);
+    // The bus also idles between attaching and the host's first reset (eg after switching
+    // into 360 mode on Windows), so only trust this once the host has configured us.
+    if (tud_mounted())
+    {
+        mounted_since_init = true;
+    }
+    bool bus_suspended = is_360 && mounted_since_init && (usb_hw->sie_status & USB_SIE_STATUS_SUSPENDED_BITS);
     // tud_suspend_cb never runs for this, so count it as a new suspend here
     if (bus_suspended && !m_bus_suspended && !tud_suspended())
     {
@@ -612,4 +618,5 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
 uint8_t XInputGamepadDevice::xinputInterfaces[4] = {0xFF, 0xFF, 0xFF, 0xFF};
 uint8_t XInputGamepadDevice::lastIntfInput = 0;
 uint32_t XInputGamepadDevice::last_caps_query_time = 0;
+bool XInputGamepadDevice::mounted_since_init = false;
 volatile uint32_t XInputGamepadDevice::report_generation = 0;

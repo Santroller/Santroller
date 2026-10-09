@@ -286,17 +286,18 @@ void GamepadAxisMapping::update_ps3(uint8_t *buf)
     case Gamepad_RightTrigger:
         report->rightTrigger = m_calibrated_value >> 8;
         break;
+    // motion axes are 10 bit, resting at PS3_ACCEL_CENTER
     case Gamepad_AccelX:
-        report->accelX = m_calibrated_value;
+        report->accelX = m_calibrated_value >> 6;
         break;
     case Gamepad_AccelY:
-        report->accelY = m_calibrated_value;
+        report->accelY = m_calibrated_value >> 6;
         break;
     case Gamepad_AccelZ:
-        report->accelZ = m_calibrated_value;
+        report->accelZ = m_calibrated_value >> 6;
         break;
     case Gamepad_Gyro:
-        report->gyro = m_calibrated_value;
+        report->gyro = m_calibrated_value >> 6;
         break;
     }
 }
@@ -500,17 +501,18 @@ void PS3GamepadAxisMapping::update_ps3(uint8_t *buf)
     case Gamepad_RightTrigger:
         report->rightTrigger = m_calibrated_value >> 8;
         break;
+    // motion axes are 10 bit, resting at PS3_ACCEL_CENTER, and big endian like a real DS3
     case Gamepad_AccelX:
-        report->accelX = m_calibrated_value;
+        report->accelX = __builtin_bswap16(m_calibrated_value >> 6);
         break;
     case Gamepad_AccelY:
-        report->accelY = m_calibrated_value;
+        report->accelY = __builtin_bswap16(m_calibrated_value >> 6);
         break;
     case Gamepad_AccelZ:
-        report->accelZ = m_calibrated_value;
+        report->accelZ = __builtin_bswap16(m_calibrated_value >> 6);
         break;
     case Gamepad_Gyro:
-        report->gyro = m_calibrated_value;
+        report->gyro = __builtin_bswap16(m_calibrated_value >> 6);
         break;
     }
     return;

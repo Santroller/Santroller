@@ -401,7 +401,7 @@ void RockBandGuitarAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     switch (m_mapping.mapping.mapping.rbAxis)
     {
     case RockBandGuitar_Whammy:
-        report->whammy = m_calibrated_value >> 8;
+        report->whammy = m_calibrated_value >> 11;
         break;
     case RockBandGuitar_Tilt:
         // report->tilt = m_calibrated_value >> 8;
@@ -420,10 +420,10 @@ void RockBandGuitarAxisMapping::update_switch(uint8_t *buf)
     switch (m_mapping.mapping.mapping.rbAxis)
     {
     case RockBandGuitar_Whammy:
-        report->whammy = m_calibrated_value >> 8;
+        report->whammy = m_calibrated_value > 60000;
         break;
     case RockBandGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->tilt = m_calibrated_value > 60000;
         break;
     default:
         break;
@@ -443,7 +443,7 @@ void RockBandGuitarAxisMapping::update_ps2(uint8_t *buf)
         report->whammy = m_calibrated_value >> 8;
         break;
     case RockBandGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->tilt = m_calibrated_value > 60000;
         break;
     default:
         break;
@@ -463,7 +463,7 @@ void RockBandGuitarAxisMapping::update_ps3(uint8_t *buf)
         report->whammy = m_calibrated_value >> 8;
         break;
     case RockBandGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->tilt = m_calibrated_value > 60000;
         break;
     case RockBandGuitar_Pickup:
         report->pickup = rb_pickup_universal[pickup_notch()];
@@ -484,7 +484,7 @@ void RockBandGuitarAxisMapping::update_ps4(uint8_t *buf)
         report->whammy = m_calibrated_value >> 8;
         break;
     case RockBandGuitar_Tilt:
-        report->tilt = abs(int32_t(m_calibrated_value - 32768)) >> 7;
+        report->tilt = clamp(abs(int32_t(m_calibrated_value) - 32768) >> 7, 0, UINT8_MAX);
         break;
     case RockBandGuitar_Pickup:
         // RB4 guitars report the notch directly, 0 - 4
@@ -508,7 +508,7 @@ void RockBandGuitarAxisMapping::update_ps5(uint8_t *buf)
         report->whammy = m_calibrated_value >> 8;
         break;
     case RockBandGuitar_Tilt:
-        report->tilt = abs(int32_t(m_calibrated_value - 32768)) >> 7;
+        report->tilt = clamp(abs(int32_t(m_calibrated_value) - 32768) >> 7, 0, UINT8_MAX);
         break;
     case RockBandGuitar_Pickup:
         // RB4 guitars report the notch directly, 0 - 4
@@ -551,10 +551,10 @@ void RockBandGuitarAxisMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.mapping.rbAxis)
     {
     case RockBandGuitar_Whammy:
-        report->whammy = m_calibrated_value >> 8;
+        report->whammy = m_calibrated_value - 32768;
         break;
     case RockBandGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->tilt = m_calibrated_value - 32768;
         break;
     case RockBandGuitar_Pickup:
         report->pickup = rb_pickup_universal[pickup_notch()];
@@ -1090,7 +1090,7 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
     }
     if (m_profile->drum_state.yellow_pad && m_profile->drum_state.yellow_cymbal && !m_profile->drum_state.red_pad)
     {
-        report->redVelocity = (32768 - (m_profile->drum_state.yellow_cymbal >> 1));
+        report->redVelocity = clamp(32768 - (m_profile->drum_state.yellow_cymbal >> 1), 0, INT16_MAX);
         report->yellowVelocity = -(32768 - (m_profile->drum_state.yellow_pad >> 1));
         report->y = true;
         report->padFlag = true;
@@ -1099,21 +1099,21 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
     }
     if (m_profile->drum_state.blue_cymbal && !m_profile->drum_state.blue_pad)
     {
-        report->blueVelocity = (32768 - (m_profile->drum_state.blue_cymbal >> 1));
+        report->blueVelocity = clamp(32768 - (m_profile->drum_state.blue_cymbal >> 1), 0, INT16_MAX);
         report->x = true;
         report->cymbalFlag = true;
         report->dpadDown = true;
     }
     if (m_profile->drum_state.blue_pad && !m_profile->drum_state.blue_cymbal)
     {
-        report->blueVelocity = (32768 - (m_profile->drum_state.blue_pad >> 1));
+        report->blueVelocity = clamp(32768 - (m_profile->drum_state.blue_pad >> 1), 0, INT16_MAX);
         report->x = true;
         report->padFlag = true;
     }
     if (m_profile->drum_state.blue_pad && m_profile->drum_state.blue_cymbal && !m_profile->drum_state.red_pad)
     {
-        report->redVelocity = (32768 - (m_profile->drum_state.blue_cymbal >> 1));
-        report->blueVelocity = (32768 - (m_profile->drum_state.blue_pad >> 1));
+        report->redVelocity = clamp(32768 - (m_profile->drum_state.blue_cymbal >> 1), 0, INT16_MAX);
+        report->blueVelocity = clamp(32768 - (m_profile->drum_state.blue_pad >> 1), 0, INT16_MAX);
         report->x = true;
         report->padFlag = true;
         report->cymbalFlag = true;
@@ -1133,7 +1133,7 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
     }
     if (m_profile->drum_state.green_pad && m_profile->drum_state.green_cymbal && !m_profile->drum_state.red_pad)
     {
-        report->redVelocity = (32768 - (m_profile->drum_state.green_cymbal >> 1));
+        report->redVelocity = clamp(32768 - (m_profile->drum_state.green_cymbal >> 1), 0, INT16_MAX);
         report->greenVelocity = -(32768 - (m_profile->drum_state.green_pad >> 1));
         report->a = true;
         report->padFlag = true;
@@ -1141,7 +1141,7 @@ void RockBandDrumsAxisMapping::update_xinput(uint8_t *buf)
     }
     if (m_profile->drum_state.red_pad)
     {
-        report->redVelocity = (32768 - (m_profile->drum_state.red_pad >> 1));
+        report->redVelocity = clamp(32768 - (m_profile->drum_state.red_pad >> 1), 0, INT16_MAX);
         report->b = true;
         report->padFlag = true;
     }

@@ -26,6 +26,7 @@
 #include "managers/device_manager.hpp"
 #include "config/device_factory.hpp"
 #include "devices/bluetooth.hpp"
+#include "protocols/ble_midi.hpp"
 
 // ---------------------------------------------------------------------------
 // Per-Connection State
@@ -46,14 +47,6 @@ static const uint8_t ghl_ios_char_uuid[16] = {
 static const uint8_t steam_ble_char_uuid[16] = {
     0x10, 0x0F, 0x6C, 0x34, 0x17, 0x35, 0x43, 0x13,
     0xB4, 0x02, 0x38, 0x56, 0x71, 0x31, 0xE5, 0xF3};
-// BLE MIDI I/O characteristic UUID: 7772e5db-3868-4112-a1a9-f2669d106bf3
-static const uint8_t midi_char_uuid[16] = {
-    0x77, 0x72, 0xE5, 0xDB, 0x38, 0x68, 0x41, 0x12,
-    0xA1, 0xA9, 0xF2, 0x66, 0x9D, 0x10, 0x6B, 0xF3};
-// BLE MIDI service UUID 03b80e5a-ede8-4b33-a751-6ce34ec4c700, little-endian as it is advertised
-static const uint8_t midi_service_uuid_le[16] = {
-    0x00, 0xC7, 0xC4, 0x4E, 0xE3, 0x6C, 0x51, 0xA7,
-    0x33, 0x4B, 0xE8, 0xED, 0x5A, 0x0E, 0xB8, 0x03};
 #define MAX_BLE_CONNECTIONS 4
 #ifndef MAX_BLE_RECONNECT_CANDIDATES
 #define MAX_BLE_RECONNECT_CANDIDATES 8 // match/exceed NVM_NUM_DEVICE_DB_ENTRIES
@@ -941,7 +934,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                         {
                             is_hid = true;
                         }
-                        if (memcmp(data + i, midi_service_uuid_le, 16) == 0)
+                        if (memcmp(data + i, ble_midi_service_uuid_le, 16) == 0)
                         {
                             is_hid = true;
                             is_midi = true;
@@ -1192,7 +1185,7 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel,
                     handle,
                     0x0001,
                     0xffff,
-                    midi_char_uuid);
+                    ble_midi_char_uuid);
             }
             else if (ctx->is_steam_controller)
             {
@@ -1273,7 +1266,7 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel,
                 handle,
                 0x0001,
                 0xffff,
-                midi_char_uuid);
+                ble_midi_char_uuid);
         }
         else if (ctx->is_steam_controller)
         {

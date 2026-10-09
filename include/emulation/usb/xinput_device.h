@@ -53,6 +53,8 @@ public:
     static uint8_t lastIntfInput;
     static uint32_t last_caps_query_time;
     static volatile uint32_t report_generation;
+    // Cleared when the device stack starts, set once the host configures us
+    static bool mounted_since_init;
 
 private:
     XInputGamepad_Data_t m_initial_report;

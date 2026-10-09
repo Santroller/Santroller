@@ -1,4 +1,5 @@
 #include "mappings/mapping.hpp"
+#include "mappings/calibration.hpp"
 #include "tusb.h"
 #include "emulation/usb/usb_descriptors.h"
 #include "events.pb.h"
@@ -26,79 +27,7 @@ uint16_t Mapping::sample_ui_event()
 
 uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, float center, bool trigger)
 {
-    if (trigger)
-    {
-        auto inverted = min > max;
-        if (inverted)
-        {
-            min -= deadzone;
-            if (val > min)
-                return 0;
-            if (val < max)
-                val = max;
-        }
-        else
-        {
-            min += deadzone;
-            if (val < min)
-                return 0;
-            if (val > max)
-                val = max;
-        }
-        val = map(val, min, max, 0, UINT16_MAX);
-    }
-    else
-    {
-
-        auto inverted = min > max;
-        if (inverted)
-        {
-            if (val < center)
-            {
-                if (center - val < deadzone)
-                {
-                    return UINT16_MAX / 2;
-                }
-
-                val = map(val, center - deadzone, max, UINT16_MAX / 2, UINT16_MAX);
-            }
-            else
-            {
-                if (val - center < deadzone)
-                {
-                    return UINT16_MAX / 2;
-                }
-
-                val = map(val, min, center + deadzone, 0, UINT16_MAX / 2);
-            }
-        }
-        else
-        {
-            if (val < center)
-            {
-                if (center - val < deadzone)
-                {
-                    return UINT16_MAX / 2;
-                }
-
-                val = map(val, min, center - deadzone, 0, UINT16_MAX / 2);
-            }
-            else
-            {
-                if (val - center < deadzone)
-                {
-                    return UINT16_MAX / 2;
-                }
-
-                val = map(val, center + deadzone, max, UINT16_MAX / 2, UINT16_MAX);
-            }
-        }
-    }
-    if (val > UINT16_MAX)
-        val = UINT16_MAX;
-    if (val < 0)
-        val = 0;
-    return val;
+    return calibrate_axis(val, max, min, deadzone, center, trigger);
 }
 
 void ButtonMapping::sample(bool full_poll, bool send_events)
@@ -122,23 +51,7 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
     {
         auto val = event_driven ? event_value : m_input->tick_analog();
         trigger_value = val;
-        calcVal = false;
-        if (m_mapping.trigger == AnalogToDigitalTriggerType_JoyHigh)
-        {
-            calcVal = val > m_mapping.triggerValue;
-        }
-        else if (m_mapping.trigger == AnalogToDigitalTriggerType_JoyLow)
-        {
-            calcVal = val < m_mapping.triggerValue;
-        }
-        else if (m_mapping.trigger == AnalogToDigitalTriggerType_Exact)
-        {
-            calcVal = val == m_mapping.triggerValue;
-        }
-        else if (m_mapping.trigger == AnalogToDigitalTriggerType_Range)
-        {
-            calcVal = val > m_mapping.triggerValue && val < m_mapping.maxTriggerValue;
-        }
+        calcVal = analog_trigger_pressed(m_mapping.trigger, val, m_mapping.triggerValue, m_mapping.maxTriggerValue);
         if (!event_driven && m_mapping.inverted) {
             calcVal = !calcVal;
         }
@@ -325,8 +238,17 @@ void AxisMapping::update(bool full_poll, bool send_events)
     {
         val = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
     }
-    // A half axis rests at the axis centre, so it can leave the axis to the other half's mapping
-    const uint32_t rest = m_mapping.section != AxisSectionFull ? UINT16_MAX / 2 : (uint32_t)m_mapping.center;
+    // A half axis rests at the axis centre, so it can leave the axis to the other half's mapping.
+    // A calibrated axis rests where calibrate leaves it, whatever its raw centre is.
+    uint32_t rest = (uint32_t)m_mapping.center;
+    if (m_mapping.section != AxisSectionFull || (!m_mapping.has_pressed && !m_trigger))
+    {
+        rest = UINT16_MAX / 2;
+    }
+    else if (!m_mapping.has_pressed)
+    {
+        rest = 0;
+    }
 
     bool physical_pressed = (val != rest);
     if (m_waiting_for_release)
@@ -347,7 +269,7 @@ void AxisMapping::update(bool full_poll, bool send_events)
     if (val != rest)
     {
         m_last_poll = time_us_64();
-        if ((!m_mapping.has_peakBased && !m_mapping.peakBased) || val > m_calibrated_value)
+        if (!(m_mapping.has_peakBased && m_mapping.peakBased) || val > m_calibrated_value)
         {
             m_calibrated_value = val;
         }

@@ -39,6 +39,8 @@ uint8_t const desc_hid_report_config[] =
         HID_COLLECTION(HID_COLLECTION_APPLICATION),
         TUD_HID_REPORT_DESC_GENERIC_INFEATURE(63, HID_REPORT_ID(ReportIdConfig)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(63, HID_REPORT_ID(ReportIdConfigInfo)),
+        // the saved (rather than running) config info, answered by the same copy_config_info
+        TUD_HID_REPORT_DESC_GENERIC_FEATURE(63, HID_REPORT_ID(ReportIdConfigInfoSaved)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(1, HID_REPORT_ID(ReportIdLoaded)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(63, HID_REPORT_ID(ReportIdCommand)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(1, HID_REPORT_ID(ReportIdKeepalive)),
@@ -717,15 +719,19 @@ uint16_t HIDConfigDevice::handle_get_report(uint8_t report_id, hid_report_type_t
   }
   case ReportId::ReportIdGetVersion:
   {
+    // the id, then the declared sizeof(version) + 1 bytes: the string, NUL and one zero byte
     buffer[0] = report_id;
     memcpy(buffer + 1, version, sizeof(version));
-    return sizeof(version) + 1;
+    buffer[1 + sizeof(version)] = 0;
+    return sizeof(version) + 2;
   }
   case ReportId::ReportIdGetType:
   {
+    // the id, then the declared sizeof(type) + 1 bytes
     buffer[0] = report_id;
     memcpy(buffer + 1, type, sizeof(type));
-    return sizeof(type) + 1;
+    buffer[1 + sizeof(type)] = 0;
+    return sizeof(type) + 2;
   }
   case ReportId::ReportIdGetActiveProfiles:
   {

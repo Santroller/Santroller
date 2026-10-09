@@ -403,12 +403,11 @@ void BTGamepadDevice::process_keyboard_mouse(bool full_poll, bool send_events)
     }
     // boot protocol only has a keyboard and mouse, so media keys need report protocol
     ConsumerReport consumer;
-    if (protocol_mode && m_reports.consumer_pending(consumer))
+    // one report per pass, but a media key report that can't go out doesn't hold the mouse back
+    if (protocol_mode && m_reports.consumer_pending(consumer) &&
+        hids_device_send_input_report_for_id(con_handle, CONSUMER_REPORT_ID, (const uint8_t *)&consumer, sizeof(consumer)) == ERROR_CODE_SUCCESS)
     {
-        if (hids_device_send_input_report_for_id(con_handle, CONSUMER_REPORT_ID, (const uint8_t *)&consumer, sizeof(consumer)) == ERROR_CODE_SUCCESS)
-        {
-            m_reports.consumer_sent(consumer);
-        }
+        m_reports.consumer_sent(consumer);
         return;
     }
     MouseReport mouse;

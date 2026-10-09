@@ -502,10 +502,10 @@ void GuitarHeroGuitarAxisMapping::update_switch(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibrated_value >> 8;
+        report->whammy = m_calibrated_value > 60000;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->tilt = m_calibrated_value > 60000;
         break;
     default:
         break;
@@ -567,7 +567,7 @@ void GuitarHeroGuitarAxisMapping::update_ps4(uint8_t *buf)
         report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = abs(int32_t(m_calibrated_value - 32768)) >> 7;
+        report->tilt = clamp(abs(int32_t(m_calibrated_value) - 32768) >> 7, 0, UINT8_MAX);
         break;
     default:
         break;
@@ -586,7 +586,7 @@ void GuitarHeroGuitarAxisMapping::update_ps5(uint8_t *buf)
         report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = abs(int32_t(m_calibrated_value - 32768)) >> 7;
+        report->tilt = clamp(abs(int32_t(m_calibrated_value) - 32768) >> 7, 0, UINT8_MAX);
         break;
     default:
         break;
@@ -803,27 +803,27 @@ void GuitarHeroDrumsAxisMapping::update_ogxbox(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghDrumAxis)
     {
     case GuitarHeroDrums_RedPad:
-        report->redVelocity = m_calibrated_value - 32768;
+        report->redVelocity = m_calibrated_value >> 9;
         report->b = true;
         break;
     case GuitarHeroDrums_YellowPad:
-        report->yellowVelocity = m_calibrated_value - 32768;
+        report->yellowVelocity = m_calibrated_value >> 9;
         report->y = true;
         break;
     case GuitarHeroDrums_BluePad:
-        report->blueVelocity = m_calibrated_value - 32768;
+        report->blueVelocity = m_calibrated_value >> 9;
         report->x = true;
         break;
     case GuitarHeroDrums_OrangePad:
-        report->orangeVelocity = m_calibrated_value - 32768;
+        report->orangeVelocity = m_calibrated_value >> 9;
         report->rightShoulder = true;
         break;
     case GuitarHeroDrums_GreenPad:
-        report->greenVelocity = m_calibrated_value - 32768;
+        report->greenVelocity = m_calibrated_value >> 9;
         report->a = true;
         break;
     case GuitarHeroDrums_KickPedal:
-        report->kickVelocity = m_calibrated_value - 32768;
+        report->kickVelocity = m_calibrated_value >> 9;
         report->leftShoulder = true;
         break;
     }
@@ -993,11 +993,17 @@ void LiveGuitarButtonMapping::update_ps3(uint8_t *buf)
         break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_last_value;
-        report->strumBar = 0;
+        if (m_last_value)
+        {
+            report->strumBar = 0;
+        }
         break;
     case GuitarHeroLiveGuitar_StrumDown:
         report->dpadDown |= m_last_value;
-        report->strumBar = 0xFF;
+        if (m_last_value)
+        {
+            report->strumBar = 0xFF;
+        }
         break;
     default:
         break;
@@ -1029,11 +1035,17 @@ void LiveGuitarButtonMapping::update_ps4(uint8_t *buf)
         break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_last_value;
-        report->strumBar = 0;
+        if (m_last_value)
+        {
+            report->strumBar = 0;
+        }
         break;
     case GuitarHeroLiveGuitar_StrumDown:
         report->dpadDown |= m_last_value;
-        report->strumBar = 0xFF;
+        if (m_last_value)
+        {
+            report->strumBar = 0xFF;
+        }
         break;
     default:
         break;
@@ -1065,11 +1077,17 @@ void LiveGuitarButtonMapping::update_ps5(uint8_t *buf)
         break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_last_value;
-        report->strumBar = 0;
+        if (m_last_value)
+        {
+            report->strumBar = 0;
+        }
         break;
     case GuitarHeroLiveGuitar_StrumDown:
         report->dpadDown |= m_last_value;
-        report->strumBar = 0xFF;
+        if (m_last_value)
+        {
+            report->strumBar = 0xFF;
+        }
         break;
     default:
         break;
@@ -1101,11 +1119,17 @@ void LiveGuitarButtonMapping::update_xinput(uint8_t *buf)
         break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_last_value;
-        report->strumBar = INT16_MAX;
+        if (m_last_value)
+        {
+            report->strumBar = INT16_MAX;
+        }
         break;
     case GuitarHeroLiveGuitar_StrumDown:
         report->dpadDown |= m_last_value;
-        report->strumBar = INT16_MIN;
+        if (m_last_value)
+        {
+            report->strumBar = INT16_MIN;
+        }
         break;
     default:
         break;
@@ -1136,11 +1160,17 @@ void LiveGuitarButtonMapping::update_ogxbox(uint8_t *buf)
         break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_last_value;
-        report->strumBar = INT16_MAX;
+        if (m_last_value)
+        {
+            report->strumBar = INT16_MAX;
+        }
         break;
     case GuitarHeroLiveGuitar_StrumDown:
         report->dpadDown |= m_last_value;
-        report->strumBar = INT16_MIN;
+        if (m_last_value)
+        {
+            report->strumBar = INT16_MIN;
+        }
         break;
     default:
         break;
@@ -1172,11 +1202,17 @@ void LiveGuitarButtonMapping::update_xboxone(uint8_t *buf)
         break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_last_value;
-        report->strumBar = 0;
+        if (m_last_value)
+        {
+            report->strumBar = 0;
+        }
         break;
     case GuitarHeroLiveGuitar_StrumDown:
         report->dpadDown |= m_last_value;
-        report->strumBar = 0xFF;
+        if (m_last_value)
+        {
+            report->strumBar = 0xFF;
+        }
         break;
     default:
         break;
@@ -1309,10 +1345,10 @@ void LiveGuitarAxisMapping::update_xboxone(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghlAxis)
     {
     case GuitarHeroLiveGuitar_Whammy:
-        report->whammy = m_last_value >> 8;
+        report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroLiveGuitar_Tilt:
-        report->tilt = m_last_value >> 2;
+        report->tilt = m_calibrated_value >> 8;
         break;
     default:
         break;

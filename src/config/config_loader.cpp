@@ -1,5 +1,6 @@
 #include "config/config_loader.hpp"
 
+#include "config/aux_config.hpp"
 #include "config/device_factory.hpp"
 #include "devices/usb.hpp"
 #include "emulation/usb/gh_arcade_device.h"
@@ -18,10 +19,6 @@
 
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg);
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg);
-bool decode_cycle_input_states(pb_istream_t *stream, const pb_field_t *field, void **arg);
-bool decode_toggle_input_states(pb_istream_t *stream, const pb_field_t *field, void **arg);
-bool decode_bluetooth_states(pb_istream_t *stream, const pb_field_t *field, void **arg);
-bool decode_bluetooth_tlv_entries(pb_istream_t *stream, const pb_field_t *field, void **arg);
 
 bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
 {

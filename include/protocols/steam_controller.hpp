@@ -78,7 +78,7 @@ struct SteamControllerState {
 #define STEAM_BTN_GRIP_L        0x00008000
 #define STEAM_BTN_GRIP_R        0x00010000
 #define STEAM_BTN_STICK_CLICK   0x00400000
-#define STEAM_BTN_PAD_CLICK     0x00800000
+#define STEAM_BTN_PAD_CLICK     0x00040000 // right pad clicked
 
 static inline bool steam_tick_digital(const SteamControllerState &s, proto_Output &type)
 {
@@ -152,6 +152,10 @@ static inline bool steam_parse_ble_report(const uint8_t *report, uint16_t len, S
             idx += 2;
         }
     }
+    if (flags & 0x0040) // more buttons, not used
+    {
+        idx += 3;
+    }
     if (flags & 0x0080) // THUMBSTICK
     {
         if (idx + 4 <= len)
@@ -184,6 +188,8 @@ static inline bool steam_parse_usb_report(const uint8_t *buf, uint16_t len, Stea
     // Wired USB reports from Valve Steam Controller (0x01 0x00 0x01 header)
     if (buf[0] == 0x01 && buf[1] == 0x00 && buf[2] == 0x01)
     {
+        // the right pad ends at offset 23
+        if (len < 24) return false;
         // Buttons 3 bytes at offset 8..10
         out.buttons = buf[8] | (buf[9] << 8) | (buf[10] << 16);
         out.trigger_l = buf[11];

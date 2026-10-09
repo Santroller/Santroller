@@ -7,27 +7,9 @@
 #include "host/usbh_pvt.h"
 #include "class/midi/midi.h"
 #include "protocols/controller_reports.hpp"
+#include "protocols/midi_input.hpp"
 #include <memory>
-
-// Where a 14 bit MIDI pitch wheel rests
-#define MIDI_PITCH_BEND_CENTER 0x2000
 #include <vector>
-
-#define MIDI_CONTROL_COMMAND_MOD_WHEEL 1
-#define MIDI_CONTROL_COMMAND_SUSTAIN_PEDAL 64
-#define MIDI_CHANNEL_PROGUITAR_SQUIER 16
-#define MIDI_CHANNEL_PROGUITAR_MUSTANG 17
-#define MIDI_SYSEX_ID_PROGUITAR_SQUIER 0x08
-#define MIDI_SYSEX_ID_PROGUITAR_MUSTANG 0x0A
-#define USB_PACKET_SIZE 4
-typedef struct
-{
-    uint status;
-    uint pos;
-    uint actual_size;
-    uint8_t data[32];
-    bool sysex_in_progress;
-} cable_state_t;
 
 struct MidiBufferConfig
 {
@@ -82,12 +64,12 @@ public:
     uint16_t read_midi_pitch_bend(uint8_t channel);
     bool read_pro_guitar_button(proto_ProGuitarMidiButtonType button);
     uint16_t read_pro_guitar_axis(proto_ProGuitarAxisType axis);
-    bool has_midi_channel(uint8_t channel) { return seenChannels[channel]; }
+    bool has_midi_channel(uint8_t channel) { return m_midi.has_midi_channel(channel); }
     bool has_any_midi_channel() const
     {
         for (int i = 0; i < 18; i++)
         {
-            if (seenChannels[i]) return true;
+            if (m_midi.has_midi_channel(i)) return true;
         }
         return false;
     }
@@ -98,7 +80,7 @@ public:
 protected:
     virtual bool mark_channel_seen(uint8_t channel);
     // Whether data arrives as 4 byte USB MIDI packets rather than a plain MIDI byte stream
-    void set_usb_packets(bool usb_packets) { usbPackets = usb_packets; }
+    void set_usb_packets(bool usb_packets) { m_midi.set_usb_packets(usb_packets); }
 
 private:
     // Endpoint stream
@@ -108,32 +90,9 @@ private:
         tu_edpt_stream_t rx;
     } ep_stream;
 
-    static constexpr size_t MIDI_NOTE_EVENT_CAPACITY = 32;
-    struct MidiNoteEvent
-    {
-        uint16_t sequence;
-        uint8_t channel;
-        uint8_t note;
-        uint8_t velocity;
-    };
-    MidiNoteEvent midiNoteEvents[MIDI_NOTE_EVENT_CAPACITY];
-    uint8_t midiNoteEventHead = 0;
-    uint8_t midiNoteEventCount = 0;
-    uint16_t midiNoteEventSequence = 0;
-    uint16_t midiPitchWheel[16];
-    uint8_t *midiControlChanges[16] = {};
-    uint8_t *midiNoteVelocity[16] = {};
-    uint8_t midiFrets[6];
-    uint8_t midiStringVelocities[6];
-    bool seenChannels[18];
-    ProGuitar_Sysex_Buttons_t midiButtons;
+    // Parser and state for everything received
+    MidiInput m_midi;
     bool usbBased;
-    bool usbPackets;
-    cable_state_t *cable_status = nullptr;
-    uint8_t m_max_cables = 1;
-    uint8_t usb_pos = 0;
-
-    void push_midi_note_event(uint8_t channel, uint8_t note, uint8_t velocity);
 };
 
 class ProGuitarMidiDevice : public Device

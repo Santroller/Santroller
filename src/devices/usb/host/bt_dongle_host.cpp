@@ -9,6 +9,7 @@
 
 #define REALTEK_VID 0x0bda
 #define INTEL_VID 0x8087
+#define BROADCOM_VID 0x0a5c
 
 // only one adapter is used at a time
 static BtDongleHost *s_dongle = nullptr;
@@ -39,24 +40,33 @@ BtDongleHost::~BtDongleHost()
 std::shared_ptr<UsbHostInterface> BtDongleHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
     // Interface 0 has the events and ACL data, interface 1 is SCO audio, which isn't used
-    TU_VERIFY(desc_itf->bInterfaceClass == TUSB_CLASS_WIRELESS_CONTROLLER &&
-                  desc_itf->bInterfaceSubClass == BT_SUBCLASS_RF &&
-                  desc_itf->bInterfaceProtocol == BT_PROTOCOL_PRIMARY_CONTROLLER &&
+    uint8_t dev_addr = list->dev_addr();
+    uint16_t vid = 0, pid = 0;
+    tuh_vid_pid_get(dev_addr, &vid, &pid);
+    bool standard_interface = desc_itf->bInterfaceClass == TUSB_CLASS_WIRELESS_CONTROLLER &&
+                              desc_itf->bInterfaceSubClass == BT_SUBCLASS_RF &&
+                              desc_itf->bInterfaceProtocol == BT_PROTOCOL_PRIMARY_CONTROLLER;
+    bool broadcom_interface = vid == BROADCOM_VID &&
+                              desc_itf->bInterfaceClass == TUSB_CLASS_VENDOR_SPECIFIC &&
+                              desc_itf->bInterfaceSubClass == BT_SUBCLASS_RF &&
+                              desc_itf->bInterfaceProtocol == BT_PROTOCOL_PRIMARY_CONTROLLER;
+    TU_VERIFY((standard_interface || broadcom_interface) &&
                   desc_itf->bInterfaceNumber == 0 && desc_itf->bAlternateSetting == 0,
               nullptr);
-    uint8_t dev_addr = list->dev_addr();
     if (s_dongle)
     {
         printf("BT dongle: already using a bluetooth adapter, ignoring the one at %d\r\n", dev_addr);
         return nullptr;
     }
-    uint16_t vid = 0, pid = 0;
-    tuh_vid_pid_get(dev_addr, &vid, &pid);
     printf("BT dongle: found bluetooth adapter %04x:%04x\r\n", vid, pid);
     if (vid == REALTEK_VID || vid == INTEL_VID)
     {
         // these need firmware uploaded before they will work, which isn't supported yet
-        printf("BT dongle: Realtek and Intel adapters need firmware we don't load yet, this adapter probably won't work. CSR and Broadcom adapters do.\r\n");
+        printf("BT dongle: Realtek and Intel adapters need firmware we don't load yet, this adapter probably won't work.\r\n");
+    }
+    else if (broadcom_interface)
+    {
+        printf("BT dongle: trying Broadcom HCI initialization without a firmware patch\r\n");
     }
 
     auto intf = std::make_shared<BtDongleHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);

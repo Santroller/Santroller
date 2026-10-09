@@ -243,10 +243,20 @@ void BTGamepadDevice::initialize()
     sm_set_io_capabilities(IO_CAPABILITY_NO_INPUT_NO_OUTPUT);
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_MITM_PROTECTION | SM_AUTHREQ_BONDING);
 
-    // setup ATT server
+    // setup ATT server. Each mode has its own database (bt.gatt, bt_keyboard.gatt, bt_config.gatt) whose HID
+    // service only references the reports in that mode's report map; they differ in structure, so their
+    // GATT database hashes differ too and a bonded host re-discovers when the mode changes.
     uint16_t config_start = ATT_SERVICE_ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE_02_START_HANDLE;
     uint16_t config_end = ATT_SERVICE_ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE_02_END_HANDLE;
-    const uint8_t *db = m_config_only ? bt_config_only_profile(&config_start, &config_end) : profile_data;
+    const uint8_t *db = profile_data;
+    if (m_config_only)
+    {
+        db = bt_config_only_profile(&config_start, &config_end);
+    }
+    else if (subtype == SubType_KeyboardMouse)
+    {
+        db = bt_keyboard_profile(&config_start, &config_end);
+    }
     att_server_init(db, NULL, NULL);
     att_server_register_packet_handler(packet_handler);
 

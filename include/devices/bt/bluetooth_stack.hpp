@@ -32,8 +32,7 @@ public:
     bool initialized() const;
     void tick();
     bool is_powered() const { return m_powered; }
-    // True when there is no CYW43 (e.g. a Pico instead of a Pico W) and a USB bluetooth adapter on the
-    // host port is used instead
+    // True when the CYW43 HCI transport is unavailable and a USB adapter on the host port is used.
     bool uses_usb_dongle() const { return m_usb_dongle; }
     // The controller's BD_ADDR (most significant byte first), once the stack is up and
     // running. Returns false if bluetooth isn't enabled or isn't ready yet.

@@ -66,19 +66,38 @@ bool BluetoothStack::begin()
         return true;
     }
 
-#ifdef BT_FORCE_USB_DONGLE
-    if (false)
-#else
-    if (cyw43_arch_init() == 0)
-#endif
+    bool use_cyw43 = false;
+#ifndef BT_FORCE_USB_DONGLE
+    int cyw43_err = cyw43_arch_init();
+    if (cyw43_err == 0)
     {
         s_context = cyw43_arch_async_context();
+        {
+            BtStackLock lock;
+            cyw43_err = hci_power_control(HCI_POWER_ON);
+        }
+        if (cyw43_err == 0)
+        {
+            use_cyw43 = true;
+            m_powered = true;
+        }
+        else
+        {
+            printf("BT: CYW43 HCI open failed (%d), falling back to USB bluetooth adapter\r\n", cyw43_err);
+            cyw43_arch_deinit();
+            s_context = nullptr;
+        }
     }
     else
     {
-        // No CYW43, so use a USB bluetooth adapter on the host port instead. BTstack gets its own
+        printf("BT: CYW43 initialization failed (%d)\r\n", cyw43_err);
+    }
+#endif
+    if (!use_cyw43)
+    {
+        // Use the USB adapter when the CYW43 HCI transport is unavailable. BTstack gets its own
         // context, polled from the main loop like TinyUSB, so the two never run at the same time.
-        printf("BT: no CYW43, using a USB bluetooth adapter instead\r\n");
+        printf("BT: using a USB bluetooth adapter\r\n");
         if (!async_context_poll_init_with_defaults(&s_poll_context))
         {
             printf("BT: couldn't create the bluetooth context\r\n");

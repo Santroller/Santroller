@@ -1227,96 +1227,99 @@
         HID_FEATURE(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                     \
         HID_COLLECTION_END
 
-#define TUD_HID_REPORT_SWITCH()                                                  \
-    HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                                      \
-        HID_LOGICAL_MIN(0x00),                                                   \
-        HID_USAGE(HID_USAGE_DESKTOP_JOYSTICK),                                   \
-        HID_COLLECTION(HID_COLLECTION_APPLICATION),                              \
-        HID_REPORT_ID(ReportSwitchOutput30)                                      \
-            HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                              \
-        HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),                                   \
-        HID_USAGE_MIN(0x01),                                                     \
-        HID_USAGE_MAX(0x0A),                                                     \
-        HID_LOGICAL_MIN(0),                                                      \
-        HID_LOGICAL_MAX(1),                                                      \
-        HID_REPORT_SIZE(1),                                                      \
-        HID_REPORT_COUNT(10),                                                    \
-        HID_UNIT_EXPONENT(0),                                                    \
-        HID_UNIT(0),                                                             \
-        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
-        HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),                                   \
-        HID_USAGE_MIN(0x0B),                                                     \
-        HID_USAGE_MAX(0x0E),                                                     \
-        HID_LOGICAL_MIN(0),                                                      \
-        HID_LOGICAL_MAX(1),                                                      \
-        HID_REPORT_SIZE(1),                                                      \
-        HID_REPORT_COUNT(4),                                                     \
-        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
-        HID_REPORT_SIZE(1),                                                      \
-        HID_REPORT_COUNT(2),                                                     \
-        HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                   \
-        HID_USAGE_N(0x010001, 3),                                                \
-        HID_COLLECTION(HID_COLLECTION_PHYSICAL),                                 \
-        HID_USAGE_N(0x010030, 3),                                                \
-        HID_USAGE_N(0x010031, 3),                                                \
-        HID_USAGE_N(0x010032, 3),                                                \
-        HID_USAGE_N(0x010035, 3),                                                \
-        HID_LOGICAL_MIN(0),                                                      \
-        HID_LOGICAL_MAX_N(65534, 3),                                             \
-        HID_REPORT_SIZE(16),                                                     \
-        HID_REPORT_COUNT(4),                                                     \
-        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
-        HID_COLLECTION_END,                                                      \
-        HID_USAGE_N(0x010039, 3),                                                \
-        HID_LOGICAL_MIN(0),                                                      \
-        HID_LOGICAL_MAX(7),                                                      \
-        HID_PHYSICAL_MAX_N(315, 2),                                              \
-        HID_UNIT(0x14), /*Unit (System: English Rotation, Length: Centimeter) */ \
-        HID_REPORT_SIZE(4),                                                      \
-        HID_REPORT_COUNT(1),                                                     \
-        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
-        HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),                                   \
-        HID_LOGICAL_MIN(0),                                                      \
-        HID_LOGICAL_MAX(1),                                                      \
-        HID_USAGE_MIN(0x0F),                                                     \
-        HID_USAGE_MAX(0x12),                                                     \
-        HID_REPORT_SIZE(1),                                                      \
-        HID_REPORT_COUNT(4),                                                     \
-        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
-        /* the rest of the 64 byte 0x30 report, as Input (Constant) like a real   \
-           Pro Controller (75 08 95 34 81 03) */                                  \
-        HID_REPORT_SIZE(8),                                                      \
-        HID_REPORT_COUNT(52),                                                    \
-        HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                   \
-        HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),                              \
-        HID_REPORT_ID(ReportSwitchOutput21)                                      \
-            HID_USAGE(0x01),                                                     \
-        HID_REPORT_SIZE(8),                                                      \
-        HID_REPORT_COUNT(63),                                                    \
-        HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                   \
-        HID_REPORT_ID(ReportSwitchInput)                                         \
-            HID_USAGE(0x02),                                                     \
-        HID_REPORT_SIZE(8),                                                      \
-        HID_REPORT_COUNT(63),                                                    \
-        HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                   \
-        HID_REPORT_ID(ReportSwitchFeature)                                       \
-            HID_USAGE(0x03),                                                     \
-        HID_REPORT_SIZE(8),                                                      \
-        HID_REPORT_COUNT(63),                                                    \
-        HID_OUTPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                  \
-        HID_REPORT_ID(ReportSwitchOutput10)                                      \
-            HID_USAGE(0x04),                                                     \
-        HID_REPORT_SIZE(8),                                                      \
-        HID_REPORT_COUNT(63),                                                    \
-        HID_OUTPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                  \
-        HID_REPORT_ID(ReportSwitchConfiguration)                                 \
-            HID_USAGE(0x05),                                                     \
-        HID_REPORT_SIZE(8),                                                      \
-        HID_REPORT_COUNT(63),                                                    \
-        HID_OUTPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                  \
-        HID_REPORT_ID(ReportSwitchOutput82)                                      \
-            HID_USAGE(0x06),                                                     \
-        HID_REPORT_SIZE(8),                                                      \
-        HID_REPORT_COUNT(63),                                                    \
-        HID_OUTPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                  \
+// The Pro Controller's descriptor, item for item the one dumped from a real HAC-013 Pro Controller
+// (DJm00n/ControllersInfo switchpro_hid_report_descriptor.txt; GP2040-CE uses the same bytes). Like the real
+// one, report 0x30's fields don't describe the standard full mode report actually sent.
+#define TUD_HID_REPORT_SWITCH()                                                   \
+    HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                                       \
+        HID_LOGICAL_MIN(0x00),                                                    \
+        HID_USAGE(HID_USAGE_DESKTOP_JOYSTICK),                                    \
+        HID_COLLECTION(HID_COLLECTION_APPLICATION),                               \
+        HID_REPORT_ID(ReportSwitchOutput30)                                       \
+        HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                                   \
+        HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),                                    \
+        HID_USAGE_MIN(0x01),                                                      \
+        HID_USAGE_MAX(0x0A),                                                      \
+        HID_LOGICAL_MIN(0),                                                       \
+        HID_LOGICAL_MAX(1),                                                       \
+        HID_REPORT_SIZE(1),                                                       \
+        HID_REPORT_COUNT(10),                                                     \
+        HID_UNIT_EXPONENT(0),                                                     \
+        HID_UNIT(0),                                                              \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                        \
+        HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),                                    \
+        HID_USAGE_MIN(0x0B),                                                      \
+        HID_USAGE_MAX(0x0E),                                                      \
+        HID_LOGICAL_MIN(0),                                                       \
+        HID_LOGICAL_MAX(1),                                                       \
+        HID_REPORT_SIZE(1),                                                       \
+        HID_REPORT_COUNT(4),                                                      \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                        \
+        HID_REPORT_SIZE(1),                                                       \
+        HID_REPORT_COUNT(2),                                                      \
+        HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                    \
+        HID_USAGE_N(0x010001, 3),                                                 \
+        HID_COLLECTION(HID_COLLECTION_PHYSICAL),                                  \
+        HID_USAGE_N(0x010030, 3),                                                 \
+        HID_USAGE_N(0x010031, 3),                                                 \
+        HID_USAGE_N(0x010032, 3),                                                 \
+        HID_USAGE_N(0x010035, 3),                                                 \
+        HID_LOGICAL_MIN(0),                                                       \
+        HID_LOGICAL_MAX_N(65535, 3),                                              \
+        HID_REPORT_SIZE(16),                                                      \
+        HID_REPORT_COUNT(4),                                                      \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                        \
+        HID_COLLECTION_END,                                                       \
+        HID_USAGE_N(0x010039, 3),                                                 \
+        HID_LOGICAL_MIN(0),                                                       \
+        HID_LOGICAL_MAX(7),                                                       \
+        HID_PHYSICAL_MIN(0),                                                      \
+        HID_PHYSICAL_MAX_N(315, 2),                                               \
+        HID_UNIT(0x14), /* Unit (System: English Rotation, Length: Centimeter) */ \
+        HID_REPORT_SIZE(4),                                                       \
+        HID_REPORT_COUNT(1),                                                      \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                        \
+        HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),                                    \
+        HID_USAGE_MIN(0x0F),                                                      \
+        HID_USAGE_MAX(0x12),                                                      \
+        HID_LOGICAL_MIN(0),                                                       \
+        HID_LOGICAL_MAX(1),                                                       \
+        HID_REPORT_SIZE(1),                                                       \
+        HID_REPORT_COUNT(4),                                                      \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                        \
+        /* the rest of the 64 byte 0x30 report is constant padding */             \
+        HID_REPORT_SIZE(8),                                                       \
+        HID_REPORT_COUNT(52),                                                     \
+        HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                    \
+        HID_USAGE_PAGE_N(HID_USAGE_PAGE_VENDOR, 2),                               \
+        HID_REPORT_ID(ReportSwitchOutput21)                                       \
+        HID_USAGE(0x01),                                                          \
+        HID_REPORT_SIZE(8),                                                       \
+        HID_REPORT_COUNT(63),                                                     \
+        HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                    \
+        HID_REPORT_ID(ReportSwitchInput)                                          \
+        HID_USAGE(0x02),                                                          \
+        HID_REPORT_SIZE(8),                                                       \
+        HID_REPORT_COUNT(63),                                                     \
+        HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                    \
+        HID_REPORT_ID(ReportSwitchFeature)                                        \
+        HID_USAGE(0x03),                                                          \
+        HID_REPORT_SIZE(8),                                                       \
+        HID_REPORT_COUNT(63),                                                     \
+        HID_OUTPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE | HID_VOLATILE),    \
+        HID_REPORT_ID(ReportSwitchOutput10)                                       \
+        HID_USAGE(0x04),                                                          \
+        HID_REPORT_SIZE(8),                                                       \
+        HID_REPORT_COUNT(63),                                                     \
+        HID_OUTPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE | HID_VOLATILE),    \
+        HID_REPORT_ID(ReportSwitchConfiguration)                                  \
+        HID_USAGE(0x05),                                                          \
+        HID_REPORT_SIZE(8),                                                       \
+        HID_REPORT_COUNT(63),                                                     \
+        HID_OUTPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE | HID_VOLATILE),    \
+        HID_REPORT_ID(ReportSwitchOutput82)                                       \
+        HID_USAGE(0x06),                                                          \
+        HID_REPORT_SIZE(8),                                                       \
+        HID_REPORT_COUNT(63),                                                     \
+        HID_OUTPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE | HID_VOLATILE),    \
         HID_COLLECTION_END

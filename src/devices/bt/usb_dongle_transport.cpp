@@ -11,9 +11,6 @@ static void (*s_packet_handler)(uint8_t packet_type, uint8_t *packet, uint16_t s
 static bool s_open = false;
 static bool s_restart = false;
 
-// set to 1 to log HCI commands and events sent to and from the adapter
-#define BT_DONGLE_DEBUG 0
-
 static void emit_event(const uint8_t *event, uint16_t len)
 {
     if (s_open && s_packet_handler)
@@ -55,12 +52,6 @@ bool usb_dongle_take_restart()
 void usb_dongle_packet_received(uint8_t packet_type, uint8_t *packet, uint16_t len)
 {
     BtStackLock lock;
-#if BT_DONGLE_DEBUG
-    if (packet_type == USB_DONGLE_EVENT_PACKET)
-    {
-        printf("BT dongle: event 0x%02x len %u %02x %02x %02x %02x\r\n", packet[0], len, packet[2], packet[3], packet[4], packet[5]);
-    }
-#endif
     if (s_open && s_packet_handler)
     {
         s_packet_handler(packet_type, packet, len);
@@ -104,12 +95,6 @@ static int transport_can_send_packet_now(uint8_t packet_type)
 static int transport_send_packet(uint8_t packet_type, uint8_t *packet, int size)
 {
     bool sent = usb_dongle_send(packet_type, packet, size);
-#if BT_DONGLE_DEBUG
-    if (packet_type == USB_DONGLE_COMMAND_PACKET)
-    {
-        printf("BT dongle: command 0x%04x %s\r\n", little_endian_read_16(packet, 0), sent ? "sent" : "FAILED");
-    }
-#endif
     return sent ? 0 : -1;
 }
 

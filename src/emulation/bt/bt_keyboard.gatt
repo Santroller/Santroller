@@ -7,20 +7,20 @@ CHARACTERISTIC, GAP_DEVICE_NAME, READ, "SantrollerBT"
 // add Device ID Service
 #import <device_information_service.gatt>
 
-// Gamepad GATT database (gamepad, dance pad and instrument profiles). Keyboard / mouse profiles use
-// bt_keyboard.gatt, and the config only database is bt_config.gatt: each mode's HID service only references
-// reports in that mode's report map. Regenerate the header after editing:
-//   lib/btstack/tool/compile_gatt.py src/emulation/bt/bt.gatt include/emulation/bt/bt_profile.h
+// Keyboard / mouse GATT database (KeyboardMouse profiles), the counterpart of bt.gatt for the gamepad.
+// Its HID service only references the reports in desc_hid_report_keyboard: hids.gatt's keyboard input and
+// lock light output (id 1), plus the mouse (2) and media keys (3). Regenerate the header after editing:
+//   lib/btstack/tool/compile_gatt.py src/emulation/bt/bt_keyboard.gatt include/emulation/bt/bt_keyboard_profile.h
 
 // add HID Service
 #import <hids.gatt>
 CHARACTERISTIC, ORG_BLUETOOTH_CHARACTERISTIC_REPORT, DYNAMIC | READ | WRITE | NOTIFY | ENCRYPTION_KEY_SIZE_16,
-// SantrollerCapabilities, type = Input (1)
-REPORT_REFERENCE, READ, 10, 1
+// Mouse (MOUSE_REPORT_ID), type = Input (1)
+REPORT_REFERENCE, READ, 2, 1
 
-CHARACTERISTIC, ORG_BLUETOOTH_CHARACTERISTIC_REPORT, DYNAMIC | READ | WRITE | WRITE_WITHOUT_RESPONSE | ENCRYPTION_KEY_SIZE_16,
-// SantrollerCapabilities, type = Output (2)
-REPORT_REFERENCE, READ, 10, 2
+CHARACTERISTIC, ORG_BLUETOOTH_CHARACTERISTIC_REPORT, DYNAMIC | READ | WRITE | NOTIFY | ENCRYPTION_KEY_SIZE_16,
+// Media keys (CONSUMER_REPORT_ID), type = Input (1)
+REPORT_REFERENCE, READ, 3, 1
 
 // Second HID service carrying only the vendor config collection, so the configurator can talk to the
 // device over bluetooth the same way it does over USB. Handled by bt_config_service, not hids_device.

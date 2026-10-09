@@ -20,7 +20,6 @@ add_executable(config_tests
 target_include_directories(config_tests BEFORE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/support/config)
 target_include_directories(config_tests PRIVATE
   ${SANTROLLER_ROOT}/lib/CRC32/src
-  ${SANTROLLER_ROOT}/lib/btstack/src
 )
 target_compile_definitions(config_tests PRIVATE
   SANTROLLER_CONFIG_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/config/fixtures"

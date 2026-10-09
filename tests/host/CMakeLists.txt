@@ -52,6 +52,7 @@ target_include_directories(santroller_proto PUBLIC ${PROTO_OUTPUT_DIR} ${SANTROL
 add_library(santroller_headers INTERFACE)
 target_include_directories(santroller_headers INTERFACE
   ${SANTROLLER_ROOT}/include
+  ${SANTROLLER_ROOT}/lib/btstack/src
   ${SANTROLLER_ROOT}/lib/hidparser
   ${SANTROLLER_ROOT}/lib/tinyusb/src
 )

@@ -13,7 +13,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      # Only TinyUSB is needed (for its portable HID / MIDI headers), not every submodule
+      # Only BTstack and TinyUSB are needed by host tests, not every submodule
+      - name: Checkout BTstack
+        run: git submodule update --init --depth 1 lib/btstack
       - name: Checkout TinyUSB
         run: git submodule update --init --depth 1 lib/tinyusb
       - name: Install build dependencies

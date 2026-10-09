@@ -19,6 +19,6 @@ public:
 
 private:
     std::unique_ptr<Input> m_input;
-    uint64_t m_last_pressed = 0;
+    uint32_t m_last_pressed = 0;
     uint64_t m_time = 0;
 };

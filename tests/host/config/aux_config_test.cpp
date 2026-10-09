@@ -28,6 +28,7 @@ protected:
         DeviceFactory::clear_cycle_states();
         DeviceFactory::clear_toggle_states();
         DeviceFactory::clear_bluetooth_pairing_states();
+        DeviceFactory::clear_arcade_side();
     }
 
     // Decode an aux block with the firmware's callbacks, like ConfigLoader::apply does
@@ -291,4 +292,16 @@ TEST_F(AuxConfigTest, ATruncatedToggleStateIsNotApplied)
     const std::vector<uint8_t> bytes = {0x12, 0x02, 0x08, 0x05};
     EXPECT_FALSE(decode(bytes));
     EXPECT_EQ(count_toggles(), 0u);
+}
+
+// The Guitar Hero Arcade cabinet side is saved with the rest, so the guitar remembers it across a restart
+TEST_F(AuxConfigTest, TheArcadeSideIsEncoded)
+{
+    DeviceFactory::set_arcade_side(2);
+    const auto bytes = encode_current_state();
+    proto_AuxConfigBlock block = proto_AuxConfigBlock_init_zero;
+    pb_istream_t stream = pb_istream_from_buffer(bytes.data(), bytes.size());
+    ASSERT_TRUE(pb_decode(&stream, proto_AuxConfigBlock_fields, &block));
+    EXPECT_TRUE(block.has_ghArcadeSide);
+    EXPECT_EQ(block.ghArcadeSide, 2u);
 }

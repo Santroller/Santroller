@@ -73,7 +73,7 @@ public:
 
 private:
     uint16_t writeLeb128(uint8_t *dest, uint16_t len, bool pad);
-    uint8_t readLeb128(const uint8_t *data, uint16_t *out);
+    uint8_t readLeb128(const uint8_t *data, const uint8_t *end, uint16_t *out);
     GipHeader_t header;          // On-going GIP header
     uint16_t actualDataReceived; // How much actual data have we received?
     uint16_t totalDataSent;      // How much actual data have we sent?

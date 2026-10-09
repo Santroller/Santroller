@@ -856,6 +856,21 @@ void update_aux_toggle(uint32_t id, bool state)
     config_storage.update_auxiliary(encode_auxiliary);
 }
 
+void update_aux_arcade_side(uint8_t side)
+{
+    if (DeviceFactory::get_arcade_side() == side)
+    {
+        return;
+    }
+    // the guitar has to report the new side straight away, even if saving it has to wait
+    DeviceFactory::set_arcade_side(side);
+    if (config_mgr.get_reinit_time())
+    {
+        return;
+    }
+    config_storage.update_auxiliary(encode_auxiliary);
+}
+
 void update_aux_bluetooth_pairing(uint32_t id, const uint8_t mac[6], const char *name, bool ble,
                                   SubType subtype, BtControllerType controller_type,
                                   uint16_t vid, uint16_t pid,

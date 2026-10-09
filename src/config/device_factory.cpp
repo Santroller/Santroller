@@ -42,6 +42,7 @@
 // Static storage for emulation devices and state
 static std::map<int32_t, int32_t> s_cycle_states;
 static std::map<int32_t, bool> s_toggle_states;
+static uint8_t s_arcade_side = 1;
 static std::map<int32_t, DeviceFactory::BluetoothPairingStateData> s_bluetooth_pairing_states;
 static std::vector<uint32_t> s_last_cycle_states;
 
@@ -78,6 +79,18 @@ void DeviceFactory::set_toggle_state(int32_t id, bool state) {
 bool DeviceFactory::get_toggle_state(int32_t id) {
     auto it = s_toggle_states.find(id);
     return it != s_toggle_states.end() ? it->second : false;
+}
+
+void DeviceFactory::set_arcade_side(uint8_t side) {
+    s_arcade_side = side;
+}
+
+uint8_t DeviceFactory::get_arcade_side() {
+    return s_arcade_side;
+}
+
+void DeviceFactory::clear_arcade_side() {
+    s_arcade_side = 1;
 }
 
 void DeviceFactory::clear_toggle_states() {

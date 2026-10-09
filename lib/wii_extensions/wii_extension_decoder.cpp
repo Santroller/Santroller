@@ -193,7 +193,7 @@ uint16_t WiiExtensionDecoder::read_axis(proto_WiiAxisType type) const
         switch (type)
         {
         case WiiAxisType::WiiAxisUDrawPenPressure:
-            return (mBuffer[3]);
+            return ((mBuffer[5] & 0x04) << 6) | mBuffer[3];
         case WiiAxisType::WiiAxisUDrawPenX:
             return ((mBuffer[2] & 0x0f) << 8) | mBuffer[0];
         case WiiAxisType::WiiAxisUDrawPenY:
@@ -236,15 +236,15 @@ uint16_t WiiExtensionDecoder::read_axis(proto_WiiAxisType type) const
         switch (type)
         {
         case WiiAxisType::WiiAxisNunchukAccelerationX:
-            return ((mBuffer[2] << 2) | ((mBuffer[5] & 0xC0) >> 6)) << 6;
+            return ((mBuffer[2] << 2) | ((mBuffer[5] & 0xC) >> 2)) << 6;
         case WiiAxisType::WiiAxisNunchukAccelerationY:
             return ((mBuffer[3] << 2) | ((mBuffer[5] & 0x30) >> 4)) << 6;
         case WiiAxisType::WiiAxisNunchukAccelerationZ:
-            return ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)) << 6;
+            return ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC0) >> 6)) << 6;
         case WiiAxisType::WiiAxisNunchukRotationPitch:
-            return (std::atan2(((mBuffer[3] << 2) | ((mBuffer[5] & 0x30) >> 4)) - 511.0, ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)) - 511.0) * 32767 / M_PI) + 32767;
+            return (std::atan2(((mBuffer[3] << 2) | ((mBuffer[5] & 0x30) >> 4)) - 511.0, ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC0) >> 6)) - 511.0) * 32767 / M_PI) + 32767;
         case WiiAxisType::WiiAxisNunchukRotationRoll:
-            return (-std::atan2(((mBuffer[2] << 2) | ((mBuffer[5] & 0xC0) >> 6)) - 511.0, ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC) >> 2)) - 511.0) * 32767 / M_PI) + 32767;
+            return (-std::atan2(((mBuffer[2] << 2) | ((mBuffer[5] & 0xC) >> 2)) - 511.0, ((mBuffer[4] << 2) | ((mBuffer[5] & 0xC0) >> 6)) - 511.0) * 32767 / M_PI) + 32767;
         case WiiAxisType::WiiAxisNunchukStickX:
             return (mBuffer[0]) << 8;
         case WiiAxisType::WiiAxisNunchukStickY:
@@ -390,16 +390,18 @@ bool WiiExtensionDecoder::read_button(proto_WiiButtonType type) const
             return ((wiiButtonsHigh) & (1 << 5));
         case WiiButtonGuitarOrange:
             return ((wiiButtonsHigh) & (1 << 7));
+        // wiibrew: 04 1st, 07 1st + 2nd, 0A 2nd, 0C/0D 2nd + 3rd, 12/13 3rd, 14/15 3rd + 4th,
+        // 17/18 4th, 1A 4th + 5th, 1F 5th, 0F not touching
         case WiiButtonGuitarTapGreen:
-            return lastTap < 0x0A;
+            return lastTap <= 0x07;
         case WiiButtonGuitarTapRed:
-            return lastTap != 0x0F && lastTap < 0x12 && lastTap >= 0x0A;
+            return lastTap >= 0x07 && lastTap <= 0x0D;
         case WiiButtonGuitarTapYellow:
-            return lastTap < 0x17 && lastTap >= 0x12;
+            return lastTap != 0x0F && lastTap >= 0x0C && lastTap <= 0x15;
         case WiiButtonGuitarTapBlue:
-            return lastTap < 0x1F && lastTap >= 0x17;
+            return lastTap >= 0x14 && lastTap <= 0x1A;
         case WiiButtonGuitarTapOrange:
-            return lastTap >= 0x1F;
+            return lastTap >= 0x1A;
         case WiiButtonGuitarPedal:
             return ((wiiButtonsHigh) & (1 << 2));
         default:
@@ -439,7 +441,7 @@ bool WiiExtensionDecoder::read_button(proto_WiiButtonType type) const
         break;
     }
 
-    case WiiExtType::WiiUbisoftDrawsomeTablet:
+    case WiiExtType::WiiThqUdrawTablet:
     {
         switch (type)
         {
@@ -607,7 +609,7 @@ bool WiiExtensionDecoder::tick_digital(proto_Output &type) const
             default:                return false;
             }
 
-        case WiiExtType::WiiUbisoftDrawsomeTablet:
+        case WiiExtType::WiiThqUdrawTablet:
             switch (type.mapping.gamepadButton)
             {
             case Gamepad_A: return read_button(WiiButtonUDrawPenButton1);

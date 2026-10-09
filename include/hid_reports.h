@@ -129,10 +129,20 @@
         HID_REPORT_COUNT(report_size),                       \
         HID_OUTPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE)
 
+// Byte for byte the descriptor of a real Guitar Hero Arcade guitar (0c70:0777)
 #define TUD_HID_REPORT_DESC_GUITAR_HERO_ARCADE()                                 \
-    HID_USAGE_PAGE_N(HID_USAGE_PAGE_DESKTOP, 2),                                 \
+    HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                                      \
+        HID_LOGICAL_MIN(0x00),                                                   \
         HID_USAGE(HID_USAGE_DESKTOP_JOYSTICK),                                   \
         HID_COLLECTION(HID_COLLECTION_APPLICATION),                              \
+        HID_USAGE_PAGE(HID_USAGE_PAGE_SIMULATE),                                 \
+        HID_USAGE(0xBB), /* Throttle, with no fields */                          \
+        HID_LOGICAL_MIN(0x81),                                                   \
+        HID_LOGICAL_MAX(0x7F),                                                   \
+        HID_REPORT_SIZE(8),                                                      \
+        HID_REPORT_COUNT(0),                                                     \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
+        HID_USAGE_PAGE(HID_USAGE_PAGE_DESKTOP),                                  \
         HID_USAGE(HID_USAGE_DESKTOP_POINTER),                                    \
         HID_COLLECTION(HID_COLLECTION_PHYSICAL),                                 \
         HID_USAGE(HID_USAGE_DESKTOP_X),                                          \
@@ -140,18 +150,13 @@
         HID_USAGE(HID_USAGE_DESKTOP_Z),                                          \
         HID_USAGE(HID_USAGE_DESKTOP_RX),                                         \
         HID_USAGE(HID_USAGE_DESKTOP_RY),                                         \
-        HID_LOGICAL_MAX(0x7F),                                                   \
-        HID_PHYSICAL_MIN(0x00),                                                  \
-        HID_PHYSICAL_MAX(0x00),                                                  \
-        HID_UNIT(0),                                                             \
-        HID_UNIT_EXPONENT(0),                                                    \
-        HID_REPORT_SIZE(8),                                                      \
         HID_REPORT_COUNT(5),                                                     \
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
         HID_COLLECTION_END,                                                      \
         HID_USAGE(HID_USAGE_DESKTOP_HAT_SWITCH),                                 \
         HID_LOGICAL_MIN(0x00),                                                   \
         HID_LOGICAL_MAX(3),                                                      \
+        HID_PHYSICAL_MIN(0x00),                                                  \
         HID_PHYSICAL_MAX_N(0x010E, 2),                                           \
         HID_UNIT(0x14), /*Unit (System: English Rotation, Length: Centimeter) */ \
         HID_REPORT_SIZE(4),                                                      \
@@ -160,14 +165,13 @@
         HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),                                   \
         HID_USAGE_MIN(0x01),                                                     \
         HID_USAGE_MAX(0x0A),                                                     \
+        HID_LOGICAL_MIN(0x00),                                                   \
         HID_LOGICAL_MAX(1),                                                      \
-        HID_PHYSICAL_MAX(1),                                                     \
-        HID_UNIT(0),                                                             \
         HID_REPORT_SIZE(1),                                                      \
-        HID_REPORT_COUNT(0x0A),                                                  \
+        HID_REPORT_COUNT(0x0C),                                                  \
+        HID_UNIT_EXPONENT(0),                                                    \
+        HID_UNIT(0),                                                             \
         HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),                       \
-        HID_REPORT_COUNT(0x02),                                                  \
-        HID_INPUT(HID_CONSTANT | HID_VARIABLE | HID_ABSOLUTE),                   \
         HID_COLLECTION_END
 
 #define TUD_HID_REPORT_DESC_SANTROLLER_DESC()               \

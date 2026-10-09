@@ -17,7 +17,14 @@ void CycleInput::load(proto_CycleInput config, std::shared_ptr<CycleDevice> devi
 }
 void CycleInput::setup()
 {
-    m_input->setup();
+    if (m_input)
+    {
+        m_input->setup();
+    }
+    if (m_input_reverse)
+    {
+        m_input_reverse->setup();
+    }
 }
 bool CycleInput::tick_digital()
 {

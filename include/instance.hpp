@@ -44,7 +44,6 @@ public:
     uint8_t stagekit_red = 0;
     uint32_t stagekit_last_strobe = 0;
     uint8_t capabilities = 0;
-    bool side = 0;
     GameFeedback game_feedback;
     uint8_t keyboard_leds = 0;
 

@@ -131,6 +131,15 @@ void Profile::sample_input_queue()
     {
         return;
     }
+    // Queued mappings are sampled before any shortcut builds a report, so let shortcuts mask
+    // their queued members first or the press would already be in the queue
+    for (auto &mapping : mappings)
+    {
+        if (mapping)
+        {
+            mapping->mask_shortcut_members(false, true);
+        }
+    }
     queued_last_live.resize(queued_mappings.size());
     uint16_t mask = 0;
     uint16_t retrigger = 0;

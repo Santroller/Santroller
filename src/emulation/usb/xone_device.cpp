@@ -214,7 +214,7 @@ XboxOneGamepadDevice::XboxOneGamepadDevice()
     keep_alive_timer = to_ms_since_boot(get_absolute_time());
     global_sequence = 1; // sequence starts at 1
     xb1_guide_pressed = false;
-    last_report_counter = 0;
+    last_report_counter = 1; // 0x00 is reserved
 
     xbone_led_mode = 0;
     auth_handler_connected = auth_broker.has_handler(ModeXboxOne);
@@ -273,7 +273,8 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         // Setup an ack before we change anything about the incoming packet
         if (parsed && incomingXGIP.ackRequired() == true)
         {
-            queue_xbone_report((uint8_t *)incomingXGIP.generateAckPacket(), incomingXGIP.getPacketLength());
+            uint8_t *ack = incomingXGIP.generateAckPacket();
+            queue_xbone_report(ack, incomingXGIP.getPacketLength());
         }
         // A chunked packet is only fully reassembled once we've received its
         // end-of-chunk marker; intermediate fragments parse successfully but
@@ -364,7 +365,8 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             outgoingXGIP.setAttributes(GIP_DEVICE_DESCRIPTOR, incomingXGIP.getSequence(), 1, 1, 0);
             outgoingXGIP.setData(xboxOneDescriptor, len);
             xboneDriverState = XboxOneDriverState::EMU_SEND_DESCRIPTOR;
-            queue_xbone_report(outgoingXGIP.generatePacket(), outgoingXGIP.getPacketLength());
+            uint8_t *packet = outgoingXGIP.generatePacket();
+            queue_xbone_report(packet, outgoingXGIP.getPacketLength());
         }
         else if (command == GIP_SET_STATE)
         {
@@ -416,11 +418,12 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 const GipRumble_t *rumble = (const GipRumble_t *)incomingXGIP.getData();
                 uint8_t left = 0;
                 uint8_t right = 0;
-                if (rumble->flags & 0x08)
+                // Motor bitmap: 0x02 left vibration, 0x01 right vibration ([MS-GIPUSB] Table 56)
+                if (rumble->flags & 0x02)
                 {
                     left = (rumble->leftMotor <= 100) ? (rumble->leftMotor * 255 / 100) : rumble->leftMotor;
                 }
-                if (rumble->flags & 0x04)
+                if (rumble->flags & 0x01)
                 {
                     right = (rumble->rightMotor <= 100) ? (rumble->rightMotor * 255 / 100) : rumble->rightMotor;
                 }
@@ -466,7 +469,8 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
 void XboxOneGamepadDevice::send_report_from_controller(XGIPProtocol *report)
 {
     outgoingXGIP.copyAttributes(report);
-    queue_xbone_report(outgoingXGIP.generatePacket(), outgoingXGIP.getPacketLength());
+    uint8_t *packet = outgoingXGIP.generatePacket();
+    queue_xbone_report(packet, outgoingXGIP.getPacketLength());
 }
 bool XboxOneGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
 {
@@ -610,7 +614,8 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
     }
     if (outgoingXGIP.waitingToSend())
     {
-        queue_xbone_report(outgoingXGIP.generatePacket(), outgoingXGIP.getPacketLength());
+        uint8_t *packet = outgoingXGIP.generatePacket();
+        queue_xbone_report(packet, outgoingXGIP.getPacketLength());
         if (outgoingXGIP.getPacketAck() == 1)
         {
             set_ack_wait();
@@ -690,7 +695,8 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
             outgoingXGIP.setAttributes(GIP_ANNOUNCE, 1, 1, 0, 0);
             outgoingXGIP.setData(announcePacket, sizeof(announce_gamepad));
             memcpy(outgoingXGIP.getData(), &now, 3);
-            queue_xbone_report(outgoingXGIP.generatePacket(), outgoingXGIP.getPacketLength());
+            uint8_t *packet = outgoingXGIP.generatePacket();
+            queue_xbone_report(packet, outgoingXGIP.getPacketLength());
             xboneDriverState = EMU_WAIT;
         }
         break;
@@ -752,7 +758,8 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
         outgoingXGIP.reset();
         outgoingXGIP.setAttributes(GIP_KEEPALIVE, global_sequence, 1, 0, 0);
         outgoingXGIP.setData(xb1_keep_alive, sizeof(xb1_keep_alive));
-        queue_xbone_report(outgoingXGIP.generatePacket(), outgoingXGIP.getPacketLength());
+        uint8_t *packet = outgoingXGIP.generatePacket();
+        queue_xbone_report(packet, outgoingXGIP.getPacketLength());
         keep_alive_timer = now;
         global_sequence++;
         if (global_sequence == 0)
@@ -774,8 +781,10 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
             led->update(full_poll, send_events);
         }
     }
+    // Guitar Hero Live guitars use a PS3 style report, where this bit is Black 1 rather than guide
+    bool has_guide = subtype != LiveGuitar;
     // Virtual Keycode Triggered (Pressed or Released)
-    if (xb1_guide_pressed != xboneReport->guide)
+    if (has_guide && xb1_guide_pressed != xboneReport->guide)
     {
         xb1_guide_pressed = xboneReport->guide;
         global_sequence++; // will rollover
@@ -791,17 +800,22 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
         {
             outgoingXGIP.setData(xb1_guide_off, sizeof(xb1_guide_off));
         }
-        queue_xbone_report(outgoingXGIP.generatePacket(), outgoingXGIP.getPacketLength());
+        uint8_t *packet = outgoingXGIP.generatePacket();
+        queue_xbone_report(packet, outgoingXGIP.getPacketLength());
         return;
     }
     // this was set temporarily to make things easier for mapping, so don't actually send it
-    xboneReport->guide = false;
+    if (has_guide)
+    {
+        xboneReport->guide = false;
+    }
     // We changed inputs since generating our last report, increment last report counter (but don't update until success)
     if (memcmp(last_report, epin_buf, xboneReportSize) != 0)
     {
         memcpy(last_report, epin_buf, xboneReportSize);
         outgoingXGIP.reset();
-        outgoingXGIP.setAttributes(GIP_INPUT_REPORT, last_report_counter, 0, 0, 0);
+        // Guitar Hero Live guitars send their guitar state as 0x21; 0x20 is the navigation report
+        outgoingXGIP.setAttributes(subtype == LiveGuitar ? GHL_HID_REPORT : GIP_INPUT_REPORT, last_report_counter, 0, 0, 0);
         outgoingXGIP.setData(epin_buf, xboneReportSize);
         uint8_t *test = outgoingXGIP.generatePacket();
         // don't put things in the queue here otherwise we will fill it pretty quick!
@@ -947,7 +961,8 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
         outgoingXGIP.reset();
         outgoingXGIP.setAttributes(GIP_KEEPALIVE, global_sequence, 1, 0, 0);
         outgoingXGIP.setData(xb1_keep_alive, sizeof(xb1_keep_alive));
-        queue_xbone_report(outgoingXGIP.generatePacket(), outgoingXGIP.getPacketLength());
+        uint8_t *packet = outgoingXGIP.generatePacket();
+        queue_xbone_report(packet, outgoingXGIP.getPacketLength());
         keep_alive_timer = now;
         global_sequence++;
         if (global_sequence == 0)
@@ -1007,7 +1022,8 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
             {
                 outgoingXGIP.setData(xb1_guide_off, sizeof(xb1_guide_off));
             }
-            queue_xbone_report(outgoingXGIP.generatePacket(), outgoingXGIP.getPacketLength());
+            uint8_t *packet = outgoingXGIP.generatePacket();
+            queue_xbone_report(packet, outgoingXGIP.getPacketLength());
         }
         gp->guide = 0; // Clear guide bit from buttons
 

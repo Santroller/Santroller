@@ -8,6 +8,7 @@
 #include "managers/profile_manager.hpp"
 #include "hid_reports.h"
 #include "config/config.hpp"
+#include "config/device_factory.hpp"
 
 static uint8_t const desc_hid_report_arcade[] = {TUD_HID_REPORT_DESC_GUITAR_HERO_ARCADE()};
 static char const str_gha_input[] = "RT-GH INPUT ";
@@ -87,10 +88,11 @@ void GHArcadeVendorDevice::device_descriptor(tusb_desc_device_t *desc)
 
 bool GHArcadeVendorDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
-    if (epout_buf[0] == 0x03)
+    if (epout_buf[0] == 0x03 && epout_buf[1] <= 1)
     {
-        // packet sends 0 for left and 1 for right, hid report uses 1 for left and 2 for right
-        side = epout_buf[1] + 1;
+        // packet sends 0 for left and 1 for right, hid report uses 1 for left and 2 for right.
+        // Saved, as the cabinet doesn't have to send it again after the guitar restarts
+        update_aux_arcade_side(epout_buf[1] + 1);
     }
     TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x40, false));
     return true;
@@ -130,7 +132,11 @@ void GHArcadeGamepadDevice::process(bool full_poll, bool send_events)
     ArcadeGuitarHeroGuitar_Data_t *report = (ArcadeGuitarHeroGuitar_Data_t *)epin_buf;
     memset(epin_buf, 0, sizeof(epin_buf));
     report->always_1d = 0x1d;
-    report->always_ff = 0xff;
+    report->always_ff = -1; // 0xFF
+    // a real guitar has no d-pad, so its hat always reads as released
+    report->dpad = 0x0F;
+    report->always_set = 1;
+    report->side = DeviceFactory::get_arcade_side();
     for (const auto &profile : profiles)
     {
         for (const auto &mapping : profile->mappings)
@@ -142,7 +148,7 @@ void GHArcadeGamepadDevice::process(bool full_poll, bool send_events)
             led->update(full_poll, send_events);
         }
     }
-    send_report(sizeof(XInputGamepad_Data_t), 0, epin_buf);
+    send_report(sizeof(ArcadeGuitarHeroGuitar_Data_t), 0, epin_buf);
 }
 
 size_t GHArcadeGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -152,7 +158,7 @@ size_t GHArcadeGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_
 
 size_t GHArcadeGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-    uint8_t desc[] = {TUD_HID_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_arcade), m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+    uint8_t desc[] = {TUD_HID_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_arcade), m_epin, 8, 1)};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);

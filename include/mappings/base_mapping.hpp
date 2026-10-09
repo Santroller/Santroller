@@ -98,6 +98,9 @@ public:
         m_waiting_for_release = true;
     }
     bool is_suppressed() const { return m_suppressed || m_waiting_for_release; }
+    // Mask the mappings this shortcut covers while its chord (or, without a shortcut input,
+    // pressed) is held. queued_only limits it to queued fret / strum mappings
+    void mask_shortcut_members(bool pressed, bool queued_only = false);
 
 protected:
     MappingConfig m_mapping;

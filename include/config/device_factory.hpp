@@ -55,6 +55,11 @@ public:
     static void clear_bluetooth_pairing_states();
     static void foreach_bluetooth_pairing_state(std::function<void(int32_t id, const BluetoothPairingStateData &state)> callback);
 
+    // Guitar Hero Arcade cabinet side (1 left, 2 right), left until the cabinet says otherwise
+    static void set_arcade_side(uint8_t side);
+    static uint8_t get_arcade_side();
+    static void clear_arcade_side();
+
     // Get last cycle states for device creation
     static const std::vector<uint32_t>& get_last_cycle_states();
 };

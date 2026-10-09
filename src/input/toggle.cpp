@@ -16,7 +16,10 @@ void ToggleInput::load(proto_ToggleInput config, std::shared_ptr<ToggleDevice> d
 }
 void ToggleInput::setup()
 {
-    m_input->setup();
+    if (m_input)
+    {
+        m_input->setup();
+    }
 }
 bool ToggleInput::tick_digital()
 {

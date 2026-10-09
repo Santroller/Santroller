@@ -118,11 +118,13 @@ typedef struct
 
 typedef struct
 {
-    uint8_t always_1d;  // Always 0x1d
-    uint8_t unk1;
-    uint8_t unk2;
-    uint8_t always_ff;  // Always 0xFF
-    uint8_t tilt;
+    // the axes are signed bytes from -127 to 127; a real guitar's Y, Z and Ry (tilt) are accelerometer
+    // axes, and X and Rx stay at 0x26 and 0xFF
+    int8_t always_1d;  // Always 0x1d
+    int8_t unk1;
+    int8_t unk2;
+    int8_t always_ff;  // Always 0xFF
+    int8_t tilt;
 
     union {
         struct {
@@ -142,6 +144,7 @@ typedef struct
     };
 
     uint8_t leftShoulder : 1;  // orange, l1
-    uint8_t : 3;
+    uint8_t : 2;
+    uint8_t always_set : 1;  // set on a real guitar, purpose unknown
     uint8_t side : 4;  // 1 for left, 2 for right
 } __attribute__((packed)) ArcadeGuitarHeroGuitar_Data_t;

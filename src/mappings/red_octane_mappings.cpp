@@ -8,8 +8,39 @@
 #include "emulation/usb/usb_descriptors.h"
 #include <pb_encode.h>
 #include <stdint.h>
+#include <algorithm>
 #include <utils.h>
 #include "math.h"
+
+// wiibrew Wiimote/Extension_Controllers/Guitar_Hero_(Wii)_Guitars: the touch bar sends one code for
+// a single fret (04 0A 12 17 1F) and another for two adjacent frets (07 0C 14 1A), 0F when not touched
+static const uint8_t wii_touch_bar_single[] = {0x04, 0x0A, 0x12, 0x17, 0x1F};
+static const uint8_t wii_touch_bar_pair[] = {0x07, 0x0C, 0x14, 0x1A};
+
+// Adds a fret (0 = green) to the code already in the report. Two adjacent frets become their chord
+// code, anything else the bar can't represent keeps the higher fret.
+static uint8_t wii_touch_bar_add_fret(uint8_t code, int fret)
+{
+    int low = fret, high = fret;
+    for (int i = 0; i < 5; i++)
+    {
+        if (code == wii_touch_bar_single[i])
+        {
+            low = std::min(low, i);
+            high = std::max(high, i);
+        }
+        if (i < 4 && code == wii_touch_bar_pair[i])
+        {
+            low = std::min(low, i);
+            high = std::max(high, i + 1);
+        }
+    }
+    if (high - low == 1)
+    {
+        return wii_touch_bar_pair[low];
+    }
+    return wii_touch_bar_single[high];
+}
 
 GuitarHeroGuitarButtonMapping::GuitarHeroGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
@@ -43,20 +74,16 @@ void GuitarHeroGuitarButtonMapping::update_wii(uint8_t format, uint8_t *buf)
     case GuitarHeroGuitar_Pedal:
         report->rightShoulder |= m_last_value;
         break;
+    // the touch bar sends one code per fret, not a bit each (wiibrew Wiimote/Extension_Controllers/Guitar_Hero_(Wii)_Guitars)
     case GuitarHeroGuitar_TapGreen:
-        report->tapGreen |= m_last_value;
-        break;
     case GuitarHeroGuitar_TapRed:
-        report->tapRed |= m_last_value;
-        break;
     case GuitarHeroGuitar_TapYellow:
-        report->tapYellow |= m_last_value;
-        break;
     case GuitarHeroGuitar_TapBlue:
-        report->tapBlue |= m_last_value;
-        break;
     case GuitarHeroGuitar_TapOrange:
-        report->tapOrange |= m_last_value;
+        if (m_last_value)
+        {
+            report->slider = wii_touch_bar_add_fret(report->slider, m_mapping.mapping.mapping.ghButton - GuitarHeroGuitar_TapGreen);
+        }
         break;
     }
 }
@@ -680,14 +707,15 @@ void GuitarHeroDrumsAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     case GuitarHeroDrums_BluePad:
         report->x = true;
         break;
+    // wiibrew: byte 5 is O R Y G B Bass 1 1
     case GuitarHeroDrums_OrangePad:
-        report->rightShoulder = true;
+        report->leftShoulder = true;
         break;
     case GuitarHeroDrums_GreenPad:
         report->a = true;
         break;
     case GuitarHeroDrums_KickPedal:
-        report->leftShoulder = true;
+        report->rightShoulder = true;
         break;
     // case GuitarHeroDrums_LeftStickX:
     //     report->leftStickX = m_calibrated_value >> 10;
@@ -857,7 +885,11 @@ void GuitarHeroArcadeButtonMapping::update_hid(uint8_t *buf)
         report->leftShoulder |= m_last_value;
         break;
     case GuitarHeroArcade_Side:
-        report->side |= m_last_value;
+        // overrides the side the cabinet picked: held is the right side
+        if (m_last_value)
+        {
+            report->side = 2;
+        }
         break;
     }
 }
@@ -908,7 +940,8 @@ void GuitarHeroArcadeAxisMapping::update_hid(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghaAxis)
     {
     case GuitarHeroArcade_Tilt:
-        report->tilt = m_calibrated_value - 32768;
+        // a signed byte from -127 to 127, like the real guitar's accelerometer
+        report->tilt = std::max(-127, (int)(m_calibrated_value >> 8) - 128);
         break;
     }
 }
@@ -1367,7 +1400,7 @@ void DJHTurntableButtonMapping::update_hid(uint8_t *buf)
 void DJHTurntableButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
     // TODO: we have to deal with data formats probably
-    WiiTurntableIntermediateFormat3_t *report = (WiiTurntableIntermediateFormat3_t *)buf;
+    WiiTurntableDataFormat3_t *report = (WiiTurntableDataFormat3_t *)buf;
     switch (m_mapping.mapping.mapping.djhButton)
     {
     case DJHTurntable_LeftGreen:

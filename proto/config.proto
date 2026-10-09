@@ -330,4 +330,6 @@ message AuxConfigBlock {
   repeated ToggleInputState toggleStates = 2;
   repeated BluetoothPairingState bluetoothStates = 3;
   repeated BluetoothTlvEntry tlvEntries = 4;
+  // Guitar Hero Arcade: the cabinet side the guitar was last told it is on (1 left, 2 right)
+  optional uint32 ghArcadeSide = 5;
 }

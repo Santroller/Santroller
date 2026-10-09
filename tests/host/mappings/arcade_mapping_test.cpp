@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "mappings/mapping_test_support.hpp"
 #include "mappings/switch_arcade_mapping.hpp"
+#include "protocols/hid.hpp"
 #include "protocols/pdloader.hpp"
 #include "protocols/pro_keys.hpp"
 
@@ -552,4 +553,39 @@ TEST_F(Arcade, MouseButtons)
     pressed<MouseButtonMapping>(button(Mouse_Middle), false)->update_hid(nullptr);
     // HID mouse buttons: 1 is left, 2 right, 3 middle
     EXPECT_EQ(profile->mouse_state.buttons, 0x01 | 0x02);
+}
+
+// Guitar Hero Arcade: the tilt is a signed byte from -127 to 127 like the real guitar's accelerometer
+// (Ry in its descriptor), centred where the Xbox 360 guitar's signed tilt is (m_calibrated_value - 32768)
+TEST_F(Arcade, GhArcadeTiltIsASignedByte)
+{
+    proto_Mapping config = trigger_config();
+    config.mapping.which_mapping = proto_Output_ghaAxis_tag;
+    config.mapping.mapping.ghaAxis = GuitarHeroArcade_Tilt;
+    const struct
+    {
+        uint16_t value;
+        int8_t tilt;
+    } cases[] = {{UINT16_MAX, 127}, {0xC000, 64}, {0x8000, 0}, {0x4000, -64}, {0x0100, -127}};
+    for (const auto &c : cases)
+    {
+        Report<ArcadeGuitarHeroGuitar_Data_t> report;
+        at<GuitarHeroArcadeAxisMapping>(config, c.value)->update_hid(report.buf());
+        EXPECT_EQ(report.data.tilt, c.tilt) << std::hex << c.value;
+    }
+}
+
+// The cabinet picks the side (1 left, 2 right, filled in by GHArcadeGamepadDevice); a Side mapping
+// held overrides it to the right side and leaves it alone otherwise
+TEST_F(Arcade, GhArcadeSideButtonPicksTheRightSide)
+{
+    proto_Mapping config = base_config();
+    config.mapping.which_mapping = proto_Output_ghaButton_tag;
+    config.mapping.mapping.ghaButton = GuitarHeroArcade_Side;
+    Report<ArcadeGuitarHeroGuitar_Data_t> report;
+    report.data.side = 1;
+    pressed<GuitarHeroArcadeButtonMapping>(config, false)->update_hid(report.buf());
+    EXPECT_EQ(report.data.side, 1);
+    pressed<GuitarHeroArcadeButtonMapping>(config, true)->update_hid(report.buf());
+    EXPECT_EQ(report.data.side, 2);
 }

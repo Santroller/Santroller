@@ -59,6 +59,8 @@ void initialize_wii_extension_report(SubType subtype, uint8_t format,
         auto *data = reinterpret_cast<WiiGuitarDataFormat3_t *>(report);
         data->leftStickX = 32;
         data->leftStickY = 32;
+        // 0x0F is the touch bar's "not touching" code (wiibrew Wiimote/Extension_Controllers/Guitar_Hero_(Wii)_Guitars)
+        data->slider = 0x0F;
         if (buttons_low_offset) *buttons_low_offset = offsetof(WiiGuitarDataFormat3_t, buttonsLow);
         if (buttons_high_offset) *buttons_high_offset = offsetof(WiiGuitarDataFormat3_t, buttonsHigh);
     }
@@ -67,6 +69,9 @@ void initialize_wii_extension_report(SubType subtype, uint8_t format,
         auto *data = reinterpret_cast<WiiDrumDataFormat3_t *>(report);
         data->leftStickX = 32;
         data->leftStickY = 32;
+        // the drum data is inverted, so no hit is FF FF in bytes 2 and 3 (wiibrew Wiimote/Extension_Controllers/Guitar_Hero_World_Tour_(Wii)_Drums)
+        report[2] = 0xFF;
+        report[3] = 0xFF;
         if (buttons_low_offset) *buttons_low_offset = offsetof(WiiDrumDataFormat3_t, buttonsLow);
         if (buttons_high_offset) *buttons_high_offset = offsetof(WiiDrumDataFormat3_t, buttonsHigh);
     }
@@ -115,7 +120,7 @@ void initialize_wii_extension_report(SubType subtype, uint8_t format,
     *size = wii_extension_report_size(subtype, format);
 }
 
-void finalize_wii_extension_report(uint8_t *report,
+void finalize_wii_extension_report(SubType subtype, uint8_t *report,
                                    uint8_t buttons_low_offset,
                                    uint8_t buttons_high_offset)
 {
@@ -124,7 +129,16 @@ void finalize_wii_extension_report(uint8_t *report,
         report[buttons_low_offset] = ~report[buttons_low_offset];
         return;
     }
-    report[buttons_low_offset] = ~report[buttons_low_offset];
+    // the buttons are active low, but the turntable's LTT<5> shares buttonsLow and is a plain
+    // signed bit (wiibrew Wiimote/Extension_Controllers/DJ_Hero_(Wii)_Turntable)
+    uint8_t not_inverted = 0;
+    if (subtype == DjHeroTurntable)
+    {
+        WiiTurntableDataFormat3_t mask = {};
+        mask.leftTableVelocity5 = 1;
+        not_inverted = mask.buttonsLow;
+    }
+    report[buttons_low_offset] ^= (uint8_t)~not_inverted;
     report[buttons_high_offset] = ~report[buttons_high_offset];
 }
 

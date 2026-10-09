@@ -386,7 +386,7 @@ uint16_t ps4_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             case GuitarHeroLiveGuitar_Whammy:
                 return data->whammy << 8;
             case GuitarHeroLiveGuitar_Tilt:
-                return data->tilt << 2;
+                return data->tilt << 8;
             default:
                 return 0;
             }

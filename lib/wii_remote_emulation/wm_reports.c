@@ -188,8 +188,9 @@ void report_append_interleaved(struct wiimote_state * state, uint8_t * buf)
 
   if (state->sys.reporting_mode == 0x3e)
   {
-    rpt->buttons.accel_0 = state->usr.accel_z >> 4;
-    rpt->buttons.accel_1 = state->usr.accel_z >> 6;
+    //only the top 8 bits of each axis fit, like X and Y (wiibrew Interleaved Mode): Z<5:4>, Z<7:6>
+    rpt->buttons.accel_0 = state->usr.accel_z >> 6;
+    rpt->buttons.accel_1 = state->usr.accel_z >> 8;
     rpt->accel = state->usr.accel_x >> 2;
 
     for (i=0; i<2; i++)
@@ -201,7 +202,7 @@ void report_append_interleaved(struct wiimote_state * state, uint8_t * buf)
       rpt->obj[i].size = state->usr.ir_object[i].size;
       rpt->obj[i].x_min = state->usr.ir_object[i].xmin;
       rpt->obj[i].y_min = state->usr.ir_object[i].ymin;
-      rpt->obj[i].y_max = state->usr.ir_object[i].xmax;
+      rpt->obj[i].x_max = state->usr.ir_object[i].xmax;
       rpt->obj[i].y_max = state->usr.ir_object[i].ymax;
       rpt->obj[i].intensity = state->usr.ir_object[i].intensity;
     }
@@ -210,8 +211,9 @@ void report_append_interleaved(struct wiimote_state * state, uint8_t * buf)
   }
   else
   {
-    rpt->buttons.accel_0 = state->usr.accel_z;
-    rpt->buttons.accel_1 = state->usr.accel_z >> 2;
+    //Z<1:0>, Z<3:2> of the top 8 bits
+    rpt->buttons.accel_0 = state->usr.accel_z >> 2;
+    rpt->buttons.accel_1 = state->usr.accel_z >> 4;
     rpt->accel = state->usr.accel_y >> 2;
 
     for (i=0; i<2; i++)
@@ -223,7 +225,7 @@ void report_append_interleaved(struct wiimote_state * state, uint8_t * buf)
       rpt->obj[i].size = state->usr.ir_object[i+2].size;
       rpt->obj[i].x_min = state->usr.ir_object[i+2].xmin;
       rpt->obj[i].y_min = state->usr.ir_object[i+2].ymin;
-      rpt->obj[i].y_max = state->usr.ir_object[i+2].xmax;
+      rpt->obj[i].x_max = state->usr.ir_object[i+2].xmax;
       rpt->obj[i].y_max = state->usr.ir_object[i+2].ymax;
       rpt->obj[i].intensity = state->usr.ir_object[i+2].intensity;
     }

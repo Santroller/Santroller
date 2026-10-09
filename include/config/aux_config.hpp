@@ -136,6 +136,8 @@ inline bool encode_auxiliary(uint8_t *buffer, uint32_t capacity, uint32_t &writt
     block.toggleStates.funcs.encode = encode_toggle_input_states;
     block.bluetoothStates.funcs.encode = encode_bluetooth_states;
     block.tlvEntries.funcs.encode = encode_bluetooth_tlv_entries;
+    block.has_ghArcadeSide = true;
+    block.ghArcadeSide = DeviceFactory::get_arcade_side();
 
     pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, capacity);
     if (!pb_encode(&outputStream, proto_AuxConfigBlock_fields, &block))

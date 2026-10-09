@@ -1,6 +1,7 @@
 #include "gip_button_mapping.h"
 #include <stdint.h>
 #include "device.pb.h"
+#include "protocols/rb_pickup.hpp"
 
 bool gip_tick_digital(const void *input_data, uint8_t subtype, bool capture, proto_Output *type)
 {
@@ -207,7 +208,8 @@ uint16_t gip_tick_analog(const void *input_data, uint8_t subtype, proto_Output *
             case GuitarHeroLiveGuitar_Whammy:
                 return data->report.whammy << 8;
             case GuitarHeroLiveGuitar_Tilt:
-                return data->report.tilt << 2;
+                // 0x00 - 0xFF, like the PS3 guitar
+                return data->report.tilt << 8;
             default:
                 return 0;
             }
@@ -246,11 +248,13 @@ uint16_t gip_tick_analog(const void *input_data, uint8_t subtype, proto_Output *
             switch (type->mapping.rbAxis)
             {
             case RockBandGuitar_Whammy:
-                return data->whammy + INT16_MAX;
+                return data->whammy << 8;
             case RockBandGuitar_Tilt:
-                return data->tilt + INT16_MAX;
+                return data->tilt << 8;
             case RockBandGuitar_Pickup:
-                return data->pickup + INT16_MAX;
+                // The notch is in the top nibble (0x00 - 0x40), convert it to the same
+                // values the other consoles' guitars use so it lands in the right notch
+                return rb_pickup_notch_value(data->pickup >> 4);
             default:
                 return 0;
             }
@@ -277,10 +281,11 @@ uint16_t gip_tick_analog(const void *input_data, uint8_t subtype, proto_Output *
             auto data = (const XboxOneGamepad_Data_t *)input_data;
             switch (type->mapping.gamepadAxis)
             {
+            // Triggers are 10 bit (0 - 1023)
             case Gamepad_LeftTrigger:
-                return data->leftTrigger << 8;
+                return (data->leftTrigger << 6) | (data->leftTrigger >> 4);
             case Gamepad_RightTrigger:
-                return data->rightTrigger << 8;
+                return (data->rightTrigger << 6) | (data->rightTrigger >> 4);
             case Gamepad_LeftStickX:
                 return static_cast<uint16_t>(data->leftStickX) ^ 0x8000;
             case Gamepad_LeftStickY:

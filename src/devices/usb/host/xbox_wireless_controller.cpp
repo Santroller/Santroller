@@ -81,8 +81,8 @@ void XboxWirelessController::send_report_from_host(XGIPProtocol *report)
         uint8_t seq = gip_sequence_pool_next(&m_controller.gip_device.tx_sequence_pools, m_controller.gip_device.outgoing_xgip->getCommand());
         m_controller.gip_device.outgoing_xgip->setSequence(seq);
     }
-    m_adapter->send_report_from_host(m_controller_idx + 1, m_controller.mac_addr,
-                                     m_controller.gip_device.outgoing_xgip->generatePacket(),
+    uint8_t *packet = m_controller.gip_device.outgoing_xgip->generatePacket();
+    m_adapter->send_report_from_host(m_controller_idx + 1, m_controller.mac_addr, packet,
                                      m_controller.gip_device.outgoing_xgip->getPacketLength());
 }
 bool XboxWirelessController::tick_digital(proto_Output &type)

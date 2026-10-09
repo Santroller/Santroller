@@ -119,7 +119,7 @@ void WiiRemoteEmulationDeviceInstance::process(bool full_poll, bool send_events)
             led->update(full_poll, send_events);
         }
     }
-    finalize_wii_extension_report(m_extension_report, m_buttons_low_idx, m_buttons_high_idx);
+    finalize_wii_extension_report(subtype, m_extension_report, m_buttons_low_idx, m_buttons_high_idx);
     next.extension_size = m_extension_size;
     memcpy(next.extension_data, m_extension_report, m_extension_size);
 

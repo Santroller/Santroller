@@ -40,6 +40,8 @@ struct AuxSpec
     std::vector<std::pair<int32_t, bool>> toggles;
     std::vector<proto_BluetoothPairingState> bluetooth;
     std::vector<proto_BluetoothTlvEntry> tlv;
+    // Guitar Hero Arcade cabinet side, left out when 0
+    uint32_t arcade_side = 0;
 };
 
 namespace detail
@@ -208,6 +210,8 @@ inline std::vector<uint8_t> encode_aux(const AuxSpec &spec)
     block.bluetoothStates.arg = &bluetooth_list;
     block.tlvEntries.funcs.encode = detail::encode_repeated<proto_BluetoothTlvEntry>;
     block.tlvEntries.arg = &tlv_list;
+    block.has_ghArcadeSide = spec.arcade_side != 0;
+    block.ghArcadeSide = spec.arcade_side;
     return detail::encode(proto_AuxConfigBlock_fields, block);
 }
 

@@ -13,8 +13,8 @@ public:
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return m_input ? m_input->has_independent_analog_value() : false; }
     void setup();
-    uint64_t hardware_id() const override { return m_input ? m_input->hardware_id() : 0; }
-    bool valid() const override { return m_input ? m_input->valid() : false; }
+    uint64_t hardware_id() const override { return m_input ? m_input->hardware_id() : m_input_reverse ? m_input_reverse->hardware_id() : 0; }
+    bool valid() const override { return m_input ? m_input->valid() : m_input_reverse ? m_input_reverse->valid() : false; }
 
 private:
     std::unique_ptr<Input> m_input;

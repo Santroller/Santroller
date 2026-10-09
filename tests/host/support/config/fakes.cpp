@@ -91,6 +91,11 @@ bool DeviceFactory::get_toggle_state(int32_t id)
 
 void DeviceFactory::clear_toggle_states() { s_toggle_states.clear(); }
 
+static uint8_t s_arcade_side = 1;
+void DeviceFactory::set_arcade_side(uint8_t side) { s_arcade_side = side; }
+uint8_t DeviceFactory::get_arcade_side() { return s_arcade_side; }
+void DeviceFactory::clear_arcade_side() { s_arcade_side = 1; }
+
 void DeviceFactory::foreach_toggle_state(std::function<void(int32_t id, bool state)> callback)
 {
     for (auto &state : s_toggle_states)

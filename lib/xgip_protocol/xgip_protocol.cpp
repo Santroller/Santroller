@@ -103,8 +103,21 @@ bool XGIPProtocol::parse(const uint8_t *buffer, uint16_t len)
             uint16_t packet_len;
             uint16_t total_len_or_offset;
             const uint8_t *packet = buffer + offsetof(GipHeader_t, length);
-            packet += readLeb128(packet, &packet_len);
-            packet += readLeb128(packet, &total_len_or_offset);
+            const uint8_t *end = buffer + len;
+            uint8_t read = readLeb128(packet, end, &packet_len);
+            if (read == 0)
+            {
+                isValidPacket = false;
+                return false;
+            }
+            packet += read;
+            read = readLeb128(packet, end, &total_len_or_offset);
+            if (read == 0)
+            {
+                isValidPacket = false;
+                return false;
+            }
+            packet += read;
             if (packet_len == 0)
             { // END OF CHUNK
                 // Verify chunk is good
@@ -223,20 +236,24 @@ bool XGIPProtocol::setData(const uint8_t *buffer, uint16_t len)
     return true;
 }
 
-uint8_t XGIPProtocol::readLeb128(const uint8_t *data, uint16_t *out)
+// Returns the number of bytes read, or 0 if the field runs past end or is longer than the
+// 4 bytes [MS-GIPUSB] 2.2.10.4 allows
+uint8_t XGIPProtocol::readLeb128(const uint8_t *data, const uint8_t *end, uint16_t *out)
 {
     uint8_t read = 0;
-    uint16_t result = 0;
-    uint16_t shift = 0;
+    uint32_t result = 0;
     unsigned char byte;
     do
     {
+        if (data >= end || read == 4)
+        {
+            return 0;
+        }
         byte = *data++;
-        result |= (byte & 0x7f) << shift; /* low-order 7 bits of byte */
-        shift += 7;
+        result |= (uint32_t)(byte & 0x7f) << (7 * read); /* low-order 7 bits of byte */
         read++;
     } while ((byte & 0x80) != 0);
-    *out = result;
+    *out = (uint16_t)result;
     return read;
 }
 
@@ -244,8 +261,8 @@ uint16_t XGIPProtocol::writeLeb128(uint8_t *dest, uint16_t len, bool pad)
 {
     if (pad)
     {
-        // if < 127, length is put in the second byte
-        if (len < 0x7f)
+        // if < 128, length is put in the second byte
+        if (len < 0x80)
         {
             dest[0] = 0x80 | len;
             dest[1] = 0;
@@ -267,6 +284,14 @@ uint16_t XGIPProtocol::writeLeb128(uint8_t *dest, uint16_t len, bool pad)
 // Generate XGIP Packet for output
 uint8_t *XGIPProtocol::generatePacket()
 {
+    if (header.chunked == 1 && numberOfChunksSent == 0 && dataLength < GIP_MAX_CHUNK_SIZE)
+    {
+        // In the rare case the chunked packet is < max chunk size it fits in a single
+        // packet: send it unfragmented, BUT we still require an ACK and have to reply to it
+        header.chunkStart = 0;
+        header.chunked = 0;
+        header.needsAck = 1;
+    }
     if (header.chunked == 0)
     { // Simple data packet does not require chunk logic
         header.length = (uint8_t)dataLength;
@@ -290,18 +315,7 @@ uint8_t *XGIPProtocol::generatePacket()
         {
             if (numberOfChunksSent == 0)
             {
-                if (dataLength < GIP_MAX_CHUNK_SIZE)
-                {
-                    // In the rare case the chunked packet is < max chunk size
-                    // we set the chunk flags to 0, set our actual data length
-                    // BUT we still require an ACK and have to reply to it
-                    header.chunkStart = 0;
-                    header.chunked = 0;
-                }
-                else
-                {
-                    header.chunkStart = 1;
-                }
+                header.chunkStart = 1;
             }
             else
             {
@@ -339,9 +353,16 @@ uint8_t *XGIPProtocol::generatePacket()
                 lebPacket += writeLeb128(lebPacket, dataToSend, dataLength < 0x80);
                 lebPacket += writeLeb128(lebPacket, dataLength, false);
             }
+            else if (end)
+            {
+                // Downstream headers must be an even length: the last fragment pads the
+                // offset field instead of the length ([MS-GIPUSB] 3.1.5.2, Table 25)
+                lebPacket += writeLeb128(lebPacket, dataToSend, false);
+                lebPacket += writeLeb128(lebPacket, totalDataSent, totalDataSent < 0x80);
+            }
             else
             {
-                lebPacket += writeLeb128(lebPacket, dataToSend, totalDataSent < 0x80 && !end);
+                lebPacket += writeLeb128(lebPacket, dataToSend, totalDataSent < 0x80);
                 lebPacket += writeLeb128(lebPacket, totalDataSent, false);
             }
             memcpy(lebPacket, &data[totalDataSent], dataToSend);

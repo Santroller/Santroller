@@ -4,8 +4,17 @@
 #include "emulation/usb/hid_device.h"
 #include "config/config.hpp"
 #include "utils.h"
-CycleDevice::CycleDevice(const DeviceReloadState* state, proto_CycleDevice device, uint16_t id, uint32_t current_index, std::vector<uint32_t> states) : Device(id), m_device(device), m_states(states), m_current_value(states[current_index]), m_current_index(current_index)
+CycleDevice::CycleDevice(const DeviceReloadState* state, proto_CycleDevice device, uint16_t id, uint32_t current_index, std::vector<uint32_t> states) : Device(id), m_device(device), m_states(states), m_current_value(0), m_current_index(current_index)
 {
+    // The value list can be emptied or shrunk after the index was saved
+    if (m_current_index >= m_states.size())
+    {
+        m_current_index = 0;
+    }
+    if (!m_states.empty())
+    {
+        m_current_value = m_states[m_current_index];
+    }
     if (state) {
         m_last = state->debounce_time;
     }
@@ -30,7 +39,7 @@ void CycleDevice::update(bool full_poll, bool send_events)
 
 void CycleDevice::cycle(bool forward)
 {
-    if (millis() - m_last < 100) {
+    if (m_states.empty() || millis() - m_last < 100) {
         return;
     }
     m_last = millis();

@@ -73,11 +73,8 @@ uint8_t wii_extension_backend_write(uint8_t *registers, bool *encrypted,
                                     struct ext_crypto_state *crypto, uint8_t offset,
                                     uint8_t value)
 {
-    if (*encrypted && offset != 0xF0)
-    {
-        value = (value ^ crypto->sb[offset % 8]) + crypto->ft[offset % 8];
-    }
-
+    // Only reads are encrypted, writes are stored as written (Dolphin EncryptedExtension::BusWrite)
+    (void)crypto;
     registers[offset] = value;
     if (offset == 0xF0)
     {

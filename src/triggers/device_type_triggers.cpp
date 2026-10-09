@@ -289,7 +289,7 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
         if (claim_device)
         {
             claim_profile_device(m_profile, DeviceSlotKind::MIDI, m_slot_id, device);
-            printf("Claimed device: %d %p %p\r\n", m_profile, m_profile, device);
+            printf("Claimed device: %p %p\r\n", (void *)m_profile, (void *)device.get());
         }
         else
         {

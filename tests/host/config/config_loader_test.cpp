@@ -59,6 +59,7 @@ protected:
         StorageTest::SetUp();
         DeviceFactory::clear_cycle_states();
         DeviceFactory::clear_toggle_states();
+        DeviceFactory::clear_arcade_side();
         DeviceFactory::clear_bluetooth_pairing_states();
     }
 
@@ -326,4 +327,24 @@ TEST_F(ConfigLoaderTest, DevicesAreResetBeforeDecodingAndPrunedAfter)
     EXPECT_LT(index("prepare_for_config_reload"), index("finish_config_reload"));
     EXPECT_LT(index("mark_root_devices_disconnected"), index("remove_disconnected_root_devices"));
     EXPECT_EQ(calls.back(), "sync_requested_mode_to_current");
+}
+
+TEST_F(ConfigLoaderTest, TheSavedArcadeSideIsRestored)
+{
+    AuxSpec aux;
+    aux.arcade_side = 2;
+    ASSERT_TRUE(store_and_apply(encode_config({}), encode_aux(aux)));
+    EXPECT_EQ(DeviceFactory::get_arcade_side(), 2);
+
+    // without one saved the guitar is on the left, as before it was ever told
+    ASSERT_TRUE(store_and_apply(encode_config({}), {}));
+    EXPECT_EQ(DeviceFactory::get_arcade_side(), 1);
+}
+
+TEST_F(ConfigLoaderTest, AnArcadeSideThatIsNotLeftOrRightIsIgnored)
+{
+    AuxSpec aux;
+    aux.arcade_side = 7;
+    ASSERT_TRUE(store_and_apply(encode_config({}), encode_aux(aux)));
+    EXPECT_EQ(DeviceFactory::get_arcade_side(), 1);
 }

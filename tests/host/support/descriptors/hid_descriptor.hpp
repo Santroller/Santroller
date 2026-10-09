@@ -187,6 +187,8 @@ struct Globals
     int32_t unit_exponent = 0;
     uint32_t report_size = 0;
     uint32_t report_count = 0;
+    // a report count of 0 is allowed (the item has no fields), so track whether one was given
+    bool report_count_set = false;
     uint8_t report_id = 0;
 };
 
@@ -257,7 +259,7 @@ inline Descriptor parse(const uint8_t *desc, size_t len)
                     return fail(at, "usage minimum is above usage maximum");
                 if (g.report_size == 0)
                     return fail(at, "main item with no report size");
-                if (g.report_count == 0)
+                if (!g.report_count_set)
                     return fail(at, "main item with no report count");
                 if (!(u & kConstant) && g.logical_min > g.logical_max)
                     return fail(at, "logical minimum is above logical maximum");
@@ -374,6 +376,7 @@ inline Descriptor parse(const uint8_t *desc, size_t len)
                 break;
             case 0x9:
                 g.report_count = u;
+                g.report_count_set = true;
                 break;
             case 0xA:
                 if (size != 0)

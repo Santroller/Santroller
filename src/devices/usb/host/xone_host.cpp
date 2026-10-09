@@ -103,9 +103,8 @@ void XboxOneHost::send_report_from_host(XGIPProtocol *report)
         uint8_t seq = gip_sequence_pool_next(&m_gip_device.tx_sequence_pools, m_gip_device.outgoing_xgip->getCommand());
         m_gip_device.outgoing_xgip->setSequence(seq);
     }
-    gip_report_queue_push(m_report_queue,
-                          m_gip_device.outgoing_xgip->generatePacket(),
-                          m_gip_device.outgoing_xgip->getPacketLength());
+    uint8_t *packet = m_gip_device.outgoing_xgip->generatePacket();
+    gip_report_queue_push(m_report_queue, packet, m_gip_device.outgoing_xgip->getPacketLength());
 }
 
 void XboxOneHost::send_power_on_sequence()
@@ -313,29 +312,32 @@ uint16_t XboxOneHost::tick_analog(proto_Output &type)
 void XboxOneHost::set_rumble(uint8_t left, uint8_t right)
 {
     GipRumble_t rumble = {};
-    rumble.flags = 0x0C;
+    // Motor bitmap ([MS-GIPUSB] Table 56): right / left vibration (0x01 / 0x02) carry the levels,
+    // right / left impulse (0x04 / 0x08) are left at 0
+    rumble.flags = 0x0F;
     rumble.leftMotor = (uint16_t)left * 100 / 255;
     rumble.rightMotor = (uint16_t)right * 100 / 255;
     rumble.duration = (left || right) ? 0xFF : 0;
 
-    send_feedback_packet(GIP_CMD_RUMBLE, (uint8_t *)&rumble, sizeof(rumble));
+    send_feedback_packet(GIP_CMD_RUMBLE, false, (uint8_t *)&rumble, sizeof(rumble));
 }
 
 // Feedback must not touch m_gip_device.outgoing_xgip: it may hold an in-flight
 // chunked auth transfer forwarded from the console, and resetting it mid-transfer
 // truncates the auth exchange.
-void XboxOneHost::send_feedback_packet(uint8_t command, const uint8_t *data, uint16_t len)
+void XboxOneHost::send_feedback_packet(uint8_t command, bool system, const uint8_t *data, uint16_t len)
 {
     static XGIPProtocol feedback;
     feedback.reset();
-    feedback.setCommand(command);
-    feedback.setSequence(gip_sequence_pool_next(&m_gip_device.tx_sequence_pools, command));
+    feedback.setAttributes(command, gip_sequence_pool_next(&m_gip_device.tx_sequence_pools, command), system, 0, 0);
     feedback.setData(data, len);
-    gip_report_queue_push(m_report_queue, feedback.generatePacket(), feedback.getPacketLength());
+    uint8_t *packet = feedback.generatePacket();
+    gip_report_queue_push(m_report_queue, packet, feedback.getPacketLength());
 }
 
 void XboxOneHost::set_player_led(uint8_t player)
 {
     uint8_t data[3] = {0x00, (uint8_t)(player ? 0x01 : 0x00), 0x14};
-    send_feedback_packet(GIP_CMD_LED_ON, data, sizeof(data));
+    // LED is a system message ([MS-GIPUSB] Table 41)
+    send_feedback_packet(GIP_CMD_LED_ON, true, data, sizeof(data));
 }

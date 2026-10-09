@@ -10,7 +10,7 @@
 //
 // Pairing, from the code that sends the reports:
 //  - GHArcadeGamepadDevice (ModeGuitarHeroArcade, gh_arcade_device.cpp) fills epin_buf as an
-//    ArcadeGuitarHeroGuitar_Data_t (no report id) and sends sizeof(XInputGamepad_Data_t) bytes of it.
+//    ArcadeGuitarHeroGuitar_Data_t (no report id) and sends all 7 bytes of it.
 //  - Spice2xDevice (ModeSpice2x, spice2x_device.cpp, built here from the real source) sends
 //    sizeof(m_input), a Spice2xInputReport with the report id in the struct. Output reports 2 and 3 are
 //    the panel / status LEDs, each named by a string index patched in by initialize().
@@ -53,23 +53,44 @@ TEST(GhArcadeDescriptor, FieldsMatchTheStruct)
     // the cabinet side (1 left, 2 right) is buttons 9 and 10
     const FieldBits side = FIELD(ArcadeGuitarHeroGuitar_Data_t, side);
     const Element *b9 = d.find(in, 0, button(9));
-    const Element *b10 = d.find(in, 0, button(10));
+    // the real descriptor has 12 one bit fields for buttons 1 - 10, so the last usage repeats for the
+    // top two (unused) bits
+    auto b10s = d.find_all(in, 0, button(10));
+    ASSERT_EQ(b10s.size(), 3u);
+    const Element *b10 = b10s[0];
     ASSERT_TRUE(b9 && b10);
     EXPECT_EQ(b9->bit_offset, side.bit);
     EXPECT_EQ(b10->bit_offset, side.bit + 1);
 }
 
-// GHArcadeGamepadDevice::process (gh_arcade_device.cpp:145) sends sizeof(XInputGamepad_Data_t) = 20
-// bytes, but its report is an ArcadeGuitarHeroGuitar_Data_t and the descriptor (no report ids) declares
-// a 7 byte input report (TUD_HID_REPORT_DESC_GUITAR_HERO_ARCADE, include/hid_reports.h:132-171). Every
-// report carries 13 undeclared trailing zero bytes. Hosts that use the raw bytes don't care; hosts that
-// check report lengths may reject or truncate them.
-TEST(GhArcadeDescriptor, DISABLED_SentLengthMatchesTheDescriptor)
+namespace
+{
+// HID report descriptor of a real Guitar Hero Arcade guitar (0c70:0777), from a USB capture of one
+const uint8_t kRealGhArcade[] = {
+    0x05, 0x01, 0x15, 0x00, 0x09, 0x04, 0xA1, 0x01, 0x05, 0x02, 0x09, 0xBB, 0x15, 0x81, 0x25, 0x7F,
+    0x75, 0x08, 0x95, 0x00, 0x81, 0x02, 0x05, 0x01, 0x09, 0x01, 0xA1, 0x00, 0x09, 0x30, 0x09, 0x31,
+    0x09, 0x32, 0x09, 0x33, 0x09, 0x34, 0x95, 0x05, 0x81, 0x02, 0xC0, 0x09, 0x39, 0x15, 0x00, 0x25,
+    0x03, 0x35, 0x00, 0x46, 0x0E, 0x01, 0x65, 0x14, 0x75, 0x04, 0x95, 0x01, 0x81, 0x02, 0x05, 0x09,
+    0x19, 0x01, 0x29, 0x0A, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x0C, 0x55, 0x00, 0x65, 0x00,
+    0x81, 0x02, 0xC0};
+static_assert(sizeof(kRealGhArcade) == 83, "the real descriptor is 83 bytes");
+} // namespace
+
+TEST(GhArcadeDescriptor, IsTheRealGuitarsDescriptor)
+{
+    ASSERT_EQ(sizeof(kGhArcade), sizeof(kRealGhArcade));
+    for (size_t i = 0; i < sizeof(kRealGhArcade); i++)
+        EXPECT_EQ(kGhArcade[i], kRealGhArcade[i]) << "byte " << i;
+}
+
+// The real guitar sends 7 byte reports, which is what GHArcadeGamepadDevice::process
+// (gh_arcade_device.cpp) sends: sizeof(ArcadeGuitarHeroGuitar_Data_t)
+TEST(GhArcadeDescriptor, SentLengthMatchesTheDescriptor)
 {
     auto d = parse(kGhArcade);
     ASSERT_TRUE(d.ok) << d.error;
-    const size_t sent = sizeof(XInputGamepad_Data_t);
-    EXPECT_EQ(sent, d.wire_bytes(ReportType::Input, 0));
+    EXPECT_EQ(d.wire_bytes(ReportType::Input, 0), 7u);
+    EXPECT_EQ(sizeof(ArcadeGuitarHeroGuitar_Data_t), 7u);
 }
 
 // ---------------------------------------------------------------------------------------------

@@ -29,6 +29,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
 
     DeviceFactory::clear_cycle_states();
     DeviceFactory::clear_toggle_states();
+    DeviceFactory::clear_arcade_side();
     DeviceFactory::clear_bluetooth_pairing_states();
     pb_istream_t inputStream = pb_istream_from_buffer(image.data, image.main_size);
     device_mgr.clear_assignable_devices();
@@ -51,6 +52,10 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     block.bluetoothStates.funcs.decode = decode_bluetooth_states;
     block.tlvEntries.funcs.decode = decode_bluetooth_tlv_entries;
     pb_decode(&auxInputStream, proto_AuxConfigBlock_fields, &block);
+    if (block.has_ghArcadeSide && (block.ghArcadeSide == 1 || block.ghArcadeSide == 2))
+    {
+        DeviceFactory::set_arcade_side(block.ghArcadeSide);
+    }
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
     InactivityManager::instance().configure(config.has_inactivity ? &config.inactivity : nullptr);
     if (config.has_peripheralBoot)

@@ -25,6 +25,28 @@ uint16_t Mapping::sample_ui_event()
     return (millis() - m_ui_event_time <= hold) ? m_ui_event_value : 0;
 }
 
+void Mapping::mask_shortcut_members(bool pressed, bool queued_only)
+{
+    if (m_masked_mappings.empty())
+    {
+        return;
+    }
+    auto *shortcut = m_input ? m_input->as_shortcut() : nullptr;
+    bool chord_active = shortcut ? shortcut->tick_digital() : pressed;
+    if (!chord_active)
+    {
+        return;
+    }
+    for (auto *masked : m_masked_mappings)
+    {
+        auto *button = masked->as_button_mapping();
+        if (!queued_only || (button && button->queue_bit() >= 0))
+        {
+            masked->mask_by_shortcut();
+        }
+    }
+}
+
 uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, float center, bool trigger)
 {
     return calibrate_axis(val, max, min, deadzone, center, trigger);
@@ -70,18 +92,7 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
     }
 
     // If this mapping is a shortcut that masks other mappings:
-    if (!m_masked_mappings.empty())
-    {
-        auto *shortcut = m_input ? m_input->as_shortcut() : nullptr;
-        bool chord_active = shortcut ? shortcut->tick_digital() : physical_pressed;
-        if (chord_active)
-        {
-            for (auto *masked : m_masked_mappings)
-            {
-                masked->mask_by_shortcut();
-            }
-        }
-    }
+    mask_shortcut_members(physical_pressed);
 
     uint16_t pressure = m_mapping.has_trigger ? trigger_value
         : event_driven ? event_value

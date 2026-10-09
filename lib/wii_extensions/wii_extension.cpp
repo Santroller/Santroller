@@ -298,14 +298,9 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
         break;
     case WII_INPUTS_UPDATE_LED:
     {
-        // encrypt if encryption is enabled
-        uint8_t state = nextEuphoriaLedState ? 1 : 0;
-        if (s_box)
-        {
-            state = (state - s_box) ^ s_box;
-        }
+        // writes are never encrypted, only reads are (Dolphin EncryptedExtension::BusWrite)
         bufferTx[0] = WII_DJ_EUPHORIA;
-        bufferTx[1] = state;
+        bufferTx[1] = nextEuphoriaLedState ? 1 : 0;
         mInterface.dmaWriteRead(WII_ADDR, bufferTx, 2, nullptr, 0);
         break;
     }

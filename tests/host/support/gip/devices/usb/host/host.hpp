@@ -47,6 +47,16 @@ class UsbHostDevice
 public:
     UsbHostDevice(uint8_t d_addr, uint16_t id) : m_id(id), m_dev_addr(d_addr) {}
     uint8_t dev_addr() { return m_dev_addr; }
+    void disconnect()
+    {
+        for (auto &itf : host_devices_by_itf)
+        {
+            if (itf)
+            {
+                itf->disconnect();
+            }
+        }
+    }
     uint16_t m_id;
     std::array<std::shared_ptr<UsbHostInterface>, 30> host_devices_by_itf;
     std::array<std::shared_ptr<UsbHostInterface>, 16> host_devices_by_endpoint_in;

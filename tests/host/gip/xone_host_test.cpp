@@ -50,6 +50,10 @@ protected:
     }
     void TearDown() override
     {
+        if (host)
+        {
+            host->disconnect();
+        }
         host.reset();
         usb.reset();
         gip_fake::reset();

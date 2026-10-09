@@ -125,8 +125,14 @@ void XboxOneHost::register_auth_handler(std::shared_ptr<XboxOneHost> self)
         return;
     }
 
-    auth_broker.register_handler(ModeXboxOne, [self](XGIPProtocol *packet)
-                                 { self->send_report_from_host(packet); });
+    std::weak_ptr<XboxOneHost> weak_self = self;
+    auth_broker.register_handler(ModeXboxOne, [weak_self](XGIPProtocol *packet)
+                                 {
+                                     if (auto host = weak_self.lock())
+                                     {
+                                         host->send_report_from_host(packet);
+                                     }
+                                 });
     m_auth_registered = true;
 }
 
@@ -176,7 +182,6 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
     {
         usb_host_add_enumerating_interface(intf);
     }
-    printf("size: %d\r\n", size);
     *out_len = size;
     return intf;
 }

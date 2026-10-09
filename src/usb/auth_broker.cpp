@@ -7,11 +7,16 @@ class UsbHostInterface;
 AuthBroker auth_broker;
 
 void AuthBroker::register_handler(ConsoleMode mode, AuthHandler handler) {
-    handlers[mode] = handler;
+    unregister_handler(mode);
+    handlers[mode] = std::move(handler);
 }
 
 void AuthBroker::unregister_handler(ConsoleMode mode) {
-    handlers.erase(mode);
+    auto it = handlers.find(mode);
+    if (it != handlers.end()) {
+        auto handler = std::move(it->second);
+        handlers.erase(it);
+    }
 }
 
 bool AuthBroker::forward_auth(ConsoleMode mode, XGIPProtocol* packet) {
@@ -28,7 +33,8 @@ bool AuthBroker::has_handler(ConsoleMode mode) const {
 }
 
 void AuthBroker::register_auth_device(ConsoleMode mode, std::shared_ptr<UsbHostInterface> device) {
-    auth_devices[mode] = device;
+    unregister_auth_device(mode);
+    auth_devices[mode] = std::move(device);
 }
 
 std::shared_ptr<UsbHostInterface> AuthBroker::get_auth_device(ConsoleMode mode) const {
@@ -37,15 +43,24 @@ std::shared_ptr<UsbHostInterface> AuthBroker::get_auth_device(ConsoleMode mode) 
 }
 
 void AuthBroker::unregister_auth_device(ConsoleMode mode) {
-    auth_devices.erase(mode);
+    auto it = auth_devices.find(mode);
+    if (it != auth_devices.end()) {
+        auto device = std::move(it->second);
+        auth_devices.erase(it);
+    }
 }
 
 void AuthBroker::register_response_handler(ConsoleMode mode, AuthHandler handler) {
-    response_handlers[mode] = handler;
+    unregister_response_handler(mode);
+    response_handlers[mode] = std::move(handler);
 }
 
 void AuthBroker::unregister_response_handler(ConsoleMode mode) {
-    response_handlers.erase(mode);
+    auto it = response_handlers.find(mode);
+    if (it != response_handlers.end()) {
+        auto handler = std::move(it->second);
+        response_handlers.erase(it);
+    }
 }
 
 bool AuthBroker::forward_auth_response(ConsoleMode mode, XGIPProtocol* packet) {

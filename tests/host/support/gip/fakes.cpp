@@ -26,7 +26,13 @@ void gip_fake::reset()
     assignable.clear();
     delayed_init_calls = 0;
     for (auto &dev : host_devices)
-        dev.reset();
+    {
+        if (dev)
+        {
+            dev->disconnect();
+            dev.reset();
+        }
+    }
     auth_broker.unregister_handler(ModeXboxOne);
     auth_broker.unregister_response_handler(ModeXboxOne);
     auth_broker.set_auth_completed(ModeXboxOne, false);

@@ -3,6 +3,7 @@
 #include <hardware/spi.h>
 #include <hardware/dma.h>
 #include <hardware/clocks.h>
+#include <hardware/sync.h>
 #include <pico/time.h>
 #include <stdio.h>
 #include <string.h>
@@ -95,7 +96,9 @@ static const uint8_t commandSetPressuresMouse[] = {0x01, 0x4F, 0x00, 0b1111, 0x0
                                                    0b11, 0x00, 0x00, 0x00};
 
 static const uint8_t commandPollInput[] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
-static PSXController *controller;
+static std::weak_ptr<PSXBus> bus_registry[2];
+// Raw copies of the registry for the interrupt handlers
+static PSXBus *buses[2];
 
 static void trace_ps2_packet(const char *tag, const uint8_t *data, uint8_t len)
 {
@@ -114,55 +117,71 @@ static void trace_ps2_packet(const char *tag, const uint8_t *data, uint8_t len)
 
 void attentionInterrupt(uint gpio, uint32_t events)
 {
-    if (controller)
-        controller->process_data(true, false);
+    PSXBus::ack_edge(gpio);
 }
 
 static void dma_complete_handler()
 {
-    if (controller)
-        controller->spi_dma_complete();
+    PSXBus::dma_complete();
 }
 
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
     PSXController *inst = (PSXController *)user_data;
     // A stale alarm can outlive the controller across config reloads
-    if (inst != controller)
+    if (!PSXBus::is_attached(inst))
         return 0;
     inst->process_data(false, true);
     return 0;
 }
-PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin) 
-    : m_block(block), m_clock(clock), m_attPin(attPin), m_ackPin(ackPin), m_sckPin(sck), m_mosiPin(mosi), m_misoPin(miso)
+
+static inline void abort_dma_if_active(int channel)
 {
-    controller = this;
-    if (m_attPin != (uint8_t)-1)
+    if (channel < 0)
+        return;
+    if (dma_channel_is_busy(channel))
     {
-        gpio_init(m_attPin);
-        gpio_set_dir(m_attPin, true);
-        gpio_put(m_attPin, true);
-        gpio_set_pulls(m_attPin, true, false);
+        dma_channel_abort(channel);
+        while (dma_hw->abort & (1u << channel))
+            tight_loop_contents();
     }
 }
 
-void PSXController::begin()
+std::shared_ptr<PSXBus> PSXBus::acquire(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint8_t ackPin, uint32_t clock)
 {
-    PS2_PRINT("[PS2] begin sck=%d mosi=%d miso=%d att=%u ack=%u clock=%u block=%u\r\n",
-              m_sckPin, m_mosiPin, m_misoPin, m_attPin, m_ackPin, m_clock, m_block);
+    uint8_t idx = block ? 1 : 0;
+    if (auto bus = bus_registry[idx].lock())
+    {
+        if (bus->m_sckPin == sck && bus->m_mosiPin == mosi && bus->m_misoPin == miso && bus->m_ackPin == ackPin)
+            return bus;
+        PS2_PRINT("[PS2] bus %u already in use with different pins\r\n", idx);
+        return nullptr;
+    }
+    auto bus = std::shared_ptr<PSXBus>(new PSXBus(idx, sck, mosi, miso, ackPin));
+    bus->init(clock);
+    bus_registry[idx] = bus;
+    buses[idx] = bus.get();
+    return bus;
+}
 
-    gpio_init(m_attPin);
-    gpio_set_dir(m_attPin, true);
-    gpio_put(m_attPin, true);
-    gpio_set_pulls(m_attPin, true, false);
+PSXBus::PSXBus(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint8_t ackPin)
+    : m_block(block), m_sckPin(sck), m_mosiPin(mosi), m_misoPin(miso), m_ackPin(ackPin)
+{
+}
+
+void PSXBus::init(uint32_t clock)
+{
+    PS2_PRINT("[PS2] bus init sck=%d mosi=%d miso=%d ack=%u clock=%u block=%u\r\n",
+              m_sckPin, m_mosiPin, m_misoPin, m_ackPin, clock, m_block);
+
     gpio_init(m_ackPin);
     gpio_set_dir(m_ackPin, false);
     gpio_set_pulls(m_ackPin, true, false);
-    controller = this;
 
     spi = (m_block == 0) ? spi0 : spi1;
-    spi_init(spi, handshake_clock());
+    spi_init(spi, clock);
     spi_set_format(spi, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
+    m_clock = clock;
 
     if (m_sckPin != -1)
         gpio_set_function(m_sckPin, GPIO_FUNC_SPI);
@@ -212,13 +231,14 @@ void PSXController::begin()
 
     if (dma_rx >= 0 && dma_tx >= 0)
     {
+        // Ports point the RX write address and TX read address at their own buffers per transaction
         dma_channel_config rx_cfg = dma_channel_get_default_config(dma_rx);
         channel_config_set_transfer_data_size(&rx_cfg, DMA_SIZE_8);
         channel_config_set_dreq(&rx_cfg, spi_get_dreq(spi, false));
         channel_config_set_read_increment(&rx_cfg, false);
         channel_config_set_write_increment(&rx_cfg, true);
         dma_channel_configure(
-            dma_rx, &rx_cfg, ps2Data,
+            dma_rx, &rx_cfg, nullptr,
             &spi_get_hw(spi)->dr, BUFFER_SIZE, false);
 
         if (pio_initialized)
@@ -242,7 +262,7 @@ void PSXController::begin()
                 channel_config_set_read_increment(&tx_cfg, true);
                 channel_config_set_write_increment(&tx_cfg, false);
                 dma_channel_configure(
-                    dma_tx, &tx_cfg, &spi_get_hw(spi)->dr, ps2DataOutBuffer, 1, false);
+                    dma_tx, &tx_cfg, &spi_get_hw(spi)->dr, nullptr, 1, false);
             }
             else
             {
@@ -264,7 +284,7 @@ void PSXController::begin()
                 channel_config_set_read_increment(&tx_cfg, true);
                 channel_config_set_write_increment(&tx_cfg, false);
                 dma_channel_configure(
-                    dma_tx, &tx_cfg, &spi_get_hw(spi)->dr, ps2DataOutBuffer, BUFFER_SIZE, false);
+                    dma_tx, &tx_cfg, &spi_get_hw(spi)->dr, nullptr, BUFFER_SIZE, false);
             }
         }
 
@@ -274,20 +294,218 @@ void PSXController::begin()
     }
 
     gpio_set_irq_enabled_with_callback(m_ackPin, GPIO_IRQ_EDGE_RISE, true, &attentionInterrupt);
-    status = DISCONNECTED;
-    packet_delay = 200000;
-    no_attention();
 }
-uint32_t PSXController::handshake_clock() const
+
+PSXBus::~PSXBus()
 {
-    return m_clock < PS1_CLOCK ? m_clock : PS1_CLOCK;
+    PS2_PRINT("~PSXBus\r\n");
+    uint32_t irq_state = save_and_disable_interrupts();
+    if (buses[m_block] == this)
+        buses[m_block] = nullptr;
+    restore_interrupts(irq_state);
+
+    gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
+    stop_transfer();
+
+    if (dma_rx >= 0)
+    {
+        dma_channel_set_irq1_enabled(dma_rx, false);
+        dma_channel_unclaim(dma_rx);
+        dma_rx = -1;
+    }
+    if (dma_tx >= 0)
+    {
+        dma_channel_unclaim(dma_tx);
+        dma_tx = -1;
+    }
+    if (dma_tx_pacer >= 0)
+    {
+        dma_channel_unclaim(dma_tx_pacer);
+        dma_tx_pacer = -1;
+    }
+    if (dma_timer >= 0)
+    {
+        dma_timer_unclaim(dma_timer);
+        dma_timer = -1;
+    }
+    if (pio_initialized && pio != nullptr)
+    {
+        pio_sm_set_enabled(pio, sm, false);
+        pio_sm_unclaim(pio, sm);
+        pio_remove_program(pio, &psx_ack_pacer_program, pio_offset);
+        pio_initialized = false;
+        pio = nullptr;
+    }
 }
-void PSXController::set_bus_clock(uint32_t clock)
+
+void PSXBus::stop_transfer()
 {
+    abort_dma_if_active(dma_rx);
+    abort_dma_if_active(dma_tx);
+    abort_dma_if_active(dma_tx_pacer);
+    if (pio_initialized)
+        pio_sm_set_enabled(pio, sm, false);
+    if (dma_rx >= 0)
+        dma_hw->ints1 = 1u << dma_rx;
+}
+
+bool PSXBus::is_attached(const PSXController *port)
+{
+    for (PSXBus *bus : buses)
+    {
+        if (!bus)
+            continue;
+        for (PSXController *p : bus->m_ports)
+        {
+            if (p == port)
+                return true;
+        }
+    }
+    return false;
+}
+
+void PSXBus::dma_complete()
+{
+    for (PSXBus *bus : buses)
+    {
+        if (!bus || bus->dma_rx < 0 || !(dma_hw->ints1 & (1u << bus->dma_rx)))
+            continue;
+        if (bus->m_active)
+            bus->m_active->spi_dma_complete();
+        else
+            dma_hw->ints1 = 1u << bus->dma_rx;
+    }
+}
+
+void PSXBus::ack_edge(uint gpio)
+{
+    for (PSXBus *bus : buses)
+    {
+        if (!bus || bus->m_ackPin != gpio)
+            continue;
+        // ACK is only listened to while the bus is idle, and it can only be the last pad selected
+        if (!bus->m_active && bus->m_last)
+            bus->m_last->process_data(true, false);
+    }
+}
+
+bool PSXBus::attach(PSXController *port, uint8_t attPin)
+{
+    uint32_t irq_state = save_and_disable_interrupts();
+    int free_slot = -1;
+    for (int i = 0; i < PSX_MAX_PORTS; i++)
+    {
+        // Another pad on the same attention pin would answer at the same time
+        if (m_ports[i] && m_attPins[i] == attPin)
+        {
+            restore_interrupts(irq_state);
+            PS2_PRINT("[PS2] att=%u already on bus %u\r\n", attPin, m_block);
+            return false;
+        }
+        if (!m_ports[i] && free_slot < 0)
+            free_slot = i;
+    }
+    if (free_slot >= 0)
+    {
+        m_ports[free_slot] = port;
+        m_attPins[free_slot] = attPin;
+        m_pending[free_slot] = false;
+    }
+    restore_interrupts(irq_state);
+    return free_slot >= 0;
+}
+
+void PSXBus::detach(PSXController *port)
+{
+    uint32_t irq_state = save_and_disable_interrupts();
+    for (int i = 0; i < PSX_MAX_PORTS; i++)
+    {
+        if (m_ports[i] == port)
+        {
+            m_ports[i] = nullptr;
+            m_pending[i] = false;
+        }
+    }
+    if (m_last == port)
+        m_last = nullptr;
+    bool was_active = m_active == port;
+    restore_interrupts(irq_state);
+
+    if (was_active)
+    {
+        stop_transfer();
+        release(port);
+    }
+}
+
+bool PSXBus::claim(PSXController *port)
+{
+    uint32_t irq_state = save_and_disable_interrupts();
+    bool claimed = !m_active || m_active == port;
+    for (int i = 0; i < PSX_MAX_PORTS; i++)
+    {
+        if (m_ports[i] == port)
+            m_pending[i] = !claimed;
+    }
+    if (claimed)
+        m_active = port;
+    restore_interrupts(irq_state);
+    if (claimed)
+        gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
+    return claimed;
+}
+
+void PSXBus::release(PSXController *port)
+{
+    uint32_t irq_state = save_and_disable_interrupts();
+    if (m_active != port)
+    {
+        restore_interrupts(irq_state);
+        return;
+    }
+    // Hand the bus to the next waiting port after this one, so ports take turns
+    int start = 0;
+    bool attached = false;
+    for (int i = 0; i < PSX_MAX_PORTS; i++)
+    {
+        if (m_ports[i] == port)
+        {
+            start = i + 1;
+            attached = true;
+        }
+    }
+    PSXController *next = nullptr;
+    for (int i = 0; i < PSX_MAX_PORTS && !next; i++)
+    {
+        int idx = (start + i) % PSX_MAX_PORTS;
+        if (m_ports[idx] && m_pending[idx])
+        {
+            m_pending[idx] = false;
+            next = m_ports[idx];
+        }
+    }
+    // Reserve the bus for the next port so nobody else takes it before its alarm fires
+    m_active = next;
+    if (attached)
+        m_last = port;
+    restore_interrupts(irq_state);
+
+    if (next)
+        next->bus_granted();
+    else
+        gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, true);
+}
+
+void PSXBus::set_clock(uint32_t clock)
+{
+    if (clock == m_clock)
+        return;
+    m_clock = clock;
     spi_set_baudrate(spi, clock);
     update_timer_pacing();
 }
-void PSXController::update_timer_pacing()
+
+void PSXBus::update_timer_pacing()
 {
     if (dma_timer < 0)
         return;
@@ -297,33 +515,81 @@ void PSXController::update_timer_pacing()
     uint32_t denom = (uint32_t)((uint64_t)clock_get_hz(clk_sys) * interval_us / 1000000);
     dma_timer_set_fraction(dma_timer, 1, denom > UINT16_MAX ? UINT16_MAX : denom);
 }
-static inline void abort_dma_if_active(int channel)
+
+PSXController::PSXController(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin, uint8_t ackPin) 
+    : m_block(block), m_clock(clock), m_attPin(attPin), m_ackPin(ackPin), m_sckPin(sck), m_mosiPin(mosi), m_misoPin(miso)
 {
-    if (channel < 0)
-        return;
-    if (dma_channel_is_busy(channel))
+    if (m_attPin != (uint8_t)-1)
     {
-        dma_channel_abort(channel);
-        while (dma_hw->abort & (1u << channel))
-            tight_loop_contents();
+        gpio_init(m_attPin);
+        gpio_set_dir(m_attPin, true);
+        gpio_put(m_attPin, true);
+        gpio_set_pulls(m_attPin, true, false);
     }
+}
+
+void PSXController::begin()
+{
+    PS2_PRINT("[PS2] begin sck=%d mosi=%d miso=%d att=%u ack=%u clock=%u block=%u\r\n",
+              m_sckPin, m_mosiPin, m_misoPin, m_attPin, m_ackPin, m_clock, m_block);
+
+    gpio_init(m_attPin);
+    gpio_set_dir(m_attPin, true);
+    gpio_put(m_attPin, true);
+    gpio_set_pulls(m_attPin, true, false);
+
+    m_begun = true;
+    m_bus_clock = handshake_clock();
+    status = DISCONNECTED;
+    packet_delay = 200000;
+    if (attach_bus())
+        no_attention();
+}
+bool PSXController::attach_bus()
+{
+    // During a config reload the bus can still be held by a port using the old pins, so tick() retries this
+    auto bus = PSXBus::acquire(m_block, m_sckPin, m_mosiPin, m_misoPin, m_ackPin, m_bus_clock);
+    if (!bus || !bus->attach(this, m_attPin))
+        return false;
+    spi = bus->spi;
+    dma_rx = bus->dma_rx;
+    dma_tx = bus->dma_tx;
+    dma_tx_pacer = bus->dma_tx_pacer;
+    dma_timer = bus->dma_timer;
+    pio = bus->pio;
+    sm = bus->sm;
+    pio_offset = bus->pio_offset;
+    pio_initialized = bus->pio_initialized;
+    m_bus = bus;
+    return true;
+}
+void PSXController::bus_granted()
+{
+    cancel_alarm(timeout_alarm_id);
+    timeout_alarm_id = add_alarm_in_us(BUS_HANDOFF_DELAY, restart_handler, this, true);
+}
+uint32_t PSXController::handshake_clock() const
+{
+    return m_clock < PS1_CLOCK ? m_clock : PS1_CLOCK;
+}
+void PSXController::set_bus_clock(uint32_t clock)
+{
+    m_bus_clock = clock;
+    if (m_bus && m_bus->is_active(this))
+        m_bus->set_clock(clock);
 }
 
 void PSXController::end()
 {
-    gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
+    m_begun = false;
     cancel_alarm(timeout_alarm_id);
-
-    if (spi_active)
+    if (m_bus)
     {
-        abort_dma_if_active(dma_rx);
-        abort_dma_if_active(dma_tx);
-        abort_dma_if_active(dma_tx_pacer);
-        if (pio_initialized)
-            pio_sm_set_enabled(pio, sm, false);
-        dma_hw->ints1 = 1u << dma_rx;
-        spi_active = false;
+        m_bus->detach(this);
+        m_bus.reset();
     }
+    spi_active = false;
+    spi_started = false;
 }
 void PSXController::load_state(const DeviceReloadState *state)
 {
@@ -364,48 +630,16 @@ PSXController::~PSXController()
 {
     PS2_PRINT("~PSXController\r\n");
     end();
-
-    if (dma_rx >= 0)
-    {
-        dma_channel_set_irq1_enabled(dma_rx, false);
-        dma_channel_unclaim(dma_rx);
-        dma_rx = -1;
-    }
-    if (dma_tx >= 0)
-    {
-        dma_channel_unclaim(dma_tx);
-        dma_tx = -1;
-    }
-    if (dma_tx_pacer >= 0)
-    {
-        dma_channel_unclaim(dma_tx_pacer);
-        dma_tx_pacer = -1;
-    }
-    if (dma_timer >= 0)
-    {
-        dma_timer_unclaim(dma_timer);
-        dma_timer = -1;
-    }
-    if (pio_initialized && pio != nullptr)
-    {
-        pio_sm_set_enabled(pio, sm, false);
-        pio_sm_unclaim(pio, sm);
-        pio_remove_program(pio, &psx_ack_pacer_program, pio_offset);
-        pio_initialized = false;
-        pio = nullptr;
-    }
-    if (controller == this)
-        controller = nullptr;
 }
 void PSXController::no_attention(void)
 {
     PS2_PRINT("[PS2] transaction end state=%d valid=%d spi=%d\r\n", status, valid, spi_active);
     done = true;
-    if (!spi_active)
-        gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, true);
     gpio_put(m_attPin, true);
     cancel_alarm(timeout_alarm_id);
     timeout_alarm_id = add_alarm_in_us(packet_delay, restart_handler, this, true);
+    if (m_bus)
+        m_bus->release(this);
 }
 void PSXController::signal_attention(void)
 {
@@ -418,6 +652,10 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
 {
     PS2_PRINT("[PS2] start state=%d cmd=%02X len=%u ps2Len=%u\r\n",
               status, len > 1 ? out[1] : 0, len, ps2Len);
+    // Another pad is using the bus, it hands the bus over once it is done
+    if (!m_bus || !m_bus->claim(this))
+        return false;
+    m_bus->set_clock(m_bus_clock);
     ps2Idx = 0;
     ps2DataLen = len;
     ps2DataOut = out;
@@ -444,7 +682,6 @@ bool PSXController::auto_shift_data(const uint8_t *out, const uint8_t len)
 #endif
 
     cancel_alarm(timeout_alarm_id);
-    gpio_set_irq_enabled(m_ackPin, GPIO_IRQ_EDGE_RISE, false);
     gpio_put(m_attPin, false);
     done = false;
     spi_active = true;
@@ -1181,6 +1418,8 @@ bool PSXController::controller_valid()
 }
 void PSXController::tick()
 {
+    if (m_begun && !m_bus && attach_bus())
+        no_attention();
 }
 void PSXController::set_rumble(uint8_t left, uint8_t right)
 {

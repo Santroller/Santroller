@@ -10,6 +10,7 @@
 #include "input/input.hpp"
 #include "triggers/activation_trigger_list.hpp"
 #include "profiles/input_queue.hpp"
+#include "protocols/midi_output.hpp"
 
 // Forward declarations to avoid circular dependencies
 class Mapping;
@@ -114,4 +115,5 @@ public:
     KeyboardState keyboard_state;
     MouseState mouse_state;
     ConsumerState consumer_state;
+    MidiState midi_state;
 };

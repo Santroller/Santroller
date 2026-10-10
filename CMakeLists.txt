@@ -220,6 +220,7 @@ add_executable(
   src/emulation/usb/ps5_device.cpp
   src/emulation/usb/hid_device.cpp
   src/emulation/usb/hid_keyboard_device.cpp
+  src/emulation/usb/midi_device.cpp
   src/emulation/usb/hid_gamepad_device.cpp
   src/emulation/usb/hid_config_device.cpp
   src/emulation/usb/switch_device.cpp

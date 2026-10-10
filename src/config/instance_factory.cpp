@@ -23,6 +23,7 @@
 #include "emulation/usb/gh_arcade_device.h"
 #include "emulation/usb/spice2x_device.h"
 #include "emulation/usb/pdloader_device.h"
+#include "emulation/usb/midi_device.h"
 
 static auto &profile_mgr = ProfileManager::instance();
 static auto &config_mgr = ConfigManager::instance();
@@ -189,8 +190,9 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
     std::shared_ptr<UsbDevice> instance;
 
     printf("usbd new mode=%d sub=%d\r\n", mode, subtype);
-    if (subtype == SubType_KeyboardMouse && mode != ModeHid)
-    {   
+    // Consoles don't take keyboards or MIDI instruments, so those only work as plain USB devices
+    if ((subtype == SubType_KeyboardMouse || subtype == SubType_Midi) && mode != ModeHid)
+    {
         config_mgr.request_mode(ModeHid);
     }
     switch (mode)
@@ -199,6 +201,10 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
         if (subtype == SubType_KeyboardMouse)
         {
             instance = std::make_shared<HIDKeyboardDevice>();
+        }
+        else if (subtype == SubType_Midi)
+        {
+            instance = std::make_shared<UsbMidiDevice>();
         }
         else
         {
@@ -268,7 +274,10 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
     if (instance)
     {
         instance->interface_id = profile_mgr.usb_instance_count();
-        profile_mgr.set_usb_instance(instance->interface_id, instance);
+        for (uint8_t i = 0; i < instance->interface_count(); i++)
+        {
+            profile_mgr.set_usb_instance(instance->interface_id + i, instance);
+        }
         profile_mgr.set_usb_reload_identity(instance->interface_id, mode, subtype, false);
     }
 

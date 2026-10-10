@@ -165,7 +165,16 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
 
     case proto_Output_proKeyboardButton_tag:
         return std::make_unique<ProKeysButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
+    case proto_Output_midiNote_tag:
+        return std::make_unique<MidiNoteMapping>(proto_mapping, std::move(input), mapping_id, profile);
+
+    case proto_Output_midiControl_tag:
+        return std::make_unique<MidiControlMapping>(proto_mapping, std::move(input), mapping_id, profile);
+
+    case proto_Output_midiPitchBend_tag:
+        return std::make_unique<MidiPitchBendMapping>(proto_mapping, std::move(input), mapping_id, profile);
+
     default:
         return nullptr;
     }

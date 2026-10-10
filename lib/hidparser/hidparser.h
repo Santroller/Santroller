@@ -354,6 +354,7 @@ extern "C"
 		bool foundPS4Usage;
 		bool foundPS5Usage;
 		bool foundSantrollerV2OutputUsage;
+		bool foundSteamTritonReport; /**< Declares a 2026 Steam Controller state input report (IDs 0x42 / 0x45 / 0x47), its items are vendor defined so they are filtered out of the item list */
 
 	} HID_ReportInfo_t;
 

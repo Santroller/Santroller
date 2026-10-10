@@ -427,7 +427,10 @@ std::shared_ptr<UsbDevice> ProfileManager::reuse_usb_instance(uint8_t id, Consol
     auto instance = m_previous_usb_instances[id];
     printf("usbd reuse itf=%u mode=%d sub=%d\r\n", id, mode, subtype);
     m_instances.push_back(instance);
-    m_usb_instances[id] = instance;
+    for (uint8_t i = 0; i < instance->interface_count() && id + i < std::size(m_usb_instances); i++)
+    {
+        m_usb_instances[id + i] = instance;
+    }
     m_usb_reload_identities[id] = identity;
     UsbDevice::restore_allocation_state(identity.after);
     for (size_t ep = 0; ep < std::size(m_usb_instances_by_epin); ++ep)

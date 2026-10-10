@@ -120,12 +120,15 @@ public:
     template <typename Func>
     void for_each_usb_instance(Func func) const
     {
+        // a device with several interfaces fills a slot for each of them, but is only visited once
+        const UsbDevice *last = nullptr;
         for (const auto &instance : m_usb_instances)
         {
-            if (instance)
+            if (instance && instance.get() != last)
             {
                 func(instance);
             }
+            last = instance.get();
         }
     }
     // Whether any profile on USB wants to jump to PS3 mode when RPCS3 probes it

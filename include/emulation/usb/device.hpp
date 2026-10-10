@@ -26,7 +26,9 @@ public:
         m_last_epout = state.epout;
         m_last_strid = state.strid;
     }
+    // The first of this device's interfaces, it owns interface_count() of them from there on
     uint8_t interface_id = 0;
+    virtual uint8_t interface_count() const { return 1; }
     virtual size_t compatible_section_descriptor(uint8_t *desc, size_t remaining) = 0;
     virtual size_t config_descriptor(uint8_t *desc, size_t remaining) = 0;
     virtual size_t device_name(uint8_t idx, char *desc) = 0;

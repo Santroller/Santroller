@@ -8,18 +8,11 @@
 #include "devices/usb.hpp"
 #include "utils.h"
 
-// The wired controller exposes keyboard / mouse interfaces for lizard mode too, so pick the
-// interface that actually declares the controller state reports
+// The wired controller puts its keyboard / mouse (lizard mode) and gamepad reports behind report IDs,
+// make sure the interface declares the vendor defined controller state reports
 static bool has_state_report(HID_ReportInfo_t *info)
 {
-    if (!info)
-        return false;
-    for (HID_ReportItem_t *item = info->FirstReportItem; item; item = item->Next)
-    {
-        if (item->ItemType == HID_REPORT_ITEM_In && steam_triton_is_state_report(item->ReportID))
-            return true;
-    }
-    return false;
+    return info && info->foundSteamTritonReport;
 }
 
 std::shared_ptr<UsbHostInterface> SteamTritonHost::open(std::shared_ptr<UsbHostDevice> list,

@@ -300,3 +300,54 @@ void MouseButtonMapping::update_ogxbox(uint8_t *buf)
 void MouseButtonMapping::update_xboxone(uint8_t *buf)
 {
 }
+
+MidiNoteMapping::MidiNoteMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+{
+}
+
+void MidiNoteMapping::update_hid(uint8_t *buf)
+{
+    if (!m_last_value)
+    {
+        return;
+    }
+    const auto &note = m_mapping.mapping.mapping.midiNote;
+    uint8_t velocity;
+    if (note.has_velocity)
+    {
+        velocity = note.velocity > 0x7F ? 0x7F : note.velocity ? note.velocity : 1;
+    }
+    else
+    {
+        // a hit's strength is its raw analog value, so scale it if the input has been calibrated
+        uint16_t strength = m_last_pressure;
+        if (m_mapping.max != m_mapping.min)
+        {
+            strength = calibrate(strength, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, true);
+        }
+        velocity = midi_velocity(strength);
+    }
+    m_profile->midi_state.set_note(note.channel, note.note, velocity);
+}
+
+MidiControlMapping::MidiControlMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
+{
+}
+
+void MidiControlMapping::update_hid(uint8_t *buf)
+{
+    // set even at rest, as the control has to go back to 0 when it's let go
+    const auto &control = m_mapping.mapping.mapping.midiControl;
+    m_value = midi_scale(m_calibrated_value, m_value, 7);
+    m_profile->midi_state.set_control(control.channel, control.control, m_value);
+}
+
+MidiPitchBendMapping::MidiPitchBendMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
+{
+}
+
+void MidiPitchBendMapping::update_hid(uint8_t *buf)
+{
+    m_value = midi_scale(m_calibrated_value, m_value, 14);
+    m_profile->midi_state.set_pitch_bend(m_mapping.mapping.mapping.midiPitchBend, m_value);
+}

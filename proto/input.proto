@@ -283,6 +283,20 @@ message InputActivationTrigger {
   optional int32 maxTriggerValue = 5;
 }
 
+// A note on a MIDI channel (0 - 15). The velocity comes from how hard the input was hit,
+// unless a fixed velocity (1 - 127) is set.
+message MidiNoteOutput {
+  required uint32 channel = 1;
+  required uint32 note = 2;
+  optional uint32 velocity = 3;
+}
+
+// A control change on a MIDI channel (0 - 15), from an axis
+message MidiControlOutput {
+  required uint32 channel = 1;
+  required uint32 control = 2;
+}
+
 message Output {
   oneof mapping {
     GamepadButtonType gamepadButton = 1;
@@ -319,6 +333,10 @@ message Output {
     // Consumer page usage, e.g. 0xE9 for volume up
     uint32 consumerKey = 34;
     ActionType action = 35;
+    MidiNoteOutput midiNote = 36;
+    MidiControlOutput midiControl = 37;
+    // The MIDI channel (0 - 15) to bend, from an axis
+    uint32 midiPitchBend = 38;
   }
 }
 

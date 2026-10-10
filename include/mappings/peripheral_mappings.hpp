@@ -85,3 +85,36 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
 };
+
+// A MIDI note, held while the input is
+class MidiNoteMapping : public ButtonMapping
+{
+public:
+    ~MidiNoteMapping() {}
+    MidiNoteMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    void update_hid(uint8_t *report);
+};
+
+// A MIDI control change, following an axis
+class MidiControlMapping : public AxisMapping
+{
+public:
+    ~MidiControlMapping() {}
+    MidiControlMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    void update_hid(uint8_t *report);
+
+private:
+    uint16_t m_value = 0;
+};
+
+// A channel's MIDI pitch bend, following an axis
+class MidiPitchBendMapping : public AxisMapping
+{
+public:
+    ~MidiPitchBendMapping() {}
+    MidiPitchBendMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    void update_hid(uint8_t *report);
+
+private:
+    uint16_t m_value = MIDI_OUTPUT_PITCH_BEND_CENTER;
+};

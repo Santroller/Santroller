@@ -100,7 +100,7 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
   ProfileManager::instance().for_each_usb_instance([&current, &interfaces](const auto &instance)
   {
     current += instance->config_descriptor(descriptor_buffer + current, sizeof(descriptor_buffer) - current);
-    interfaces++;
+    interfaces += instance->interface_count();
   });
   config->bDescriptorType = TUSB_DESC_CONFIGURATION;
   config->bLength = sizeof(tusb_desc_configuration_t);

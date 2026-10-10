@@ -66,6 +66,7 @@ add_executable(santroller_tests
   unit/ble_midi_test.cpp
   unit/hidparser_test.cpp
   unit/hid_mouse_test.cpp
+  unit/midi_output_test.cpp
 )
 target_include_directories(santroller_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/support)
 target_compile_options(santroller_tests PRIVATE -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter)

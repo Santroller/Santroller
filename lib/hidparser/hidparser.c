@@ -650,6 +650,11 @@ uint8_t USB_ProcessHIDReport(const uint8_t *ReportData,
 				{
 					ParserData->foundSantrollerV2OutputUsage = true;
 				}
+				if (NewReportItem.ItemType == HID_REPORT_ITEM_In &&
+					(NewReportItem.ReportID == 0x42 || NewReportItem.ReportID == 0x45 || NewReportItem.ReportID == 0x47))
+				{
+					ParserData->foundSteamTritonReport = true;
+				}
 				if (NewReportItem.ItemType == HID_REPORT_ITEM_Feature && NewReportItem.Attributes.Usage.Page == HID_USAGE_PAGE_VENDOR)
 				{
 					if (NewReportItem.Attributes.Usage.Usage == 0x2821 || NewReportItem.Attributes.Usage.Usage == 0xA883)

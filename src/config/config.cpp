@@ -183,7 +183,10 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
         previous_state.valid ? &previous_state : nullptr);
     if (!device)
     {
-        return false;
+        // Skip devices we can't build (no type set, or one this firmware doesn't know). Failing here
+        // aborts the whole config decode, and profiles come after devices, so none would load.
+        printf("skipping device %d type=%d\r\n", device_id, proto_device.which_device);
+        return true;
     }
 
     device_mgr.set_root_device(device_id, device);

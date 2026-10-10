@@ -7,6 +7,7 @@
 #include "controllers.h"
 #include "endpoints.h"
 #include "fxpt_math.h"
+#include "gh5_neck.h"
 #include "hid.h"
 #include "inputs/slave.h"
 #include "io.h"
@@ -22,10 +23,8 @@
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
 #define DJ_BUTTONS_PTR 0x12
-#define GH5NECK_ADDR 0x0D
 #define CLONE_ADDR 0x10
 #define CLONE_VALID_PACKET 0x52
-#define GH5NECK_BUTTONS_PTR 0x12
 #define BUFFER_SIZE_QUEUE 255
 #define KEY_ERR_OVF 0x01
 #define REQUIRE_LED_DEBOUNCE LED_COUNT || LED_COUNT_PERIPHERAL || LED_COUNT_STP || LED_COUNT_PERIPHERAL_STP || LED_COUNT_WS2812 || LED_COUNT_PERIPHERAL_WS2812 || HAS_LED_OUTPUT || LED_COUNT_MPR121
@@ -131,7 +130,6 @@ uint8_t lastSuccessfulTurntablePacketLeft[3];
 uint8_t lastSuccessfulTurntablePacketRight[3];
 uint8_t last_usb_report_size = 0;
 long lastSuccessfulGHWTPacket;
-bool lastGH5WasSuccessful = false;
 bool lastCloneWasSuccessful = false;
 bool lastTurntableWasSuccessfulLeft = false;
 bool lastTurntableWasSuccessfulRight = false;

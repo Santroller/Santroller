@@ -10,6 +10,11 @@ extern "C" {
 #include "config_data.h"
 #endif
 
+// The AVRs don't have enough headroom for Wii extension or PS2 controller emulation, so the legacy release doesn't support them
+#if defined(TICK_WII) || defined(TICK_PS2)
+#error Wii and PS2 output are not supported in the legacy release
+#endif
+
 // ConsoleType can change due to console detection
 extern uint8_t consoleType;
 #ifdef CONFIGURABLE_BLOBS

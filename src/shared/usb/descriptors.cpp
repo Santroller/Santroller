@@ -800,7 +800,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
     if (requestType == (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_RECIPIENT_INTERFACE | USB_SETUP_TYPE_CLASS)) {
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
         // PS3s request this as some form of controller id
-        if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wLength == 0x08) {
+        if ((consoleType == PS3 || consoleType == IOS_FESTIVAL) && wValue == 0x0300 && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT) {
             // Pro instruments use a different init flow
 #if DEVICE_TYPE_IS_PRO
             if (proButtonsEnabled) {
@@ -975,10 +975,14 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
             compat->TotalSections = 4;
             compat->TotalLength = sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
             return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR);
-        } else if (consoleType == PS3 || consoleType == WII_RB) {
+        }
+#if DEVICE_TYPE != GUITAR_HERO_GUITAR
+        else if (consoleType == PS3 || consoleType == WII_RB) {
             memcpy_P(requestBuffer, &DevCompatIDsPS3, sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE));
             return sizeof(OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE);
-        } else if (consoleType != UNIVERSAL) {
+        }
+#endif
+        else if (consoleType != UNIVERSAL) {
             return 0;
         }
         memcpy_P(requestBuffer, &DevCompatIDsUniversal, sizeof(DevCompatIDsUniversal));

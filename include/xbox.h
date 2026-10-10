@@ -97,5 +97,5 @@ extern const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE DevCompatIDsOne;
 extern const OS_COMPATIBLE_ID_DESCRIPTOR_SINGLE DevCompatIDsOneDetect;
 
 extern const XID_DESCRIPTOR DukeXIDDescriptor;
-extern const OGXboxGamepad_Data_t DukeXIDInputCapabilities;
+extern const OGXboxGamepadCapabilities_Data_t DukeXIDInputCapabilities;
 extern const OGXboxOutput_Report_t DukeXIDVibrationCapabilities;

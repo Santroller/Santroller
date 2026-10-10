@@ -85,11 +85,11 @@ long clone_guitar_ready_timer = 0;
 bool clone_ready = false;
 bool reading = false;
 Buffer_Report_t last_queue_report;
-long last_queue = 0;
+uint32_t last_queue = 0;
 uint8_t brightness = LED_BRIGHTNESS;
 uint8_t queue_size = 0;
 uint8_t led_tmp;
-uint8_t queue_tail = 0;
+uint8_t queue_head = 0;
 Buffer_Report_t queue[BUFFER_SIZE_QUEUE];
 #define TURNTABLE_BUFFER_SIZE 16
 #ifdef INPUT_DJ_TURNTABLE_SMOOTHING
@@ -117,7 +117,7 @@ long lastSentPacket = 0;
 long lastLed = 0;
 long lastSentGHLPoke = 0;
 long input_start = 0;
-long lastDebounce = 0;
+uint32_t lastDebounce = 0;
 uint16_t lastMpr121 = 0;
 bool hasTapBar = false;
 uint8_t ghl_sequence_number_host = 1;
@@ -1667,10 +1667,32 @@ void tick_wiioutput() {
 #endif
 }
 #endif
+// Count down the debounce timers by every whole interval that has passed since the last call,
+// so that a slow loop doesn't stretch out the debounce time
+bool tick_debounce(uint32_t *last, uint16_t interval) {
+    uint32_t elapsed = (micros() - *last) / interval;
+    if (!elapsed) {
+        return false;
+    }
+    *last += elapsed * interval;
+    uint8_t ticks = elapsed > 0xFF ? 0xFF : elapsed;
+    for (int i = 0; i < DIGITAL_COUNT; i++) {
+        debounce[i] = debounce[i] > ticks ? debounce[i] - ticks : 0;
+    }
+#if REQUIRE_LED_DEBOUNCE
+    for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
+        ledDebounce[i] = ledDebounce[i] > ticks ? ledDebounce[i] - ticks : 0;
+    }
+#endif
+    return true;
+}
 uint8_t rbcount = 0;
 uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t output_console_type) {
     uint8_t packet_size = 0;
     Buffer_Report_t current_queue_report = {val : 0};
+    if (INPUT_QUEUE) {
+        tick_debounce(&last_queue, 100);
+    }
 // Tick Inputs
 #include "inputs/adxl.h"
 #include "inputs/clone_neck.h"
@@ -1693,37 +1715,20 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
     // We tick the guitar every 5ms to handle inputs if nothing is attempting to read, but this doesn't need to output that data anywhere.
     // if input queues are enabled, then we just tick as often as possible
-    if (!buf) {
-        if (INPUT_QUEUE) {
-            if (micros() - last_queue > 100) {
-                last_queue = micros();
-                for (int i = 0; i < DIGITAL_COUNT; i++) {
-                    if (debounce[i]) {
-                        debounce[i]--;
-                    }
-                }
-#if REQUIRE_LED_DEBOUNCE
-                for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
-                    if (ledDebounce[i]) {
-                        ledDebounce[i]--;
-                    }
-                }
-#endif
-            }
-            if (current_queue_report.val != last_queue_report.val) {
-                queue[queue_tail] = current_queue_report;
-                last_queue_report = current_queue_report;
-                if (queue_size < BUFFER_SIZE_QUEUE) {
-                    queue_size++;
-                    queue_tail++;
-                }
-            }
+    if (INPUT_QUEUE) {
+        if (current_queue_report.val != last_queue_report.val && queue_size < BUFFER_SIZE_QUEUE) {
+            queue[(queue_head + queue_size) % BUFFER_SIZE_QUEUE] = current_queue_report;
+            last_queue_report = current_queue_report;
+            queue_size++;
         }
+    }
+    if (!buf) {
         return 0;
     }
 
     if (INPUT_QUEUE && queue_size) {
-        current_queue_report = queue[queue_tail - queue_size];
+        current_queue_report = queue[queue_head];
+        queue_head = (queue_head + 1) % BUFFER_SIZE_QUEUE;
         queue_size--;
     }
     // Tick all three reports, and then go for the first one that has changes
@@ -2278,7 +2283,7 @@ bool tick_usb(void) {
         send_report_to_pc(&combined_report, size);
     }
     seen_ps4_console = true;
-    return size;
+    return ready;
 }
 #ifdef BLUETOOTH_RX
 int tick_bluetooth_inputs(const void *buf) {
@@ -2557,20 +2562,8 @@ int tick_bluetooth_inputs(const void *buf) {
 #endif
 #endif
     TICK_RESET
-    if (!INPUT_QUEUE && micros() - lastDebounce > 1000) {
-        lastDebounce = micros();
-        for (int i = 0; i < DIGITAL_COUNT; i++) {
-            if (debounce[i]) {
-                debounce[i]--;
-            }
-        }
-#if REQUIRE_LED_DEBOUNCE
-        for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
-            if (ledDebounce[i]) {
-                ledDebounce[i]--;
-            }
-        }
-#endif
+    if (!INPUT_QUEUE) {
+        tick_debounce(&lastDebounce, 1000);
     }
     if (output_console_type != PS4 && output_console_type != PS3 && !updateHIDSequence) {
         uint8_t cmp = memcmp(&last_report_bt, report_data, report_size);
@@ -2632,23 +2625,10 @@ void tick(void) {
 #ifdef TICK_PS2
     tick_ps2output();
 #endif
-    if (!INPUT_QUEUE && micros() - lastDebounce > 1000) {
+    if (!INPUT_QUEUE && tick_debounce(&lastDebounce, 1000)) {
         // No benefit to ticking bluetooth faster than this!
 #ifdef BLUETOOTH_TX
         tick_bluetooth();
-#endif
-        lastDebounce = micros();
-        for (int i = 0; i < DIGITAL_COUNT; i++) {
-            if (debounce[i]) {
-                debounce[i]--;
-            }
-        }
-#if REQUIRE_LED_DEBOUNCE
-        for (int i = 0; i < LED_DEBOUNCE_COUNT; i++) {
-            if (ledDebounce[i]) {
-                ledDebounce[i]--;
-            }
-        }
 #endif
     }
 #if DEVICE_TYPE_IS_GUITAR

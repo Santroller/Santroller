@@ -238,6 +238,9 @@ typedef union {
 
         bool leftShoulder : 1;   // l1
         bool rightShoulder : 1;  // r1
+
+        bool dpadUp : 1;    // strum up
+        bool dpadDown : 1;  // strum down
     };
     uint8_t val;
 } Buffer_Report_t;

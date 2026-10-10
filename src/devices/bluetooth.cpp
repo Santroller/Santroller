@@ -10,6 +10,7 @@
 #include "devices/bt/ble_rx.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
 #include "devices/bt/bt_host.hpp"
+#include "devices/bt/bluetooth_status.hpp"
 BluetoothDevice::BluetoothDevice(proto_BluetoothDevice device, uint16_t id) : Device(id), m_device(device), m_sync(device.has_syncPin ? device.syncPin : -1)
 {
 }
@@ -69,10 +70,19 @@ BluetoothDevice::~BluetoothDevice()
 
 void BluetoothDevice::update(bool full_poll, bool send_events)
 {
-    if (full_poll)
+    // full polls only happen when a tool loads or the profile changes, so host connections and
+    // disconnections are sent as they happen too
+    bool host_connected = bluetooth_host_connected();
+    if (full_poll || host_connected != m_sent_host_connected)
     {
-        proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, ConfigManager::instance().has_bluetooth()}}};
-        HIDConfigDevice::send_event(event, true);
+        proto_Event event = proto_Event_init_default;
+        event.which_event = proto_Event_device_tag;
+        event.event.device.id = m_id;
+        event.event.device.connected = ConfigManager::instance().has_bluetooth();
+        event.event.device.has_hostConnected = true;
+        event.event.device.hostConnected = host_connected;
+        // try again next update if no tool is listening
+        m_sent_host_connected = HIDConfigDevice::send_event(event, full_poll) ? host_connected : -1;
     }
     bt_host_update_interfaces(full_poll, send_events);
     if (m_sync.pressed())

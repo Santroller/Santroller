@@ -95,6 +95,7 @@ public:
 private:
   void process_events();
   bool events_busy();
+  void switch_transport(ConfigTransport transport);
   void handle_command(proto_Command command);
   uint16_t handle_get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
   void handle_set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);

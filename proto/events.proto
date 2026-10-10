@@ -77,6 +77,8 @@ message DeviceHotplugEvent {
     optional bool rebooting = 5;
     // Battery devices: the battery percentage
     optional uint32 battery = 6;
+    // Bluetooth: whether a host (PC, phone or console) is connected to this controller
+    optional bool hostConnected = 7;
 }
 
 message UsbDeviceHotplugEvent {

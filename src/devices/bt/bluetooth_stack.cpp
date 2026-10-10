@@ -278,3 +278,13 @@ bool bluetooth_connected()
     BtStackLock lock;
     return bt_gamepad_connected() || wiimote_emulator_connected() || btc_has_connected_device() || ble_has_connected_device();
 }
+
+bool bluetooth_host_connected()
+{
+    if (!BluetoothStack::instance().initialized())
+    {
+        return false;
+    }
+    BtStackLock lock;
+    return bt_peripheral_connected() || wiimote_emulator_connected();
+}

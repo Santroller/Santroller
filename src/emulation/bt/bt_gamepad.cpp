@@ -442,6 +442,11 @@ bool bt_gamepad_connected()
     return con_handle != HCI_CON_HANDLE_INVALID;
 }
 
+bool bt_peripheral_connected()
+{
+    return peripheral_handle != HCI_CON_HANDLE_INVALID;
+}
+
 bool bt_gamepad_advertising()
 {
     // BTstack advertises while it has room for another peripheral connection, which is only ever one here

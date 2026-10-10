@@ -32,6 +32,8 @@ private:
     proto_BluetoothDevice m_device;
     SyncButton m_sync;
     bool m_timed_out = false;
+    // the host connection state last sent to the tool, -1 when it still needs sending
+    int8_t m_sent_host_connected = -1;
 };
 
 void bt_discovery_stop();

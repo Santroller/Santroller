@@ -18,6 +18,7 @@ void bt_config_service_process(bool full_poll, bool send_events);
 void bt_config_service_disconnected();
 
 // Used by HIDConfigDevice to send config events over bluetooth
+bool bt_config_connected();
 bool bt_config_can_send_event();
 uint16_t bt_config_max_event_size();
 bool bt_config_send_event(const uint8_t *data, uint16_t len);

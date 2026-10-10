@@ -418,14 +418,25 @@ void HIDConfigDevice::set_report(uint8_t report_id, hid_report_type_t report_typ
   set_report_from(ConfigTransport::Usb, report_id, report_type, buffer, bufsize);
 }
 
+void HIDConfigDevice::switch_transport(ConfigTransport transport)
+{
+  if (transport == m_transport)
+  {
+    return;
+  }
+  // events queued for a tool still connected over the old transport are of no use to this one,
+  // but once a bluetooth tool has gone they are still current, such as the status changes its
+  // disconnect caused
+  if (m_transport != ConfigTransport::Bluetooth || bt_config_connected())
+  {
+    list.event_count = 0;
+  }
+  m_transport = transport;
+}
+
 void HIDConfigDevice::set_report_from(ConfigTransport transport, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
-  if (transport != m_transport)
-  {
-    // events queued for the old transport are of no use on the new one
-    list.event_count = 0;
-    m_transport = transport;
-  }
+  switch_transport(transport);
   handle_set_report(report_id, report_type, buffer, bufsize);
 }
 
@@ -436,11 +447,7 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
 
 uint16_t HIDConfigDevice::get_report_from(ConfigTransport transport, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
 {
-  if (transport != m_transport)
-  {
-    list.event_count = 0;
-    m_transport = transport;
-  }
+  switch_transport(transport);
   return handle_get_report(report_id, report_type, buffer, reqlen);
 }
 

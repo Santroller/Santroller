@@ -472,6 +472,12 @@ void bt_config_service_process(bool full_poll, bool send_events)
     hid_config_bt_process(full_poll, send_events);
 }
 
+bool bt_config_connected()
+{
+    BtStackLock lock;
+    return s_con_handle != HCI_CON_HANDLE_INVALID;
+}
+
 bool bt_config_can_send_event()
 {
     BtStackLock lock;

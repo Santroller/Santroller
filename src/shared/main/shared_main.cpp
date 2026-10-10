@@ -1567,6 +1567,9 @@ void tick_wiioutput() {
 #if DEVICE_TYPE_IS_GUITAR
     WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)wii_data;
     memset(wii_data, 0, sizeof(wii_data));
+    // Center sticks
+    report->leftStickX = 0x20;
+    report->leftStickY = 0x20;
     report->slider = 0x0F;
     TICK_WII;
     wii_data[4] = ~wii_data[4];
@@ -1575,6 +1578,9 @@ void tick_wiioutput() {
 #elif DEVICE_TYPE_IS_DRUM
     WiiDrumDataFormat3_t *report = (WiiDrumDataFormat3_t *)wii_data;
     memset(wii_data, 0, sizeof(wii_data));
+    // Center sticks
+    report->leftStickX = 0x20;
+    report->leftStickY = 0x20;
     TICK_WII;
     wii_data[4] = ~wii_data[4];
     wii_data[5] = ~wii_data[5];
@@ -1584,6 +1590,9 @@ void tick_wiioutput() {
     WiiTurntableIntermediateFormat3_t *report = &temp_report;
     memset(report, 0, sizeof(temp_report));
     memset(wii_data, 0, sizeof(wii_data));
+    // Center sticks
+    report->leftStickX = 0x20;
+    report->leftStickY = 0x20;
     TICK_WII;
     // Turntable report format is so muddled that we have to transform things by hand after
     WiiTurntableDataFormat3_t *real_report = (WiiTurntableDataFormat3_t *)wii_data;
@@ -1609,6 +1618,11 @@ void tick_wiioutput() {
     WiiClassicDataFormat3_t *report = &temp_report;
     memset(report, 0, sizeof(temp_report));
     memset(wii_data, 0, sizeof(wii_data));
+    // Center sticks
+    report->leftStickX = PS3_STICK_CENTER;
+    report->leftStickY = PS3_STICK_CENTER;
+    report->rightStickX = PS3_STICK_CENTER;
+    report->rightStickY = PS3_STICK_CENTER;
     TICK_WII;
     // button bits are inverted
     report->buttonsLow = ~report->buttonsLow;

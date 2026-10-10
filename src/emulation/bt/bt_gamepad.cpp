@@ -15,6 +15,13 @@
 #include "emulation/bt/bt_descriptors.h"
 #include "emulation/bt/bt_gamepad.h"
 #include "emulation/bt/bt_config_service.h"
+#include "emulation/bt/bt_gatt_changes.h"
+
+// bt_gatt_changes relies on the Generic Attribute service being at the same handles in every database
+static_assert(ATT_SERVICE_GATT_SERVICE_START_HANDLE == BT_GATT_SERVICE_START_HANDLE, "GATT service moved");
+static_assert(ATT_SERVICE_GATT_SERVICE_END_HANDLE == BT_GATT_SERVICE_END_HANDLE, "GATT service moved");
+static_assert(ATT_CHARACTERISTIC_GATT_SERVICE_CHANGED_01_VALUE_HANDLE == BT_GATT_SERVICE_CHANGED_VALUE_HANDLE, "Service Changed moved");
+static_assert(ATT_CHARACTERISTIC_GATT_SERVICE_CHANGED_01_CLIENT_CONFIGURATION_HANDLE == BT_GATT_SERVICE_CHANGED_CLIENT_CONFIGURATION_HANDLE, "Service Changed moved");
 #include "managers/config_manager.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
 #include "btstack.h"
@@ -216,6 +223,7 @@ void BTGamepadDevice::deinitialize()
     sm_remove_event_handler(&sm_event_callback_registration);
     // clears every registered service handler, so the next init starts clean, possibly with the other database
     bt_config_service_deinit();
+    bt_gatt_changes_deinit();
     att_server_deinit();
     m_initialized = false;
     printf("btgamepaddevice deinit\r\n");
@@ -244,8 +252,8 @@ void BTGamepadDevice::initialize()
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_MITM_PROTECTION | SM_AUTHREQ_BONDING);
 
     // setup ATT server. Each mode has its own database (bt.gatt, bt_keyboard.gatt, bt_config.gatt) whose HID
-    // service only references the reports in that mode's report map; they differ in structure, so their
-    // GATT database hashes differ too and a bonded host re-discovers when the mode changes.
+    // service only references the reports in that mode's report map. They're laid out differently, so a
+    // bonded host is sent Service Changed when the mode changed since it last connected (bt_gatt_changes).
     uint16_t config_start = ATT_SERVICE_ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE_02_START_HANDLE;
     uint16_t config_end = ATT_SERVICE_ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE_02_END_HANDLE;
     const uint8_t *db = profile_data;
@@ -259,6 +267,7 @@ void BTGamepadDevice::initialize()
     }
     att_server_init(db, NULL, NULL);
     att_server_register_packet_handler(packet_handler);
+    bt_gatt_changes_init();
 
     // setup battery service
     battery_service_server_init(battery);

@@ -872,13 +872,18 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         }
         // PS3 and PS4 send this
         if (consoleType == UNIVERSAL && wIndex == INTERFACE_ID_Device && request == HID_REQUEST_GET_REPORT && wValue == 0x0303) {
+            seen_ps4 = true;
             // PS3 Drums and Guitars get used on both consoles, so we can jump straight to PS3 mode
 #if DEVICE_TYPE_IS_INSTRUMENT && !SUPPORTS_PS4
             consoleType = PS3;
             reset_usb();
 #else
-            // the PS3 and PS4 will end up here. PS4 mode will jump back to PS3 mode on a PS3 later.
-            consoleType = PS4;
+            // the PS3 and PS4 will end up here, but the PS4 asks for the full feature report, so we can tell them apart by wLength
+            if (wLength == sizeof(ps4_feature_config)) {
+                consoleType = PS4;
+            } else {
+                consoleType = PS3;
+            }
             reset_usb();
 #endif
         }

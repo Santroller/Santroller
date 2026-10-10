@@ -5,6 +5,7 @@ extern "C" {
 #endif
 bool seen_hid_descriptor_read = false;
 bool seen_ps4 = false;
+bool seen_rpcs3 = false;
 bool descriptor_requested = false;
 Xbox_One_State_t xbox_one_state = Announce;
 uint16_t xbox_360_vid = ARDWIINO_VID;

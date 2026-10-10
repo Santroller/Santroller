@@ -1887,6 +1887,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         TICK_XINPUT;
         asm volatile("" ::
                          : "memory");
+#if DEVICE_TYPE == GUITAR_HERO_GUITAR
+        if (seen_rpcs3) {
+            report->whammy = (INT16_MAX + (uint32_t)(report->whammy)) >> 1;
+        }
+#endif
 
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
         uint8_t currentVel = 0;
@@ -1991,6 +1996,11 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
             TICK_PC;
             asm volatile("" ::
                              : "memory");
+#if DEVICE_TYPE == GUITAR_HERO_GUITAR
+            if (seen_rpcs3) {
+                report->whammy = PS3_STICK_CENTER + (report->whammy >> 1);
+            }
+#endif
             report->dpad = (report->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[report->dpad];
 #ifdef TICK_FESTIVAL
         } else {

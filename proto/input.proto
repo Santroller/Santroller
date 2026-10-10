@@ -283,7 +283,7 @@ message InputActivationTrigger {
   optional int32 maxTriggerValue = 5;
 }
 
-// A note on a MIDI channel (0 - 15). The velocity comes from how hard the input was hit,
+// A note on a MIDI channel (1 - 16, like MIDI inputs). The velocity comes from how hard the input was hit,
 // unless a fixed velocity (1 - 127) is set.
 message MidiNoteOutput {
   required uint32 channel = 1;
@@ -291,7 +291,7 @@ message MidiNoteOutput {
   optional uint32 velocity = 3;
 }
 
-// A control change on a MIDI channel (0 - 15), from an axis
+// A control change on a MIDI channel (1 - 16), from an axis
 message MidiControlOutput {
   required uint32 channel = 1;
   required uint32 control = 2;
@@ -335,7 +335,7 @@ message Output {
     ActionType action = 35;
     MidiNoteOutput midiNote = 36;
     MidiControlOutput midiControl = 37;
-    // The MIDI channel (0 - 15) to bend, from an axis
+    // The MIDI channel (1 - 16) to bend, from an axis
     uint32 midiPitchBend = 38;
   }
 }

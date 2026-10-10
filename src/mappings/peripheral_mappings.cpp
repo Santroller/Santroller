@@ -327,7 +327,7 @@ void MidiNoteMapping::update_hid(uint8_t *buf)
         }
         velocity = midi_velocity(strength);
     }
-    m_profile->midi_state.set_note(note.channel, note.note, velocity);
+    m_profile->midi_state.set_note(note.channel - 1, note.note, velocity);
 }
 
 MidiControlMapping::MidiControlMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
@@ -339,7 +339,7 @@ void MidiControlMapping::update_hid(uint8_t *buf)
     // set even at rest, as the control has to go back to 0 when it's let go
     const auto &control = m_mapping.mapping.mapping.midiControl;
     m_value = midi_scale(m_calibrated_value, m_value, 7);
-    m_profile->midi_state.set_control(control.channel, control.control, m_value);
+    m_profile->midi_state.set_control(control.channel - 1, control.control, m_value);
 }
 
 MidiPitchBendMapping::MidiPitchBendMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
@@ -349,5 +349,5 @@ MidiPitchBendMapping::MidiPitchBendMapping(proto_Mapping mapping, std::unique_pt
 void MidiPitchBendMapping::update_hid(uint8_t *buf)
 {
     m_value = midi_scale(m_calibrated_value, m_value, 14);
-    m_profile->midi_state.set_pitch_bend(m_mapping.mapping.mapping.midiPitchBend, m_value);
+    m_profile->midi_state.set_pitch_bend(m_mapping.mapping.mapping.midiPitchBend - 1, m_value);
 }

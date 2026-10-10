@@ -249,6 +249,7 @@ add_executable(
   src/devices/usb/host/hid/streamdeck_host.cpp
   src/devices/usb/host/hid/switch_host.cpp
   src/devices/usb/host/hid/steam_host.cpp
+  src/devices/usb/host/hid/steam_triton_host.cpp
   src/devices/usb/host/xinput/xinput_audio_host.cpp
   src/devices/usb/host/xinput/xinput_gamepad_host.cpp
   src/devices/usb/host/xinput/xinput_wireless_gamepad_host.cpp
@@ -339,6 +340,7 @@ add_executable(
   src/devices/bt/host/midi_host.cpp
   src/devices/bt/host/santroller_host.cpp
   src/devices/bt/host/steam_host.cpp
+  src/devices/bt/host/steam_triton_host.cpp
   src/devices/bt/bt_tlv_storage.cpp
   src/input/bt.cpp
   src/devices/usb.cpp

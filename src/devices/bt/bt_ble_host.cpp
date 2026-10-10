@@ -25,6 +25,15 @@ std::shared_ptr<BluetoothHostInterface> ble_create_host(uint16_t vid, uint16_t p
         return host;
     }
 
+    // 2026 Steam Controller (Triton) over HID over GATT
+    if (vid == VALVE_USB_VID && pid == VALVE_STEAM_TRITON_BLE_PID)
+    {
+        auto host = std::make_shared<BleSteamTritonHost>(device_id);
+        host->m_vid = vid;
+        host->m_pid = pid;
+        return host;
+    }
+
     // Valve Steam Controller / HORI Steam Controller
     if (vid == VALVE_USB_VID || (vid == HORI_VID && pid == HORI_STEAM_CONTROLLER_PID))
     {

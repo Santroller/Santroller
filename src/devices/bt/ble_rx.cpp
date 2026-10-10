@@ -68,6 +68,11 @@ struct BleConnectionContext
     bool found_ghl_char = false;
     bool is_steam_controller = false;
     bool found_steam_char = false;
+    // After the report characteristic is found, probe for the 2026 Steam Controller's input
+    // characteristics: 1 = report 0x45, 2 = report 0x47
+    uint8_t steam_probe = 0;
+    bool found_triton_char = false;
+    uint8_t triton_report_id = 0;
     bool is_midi = false;
     bool found_midi_char = false;
     SubType known_subtype = SubType_Unknown;
@@ -76,6 +81,8 @@ struct BleConnectionContext
     gatt_client_notification_t ghl_notification = {};
     gatt_client_characteristic_t steam_characteristic = {};
     gatt_client_notification_t steam_notification = {};
+    gatt_client_characteristic_t triton_characteristic = {};
+    gatt_client_notification_t triton_notification = {};
     gatt_client_characteristic_t midi_characteristic = {};
     gatt_client_notification_t midi_notification = {};
 
@@ -114,6 +121,9 @@ static BleConnectionContext *ble_context_alloc()
             ctx.found_ghl_char = false;
             ctx.is_steam_controller = false;
             ctx.found_steam_char = false;
+            ctx.steam_probe = 0;
+            ctx.found_triton_char = false;
+            ctx.triton_report_id = 0;
             ctx.is_midi = false;
             ctx.found_midi_char = false;
             ctx.known_subtype = SubType_Unknown;
@@ -122,6 +132,8 @@ static BleConnectionContext *ble_context_alloc()
             memset(&ctx.ghl_notification, 0, sizeof(ctx.ghl_notification));
             memset(&ctx.steam_characteristic, 0, sizeof(ctx.steam_characteristic));
             memset(&ctx.steam_notification, 0, sizeof(ctx.steam_notification));
+            memset(&ctx.triton_characteristic, 0, sizeof(ctx.triton_characteristic));
+            memset(&ctx.triton_notification, 0, sizeof(ctx.triton_notification));
             memset(&ctx.midi_characteristic, 0, sizeof(ctx.midi_characteristic));
             memset(&ctx.midi_notification, 0, sizeof(ctx.midi_notification));
 
@@ -586,6 +598,14 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
                 printf("BLE MIDI characteristic found for handle 0x%04x, value_handle=0x%04x\r\n",
                        handle, ctx->midi_characteristic.value_handle);
             }
+            else if (ctx->is_steam_controller && ctx->steam_probe)
+            {
+                gatt_event_characteristic_query_result_get_characteristic(packet, &ctx->triton_characteristic);
+                ctx->found_triton_char = true;
+                ctx->triton_report_id = ctx->steam_probe == 1 ? TRITON_REPORT_STATE_BLE : TRITON_REPORT_STATE_TIMESTAMP;
+                printf("Steam Controller (2026) input characteristic found for handle 0x%04x, value_handle=0x%04x, report 0x%02x\r\n",
+                       handle, ctx->triton_characteristic.value_handle, ctx->triton_report_id);
+            }
             else if (ctx->is_steam_controller)
             {
                 gatt_event_characteristic_query_result_get_characteristic(packet, &ctx->steam_characteristic);
@@ -636,6 +656,49 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
             host->m_addr_type = ctx->addr_type;
             host->m_cid = handle;
             strncpy(host->m_name, ctx->paired_name[0] ? ctx->paired_name : "BLE MIDI Device", sizeof(host->m_name) - 1);
+
+            ctx->host = host;
+            host->on_connected();
+            bt_host_add_interface(host);
+            bt_host_save_pairing(host, true);
+        }
+        else if (ctx->found_steam_char && !ctx->found_triton_char && ctx->steam_probe < 2)
+        {
+            // Check whether this is a 2026 Steam Controller before settling on the original protocol
+            ctx->steam_probe++;
+            gatt_client_discover_characteristics_for_handle_range_by_uuid128(
+                handle_gatt_client_event,
+                handle,
+                0x0001,
+                0xffff,
+                ctx->steam_probe == 1 ? TRITON_BLE_INPUT_0x45_UUID : TRITON_BLE_INPUT_0x47_UUID);
+        }
+        else if (ctx->found_triton_char)
+        {
+            printf("Steam Controller (2026) query complete, subscribing to notifications for handle 0x%04x\r\n", handle);
+            gatt_client_listen_for_characteristic_value_updates(
+                &ctx->triton_notification,
+                handle_gatt_client_event,
+                handle,
+                &ctx->triton_characteristic);
+
+            gatt_client_write_client_characteristic_configuration(
+                handle_gatt_client_event,
+                handle,
+                &ctx->triton_characteristic,
+                GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
+
+            uint16_t device_id = BluetoothStack::instance().device_id();
+            auto host = std::make_shared<BleSteamTritonHost>(device_id);
+            memcpy(host->m_addr, ctx->addr, 6);
+            host->m_addr_type = ctx->addr_type;
+            host->m_cid = handle;
+            host->m_con_handle = handle;
+            host->m_input_handle = ctx->triton_characteristic.value_handle;
+            host->m_report_char_handle = ctx->steam_characteristic.value_handle;
+            host->m_vid = VALVE_USB_VID;
+            host->m_pid = VALVE_STEAM_TRITON_BLE_PID;
+            strncpy(host->m_name, "Steam Controller", sizeof(host->m_name) - 1);
 
             ctx->host = host;
             host->on_connected();
@@ -1074,6 +1137,11 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     if (paired_state.subtype == SubType_Midi)
                     {
                         ctx->is_midi = true;
+                    }
+                    // Reconnect the 2026 Steam Controller the same way it was first paired, over the Valve service
+                    if (paired_state.vid == VALVE_USB_VID && paired_state.pid == VALVE_STEAM_TRITON_BLE_PID)
+                    {
+                        ctx->is_steam_controller = true;
                     }
                 }
 

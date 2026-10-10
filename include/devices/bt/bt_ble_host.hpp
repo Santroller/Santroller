@@ -6,6 +6,7 @@
 #include "devices/bt/host/midi_host.hpp"
 #include "devices/bt/host/santroller_host.hpp"
 #include "devices/bt/host/steam_host.hpp"
+#include "devices/bt/host/steam_triton_host.hpp"
 #include "devices/bt/host/switch_host.hpp"
 #include "hidparser.h"
 

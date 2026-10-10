@@ -4,6 +4,7 @@
 #include "devices/usb/host/hid/ps4_host.h"
 #include "devices/usb/host/hid/ps5_host.h"
 #include "devices/usb/host/hid/steam_host.h"
+#include "devices/usb/host/hid/steam_triton_host.h"
 #include "devices/usb/host/hid/spice2x_host.h"
 #include "devices/usb/host/hid/santroller_host.h"
 #include "devices/usb/host/hid/xbox_hid_host.h"
@@ -28,6 +29,7 @@ static std::shared_ptr<UsbHostInterface> (*hid_device_types[])(std::shared_ptr<U
     StreamDeckHost::open,
     SwitchHost::open,
     SteamHost::open,
+    SteamTritonHost::open,
     StadiaHost::open,
     XboxHidHost::open,
     KeyboardHost::open_report, // non boot keyboards, e.g. NKRO interfaces, after the vid / pid matchers

@@ -1894,13 +1894,15 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
+        bool key25 = report->key25;
         uint8_t currentVel = 0;
         for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
             if (proKeyVelocities[i]) {
-                report->velocities[currentVel] |= proKeyVelocities[i] >> 1;
+                report->velocities[currentVel] = proKeyVelocities[i] >> 1;
                 currentVel++;
             }
         }
+        report->key25 = key25;
 #endif
 // xb360 is stupid
 #if DEVICE_TYPE == GUITAR_HERO_DRUMS
@@ -2112,13 +2114,15 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #endif
 
 #if DEVICE_TYPE == ROCK_BAND_PRO_KEYS
+            bool key25 = report->key25;
             uint8_t currentVel = 0;
             for (int i = 0; i < sizeof(proKeyVelocities) && currentVel <= 4; i++) {
                 if (proKeyVelocities[i]) {
-                    report->velocities[currentVel] |= proKeyVelocities[i] >> 1;
+                    report->velocities[currentVel] = proKeyVelocities[i] >> 1;
                     currentVel++;
                 }
             }
+            report->key25 = key25;
 #endif
             gamepad->dpad = (gamepad->dpad & 0xf) > 0x0a ? 0x08 : dpad_bindings[gamepad->dpad];
 #ifdef CONFIGURABLE_BLOBS

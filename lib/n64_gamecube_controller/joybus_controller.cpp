@@ -78,7 +78,8 @@ void JoybusController::restart_sm()
     pio_sm_set_enabled(m_pio, m_sm, false);
     pio_sm_config c = controller_program_get_default_config(m_offset);
     controller_program_init(m_pio, m_sm, m_offset, m_pin, &c);
-    // The console normally provides the pull-up, so use the internal one as a fallback
+    // We are the console here, so nothing else pulls the line up. The internal pull-up is weak enough that
+    // the line rises slowly, so an external ~1k pull-up to 3.3V is recommended for reliable reads
     gpio_pull_up(m_pin);
 }
 
@@ -105,13 +106,15 @@ void JoybusController::start_transfer(const uint8_t *request, uint8_t request_le
         m_tx[i + 1] = (uint32_t)request[i] << 24;
     }
     m_response_len = response_len;
+    // One extra word, pushed once the controller's stop bit arrives
+    uint8_t rx_words = response_len + 1;
 
     dma_channel_config rx = dma_channel_get_default_config(m_dma_rx);
     channel_config_set_transfer_data_size(&rx, DMA_SIZE_32);
     channel_config_set_read_increment(&rx, false);
     channel_config_set_write_increment(&rx, true);
     channel_config_set_dreq(&rx, pio_get_dreq(m_pio, m_sm, false));
-    dma_channel_configure(m_dma_rx, &rx, m_rx, &m_pio->rxf[m_sm], response_len, true);
+    dma_channel_configure(m_dma_rx, &rx, m_rx, &m_pio->rxf[m_sm], rx_words, true);
 
     dma_channel_config tx = dma_channel_get_default_config(m_dma_tx);
     channel_config_set_transfer_data_size(&tx, DMA_SIZE_32);

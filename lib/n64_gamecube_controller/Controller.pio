@@ -25,11 +25,16 @@ sendStop:
 receiveByte:
   set x, 7
 getBit:
-  wait 0 pin 0 [T1 + 1]; wait until the line goes low, then wait until a 1 bit would register as high
+  wait 0 pin 0 [T1 + 3]; wait until the line goes low, then sample 2us in, halfway between a 1 (1us low) and a 0 (3us low)
   in pins 1 ; read
   wait 1 pin 0 ; wait for a 1 if it's a 0
   jmp x-- getBit ; get the next bit
   jmp y-- receiveByte ; get the next byte
+  ; Wait for the controller's stop bit and push an extra word for it. A glitch that added an edge
+  ; would have shifted the data and swallowed the stop bit, so the transfer times out instead
+  wait 0 pin 0
+  wait 1 pin 0
+  in null, 8
 
 .wrap
 

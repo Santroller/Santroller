@@ -92,6 +92,6 @@ private:
     bool m_rumble_sent = false;
 
     uint32_t m_tx[36];
-    uint32_t m_rx[10];
+    uint32_t m_rx[11];
     uint8_t m_state[8] = {};
 };

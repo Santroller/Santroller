@@ -90,7 +90,8 @@ TEST_F(Drums, GHOGXboxVelocitiesMatchXInput)
     EXPECT_EQ(report->kickVelocity, 0x7F);
 }
 
-// Rock Band, 360 / XInput: red and blue are positive, yellow and green negative
+// Rock Band, 360 / XInput: red and blue are positive, yellow and green negative, and harder hits
+// are closer to 0 (RB1 kits always send 0)
 
 TEST_F(Drums, RBXInputPadSetsButtonFlagAndVelocity)
 {

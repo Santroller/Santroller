@@ -363,6 +363,10 @@ bool XInputGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t
                         case GuitarHeroDrums:
                             XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
                             break;
+                        case RockBandDrums:
+                            // kick 2 and the pad flag, like the MPA
+                            XInputInputCapabilities.buttons = 0xf7ff;
+                            break;
                         case DjHeroTurntable:
                             XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
                             break;

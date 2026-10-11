@@ -8,11 +8,192 @@
 // Shared tick_digital and tick_analog implementations for XInput devices
 // These functions take the buffer and subtype as parameters
 
-inline bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_Output &type, bool is_wt = false)
+// RB velocities are inverted so RB1 kits, which always send 0, read as the hardest hit: the
+// closer to 0 the harder the hit. Red and blue are positive (0 to 32767), yellow and green are
+// negative while hit (-1 to -32768). Only meaningful while the matching colour is hit.
+inline uint16_t xinput_rb_drum_velocity(int16_t velocity)
+{
+    uint16_t distance = velocity < 0 ? (uint16_t)~velocity : (uint16_t)velocity;
+    return UINT16_MAX - (distance << 1);
+}
+
+struct XInputRockBandDrumHits
+{
+    uint16_t red_pad;
+    uint16_t yellow_pad;
+    uint16_t blue_pad;
+    uint16_t green_pad;
+    uint16_t yellow_cymbal;
+    uint16_t blue_cymbal;
+    uint16_t green_cymbal;
+};
+
+// RB1 kits have no velocity or cymbals and report every hit as a plain face button. RB2+ kits
+// flag pads and cymbals and use the d-pad to tell which colour a cymbal hit was. Hosts tell
+// them apart with XINPUT_CAPS_BUTTON_RIGHT_THUMB in the kit's capabilities.
+inline XInputRockBandDrumHits xinput_decode_rb_drums(const XInputRockBandDrums_Data_t *data, bool rb2)
+{
+    XInputRockBandDrumHits hits = {};
+    if (!rb2)
+    {
+        hits.red_pad = data->b ? UINT16_MAX : 0;
+        hits.yellow_pad = data->y ? UINT16_MAX : 0;
+        hits.blue_pad = data->x ? UINT16_MAX : 0;
+        hits.green_pad = data->a ? UINT16_MAX : 0;
+        return hits;
+    }
+    bool green = data->a;
+    bool red = data->b;
+    bool yellow = data->y;
+    bool blue = data->x;
+    bool pad = data->padFlag;
+    bool cymbal = data->cymbalFlag;
+    bool up = data->dpadUp;
+    bool down = data->dpadDown;
+    uint16_t red_velocity = xinput_rb_drum_velocity(data->redVelocity);
+    uint16_t yellow_velocity = xinput_rb_drum_velocity(data->yellowVelocity);
+    uint16_t blue_velocity = xinput_rb_drum_velocity(data->blueVelocity);
+    uint16_t green_velocity = xinput_rb_drum_velocity(data->greenVelocity);
+    if (pad && cymbal)
+    {
+        // Only the d-pad is checked to resolve a pad+cymbal hit, as the colour flag can be
+        // released before the d-pad is (particularly at high polling rates)
+        if (!red && data->redVelocity)
+        {
+            // Pad and cymbal of the same colour hit together: the cymbal velocity goes in
+            // redVelocity, without red being pressed
+            if (up)
+            {
+                hits.yellow_cymbal = red_velocity;
+                hits.yellow_pad = yellow_velocity;
+            }
+            else if (down)
+            {
+                hits.blue_cymbal = red_velocity;
+                hits.blue_pad = blue_velocity;
+            }
+            else
+            {
+                hits.green_cymbal = red_velocity;
+                hits.green_pad = green_velocity;
+            }
+            return hits;
+        }
+        if (up)
+        {
+            hits.yellow_cymbal = yellow_velocity;
+            yellow = false;
+        }
+        if (down)
+        {
+            hits.blue_cymbal = blue_velocity;
+            blue = false;
+        }
+        if (!(up || down))
+        {
+            hits.green_cymbal = green_velocity;
+            green = false;
+        }
+        cymbal = false;
+    }
+    if (pad)
+    {
+        if (red)
+            hits.red_pad = red_velocity;
+        if (yellow)
+            hits.yellow_pad = yellow_velocity;
+        if (blue)
+            hits.blue_pad = blue_velocity;
+        if (green)
+            hits.green_pad = green_velocity;
+    }
+    if (cymbal)
+    {
+        if (yellow)
+            hits.yellow_cymbal = yellow_velocity;
+        if (blue)
+            hits.blue_cymbal = blue_velocity;
+        if (green)
+            hits.green_cymbal = green_velocity;
+    }
+    return hits;
+}
+
+inline uint16_t xinput_rb_drum_axis(const uint8_t *ep_in_buf, RockBandDrumsAxisType axis, bool rb2)
+{
+    auto hits = xinput_decode_rb_drums((const XInputRockBandDrums_Data_t *)ep_in_buf, rb2);
+    switch (axis)
+    {
+    case RockBandDrums_RedPad:
+        return hits.red_pad;
+    case RockBandDrums_YellowPad:
+        return hits.yellow_pad;
+    case RockBandDrums_BluePad:
+        return hits.blue_pad;
+    case RockBandDrums_GreenPad:
+        return hits.green_pad;
+    case RockBandDrums_YellowCymbal:
+        return hits.yellow_cymbal;
+    case RockBandDrums_BlueCymbal:
+        return hits.blue_cymbal;
+    case RockBandDrums_GreenCymbal:
+        return hits.green_cymbal;
+    default:
+        return 0;
+    }
+}
+
+// Guitar Hero kits report standard 7 bit MIDI velocities
+inline uint16_t xinput_gh_drum_axis(const uint8_t *ep_in_buf, GuitarHeroDrumsAxisType axis)
+{
+    auto data = (const XInputGuitarHeroDrums_Data_t *)ep_in_buf;
+    switch (axis)
+    {
+    case GuitarHeroDrums_RedPad:
+        return data->redVelocity << 9;
+    case GuitarHeroDrums_YellowPad:
+        return data->yellowVelocity << 9;
+    case GuitarHeroDrums_BluePad:
+        return data->blueVelocity << 9;
+    case GuitarHeroDrums_OrangePad:
+        return data->orangeVelocity << 9;
+    case GuitarHeroDrums_GreenPad:
+        return data->greenVelocity << 9;
+    case GuitarHeroDrums_KickPedal:
+        return data->kickVelocity << 9;
+    default:
+        return 0;
+    }
+}
+
+inline bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_Output &type, bool is_wt = false, bool rb2 = false)
 {
     if (type.which_mapping == proto_Output_gamepadButton_tag)
     {
         auto data = (XInputGamepad_Data_t *)ep_in_buf;
+        // RB2 kits press the face buttons and d-pad when hitting pads and cymbals, only
+        // treat them as navigation when no hit is flagged
+        if (subtype == RockBandDrums)
+        {
+            auto drums = (const XInputRockBandDrums_Data_t *)ep_in_buf;
+            if (drums->padFlag || drums->cymbalFlag)
+            {
+                switch (type.mapping.gamepadButton)
+                {
+                case Gamepad_A:
+                case Gamepad_B:
+                case Gamepad_X:
+                case Gamepad_Y:
+                case Gamepad_DpadUp:
+                case Gamepad_DpadDown:
+                case Gamepad_DpadLeft:
+                case Gamepad_DpadRight:
+                    return false;
+                default:
+                    break;
+                }
+            }
+        }
         switch (type.mapping.gamepadButton)
         {
         case Gamepad_A:
@@ -224,6 +405,27 @@ inline bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, 
             }
         }
         return false;
+    case RockBandDrums:
+        if (type.which_mapping == proto_Output_rbDrumButton_tag)
+        {
+            auto data = (const XInputRockBandDrums_Data_t *)ep_in_buf;
+            switch (type.mapping.rbDrumButton)
+            {
+            case RockBandDrums_Kick1Pedal:
+                return data->kick1;
+            case RockBandDrums_Kick2Pedal:
+                return data->kick2;
+            default:
+                return false;
+            }
+        }
+        if (type.which_mapping == proto_Output_rbDrumAxis_tag)
+            return xinput_rb_drum_axis(ep_in_buf, type.mapping.rbDrumAxis, rb2) != 0;
+        return false;
+    case GuitarHeroDrums:
+        if (type.which_mapping == proto_Output_ghDrumAxis_tag)
+            return xinput_gh_drum_axis(ep_in_buf, type.mapping.ghDrumAxis) != 0;
+        return false;
     default:
         return false;
     }
@@ -237,7 +439,7 @@ inline uint16_t xinput_turntable_velocity(int16_t velocity)
     return value < 0 ? 0 : value > UINT16_MAX ? UINT16_MAX : value;
 }
 
-inline uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtype, proto_Output &type)
+inline uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtype, proto_Output &type, bool rb2 = false)
 {
     if (type.which_mapping == proto_Output_gamepadAxis_tag)
     {
@@ -388,6 +590,14 @@ inline uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtyp
             }
         }
         break;
+    case RockBandDrums:
+        if (type.which_mapping == proto_Output_rbDrumAxis_tag)
+            return xinput_rb_drum_axis(ep_in_buf, type.mapping.rbDrumAxis, rb2);
+        break;
+    case GuitarHeroDrums:
+        if (type.which_mapping == proto_Output_ghDrumAxis_tag)
+            return xinput_gh_drum_axis(ep_in_buf, type.mapping.ghDrumAxis);
+        break;
     default:
         break;
     }
@@ -396,9 +606,9 @@ inline uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtyp
 }
 
 inline uint16_t xinput_tick_button_pressure_impl(const uint8_t *ep_in_buf, SubType subtype,
-                                                 proto_Output &type, bool is_wt = false)
+                                                 proto_Output &type, bool is_wt = false, bool rb2 = false)
 {
-    if (!xinput_tick_digital_impl(ep_in_buf, subtype, type, is_wt))
+    if (!xinput_tick_digital_impl(ep_in_buf, subtype, type, is_wt, rb2))
         return 0;
 
     if (subtype == ProKeys &&
@@ -412,6 +622,9 @@ inline uint16_t xinput_tick_button_pressure_impl(const uint8_t *ep_in_buf, SubTy
         return pro_keyboard_key_range_pressure(data->key1, data->key2, data->key3,
                                                data->velocities, type.mapping.proKeyMultiple);
     }
+    if (type.which_mapping == proto_Output_rbDrumAxis_tag ||
+        type.which_mapping == proto_Output_ghDrumAxis_tag)
+        return xinput_tick_analog_impl(ep_in_buf, subtype, type, rb2);
 
     return UINT16_MAX;
 }

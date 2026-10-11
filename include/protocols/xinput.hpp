@@ -160,6 +160,10 @@ inline uint8_t get_xinput_subtype(SubType subtype)
 #define XINPUT_FLAGS_NONE 0x0000
 #define XINPUT_FLAGS_FORCE_FEEDBACK 0x0001
 
+// Capability button bits. RB2+ drum kits list the right stick click (their pad flag), while
+// RB1 and Guitar Hero kits never send it
+#define XINPUT_CAPS_BUTTON_RIGHT_THUMB 0x0080
+
 #define LED_OFF 0
 #define LED_ALL_BLINKING 1
 #define LED_ONE_FLASH 2

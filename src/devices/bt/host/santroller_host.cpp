@@ -160,7 +160,7 @@ bool BleSantrollerHost::tick_digital(proto_Output &type)
 {
     if (m_is_v2)
     {
-        return xinput_tick_digital_impl(m_report_buf, m_subtype, type);
+        return xinput_tick_digital_impl(m_report_buf, m_subtype, type, false, true);
     }
     return santroller_v1_tick_digital(m_report_buf, m_subtype, type);
 }
@@ -169,7 +169,7 @@ uint16_t BleSantrollerHost::tick_analog(proto_Output &type)
 {
     if (m_is_v2)
     {
-        return xinput_tick_analog_impl(m_report_buf, m_subtype, type);
+        return xinput_tick_analog_impl(m_report_buf, m_subtype, type, true);
     }
     return santroller_v1_tick_analog(m_report_buf, m_subtype, type);
 }
@@ -177,6 +177,6 @@ uint16_t BleSantrollerHost::tick_analog(proto_Output &type)
 uint16_t BleSantrollerHost::tick_button_pressure(proto_Output &type)
 {
     if (m_is_v2)
-        return xinput_tick_button_pressure_impl(m_report_buf, m_subtype, type);
+        return xinput_tick_button_pressure_impl(m_report_buf, m_subtype, type, false, true);
     return tick_digital(type) ? UINT16_MAX : 0;
 }

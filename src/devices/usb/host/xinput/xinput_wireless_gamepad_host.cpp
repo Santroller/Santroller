@@ -586,7 +586,8 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
             if (linkReport->always_0xCC == 0xCC)
             {
                 const uint8_t raw_subtype = linkReport->subtype & ~0x80;
-                m_request_caps_on_input = raw_subtype == XINPUT_GUITAR_ALTERNATE || raw_subtype == XINPUT_PRO_GUITAR;
+                m_request_caps_on_input = raw_subtype == XINPUT_GUITAR_ALTERNATE || raw_subtype == XINPUT_PRO_GUITAR ||
+                                           raw_subtype == XINPUT_DRUMS;
                 bool newly_connected = !m_found;
                 if (newly_connected)
                 {
@@ -602,6 +603,7 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                     m_link_up_ms = millis();
                     set_linked(true);
                     m_wt = false;
+                    m_rb2 = true;
                     m_led_set = false;
                     m_input_count = 0;
                     m_last_input_ms = 0;
@@ -633,6 +635,12 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                 {
                     m_wt = true;
                 }
+                // Rock Band and Guitar Hero kits share a subtype, only RB kits have a pad flag
+                if (m_subtype == RockBandDrums || m_subtype == GuitarHeroDrums)
+                {
+                    m_rb2 = caps->buttons & XINPUT_CAPS_BUTTON_RIGHT_THUMB;
+                    m_subtype = m_rb2 ? RockBandDrums : GuitarHeroDrums;
+                }
             }
         }
     }
@@ -640,15 +648,15 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
 
 bool XInputWirelessGamepadHost::tick_digital(proto_Output &type)
 {
-    return xinput_tick_digital_impl(m_report_buf, m_subtype, type, m_wt);
+    return xinput_tick_digital_impl(m_report_buf, m_subtype, type, m_wt, m_rb2);
 }
 uint16_t XInputWirelessGamepadHost::tick_analog(proto_Output &type)
 {
-    return xinput_tick_analog_impl(m_report_buf, m_subtype, type);
+    return xinput_tick_analog_impl(m_report_buf, m_subtype, type, m_rb2);
 }
 uint16_t XInputWirelessGamepadHost::tick_button_pressure(proto_Output &type)
 {
-    return xinput_tick_button_pressure_impl(m_report_buf, m_subtype, type, m_wt);
+    return xinput_tick_button_pressure_impl(m_report_buf, m_subtype, type, m_wt, m_rb2);
 }
 
 void XInputWirelessGamepadHost::set_rumble(uint8_t left, uint8_t right)

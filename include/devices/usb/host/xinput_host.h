@@ -46,6 +46,8 @@ private:
     xfer_result_t m_out_result = XFER_RESULT_SUCCESS;
     bool m_euphoria = false;
     bool m_wt = false;
+    // RB2+ drum kit, from the capabilities
+    bool m_rb2 = false;
 };
 class XInputAudioHost : public UsbHostInterface
 {
@@ -172,6 +174,9 @@ private:
     static constexpr uint32_t link_loss_grace_ms = 3000;
     bool m_led_set = false;
     bool m_wt = false;
+    // RB2+ drum kit, from the capabilities. Only RB2+ kits are wireless, so assume one until
+    // the capabilities arrive
+    bool m_rb2 = true;
     bool m_out_pending = false;
     uint32_t m_out_submit_failures = 0;
     uint32_t m_input_count = 0;

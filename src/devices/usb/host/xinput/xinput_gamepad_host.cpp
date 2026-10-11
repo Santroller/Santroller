@@ -125,6 +125,7 @@ bool XInputGamepadHost::set_config()
         {
             m_subtype = GuitarHeroDrums;
         }
+        m_rb2 = caps.buttons & XINPUT_CAPS_BUTTON_RIGHT_THUMB;
         if (m_subtype == GuitarHeroGuitar && caps.leftThumbX == 0xFFC0 && caps.rightThumbX == 0xFFC0)
         {
             m_wt = true;
@@ -218,15 +219,15 @@ void XInputGamepadHost::update(bool full_poll, bool send_events)
 
 bool XInputGamepadHost::tick_digital(proto_Output &type)
 {
-    return xinput_tick_digital_impl(m_ep_in_buf, m_subtype, type, m_wt);
+    return xinput_tick_digital_impl(m_ep_in_buf, m_subtype, type, m_wt, m_rb2);
 }
 uint16_t XInputGamepadHost::tick_analog(proto_Output &type)
 {
-    return xinput_tick_analog_impl(m_ep_in_buf, m_subtype, type);
+    return xinput_tick_analog_impl(m_ep_in_buf, m_subtype, type, m_rb2);
 }
 uint16_t XInputGamepadHost::tick_button_pressure(proto_Output &type)
 {
-    return xinput_tick_button_pressure_impl(m_ep_in_buf, m_subtype, type, m_wt);
+    return xinput_tick_button_pressure_impl(m_ep_in_buf, m_subtype, type, m_wt, m_rb2);
 }
 
 void XInputGamepadHost::set_rumble(uint8_t left, uint8_t right)

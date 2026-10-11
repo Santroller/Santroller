@@ -194,19 +194,19 @@ bool SantrollerHost::tick_digital(proto_Output &type)
 {
     if (!m_is_v2)
         return santroller_v1_tick_digital(m_report, m_subtype, type);
-    return xinput_tick_digital_impl(m_report, m_subtype, type);
+    return xinput_tick_digital_impl(m_report, m_subtype, type, false, true);
 }
 
 uint16_t SantrollerHost::tick_analog(proto_Output &type)
 {
     if (!m_is_v2)
         return santroller_v1_tick_analog(m_report, m_subtype, type);
-    return xinput_tick_analog_impl(m_report, m_subtype, type);
+    return xinput_tick_analog_impl(m_report, m_subtype, type, true);
 }
 
 uint16_t SantrollerHost::tick_button_pressure(proto_Output &type)
 {
     if (!m_is_v2)
         return santroller_v1_tick_digital(m_report, m_subtype, type) ? UINT16_MAX : 0;
-    return xinput_tick_button_pressure_impl(m_report, m_subtype, type);
+    return xinput_tick_button_pressure_impl(m_report, m_subtype, type, false, true);
 }

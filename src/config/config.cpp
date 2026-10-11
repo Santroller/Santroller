@@ -103,6 +103,7 @@
 #include <algorithm>
 #include <array>
 #include "utils.h"
+#include "config/slot_ids.hpp"
 #include "hci.h"
 
 static auto &profile_mgr = ProfileManager::instance();
@@ -123,6 +124,9 @@ struct ConfigDecodeContext
     // Building an inactive profile for the config tool: load everything, but never activate it
     bool preview = false;
     std::array<uint16_t, 5> slot_counts{};
+    // deviceSlotIdVersion 2: slot ids come from the whole profile, scanned before it is loaded
+    bool profile_wide_slot_ids = false;
+    ProfileSlotIds slot_ids;
 };
 
 bool load_cycle_state(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -478,7 +482,14 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
     }
 
     auto slot_id = static_cast<uint32_t>(list->triggers.size());
-    if (profile->per_kind_slot_ids)
+    if (context->profile_wide_slot_ids)
+    {
+        if (slot_kind_and_type(proto_assignment).first != DeviceSlotKind::None)
+        {
+            slot_id = context->slot_ids.next_id(proto_assignment);
+        }
+    }
+    else if (profile->per_kind_slot_ids)
     {
         DeviceSlotKind kind = DeviceSlotKind::None;
         switch (proto_assignment.which_assignment)
@@ -532,6 +543,7 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     auto profile = context->profile;
     auto list = new ActivationTriggerList();
     context->slot_counts.fill(0);
+    context->slot_ids.end_list();
     list->list_id = profile->triggers.size();
     profile->triggers.emplace_back(list);
     proto_ProfileAssignment proto_assignment = proto_ProfileAssignment_init_default;
@@ -671,8 +683,69 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->input_queue.interval_us = (opts.has_dequeueInterval100us ? opts.dequeueInterval100us : default_interval) * 100;
     return true;
 }
+struct SlotIdScan
+{
+    uint32_t version = 0;
+    ProfileSlotIds ids;
+};
+
+static bool scan_slot_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto *ids = static_cast<ProfileSlotIds *>(*arg);
+    proto_ProfileAssignmentInfo info = proto_ProfileAssignmentInfo_init_default;
+    if (!pb_decode(stream, proto_ProfileAssignmentInfo_fields, &info))
+    {
+        return false;
+    }
+    ids->add(info);
+    return true;
+}
+
+static bool scan_slot_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto *ids = static_cast<ProfileSlotIds *>(*arg);
+    proto_ProfileAssignment list = proto_ProfileAssignment_init_default;
+    list.assignments.funcs.decode = &scan_slot_assignment_info;
+    list.assignments.arg = ids;
+    bool ok = pb_decode(stream, proto_ProfileAssignment_fields, &list);
+    ids->end_list();
+    return ok;
+}
+
+static bool scan_slot_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto *scan = static_cast<SlotIdScan *>(*arg);
+    proto_ProfileOpts opts = proto_ProfileOpts_init_default;
+    if (!decode_profile_opts(stream, &opts))
+    {
+        return false;
+    }
+    scan->version = opts.has_deviceSlotIdVersion ? opts.deviceSlotIdVersion : 0;
+    return true;
+}
+
+// Slot ids in deviceSlotIdVersion 2 depend on every assignment list in the profile, but the lists
+// are claimed as they are decoded, so read them all first
+static void scan_slot_ids(pb_istream_t stream, ConfigDecodeContext &context)
+{
+    SlotIdScan scan;
+    proto_Profile proto_profile = proto_Profile_init_default;
+    proto_profile.opts.funcs.decode = &scan_slot_opts;
+    proto_profile.opts.arg = &scan;
+    proto_profile.assignments.funcs.decode = &scan_slot_assignments;
+    proto_profile.assignments.arg = &scan.ids;
+    if (!pb_decode_ex(&stream, proto_Profile_fields, &proto_profile, PB_DECODE_NOINIT) || scan.version < 2)
+    {
+        return;
+    }
+    scan.ids.build();
+    context.slot_ids = std::move(scan.ids);
+    context.profile_wide_slot_ids = true;
+}
+
 static std::shared_ptr<Profile> decode_profile(pb_istream_t stream, ConfigDecodeContext &context)
 {
+    scan_slot_ids(stream, context);
     auto profile = std::make_shared<Profile>();
     device_mgr.for_each_active_device([profile](const auto &device)
                                       {

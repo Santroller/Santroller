@@ -15,6 +15,8 @@ message ProfileOpts {
   optional bool ps4OrPs5Mode = 12;
   optional bool supportsSlider = 13;
   optional bool cymbalGlitchFix = 14;
+  // 0: slots numbered by position in each assignment list, 1: per kind in each list,
+  // 2: per kind and subtype across the whole profile
   optional uint32 deviceSlotIdVersion = 15;
   // Guitars only: queue fret / strum changes and present each one for at least
   // dequeueInterval100us, so a game polling at a fixed rate sees every transition.
@@ -155,6 +157,8 @@ message Led {
 message SpecificUsbDevice {
   required uint32 vid = 1;
   required uint32 pid = 2;
+  // The type of device expected, which numbers its slot with the other slots of that type
+  optional SubType subtype = 3;
 }
 
 message UsbDeviceAssignment {
@@ -166,6 +170,8 @@ message UsbDeviceAssignment {
 message SpecificBluetoothDevice {
   required uint32 vid = 1;
   required uint32 pid = 2;
+  // The type of device expected, which numbers its slot with the other slots of that type
+  optional SubType subtype = 3;
 }
 
 message WiimoteAssignment {

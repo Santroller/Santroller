@@ -81,7 +81,8 @@ public:
   void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
   // Same as get_report / set_report (buffers include the report id), but for requests that arrived over another transport
   uint16_t get_report_from(ConfigTransport transport, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
-  void set_report_from(ConfigTransport transport, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
+  // Returns false if the report was refused
+  bool set_report_from(ConfigTransport transport, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
   // True if the config device is already processed as a USB instance
   bool is_registered();
   bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
@@ -98,7 +99,7 @@ private:
   void switch_transport(ConfigTransport transport);
   void handle_command(proto_Command command);
   uint16_t handle_get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
-  void handle_set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
+  bool handle_set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
   ConfigTransport m_transport = ConfigTransport::Usb;
   proto_EventList list;
   proto_PinDetectType m_detect_type;

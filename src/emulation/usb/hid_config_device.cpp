@@ -2,6 +2,7 @@
 #include "managers/config_manager.hpp"
 #include "managers/device_manager.hpp"
 #include "config/config.hpp"
+#include "config/FlashPROM.h"
 #include "managers/profile_manager.hpp"
 
 #include "commands.pb.h"
@@ -434,10 +435,10 @@ void HIDConfigDevice::switch_transport(ConfigTransport transport)
   m_transport = transport;
 }
 
-void HIDConfigDevice::set_report_from(ConfigTransport transport, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
+bool HIDConfigDevice::set_report_from(ConfigTransport transport, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
   switch_transport(transport);
-  handle_set_report(report_id, report_type, buffer, bufsize);
+  return handle_set_report(report_id, report_type, buffer, bufsize);
 }
 
 uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
@@ -463,7 +464,7 @@ bool HIDConfigDevice::is_registered()
   return found;
 }
 
-void HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
+bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
   if (report_type == HID_REPORT_TYPE_FEATURE ||
       (report_type == HID_REPORT_TYPE_OUTPUT && report_id == ReportId::ReportIdUploadFirmware))
@@ -549,7 +550,7 @@ void HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
         }
         else
         {
-          multicore_lockout_start_blocking();
+          flash_write_begin();
           uint32_t write_size =
               uploaded >= firmware_size
                   ? ((chunk_offset + firmware_write_alignment - 1) / firmware_write_alignment) * firmware_write_alignment
@@ -581,19 +582,31 @@ void HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
             update_state.chunkOffset = 0;
             memset(fw_update_tmp, 0, sizeof(fw_update_tmp));
           }
-          multicore_lockout_end_blocking();
+          flash_write_end();
         }
       }
       break;
     }
     case ReportId::ReportIdUpdateFirmware:
     {
-      if (!decode_firmware_update(buffer, bufsize, &update_state))
+      proto_FirmwareUpdate decoded;
+      if (!decode_firmware_update(buffer, bufsize, &decoded))
       {
         printf("Didn't decode fw update?\r\n");
         fw_update_active = false;
         break;
       }
+      // A streamed upload sends this between blocks, both to wait for the block to be written and to
+      // check it all arrived: the offset has to be where the upload is up to, which is the start of the
+      // next block once a block is written. Otherwise refuse it, so the configurator sends that block again
+      // (starting with this report at the offset it is up to, which resets the block).
+      if (fw_update_active && !m_target_secondary_pico && decoded.offset > 0 &&
+          !(decoded.has_deviceId && decoded.deviceId > 0) && decoded.offset != update_state.offset)
+      {
+        printf("fw update at 0x%lx, expected 0x%lx\r\n", (unsigned long)decoded.offset, (unsigned long)update_state.offset);
+        return false;
+      }
+      update_state = decoded;
       // printf("fw update offset: %02x\r\n", update_state.offset);
       tool_seen = true;
       fw_update_active = true;
@@ -616,9 +629,9 @@ void HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
         }
         else
         {
-          multicore_lockout_start_blocking();
+          flash_write_begin();
           pfb_initialize_download_slot();
-          multicore_lockout_end_blocking();
+          flash_write_end();
         }
       }
       break;
@@ -665,6 +678,7 @@ void HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
     }
     }
   }
+  return true;
 }
 
 bool encode_active_profiles(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
@@ -756,13 +770,13 @@ uint16_t HIDConfigDevice::handle_get_report(uint8_t report_id, hid_report_type_t
     buffer[0] = report_id;
     buffer++;
     start = 0;
-    return copy_config_info(buffer, cached) + 1;
+    return copy_config_info(buffer, cached, m_transport == ConfigTransport::Bluetooth) + 1;
   case ReportId::ReportIdConfigInfoSaved:
     cached = false;
     buffer[0] = report_id;
     buffer++;
     start = 0;
-    return copy_config_info(buffer, cached) + 1;
+    return copy_config_info(buffer, cached, m_transport == ConfigTransport::Bluetooth) + 1;
   }
   return 0;
 }
@@ -897,9 +911,9 @@ uint16_t hid_config_bt_get_report(uint8_t report_id, uint8_t report_type, uint8_
   return HIDConfigDevice::instance->get_report_from(ConfigTransport::Bluetooth, report_id, static_cast<hid_report_type_t>(report_type), buffer, reqlen);
 }
 
-void hid_config_bt_set_report(uint8_t report_id, uint8_t report_type, const uint8_t *buffer, uint16_t len)
+bool hid_config_bt_set_report(uint8_t report_id, uint8_t report_type, const uint8_t *buffer, uint16_t len)
 {
-  HIDConfigDevice::instance->set_report_from(ConfigTransport::Bluetooth, report_id, static_cast<hid_report_type_t>(report_type), buffer, len);
+  return HIDConfigDevice::instance->set_report_from(ConfigTransport::Bluetooth, report_id, static_cast<hid_report_type_t>(report_type), buffer, len);
 }
 
 void hid_config_bt_process(bool full_poll, bool send_events)

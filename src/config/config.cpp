@@ -894,7 +894,7 @@ bool load_empty()
     return true;
 }
 
-uint32_t copy_config_info(uint8_t *buffer, bool cached)
+uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload)
 {
     ConfigMetadata metadata = config_storage.read_metadata(cached);
     proto_ConfigInfo info proto_ConfigInfo_init_zero;
@@ -910,6 +910,11 @@ uint32_t copy_config_info(uint8_t *buffer, bool cached)
     info.has_needsUf2Update = true;
     info.needsUf2Update = missing;
 #endif
+    if (streamed_upload)
+    {
+        info.has_streamedFirmwareUpload = true;
+        info.streamedFirmwareUpload = true;
+    }
     pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 64);
     if (!pb_encode(&outputStream, proto_ConfigInfo_fields, &info))
     {

@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 // set to 1 to log every config request made over bluetooth
-#define BT_CONFIG_DEBUG 0
+#define BT_CONFIG_DEBUG 1
 #if BT_CONFIG_DEBUG
 #define config_debug(...) printf(__VA_ARGS__)
 #else
@@ -19,7 +19,10 @@
 // The same reports are also served from a plain GATT service for Web Bluetooth, which blocks HID services.
 
 #define MAX_CONFIG_REPORTS 32
-#define MAX_PENDING_WRITES 4
+// Enough for a whole streamed firmware block (4096 bytes in 63 byte reports) and the feature report
+// write that follows it. Streamed writes have no response to hold back, so nothing slows the host down
+// until that feature report, and anything that doesn't fit is lost.
+#define MAX_PENDING_WRITES 80
 // largest config report, without the report id
 #define MAX_REPORT_SIZE 64
 
@@ -29,6 +32,9 @@ static const uint8_t s_web_service_uuid[16] = {0x53, 0x41, 0x4E, 0x54, 0x52, 0x4
                                                0x45, 0x52, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t s_web_report_ids[] = {0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x30, 0x31, 0x32, 0x33};
 #define WEB_EVENTS_REPORT_ID 0x22
+// Streamed firmware upload, written without response. The UUID ends in this instead of the report id.
+#define WEB_STREAM_UUID_ID 0xB1
+#define STREAM_REPORT_ID 0x31
 
 // Somewhere config events can be notified to
 struct EventTarget
@@ -51,6 +57,8 @@ struct ConfigReport
     hid_report_type_t type;
     uint16_t size;
     ConfigServiceType service;
+    // only writable without response, so writes are never acknowledged
+    bool streamed;
 };
 
 enum ReadState
@@ -97,6 +105,7 @@ static uint8_t s_write_count = 0;
 // a delayed write was handled, the ATT server will call back with it once more to send the response
 static bool s_write_acked = false;
 static uint16_t s_write_acked_handle = 0;
+static uint8_t s_write_acked_error = 0;
 
 static const ConfigReport *s_prepared_report = nullptr;
 static uint8_t s_prepared_buf[MAX_REPORT_SIZE];
@@ -180,6 +189,8 @@ static uint16_t att_read_callback(hci_con_handle_t con_handle, uint16_t att_hand
         return att_read_callback_handle_blob(empty, report->size, offset, buffer, buffer_size);
     }
     bool cached = s_read_report == report && (s_read_state == ReadReady || s_read_state == ReadServing);
+    config_debug("BT config: att read 0x%02x offset %u %s size %u, state %d cached %d len %u mtu %u\r\n", report->id, offset,
+                 buffer ? "data" : "length", buffer_size, s_read_state, cached, s_read_len, att_server_get_mtu(con_handle));
     if (!buffer)
     {
         // length request, made at the start of every read
@@ -238,6 +249,13 @@ static int att_write_callback(hci_con_handle_t con_handle, uint16_t att_handle, 
         {
             target->notifications = little_endian_read_16(buffer, 0);
             printf("BT: config events %s (%s)\r\n", target->notifications ? "enabled" : "disabled", target == &s_event_targets[ServiceWeb] ? "web bluetooth" : "hid");
+            if (target->notifications)
+            {
+                // The tool is connected. Every config request is a round trip, so ask for the same
+                // short connection interval the gamepad uses, otherwise the host picks one (30-50ms on
+                // linux) and reading the config or uploading firmware crawls
+                gap_request_connection_parameter_update(con_handle, 6, 7, 0, 100);
+            }
         }
         return 0;
     }
@@ -248,6 +266,16 @@ static int att_write_callback(hci_con_handle_t con_handle, uint16_t att_handle, 
         return ATT_ERROR_WRITE_NOT_PERMITTED;
     }
     s_active_service = report->service;
+    if (report->streamed)
+    {
+        // btstack refuses write requests for characteristics without WRITE, so this is a write
+        // command: there is no response to hold back
+        if (!queue_write(report, buffer, buffer_size, false))
+        {
+            printf("BT: config write queue full, dropped streamed write\r\n");
+        }
+        return 0;
+    }
     if (transaction_mode == ATT_TRANSACTION_MODE_ACTIVE)
     {
         // a prepared write, collect it until it is executed
@@ -269,7 +297,7 @@ static int att_write_callback(hci_con_handle_t con_handle, uint16_t att_handle, 
     {
         // the ATT server asking again for the result of a write we already handled
         s_write_acked = false;
-        return 0;
+        return s_write_acked_error;
     }
     config_debug("BT config: write 0x%02x len %u\r\n", report->id, buffer_size);
     if (!queue_write(report, buffer, buffer_size, true))
@@ -319,6 +347,8 @@ void bt_config_service_init(uint16_t start, uint16_t end)
         report.type = (hid_report_type_t)reference[1];
         report.size = btstack_min(btstack_hid_get_report_size_for_id(report.id, report.type, desc, len), MAX_REPORT_SIZE);
         report.service = ServiceHid;
+        // the firmware upload output report, see bt_config.gatt
+        report.streamed = report.type == HID_REPORT_TYPE_OUTPUT;
         if (report.type == HID_REPORT_TYPE_INPUT)
         {
             s_event_targets[ServiceHid].value_handle = value_handle;
@@ -354,11 +384,30 @@ void bt_config_service_init(uint16_t start, uint16_t end)
         report.type = HID_REPORT_TYPE_FEATURE;
         report.size = btstack_min(btstack_hid_get_report_size_for_id(report.id, report.type, desc, len), MAX_REPORT_SIZE);
         report.service = ServiceWeb;
+        report.streamed = false;
         if (id == WEB_EVENTS_REPORT_ID)
         {
             s_event_targets[ServiceWeb].value_handle = value_handle;
             s_event_targets[ServiceWeb].client_configuration_handle =
                 gatt_server_get_client_configuration_handle_for_characteristic_with_uuid128(web_start, web_end, uuid);
+        }
+    }
+
+    if (web_start && s_report_count < MAX_CONFIG_REPORTS)
+    {
+        uint8_t uuid[16];
+        memcpy(uuid, s_web_service_uuid, sizeof(uuid));
+        uuid[15] = WEB_STREAM_UUID_ID;
+        uint16_t value_handle = gatt_server_get_value_handle_for_characteristic_with_uuid128(web_start, web_end, uuid);
+        if (value_handle)
+        {
+            ConfigReport &report = s_reports[s_report_count++];
+            report.value_handle = value_handle;
+            report.id = STREAM_REPORT_ID;
+            report.type = HID_REPORT_TYPE_OUTPUT;
+            report.size = btstack_min(btstack_hid_get_report_size_for_id(report.id, report.type, desc, len), MAX_REPORT_SIZE);
+            report.service = ServiceWeb;
+            report.streamed = true;
         }
     }
 
@@ -425,12 +474,13 @@ void bt_config_service_process(bool full_poll, bool send_events)
         uint8_t buf[MAX_REPORT_SIZE + 1];
         buf[0] = write.report->id;
         memcpy(buf + 1, write.data, write.len);
-        hid_config_bt_set_report(write.report->id, write.report->type, buf, write.len + 1);
+        bool ok = hid_config_bt_set_report(write.report->id, write.report->type, buf, write.len + 1);
         if (write.needs_ack)
         {
             BtStackLock lock;
             s_write_acked = true;
             s_write_acked_handle = write.report->value_handle;
+            s_write_acked_error = ok ? 0 : ATT_ERROR_VALUE_NOT_ALLOWED;
             if (att_server_response_ready(s_con_handle) != ERROR_CODE_SUCCESS)
             {
                 s_write_acked = false;
@@ -457,6 +507,13 @@ void bt_config_service_process(bool full_poll, bool send_events)
         // to the declared size breaks the configurator decoding reports like ConfigInfo, which are plain
         // protobuf (an odd number of trailing zeros reads as a truncated field)
         s_read_len = len > 1 ? btstack_min(len - 1, sizeof(s_read_buf)) : 0;
+        // BlueZ (at least up to 5.87) drops the last byte of numbered feature reports read over
+        // HID-over-GATT, so add a zero for it to drop. Other hosts trim it to the declared report
+        // size, or pass it on as a trailing zero, which the configurator ignores like USB padding.
+        if (read_report->service == ServiceHid && len > 1 && s_read_len < sizeof(s_read_buf))
+        {
+            s_read_len++;
+        }
         memcpy(s_read_buf, buf + 1, s_read_len);
         // the request may have been dropped by a disconnect while it was fetched
         if (s_read_state == ReadQueued && s_read_report == read_report)

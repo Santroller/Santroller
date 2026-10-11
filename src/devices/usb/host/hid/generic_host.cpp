@@ -9,12 +9,43 @@
 #include "hidparser.h"
 #include "devices/usb/host/generic_hid_tick_helpers.h"
 
+// Interfaces are opened in order, so earlier keyboard interfaces have already been claimed, and later
+// ones are found by scanning the rest of the configuration descriptor (max_len covers up to its end)
+static bool device_has_keyboard(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len)
+{
+    if (!list->keyboard.expired())
+    {
+        return true;
+    }
+    uint8_t const *p_desc = (uint8_t const *)itf_desc;
+    uint8_t const *desc_end = p_desc + max_len;
+    while (p_desc + 2 <= desc_end && tu_desc_len(p_desc) && p_desc + tu_desc_len(p_desc) <= desc_end)
+    {
+        if (tu_desc_type(p_desc) == TUSB_DESC_INTERFACE)
+        {
+            tusb_desc_interface_t const *desc = (tusb_desc_interface_t const *)p_desc;
+            if (desc->bInterfaceClass == TUSB_CLASS_HID && desc->bInterfaceProtocol == HID_ITF_PROTOCOL_KEYBOARD)
+            {
+                return true;
+            }
+        }
+        p_desc = tu_desc_next(p_desc);
+    }
+    return false;
+}
+
 std::shared_ptr<UsbHostInterface> GenericHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
     uint8_t dev_addr = list->dev_addr();
 
     uint8_t const *p_desc = (uint8_t const *)itf_desc;
     if (itf_desc->bInterfaceProtocol != HID_ITF_PROTOCOL_NONE || !info)
+    {
+        return nullptr;
+    }
+    // Keyboards often expose a gamepad interface as well, and users won't expect that to activate
+    // gamepad profiles, so only the keyboard side of them is used
+    if (device_has_keyboard(list, itf_desc, max_len))
     {
         return nullptr;
     }

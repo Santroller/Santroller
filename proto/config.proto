@@ -292,6 +292,9 @@ message ConfigInfo {
   required int32 magic = 5;
   optional bool missingStaticFirmware = 6;
   optional bool needsUf2Update = 7;
+  // Send firmware uploads as output reports, with a ReportIdUpdateFirmware feature report after each
+  // 4096 byte block to wait for it and check it arrived. Only set over bluetooth.
+  optional bool streamedFirmwareUpload = 8;
 }
 
 message GetActiveProfiles {

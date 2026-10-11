@@ -27,6 +27,7 @@ bool bt_config_send_event(const uint8_t *data, uint16_t len);
 // Buffers include the report id, the same as over USB.
 const uint8_t *hid_config_report_descriptor(uint16_t *len);
 uint16_t hid_config_bt_get_report(uint8_t report_id, uint8_t report_type, uint8_t *buffer, uint16_t reqlen);
-void hid_config_bt_set_report(uint8_t report_id, uint8_t report_type, const uint8_t *buffer, uint16_t len);
+// Returns false if the report was refused, which is passed back to the host as an ATT error
+bool hid_config_bt_set_report(uint8_t report_id, uint8_t report_type, const uint8_t *buffer, uint16_t len);
 // Processes the config device when it isn't already a USB instance
 void hid_config_bt_process(bool full_poll, bool send_events);

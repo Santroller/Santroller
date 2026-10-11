@@ -38,5 +38,8 @@ inline FlashPROM EEPROM;
 // Core1's main loop. Runs from RAM so flash writes don't need to lock core1 out, and keeps the
 // USB host's SOF going while core0 is stalled by a flash write
 void flash_core1_loop();
+// Wrap flash writes in these, so core1 sends the USB host's SOF while core0 can't
+void flash_write_begin();
+void flash_write_end();
 
 #endif

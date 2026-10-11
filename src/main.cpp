@@ -233,7 +233,8 @@ void deinitDebug()
 
 void core1()
 {
-    // Still needed for firmware updates, which lock core1 out
+    // Our own flash writes keep core1 running (see flash_write_begin), but the SDK's flash_safe_execute
+    // (used by btstack's flash bank via cyw43_arch_init) fails, and asserts, unless core1 can be locked out
     multicore_lockout_victim_init();
     flash_core1_loop();
 }

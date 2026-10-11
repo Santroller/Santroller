@@ -40,7 +40,7 @@ void __not_in_flash_func(flash_core1_loop)()
 	}
 }
 
-static void flash_write_begin()
+void flash_write_begin()
 {
 	while (!core1_ready)
 	{
@@ -55,7 +55,7 @@ static void flash_write_begin()
 	}
 }
 
-static void flash_write_end()
+void flash_write_end()
 {
 	sof_requested = false;
 	while (sof_running)

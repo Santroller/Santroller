@@ -46,7 +46,7 @@ static const uint8_t profile_data[] =
     0x0d, 0x00, 0x02, 0x00, 0x08, 0x00, 0x03, 0x28, 0x02, 0x09, 0x00, 0x2a, 0x2b, 
     // 0x0009 VALUE CHARACTERISTIC-GATT_DATABASE_HASH - READ -''
     // READ_ANYBODY
-    0x18, 0x00, 0x02, 0x00, 0x09, 0x00, 0x2a, 0x2b, 0x2d, 0x7c, 0xa2, 0x00, 0xbc, 0xe6, 0x75, 0x86, 0x23, 0xf6, 0x62, 0xf0, 0x45, 0x31, 0x00, 0x9b, 
+    0x18, 0x00, 0x02, 0x00, 0x09, 0x00, 0x2a, 0x2b, 0x7c, 0xa9, 0x85, 0x2d, 0x91, 0xfa, 0x5a, 0xcd, 0xf1, 0xd1, 0x43, 0x23, 0x7b, 0xae, 0xdb, 0xb5, 
     // add Battery Service
 
 
@@ -330,12 +330,14 @@ static const uint8_t profile_data[] =
     0x08, 0x00, 0x0b, 0xf5, 0x6d, 0x00, 0x4d, 0x2a, 
     // 0x006e REPORT_REFERENCE-READ-33-3
     0x0a, 0x00, 0x02, 0x00, 0x6e, 0x00, 0x08, 0x29, 0x33, 0x3, 
-    // Firmware upload, type = Output (2)
-    // 0x006f CHARACTERISTIC-ORG_BLUETOOTH_CHARACTERISTIC_REPORT - DYNAMIC | READ | WRITE | ENCRYPTION_KEY_SIZE_16
-    0x0d, 0x00, 0x02, 0x00, 0x6f, 0x00, 0x03, 0x28, 0x0a, 0x70, 0x00, 0x4d, 0x2a, 
-    // 0x0070 VALUE CHARACTERISTIC-ORG_BLUETOOTH_CHARACTERISTIC_REPORT - DYNAMIC | READ | WRITE | ENCRYPTION_KEY_SIZE_16
+    // Firmware upload, type = Output (2). Only WRITE_WITHOUT_RESPONSE, so hosts stream it (BlueZ uses write
+    // requests whenever WRITE is there) and every write that arrives is known to need no response. The
+    // configurator checks each block arrived with an acknowledged ReportIdUpdateFirmware feature report.
+    // 0x006f CHARACTERISTIC-ORG_BLUETOOTH_CHARACTERISTIC_REPORT - DYNAMIC | READ | WRITE_WITHOUT_RESPONSE | ENCRYPTION_KEY_SIZE_16
+    0x0d, 0x00, 0x02, 0x00, 0x6f, 0x00, 0x03, 0x28, 0x06, 0x70, 0x00, 0x4d, 0x2a, 
+    // 0x0070 VALUE CHARACTERISTIC-ORG_BLUETOOTH_CHARACTERISTIC_REPORT - DYNAMIC | READ | WRITE_WITHOUT_RESPONSE | ENCRYPTION_KEY_SIZE_16
     // READ_ENCRYPTED, WRITE_ENCRYPTED, ENCRYPTION_KEY_SIZE=16
-    0x08, 0x00, 0x0b, 0xf5, 0x70, 0x00, 0x4d, 0x2a, 
+    0x08, 0x00, 0x07, 0xf5, 0x70, 0x00, 0x4d, 0x2a, 
     // 0x0071 REPORT_REFERENCE-READ-31-2
     0x0a, 0x00, 0x02, 0x00, 0x71, 0x00, 0x08, 0x29, 0x31, 0x2, 
     // The same config reports as a plain GATT service, for Web Bluetooth (which blocks HID services).
@@ -406,9 +408,15 @@ static const uint8_t profile_data[] =
     // 0x008b VALUE CHARACTERISTIC-53414E54-524F-4C4C-4552-000000000033 - DYNAMIC | READ | WRITE | ENCRYPTION_KEY_SIZE_16
     // READ_ENCRYPTED, WRITE_ENCRYPTED, ENCRYPTION_KEY_SIZE=16
     0x16, 0x00, 0x0b, 0xf7, 0x8b, 0x00, 0x33, 0x00, 0x00, 0x00, 0x00, 0x00, 0x52, 0x45, 0x4c, 0x4c, 0x4f, 0x52, 0x54, 0x4e, 0x41, 0x53, 
+    // Streamed firmware upload (output report 0x31), the same as the HID service's firmware upload report
+    // 0x008c CHARACTERISTIC-53414E54-524F-4C4C-4552-0000000000B1 - DYNAMIC | WRITE_WITHOUT_RESPONSE | ENCRYPTION_KEY_SIZE_16
+    0x1b, 0x00, 0x02, 0x00, 0x8c, 0x00, 0x03, 0x28, 0x04, 0x8d, 0x00, 0xb1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x52, 0x45, 0x4c, 0x4c, 0x4f, 0x52, 0x54, 0x4e, 0x41, 0x53, 
+    // 0x008d VALUE CHARACTERISTIC-53414E54-524F-4C4C-4552-0000000000B1 - DYNAMIC | WRITE_WITHOUT_RESPONSE | ENCRYPTION_KEY_SIZE_16
+    // WRITE_ENCRYPTED, ENCRYPTION_KEY_SIZE=16
+    0x16, 0x00, 0x05, 0xf7, 0x8d, 0x00, 0xb1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x52, 0x45, 0x4c, 0x4c, 0x4f, 0x52, 0x54, 0x4e, 0x41, 0x53, 
     // END
     0x00, 0x00, 
-}; // total size 943 bytes 
+}; // total size 970 bytes 
 
 
 //
@@ -437,9 +445,9 @@ static const uint8_t profile_data[] =
 #define ATT_SERVICE_ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE_02_START_HANDLE 0x0040
 #define ATT_SERVICE_ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE_02_END_HANDLE 0x0071
 #define ATT_SERVICE_53414E54_524F_4C4C_4552_000000000000_START_HANDLE 0x0072
-#define ATT_SERVICE_53414E54_524F_4C4C_4552_000000000000_END_HANDLE 0x008b
+#define ATT_SERVICE_53414E54_524F_4C4C_4552_000000000000_END_HANDLE 0x008d
 #define ATT_SERVICE_53414E54_524F_4C4C_4552_000000000000_01_START_HANDLE 0x0072
-#define ATT_SERVICE_53414E54_524F_4C4C_4552_000000000000_01_END_HANDLE 0x008b
+#define ATT_SERVICE_53414E54_524F_4C4C_4552_000000000000_01_END_HANDLE 0x008d
 
 //
 // list mapping between characteristics and handles
@@ -505,3 +513,4 @@ static const uint8_t profile_data[] =
 #define ATT_CHARACTERISTIC_53414E54_524F_4C4C_4552_000000000031_01_VALUE_HANDLE 0x0087
 #define ATT_CHARACTERISTIC_53414E54_524F_4C4C_4552_000000000032_01_VALUE_HANDLE 0x0089
 #define ATT_CHARACTERISTIC_53414E54_524F_4C4C_4552_000000000033_01_VALUE_HANDLE 0x008b
+#define ATT_CHARACTERISTIC_53414E54_524F_4C4C_4552_0000000000B1_01_VALUE_HANDLE 0x008d

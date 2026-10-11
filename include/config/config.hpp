@@ -24,7 +24,8 @@ bool load_empty();
 std::shared_ptr<Profile> load_preview_profile(uint32_t profile_id);
 bool load();
 uint32_t copy_config(uint8_t *buffer, uint32_t start, bool cached);
-uint32_t copy_config_info(uint8_t *buffer, bool cached);
+// streamed_upload: tell the configurator to stream firmware uploads (see bt_config_service.cpp)
+uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload);
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize);
 bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start);
 void update();

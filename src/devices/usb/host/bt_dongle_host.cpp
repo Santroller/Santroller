@@ -125,15 +125,18 @@ std::shared_ptr<UsbHostInterface> BtDongleHost::open(std::shared_ptr<UsbHostDevi
         printf("BT dongle: adapter is missing an endpoint\r\n");
         return nullptr;
     }
+    // Not assignable, but still updated so the config tool hears about it, which is what the
+    // enumerating list does (it's only promoted from there once it has a MIDI channel)
+    usb_host_add_enumerating_interface(intf);
     *out_len = size;
     return intf;
 }
 
 bool BtDongleHost::set_config()
 {
-    // No product string or hotplug event, as this isn't an input device
     still_connected = true;
     tuh_vid_pid_get(m_dev_addr, &m_vid, &m_pid);
+    request_name();
     usbh_driver_set_config_complete(m_dev_addr, m_interface);
     s_dongle = this;
     m_event_len = 0;
@@ -144,6 +147,14 @@ bool BtDongleHost::set_config()
     receive_acl();
     usb_dongle_attached();
     return true;
+}
+
+void BtDongleHost::update(bool full_poll, bool send_events)
+{
+    if (send_events && full_poll)
+    {
+        send_hotplug_event(true);
+    }
 }
 
 void BtDongleHost::disconnect()

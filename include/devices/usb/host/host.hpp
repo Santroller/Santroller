@@ -33,6 +33,8 @@ public:
     // Tell the config tool about this interface, e.g. when a wireless controller links
     // to or drops from a receiver slot after enumeration
     void send_hotplug_event(bool connected);
+    // Read the product string, then send a hotplug event (straight away if there isn't one)
+    void request_name();
     virtual bool tick_digital(proto_Output& type) = 0;
     virtual uint16_t tick_analog(proto_Output& type) = 0;
     virtual bool tick_axis_digital(proto_Output& type) { return tick_analog(type) != 0; }
@@ -59,6 +61,8 @@ public:
         return true;
     }
     bool is_usb_host_interface() const override { return true; }
+    // Shown as a bluetooth adapter in the config tool's list of USB devices
+    virtual bool is_bluetooth_adapter() const { return false; }
     bool is_bluetooth_device(proto_SpecificBluetoothDevice type)
     {
         return false;

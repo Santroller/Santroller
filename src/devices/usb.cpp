@@ -478,22 +478,28 @@ bool UsbHostInterface::set_config()
     still_connected = true;
 
     tuh_vid_pid_get(m_dev_addr, &m_vid, &m_pid);
-    // TODO: get lang id and use it
-    // also, deal with devices that dont have product names
-    if (m_has_name)
-    {
-        update(true, true);
-    }
-    else
-    {
-        tuh_descriptor_get_product_string(m_dev_addr, 0x0409, m_name, sizeof(m_name), process_product_string, (uintptr_t)this);
-    }
+    request_name();
     usbh_driver_set_config_complete(m_dev_addr, m_interface);
     if (!m_delayed_init)
     {
         m_devices_changed = millis() + 500;
     }
     return true;
+}
+
+void UsbHostInterface::request_name()
+{
+    // TODO: get lang id and use it
+    tusb_desc_device_t desc;
+    if (m_has_name || !tuh_descriptor_get_device_local(m_dev_addr, &desc) || !desc.iProduct)
+    {
+        // nothing to wait for, so tell the config tool now, without a name
+        update(true, true);
+        return;
+    }
+    // If this fails another interface on the device is already reading the name, and
+    // process_product_string updates every interface on the device once it's in
+    tuh_descriptor_get_product_string(m_dev_addr, 0x0409, m_name, sizeof(m_name), process_product_string, (uintptr_t)this);
 }
 
 void UsbHostInterface::update(bool full_poll, bool send_events)
@@ -512,6 +518,11 @@ void UsbHostInterface::send_hotplug_event(bool connected)
     proto_Event event = {which_event : proto_Event_usb_tag, event : {usb : {m_id, connected ? m_subtype : SubType_Gamepad, m_dev_addr, m_interface, connected}}};
     event.event.usb.has_sourceId = true;
     event.event.usb.sourceId = source_id();
+    if (is_bluetooth_adapter())
+    {
+        event.event.usb.has_bluetoothAdapter = true;
+        event.event.usb.bluetoothAdapter = true;
+    }
     if (connected)
     {
         // name is a nanopb static "string" field (nul-terminated, no length

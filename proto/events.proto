@@ -89,6 +89,8 @@ message UsbDeviceHotplugEvent {
     required bool connected = 5;
     required string name = 6;
     optional uint32 sourceId = 7;
+    // A bluetooth adapter used as the bluetooth controller, not an input device
+    optional bool bluetoothAdapter = 8;
 }
 
 message WiiDeviceHotplugEvent {

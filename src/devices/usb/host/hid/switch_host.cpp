@@ -122,11 +122,10 @@ void SwitchHost::send_handshake_step()
     case 2:
     {
         // Set standard report mode 0x30 via output report 0x01
-        static const uint8_t cmd_mode_30[] = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x30};
-        memcpy(m_ep_out_buf, cmd_mode_30, sizeof(cmd_mode_30));
+        memcpy(m_ep_out_buf, SWITCH_SET_FULL_REPORT_MODE, sizeof(SWITCH_SET_FULL_REPORT_MODE));
         if (usbh_edpt_claim(m_dev_addr, m_ep_out))
         {
-            if (usbh_edpt_xfer(m_dev_addr, m_ep_out, m_ep_out_buf, sizeof(cmd_mode_30)))
+            if (usbh_edpt_xfer(m_dev_addr, m_ep_out, m_ep_out_buf, sizeof(SWITCH_SET_FULL_REPORT_MODE)))
             {
                 m_handshake_step++;
             }
@@ -278,12 +277,14 @@ bool switch_tick_digital(const uint8_t *buf, proto_Output &type)
         return false;
     }
 
-    if (buf[0] == 0x3F)
+    // Simple HID mode, which the Pro Controller uses over Bluetooth until it is switched to 0x30:
+    //   [1] B, A, Y, X, L, R, ZL, ZR  [2] -, +, LS, RS, Home, Capture  [3] hat (0 is up, 8 is neutral)
+    //   [4..11] LX, LY, RX, RY (u16, down is the maximum)
+    if (buf[0] == SWITCH_PRO_CON_SIMPLE_REPORT_ID)
     {
         uint8_t b1 = buf[1];
         uint8_t b2 = buf[2];
-        uint8_t b3 = buf[3];
-        uint8_t hat = b3 & 0x0F;
+        uint8_t hat = buf[3] & 0x0F;
         bool up = (hat == 0 || hat == 1 || hat == 7);
         bool right = (hat == 1 || hat == 2 || hat == 3);
         bool down = (hat == 3 || hat == 4 || hat == 5);
@@ -293,16 +294,16 @@ bool switch_tick_digital(const uint8_t *buf, proto_Output &type)
         {
             switch (type.mapping.gamepadButton)
             {
-            case Gamepad_A:               return (b1 & 0x08) != 0;
-            case Gamepad_B:               return (b1 & 0x04) != 0;
-            case Gamepad_X:               return (b1 & 0x02) != 0;
-            case Gamepad_Y:               return (b1 & 0x01) != 0;
-            case Gamepad_LeftShoulder:    return (b3 & 0x40) != 0;
-            case Gamepad_RightShoulder:   return (b1 & 0x40) != 0;
+            case Gamepad_A:               return (b1 & 0x02) != 0;
+            case Gamepad_B:               return (b1 & 0x01) != 0;
+            case Gamepad_X:               return (b1 & 0x08) != 0;
+            case Gamepad_Y:               return (b1 & 0x04) != 0;
+            case Gamepad_LeftShoulder:    return (b1 & 0x10) != 0;
+            case Gamepad_RightShoulder:   return (b1 & 0x20) != 0;
             case Gamepad_Back:            return (b2 & 0x01) != 0;
             case Gamepad_Start:           return (b2 & 0x02) != 0;
-            case Gamepad_LeftThumbClick:  return (b2 & 0x08) != 0;
-            case Gamepad_RightThumbClick: return (b2 & 0x04) != 0;
+            case Gamepad_LeftThumbClick:  return (b2 & 0x04) != 0;
+            case Gamepad_RightThumbClick: return (b2 & 0x08) != 0;
             case Gamepad_Guide:           return (b2 & 0x10) != 0;
             case Gamepad_Capture:         return (b2 & 0x20) != 0;
             case Gamepad_DpadUp:          return up;
@@ -341,17 +342,17 @@ uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type)
         return 0;
     }
 
-    if (buf[0] == 0x3F)
+    if (buf[0] == SWITCH_PRO_CON_SIMPLE_REPORT_ID)
     {
         if (type.which_mapping == proto_Output_gamepadAxis_tag)
         {
             switch (type.mapping.gamepadAxis)
             {
-            case Gamepad_LeftStickX:   return (uint16_t)buf[4] * 0x101;
-            case Gamepad_LeftStickY:   return (uint16_t)(UINT8_MAX - buf[5]) * 0x101;
-            case Gamepad_RightStickX:  return (uint16_t)buf[6] * 0x101;
-            case Gamepad_RightStickY:  return (uint16_t)(UINT8_MAX - buf[7]) * 0x101;
-            case Gamepad_LeftTrigger:  return (buf[3] & 0x80) ? 0xFFFF : 0;
+            case Gamepad_LeftStickX:   return (uint16_t)(buf[4] | (buf[5] << 8));
+            case Gamepad_LeftStickY:   return UINT16_MAX - (uint16_t)(buf[6] | (buf[7] << 8));
+            case Gamepad_RightStickX:  return (uint16_t)(buf[8] | (buf[9] << 8));
+            case Gamepad_RightStickY:  return UINT16_MAX - (uint16_t)(buf[10] | (buf[11] << 8));
+            case Gamepad_LeftTrigger:  return (buf[1] & 0x40) ? 0xFFFF : 0;
             case Gamepad_RightTrigger: return (buf[1] & 0x80) ? 0xFFFF : 0;
             default:                   return 0;
             }

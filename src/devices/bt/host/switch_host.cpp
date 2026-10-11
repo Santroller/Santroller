@@ -17,15 +17,33 @@ uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type);
 
 void BtSwitchHost::on_connected()
 {
-    // Switch Pro: send USB mode command so it sends full 0x30 reports
-    // CMD 0x03 sets the input report mode; 0x30 = full controller state
-    static const uint8_t cmd[] = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x30};
-    hid_host_send_set_report(m_cid, HID_REPORT_TYPE_OUTPUT, cmd[0], cmd + 1, sizeof(cmd) - 1);
+    BluetoothHostInterface::on_connected();
+}
+
+void BtSwitchHost::send_init_packets()
+{
+    // Switch to full 0x30 reports, the controller starts out in simple 0x3F mode.
+    // Subcommands go out on the interrupt channel, the controller ignores them as SET_REPORTs.
+    BtStackLock lock;
+    uint8_t res = hid_host_send_report(m_cid, SWITCH_SET_FULL_REPORT_MODE[0], SWITCH_SET_FULL_REPORT_MODE + 1,
+                                       sizeof(SWITCH_SET_FULL_REPORT_MODE) - 1);
+    printf("Switch set report mode: cid=0x%04x status=0x%02x\r\n", m_cid, res);
+    if (res == ERROR_CODE_SUCCESS)
+    {
+        m_mode_sent_at = millis();
+        BluetoothHostInterface::send_init_packets();
+    }
 }
 
 void BtSwitchHost::handle_report(const uint8_t *data, uint16_t len)
 {
     BluetoothHostInterface::handle_report(data, len);
+    // The mode command can get dropped if it arrives too early, so keep asking while it's still in simple mode
+    if (!m_is_switch2 && len > 0 && data[0] == SWITCH_PRO_CON_SIMPLE_REPORT_ID && m_init_packets_sent &&
+        millis() - m_mode_sent_at > SWITCH_MODE_RETRY_MS)
+    {
+        m_init_packets_sent = false;
+    }
     if (m_is_switch2 && len > 0)
     {
         switch2_parse_report(data, len, m_switch2_state);

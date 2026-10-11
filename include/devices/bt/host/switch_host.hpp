@@ -34,7 +34,8 @@ static inline uint16_t switch_pid_from_name(const char *name)
 
 // ---------------------------------------------------------------------------
 // Switch Pro Controller over BT Classic
-// Reports come in as 0x30 full input reports (same layout as USB).
+// Reports start out as simple 0x3F reports, then switch to 0x30 full input reports (same layout as USB)
+// once the report mode subcommand has been sent.
 // ---------------------------------------------------------------------------
 class BtSwitchHost : public BluetoothHostInterface
 {
@@ -49,13 +50,16 @@ public:
     BtControllerType controller_type() const override { return BtControllerType_BtControllerTypeSwitch; }
 
     void on_connected() override;
+    void send_init_packets() override;
     void handle_report(const uint8_t *data, uint16_t len) override;
 
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
 
 private:
+    static constexpr uint32_t SWITCH_MODE_RETRY_MS = 500;
     bool m_is_switch2 = false;
+    uint32_t m_mode_sent_at = 0;
     Switch2ControllerState m_switch2_state = {};
 };
 

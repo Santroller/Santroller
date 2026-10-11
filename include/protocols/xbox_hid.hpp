@@ -244,13 +244,20 @@ static inline uint16_t xbox_hid_tick_analog(const XboxHidState &state, proto_Out
 #define XBOX_HID_RUMBLE_LEN 8
 #define XBOX_HID_RUMBLE_ENABLE_WEAK 0x01
 #define XBOX_HID_RUMBLE_ENABLE_STRONG 0x02
+#define XBOX_HID_RUMBLE_ENABLE_RIGHT_TRIGGER 0x04
+#define XBOX_HID_RUMBLE_ENABLE_LEFT_TRIGGER 0x08
+// Some clones swap or reverse the bits in the enable mask, so enable every motor and leave the
+// trigger magnitudes at 0. The mask order then doesn't matter, and a real controller still ends up
+// with only the main motors running.
+#define XBOX_HID_RUMBLE_ENABLE_ALL (XBOX_HID_RUMBLE_ENABLE_WEAK | XBOX_HID_RUMBLE_ENABLE_STRONG | \
+                                    XBOX_HID_RUMBLE_ENABLE_RIGHT_TRIGGER | XBOX_HID_RUMBLE_ENABLE_LEFT_TRIGGER)
 // A rumble command only lasts up to 2.55 seconds, so it gets resent while held
 #define XBOX_HID_RUMBLE_REFRESH_MS 1000
 #define XBOX_HID_OUTPUT_MIN_INTERVAL_MS 10
 
 static inline void xbox_hid_build_rumble(uint8_t left, uint8_t right, uint8_t *out)
 {
-    out[0] = XBOX_HID_RUMBLE_ENABLE_WEAK | XBOX_HID_RUMBLE_ENABLE_STRONG;
+    out[0] = XBOX_HID_RUMBLE_ENABLE_ALL;
     out[1] = 0;
     out[2] = 0;
     out[3] = left * 100 / UINT8_MAX;

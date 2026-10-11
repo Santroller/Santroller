@@ -3,6 +3,15 @@
 #include "emulation/usb/usb_devices.h"
 
 #define SWITCH_PRO_CON_FULL_REPORT_ID 0x30
+#define SWITCH_PRO_CON_SIMPLE_REPORT_ID 0x3F
+#define SWITCH_PRO_CON_SUBCMD_REPORT_ID 0x01
+
+// Output report 0x01: packet counter, 8 bytes of rumble (neutral here), then the subcommand and its arguments.
+// Subcommand 0x03 sets the input report mode, 0x30 being the full report with 12 bit sticks. Over Bluetooth
+// the controller starts out in the simple 0x3F mode until it gets this.
+static const uint8_t SWITCH_SET_FULL_REPORT_MODE[] = {SWITCH_PRO_CON_SUBCMD_REPORT_ID, 0x00,
+                                                      0x00, 0x01, 0x40, 0x40, 0x00, 0x01, 0x40, 0x40,
+                                                      0x03, 0x30};
 typedef struct
 {
     int16_t accX, accY, accZ;

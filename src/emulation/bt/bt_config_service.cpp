@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 // set to 1 to log every config request made over bluetooth
-#define BT_CONFIG_DEBUG 1
+#define BT_CONFIG_DEBUG 0
 #if BT_CONFIG_DEBUG
 #define config_debug(...) printf(__VA_ARGS__)
 #else

@@ -37,6 +37,8 @@ void InstanceFactory::setup_instance_from_profile(
     instance->xinput_on_windows = profile->xinput_on_windows;
     instance->invert_y_axis_hid = profile->invert_y_axis_hid;
     instance->supports_ps4 = profile->supports_ps4;
+    // otherwise they're only worked out once a host device is claimed
+    instance->update_capabilities();
 }
 
 std::shared_ptr<Instance> InstanceFactory::create_instance(

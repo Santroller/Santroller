@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include "enums.pb.h"
+#include "input.pb.h"
 
 #define SANTROLLER_VID 0x1209
 #define SANTROLLER_PID 0x2882
@@ -26,4 +27,16 @@ static inline void santroller_v2_normalize_report(uint8_t *report, uint16_t len,
     default: dpad_bits = 0; break;
     }
     report[2] = (report[2] & 0xF0) | dpad_bits;
+}
+
+// Santroller 2 sends the gamepad stick Y axes flipped to the HID convention, down at the max
+// (GamepadAxisMapping::update_hid), where the rest of its XInput style report has up at the
+// max, unless it reports CapabilityXInputYAxis. Flips a value the xinput tick helpers read from
+// the report back to XInput's convention.
+static inline uint16_t santroller_v2_fix_analog(const proto_Output &type, uint16_t value, uint8_t capabilities)
+{
+    if (!(capabilities & CapabilityXInputYAxis) && type.which_mapping == proto_Output_gamepadAxis_tag &&
+        (type.mapping.gamepadAxis == Gamepad_LeftStickY || type.mapping.gamepadAxis == Gamepad_RightStickY))
+        return ~value;
+    return value;
 }

@@ -13,6 +13,8 @@ set(MAPPINGS_SOURCES
   ${SANTROLLER_ROOT}/src/mappings/peripheral_mappings.cpp
   ${SANTROLLER_ROOT}/src/mappings/powergig_mappings.cpp
   ${SANTROLLER_ROOT}/src/mappings/rock_revolution_mappings.cpp
+  # how a Santroller 2 host reads the HID report back
+  ${SANTROLLER_ROOT}/src/devices/usb/host/xinput_tick_helpers.cpp
 )
 
 add_executable(mappings_tests

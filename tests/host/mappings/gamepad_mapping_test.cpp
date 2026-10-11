@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 #include "mappings/mapping_test_support.hpp"
+#include "devices/usb/host/xinput_tick_helpers.h"
+#include "protocols/santroller_v2.hpp"
 
 // How the gamepad mappings pack a calibrated 0 - 65535 axis (stick up / right is high) or a
 // button into each console's report
@@ -118,6 +120,47 @@ TEST_F(GamepadAxis, HidYCentreStaysCentred)
     Report<PCGamepadDpad_Data_t> report;
     axis(Gamepad_LeftStickY, 32768)->update_hid(report.buf());
     EXPECT_EQ(report->leftStickY, -1);
+}
+
+TEST_F(GamepadAxis, Santroller2HostReadsHidSticksBack)
+{
+    // A Santroller hosting another Santroller 2 reads the HID report with the xinput helpers,
+    // so the flipped Y axes have to be flipped back (santroller_host.cpp)
+    for (GamepadAxisType type : {Gamepad_LeftStickX, Gamepad_LeftStickY, Gamepad_RightStickX, Gamepad_RightStickY})
+    {
+        for (uint16_t value : {0, 0x1234, 0x8001, 0xBEEF, UINT16_MAX})
+        {
+            Report<PCGamepadDpad_Data_t> report;
+            axis(type, value)->update_hid(report.buf());
+            proto_Output output = {};
+            output.which_mapping = proto_Output_gamepadAxis_tag;
+            output.mapping.gamepadAxis = type;
+            uint16_t read = santroller_v2_fix_analog(output, xinput_tick_analog_impl(report.buf(), Gamepad, output, true), 0);
+            EXPECT_EQ(read, value) << "axis " << type << " value " << value;
+        }
+    }
+}
+
+TEST_F(GamepadAxis, Santroller2HostReadsXInputYAxesBack)
+{
+    // With "invert Y axis" on, HIDGamepadDevice::process flips a gamepad's Y axes back to
+    // XInput's convention, and reports CapabilityXInputYAxis so the host leaves them alone
+    for (GamepadAxisType type : {Gamepad_LeftStickX, Gamepad_LeftStickY, Gamepad_RightStickX, Gamepad_RightStickY})
+    {
+        for (uint16_t value : {0, 0x1234, 0x8001, 0xBEEF, UINT16_MAX})
+        {
+            Report<PCGamepadDpad_Data_t> report;
+            axis(type, value)->update_hid(report.buf());
+            report->leftStickY = static_cast<int16_t>(~static_cast<uint16_t>(report->leftStickY));
+            report->rightStickY = static_cast<int16_t>(~static_cast<uint16_t>(report->rightStickY));
+            proto_Output output = {};
+            output.which_mapping = proto_Output_gamepadAxis_tag;
+            output.mapping.gamepadAxis = type;
+            uint16_t read = santroller_v2_fix_analog(output, xinput_tick_analog_impl(report.buf(), Gamepad, output, true),
+                                                     CapabilityXInputYAxis);
+            EXPECT_EQ(read, value) << "axis " << type << " value " << value;
+        }
+    }
 }
 
 // PlayStation: unsigned 8 bit sticks centred on 0x80, with up at 0

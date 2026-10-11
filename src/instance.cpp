@@ -289,5 +289,16 @@ void Instance::update_capabilities()
     {
         caps |= CapabilityHasInstrumentLeds;
     }
+    else if (subtype == Dancepad)
+    {
+        // dance pads report the dpad as buttons instead of a hat (HIDGamepadDevice)
+        caps |= CapabilityDpadAsButtons;
+    }
+    // HID flips the stick Y axes to down at the max, unless this flips them back
+    // (HIDGamepadDevice::process, bt_gamepad)
+    if (invert_y_axis_hid && subtype == Gamepad)
+    {
+        caps |= CapabilityXInputYAxis;
+    }
     capabilities = caps;
 }

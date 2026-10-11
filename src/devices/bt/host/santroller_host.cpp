@@ -164,7 +164,7 @@ uint16_t BleSantrollerHost::tick_analog(proto_Output &type)
 {
     if (m_is_v2)
     {
-        return xinput_tick_analog_impl(m_report_buf, m_subtype, type, true);
+        return santroller_v2_fix_analog(type, xinput_tick_analog_impl(m_report_buf, m_subtype, type, true), m_capabilities);
     }
     return santroller_v1_tick_analog(m_report_buf, m_subtype, type);
 }

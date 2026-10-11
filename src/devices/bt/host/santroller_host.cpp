@@ -34,19 +34,14 @@ BleSantrollerHost::BleSantrollerHost(uint16_t id, bool is_v2, uint16_t version, 
     }
     else
     {
-        // Santroller 1: SubType is encoded in version high byte: (version >> 8) & 0xFF
-        uint8_t st = (version >> 8) & 0xFF;
+        // Santroller 1: SubType is encoded in the version's high byte
         if (known_subtype != SubType_Unknown)
         {
             m_subtype = known_subtype;
         }
-        else if (st != 0)
-        {
-            m_subtype = (SubType)st;
-        }
         else
         {
-            m_subtype = SubType_Gamepad;
+            m_subtype = santroller_v1_subtype(version);
         }
         m_ready = true;
     }
@@ -178,5 +173,5 @@ uint16_t BleSantrollerHost::tick_button_pressure(proto_Output &type)
 {
     if (m_is_v2)
         return xinput_tick_button_pressure_impl(m_report_buf, m_subtype, type, false, true);
-    return tick_digital(type) ? UINT16_MAX : 0;
+    return santroller_v1_tick_button_pressure(m_report_buf, m_subtype, type);
 }

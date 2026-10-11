@@ -1,6 +1,12 @@
 # Header-only protocol definitions and helpers from include/protocols/
 file(GLOB SANTROLLER_PROTOCOL_TESTS CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/protocols/*_test.cpp)
-add_executable(protocols_tests ${SANTROLLER_PROTOCOL_TESTS})
+add_executable(protocols_tests
+  ${SANTROLLER_PROTOCOL_TESTS}
+  # Santroller 1 report decoding, shared by the BLE and USB hosts
+  ${SANTROLLER_ROOT}/src/devices/santroller_v1_decode.cpp
+  # XInput report decoding, shared by the XInput and Santroller 2 hosts
+  ${SANTROLLER_ROOT}/src/devices/usb/host/xinput_tick_helpers.cpp
+)
 target_include_directories(protocols_tests PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/support
   # xbox_one.hpp pulls in xgip_protocol.h

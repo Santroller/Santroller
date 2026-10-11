@@ -41,8 +41,7 @@ std::shared_ptr<UsbHostInterface> SantrollerHost::open(std::shared_ptr<UsbHostDe
     if (!is_v2)
     {
         // Santroller 1 encodes its subtype in bcdDevice instead
-        uint8_t subtype = (revision >> 8) & 0xFF;
-        intf->m_subtype = subtype ? (SubType)subtype : SubType_Gamepad;
+        intf->m_subtype = santroller_v1_subtype(revision);
         intf->m_output.subtype = intf->m_subtype;
     }
     uint8_t endpoints = itf_desc->bNumEndpoints;
@@ -207,6 +206,6 @@ uint16_t SantrollerHost::tick_analog(proto_Output &type)
 uint16_t SantrollerHost::tick_button_pressure(proto_Output &type)
 {
     if (!m_is_v2)
-        return santroller_v1_tick_digital(m_report, m_subtype, type) ? UINT16_MAX : 0;
+        return santroller_v1_tick_button_pressure(m_report, m_subtype, type);
     return xinput_tick_button_pressure_impl(m_report, m_subtype, type, false, true);
 }

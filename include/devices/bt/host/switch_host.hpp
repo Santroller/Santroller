@@ -52,14 +52,25 @@ public:
     void on_connected() override;
     void send_init_packets() override;
     void handle_report(const uint8_t *data, uint16_t len) override;
+    void update(bool full_poll, bool send_events) override;
 
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
+
+    // Switch 2 controllers use a different output protocol
+    void set_rumble(uint8_t left, uint8_t right) override { m_output.set_rumble(left, right); }
+    void set_player_led(uint8_t player) override { m_output.set_player(player); }
+    bool has_rumble() const override { return !m_is_switch2; }
+    bool has_player_led() const override { return !m_is_switch2; }
 
 private:
     static constexpr uint32_t SWITCH_MODE_RETRY_MS = 500;
     bool m_is_switch2 = false;
     uint32_t m_mode_sent_at = 0;
+    // Set once full reports arrive, so no output goes out ahead of the report mode command
+    bool m_full_reports = false;
+    SwitchOutput m_output;
+    uint8_t m_out_buf[SWITCH_OUTPUT_MAX_LEN] = {};
     Switch2ControllerState m_switch2_state = {};
 };
 

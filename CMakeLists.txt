@@ -148,6 +148,12 @@ endif()
 
 add_compile_options(-fdata-sections -ffunction-sections)
 add_link_options(-Wl,--gc-sections)
+# Use relative paths for __FILE__ (asserts and logs) rather than baking absolute paths into flash.
+# Only affects macros, the debug info keeps full paths so debuggers still find the sources.
+add_compile_options(
+  -fmacro-prefix-map=${CMAKE_SOURCE_DIR}/=
+  -fmacro-prefix-map=${CMAKE_BINARY_DIR}/=build/
+  -fmacro-prefix-map=${PICO_SDK_PATH}/=pico-sdk/)
 
 include(cmake/Uzlib.cmake)
 add_subdirectory(lib)

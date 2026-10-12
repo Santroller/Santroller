@@ -4,9 +4,15 @@
 // Copy & paste from, with some custom changes:
 // https://github.com/raspberrypi/pico-examples/blob/master/pico_w/bt/config/btstack_config.h
 
+// Uncomment to log every HCI packet, for debugging bluetooth startup and pairing
+// #define BT_HCI_DUMP
+
 // BTstack features that can be enabled
+// BTstack's log_info / log_error only come out through the HCI dump, so without it they'd just take up flash
+#ifdef BT_HCI_DUMP
 #define ENABLE_LOG_INFO
 #define ENABLE_LOG_ERROR
+#endif
 #define ENABLE_PRINTF_HEXDUMP
 #define ENABLE_SCO_OVER_HCI
 
@@ -102,8 +108,5 @@
 
 // Uncomment to use a USB bluetooth adapter on the host port even on a Pico W, for testing adapters
 // #define BT_FORCE_USB_DONGLE
-
-// Uncomment to log every HCI packet, for debugging bluetooth startup and pairing
-// #define BT_HCI_DUMP
 
 #endif  // _PICO_BTSTACK_BTSTACK_CONFIG_H

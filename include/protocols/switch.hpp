@@ -12,6 +12,77 @@
 static const uint8_t SWITCH_SET_FULL_REPORT_MODE[] = {SWITCH_PRO_CON_SUBCMD_REPORT_ID, 0x00,
                                                       0x00, 0x01, 0x40, 0x40, 0x00, 0x01, 0x40, 0x40,
                                                       0x03, 0x30};
+
+// ---------------------------------------------------------------------------
+// Rumble and player LEDs, shared by the USB and Bluetooth hosts
+// ---------------------------------------------------------------------------
+#define SWITCH_RUMBLE_REPORT_ID 0x10
+#define SWITCH_SUBCMD_SET_PLAYER_LIGHTS 0x30
+#define SWITCH_RUMBLE_REPORT_LEN 10
+#define SWITCH_PLAYER_LED_REPORT_LEN 12
+#define SWITCH_OUTPUT_MAX_LEN SWITCH_PLAYER_LED_REPORT_LEN
+// Same timings as SDL: rumble writes at most every 30ms, and a running rumble has to be refreshed
+// every 50ms or the motors stop
+#define SWITCH_OUTPUT_MIN_INTERVAL_MS 30
+#define SWITCH_RUMBLE_REFRESH_MS 50
+
+enum class SwitchOutputKind : uint8_t
+{
+    None,
+    Rumble,
+    PlayerLed
+};
+
+// Output bookkeeping, the transport specific hosts only do the actual send. build() fills in the next
+// report (report id first) without changing anything, then sent() or failed() once the outcome is known.
+struct SwitchOutput
+{
+    uint8_t strong = 0;
+    uint8_t weak = 0;
+    uint8_t player = 0;
+    bool rumble_dirty = true;
+    bool player_dirty = true;
+    uint8_t counter = 0;
+    uint32_t last_sent_ms = 0;
+
+    void set_rumble(uint8_t left, uint8_t right)
+    {
+        if (left != strong || right != weak)
+            rumble_dirty = true;
+        strong = left;
+        weak = right;
+    }
+
+    void set_player(uint8_t p)
+    {
+        if (p != player)
+            player_dirty = true;
+        player = p;
+    }
+
+    // Defined in the USB Switch host, which the Bluetooth host shares
+    uint8_t build(uint32_t now, uint8_t *out, SwitchOutputKind &kind) const;
+
+    void sent(SwitchOutputKind kind, uint32_t now)
+    {
+        if (kind == SwitchOutputKind::None)
+            return;
+        counter++;
+        last_sent_ms = now;
+        rumble_dirty = false;
+        if (kind == SwitchOutputKind::PlayerLed)
+            player_dirty = false;
+    }
+
+    void failed(SwitchOutputKind kind)
+    {
+        if (kind == SwitchOutputKind::None)
+            return;
+        rumble_dirty = true;
+        if (kind == SwitchOutputKind::PlayerLed)
+            player_dirty = true;
+    }
+};
 typedef struct
 {
     int16_t accX, accY, accZ;

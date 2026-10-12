@@ -21,6 +21,9 @@ void bt_host_remove_assignable_interface(BluetoothHostInterface *device);
 void bt_host_update_interfaces(bool full_poll, bool send_events);
 void bt_host_notify_devices_changed();
 void bt_host_save_pairing(const std::shared_ptr<BluetoothHostInterface> &device, bool is_ble);
+// Fills in the CRC32 at the end of a DS4 (0x11) / DS5 (0x31) bluetooth output report. The report starts at
+// the report id, and the CRC also covers the 0xA2 HID output header that BTstack adds in front of it.
+void bt_host_set_output_crc32(uint8_t *report, uint16_t len);
 
 // Avoid pulling btstack.h into the header (it conflicts with TinyUSB HID enum).
 // The BTstack-facing fields use plain types; each .cpp that calls BTstack APIs
@@ -58,6 +61,8 @@ public:
     // Called when a feature report response arrives
     virtual void handle_feature_report(const uint8_t *data, uint16_t len) {}
     virtual void handle_feature_report_failed() { m_ready = true; }
+    // True if a GET_REPORT response belongs to a read that was only sent to switch the report mode
+    virtual bool consume_mode_switch_response() { return false; }
     virtual void send_init_packets() {m_init_packets_sent = true;}
     bool init_packets_sent() const { return m_init_packets_sent; }
 

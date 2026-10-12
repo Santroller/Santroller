@@ -9,6 +9,7 @@
 #include "config/device_factory.hpp"
 #include "managers/config_manager.hpp"
 #include "utils.h"
+#include "CRC32.h"
 
 #include <vector>
 #include <algorithm>
@@ -156,6 +157,18 @@ void bt_host_notify_devices_changed()
 }
 
 #include "gap.h"
+
+void bt_host_set_output_crc32(uint8_t *report, uint16_t len)
+{
+    CRC32 crc;
+    crc.update((uint8_t)0xA2);
+    crc.update(report, len - 4);
+    uint32_t value = crc.finalize();
+    report[len - 4] = value;
+    report[len - 3] = value >> 8;
+    report[len - 2] = value >> 16;
+    report[len - 1] = value >> 24;
+}
 
 void bt_host_save_pairing(const std::shared_ptr<BluetoothHostInterface> &device, bool is_ble)
 {

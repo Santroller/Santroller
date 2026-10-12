@@ -37,4 +37,5 @@ private:
     bool m_output_dirty = true;
     bool m_output_sent = false;
     uint32_t m_last_output_ms = 0;
+    uint32_t m_last_enable_ms = 0;
 };

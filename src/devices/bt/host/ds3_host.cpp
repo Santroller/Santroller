@@ -21,16 +21,32 @@ void BtDs3Host::send_init_packets()
     // Enable DS3 HID reports. Over bluetooth this is 42 03 00 00 (Linux
     // sixaxis_set_operational_bt), not the 42 0c 00 00 used over USB.
     static const uint8_t enable[] = {0x42, 0x03, 0x00, 0x00};
-    hid_host_send_set_report(m_cid, HID_REPORT_TYPE_FEATURE, 0xF4, enable, sizeof(enable));
-    // marks init done, otherwise every input report queues the enable again
-    BluetoothHostInterface::send_init_packets();
+    m_last_enable_ms = millis();
+    // Only one control request can be outstanding, so this fails if one is still in flight
+    if (hid_host_send_set_report(m_cid, HID_REPORT_TYPE_FEATURE, 0xF4, enable, sizeof(enable)) == ERROR_CODE_SUCCESS)
+    {
+        // marks init done, otherwise every input report queues the enable again
+        BluetoothHostInterface::send_init_packets();
+    }
 }
 
 #define DS3_BT_OUTPUT_MIN_INTERVAL_MS 150
+#define DS3_BT_ENABLE_RETRY_MS 100
 
 void BtDs3Host::update(bool full_poll, bool send_events)
 {
     BluetoothHostInterface::update(full_poll, send_events);
+    // The DS3 sends no input reports until it has been enabled, so a failed enable has to be retried from here
+    if (!init_packets_sent())
+    {
+        if (m_cid && m_last_enable_ms && millis() - m_last_enable_ms >= DS3_BT_ENABLE_RETRY_MS)
+        {
+            // update() runs from the main loop, outside BTstack's context
+            BtStackLock lock;
+            send_init_packets();
+        }
+        return;
+    }
     if (!m_output_dirty || !init_packets_sent())
         return;
     // Some DS3/SIXAXIS revisions lock up over bluetooth (ignoring rumble/LEDs for

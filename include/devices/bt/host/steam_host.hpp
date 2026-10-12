@@ -14,6 +14,7 @@ public:
     BtControllerType controller_type() const override { return BtControllerType_BtControllerTypeGeneric; }
 
     void on_connected() override;
+    void update(bool full_poll, bool send_events) override;
     void handle_report(const uint8_t *data, uint16_t len) override;
 
     bool tick_digital(proto_Output &type) override;
@@ -23,5 +24,9 @@ public:
     uint16_t m_con_handle = 0;
 
 private:
+    void send_setup();
+
     SteamControllerState m_state = {};
+    // How many of the setup commands (clear mappings, disable lizard mode) have gone out
+    uint8_t m_setup_step = 0;
 };

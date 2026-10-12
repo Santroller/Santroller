@@ -1093,6 +1093,9 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 auto slot = bt_slot_by_cid(cid);
                 if (slot && slot->host)
                 {
+                    // Reads that only exist to switch the controller's report mode, nothing to parse or save
+                    if (slot->host->consume_mode_switch_response())
+                        break;
                     if (status != HID_HANDSHAKE_PARAM_TYPE_SUCCESSFUL)
                     {
                         printf("Error get report for cid 0x%04x, status 0x%02x\r\n", cid, status);

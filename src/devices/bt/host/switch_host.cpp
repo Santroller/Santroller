@@ -44,10 +44,34 @@ void BtSwitchHost::handle_report(const uint8_t *data, uint16_t len)
     {
         m_init_packets_sent = false;
     }
+    if (len > 0 && (data[0] == SWITCH_PRO_CON_FULL_REPORT_ID || data[0] == 0x21))
+    {
+        m_full_reports = true;
+    }
     if (m_is_switch2 && len > 0)
     {
         switch2_parse_report(data, len, m_switch2_state);
     }
+}
+
+void BtSwitchHost::update(bool full_poll, bool send_events)
+{
+    BluetoothHostInterface::update(full_poll, send_events);
+    if (m_is_switch2 || !m_cid || !m_full_reports)
+        return;
+    uint32_t now = millis();
+    SwitchOutputKind kind;
+    uint8_t len = m_output.build(now, m_out_buf, kind);
+    if (!len)
+        return;
+    uint8_t status;
+    {
+        // update() runs from the main loop, outside BTstack's context
+        BtStackLock lock;
+        status = hid_host_send_report(m_cid, m_out_buf[0], m_out_buf + 1, len - 1);
+    }
+    if (status == ERROR_CODE_SUCCESS)
+        m_output.sent(kind, now);
 }
 
 bool BtSwitchHost::tick_digital(proto_Output &type)

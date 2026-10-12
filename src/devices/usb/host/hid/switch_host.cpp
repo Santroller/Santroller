@@ -7,6 +7,7 @@
 #include "config/config.hpp"
 #include "managers/device_manager.hpp"
 #include "hidparser.h"
+#include "utils.h"
 #include "protocols/switch.hpp"
 
 std::shared_ptr<UsbHostInterface> SwitchHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
@@ -166,8 +167,6 @@ bool SwitchHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred
     return true;
 }
 
-static inline void encode_switch_rumble_data(uint8_t amp, uint8_t *data);
-
 void SwitchHost::update(bool full_poll, bool send_events)
 {
     UsbHostInterface::update(full_poll, send_events);
@@ -175,61 +174,33 @@ void SwitchHost::update(bool full_poll, bool send_events)
     {
         if (m_out_result != XFER_RESULT_SUCCESS)
         {
-            if (m_pending_output == OutputKind::Rumble)
-                m_rumble_dirty = true;
-            else if (m_pending_output == OutputKind::PlayerLed)
-                m_player_dirty = true;
+            m_output.failed(m_pending_output);
             if (!m_out_submit_failed)
                 printf("Switch output failed: dev=%u ep=%u result=%u\r\n", m_dev_addr, m_ep_out, unsigned(m_out_result));
             m_out_submit_failed = true;
         }
-        m_pending_output = OutputKind::None;
+        m_pending_output = SwitchOutputKind::None;
     }
-    if (!m_ep_out || m_handshake_step < 3 || m_pending_output != OutputKind::None ||
+    if (!m_ep_out || m_handshake_step < 3 || m_pending_output != SwitchOutputKind::None ||
         usbh_edpt_busy(m_dev_addr, m_ep_out))
         return;
 
-    // Alternate state reports so LED updates are not starved by rumble changes.
-    for (uint8_t i = 0; i < 2; ++i)
+    uint32_t now = millis();
+    SwitchOutputKind kind;
+    uint8_t len = m_output.build(now, m_ep_out_buf, kind);
+    if (!len)
+        return;
+    m_pending_output = kind;
+    if (!send_intr_xfer(m_ep_out, m_ep_out_buf, len))
     {
-        OutputKind kind = m_last_output == OutputKind::Rumble
-                              ? (i == 0 ? OutputKind::PlayerLed : OutputKind::Rumble)
-                              : (i == 0 ? OutputKind::Rumble : OutputKind::PlayerLed);
-        if ((kind == OutputKind::Rumble && !m_rumble_dirty) ||
-            (kind == OutputKind::PlayerLed && !m_player_dirty))
-            continue;
-
-        uint8_t report[12] = {};
-        report[0] = kind == OutputKind::Rumble ? 0x10 : 0x01;
-        report[1] = m_packet_counter & 0x0F;
-        encode_switch_rumble_data(m_rumble_left, report + 2);
-        encode_switch_rumble_data(m_rumble_right, report + 6);
-        uint8_t len = kind == OutputKind::Rumble ? 10 : 12;
-        if (kind == OutputKind::PlayerLed)
-        {
-            uint8_t mask = m_player >= 1 && m_player <= 4 ? (1 << m_player) - 1 : 0;
-            report[10] = 0x30;
-            report[11] = mask;
-        }
-        memcpy(m_ep_out_buf, report, len);
-        m_pending_output = kind;
-        if (!send_intr_xfer(m_ep_out, m_ep_out_buf, len))
-        {
-            m_pending_output = OutputKind::None;
-            if (!m_out_submit_failed)
-                printf("Switch output submission failed: dev=%u ep=%u\r\n", m_dev_addr, m_ep_out);
-            m_out_submit_failed = true;
-            return;
-        }
-        m_out_submit_failed = false;
-        ++m_packet_counter;
-        m_last_output = kind;
-        if (kind == OutputKind::Rumble)
-            m_rumble_dirty = false;
-        else
-            m_player_dirty = false;
+        m_pending_output = SwitchOutputKind::None;
+        if (!m_out_submit_failed)
+            printf("Switch output submission failed: dev=%u ep=%u\r\n", m_dev_addr, m_ep_out);
+        m_out_submit_failed = true;
         return;
     }
+    m_out_submit_failed = false;
+    m_output.sent(kind, now);
 }
 
 bool SwitchHost::set_config()
@@ -389,9 +360,40 @@ uint16_t SwitchHost::tick_analog(proto_Output& type)
     return switch_tick_analog(m_ep_in_buf, type);
 }
 
-static inline void encode_switch_rumble_data(uint8_t amp, uint8_t *data)
+void SwitchHost::set_rumble(uint8_t left, uint8_t right)
 {
-    if (amp == 0)
+    m_output.set_rumble(left, right);
+}
+
+void SwitchHost::set_player_led(uint8_t player)
+{
+    m_output.set_player(player);
+}
+
+// Amplitude thresholds from SDL / dekuNukem's rumble_data_table.md, divided by 257 to match our 8 bit
+// amplitudes (amp * 257 > t is the same as amp > t / 257 rounded down). Entry i encodes as a high band
+// amplitude of 2 * i and a low band amplitude of 0x40 + i / 2, with the low band's ninth bit set for odd i.
+static const uint8_t switch_rumble_amp_thresholds[101] = {
+    0, 2, 3, 3, 4, 5, 6, 7, 8, 10, 12, 14, 17, 20, 24, 28, 29,
+    31, 32, 34, 35, 37, 38, 40, 42, 44, 46, 48, 50, 52, 54, 57, 58, 59,
+    61, 62, 63, 65, 66, 68, 69, 71, 72, 74, 76, 77, 79, 81, 82, 84, 86,
+    88, 90, 92, 94, 96, 98, 100, 102, 105, 107, 109, 112, 114, 117, 119, 122, 125,
+    127, 130, 133, 136, 139, 142, 145, 148, 152, 155, 158, 162, 165, 169, 173, 176, 180,
+    184, 188, 192, 197, 201, 205, 210, 215, 219, 224, 229, 234, 239, 244, 250, 255};
+
+static uint8_t switch_rumble_amp_index(uint8_t amp)
+{
+    uint8_t i = 0;
+    while (i < 100 && amp > switch_rumble_amp_thresholds[i])
+        i++;
+    return i;
+}
+
+// Like SDL, the strong motor drives the low band (160Hz) and the weak motor the high band (320Hz), and
+// both actuators get the same data
+static void switch_encode_rumble(uint8_t strong, uint8_t weak, uint8_t *data)
+{
+    if (!strong && !weak)
     {
         data[0] = 0x00;
         data[1] = 0x01;
@@ -399,24 +401,34 @@ static inline void encode_switch_rumble_data(uint8_t amp, uint8_t *data)
         data[3] = 0x40;
         return;
     }
-    uint8_t hf_amp = amp;
-    data[0] = 0x00;
-    data[1] = (hf_amp & 0xFE) | 0x01;
-    data[2] = 0x40;
-    data[3] = 0x40 + (amp >> 1);
+    uint8_t high = switch_rumble_amp_index(weak);
+    uint8_t low = switch_rumble_amp_index(strong);
+    data[0] = 0x74;
+    data[1] = high * 2;
+    data[2] = 0x3D | ((low & 1) ? 0x80 : 0x00);
+    data[3] = 0x40 + (low >> 1);
 }
 
-void SwitchHost::set_rumble(uint8_t left, uint8_t right)
+uint8_t SwitchOutput::build(uint32_t now, uint8_t *out, SwitchOutputKind &kind) const
 {
-    if (m_rumble_left != left || m_rumble_right != right)
-        m_rumble_dirty = true;
-    m_rumble_left = left;
-    m_rumble_right = right;
-}
-
-void SwitchHost::set_player_led(uint8_t player)
-{
-    if (m_player != player)
-        m_player_dirty = true;
-    m_player = player;
+    kind = SwitchOutputKind::None;
+    if (now - last_sent_ms < SWITCH_OUTPUT_MIN_INTERVAL_MS)
+        return 0;
+    bool rumble_due = rumble_dirty || ((strong || weak) && now - last_sent_ms >= SWITCH_RUMBLE_REFRESH_MS);
+    if (!player_dirty && !rumble_due)
+        return 0;
+    out[0] = player_dirty ? SWITCH_PRO_CON_SUBCMD_REPORT_ID : SWITCH_RUMBLE_REPORT_ID;
+    out[1] = counter & 0x0F;
+    switch_encode_rumble(strong, weak, out + 2);
+    memcpy(out + 6, out + 2, 4);
+    if (!player_dirty)
+    {
+        kind = SwitchOutputKind::Rumble;
+        return SWITCH_RUMBLE_REPORT_LEN;
+    }
+    // Subcommand reports carry rumble data too, so this also takes care of any pending rumble
+    out[10] = SWITCH_SUBCMD_SET_PLAYER_LIGHTS;
+    out[11] = player >= 1 && player <= 4 ? (1 << player) - 1 : 0;
+    kind = SwitchOutputKind::PlayerLed;
+    return SWITCH_PLAYER_LED_REPORT_LEN;
 }

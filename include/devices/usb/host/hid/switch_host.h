@@ -2,6 +2,7 @@
 #include "devices/usb/host/hid/hid_host.h"
 #include <atomic>
 
+#include "protocols/switch.hpp"
 #include "protocols/switch2.hpp"
 
 bool switch_tick_digital(const uint8_t *buf, proto_Output &type);
@@ -29,18 +30,11 @@ public:
     bool has_player_led() const override { return true; }
 
 private:
-    uint8_t m_rumble_left = 0;
-    uint8_t m_rumble_right = 0;
-    uint8_t m_player = 0;
-    bool m_rumble_dirty = true;
-    bool m_player_dirty = true;
-    enum class OutputKind : uint8_t { None, Rumble, PlayerLed };
-    OutputKind m_pending_output = OutputKind::None;
-    OutputKind m_last_output = OutputKind::None;
+    SwitchOutput m_output;
+    SwitchOutputKind m_pending_output = SwitchOutputKind::None;
     std::atomic<bool> m_out_done{false};
     xfer_result_t m_out_result = XFER_RESULT_SUCCESS;
     bool m_out_submit_failed = false;
-    uint8_t m_packet_counter = 0;
     void send_handshake_step();
 
     bool m_is_switch2 = false;

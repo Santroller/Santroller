@@ -1,5 +1,7 @@
 #include "tusb_option.h"
 #include "devices/usb/host/xinput_host.h"
+#include "devices/usb/host/xinput_tick_helpers.h"
+#include "protocols/xinput.hpp"
 #include "class/hid/hid.h"
 #include "host/usbh.h"
 #include "host/usbh_pvt.h"
@@ -26,7 +28,7 @@ std::shared_ptr<UsbHostInterface> XInputBigButtonHost::open(std::shared_ptr<UsbH
         if (desc_ep->bEndpointAddress & 0x80)
         {
             intf->m_ep_in = desc_ep->bEndpointAddress;
-            intf->m_ep_in_size = desc_ep->wMaxPacketSize;
+            intf->m_ep_in_size = TU_MIN(desc_ep->wMaxPacketSize, sizeof(intf->m_ep_in_buf));
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
         }
         else
@@ -49,10 +51,50 @@ std::shared_ptr<UsbHostInterface> XInputBigButtonHost::open(std::shared_ptr<UsbH
     return intf;
 }
 
+bool XInputBigButtonHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
+{
+    if (ep_addr & 0x80)
+    {
+        if (result == XFER_RESULT_SUCCESS && xferred_bytes >= sizeof(XInputBigButton_Data_t))
+        {
+            auto report = (const XInputBigButton_Data_t *)m_ep_in_buf;
+            // The buttons are laid out like a normal XInput report, just after the controller number
+            if (report->controllerNumber < 4)
+            {
+                m_buttons[report->controllerNumber] = m_ep_in_buf[3] | (m_ep_in_buf[4] << 8);
+            }
+        }
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+    }
+    return true;
+}
+
+// All four Big Button pads are combined, A / B / Y / X / LB double as the frets like the old firmware
 bool XInputBigButtonHost::tick_digital(proto_Output& type)
 {
-
-    return true;
+    XInputGamepad_Data_t report = {};
+    uint16_t buttons = m_buttons[0] | m_buttons[1] | m_buttons[2] | m_buttons[3];
+    memcpy(((uint8_t *)&report) + 2, &buttons, sizeof(buttons));
+    if (type.which_mapping == proto_Output_ghButton_tag || type.which_mapping == proto_Output_rbButton_tag)
+    {
+        uint8_t fret = type.which_mapping == proto_Output_ghButton_tag ? type.mapping.ghButton : type.mapping.rbButton;
+        switch (fret)
+        {
+        case GuitarHeroGuitar_Green:
+            return report.a;
+        case GuitarHeroGuitar_Red:
+            return report.b;
+        case GuitarHeroGuitar_Yellow:
+            return report.y;
+        case GuitarHeroGuitar_Blue:
+            return report.x;
+        case GuitarHeroGuitar_Orange:
+            return report.leftShoulder;
+        default:
+            return false;
+        }
+    }
+    return xinput_tick_digital_impl((const uint8_t *)&report, Gamepad, type);
 }
 uint16_t XInputBigButtonHost::tick_analog(proto_Output& type)
 {

@@ -320,6 +320,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 case DJMax:
                 case ProjectDiva:
                 case GuitarFreaks:
+                case DrumMania:
                     xboxOneDescriptor = xb1_descriptor_gamepad;
                     len = sizeof(xb1_descriptor_gamepad);
                     break;
@@ -654,6 +655,7 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
                 case DJMax:
                 case ProjectDiva:
                 case GuitarFreaks:
+                case DrumMania:
                     announcePacket = announce_gamepad;
                     input_report_length = sizeof(XboxOneGamepad_Data_t);
                     break;

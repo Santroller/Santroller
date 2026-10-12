@@ -158,6 +158,7 @@ enum SubType {
   RockRevolutionGuitar = 27;
   Midi = 28;
   BeatMania = 29;
+  DrumMania = 30;
   Unknown = 255;
 }
 
@@ -223,6 +224,7 @@ enum PS2ControllerType {
   PS2ControllerTypeTaiko = 11;
   PS2ControllerTypePopNMusic = 12;
   PS2ControllerTypeGuitarFreaks = 13;
+  PS2ControllerTypeDrumMania = 14;
 }
 
 enum SNESControllerType {

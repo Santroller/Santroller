@@ -89,7 +89,7 @@ public:
     ~XInputBigButtonHost() {}
     XInputBigButtonHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
     bool set_config();
-    bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) { return true; }
+    bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
     bool tick_digital(proto_Output &type);
     uint16_t tick_analog(proto_Output &type);
@@ -99,7 +99,9 @@ private:
     uint8_t m_ep_out;
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
-    uint8_t m_ep_in_buf[sizeof(XInputBigButton_Data_t)];
+    // Button bytes for each of the receiver's 4 controllers, in XInput gamepad report order
+    uint16_t m_buttons[4] = {};
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
 };
 class XInputWirelessGamepadHost : public UsbHostInterface
 {

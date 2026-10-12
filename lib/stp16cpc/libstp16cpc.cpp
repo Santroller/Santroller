@@ -15,7 +15,7 @@ STP16CPC::STP16CPC(uint8_t block, uint8_t mosi, uint8_t sck, uint8_t oe, uint8_t
 }
 void STP16CPC::putLeds(uint8_t* leds)
 {
-    for (size_t i = 0; i < m_bytes; i+=8) {
+    for (size_t i = 0; i < m_bytes; i++) {
         interface.transfer(leds[i]);
     }
     gpio_put(m_le, true);

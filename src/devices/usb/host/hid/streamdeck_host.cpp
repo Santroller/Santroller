@@ -7,6 +7,7 @@
 #include "config/config.hpp"
 #include "managers/device_manager.hpp"
 #include "hidparser.h"
+#include "devices/usb/host/generic_hid_tick_helpers.h"
 
 
 std::shared_ptr<UsbHostInterface> StreamDeckHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
@@ -19,6 +20,17 @@ std::shared_ptr<UsbHostInterface> StreamDeckHost::open(std::shared_ptr<UsbHostDe
         return nullptr;
     }
     auto intf = std::make_shared<StreamDeckHost>(dev_addr, itf_desc->bInterfaceNumber, list->m_id);
+    switch (pid)
+    {
+    case STREAM_DECK_OG_PID:
+    case STREAM_DECK_MINI_PID:
+    case STREAM_DECK_MINIV2_PID:
+        intf->m_key_offset = 1;
+        break;
+    default:
+        intf->m_key_offset = 4;
+        break;
+    }
     uint8_t endpoints = itf_desc->bNumEndpoints;
     p_desc = tu_desc_next(p_desc);
     tusb_hid_descriptor_hid_t *x_desc =
@@ -33,7 +45,7 @@ std::shared_ptr<UsbHostInterface> StreamDeckHost::open(std::shared_ptr<UsbHostDe
         if (desc_ep->bEndpointAddress & 0x80)
         {
             intf->m_ep_in = desc_ep->bEndpointAddress;
-            intf->m_ep_in_size = desc_ep->wMaxPacketSize;
+            intf->m_ep_in_size = TU_MIN(desc_ep->wMaxPacketSize, sizeof(intf->m_ep_in_buf));
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
         }
         else
@@ -60,7 +72,19 @@ bool StreamDeckHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xfe
 {
     if (ep_addr & 0x80)
     {
-        // TODO: map as needed
+        // Input reports are one byte per key after the header, nonzero while held
+        if (result == XFER_RESULT_SUCCESS && xferred_bytes > m_key_offset && m_ep_in_buf[0] == STREAM_DECK_INPUT_REPORT_ID)
+        {
+            uint16_t buttons = 0;
+            for (uint8_t i = 0; i + m_key_offset < xferred_bytes && i < 16; i++)
+            {
+                if (m_ep_in_buf[i + m_key_offset])
+                {
+                    buttons |= 1 << i;
+                }
+            }
+            m_data.genericButtons = buttons;
+        }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;
@@ -75,9 +99,10 @@ bool StreamDeckHost::set_config()
     }
     return true;
 }
+// Keys (or pedals) are mapped in order, the same way as buttons on a generic HID gamepad
 bool StreamDeckHost::tick_digital(proto_Output& type)
 {
-    return false;
+    return generic_hid_tick_digital_impl(m_data, type);
 }
 uint16_t StreamDeckHost::tick_analog(proto_Output& type)
 {

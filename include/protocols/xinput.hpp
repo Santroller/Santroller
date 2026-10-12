@@ -109,6 +109,7 @@ inline uint8_t get_xinput_subtype(SubType subtype)
     case Gamepad:
     case PopNMusic:
     case BeatMania:
+    case DrumMania:
     case ProjectDiva:
     case DJMax:
         return XINPUT_GAMEPAD;

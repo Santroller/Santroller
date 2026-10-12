@@ -136,6 +136,8 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
         return create_mapping(beatmania_as_gamepad(proto_mapping), profile, std::move(input), mapping_id);
     case proto_Output_gfButton_tag:
         return create_mapping(guitarfreaks_as_gamepad(proto_mapping), profile, std::move(input), mapping_id);
+    case proto_Output_dmButton_tag:
+        return create_mapping(drummania_as_gamepad(proto_mapping), profile, std::move(input), mapping_id);
         
     case proto_Output_ghaAxis_tag:
         return std::make_unique<GuitarHeroArcadeAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);

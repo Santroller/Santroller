@@ -8,93 +8,6 @@
 #include <stdint.h>
 #include <utils.h>
 
-DrumManiaButtonMapping::DrumManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
-{
-}
-
-void DrumManiaButtonMapping::update_hid(uint8_t *buf)
-{
-}
-void DrumManiaButtonMapping::update_wii(uint8_t format, uint8_t *buf)
-{
-}
-void DrumManiaButtonMapping::update_switch(uint8_t *buf)
-{
-}
-
-void DrumManiaButtonMapping::update_ps2(uint8_t *buf)
-{
-    // TODO: Works like a GH ps2 guitar, but also holds dpad right
-}
-
-void DrumManiaButtonMapping::update_ps3(uint8_t *buf)
-{
-}
-
-void DrumManiaButtonMapping::update_ps4(uint8_t *buf)
-{
-}
-
-void DrumManiaButtonMapping::update_ps5(uint8_t *buf)
-{
-}
-
-void DrumManiaButtonMapping::update_xinput(uint8_t *buf)
-{
-}
-void DrumManiaButtonMapping::update_ogxbox(uint8_t *buf)
-{
-}
-void DrumManiaButtonMapping::update_xboxone(uint8_t *buf)
-{
-    // not a thing
-}
-
-DrumManiaAxisMapping::DrumManiaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
-{
-}
-
-void DrumManiaAxisMapping::update_hid(uint8_t *buf)
-{
-}
-void DrumManiaAxisMapping::update_wii(uint8_t format, uint8_t *buf)
-{
-}
-void DrumManiaAxisMapping::update_switch(uint8_t *buf)
-{
-    // not a thing on switch
-}
-
-void DrumManiaAxisMapping::update_ps2(uint8_t *buf)
-{
-    // holds left and right
-}
-
-void DrumManiaAxisMapping::update_ps3(uint8_t *buf)
-{
-}
-
-void DrumManiaAxisMapping::update_ps4(uint8_t *buf)
-{
-    // not a thing on ps4
-}
-
-void DrumManiaAxisMapping::update_ps5(uint8_t *buf)
-{
-    // not a thing on ps5
-}
-
-void DrumManiaAxisMapping::update_xinput(uint8_t *buf)
-{
-}
-void DrumManiaAxisMapping::update_ogxbox(uint8_t *buf)
-{
-}
-void DrumManiaAxisMapping::update_xboxone(uint8_t *buf)
-{
-    // not a thing
-}
-
 // L2 and R2 are triggers on gamepads, so buttons on them become trigger axes driven fully by the button
 static proto_Mapping as_gamepad_trigger(proto_Mapping mapping, GamepadAxisType axis)
 {
@@ -228,6 +141,41 @@ proto_Mapping guitarfreaks_as_gamepad(proto_Mapping mapping)
     case GuitarFreaks_Strum:
         button = Gamepad_DpadUp;
         break;
+    }
+    mapping.mapping.which_mapping = proto_Output_gamepadButton_tag;
+    mapping.mapping.mapping.gamepadButton = button;
+    return mapping;
+}
+
+// DrumMania kits are PS digital pads holding dpad left, up and right as an identifier,
+// so they are handled as the equivalent gamepad output.
+proto_Mapping drummania_as_gamepad(proto_Mapping mapping)
+{
+    GamepadButtonType button = Gamepad_A;
+    switch (mapping.mapping.mapping.dmButton)
+    {
+    // Triangle
+    case DrumMania_HiHat:
+        button = Gamepad_Y;
+        break;
+    // Circle
+    case DrumMania_Snare:
+        button = Gamepad_B;
+        break;
+    // R2
+    case DrumMania_HighTom:
+        return as_gamepad_trigger(mapping, Gamepad_RightTrigger);
+    // R1
+    case DrumMania_LowTom:
+        button = Gamepad_RightShoulder;
+        break;
+    // Cross
+    case DrumMania_Cymbal:
+        button = Gamepad_A;
+        break;
+    // L2
+    case DrumMania_BassPedal:
+        return as_gamepad_trigger(mapping, Gamepad_LeftTrigger);
     }
     mapping.mapping.which_mapping = proto_Output_gamepadButton_tag;
     mapping.mapping.mapping.gamepadButton = button;

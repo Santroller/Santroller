@@ -1014,10 +1014,13 @@ void PSXController::process_data(bool ack, bool timeout)
                 bool left = (~ps2Data[3]) & (1 << 7);
                 bool right = (~ps2Data[3]) & (1 << 5);
                 bool down = (~ps2Data[3]) & (1 << 6);
+                bool up = (~ps2Data[3]) & (1 << 4);
                 // pop'n pads are digital and hold dpad left, right and down,
-                // GuitarFreaks guitars hold just left and right
+                // DrumMania kits hold left, up and right, GuitarFreaks guitars hold just left and right
                 if (left && right && down)
                     type = PS2ControllerTypePopNMusic;
+                else if (left && right && up)
+                    type = PS2ControllerTypeDrumMania;
                 else if (left && right)
                     type = PS2ControllerTypeGuitarFreaks;
                 else
@@ -1213,6 +1216,7 @@ uint16_t PSXController::read_axis(PS2AxisType axisType)
         return 0;
     case PS2ControllerTypePopNMusic:
     case PS2ControllerTypeGuitarFreaks:
+    case PS2ControllerTypeDrumMania:
         return 0;
     case PS2ControllerTypeDigital:
         return 0;
@@ -1239,6 +1243,31 @@ bool PSXController::read_button(PS2ButtonType buttonType)
         case PS2ButtonGuitarFreaksPick:
             return read_button(PS2ButtonDpadUp);
         case PS2ButtonGuitarFreaksTilt:
+            return read_button(PS2ButtonL2);
+        default:
+            break;
+        }
+    }
+    if (type == PS2ControllerTypeDrumMania)
+    {
+        switch (buttonType)
+        {
+        // DrumMania kits hold dpad left, up and right permanently as an identifier
+        case PS2ButtonDpadLeft:
+        case PS2ButtonDpadUp:
+        case PS2ButtonDpadRight:
+            return false;
+        case PS2ButtonDrumManiaHiHat:
+            return read_button(PS2ButtonTriangle);
+        case PS2ButtonDrumManiaSnare:
+            return read_button(PS2ButtonCircle);
+        case PS2ButtonDrumManiaHighTom:
+            return read_button(PS2ButtonR2);
+        case PS2ButtonDrumManiaLowTom:
+            return read_button(PS2ButtonR1);
+        case PS2ButtonDrumManiaCymbal:
+            return read_button(PS2ButtonCross);
+        case PS2ButtonDrumManiaBassPedal:
             return read_button(PS2ButtonL2);
         default:
             break;
@@ -1276,6 +1305,23 @@ bool PSXController::read_button(PS2ButtonType buttonType)
             break;
         }
     }
+    // A TaTaCon is a plain digital pad with no identifier, so it can only be read as a digital pad
+    if (type == PS2ControllerTypeDigital)
+    {
+        switch (buttonType)
+        {
+        case PS2ButtonTaikoRimLeft:
+            return read_button(PS2ButtonL1);
+        case PS2ButtonTaikoRimRight:
+            return read_button(PS2ButtonR1);
+        case PS2ButtonTaikoCenterLeft:
+            return read_button(PS2ButtonDpadLeft);
+        case PS2ButtonTaikoCenterRight:
+            return read_button(PS2ButtonCircle);
+        default:
+            break;
+        }
+    }
     switch (type)
     {
     case PS2ControllerTypeUnknown:
@@ -1285,6 +1331,7 @@ bool PSXController::read_button(PS2ButtonType buttonType)
     case PS2ControllerTypeDigital:
     case PS2ControllerTypePopNMusic:
     case PS2ControllerTypeGuitarFreaks:
+    case PS2ControllerTypeDrumMania:
     case PS2ControllerTypeFlightStick:
     case PS2ControllerTypeDualshock:
     case PS2ControllerTypeDualshock2:

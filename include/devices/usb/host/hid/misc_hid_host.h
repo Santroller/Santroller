@@ -19,6 +19,9 @@ private:
     uint8_t m_ep_out = 0;
     uint8_t m_ep_in_size;
     uint8_t m_ep_out_size;
+    // Size of the header before the key states (1 on the original / Mini, 4 on newer models)
+    uint8_t m_key_offset = 1;
+    USB_Host_Data_t m_data = {};
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
 };
 

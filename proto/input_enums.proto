@@ -179,6 +179,14 @@ enum BeatManiaButtonType {
   BeatMania_ScratchCounterClockwise = 9;
   BeatMania_Pedal = 10;
 }
+enum DrumManiaButtonType {
+  DrumMania_HiHat = 1;
+  DrumMania_Snare = 2;
+  DrumMania_HighTom = 3;
+  DrumMania_LowTom = 4;
+  DrumMania_Cymbal = 5;
+  DrumMania_BassPedal = 6;
+}
 enum PopNMusicButtonType {
   PopNMusic_Button1 = 1;
   PopNMusic_Button2 = 2;
@@ -437,6 +445,13 @@ enum PS2ButtonType {
   PS2ButtonGuitarFreaksBlue = 57;
   PS2ButtonGuitarFreaksPick = 58;
   PS2ButtonGuitarFreaksTilt = 59;
+  // DrumMania drum kits
+  PS2ButtonDrumManiaHiHat = 60;
+  PS2ButtonDrumManiaSnare = 61;
+  PS2ButtonDrumManiaHighTom = 62;
+  PS2ButtonDrumManiaLowTom = 63;
+  PS2ButtonDrumManiaCymbal = 64;
+  PS2ButtonDrumManiaBassPedal = 65;
 }
 
 enum CrkdNeckButtonType {

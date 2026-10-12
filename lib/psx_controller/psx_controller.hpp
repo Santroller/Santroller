@@ -10,6 +10,7 @@
 #include <hardware/pio.h>
 #include "psx_controller.pio.h"
 #include "devices/base.hpp"
+#include "psx_poll_command.hpp"
 #include <memory>
 
 #ifndef PS2_DEBUG
@@ -176,7 +177,8 @@ private:
     int8_t m_misoPin;
     uint8_t m_rumble_small = 0;
     uint8_t m_rumble_large = 0;
-    uint8_t m_poll_cmd[5] = {0x01, 0x42, 0x00, 0x00, 0x00};
+    bool m_rumble_enabled = false;
+    std::array<uint8_t, 5> m_poll_cmd = psx_poll_command(PS2ControllerTypeUnknown, false, 0, 0);
     int missing = 0;
     bool valid = false;
     bool hasTapBar = false;

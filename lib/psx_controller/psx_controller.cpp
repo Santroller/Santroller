@@ -95,7 +95,6 @@ static const uint8_t commandSetPressuresGuitar[] = {0x01, 0x4F, 0x00, 0b110001, 
 static const uint8_t commandSetPressuresMouse[] = {0x01, 0x4F, 0x00, 0b1111, 0x00,
                                                    0b11, 0x00, 0x00, 0x00};
 
-static const uint8_t commandPollInput[] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
 static std::weak_ptr<PSXBus> bus_registry[2];
 // Raw copies of the registry for the interrupt handlers
 static PSXBus *buses[2];
@@ -541,6 +540,7 @@ void PSXController::begin()
     m_begun = true;
     m_bus_clock = handshake_clock();
     status = DISCONNECTED;
+    m_rumble_enabled = false;
     packet_delay = 200000;
     if (attach_bus())
         no_attention();
@@ -593,6 +593,8 @@ void PSXController::end()
 }
 void PSXController::load_state(const DeviceReloadState *state)
 {
+    static_assert(sizeof(state->ps2_data) == BUFFER_SIZE);
+    static_assert(sizeof(state->ps2_lastInputs) == BUFFER_SIZE);
     type = state->ps2_type;
     valid = state->ps2_valid;
     hasTapBar = state->ps2_hasTapBar;
@@ -600,6 +602,8 @@ void PSXController::load_state(const DeviceReloadState *state)
     last = state->ps2_last;
     lastInit = state->ps2_lastInit;
     invalidCount = state->ps2_invalidCount;
+    m_rumble_large = state->ps2_rumble_large;
+    m_rumble_small = state->ps2_rumble_small;
     memcpy(ps2Data, state->ps2_data, sizeof(ps2Data));
     memcpy(lastInputs, state->ps2_lastInputs, sizeof(lastInputs));
     ps2Idx = state->ps2_idx;
@@ -617,6 +621,8 @@ void PSXController::save_state(DeviceReloadState &state) const
     state.ps2_last = last;
     state.ps2_lastInit = lastInit;
     state.ps2_invalidCount = invalidCount;
+    state.ps2_rumble_large = m_rumble_large;
+    state.ps2_rumble_small = m_rumble_small;
     memcpy(state.ps2_data, ps2Data, sizeof(ps2Data));
     memcpy(state.ps2_lastInputs, lastInputs, sizeof(lastInputs));
     state.ps2_idx = ps2Idx;
@@ -875,6 +881,7 @@ void PSXController::process_data(bool ack, bool timeout)
         switch (status)
         {
         case DISCONNECTED:
+            m_rumble_enabled = false;
             if (valid)
             {
                 status = CONNECTION_DELAY;
@@ -926,6 +933,7 @@ void PSXController::process_data(bool ack, bool timeout)
             packet_delay = 10000;
             break;
         case ENABLE_RUMBLE:
+            m_rumble_enabled = valid && isConfigReply(ps2Data);
             if (!valid && m_config_retries < 5)
             {
                 m_config_retries++;
@@ -1041,19 +1049,12 @@ void PSXController::process_data(bool ack, bool timeout)
                 {
                     status = DISCONNECTED;
                     type = PS2ControllerTypeUnknown;
+                    m_rumble_enabled = false;
                     packet_delay = 10000;
                 }
             }
             break;
         }
-
-        m_poll_cmd[0] = 0x01;
-        m_poll_cmd[1] = 0x42;
-        m_poll_cmd[2] = 0x00;
-        // Only pads that went through the rumble mapping handshake understand motor bytes
-        bool rumble = type == PS2ControllerTypeDualshock || type == PS2ControllerTypeDualshock2;
-        m_poll_cmd[3] = rumble && m_rumble_small ? 0x01 : 0x00;
-        m_poll_cmd[4] = rumble ? m_rumble_large : 0x00;
 
         if (valid && status == ENUMERATED &&
             (ps2Data[2] == 0x5A || ps2Data[2] == 0x00))
@@ -1087,11 +1088,11 @@ void PSXController::process_data(bool ack, bool timeout)
     case EXIT_CONFIG:
         auto_shift_data(commandExitConfig, sizeof(commandExitConfig));
         break;
-    case ENUMERATED:
-        auto_shift_data(m_poll_cmd, sizeof(m_poll_cmd));
-        break;
     default:
-        auto_shift_data(commandPollInput, sizeof(commandPollInput));
+        // Re-enumeration must confirm the motor mapping before sending rumble.
+        m_poll_cmd = psx_poll_command(type, status == ENUMERATED && m_rumble_enabled,
+                                     m_rumble_large, m_rumble_small);
+        auto_shift_data(m_poll_cmd.data(), m_poll_cmd.size());
         break;
     }
     return;
@@ -1470,6 +1471,8 @@ void PSXController::tick()
 }
 void PSXController::set_rumble(uint8_t left, uint8_t right)
 {
+    uint32_t irq_state = save_and_disable_interrupts();
     m_rumble_large = left;
     m_rumble_small = right ? 1 : 0;
+    restore_interrupts(irq_state);
 }

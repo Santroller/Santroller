@@ -45,8 +45,10 @@ struct DeviceReloadState
     uint32_t ps2_last = 0;
     uint32_t ps2_lastInit = 0;
     uint32_t ps2_invalidCount = 0;
-    uint8_t ps2_data[18] = {};
-    uint8_t ps2_lastInputs[18] = {};
+    uint8_t ps2_rumble_large = 0;
+    uint8_t ps2_rumble_small = 0;
+    uint8_t ps2_data[32] = {};
+    uint8_t ps2_lastInputs[32] = {};
     uint8_t ps2_dataOut[18] = {};
     uint8_t ps2_idx = 0;
     uint8_t ps2_len = 0;

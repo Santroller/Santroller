@@ -75,25 +75,6 @@ bool XInputBigButtonHost::tick_digital(proto_Output& type)
     XInputGamepad_Data_t report = {};
     uint16_t buttons = m_buttons[0] | m_buttons[1] | m_buttons[2] | m_buttons[3];
     memcpy(((uint8_t *)&report) + 2, &buttons, sizeof(buttons));
-    if (type.which_mapping == proto_Output_ghButton_tag || type.which_mapping == proto_Output_rbButton_tag)
-    {
-        uint8_t fret = type.which_mapping == proto_Output_ghButton_tag ? type.mapping.ghButton : type.mapping.rbButton;
-        switch (fret)
-        {
-        case GuitarHeroGuitar_Green:
-            return report.a;
-        case GuitarHeroGuitar_Red:
-            return report.b;
-        case GuitarHeroGuitar_Yellow:
-            return report.y;
-        case GuitarHeroGuitar_Blue:
-            return report.x;
-        case GuitarHeroGuitar_Orange:
-            return report.leftShoulder;
-        default:
-            return false;
-        }
-    }
     return xinput_tick_digital_impl((const uint8_t *)&report, Gamepad, type);
 }
 uint16_t XInputBigButtonHost::tick_analog(proto_Output& type)

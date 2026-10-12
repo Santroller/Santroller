@@ -76,9 +76,22 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
   // }
   if (tool_closed())
   {
-    profile_selected = false;
+    // Keep the tool's selection: the keepalive can lapse while the tool is still open (its tab was
+    // in the background, a config was being written), and it won't select the profile again after.
+    // reset_keepalive() clears it when the tool really goes away.
+    if (profile_selected)
+    {
+      tool_lapsed = true;
+    }
     ProfileManager::instance().release_tool_profile();
     return;
+  }
+  if (tool_lapsed)
+  {
+    // The tool missed whatever happened in the meantime, so start it over from the current state
+    tool_lapsed = false;
+    profile_changed = true;
+    just_loaded = true;
   }
   bool profile_just_changed = profile_changed;
   if (profile_changed)
@@ -897,6 +910,7 @@ void HIDConfigDevice::reset_keepalive()
   dev->selected_profile = 0;
   dev->profile_selected = false;
   dev->profile_changed = false;
+  dev->tool_lapsed = false;
 }
 
 std::shared_ptr<HIDConfigDevice> HIDConfigDevice::instance = std::make_shared<HIDConfigDevice>();

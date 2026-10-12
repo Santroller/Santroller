@@ -115,6 +115,8 @@ private:
   bool tool_seen = false;
   bool just_loaded = false;
   bool profile_selected = false;
+  // The keepalive lapsed while a profile was selected, so put it back when the tool returns
+  bool tool_lapsed = false;
   bool profile_changed = false;
   bool fw_update_active = false;
   uint16_t last_adc_vals[NUM_ADC_CHANNELS];

@@ -25,6 +25,13 @@ public:
     // Config loading state
     bool is_working() const { return m_working; }
     void set_working(bool working) { m_working = working; }
+    // Note that a config write is still making progress
+    void touch_working(uint32_t now)
+    {
+        m_working = true;
+        m_last_work = now;
+    }
+    bool working_stalled(uint32_t now, uint32_t timeout_ms) const { return m_working && now - m_last_work > timeout_ms; }
     bool has_loaded_any() const { return m_loaded_any; }
     void set_loaded_any(bool loaded) { m_loaded_any = loaded; }
     bool has_bluetooth() const { return m_has_bluetooth; }
@@ -87,6 +94,7 @@ private:
     bool m_full_reload;
     bool m_reinitialize_device_stack;
     bool m_restart_device_stack = false;
+    uint32_t m_last_work = 0;
     uint32_t m_reinit_time;
     uint32_t m_time_since_mode;
     uint32_t m_seen_masks;

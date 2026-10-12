@@ -125,12 +125,24 @@ bool ConfigStorage::write_info(const uint8_t *buffer, uint16_t bufsize)
     {
         return false;
     }
+    // Restarting an upload still replaces the config from before the first attempt
+    if (!m_have_previous_footer)
+    {
+        static_assert(sizeof(m_previous_footer) == sizeof(ConfigFooter));
+        memcpy(m_previous_footer, footer, sizeof(ConfigFooter));
+        m_have_previous_footer = true;
+    }
     footer->dataCrc = info.dataCrc;
     footer->dataSize = info.dataSize;
     footer->magic = info.magic;
     footer->mainSize = info.mainSize;
     footer->auxSize = info.auxSize;
     m_upload_active = info.dataSize != 0;
+    if (!m_upload_active)
+    {
+        // An empty config is complete as soon as it's written, there's nothing to wait for
+        m_have_previous_footer = false;
+    }
     return true;
 }
 
@@ -163,7 +175,30 @@ ConfigStorage::WriteResult ConfigStorage::write_chunk(const uint8_t *buffer, uin
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize,
             EEPROM.writeCache, footer.dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
+    m_have_previous_footer = false;
     return WriteResult::Done;
+}
+
+void ConfigStorage::abort_write()
+{
+    m_upload_active = false;
+    if (!m_have_previous_footer)
+    {
+        return;
+    }
+    m_have_previous_footer = false;
+    ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(
+        EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
+    memcpy(footer, m_previous_footer, sizeof(ConfigFooter));
+    // The upload is staged at the front of the cache and the old config sits against the footer, so the
+    // old one is intact unless the upload reached it. If it did, fall back to what's in flash.
+    ConfigImage image;
+    if (!read_flash(image, true))
+    {
+        EEPROM.start();
+        return;
+    }
+    memset(EEPROM.writeCache, 0, MAX_DATA_SIZE - image.data_size);
 }
 
 bool ConfigStorage::update_auxiliary(AuxiliaryWriter writer, void *context) const

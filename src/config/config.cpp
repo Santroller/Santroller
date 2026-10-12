@@ -988,7 +988,22 @@ void update_aux_tlv()
 
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
 {
-    return config_storage.write_info(buffer, bufsize);
+    if (!config_storage.write_info(buffer, bufsize))
+    {
+        return false;
+    }
+    // The cached config isn't readable until the upload finishes, so it counts as working from here
+    if (config_storage.upload_active())
+    {
+        config_mgr.touch_working(millis());
+    }
+    return true;
+}
+
+void abort_config_write()
+{
+    config_storage.abort_write();
+    config_mgr.set_working(false);
 }
 
 bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
@@ -997,12 +1012,14 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     if (result == ConfigStorage::WriteResult::InProgress)
     {
         // //printf("writing up to: %d < %d\r\n", start + bufsize, footer.dataSize);
-        config_mgr.set_working(true);
+        config_mgr.touch_working(millis());
         return true;
     }
     if (result == ConfigStorage::WriteResult::Invalid)
     {
         // printf("Crc didnt match after writing? %d\r\n", footer.dataCrc);
+        // Left working, the device would stop updating and ignore the tool until it was power cycled
+        abort_config_write();
         return false;
     }
     printf("Everything matched, saving!\r\n");

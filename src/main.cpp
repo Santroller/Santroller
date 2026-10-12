@@ -153,16 +153,25 @@ bool mode_recently_changed()
     return ConfigManager::instance().mode_recently_changed(millis());
 }
 
+// Config chunks arrive back to back, so a gap this long means the tool isn't going to finish
+static constexpr uint32_t CONFIG_WRITE_STALL_MS = 2000;
+
 void hid_task(void)
 {
     auto& config_mgr = ConfigManager::instance();
     
+    uint32_t now = millis();
     if (config_mgr.is_working())
     {
+        // The tool went away partway through writing a config (closed, crashed, unplugged from the PC)
+        if (config_mgr.working_stalled(now, CONFIG_WRITE_STALL_MS))
+        {
+            printf("config write stalled, abandoning it\r\n");
+            abort_config_write();
+        }
         return;
     }
-    
-    uint32_t now = millis();
+
     if (config_mgr.should_reinit(now))
     {
         if (!HIDConfigDevice::tool_closed())

@@ -1,7 +1,6 @@
 # Things to work on
 
 ## Emulation
-- [ ] Emulation of MIDI devices
 - [ ] Emulation of fight sticks
 - [ ] Emulation of flight sticks
 - [ ] Emulation of wheels
@@ -14,7 +13,6 @@
 - [ ] Rapid Trigger - https://github.com/minipadKB/minipad-firmware/blob/master/src/handlers/key_handler.cpp
 - [ ] Other analog filters - Low pass, high pass, zero point crossing
 - [ ] Filters needed for hall effect
-- [ ] Mapping an analog input as the calibration instead of only being able to do it from the ui
 
 ## Led / rumble features
 - [ ] Support directoutput (if we want to start supporting pinball cabs)

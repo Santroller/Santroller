@@ -41,9 +41,15 @@ public:
     ConfigMetadata read_metadata(bool cached) const;
     bool write_info(const uint8_t *buffer, uint16_t bufsize);
     WriteResult write_chunk(const uint8_t *buffer, uint16_t bufsize, uint32_t start);
+    bool upload_active() const { return m_upload_active; }
+    // Throw away an upload that failed or was never finished, putting back the config it was replacing
+    void abort_write();
     bool update_auxiliary(AuxiliaryWriter writer, void *context = nullptr) const;
 private:
     bool m_should_commit = false;
     // Set while write_info's upload is waiting for its data
     bool m_upload_active = false;
+    // write_info replaces the cached footer, this is the one it replaced
+    uint8_t m_previous_footer[24];
+    bool m_have_previous_footer = false;
 };

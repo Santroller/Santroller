@@ -11,4 +11,5 @@ uint16_t adc(uint8_t pin);
 uint8_t digital_read(uint8_t port, uint8_t mask);
 uint16_t adc_read(uint8_t pin, uint8_t mask);
 uint16_t multiplexer_read(uint8_t pin, uint32_t mask, uint32_t bits);
+uint8_t matrix_read(uint8_t pin, uint8_t outPin);
 void digital_write(uint8_t port, uint8_t mask, uint8_t activeMask);

@@ -1,7 +1,8 @@
 #include "shared_main.h"
 
 #include "Arduino.h"
-#include "adxl.h"
+#include "accel.h"
+#include "drum_brain.h"
 #include "bt.h"
 #include "config.h"
 #include "controllers.h"
@@ -106,6 +107,11 @@ PS3_REPORT bt_report;
 USB_Report_Data_t bt_report;
 #endif
 uint8_t debounce[DIGITAL_COUNT];
+#if RGB_INACTIVITY_TIMEOUT_SEC
+uint32_t lastInputActivity = 0;
+bool leds_were_asleep = false;
+volatile bool led_preview_activity = false;
+#endif
 uint8_t ledDebounce[LED_DEBOUNCE_COUNT];
 uint16_t lastDrum[DIGITAL_COUNT];
 uint8_t drumVelocity[8];
@@ -261,9 +267,6 @@ void init_main(void) {
 #endif
 #ifdef TICK_PS2
     ps2_emu_init();
-#endif
-#ifdef INPUT_ADXL
-    init_adxl();
 #endif
 #ifdef INPUT_MIDI
     memset(midiData.midiVelocities, 0, sizeof(midiData.midiVelocities));
@@ -1529,7 +1532,7 @@ void tick_ps2output() {
     uint8_t packet_size = 0;
     Buffer_Report_t current_queue_report = {val : 0};
 // Tick Inputs
-#include "inputs/adxl.h"
+#include "inputs/accel.h"
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"
 #include "inputs/mpr121.h"
@@ -1557,7 +1560,7 @@ void tick_ps2output() {
 #endif
 #ifdef TICK_WII
 void tick_wiioutput() {
-#include "inputs/adxl.h"
+#include "inputs/accel.h"
 #include "inputs/clone_neck.h"
 #include "inputs/gh5_neck.h"
 #include "inputs/mpr121.h"
@@ -1693,8 +1696,9 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
         tick_debounce(&last_queue, 100);
     }
 // Tick Inputs
-#include "inputs/adxl.h"
+#include "inputs/accel.h"
 #include "inputs/clone_neck.h"
+#include "inputs/drum_brain.h"
 #include "inputs/gh5_neck.h"
 #include "inputs/mpr121.h"
 #include "inputs/ps2.h"
@@ -1705,6 +1709,14 @@ uint8_t tick_inputs(void *buf, USB_LastReport_Data_t *last_report, uint8_t outpu
 #include "inputs/wt_neck.h"
 
     TICK_SHARED;
+#if RGB_INACTIVITY_TIMEOUT_SEC
+    for (int i = 0; i < DIGITAL_COUNT; i++) {
+        if (debounce[i]) {
+            lastInputActivity = millis();
+            break;
+        }
+    }
+#endif
     // give the user 2 second to jump between modes (aka, hold on plug in)
     if ((millis() - input_start) < 2000 && (millis() - input_start) > 100) {
         TICK_DETECTION;
@@ -2240,16 +2252,25 @@ bool tick_usb(void) {
     }
 #endif
 #if DEVICE_TYPE_IS_NORMAL_GAMEPAD
-    // PS2 / Wii / WiiU do not read the hid report descriptor or any of the string descriptors.
-    if (millis_at_boot && (millis() - millis_at_boot) > 5000 && consoleType == UNIVERSAL && !seen_hid_descriptor_read && !read_any_string && !seen_windows_xb1) {
-        // The wii however will configure the usb device before it stops communicating
+    // PS2 / Wii / WiiU / Switch 2 do not read any of the string descriptors.
+    if (millis_at_boot && (millis() - millis_at_boot) > 5000 && consoleType == UNIVERSAL && !read_any_string && !seen_windows_xb1) {
+        // Switch 2 does read the hid descriptor
+        if (seen_hid_descriptor_read) {
+            set_console_type(SWITCH);
+        } else {
+            // PS2 / Wii / WiiU does not read hid descriptor
+            // The wii however will configure the usb device before it stops communicating
+            // reset_usb doesn't reboot on the uno, so only set the console type once
 #if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == ROCK_BAND_DRUMS
-        if (usb_configured()) {
-            set_console_type(WII_RB);
-        }
+            if (usb_configured()) {
+                set_console_type(WII_RB);
+            } else
 #endif
-        // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
-        set_console_type(PS3);
+            {
+                // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
+                set_console_type(PS3);
+            }
+        }
     }
     // Due to some quirks with how the PS3 detects controllers, we can also end up here for PS3, but in that case, we won't see any requests for controller data
     if ((millis() - millis_at_boot) > 2000 && consoleType == PS4 && !seen_ps4) {
@@ -2473,6 +2494,43 @@ int tick_bluetooth_inputs(const void *buf) {
         gamepad->rightStickY = PS3_STICK_CENTER;
         convert_universal_to_type((uint8_t *)report_data, input, PS3);
         TICK_PS3;
+#if DEVICE_TYPE == GUITAR_HERO_GUITAR
+        // PS2 GH games running on a PS3 expect a PS2 guitar connected via an adapter, which uses a different layout
+        if (output_console_type == PS2_ON_PS3) {
+            PS3GuitarHeroGuitar_Data_t ps3;
+            memcpy(&ps3, report_data, sizeof(ps3));
+            PS2GuitarOnPS3_Data_t *ps2 = (PS2GuitarOnPS3_Data_t *)report_data;
+            memset(ps2, 0, sizeof(PS2GuitarOnPS3_Data_t));
+            ps2->a = ps3.a;
+            ps2->b = ps3.b;
+            ps2->x = ps3.x;
+            ps2->y = ps3.y;
+            ps2->leftShoulder = ps3.leftShoulder;
+            // PS3 guitars report tilt by the accelerometer swinging below its resting point
+            ps2->tilt = ps3.tilt < 0x190;
+            ps2->back = ps3.back;
+            ps2->start = ps3.start;
+            ps2->guide = ps3.guide;
+            ps2->dpadUp = ps3.dpadUp;
+            ps2->dpadDown = ps3.dpadDown;
+            ps2->dpadRight = ps3.dpadRight;
+            // PS2 guitars always hold dpad left
+            ps2->dpadLeft = true;
+            ps2->slider = ps3.slider;
+            ps2->whammy = 0xFF - ps3.whammy;
+            ps2->unused1[0] = PS3_STICK_CENTER;
+            ps2->unused1[1] = PS3_STICK_CENTER;
+            ps2->pressure_dpadRight_yellow = ps3.pressure_dpadRight_yellow;
+            ps2->pressure_dpadLeft = ps3.pressure_dpadLeft;
+            ps2->pressure_dpadUp_green = ps3.pressure_dpadUp_green;
+            ps2->pressure_dpadDown_orange = ps3.pressure_dpadDown_orange;
+            ps2->pressure_blue = ps3.pressure_blue;
+            ps2->pressure_red = ps3.pressure_red;
+            ps2->accelX = ps3.tilt;
+            ps2->accelZ = ps3.accelZ;
+            ps2->accelY = ps3.accelY;
+        }
+#endif
 
 #if DEVICE_TYPE == ROCK_BAND_GUITAR || DEVICE_TYPE == GUITAR_HERO_GUITAR
         if (output_console_type == SWITCH) {
@@ -2487,7 +2545,7 @@ int tick_bluetooth_inputs(const void *buf) {
                 gamepad->leftTrigger = true;
                 gamepad->l2 = true;
             }
-            if (report->tilt > 0x200) {
+            if (report->tilt < 0x190) {
                 gamepad->rightTrigger = true;
                 gamepad->r2 = true;
             }
@@ -2608,15 +2666,43 @@ void tick(void) {
         memset(lastLedStatePeripheral, 0, sizeof(lastLedStatePeripheral));
     }
 #endif
+#if RGB_INACTIVITY_TIMEOUT_SEC
+    if (led_preview_activity) {
+        led_preview_activity = false;
+        lastInputActivity = millis();
+    }
+    bool leds_asleep = millis() - lastInputActivity >= ((uint32_t)RGB_INACTIVITY_TIMEOUT_SEC * 1000);
+    bool leds_falling_asleep = leds_asleep && !leds_were_asleep;
+    leds_were_asleep = leds_asleep;
+#else
+    const bool leds_asleep = false;
+    const bool leds_falling_asleep = false;
+#endif
 #ifdef TICK_LED
-    if (memcmp(lastLedState, ledState, sizeof(ledState)) != 0) {
+    if (leds_falling_asleep) {
+        // Send out a blank frame, but keep the led state around so that it can be shown again once there is activity
+        memcpy(lastLedState, ledState, sizeof(ledState));
+#if LED_COUNT_WS2812
+        // WS2812 data is SPI encoded, so a zeroed byte is not a valid "off"
+        memset(ledState, ws2812_bits[0], sizeof(ledState));
+#else
+        memset(ledState, 0, sizeof(ledState));
+#endif
+        TICK_LED;
+        memcpy(ledState, lastLedState, sizeof(ledState));
+        // Force the real state to be sent out again on wake up
+        memset(lastLedState, 0, sizeof(lastLedState));
+    } else if (!leds_asleep && memcmp(lastLedState, ledState, sizeof(ledState)) != 0) {
         memcpy(lastLedState, ledState, sizeof(ledState));
         TICK_LED;
     }
 #endif
 
 #if LED_COUNT_MPR121
-    if (lastLedStateMpr121 != ledStateMpr121) {
+    if (leds_falling_asleep) {
+        twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIODATA, 0);
+        lastLedStateMpr121 = 0;
+    } else if (!leds_asleep && lastLedStateMpr121 != ledStateMpr121) {
         lastLedStateMpr121 = ledStateMpr121;
         twi_writeSingleToPointer(MPR121_TWI_PORT, MPR121_I2CADDR_DEFAULT, MPR121_GPIODATA, ledStateMpr121);
     }

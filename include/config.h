@@ -15,6 +15,11 @@ extern "C" {
 #error Wii and PS2 output are not supported in the legacy release
 #endif
 
+// Turn off LEDs after this many seconds without any input, 0 to keep them on
+#ifndef RGB_INACTIVITY_TIMEOUT_SEC
+#define RGB_INACTIVITY_TIMEOUT_SEC 0
+#endif
+
 // ConsoleType can change due to console detection
 extern uint8_t consoleType;
 #ifdef CONFIGURABLE_BLOBS

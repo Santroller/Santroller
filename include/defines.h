@@ -5,6 +5,13 @@
 #define NONE 0
 #define INVALID_PIN 0xFF
 
+// Accelerometer types
+#define ADXL345 1
+#define LIS3DH 2
+#define MPU6050 3
+#define SC7A20 4
+#define LIS3DSH 5
+
 #define XINPUT_FLAGS_NO_NAV 0xFFFF
 #define XINPUT_FLAGS_NONE 0x0000
 #define XINPUT_FLAGS_FORCE_FEEDBACK 0x000D
@@ -81,6 +88,7 @@
 #define STEPMANIAX 24
 #define LTEK_ID 25
 #define IOS_FESTIVAL 26
+#define PS2_ON_PS3 29
 #define NON_CONTROLLER 0xFE
 #define UNKNOWN 0xFF
 

@@ -154,3 +154,20 @@ ISR(ADC_vect) {
     sbi(ADCSRA, ADSC);
 }
 #endif
+uint8_t matrix_read(uint8_t pin, uint8_t outPin) {
+    volatile uint8_t* out = portOutputRegister(digitalPinToPort(outPin));
+    uint8_t outMask = digitalPinToBitMask(outPin);
+    volatile uint8_t* in = portInputRegister(digitalPinToPort(pin));
+    uint8_t inMask = digitalPinToBitMask(pin);
+    uint8_t oldSREG = SREG;
+    cli();
+    // Drive this row low, read the column, and then put the row back to its idle high state
+    *out &= ~outMask;
+    SREG = oldSREG;
+    delayMicroseconds(1);
+    uint8_t ret = (*in & inMask) != 0;
+    cli();
+    *out |= outMask;
+    SREG = oldSREG;
+    return ret;
+}

@@ -10,12 +10,7 @@
 #include "shared_main.h"
 #include "usbhid.h"
 #include "util.h"
-#include "xsm3/xsm3.h"
 
-#ifdef KV_KEY_1
-const PROGMEM uint8_t kv_key_1[16] = KV_KEY_1;
-const PROGMEM uint8_t kv_key_2[16] = KV_KEY_2;
-#endif
 // We can't use WideStrings below, as the pico has four byte widestrings, and we need them to be two-byte.
 
 /* A Microsoft-proprietary extension. String address 0xEE is used by
@@ -746,34 +741,7 @@ uint16_t controlRequest(const uint8_t requestType, const uint8_t request, const 
         reset_usb();
         return 0;
     }
-#ifdef KV_KEY_1
-    switch (request) {
-        case 0x81:
-            uint8_t serial[0x0B];
-            read_serial(serial, sizeof(serial));
-            xsm3_import_kv_keys(kv_key_1, kv_key_2);
-            xsm3_set_serial(serial);
-            xsm3_initialise_state();
-            xsm3_set_identification_data(xsm3_id_data_ms_controller);
-            memcpy(requestBuffer, xsm3_id_data_ms_controller, sizeof(xsm3_id_data_ms_controller));
-            return sizeof(xsm3_id_data_ms_controller);
-        case 0x82:
-            xsm3_do_challenge_init((uint8_t *)requestBuffer);
-            return 0;
-        case 0x87:
-            xsm3_do_challenge_verify((uint8_t *)requestBuffer);
-            return 0;
-        case 0x84:
-            return 0;
-        case 0x83:
-            memcpy(requestBuffer, xsm3_challenge_response, sizeof(xsm3_challenge_response));
-            return sizeof(xsm3_challenge_response);
-        case 0x86:
-            short state = 2;  // 1 = in-progress, 2 = complete
-            memcpy(requestBuffer, &state, sizeof(state));
-            return sizeof(state);
-    }
-#elif USB_HOST_STACK
+#if USB_HOST_STACK
     switch (request) {
         case 0x81:
         case 0x82:
@@ -1240,7 +1208,10 @@ uint16_t descriptorRequest(const uint16_t wValue,
             break;
         }
         case USB_DESCRIPTOR_STRING: {
-            read_any_string = true;
+            // We only care for actual string reads, not the language id
+            if (descriptorNumber != 0) {
+                read_any_string = true;
+            }
             const uint8_t *str;
             if (descriptorNumber == 4) {
                 str = (uint8_t *)&xboxString;

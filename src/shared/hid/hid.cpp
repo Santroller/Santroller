@@ -12,6 +12,7 @@
 #include "keyboard_mouse.h"
 #include "pico_slave.h"
 #include "pin_funcs.h"
+#include "drum_brain.h"
 #include "ps3_wii_switch.h"
 #include "shared_main.h"
 #include "stdint.h"
@@ -772,7 +773,17 @@ void hid_set_report(const uint8_t *data, uint8_t len, uint8_t reportType, uint8_
         }
 }
 long millis_since_command = 0;
+#if RGB_INACTIVITY_TIMEOUT_SEC
+extern volatile bool led_preview_activity;
+#endif
 uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *response_buffer, bool *success) {
+#if RGB_INACTIVITY_TIMEOUT_SEC
+    // Keep the leds awake while the tool is previewing them
+    if (request == COMMAND_SET_LEDS || request == COMMAND_SET_LEDS_MPR121) {
+        // This can run from the usb interrupt, so let tick() update the timestamp
+        led_preview_activity = true;
+    }
+#endif
     switch (request) {
         case COMMAND_READ_CONFIG: {
             if (wValue > CONFIGURATION_LEN) {
@@ -857,11 +868,16 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
             memcpy(response_buffer, &response, sizeof(response));
             return sizeof(response);
         }
-        case COMMAND_READ_ADXL: {
+        case COMMAND_READ_ACCEL: {
             memcpy(response_buffer, &filtered, sizeof(filtered));
-            return sizeof(filtered);
+            memcpy(response_buffer + sizeof(filtered), &accel_adc, sizeof(accel_adc));
+            return sizeof(filtered) + sizeof(accel_adc);
         }
-        case COMMAND_SET_ADXL_FILTER: {
+        case COMMAND_ACCEL_VALID: {
+            response_buffer[0] = accel_found;
+            return 1;
+        }
+        case COMMAND_SET_ACCEL_FILTER: {
             memcpy(&currentLowPassAlpha, response_buffer, sizeof(currentLowPassAlpha));
             return 0;
         }
@@ -891,6 +907,16 @@ uint8_t handle_serial_command(uint8_t request, uint16_t wValue, uint8_t *respons
         }
         case COMMAND_DISABLE_MULTIPLEXER: {
             disable_multiplexer = response_buffer[0];
+            return 0;
+        }
+        case COMMAND_READ_DRUM_BRAIN: {
+            response_buffer[0] = drum_brain_found;
+            memcpy(response_buffer + 1, drum_brain_velocities, sizeof(drum_brain_velocities));
+            return 1 + sizeof(drum_brain_velocities);
+        }
+        case COMMAND_READ_MATRIX: {
+            response_buffer[0] = matrix_read(wValue >> 8, wValue & 0xff);
+            return 1;
         }
 #ifdef INPUT_MIDI
         case COMMAND_READ_MIDI: {

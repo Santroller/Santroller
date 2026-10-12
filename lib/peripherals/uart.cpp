@@ -56,15 +56,22 @@ static void on_uart_rx_1()
 }
 UARTInterface::UARTInterface(uint8_t block, int8_t tx, int8_t rx, uint32_t clock)
 {
-    if (tx == -1 || rx == -1)
+    // Receive only (eg MIDI in) or transmit only is fine, so only give up when neither pin is set
+    if (tx == -1 && rx == -1)
     {
         return;
     }
     printf("uart: %d %d %d %d\r\n", tx, rx, block, clock);
     uart = _hardwareBlocks[block];
     uart_init(uart, clock);
-    gpio_set_function(tx, GPIO_FUNC_UART);
-    gpio_set_function(rx, GPIO_FUNC_UART);
+    if (tx != -1)
+    {
+        gpio_set_function(tx, GPIO_FUNC_UART);
+    }
+    if (rx != -1)
+    {
+        gpio_set_function(rx, GPIO_FUNC_UART);
+    }
 }
 
 UARTInterface::~UARTInterface()

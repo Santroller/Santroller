@@ -28,7 +28,7 @@ static void on_uart_rx_1()
     }
 }
 
-MidiSerial::MidiSerial(MidiDevice *midiDevice, uint8_t block, uint8_t tx, uint8_t rx, uint32_t clock) : interface(block, tx, rx, clock)
+MidiSerial::MidiSerial(MidiDevice *midiDevice, uint8_t block, int8_t tx, int8_t rx, uint32_t clock) : interface(block, tx, rx, clock)
 {
     if (interface.is_uart0())
     {

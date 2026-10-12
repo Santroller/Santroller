@@ -7,7 +7,7 @@
 class MidiSerial
 {
 public:
-    MidiSerial(MidiDevice* midiDevice, uint8_t block, uint8_t tx, uint8_t rx, uint32_t clock);
+    MidiSerial(MidiDevice* midiDevice, uint8_t block, int8_t tx, int8_t rx, uint32_t clock);
     ~MidiSerial();
     void tick();
     inline bool is_connected()

@@ -141,6 +141,47 @@ TEST_F(GamepadAxis, Santroller2HostReadsHidSticksBack)
     }
 }
 
+TEST_F(GamepadAxis, HidInstrumentsKeepXInputYAxes)
+{
+    // instrument reports are XInput reports, so a stick mapped on one isn't flipped
+    for (SubType subtype : {GuitarHeroGuitar, RockBandDrums, LiveGuitar, ProKeys, PowerGigGuitar})
+    {
+        profile = make_profile(subtype);
+        Report<PCGamepadDpad_Data_t> report;
+        axis(Gamepad_LeftStickY, UINT16_MAX)->update_hid(report.buf());
+        axis(Gamepad_RightStickY, 0)->update_hid(report.buf());
+        EXPECT_EQ(report->leftStickY, INT16_MAX) << subtype;
+        EXPECT_EQ(report->rightStickY, INT16_MIN) << subtype;
+    }
+    for (SubType subtype : {Gamepad, Dancepad, Taiko, StageKit})
+    {
+        profile = make_profile(subtype);
+        Report<PCGamepadDpad_Data_t> report;
+        axis(Gamepad_LeftStickY, UINT16_MAX)->update_hid(report.buf());
+        EXPECT_EQ(report->leftStickY, INT16_MIN) << subtype;
+    }
+}
+
+TEST_F(GamepadAxis, Santroller2HostReadsInstrumentSticksBack)
+{
+    // instruments report CapabilityXInputYAxis, so the host leaves their Y axes alone
+    profile = make_profile(GuitarHeroGuitar);
+    for (GamepadAxisType type : {Gamepad_LeftStickX, Gamepad_LeftStickY, Gamepad_RightStickX, Gamepad_RightStickY})
+    {
+        for (uint16_t value : {0, 0x1234, 0x8001, 0xBEEF, UINT16_MAX})
+        {
+            Report<PCGamepadDpad_Data_t> report;
+            axis(type, value)->update_hid(report.buf());
+            proto_Output output = {};
+            output.which_mapping = proto_Output_gamepadAxis_tag;
+            output.mapping.gamepadAxis = type;
+            uint16_t read = santroller_v2_fix_analog(output, xinput_tick_analog_impl(report.buf(), GuitarHeroGuitar, output, true),
+                                                     CapabilityXInputYAxis);
+            EXPECT_EQ(read, value) << "axis " << type << " value " << value;
+        }
+    }
+}
+
 TEST_F(GamepadAxis, Santroller2HostReadsXInputYAxesBack)
 {
     // With "invert Y axis" on, HIDGamepadDevice::process flips a gamepad's Y axes back to

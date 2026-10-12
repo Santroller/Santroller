@@ -29,6 +29,31 @@ static inline void santroller_v2_normalize_report(uint8_t *report, uint16_t len,
     report[2] = (report[2] & 0xF0) | dpad_bits;
 }
 
+// Subtypes whose Santroller 2 HID report is an XInput instrument report. Their stick bytes hold
+// instrument values (whammy, tilt, strum bar, velocities...), so they're sent in XInput's
+// convention as they are, and the subtype reports CapabilityXInputYAxis.
+static inline bool santroller_v2_is_xinput_instrument(SubType subtype)
+{
+    switch (subtype)
+    {
+    case GuitarHeroGuitar:
+    case RockBandGuitar:
+    case GuitarHeroDrums:
+    case RockBandDrums:
+    case LiveGuitar:
+    case DjHeroTurntable:
+    case ProGuitarMustang:
+    case ProGuitarSquire:
+    case ProKeys:
+    // these use the rock band guitar and drums reports
+    case PowerGigGuitar:
+    case PowerGigDrum:
+        return true;
+    default:
+        return false;
+    }
+}
+
 // Santroller 2 sends the gamepad stick Y axes flipped to the HID convention, down at the max
 // (GamepadAxisMapping::update_hid), where the rest of its XInput style report has up at the
 // max, unless it reports CapabilityXInputYAxis. Flips a value the xinput tick helpers read from

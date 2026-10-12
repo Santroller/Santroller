@@ -372,7 +372,7 @@ TEST(XboxHid, RumblePayloadMatchesHidMicrosoft)
     uint8_t out[XBOX_HID_RUMBLE_LEN];
     memset(out, 0xAA, sizeof(out));
     xbox_hid_build_rumble(255, 0, out);
-    const uint8_t expected_full_left[] = {0x03, 0, 0, 100, 0, 0xFF, 0, 0};
+    const uint8_t expected_full_left[] = {0x0F, 0, 0, 100, 0, 0xFF, 0, 0};
     EXPECT_EQ(0, memcmp(out, expected_full_left, sizeof(out)));
 
     xbox_hid_build_rumble(0, 255, out);
@@ -382,13 +382,25 @@ TEST(XboxHid, RumblePayloadMatchesHidMicrosoft)
     xbox_hid_build_rumble(0, 0, out);
     EXPECT_EQ(out[3], 0);
     EXPECT_EQ(out[4], 0);
-    // still enables both motors so the zero magnitudes stop them
-    EXPECT_EQ(out[0], XBOX_HID_RUMBLE_ENABLE_WEAK | XBOX_HID_RUMBLE_ENABLE_STRONG);
+    // still enables the motors so the zero magnitudes stop them
+    EXPECT_EQ(out[0], XBOX_HID_RUMBLE_ENABLE_ALL);
 
     xbox_hid_build_rumble(128, 64, out);
     EXPECT_EQ(out[3], 128 * 100 / 255);
     EXPECT_EQ(out[4], 64 * 100 / 255);
     // trigger motors stay off
+    EXPECT_EQ(out[1], 0);
+    EXPECT_EQ(out[2], 0);
+}
+
+TEST(XboxHid, RumbleEnablesEveryMotorForClonesWithSwappedMasks)
+{
+    // Clones like the GuliKit KK3 Max swap the main and trigger motor bits, others reverse them (xpadneo's
+    // SWAPPED_MASK / REVERSE_MASK quirks). With every bit set the order doesn't matter, and the zero trigger
+    // magnitudes keep a real controller's trigger motors off.
+    uint8_t out[XBOX_HID_RUMBLE_LEN];
+    xbox_hid_build_rumble(255, 255, out);
+    EXPECT_EQ(out[0], 0x0F);
     EXPECT_EQ(out[1], 0);
     EXPECT_EQ(out[2], 0);
 }

@@ -4,6 +4,7 @@
 #include "enums.pb.h"
 #include "utils.h"
 #include "emulation/usb/usb_descriptors.h"
+#include "protocols/santroller_v2.hpp"
 
 void Instance::set_rumble(uint8_t left, uint8_t right)
 {
@@ -294,9 +295,10 @@ void Instance::update_capabilities()
         // dance pads report the dpad as buttons instead of a hat (HIDGamepadDevice)
         caps |= CapabilityDpadAsButtons;
     }
-    // HID flips the stick Y axes to down at the max, unless this flips them back
+    // HID sends stick Y axes down at the max, except in instrument reports, which keep XInput's
+    // convention (GamepadAxisMapping::update_hid), and on a gamepad that flips them back
     // (HIDGamepadDevice::process, bt_gamepad)
-    if (invert_y_axis_hid && subtype == Gamepad)
+    if (santroller_v2_is_xinput_instrument(subtype) || (invert_y_axis_hid && subtype == Gamepad))
     {
         caps |= CapabilityXInputYAxis;
     }

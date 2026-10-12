@@ -322,7 +322,7 @@ enum CapabilitiyFlags {
     CapabilityHasInstrumentLeds=4; /* Has instrument LEDs (Stage kit format or santroller format) */
     CapabilityHasRumble=8; /* Has rumble */
     CapabilityDpadAsButtons=16; /* Treat D-pad as buttons instead of hat */
-    CapabilityXInputYAxis=32; /* Stick Y axes are up at the max (XInput) instead of down at the max (HID) */
+    CapabilityXInputYAxis=32; /* Stick Y axes are up at the max (XInput) instead of down at the max (HID): instruments, and gamepads with the Y axis inverted */
 }
 
 enum ProfileAssignMask {

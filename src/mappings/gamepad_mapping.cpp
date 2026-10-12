@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <config/config.hpp>
 #include "protocols/switch_arcade.hpp"
+#include "protocols/santroller_v2.hpp"
 
 GamepadAxisMapping::GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.gamepadAxis == Gamepad_LeftTrigger || mapping.mapping.mapping.gamepadAxis == Gamepad_RightTrigger)
 {
@@ -28,6 +29,12 @@ void GamepadAxisMapping::update_hid(uint8_t *buf)
     }
     // santroller hid uses an xinput style report descriptor for compatibility reasons
     update_xinput(buf);
+    // instrument reports keep XInput's convention throughout (CapabilityXInputYAxis), everything
+    // else uses the HID convention for its Y axes, down at the max
+    if (m_profile && santroller_v2_is_xinput_instrument(m_profile->subtype))
+    {
+        return;
+    }
     PCGamepadDpad_Data_t *data = (PCGamepadDpad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.gamepadAxis)
     {

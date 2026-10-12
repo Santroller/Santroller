@@ -229,11 +229,13 @@ enum MidiTriggerType {
 
 // Which part of an axis a mapping drives. A half uses the input's whole range (min = rest,
 // max = fully pressed) to move the axis from its centre towards one end, so two inputs can
-// share an axis, e.g. two analog triggers driving one stick axis.
+// share an axis, e.g. two analog triggers driving one stick axis. Custom moves the axis from
+// sectionStart (at rest) to sectionEnd (fully pressed) instead.
 enum AxisSection {
   AxisSectionFull = 0;
   AxisSectionPositive = 1;
   AxisSectionNegative = 2;
+  AxisSectionCustom = 3;
 }
 
 enum AnalogToDigitalTriggerType {

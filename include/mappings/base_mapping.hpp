@@ -28,8 +28,19 @@ struct MappingConfig
           maxTriggerValue(source.maxTriggerValue),
           has_peakBased(source.has_peakBased),
           peakBased(source.peakBased),
-          section(source.has_section ? source.section : AxisSectionFull)
+          section(source.has_section ? source.section : AxisSectionFull),
+          section_start(UINT16_MAX / 2),
+          section_end(UINT16_MAX)
     {
+        if (section == AxisSectionNegative)
+        {
+            section_end = 0;
+        }
+        else if (section == AxisSectionCustom)
+        {
+            section_start = source.has_sectionStart ? source.sectionStart : 0;
+            section_end = source.has_sectionEnd ? source.sectionEnd : UINT16_MAX;
+        }
     }
 
     proto_Output mapping;
@@ -51,6 +62,9 @@ struct MappingConfig
     bool has_peakBased;
     bool peakBased;
     AxisSection section;
+    // the axis values a section moves between, from rest to fully pressed
+    uint32_t section_start;
+    uint32_t section_end;
 };
 
 class ButtonMapping;

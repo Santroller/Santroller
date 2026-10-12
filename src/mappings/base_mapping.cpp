@@ -241,18 +241,23 @@ void AxisMapping::update(bool full_poll, bool send_events)
     }
     else if (m_mapping.section != AxisSectionFull)
     {
-        // calibrate like a trigger, then use that to push the axis from its centre to one end
-        uint32_t amount = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, true) / 2;
-        val = m_mapping.section == AxisSectionPositive ? UINT16_MAX / 2 + amount : UINT16_MAX / 2 - amount;
+        // calibrate like a trigger, then use that to move the axis from the section start to its end
+        int64_t amount = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, true);
+        int64_t start = m_mapping.section_start;
+        val = start + ((int64_t)m_mapping.section_end - start) * amount / UINT16_MAX;
     }
     else
     {
         val = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
     }
-    // A half axis rests at the axis centre, so it can leave the axis to the other half's mapping.
-    // A calibrated axis rests where calibrate leaves it, whatever its raw centre is.
+    // A section rests at its start (the axis centre for a half), so it can leave the axis to
+    // another mapping. A calibrated axis rests where calibrate leaves it, whatever its raw centre is.
     uint32_t rest = (uint32_t)m_mapping.center;
-    if (m_mapping.section != AxisSectionFull || (!m_mapping.has_pressed && !m_trigger))
+    if (m_mapping.section != AxisSectionFull && !m_mapping.has_pressed)
+    {
+        rest = m_mapping.section_start;
+    }
+    else if (m_mapping.section != AxisSectionFull || (!m_mapping.has_pressed && !m_trigger))
     {
         rest = UINT16_MAX / 2;
     }

@@ -364,4 +364,7 @@ message Mapping {
   // analog pickup be calibrated. Without them, the range is split into 5 equal bands.
   repeated uint32 pickupThresholds = 65;
   optional AxisSection section = 66;
+  // AxisSectionCustom only: the axis value at rest and when fully pressed (0 - 65535)
+  optional uint32 sectionStart = 67;
+  optional uint32 sectionEnd = 68;
 }

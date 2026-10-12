@@ -146,6 +146,61 @@ TEST_F(AxisUpdate, NegativeHalfPushesFromCentreToBottom)
     EXPECT_FALSE(axis->centered());
 }
 
+TEST_F(AxisUpdate, CustomSectionMovesFromStartToEnd)
+{
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftStickX);
+    config.has_section = true;
+    config.section = AxisSectionCustom;
+    config.has_sectionStart = true;
+    config.sectionStart = 10000;
+    config.has_sectionEnd = true;
+    config.sectionEnd = 20000;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 10000u);
+    EXPECT_TRUE(axis->centered());
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 20000u);
+    EXPECT_FALSE(axis->centered());
+    axis.set_analog(32768);
+    EXPECT_NEAR(axis->value(), 15000, 1);
+}
+
+TEST_F(AxisUpdate, CustomSectionCanRunBackwards)
+{
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftStickX);
+    config.has_section = true;
+    config.section = AxisSectionCustom;
+    config.has_sectionStart = true;
+    config.sectionStart = 50000;
+    config.has_sectionEnd = true;
+    config.sectionEnd = 0;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 50000u);
+    EXPECT_TRUE(axis->centered());
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 0u);
+}
+
+TEST_F(AxisUpdate, CustomSectionWorksOnATrigger)
+{
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger);
+    config.has_section = true;
+    config.section = AxisSectionCustom;
+    config.has_sectionStart = true;
+    config.sectionStart = 0;
+    config.has_sectionEnd = true;
+    config.sectionEnd = 30000;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 0u);
+    EXPECT_TRUE(axis->centered());
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 30000u);
+    EXPECT_FALSE(axis->centered());
+}
+
 TEST_F(AxisUpdate, HalfAxisIgnoresTheConfiguredCentre)
 {
     // a half axis rests at the axis centre whatever its raw centre is

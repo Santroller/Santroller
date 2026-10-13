@@ -18,6 +18,7 @@ private:
     uint8_t m_ep_in = 0;
     uint8_t m_ep_out = 0;
     uint8_t m_ep_in_size;
+    uint8_t m_ep_in_xfer_len;
     uint8_t m_ep_out_size;
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
     HID_ReportInfo_t *m_info;

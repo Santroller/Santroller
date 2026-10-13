@@ -666,6 +666,10 @@ uint8_t USB_ProcessHIDReport(const uint8_t *ReportData,
 				CurrReportIDInfo->ReportSizeBits[NewReportItem.ItemType] += CurrStateTable->Attributes.BitSize;
 
 				ParserData->LargestReportSizeBits = MAX(ParserData->LargestReportSizeBits, CurrReportIDInfo->ReportSizeBits[NewReportItem.ItemType]);
+				if (NewReportItem.ItemType == HID_REPORT_ITEM_In)
+				{
+					ParserData->LargestInputReportSizeBits = MAX(ParserData->LargestInputReportSizeBits, CurrReportIDInfo->ReportSizeBits[HID_REPORT_ITEM_In]);
+				}
 				if (NewReportItem.ReportID == ReportIdSantrollerCapabilities && NewReportItem.ItemType == HID_REPORT_ITEM_Out && NewReportItem.Attributes.Usage.Page == HID_USAGE_PAGE_VENDOR && NewReportItem.Attributes.Usage.Usage == 0x2882)
 				{
 					ParserData->foundSantrollerV2OutputUsage = true;

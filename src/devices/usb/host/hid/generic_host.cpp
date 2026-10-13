@@ -34,6 +34,19 @@ static bool device_has_keyboard(std::shared_ptr<UsbHostDevice> list, tusb_desc_i
     return false;
 }
 
+// Some devices (e.g. the Saitek P150) send reports larger than their endpoint, split over several
+// packets, so read whole reports instead of single packets. Rounded up to whole packets so a device
+// sending more than its descriptor claims still ends the transfer with a short packet
+static uint8_t input_xfer_len(HID_ReportInfo_t *info, uint8_t ep_size, uint8_t buf_size)
+{
+    uint16_t len = (info->LargestInputReportSizeBits + 7) / 8 + (info->UsingReportIDs ? 1 : 0);
+    if (ep_size)
+    {
+        len = tu_max16(ep_size, ((len + ep_size - 1) / ep_size) * ep_size);
+    }
+    return tu_min16(len, buf_size);
+}
+
 std::shared_ptr<UsbHostInterface> GenericHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
     uint8_t dev_addr = list->dev_addr();
@@ -65,6 +78,7 @@ std::shared_ptr<UsbHostInterface> GenericHost::open(std::shared_ptr<UsbHostDevic
         {
             intf->m_ep_in = desc_ep->bEndpointAddress;
             intf->m_ep_in_size = desc_ep->wMaxPacketSize;
+            intf->m_ep_in_xfer_len = input_xfer_len(info, intf->m_ep_in_size, sizeof(intf->m_ep_in_buf));
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
         }
         else
@@ -112,7 +126,7 @@ bool GenericHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
         {
             fill_generic_report(m_info, m_ep_in_buf, &m_data);
         }
-        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_xfer_len);
     }
     return true;
 }
@@ -122,7 +136,7 @@ bool GenericHost::set_config()
     UsbHostInterface::set_config();
     if (m_ep_in)
     {
-        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
+        usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_xfer_len);
     }
     return true;
 }

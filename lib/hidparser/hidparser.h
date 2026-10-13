@@ -346,6 +346,7 @@ extern "C"
 																	*/
 		uint8_t TotalDeviceReports;								   /**< Number of reports within the HID interface */
 		uint16_t LargestReportSizeBits;							   /**< Largest report that the attached device will generate, in bits */
+		uint16_t LargestInputReportSizeBits;					   /**< Largest input report, in bits, excluding the report ID byte */
 		bool UsingReportIDs;									   /**< Indicates if the device has at least one REPORT ID
 																	*   element in its HID report descriptor.
 																	*/

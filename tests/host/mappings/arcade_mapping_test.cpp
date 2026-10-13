@@ -258,6 +258,13 @@ proto_Mapping popn(PopNMusicButtonType button)
     return config;
 }
 
+// The converters rewrite the mapping in place
+proto_Mapping converted(void (*convert)(proto_Mapping &), proto_Mapping config)
+{
+    convert(config);
+    return config;
+}
+
 void expect_button(const proto_Mapping &config, GamepadButtonType button)
 {
     EXPECT_EQ(config.mapping.which_mapping, proto_Output_gamepadButton_tag);
@@ -280,32 +287,32 @@ void expect_trigger(const proto_Mapping &config, GamepadAxisType axis)
 TEST(KonamiMapping, BeatmaniaLayout)
 {
     // https://github.com/PCSX2/pcsx2/issues/10176
-    expect_button(beatmania_as_gamepad(beatmania(BeatMania_Button1)), Gamepad_X);
-    expect_button(beatmania_as_gamepad(beatmania(BeatMania_Button2)), Gamepad_LeftShoulder);
-    expect_button(beatmania_as_gamepad(beatmania(BeatMania_Button3)), Gamepad_A);
-    expect_button(beatmania_as_gamepad(beatmania(BeatMania_Button4)), Gamepad_RightShoulder);
-    expect_button(beatmania_as_gamepad(beatmania(BeatMania_Button5)), Gamepad_B);
-    expect_trigger(beatmania_as_gamepad(beatmania(BeatMania_Button6)), Gamepad_LeftTrigger);
-    expect_button(beatmania_as_gamepad(beatmania(BeatMania_Button7)), Gamepad_DpadLeft);
-    expect_button(beatmania_as_gamepad(beatmania(BeatMania_ScratchClockwise)), Gamepad_DpadUp);
-    expect_button(beatmania_as_gamepad(beatmania(BeatMania_ScratchCounterClockwise)), Gamepad_DpadDown);
-    expect_trigger(beatmania_as_gamepad(beatmania(BeatMania_Pedal)), Gamepad_RightTrigger);
+    expect_button(converted(beatmania_as_gamepad, beatmania(BeatMania_Button1)), Gamepad_X);
+    expect_button(converted(beatmania_as_gamepad, beatmania(BeatMania_Button2)), Gamepad_LeftShoulder);
+    expect_button(converted(beatmania_as_gamepad, beatmania(BeatMania_Button3)), Gamepad_A);
+    expect_button(converted(beatmania_as_gamepad, beatmania(BeatMania_Button4)), Gamepad_RightShoulder);
+    expect_button(converted(beatmania_as_gamepad, beatmania(BeatMania_Button5)), Gamepad_B);
+    expect_trigger(converted(beatmania_as_gamepad, beatmania(BeatMania_Button6)), Gamepad_LeftTrigger);
+    expect_button(converted(beatmania_as_gamepad, beatmania(BeatMania_Button7)), Gamepad_DpadLeft);
+    expect_button(converted(beatmania_as_gamepad, beatmania(BeatMania_ScratchClockwise)), Gamepad_DpadUp);
+    expect_button(converted(beatmania_as_gamepad, beatmania(BeatMania_ScratchCounterClockwise)), Gamepad_DpadDown);
+    expect_trigger(converted(beatmania_as_gamepad, beatmania(BeatMania_Pedal)), Gamepad_RightTrigger);
 }
 
 TEST(KonamiMapping, GuitarFreaksLayout)
 {
-    expect_trigger(guitarfreaks_as_gamepad(guitarfreaks(GuitarFreaks_Red)), Gamepad_RightTrigger);
-    expect_button(guitarfreaks_as_gamepad(guitarfreaks(GuitarFreaks_Green)), Gamepad_B);
-    expect_button(guitarfreaks_as_gamepad(guitarfreaks(GuitarFreaks_Blue)), Gamepad_Y);
-    expect_trigger(guitarfreaks_as_gamepad(guitarfreaks(GuitarFreaks_Tilt)), Gamepad_LeftTrigger);
-    expect_button(guitarfreaks_as_gamepad(guitarfreaks(GuitarFreaks_Strum)), Gamepad_DpadUp);
+    expect_trigger(converted(guitarfreaks_as_gamepad, guitarfreaks(GuitarFreaks_Red)), Gamepad_RightTrigger);
+    expect_button(converted(guitarfreaks_as_gamepad, guitarfreaks(GuitarFreaks_Green)), Gamepad_B);
+    expect_button(converted(guitarfreaks_as_gamepad, guitarfreaks(GuitarFreaks_Blue)), Gamepad_Y);
+    expect_trigger(converted(guitarfreaks_as_gamepad, guitarfreaks(GuitarFreaks_Tilt)), Gamepad_LeftTrigger);
+    expect_button(converted(guitarfreaks_as_gamepad, guitarfreaks(GuitarFreaks_Strum)), Gamepad_DpadUp);
 }
 
 TEST(KonamiMapping, PopnTriggerButtons)
 {
-    expect_trigger(popn_as_gamepad(popn(PopNMusic_Button7)), Gamepad_RightTrigger);
-    expect_trigger(popn_as_gamepad(popn(PopNMusic_Button9)), Gamepad_LeftTrigger);
-    expect_button(popn_as_gamepad(popn(PopNMusic_Button8)), Gamepad_DpadUp);
+    expect_trigger(converted(popn_as_gamepad, popn(PopNMusic_Button7)), Gamepad_RightTrigger);
+    expect_trigger(converted(popn_as_gamepad, popn(PopNMusic_Button9)), Gamepad_LeftTrigger);
+    expect_button(converted(popn_as_gamepad, popn(PopNMusic_Button8)), Gamepad_DpadUp);
 }
 
 TEST(KonamiMapping, ConversionKeepsTheInputSettings)
@@ -314,16 +321,16 @@ TEST(KonamiMapping, ConversionKeepsTheInputSettings)
     config.inverted = true;
     config.has_debounce = true;
     config.debounce = 7;
-    auto converted = beatmania_as_gamepad(config);
-    EXPECT_TRUE(converted.inverted);
-    EXPECT_TRUE(converted.has_debounce);
-    EXPECT_EQ(converted.debounce, 7u);
+    beatmania_as_gamepad(config);
+    EXPECT_TRUE(config.inverted);
+    EXPECT_TRUE(config.has_debounce);
+    EXPECT_EQ(config.debounce, 7u);
 }
 
 TEST_F(Arcade, KonamiTriggerButtonDrivesTheFullTrigger)
 {
     Report<PS2Gamepad_Data_t> report;
-    auto pedal = pressed<GamepadAxisMapping>(beatmania_as_gamepad(beatmania(BeatMania_Pedal)));
+    auto pedal = pressed<GamepadAxisMapping>(converted(beatmania_as_gamepad, beatmania(BeatMania_Pedal)));
     pedal->update_ps2(report.buf());
     EXPECT_TRUE(report->r2);
     EXPECT_EQ(report->rightTrigger, 0xFF);

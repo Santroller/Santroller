@@ -641,6 +641,22 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                     m_rb2 = caps->buttons & XINPUT_CAPS_BUTTON_RIGHT_THUMB;
                     m_subtype = m_rb2 ? RockBandDrums : GuitarHeroDrums;
                 }
+
+                // Pro guitars we have to identify by vid+pid
+                if ((m_subtype == ProGuitarMustang || m_subtype == ProGuitarSquire) && caps->leftStickX == HARMONIX_VID)
+                {
+                    switch (caps->leftStickY)
+                    {
+                    case XBOX_360_MUSTANG_PID:
+                    case XBOX_360_MPA_MUSTANG_PID:
+                        m_subtype = ProGuitarMustang;
+                        break;
+                    case XBOX_360_MPA_SQUIRE_PID:
+                    case XBOX_360_SQUIRE_PID:
+                        m_subtype = ProGuitarSquire;
+                        break;
+                    }
+                }
             }
         }
     }

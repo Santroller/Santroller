@@ -32,7 +32,7 @@ static bool is_guitar_subtype(SubType subtype)
 {
     // pro guitars don't exist on Xbox One, so they are reported as a standard Rock Band guitar
     return subtype == GuitarHeroGuitar || subtype == RockBandGuitar || subtype == PowerGigGuitar ||
-           subtype == ProGuitarMustang || subtype == ProGuitarSquire;
+           subtype == ProGuitarMustang || subtype == ProGuitarSquier;
 }
 
 static GipLegacyWirelessDeviceType get_legacy_wireless_device_type(SubType subtype)
@@ -327,7 +327,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 case GuitarHeroGuitar:
                 case RockBandGuitar:
                 case ProGuitarMustang:
-                case ProGuitarSquire:
+                case ProGuitarSquier:
                 case PowerGigGuitar:
                 case RockRevolutionGuitar:
                     xboxOneDescriptor = xb1_descriptor_guitar;
@@ -662,7 +662,7 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
                 case GuitarHeroGuitar:
                 case RockBandGuitar:
                 case ProGuitarMustang:
-                case ProGuitarSquire:
+                case ProGuitarSquier:
                 case PowerGigGuitar:
                 case RockRevolutionGuitar:
                     announcePacket = announce_guitar;

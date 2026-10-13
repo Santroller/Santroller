@@ -139,9 +139,9 @@ bool XInputGamepadHost::set_config()
             case XBOX_360_MPA_MUSTANG_PID:
                 m_subtype = ProGuitarMustang;
                 break;
-            case XBOX_360_MPA_SQUIRE_PID:
-            case XBOX_360_SQUIRE_PID:
-                m_subtype = ProGuitarSquire;
+            case XBOX_360_MPA_SQUIER_PID:
+            case XBOX_360_SQUIER_PID:
+                m_subtype = ProGuitarSquier;
                 break;
             }
         }

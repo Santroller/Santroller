@@ -21,7 +21,7 @@ TEST(XInput, SubtypeValues)
 TEST(XInput, SubtypesRoundTrip)
 {
     for (SubType t : {Gamepad, Wheel, FightStick, FlightStick, Dancepad, RockBandGuitar, GuitarHeroGuitar, RockBandDrums,
-                      StageKit, ProKeys, DjHeroTurntable, ProGuitarSquire, DisneyInfinity, Skylanders})
+                      StageKit, ProKeys, DjHeroTurntable, ProGuitarSquier, DisneyInfinity, Skylanders})
         EXPECT_EQ(get_subtype_from_xinput(get_xinput_subtype(t)), t) << t;
 }
 

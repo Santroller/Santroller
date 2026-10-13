@@ -43,7 +43,7 @@ static inline bool santroller_v2_is_xinput_instrument(SubType subtype)
     case LiveGuitar:
     case DjHeroTurntable:
     case ProGuitarMustang:
-    case ProGuitarSquire:
+    case ProGuitarSquier:
     case ProKeys:
     // these use the rock band guitar and drums reports
     case PowerGigGuitar:

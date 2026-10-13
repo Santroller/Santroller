@@ -95,9 +95,9 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
             subtype = ProGuitarMustang;
             isValid = true;
             break;
-        case PS3_SQUIRE_PID:
-        case PS3_SQUIRE_MPA_PID:
-            subtype = ProGuitarSquire;
+        case PS3_SQUIER_PID:
+        case PS3_SQUIER_MPA_PID:
+            subtype = ProGuitarSquier;
             isValid = true;
             break;
         }
@@ -135,9 +135,9 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
             subtype = ProGuitarMustang;
             isValid = true;
             break;
-        case WII_SQUIRE_PID:
-        case WII_SQUIRE_MPA_PID:
-            subtype = ProGuitarSquire;
+        case WII_SQUIER_PID:
+        case WII_SQUIER_MPA_PID:
+            subtype = ProGuitarSquier;
             isValid = true;
             break;
         case XBOX_360_ION_ROCKER_VID:
@@ -193,7 +193,7 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
                              sizeof(intf->m_output_report));
         }
 
-        if (subtype == ProKeys || subtype == ProGuitarMustang || subtype == ProGuitarSquire)
+        if (subtype == ProKeys || subtype == ProGuitarMustang || subtype == ProGuitarSquier)
         {
             intf->enable_pro_instrument_full_report();
             intf->m_last_pro_instrument_poke = millis();
@@ -329,7 +329,7 @@ bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
                 printf("Switch arcade: invalid input transfer (result %u, length %lu)\n",
                        static_cast<unsigned>(result), static_cast<unsigned long>(xferred_bytes));
         }
-        if ((m_subtype == ProKeys || m_subtype == ProGuitarMustang || m_subtype == ProGuitarSquire) &&
+        if ((m_subtype == ProKeys || m_subtype == ProGuitarMustang || m_subtype == ProGuitarSquier) &&
             (millis() - m_last_pro_instrument_poke) >= 8000)
         {
             enable_pro_instrument_full_report();
@@ -530,7 +530,7 @@ bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
             }
         }
         return false;
-    case ProGuitarSquire:
+    case ProGuitarSquier:
     case ProGuitarMustang:
         if (type.which_mapping == proto_Output_proButton_tag)
         {
@@ -769,7 +769,7 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             }
         }
 
-    case ProGuitarSquire:
+    case ProGuitarSquier:
     case ProGuitarMustang:
         if (type.which_mapping == proto_Output_proAxis_tag)
         {

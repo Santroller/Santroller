@@ -646,7 +646,7 @@ static bool rpcs3_passthrough_supported(SubType subtype)
     case StageKit:
     case ProKeys:
     case ProGuitarMustang:
-    case ProGuitarSquire:
+    case ProGuitarSquier:
         return true;
     default:
         return false;

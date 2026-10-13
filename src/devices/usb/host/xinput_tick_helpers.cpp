@@ -275,7 +275,7 @@ bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_O
         }
         return false;
     case ProGuitarMustang:
-    case ProGuitarSquire:
+    case ProGuitarSquier:
         if (type.which_mapping == proto_Output_proButton_tag)
         {
             const auto *data = reinterpret_cast<const XInputRockBandProGuitar_Data_t *>(ep_in_buf);
@@ -510,7 +510,7 @@ uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtype, prot
         }
         break;
     case ProGuitarMustang:
-    case ProGuitarSquire:
+    case ProGuitarSquier:
         if (type.which_mapping == proto_Output_proAxis_tag)
         {
             auto data = (XInputRockBandProGuitar_Data_t *)ep_in_buf;

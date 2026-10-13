@@ -94,7 +94,7 @@ inline SubType get_subtype_from_xinput(uint8_t subtype)
     case XINPUT_TURNTABLE:
         return DjHeroTurntable;
     case XINPUT_PRO_GUITAR:
-        return ProGuitarSquire;
+        return ProGuitarSquier;
     case XINPUT_DISNEY_INFINITY_AND_LEGO_DIMENSIONS:
         return DisneyInfinity;
     case XINPUT_SKYLANDERS:
@@ -130,7 +130,7 @@ inline uint8_t get_xinput_subtype(SubType subtype)
     case DjHeroTurntable:
         return XINPUT_TURNTABLE;
     case ProGuitarMustang:
-    case ProGuitarSquire:
+    case ProGuitarSquier:
         return XINPUT_PRO_GUITAR;
     case ProKeys:
         return XINPUT_PRO_KEYS;

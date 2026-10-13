@@ -313,7 +313,7 @@ static inline SubType santroller_v1_subtype(uint16_t version)
     case 9: return StageKit;
     case 16: return ProKeys;
     case 17: return ProGuitarMustang;
-    case 18: return ProGuitarSquire;
+    case 18: return ProGuitarSquier;
     case 21: return DisneyInfinity;
     case 22: return Skylanders;
     case 23: return LegoDimensions;

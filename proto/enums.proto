@@ -146,7 +146,7 @@ enum SubType {
   Wheel = 15;
   ProKeys = 16;
   ProGuitarMustang = 17;
-  ProGuitarSquire = 18;
+  ProGuitarSquier = 18;
   KeyboardMouse = 19;
   FightStick = 20;
   FlightStick = 21;

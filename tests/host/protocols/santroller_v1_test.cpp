@@ -54,7 +54,7 @@ TEST(SantrollerV1, SubtypeUsesTheOldNumbering)
     EXPECT_EQ(santroller_v1_subtype(0x0900), StageKit);
     EXPECT_EQ(santroller_v1_subtype(0x1000), ProKeys);
     EXPECT_EQ(santroller_v1_subtype(0x1100), ProGuitarMustang);
-    EXPECT_EQ(santroller_v1_subtype(0x1200), ProGuitarSquire);
+    EXPECT_EQ(santroller_v1_subtype(0x1200), ProGuitarSquier);
     // these moved when the subtypes were renumbered
     EXPECT_EQ(santroller_v1_subtype(0x1500), DisneyInfinity);
     EXPECT_EQ(santroller_v1_subtype(0x1600), Skylanders);
@@ -198,11 +198,11 @@ TEST(SantrollerV1, ProGuitar)
     high_e_velocity.mapping.proAxis = ProGuitar_HighEFretVelocity;
 
     EXPECT_TRUE(digital(Report().set(1, 0x80), ProGuitarMustang, green));
-    EXPECT_TRUE(digital(Report().set(2, 0x10), ProGuitarSquire, pedal));
+    EXPECT_TRUE(digital(Report().set(2, 0x10), ProGuitarSquier, pedal));
     EXPECT_TRUE(digital(Report().set(1, 0x02), ProGuitarMustang, gamepad_button(Gamepad_A)));
     EXPECT_FALSE(digital(Report().set(1, 0x02), ProGuitarMustang, gamepad_button(Gamepad_X)));
     EXPECT_EQ(analog(Report().set(5, 3), ProGuitarMustang, low_e), 3 << 11);
-    EXPECT_EQ(analog(Report().set(16, 0x40), ProGuitarSquire, high_e_velocity), 0x40 << 9);
+    EXPECT_EQ(analog(Report().set(16, 0x40), ProGuitarSquier, high_e_velocity), 0x40 << 9);
 }
 
 TEST(SantrollerV1, ProKeys)

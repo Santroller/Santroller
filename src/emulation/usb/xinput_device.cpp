@@ -355,10 +355,10 @@ bool XInputGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t
                             XInputInputCapabilities.leftThumbX = HARMONIX_VID;
                             XInputInputCapabilities.leftThumbY = XBOX_360_MUSTANG_PID;
                             break;
-                        case ProGuitarSquire:
+                        case ProGuitarSquier:
                             XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
                             XInputInputCapabilities.leftThumbX = HARMONIX_VID;
-                            XInputInputCapabilities.leftThumbY = XBOX_360_SQUIRE_PID;
+                            XInputInputCapabilities.leftThumbY = XBOX_360_SQUIER_PID;
                             break;
                         case GuitarHeroDrums:
                             XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;

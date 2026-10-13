@@ -76,7 +76,7 @@ const uint8_t *gamepad_button_table(SubType subtype)
     case RockBandDrums: return rb_drum_buttons;
     case DjHeroTurntable: return turntable_buttons;
     case ProGuitarMustang:
-    case ProGuitarSquire:
+    case ProGuitarSquier:
     case ProKeys: return pro_buttons;
     case StageKit: return stage_kit_buttons;
     // Gamepad, Dancepad, Taiko and the portals all use the gamepad report
@@ -148,7 +148,7 @@ bool santroller_v1_tick_digital(const uint8_t *report, SubType subtype, proto_Ou
         return subtype == RockBandDrums && value >= RockBandDrums_Kick1Pedal &&
                value <= RockBandDrums_Kick2Pedal && button(report, value - RockBandDrums_Kick1Pedal + 6);
     case proto_Output_proButton_tag:
-        if (subtype != ProGuitarMustang && subtype != ProGuitarSquire)
+        if (subtype != ProGuitarMustang && subtype != ProGuitarSquier)
             return false;
         // green, red, yellow, blue, orange, pedal are bits 7 - 12. There's no solo flag, so the
         // solo frets never read as held
@@ -195,7 +195,7 @@ uint16_t santroller_v1_tick_analog(const uint8_t *report, SubType subtype, proto
         case RockBandDrums:
         case DjHeroTurntable:
         case ProGuitarMustang:
-        case ProGuitarSquire:
+        case ProGuitarSquier:
         case ProKeys:
             return 0;
         default:
@@ -221,7 +221,7 @@ uint16_t santroller_v1_tick_analog(const uint8_t *report, SubType subtype, proto
     case proto_Output_djhAxis_tag:
         return subtype == DjHeroTurntable ? axis(report, turntable_axes, value) : 0;
     case proto_Output_proAxis_tag:
-        if (subtype != ProGuitarMustang && subtype != ProGuitarSquire)
+        if (subtype != ProGuitarMustang && subtype != ProGuitarSquier)
             return 0;
         // byte 4: tilt, 5 - 10: frets low E to high E, 11 - 16: their velocities. Same
         // scaling as the PS3 pro guitar, which Santroller 1 copies these from

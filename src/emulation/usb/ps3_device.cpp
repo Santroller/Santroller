@@ -230,7 +230,7 @@ void PS3GamepadDevice::initialize()
     {
     case ProKeys:
     case ProGuitarMustang:
-    case ProGuitarSquire:
+    case ProGuitarSquier:
     {
         // the pro instruments use the right stick bytes for keys / frets
         gamepad->rightStickX = 0;
@@ -472,9 +472,9 @@ void PS3GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
         desc->idVendor = REDOCTANE_VID;
         desc->idProduct = PS3_MUSTANG_PID;
         return;
-    case ProGuitarSquire:
+    case ProGuitarSquier:
         desc->idVendor = REDOCTANE_VID;
-        desc->idProduct = PS3_SQUIRE_PID;
+        desc->idProduct = PS3_SQUIER_PID;
         return;
     case ProKeys:
         desc->idVendor = REDOCTANE_VID;
@@ -572,7 +572,7 @@ uint16_t PS3GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
             buffer[3] = 0x05;
             break;
         case ProGuitarMustang:
-        case ProGuitarSquire:
+        case ProGuitarSquier:
         case ProKeys:
             // RB Pro instruments follow a slightly different request flow
             if (m_enabled)
@@ -613,7 +613,7 @@ void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
             switch (subtype)
             {
             case ProGuitarMustang:
-            case ProGuitarSquire:
+            case ProGuitarSquier:
             case ProKeys:
                 if (buffer[0] == 0xe9 && buffer[2] == 0x89)
                 {

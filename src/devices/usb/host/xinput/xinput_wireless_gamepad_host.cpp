@@ -643,7 +643,7 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                 }
 
                 // Pro guitars we have to identify by vid+pid
-                if ((m_subtype == ProGuitarMustang || m_subtype == ProGuitarSquire) && caps->leftStickX == HARMONIX_VID)
+                if ((m_subtype == ProGuitarMustang || m_subtype == ProGuitarSquier) && caps->leftStickX == HARMONIX_VID)
                 {
                     switch (caps->leftStickY)
                     {
@@ -651,9 +651,9 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                     case XBOX_360_MPA_MUSTANG_PID:
                         m_subtype = ProGuitarMustang;
                         break;
-                    case XBOX_360_MPA_SQUIRE_PID:
-                    case XBOX_360_SQUIRE_PID:
-                        m_subtype = ProGuitarSquire;
+                    case XBOX_360_MPA_SQUIER_PID:
+                    case XBOX_360_SQUIER_PID:
+                        m_subtype = ProGuitarSquier;
                         break;
                     }
                 }

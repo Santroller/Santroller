@@ -91,6 +91,9 @@ message UsbDeviceHotplugEvent {
     optional uint32 sourceId = 7;
     // A bluetooth adapter used as the bluetooth controller, not an input device
     optional bool bluetoothAdapter = 8;
+    // Lets the config tool fill in a specific device trigger from a connected device
+    optional uint32 vid = 9;
+    optional uint32 pid = 10;
 }
 
 message WiiDeviceHotplugEvent {
@@ -160,6 +163,8 @@ message BtDeviceHotplugEvent {
     required bool connected = 3;
     required string name = 4;
     optional uint32 sourceId = 5;
+    optional uint32 vid = 6;
+    optional uint32 pid = 7;
 }
 
 message EventList {

@@ -292,6 +292,10 @@ void BluetoothHostInterface::notify_connected()
     event.event.bt.connected = true;
     event.event.bt.has_sourceId = true;
     event.event.bt.sourceId = source_id();
+    event.event.bt.has_vid = true;
+    event.event.bt.vid = m_vid;
+    event.event.bt.has_pid = true;
+    event.event.bt.pid = m_pid;
 
     size_t max_len = sizeof(event.event.bt.name) - 1;
     strncpy(event.event.bt.name, m_name, max_len);

@@ -152,6 +152,13 @@ uint16_t GetAxis(HID_ReportItem_t *item)
 #define GENERIC_EXTRA_BACK (1 << 1)
 #define GENERIC_EXTRA_CAPTURE (1 << 2)
 
+// Every hat and dpad usage in a report is combined, so a device with several hats doesn't have the
+// last one overwrite the others
+#define GENERIC_DPAD_UP (1 << 0)
+#define GENERIC_DPAD_DOWN (1 << 1)
+#define GENERIC_DPAD_LEFT (1 << 2)
+#define GENERIC_DPAD_RIGHT (1 << 3)
+
 static void SetButton(uint16_t bit, bool pressed, uint16_t *touched, uint16_t *buttons)
 {
 	*touched |= bit;
@@ -170,6 +177,8 @@ void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host
     uint16_t buttons = 0;
     uint16_t extra_touched = 0;
     uint16_t extra = 0;
+    bool dpad_touched = false;
+    uint8_t dpad = 0;
     HID_ReportItem_t *item = info->FirstReportItem;
     while (item) {
         if (USB_GetHIDReportItemInfoWithReportId(report, item)) {
@@ -205,32 +214,37 @@ void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host
                             out->genericAxesPresent |= GENERIC_AXIS_SLIDER;
                             break;
                         case HID_USAGE_DESKTOP_HAT_SWITCH: {
-                            // Hats may start at 0 or 1, anything outside the logical range is neutral
+                            // Hats may start at 0 or 1, anything outside the logical range is neutral.
+                            // Scale the range onto 8 positions so 4 way hats and hats reported in degrees work too
                             int32_t min = LogicalMinimum(item);
                             int32_t max = (int32_t)item->Attributes.Logical.Maximum;
-                            int32_t hat = LogicalValue(item) - min;
-                            if (max - min == 3) {
-                                // 4 way hat
-                                hat *= 2;
+                            int32_t value = LogicalValue(item);
+                            dpad_touched = true;
+                            if (max <= min || value < min || value > max) {
+                                break;
                             }
-                            bool valid = LogicalValue(item) >= min && LogicalValue(item) <= max && hat <= 7;
-                            out->dpadLeft = valid && (hat == 6 || hat == 5 || hat == 7);
-                            out->dpadRight = valid && (hat == 3 || hat == 2 || hat == 1);
-                            out->dpadUp = valid && (hat == 0 || hat == 1 || hat == 7);
-                            out->dpadDown = valid && (hat == 5 || hat == 4 || hat == 3);
+                            int32_t hat = (int32_t)(((int64_t)(value - min) * 8) / (max - min + 1));
+                            if (hat == 6 || hat == 5 || hat == 7) dpad |= GENERIC_DPAD_LEFT;
+                            if (hat == 3 || hat == 2 || hat == 1) dpad |= GENERIC_DPAD_RIGHT;
+                            if (hat == 0 || hat == 1 || hat == 7) dpad |= GENERIC_DPAD_UP;
+                            if (hat == 5 || hat == 4 || hat == 3) dpad |= GENERIC_DPAD_DOWN;
                             break;
                         }
                         case HID_USAGE_DESKTOP_DPAD_UP:
-                            out->dpadUp = item->Value != 0;
+                            dpad_touched = true;
+                            if (item->Value) dpad |= GENERIC_DPAD_UP;
                             break;
                         case HID_USAGE_DESKTOP_DPAD_RIGHT:
-                            out->dpadRight = item->Value != 0;
+                            dpad_touched = true;
+                            if (item->Value) dpad |= GENERIC_DPAD_RIGHT;
                             break;
                         case HID_USAGE_DESKTOP_DPAD_DOWN:
-                            out->dpadDown = item->Value != 0;
+                            dpad_touched = true;
+                            if (item->Value) dpad |= GENERIC_DPAD_DOWN;
                             break;
                         case HID_USAGE_DESKTOP_DPAD_LEFT:
-                            out->dpadLeft = item->Value != 0;
+                            dpad_touched = true;
+                            if (item->Value) dpad |= GENERIC_DPAD_LEFT;
                             break;
                         case HID_USAGE_DESKTOP_SYSTEM_MAIN_MENU:
                             SetButton(GENERIC_EXTRA_GUIDE, item->Value, &extra_touched, &extra);
@@ -274,6 +288,12 @@ void fill_generic_report(HID_ReportInfo_t *info, const uint8_t *report, USB_Host
         item = item->Next;
     }
     out->genericButtons = (out->genericButtons & ~touched) | buttons;
+    if (dpad_touched) {
+        out->dpadUp = (dpad & GENERIC_DPAD_UP) != 0;
+        out->dpadDown = (dpad & GENERIC_DPAD_DOWN) != 0;
+        out->dpadLeft = (dpad & GENERIC_DPAD_LEFT) != 0;
+        out->dpadRight = (dpad & GENERIC_DPAD_RIGHT) != 0;
+    }
     if (extra_touched & GENERIC_EXTRA_GUIDE) {
         out->guide = (extra & GENERIC_EXTRA_GUIDE) != 0;
     }

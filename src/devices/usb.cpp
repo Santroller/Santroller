@@ -523,6 +523,13 @@ void UsbHostInterface::send_hotplug_event(bool connected)
         event.event.usb.has_bluetoothAdapter = true;
         event.event.usb.bluetoothAdapter = true;
     }
+    else if (connected)
+    {
+        event.event.usb.has_vid = true;
+        event.event.usb.vid = m_vid;
+        event.event.usb.has_pid = true;
+        event.event.usb.pid = m_pid;
+    }
     if (connected)
     {
         // name is a nanopb static "string" field (nul-terminated, no length

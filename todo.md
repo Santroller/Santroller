@@ -5,7 +5,7 @@
 - [ ] Emulation of flight sticks
 - [ ] Emulation of wheels
 - [ ] Emulation of microphones
-- [ ] Emulation of GCN adapters
+- [ ] Emulation of drawing tablets
 
 ## Led / rumble features
 - [ ] Support directoutput (if we want to start supporting pinball cabs)

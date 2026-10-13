@@ -89,6 +89,7 @@ void BleSantrollerHost::handle_report_v2(const uint8_t *data, uint16_t len)
     {
         if (len >= 2)
         {
+            const SubType previous = m_subtype;
             m_subtype = (SubType)data[1];
             if (len >= 3)
             {
@@ -100,6 +101,11 @@ void BleSantrollerHost::handle_report_v2(const uint8_t *data, uint16_t len)
             if (!m_ready)
             {
                 set_ready(true);
+            }
+            else if (m_subtype != previous)
+            {
+                // Connected with the subtype remembered from pairing, which is out of date
+                bt_host_subtype_changed(this);
             }
         }
         return;

@@ -35,6 +35,8 @@ void reload();
 void update_aux_cycle(uint32_t id, uint32_t state);
 void update_aux_toggle(uint32_t id, bool state);
 void update_aux_arcade_side(uint8_t side);
+// Removes a bluetooth pairing and the keys stored for it, and saves that
+void remove_aux_bluetooth_pairing(int32_t id);
 void update_aux_bluetooth_pairing(uint32_t id, const uint8_t mac[6], const char *name, bool ble,
                                   SubType subtype = SubType_Gamepad,
                                   BtControllerType controller_type = BtControllerType_BtControllerTypeGeneric,

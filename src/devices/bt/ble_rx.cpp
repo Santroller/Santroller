@@ -963,6 +963,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
             bool is_hid = false;
             bool is_midi = false;
+            uint16_t appearance = 0;
             char dev_name[100] = {};
 
             for (ad_iterator_init(&context, adv_size, adv_data);
@@ -1006,7 +1007,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     break;
                 case BLUETOOTH_DATA_TYPE_APPEARANCE:
                 {
-                    uint16_t appearance = little_endian_read_16(data, 0);
+                    appearance = little_endian_read_16(data, 0);
                     if (appearance == 0x03C4 /* Gamepad */ || appearance == 0x03C5 /* Joystick */ || appearance == 0x03C6 /* Simulation */)
                     {
                         is_hid = true;
@@ -1031,6 +1032,14 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 default:
                     break;
                 }
+            }
+
+            // A Santroller with no profile using bluetooth still advertises HID, so the configurator can
+            // reach it over WebHID, but as a generic HID device rather than a gamepad. It has no controller
+            // reports, and pairing to it would record it as a gamepad, so leave it alone.
+            if (is_hid && appearance == 0x03C0 /* Generic HID */ && strncmp(dev_name, "Santroller", 10) == 0)
+            {
+                is_hid = false;
             }
 
             if (is_hid)

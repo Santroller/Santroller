@@ -781,3 +781,41 @@ TEST_F(GamepadButton, NesButtons)
     pressed(Gamepad_DpadUp)->update_nes(report.buf());
     EXPECT_EQ(report.bytes()[0], 0x1B);
 }
+
+// The dpad bits (up 1, down 2, left 4, right 8) become a HID hat: 0 is up, going clockwise to 7, and 8 is
+// neutral. The nibble can hold any combination, and opposite directions held together cancel out.
+TEST(GamepadDpadHat, EveryCombinationHasAHatValue)
+{
+    constexpr uint8_t UP = 1, DOWN = 2, LEFT = 4, RIGHT = 8;
+    const struct
+    {
+        uint8_t bits;
+        uint8_t hat;
+    } expected[] = {
+        {0, 8},
+        {UP, 0},
+        {UP | RIGHT, 1},
+        {RIGHT, 2},
+        {DOWN | RIGHT, 3},
+        {DOWN, 4},
+        {DOWN | LEFT, 5},
+        {LEFT, 6},
+        {UP | LEFT, 7},
+        {UP | DOWN, 8},
+        {LEFT | RIGHT, 8},
+        {UP | DOWN | LEFT, 8},
+        {UP | DOWN | RIGHT, 8},
+        {UP | LEFT | RIGHT, 8},
+        {DOWN | LEFT | RIGHT, 8},
+        {UP | DOWN | LEFT | RIGHT, 8},
+    };
+    static_assert(sizeof(GamepadButtonMapping::dpad_bindings) == 16);
+    for (const auto &c : expected)
+    {
+        EXPECT_EQ(GamepadButtonMapping::dpad_bindings[c.bits], c.hat) << int(c.bits);
+        // a Santroller receiving this over bluetooth turns the hat back into the bits
+        uint8_t report[3] = {1, 0, c.hat};
+        santroller_v2_normalize_report(report, sizeof(report), GuitarHeroGuitar);
+        EXPECT_EQ(report[2], c.hat == 8 ? 0 : c.bits) << int(c.bits);
+    }
+}

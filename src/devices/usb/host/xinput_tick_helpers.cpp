@@ -247,18 +247,21 @@ bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_O
         if (type.which_mapping == proto_Output_rbButton_tag)
         {
             auto data = (XInputRockBandGuitar_Data_t *)ep_in_buf;
+            // There's one solo flag for every fret, so it can't say which colour was a solo fret. A fret
+            // is pressed whenever its colour is, the solo fret also needs the flag. Leaving frets out
+            // while the flag is set lost every fret of a guitar with its solo frets on the same pins.
             switch (type.mapping.rbButton)
             {
             case RockBandGuitar_Green:
-                return data->a && !data->solo;
+                return data->a;
             case RockBandGuitar_Red:
-                return data->b && !data->solo;
+                return data->b;
             case RockBandGuitar_Yellow:
-                return data->y && !data->solo;
+                return data->y;
             case RockBandGuitar_Blue:
-                return data->x && !data->solo;
+                return data->x;
             case RockBandGuitar_Orange:
-                return data->leftShoulder && !data->solo;
+                return data->leftShoulder;
             case RockBandGuitar_SoloGreen:
                 return data->a && data->solo;
             case RockBandGuitar_SoloRed:
@@ -269,6 +272,8 @@ bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_O
                 return data->x && data->solo;
             case RockBandGuitar_SoloOrange:
                 return data->leftShoulder && data->solo;
+            case RockBandGuitar_Pedal:
+                return data->rightShoulder;
             default:
                 return false;
             }

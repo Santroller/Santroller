@@ -9,6 +9,9 @@
 #include "config/device_factory.hpp"
 #include "managers/config_manager.hpp"
 #include "utils.h"
+#include "gap.h"
+#include "btstack_util.h"
+#include "ble/le_device_db.h"
 #include "CRC32.h"
 
 #include <vector>
@@ -154,6 +157,72 @@ void bt_host_update_interfaces(bool full_poll, bool send_events)
 
 void bt_host_notify_devices_changed()
 {
+}
+
+void bt_forget_pairing(int32_t id)
+{
+    DeviceFactory::BluetoothPairingStateData state;
+    if (!DeviceFactory::get_bluetooth_pairing_state(id, state))
+    {
+        return;
+    }
+    printf("BT: forgetting pairing %ld (%s)\r\n", (long)id, bd_addr_to_str(state.mac));
+    {
+        BtStackLock lock;
+        if (state.ble)
+        {
+            // also holds off reconnecting, so it doesn't come straight back
+            ble_disconnect(state.mac);
+            // btstack keeps its own copy of the bond, which would let it reconnect without pairing
+            for (int i = 0; i < le_device_db_max_count(); i++)
+            {
+                int addr_type = BD_ADDR_TYPE_UNKNOWN;
+                bd_addr_t addr;
+                le_device_db_info(i, &addr_type, addr, nullptr);
+                if (addr_type != BD_ADDR_TYPE_UNKNOWN && bd_addr_cmp(addr, state.mac) == 0)
+                {
+                    gap_delete_bonding((bd_addr_type_t)addr_type, addr);
+                }
+            }
+        }
+        else
+        {
+            for (const auto &list : {bt_assignable_interfaces, bt_pending_interfaces})
+            {
+                for (const auto &device : list)
+                {
+                    if (!device->is_ble() && bd_addr_cmp(device->m_addr, state.mac) == 0)
+                    {
+                        device->disconnect();
+                    }
+                }
+            }
+            gap_drop_link_key_for_bd_addr(state.mac);
+        }
+    }
+    // removes the keys we saved for it too
+    remove_aux_bluetooth_pairing(id);
+    ble_resync_reconnect();
+}
+
+void bt_host_subtype_changed(BluetoothHostInterface *device)
+{
+    // Not registered yet means it is still waiting on its subtype, and registering saves it
+    if (!device || !device->is_registered())
+        return;
+    for (const auto &registered : bt_assignable_interfaces)
+    {
+        if (registered.get() == device)
+        {
+            // The pairing remembers the subtype for the next connection, which would otherwise
+            // start out as whatever the device was when it was first paired
+            bt_host_save_pairing(registered, registered->is_ble());
+            registered->notify_connected();
+            // Profiles pick devices by subtype, so they need picking again
+            m_devices_changed = millis() + 500;
+            return;
+        }
+    }
 }
 
 #include "gap.h"

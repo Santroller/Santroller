@@ -2,6 +2,7 @@
 #include "mappings/mapping_test_support.hpp"
 #include "managers/config_manager.hpp"
 #include "protocols/rb_pickup.hpp"
+#include "devices/usb/host/xinput_tick_helpers.h"
 
 // Guitar and turntable outputs: whammy (calibrated like a trigger, resting at 0), tilt
 // (calibrated like a stick, resting at the centre), the Rock Band pickup selector and the
@@ -315,6 +316,37 @@ TEST_F(Guitar, GHLReleasedStrumLeavesTheStrumBarAlone)
 }
 
 // Rock Band
+
+// A Rock Band guitar's XInput report (from USB, or a Santroller over bluetooth) has one solo flag for
+// every fret, so reading it back a fret is pressed whenever its colour is, and its solo fret also needs
+// the flag
+TEST_F(Guitar, RBXInputFretsReadBack)
+{
+    proto_Output green = rb_button(RockBandGuitar_Green).mapping;
+    proto_Output solo_green = rb_button(RockBandGuitar_SoloGreen).mapping;
+    proto_Output red = rb_button(RockBandGuitar_Red).mapping;
+
+    Report<XInputRockBandGuitar_Data_t> upper;
+    pressed<RockBandGuitarButtonMapping>(rb_button(RockBandGuitar_Green))->update_xinput(upper.buf());
+    EXPECT_TRUE(xinput_tick_digital_impl(upper.buf(), RockBandGuitar, green));
+    EXPECT_FALSE(xinput_tick_digital_impl(upper.buf(), RockBandGuitar, solo_green));
+    EXPECT_FALSE(xinput_tick_digital_impl(upper.buf(), RockBandGuitar, red));
+
+    // most guitars have their solo frets on the same pins as the frets
+    Report<XInputRockBandGuitar_Data_t> shared;
+    pressed<RockBandGuitarButtonMapping>(rb_button(RockBandGuitar_Green))->update_xinput(shared.buf());
+    pressed<RockBandGuitarButtonMapping>(rb_button(RockBandGuitar_SoloGreen))->update_xinput(shared.buf());
+    EXPECT_TRUE(xinput_tick_digital_impl(shared.buf(), RockBandGuitar, green));
+    EXPECT_TRUE(xinput_tick_digital_impl(shared.buf(), RockBandGuitar, solo_green));
+    EXPECT_FALSE(xinput_tick_digital_impl(shared.buf(), RockBandGuitar, red));
+
+    proto_Output pedal = rb_button(RockBandGuitar_Pedal).mapping;
+    EXPECT_FALSE(xinput_tick_digital_impl(shared.buf(), RockBandGuitar, pedal));
+    Report<XInputRockBandGuitar_Data_t> pedalled;
+    pressed<RockBandGuitarButtonMapping>(rb_button(RockBandGuitar_Pedal))->update_xinput(pedalled.buf());
+    EXPECT_TRUE(xinput_tick_digital_impl(pedalled.buf(), RockBandGuitar, pedal));
+    EXPECT_FALSE(xinput_tick_digital_impl(pedalled.buf(), RockBandGuitar, green));
+}
 
 TEST_F(Guitar, RBXInputWhammyAndTilt)
 {

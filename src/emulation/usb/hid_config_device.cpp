@@ -10,6 +10,7 @@
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
 #include "emulation/bt/bt_config_service.h"
+#include "devices/bt/bt_host.hpp"
 #include "emulation/usb/ps3_device.h"
 #include "emulation/usb/ps4_device.h"
 #include "devices/crkd_drum.hpp"
@@ -352,6 +353,11 @@ void HIDConfigDevice::handle_command(proto_Command command)
   case proto_Command_disconnect_tag:
   {
     reset_keepalive();
+    return;
+  }
+  case proto_Command_unpairBluetooth_tag:
+  {
+    bt_forget_pairing(command.command.unpairBluetooth.id);
     return;
   }
   case proto_Command_scan_tag:

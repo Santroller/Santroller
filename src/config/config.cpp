@@ -980,6 +980,16 @@ void update_aux_arcade_side(uint8_t side)
     config_storage.update_auxiliary(encode_auxiliary);
 }
 
+void remove_aux_bluetooth_pairing(int32_t id)
+{
+    DeviceFactory::remove_bluetooth_pairing_state(id);
+    if (config_mgr.get_reinit_time())
+    {
+        return;
+    }
+    config_storage.update_auxiliary(encode_auxiliary);
+}
+
 void update_aux_bluetooth_pairing(uint32_t id, const uint8_t mac[6], const char *name, bool ble,
                                   SubType subtype, BtControllerType controller_type,
                                   uint16_t vid, uint16_t pid,

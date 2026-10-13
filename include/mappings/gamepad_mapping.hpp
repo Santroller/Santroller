@@ -94,7 +94,8 @@ public:
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
-    static const uint8_t dpad_bindings[15];
+    // HID hat values for the dpad bits (up 1, down 2, left 4, right 8), 8 being neutral
+    static const uint8_t dpad_bindings[16];
 };
 
 class PS3GamepadButtonMapping : public GamepadButtonMapping

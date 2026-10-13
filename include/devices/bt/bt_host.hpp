@@ -21,6 +21,10 @@ void bt_host_remove_assignable_interface(BluetoothHostInterface *device);
 void bt_host_update_interfaces(bool full_poll, bool send_events);
 void bt_host_notify_devices_changed();
 void bt_host_save_pairing(const std::shared_ptr<BluetoothHostInterface> &device, bool is_ble);
+// A connected device's subtype changed (eg a Santroller reported a different one than it was paired as)
+void bt_host_subtype_changed(BluetoothHostInterface *device);
+// Forgets a paired controller: disconnects it, deletes its bond and removes (and saves) its pairing
+void bt_forget_pairing(int32_t id);
 // Fills in the CRC32 at the end of a DS4 (0x11) / DS5 (0x31) bluetooth output report. The report starts at
 // the report id, and the CRC also covers the 0xA2 HID output header that BTstack adds in front of it.
 void bt_host_set_output_crc32(uint8_t *report, uint16_t len);

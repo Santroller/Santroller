@@ -332,18 +332,20 @@ bool ps5_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
         if (type.which_mapping == proto_Output_rbButton_tag)
         {
             auto data = (PS5RockBandGuitar_Data_t *)buf;
+            // One solo flag for every fret, so a fret is pressed whenever its colour is and the solo fret
+            // also needs the flag (see xinput_tick_digital_impl)
             switch (type.mapping.rbButton)
             {
             case RockBandGuitar_Green:
-                return data->a && !data->solo;
+                return data->a;
             case RockBandGuitar_Red:
-                return data->b && !data->solo;
+                return data->b;
             case RockBandGuitar_Yellow:
-                return data->y && !data->solo;
+                return data->y;
             case RockBandGuitar_Blue:
-                return data->x && !data->solo;
+                return data->x;
             case RockBandGuitar_Orange:
-                return data->leftShoulder && !data->solo;
+                return data->leftShoulder;
             case RockBandGuitar_SoloGreen:
                 return data->a && data->solo;
             case RockBandGuitar_SoloRed:
@@ -354,6 +356,8 @@ bool ps5_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
                 return data->x && data->solo;
             case RockBandGuitar_SoloOrange:
                 return data->leftShoulder && data->solo;
+            case RockBandGuitar_Pedal:
+                return data->rightShoulder;
             default:
                 return false;
             }

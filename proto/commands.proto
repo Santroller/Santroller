@@ -27,6 +27,10 @@ message ScanCommand {
 message SaveCommand {
 
 }
+// Forget a paired bluetooth controller: drops the connection, the bond and the pairing, and saves that
+message UnpairBluetoothCommand {
+  required int32 id = 1;
+}
 message CrkdCalibrationUpdateCommand {
   required uint32 id = 1;
   required CrkdDrumCalibrationType type = 2;
@@ -42,5 +46,6 @@ message Command {
         DisconnectCommand disconnect = 5;
         ScanCommand scan = 6;
         SaveCommand save = 7;
+        UnpairBluetoothCommand unpairBluetooth = 8;
     }
 }

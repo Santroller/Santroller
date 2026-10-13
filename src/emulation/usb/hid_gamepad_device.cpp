@@ -88,18 +88,8 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
       process_suspended(full_poll, send_events);
       return;
   }
-  if (!tud_ready())
-  {
-    for (const auto &profile : profiles)
-    {
-      for (const auto &led : profile->leds)
-      {
-        led->update(full_poll, send_events);
-      }
-    }
-    return;
-  }
   // Deal with devices that don't have easy detection methods
+  // This has to run before the tud_ready() check, as the PS2 never configures the device
   auto &detection = UsbDetectionState::instance();
   if (!mode_recently_changed() && detection.should_infer_console() && tud_connected())
   {
@@ -119,6 +109,17 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
       // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
       ConfigManager::instance().request_mode(ModePs3);
     }
+  }
+  if (!tud_ready())
+  {
+    for (const auto &profile : profiles)
+    {
+      for (const auto &led : profile->leds)
+      {
+        led->update(full_poll, send_events);
+      }
+    }
+    return;
   }
   // if usb stack isnt ready, then we want to update inputs
   // we want to limit updates to usb speed though if it is ready

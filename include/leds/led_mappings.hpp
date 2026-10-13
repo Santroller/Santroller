@@ -36,11 +36,27 @@ public:
     virtual void set_keyboard_leds(uint8_t leds) {};
     // the Capability bits this mapping lets the host drive
     virtual uint8_t capabilities() const { return 0; }
+    // Around each pass of the host's feedback through the set_ functions, to notice when it changes
+    // what this mapping shows
+    void begin_feedback();
+    void end_feedback();
+    // Whether the host changed what this mapping shows within the last COMMAND_HOLD_MS
+    bool commanded() const;
+    // How long the host keeps an LED after changing it, before mappings driven by inputs get it back
+    static constexpr uint32_t COMMAND_HOLD_MS = 1000;
 
 protected:
+    // Whether the host recently drove one of this mapping's LEDs, which then takes precedence over
+    // what this mapping would show
+    bool overridden() const;
     std::unique_ptr<LedMappingDevice> m_device;
     uint32_t m_id;
     Profile *m_profile;
+
+private:
+    uint32_t m_last_feedback = LedMappingDevice::NOTHING_WRITTEN;
+    uint32_t m_commanded_at = 0;
+    bool m_was_commanded = false;
 };
 class RumbleLedMapping : public LedMapping
 {

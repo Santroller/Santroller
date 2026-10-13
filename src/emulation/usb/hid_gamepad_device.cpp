@@ -150,6 +150,7 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
     }
     return;
   }
+  update_stagekit();
   PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
   memcpy(epin_buf, m_initial_report, sizeof(epin_buf));
   report->rid = ReportIdGamepad;

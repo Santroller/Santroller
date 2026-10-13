@@ -208,7 +208,10 @@ void StatusLedMapping::update(bool full_poll, bool send_events)
         on = m_mapping.has_mode && mode == m_mapping.mode;
         break;
     }
-    m_device->set_val(on ? UINT16_MAX : 0);
+    if (!overridden())
+    {
+        m_device->set_val(on ? UINT16_MAX : 0);
+    }
 }
 
 void InputLedMapping::update(bool full_poll, bool send_events)
@@ -248,9 +251,9 @@ void InputLedMapping::update(bool full_poll, bool send_events)
             }
             m_last_decay = millis();
         }
-        m_device->set_val(m_pos);
+        curr = m_pos;
     }
-    else
+    if (!overridden())
     {
         m_device->set_val(curr);
     }
@@ -287,7 +290,8 @@ PatternLedMapping::PatternLedMapping(std::unique_ptr<LedMappingDevice> device, p
 }
 void PatternLedMapping::update(bool full_poll, bool send_events)
 {
-    if (millis() < m_next_poll)
+    // Paused while the host has the LEDs
+    if (millis() < m_next_poll || overridden())
     {
         return;
     }
@@ -357,5 +361,8 @@ void PatternLedMapping::update(bool full_poll, bool send_events)
 }
 void StaticLedMapping::update(bool full_poll, bool send_events)
 {
-    m_device->set_val(UINT16_MAX);
+    if (!overridden())
+    {
+        m_device->set_val(UINT16_MAX);
+    }
 }

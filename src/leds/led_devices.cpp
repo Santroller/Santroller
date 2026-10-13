@@ -26,6 +26,10 @@ uint8_t RgbLedDevice::led_count()
 {
     return m_device.activeLed_count;
 }
+LedId RgbLedDevice::led_id(uint8_t i)
+{
+    return {m_led_device.get(), (uint32_t)m_device.activeLed[i]};
+}
 bool RgbLedDevice::supports_brightness()
 {
     return m_led_device->supports_brightness();
@@ -86,6 +90,10 @@ uint8_t STP16CPCLedDevice::led_count()
 {
     return m_device.activeLed_count;
 }
+LedId STP16CPCLedDevice::led_id(uint8_t i)
+{
+    return {m_led_device.get(), (uint32_t)m_device.activeLed[i]};
+}
 bool STP16CPCLedDevice::supports_brightness()
 {
     return false;
@@ -140,6 +148,18 @@ uint8_t VTechGuitarIoExpanderLedDevice::led_count()
 {
     return m_led_count;
 }
+LedId VTechGuitarIoExpanderLedDevice::led_id(uint8_t i)
+{
+    // the i'th active LED
+    for (uint32_t bit = 0; bit < 8; bit++)
+    {
+        if ((m_device.activeLed & 1 << bit) && i-- == 0)
+        {
+            return {m_led_device.get(), bit};
+        }
+    }
+    return {m_led_device.get(), UINT32_MAX};
+}
 void VTechGuitarIoExpanderLedDevice::off()
 {
     for (int i = 0; i < 8; i++)
@@ -190,6 +210,12 @@ uint8_t GpioLedDevice::led_count()
 {
     return 1;
 }
+LedId GpioLedDevice::led_id(uint8_t i)
+{
+    // Every GPIO LED shares the Pico's pins
+    static const uint8_t pico_pins = 0;
+    return {&pico_pins, (uint32_t)m_device.pin};
+}
 bool GpioLedDevice::supports_brightness()
 {
     return false;
@@ -230,6 +256,10 @@ uint8_t DMXLedDevice::led_count()
 {
     return 1;
 }
+LedId DMXLedDevice::led_id(uint8_t i)
+{
+    return {m_led_device.get(), (uint32_t)m_device.channel};
+}
 bool DMXLedDevice::supports_brightness()
 {
     return true;
@@ -259,8 +289,7 @@ uint8_t MPR121LedDevice::led_count()
 {
     return 1;
 }
-
-void LedMapping::off()
+LedId MPR121LedDevice::led_id(uint8_t i)
 {
-    m_device->off();
+    return {m_led_device.get(), (uint32_t)m_device.pin};
 }

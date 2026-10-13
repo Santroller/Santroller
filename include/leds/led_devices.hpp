@@ -21,6 +21,7 @@ public:
     void setup();
     bool supports_brightness();
     uint8_t led_count();
+    LedId led_id(uint8_t i);
 
 protected:
     proto_RGBLedDevice m_device;
@@ -51,6 +52,7 @@ public:
     void setup();
     bool supports_brightness();
     uint8_t led_count();
+    LedId led_id(uint8_t i);
 
 protected:
     proto_GpioLedDevice m_device;
@@ -69,6 +71,7 @@ public:
     void setup();
     bool supports_brightness();
     uint8_t led_count();
+    LedId led_id(uint8_t i);
 
 protected:
     proto_VTechGuitarIOExpanderLedDevice m_device;
@@ -89,6 +92,7 @@ public:
     void setup();
     bool supports_brightness();
     uint8_t led_count();
+    LedId led_id(uint8_t i);
 
 protected:
     proto_STP16CPCLedDevice m_device;
@@ -108,6 +112,7 @@ public:
     void setup();
     bool supports_brightness();
     uint8_t led_count();
+    LedId led_id(uint8_t i);
 
 protected:
     proto_DMXLedDevice m_device;
@@ -127,6 +132,7 @@ public:
     void setup();
     bool supports_brightness();
     uint8_t led_count();
+    LedId led_id(uint8_t i);
 
 protected:
     proto_MPR121LedDevice m_device;

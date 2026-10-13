@@ -151,6 +151,7 @@ public:
     void off() override { (*m_offs)++; }
     bool supports_brightness() override { return false; }
     uint8_t led_count() override { return 1; }
+    LedId led_id(uint8_t) override { return {m_offs, 0}; }
 
 protected:
     void write_val(uint16_t) override {}

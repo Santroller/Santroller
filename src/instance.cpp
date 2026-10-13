@@ -19,14 +19,25 @@ void Instance::set_rumble(uint8_t left, uint8_t right)
 
 void Instance::update_stagekit()
 {
+    uint8_t strobe = stagekit_strobe;
     if (stagekit_strobe_speed > 0 && (millis() - stagekit_last_strobe) >= stagekit_strobe_speed)
     {
-        stagekit_strobe = 0xFF;
+        strobe = 0xFF;
         stagekit_last_strobe = millis();
     }
     else if (stagekit_strobe_speed > 0 && (millis() - stagekit_last_strobe) > 10)
     {
-        stagekit_strobe = 0;
+        strobe = 0;
+    }
+    // Turning the strobe off stops it with the light off
+    else if (!stagekit_strobe_speed)
+    {
+        strobe = 0;
+    }
+    if (strobe != stagekit_strobe)
+    {
+        stagekit_strobe = strobe;
+        update_feedback();
     }
 }
 
@@ -216,6 +227,7 @@ void Instance::update_feedback(bool force)
         {
             if (led_pair)
             {
+                led_pair->begin_feedback();
                 led_pair->set_rumble(rumble_left, rumble_right);
                 led_pair->set_player_led(player_led);
                 led_pair->set_lightbar(lightbar_red, lightbar_green, lightbar_blue);
@@ -223,6 +235,7 @@ void Instance::update_feedback(bool force)
                 led_pair->set_stagekit_led(stagekit_fog, stagekit_strobe, stagekit_blue, stagekit_green, stagekit_yellow, stagekit_red);
                 led_pair->set_game_feedback(game_feedback);
                 led_pair->set_keyboard_leds(keyboard_leds);
+                led_pair->end_feedback();
             }
         }
     }

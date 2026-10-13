@@ -65,8 +65,3 @@ bool DeviceManager::is_snes_communicating() const
     return fake_devices::snes_communicating;
 }
 
-// Same as src/leds/led_devices.cpp
-void LedMapping::off()
-{
-    m_device->off();
-}

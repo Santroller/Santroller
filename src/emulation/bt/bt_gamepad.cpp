@@ -497,6 +497,7 @@ void BTGamepadDevice::process(bool full_poll, bool send_events)
     }
     if (con_handle != HCI_CON_HANDLE_INVALID)
     {
+        update_stagekit();
         PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)m_epin_buffer;
         memcpy(m_epin_buffer, m_initial_report, sizeof(m_epin_buffer));
         report->rid = ReportIdGamepad;

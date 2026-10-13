@@ -16,6 +16,15 @@ cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Reuses compiled objects from earlier builds when ccache is installed (the board variant builds
+# run this file too, so they pick it up as well)
+option(SANTROLLER_USE_CCACHE "Compile through ccache when it is installed" ON)
+find_program(CCACHE_PROGRAM ccache)
+if(SANTROLLER_USE_CCACHE AND CCACHE_PROGRAM)
+  set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+  set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+endif()
+
 set(SANTROLLER_BOARD_VARIANTS pico_w_compat pico2_w_compat CACHE STRING "Board variants to build")
 option(SANTROLLER_VARIANT_DRIVER "Configure this build tree as a board variant driver" OFF)
 option(SANTROLLER_VARIANT_BUILD "Internal flag for single-board variant builds" OFF)
@@ -227,8 +236,13 @@ endif()
 if(NOT GIT_BUILD MATCHES "^[0-9]+$")
   set(GIT_BUILD 0)
 endif()
-add_compile_definitions("GIT_HASH=\"${GIT_COMMIT}\"")
-add_compile_definitions("GIT_BUILD=${GIT_BUILD}")
+# Only these need them. On every file they would change every compile command with each commit,
+# rebuilding the whole firmware and never reusing anything ccache has.
+set_property(SOURCE
+  src/emulation/usb/hid_config_device.cpp
+  src/devices/secondary_pico.cpp
+  lib/secondary_pico/secondary_pico.cpp
+  APPEND PROPERTY COMPILE_DEFINITIONS "GIT_HASH=\"${GIT_COMMIT}\"" "GIT_BUILD=${GIT_BUILD}")
 
 set(TARGET santroller)
 message(STATUS ${TARGET})

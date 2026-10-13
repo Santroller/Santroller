@@ -64,7 +64,8 @@ private:
     alarm_id_t restart_alarm_id;
     int failCount = 0;
 
-    bool started = false;
+    // Cleared by end(), so the alarm and I2C interrupts stop scheduling polls of a device being freed
+    volatile bool started = false;
 
     wii_status_e status = WII_INIT_FINISH_ENC;
     uint8_t bufferTx[32];

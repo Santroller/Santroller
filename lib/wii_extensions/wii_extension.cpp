@@ -37,6 +37,10 @@ bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
 // state machine to handle polling wii extensions
 void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
+    if (!started)
+    {
+        return;
+    }
     lastPoll = to_ms_since_boot(get_absolute_time());
     if (timeout || abort_detected)
     {
@@ -321,6 +325,7 @@ void WiiExtension::begin()
 {
     printf("WiiExtension::begin\r\n");
     memset(bufferRx, 0, sizeof(bufferRx));
+    started = true;
     mInterface.dmaInit(WII_ADDR, this);
     process_data(WII_ADDR, false, false, false, false);
 }
@@ -362,8 +367,12 @@ WiiExtension::~WiiExtension()
 void WiiExtension::end()
 {
     printf("WiiExtension::end\r\n");
-    cancel_alarm(restart_alarm_id);
+    // Polls are scheduled from the alarm and I2C interrupts, so stop those scheduling more before
+    // cancelling the pending one. Otherwise a transfer finishing in between could schedule an alarm
+    // that fires after this is freed.
+    started = false;
     mInterface.dmaDeinit(WII_ADDR);
+    cancel_alarm(restart_alarm_id);
 }
 
 void WiiExtension::setEuphoriaLed(bool state)

@@ -249,9 +249,13 @@ void Instance::update_capabilities()
                 {
                     caps |= CapabilityHasStandardPlayerLeds;
                 }
-                if (dev_pair.second->has_euphoria_led())
+                if (dev_pair.second->has_euphoria_led() || dev_pair.second->has_lightbar())
                 {
                     caps |= CapabilityHasRGBIndicatorLed;
+                }
+                if (dev_pair.second->has_stagekit_led())
+                {
+                    caps |= CapabilityHasInstrumentLeds;
                 }
             }
         }
@@ -267,30 +271,25 @@ void Instance::update_capabilities()
                 {
                     caps |= CapabilityHasStandardPlayerLeds;
                 }
-                if (dev_pair.second->has_euphoria_led())
+                if (dev_pair.second->has_euphoria_led() || dev_pair.second->has_lightbar())
                 {
                     caps |= CapabilityHasRGBIndicatorLed;
                 }
+                if (dev_pair.second->has_stagekit_led())
+                {
+                    caps |= CapabilityHasInstrumentLeds;
+                }
             }
         }
-        if (!profile->leds.empty())
+        for (const auto &led : profile->leds)
         {
-            caps |= CapabilityHasStandardPlayerLeds;
+            if (led)
+            {
+                caps |= led->capabilities();
+            }
         }
     }
-    if (subtype == Gamepad)
-    {
-        caps |= CapabilityHasRumble;
-    }
-    else if (subtype == DjHeroTurntable)
-    {
-        caps |= CapabilityHasRGBIndicatorLed;
-    }
-    else if (subtype == StageKit)
-    {
-        caps |= CapabilityHasInstrumentLeds;
-    }
-    else if (subtype == Dancepad)
+    if (subtype == Dancepad)
     {
         // dance pads report the dpad as buttons instead of a hat (HIDGamepadDevice)
         caps |= CapabilityDpadAsButtons;

@@ -1,6 +1,7 @@
 #pragma once
 #include "leds/base_led.hpp"
 #include "input.pb.h"
+#include "enums.pb.h"
 #include "input/input.hpp"
 #include <memory>
 
@@ -33,6 +34,8 @@ public:
     virtual void set_stagekit_led(uint8_t fog, uint8_t strobe, uint8_t blue, uint8_t green, uint8_t yellow, uint8_t red) {};
     virtual void set_game_feedback(const GameFeedback &feedback) {};
     virtual void set_keyboard_leds(uint8_t leds) {};
+    // the Capability bits this mapping lets the host drive
+    virtual uint8_t capabilities() const { return 0; }
 
 protected:
     std::unique_ptr<LedMappingDevice> m_device;
@@ -46,6 +49,7 @@ public:
     void update(bool full_poll, bool send_events);
     void reload();
     void set_rumble(uint8_t left, uint8_t right) override;
+    uint8_t capabilities() const override { return CapabilityHasRumble; }
 
 protected:
     proto_RumbleLedMapping m_mapping;
@@ -57,6 +61,7 @@ public:
     void update(bool full_poll, bool send_events);
     void reload();
     void set_stagekit_led(uint8_t fog, uint8_t strobe, uint8_t blue, uint8_t green, uint8_t yellow, uint8_t red) override;
+    uint8_t capabilities() const override { return CapabilityHasInstrumentLeds; }
 
 protected:
     proto_StageKitLedMapping m_mapping;
@@ -69,6 +74,7 @@ public:
     void update(bool full_poll, bool send_events);
     void reload();
     void set_lightbar(uint8_t r, uint8_t g, uint8_t b) override;
+    uint8_t capabilities() const override { return CapabilityHasRGBIndicatorLed; }
 
 protected:
     proto_PlaystationLedMapping m_mapping;
@@ -80,6 +86,7 @@ public:
     void update(bool full_poll, bool send_events);
     void reload();
     void set_euphoria_led(uint8_t val) override;
+    uint8_t capabilities() const override { return CapabilityHasRGBIndicatorLed; }
 
 protected:
     proto_EuphoriaLedMapping m_mapping;
@@ -91,6 +98,7 @@ public:
     void update(bool full_poll, bool send_events);
     void reload();
     void set_player_led(uint8_t player) override;
+    uint8_t capabilities() const override { return CapabilityHasStandardPlayerLeds; }
 
 protected:
     proto_PlayerLedMapping m_mapping;

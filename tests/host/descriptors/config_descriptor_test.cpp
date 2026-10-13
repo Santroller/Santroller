@@ -56,15 +56,18 @@ TEST(ConfigDescriptor, ConfigInfoSavedIsDeclared)
     EXPECT_EQ(d.report_bytes(ReportType::Feature, ReportIdConfigInfoSaved), d.report_bytes(ReportType::Feature, ReportIdConfigInfo));
 }
 
-// GetVersion / GetType are declared as sizeof(string) + 1 bytes after the id, and handle_get_report
-// returns exactly that: the id, the string with its NUL, and one zero byte (sizeof(string) + 2 in all)
+// GetType is declared as sizeof(string) + 1 bytes after the id, and handle_get_report returns
+// exactly that: the id, the string with its NUL, and one zero byte (sizeof(string) + 2 in all).
+// GetVersion is the same with the 4 byte build number after it.
 TEST(ConfigDescriptor, VersionAndTypeLengthsMatchGetReport)
 {
     auto d = config();
-    EXPECT_EQ(d.wire_bytes(ReportType::Feature, ReportIdGetVersion), sizeof(kConfigVersion) + 2);
+    EXPECT_EQ(d.wire_bytes(ReportType::Feature, ReportIdGetVersion), sizeof(kConfigVersion) + 2 + sizeof(uint32_t));
     EXPECT_EQ(d.wire_bytes(ReportType::Feature, ReportIdGetType), sizeof(kConfigType) + 2);
     const std::string source = firmware_source("src/emulation/usb/hid_config_device.cpp");
-    EXPECT_NE(source.find("buffer[0]=report_id;memcpy(buffer+1,version,sizeof(version));buffer[1+sizeof(version)]=0;returnsizeof(version)+2;"),
+    EXPECT_NE(source.find("buffer[0]=report_id;memcpy(buffer+1,version,sizeof(version));buffer[1+sizeof(version)]=0;"
+                          "memcpy(buffer+2+sizeof(version),&build_number,sizeof(build_number));"
+                          "returnsizeof(version)+2+sizeof(build_number);"),
               std::string::npos);
     EXPECT_NE(source.find("buffer[0]=report_id;memcpy(buffer+1,type,sizeof(type));buffer[1+sizeof(type)]=0;returnsizeof(type)+2;"),
               std::string::npos);

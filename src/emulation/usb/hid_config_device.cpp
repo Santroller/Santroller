@@ -27,6 +27,8 @@
 #include <algorithm>
 
 static const char version[] = GIT_HASH;
+// 0 when it was built without the git history
+static constexpr uint32_t build_number = GIT_BUILD;
 static const char type[] = PICO_BOARD;
 static constexpr uint16_t firmware_upload_report_size = 63;
 static constexpr uint32_t firmware_write_alignment = 256;
@@ -50,7 +52,7 @@ uint8_t const desc_hid_report_config[] =
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(63, HID_REPORT_ID(ReportIdUpdateFirmware)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(firmware_upload_report_size, HID_REPORT_ID(ReportIdUploadFirmware)),
         TUD_HID_REPORT_DESC_GENERIC_OUTPUT(firmware_upload_report_size, HID_REPORT_ID(ReportIdUploadFirmware)),
-        TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(version) + 1, HID_REPORT_ID(ReportIdGetVersion)),
+        TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(version) + 1 + sizeof(build_number), HID_REPORT_ID(ReportIdGetVersion)),
         TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(type) + 1, HID_REPORT_ID(ReportIdGetType)),
         HID_COLLECTION_END};
 
@@ -753,11 +755,13 @@ uint16_t HIDConfigDevice::handle_get_report(uint8_t report_id, hid_report_type_t
   }
   case ReportId::ReportIdGetVersion:
   {
-    // the id, then the declared sizeof(version) + 1 bytes: the string, NUL and one zero byte
+    // the id, the string, NUL and one zero byte, then the build number (little endian). Older
+    // configurators read up to the NUL, so they still see the hash.
     buffer[0] = report_id;
     memcpy(buffer + 1, version, sizeof(version));
     buffer[1 + sizeof(version)] = 0;
-    return sizeof(version) + 2;
+    memcpy(buffer + 2 + sizeof(version), &build_number, sizeof(build_number));
+    return sizeof(version) + 2 + sizeof(build_number);
   }
   case ReportId::ReportIdGetType:
   {

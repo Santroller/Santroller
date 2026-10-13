@@ -71,7 +71,7 @@ inline constexpr uint8_t kConfig[] = {
     TUD_HID_REPORT_DESC_GENERIC_FEATURE(63, HID_REPORT_ID(ReportIdUpdateFirmware)),
     TUD_HID_REPORT_DESC_GENERIC_FEATURE(kFirmwareUploadReportSize, HID_REPORT_ID(ReportIdUploadFirmware)),
     TUD_HID_REPORT_DESC_GENERIC_OUTPUT(kFirmwareUploadReportSize, HID_REPORT_ID(ReportIdUploadFirmware)),
-    TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(kConfigVersion) + 1, HID_REPORT_ID(ReportIdGetVersion)),
+    TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(kConfigVersion) + 1 + sizeof(uint32_t), HID_REPORT_ID(ReportIdGetVersion)),
     TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(kConfigType) + 1, HID_REPORT_ID(ReportIdGetType)),
     HID_COLLECTION_END};
 
@@ -141,7 +141,7 @@ inline std::vector<NamedDescriptor> all_descriptors()
          "TUD_HID_REPORT_DESC_GENERIC_FEATURE(63,HID_REPORT_ID(ReportIdUpdateFirmware)),"
          "TUD_HID_REPORT_DESC_GENERIC_FEATURE(firmware_upload_report_size,HID_REPORT_ID(ReportIdUploadFirmware)),"
          "TUD_HID_REPORT_DESC_GENERIC_OUTPUT(firmware_upload_report_size,HID_REPORT_ID(ReportIdUploadFirmware)),"
-         "TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(version)+1,HID_REPORT_ID(ReportIdGetVersion)),"
+         "TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(version)+1+sizeof(build_number),HID_REPORT_ID(ReportIdGetVersion)),"
          "TUD_HID_REPORT_DESC_GENERIC_FEATURE(sizeof(type)+1,HID_REPORT_ID(ReportIdGetType)),"
          "HID_COLLECTION_END};"},
         {"Spice2x", spice2x_descriptor(), Transport::Usb, "", ""},

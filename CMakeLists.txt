@@ -56,7 +56,16 @@ if(SANTROLLER_VARIANT_DRIVER AND NOT SANTROLLER_VARIANT_BUILD)
     OUTPUT_VARIABLE SANTROLLER_GIT_REPO_BUILD_ID
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
+  # Counts up with every commit, so the configurator can tell older firmware from newer firmware
+  # (a hash can only say they differ). Needs the full history, a shallow clone counts from 1.
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-list --count HEAD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    OUTPUT_VARIABLE SANTROLLER_GIT_BUILD
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
   file(WRITE "${CMAKE_BINARY_DIR}/commit.hash" "${SANTROLLER_GIT_COMMIT}")
+  file(WRITE "${CMAKE_BINARY_DIR}/commit.build" "${SANTROLLER_GIT_BUILD}")
   if(ENABLE_XBOX_WIRELESS OR ENABLE_WIFI)
     if(ENABLE_XBOX_WIRELESS)
       include(cmake/DownloadFirmware.cmake)
@@ -86,6 +95,7 @@ if(SANTROLLER_VARIANT_DRIVER AND NOT SANTROLLER_VARIANT_BUILD)
         -DPICO_SDK_PATH=${PICO_SDK_PATH}
         -DPICO_SDK_FETCH_FROM_GIT=OFF
         -DSANTROLLER_GIT_COMMIT=${SANTROLLER_GIT_COMMIT}
+        -DSANTROLLER_GIT_BUILD=${SANTROLLER_GIT_BUILD}
         -DSANTROLLER_GIT_REPO_VERSION=${SANTROLLER_GIT_REPO_VERSION}
         -DSANTROLLER_GIT_REPO_BUILD_ID=${SANTROLLER_GIT_REPO_BUILD_ID}
         -DSANTROLLER_SHARED_GENERATED_DIR=${CMAKE_BINARY_DIR}/generated
@@ -206,7 +216,19 @@ configure_file("include/version.h.in" "include/version.h")
 message("GIT_REPO_VERSION is ${GIT_REPO_VERSION}")
 message("CMAKE_GIT_REPO_VERSION is ${CMAKE_GIT_REPO_VERSION}")
 message("GIT_REPO_BUILD_ID is ${GIT_REPO_BUILD_ID}")
+if(DEFINED SANTROLLER_GIT_BUILD)
+  set(GIT_BUILD ${SANTROLLER_GIT_BUILD})
+else()
+  execute_process(COMMAND ${GIT_EXECUTABLE} rev-list --count HEAD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_BUILD
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+if(NOT GIT_BUILD MATCHES "^[0-9]+$")
+  set(GIT_BUILD 0)
+endif()
 add_compile_definitions("GIT_HASH=\"${GIT_COMMIT}\"")
+add_compile_definitions("GIT_BUILD=${GIT_BUILD}")
 
 set(TARGET santroller)
 message(STATUS ${TARGET})

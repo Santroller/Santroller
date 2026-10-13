@@ -26,6 +26,7 @@ struct MappingConfig
           triggerValue(source.triggerValue),
           has_debounce(source.has_debounce100us || source.has_debounce),
           debounce_us(source.has_debounce100us ? source.debounce100us * 100 : source.debounce * 1000),
+          debounce_mode(source.has_debounceMode ? source.debounceMode : DebounceRelease),
           maxTriggerValue(source.maxTriggerValue),
           has_peakBased(source.has_peakBased),
           peakBased(source.peakBased),
@@ -59,6 +60,7 @@ struct MappingConfig
     int32_t triggerValue;
     bool has_debounce;
     uint32_t debounce_us;
+    DebounceMode debounce_mode;
     int32_t maxTriggerValue;
     bool has_peakBased;
     bool peakBased;
@@ -186,7 +188,10 @@ protected:
     bool m_last_sent_value = false;
     uint16_t m_last_sent_pressure = 0;
     bool m_calibrated_value = false;
+    // with release debounce, when the input was last pressed. With press debounce, when the
+    // current press started
     uint64_t m_last_poll = 0;
+    bool m_was_pressed = false;
     std::unique_ptr<RapidTrigger> m_rapid_trigger;
 };
 

@@ -434,6 +434,73 @@ TEST_F(ButtonUpdate, DebounceDoesNotDelayAPress)
     EXPECT_TRUE(button->value());
 }
 
+namespace
+{
+proto_Mapping press_debounced_button(uint32_t debounce100us)
+{
+    auto config = gamepad_button(Gamepad_A);
+    config.has_debounce100us = true;
+    config.debounce100us = debounce100us;
+    config.has_debounceMode = true;
+    config.debounceMode = DebouncePress;
+    return config;
+}
+} // namespace
+
+TEST_F(ButtonUpdate, PressDebounceWaitsForTheDebounceTime)
+{
+    auto button = drive<ProbeButton>(press_debounced_button(20), profile); // 2ms
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
+    fake_time::advance_us(1999);
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
+    fake_time::advance_us(1);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
+}
+
+TEST_F(ButtonUpdate, PressDebounceIgnoresPressesShorterThanTheDebounceTime)
+{
+    auto button = drive<ProbeButton>(press_debounced_button(20), profile);
+    button.set_digital(true);
+    fake_time::advance_us(1500);
+    button.set_digital(false);
+    // a new press starts the wait again, rather than carrying on from the last one
+    fake_time::advance_us(100);
+    button.set_digital(true);
+    fake_time::advance_us(1500);
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
+    fake_time::advance_us(500);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
+}
+
+TEST_F(ButtonUpdate, PressDebounceReleasesStraightAway)
+{
+    auto button = drive<ProbeButton>(press_debounced_button(20), profile);
+    button.set_digital(true);
+    fake_time::advance_us(2000);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
+    button.set_digital(false);
+    EXPECT_FALSE(button->value());
+}
+
+TEST_F(ButtonUpdate, PressDebounceReportsNoPressureUntilPressed)
+{
+    auto config = press_debounced_button(20);
+    auto button = drive<ProbeButton>(config, profile);
+    button.input->independent_analog = true;
+    button.input->analog = 12345;
+    button.set_digital(true);
+    EXPECT_EQ(button->pressure(), 0);
+    fake_time::advance_us(2000);
+    button.set_digital(true);
+    EXPECT_EQ(button->pressure(), 12345);
+}
+
 TEST_F(ButtonUpdate, ShortcutMaskHoldsReleasedUntilLetGo)
 {
     auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);

@@ -7,9 +7,6 @@
 - [ ] Emulation of microphones
 - [ ] Emulation of GCN adapters
 
-## Mapping features
-- [ ] Reverse debounce - https://github.com/Santroller/Santroller/issues/101
-
 ## Led / rumble features
 - [ ] Support directoutput (if we want to start supporting pinball cabs)
 

@@ -161,13 +161,32 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
         calcVal = false;
     }
     bool was_live = m_live_value;
-    if (calcVal)
+    uint64_t now = time_us_64();
+    if (m_mapping.has_debounce && m_mapping.debounce_mode == DebouncePress)
     {
-        m_last_poll = time_us_64();
+        if (calcVal && !m_was_pressed)
+        {
+            m_last_poll = now;
+        }
+        m_was_pressed = calcVal;
+        if (calcVal && (m_live_value || (now - m_last_poll) >= m_mapping.debounce_us))
+        {
+            m_live_value = true;
+            m_live_pressure = m_mapping.inverted && !analog_trigger ? UINT16_MAX : pressure;
+        }
+        else if (!calcVal)
+        {
+            m_live_value = false;
+            m_live_pressure = 0;
+        }
+    }
+    else if (calcVal)
+    {
+        m_last_poll = now;
         m_live_value = calcVal;
         m_live_pressure = m_mapping.inverted && !analog_trigger ? UINT16_MAX : pressure;
     }
-    else if (!m_mapping.has_debounce || (time_us_64() - m_last_poll) > m_mapping.debounce_us)
+    else if (!m_mapping.has_debounce || (now - m_last_poll) > m_mapping.debounce_us)
     {
         m_live_value = calcVal;
         m_live_pressure = 0;

@@ -7,6 +7,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "config/config.hpp"
+#include "protocols/midi_input.hpp"
 #include "emulation/usb/hid_device.h"
 #include <algorithm>
 
@@ -301,6 +302,44 @@ bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, b
 }
 
 void MidiChannelActivationTrigger::reset()
+{
+    clear_profile_temp_devices(m_profile);
+}
+
+MidiProGuitarActivationTrigger::MidiProGuitarActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_channel(type == ProGuitarSquier ? MIDI_CHANNEL_PROGUITAR_SQUIER : MIDI_CHANNEL_PROGUITAR_MUSTANG)
+{
+}
+
+bool MidiProGuitarActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+{
+    auto device = get_assignable_device(m_profile, claim_device, [this](const auto &device)
+                                        { return device->has_midi_channel(m_channel); });
+    bool matched = device != nullptr;
+    if (send_events && (matched != m_last_val || full_poll))
+    {
+        m_last_val = matched;
+        send_activation_event(m_id, m_list_id, m_last_analog_val, m_last_val);
+    }
+    else
+    {
+        m_last_val = matched;
+    }
+    if (device)
+    {
+        if (claim_device)
+        {
+            claim_profile_device(m_profile, DeviceSlotKind::MIDI, m_slot_id, device);
+        }
+        else
+        {
+            claim_profile_temp_device(m_profile, DeviceSlotKind::MIDI, m_slot_id, device);
+        }
+        return true;
+    }
+    return false;
+}
+
+void MidiProGuitarActivationTrigger::reset()
 {
     clear_profile_temp_devices(m_profile);
 }

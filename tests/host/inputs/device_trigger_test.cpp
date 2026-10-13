@@ -9,6 +9,7 @@
 #include "inputs_test_support.hpp"
 #include "triggers/device_type_triggers.hpp"
 #include "triggers/mode_triggers.hpp"
+#include "protocols/midi_input.hpp"
 #include <algorithm>
 
 namespace
@@ -165,6 +166,21 @@ TEST_F(DeviceTriggerTest, MidiChannelIsOneBased)
     MidiChannelActivationTrigger channel16(16, profile, 3, 0, 0);
     EXPECT_TRUE(channel16.validate(true, false, false));
     EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::MIDI, 0), keyboard);
+}
+
+TEST_F(DeviceTriggerTest, MidiProGuitarMatchesItsSysexId)
+{
+    // A Squier and a Mustang are told apart by the sysex they send, not by a MIDI channel
+    auto guitar = plug_in(10);
+    guitar->midi_channels = 1u << MIDI_CHANNEL_PROGUITAR_SQUIER;
+    MidiProGuitarActivationTrigger squier(ProGuitarSquier, profile, 1, 0, 0);
+    MidiProGuitarActivationTrigger mustang(ProGuitarMustang, profile, 2, 0, 0);
+    EXPECT_TRUE(squier.validate(false, false, false));
+    EXPECT_FALSE(mustang.validate(false, false, false));
+    guitar->midi_channels = 1u << MIDI_CHANNEL_PROGUITAR_MUSTANG;
+    EXPECT_FALSE(squier.validate(false, false, false));
+    EXPECT_TRUE(mustang.validate(true, false, false));
+    EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::MIDI, 0), guitar);
 }
 
 TEST_F(DeviceTriggerTest, ReportsChangesToTheTool)

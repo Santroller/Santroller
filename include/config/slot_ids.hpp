@@ -33,6 +33,8 @@ inline std::pair<DeviceSlotKind, uint16_t> slot_kind_and_type(const proto_Profil
                                                : SLOT_UNTYPED};
     case proto_ProfileAssignmentInfo_midiChannel_tag:
         return {DeviceSlotKind::MIDI, SLOT_UNTYPED};
+    case proto_ProfileAssignmentInfo_midiProGuitar_tag:
+        return {DeviceSlotKind::MIDI, static_cast<uint16_t>(info.assignment.midiProGuitar)};
     default:
         return {DeviceSlotKind::None, SLOT_UNTYPED};
     }

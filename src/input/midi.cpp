@@ -72,7 +72,7 @@ void MidiPitchBendInput::setup()
 {
 }
 
-MidiProGuitarButtonInput::MidiProGuitarButtonInput(proto_MidiInput input, std::shared_ptr<ProGuitarMidiDevice> device, Profile* profile) : m_input(input.input.midiProGuitarButton), m_device(device), m_profile(profile), m_device_id(input.deviceid), m_slot_kind(midi_input_slot_kind(input))
+MidiProGuitarButtonInput::MidiProGuitarButtonInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile* profile) : m_input(input.input.midiProGuitarButton), m_device(device), m_profile(profile), m_device_id(input.deviceid), m_slot_kind(midi_input_slot_kind(input))
 {
 }
 bool MidiProGuitarButtonInput::tick_digital()
@@ -89,7 +89,7 @@ void MidiProGuitarButtonInput::setup()
 {
 }
 
-MidiProGuitarAxisInput::MidiProGuitarAxisInput(proto_MidiInput input, std::shared_ptr<ProGuitarMidiDevice> device, Profile* profile) : m_input(input.input.midiProGuitarAxis), m_device(device), m_profile(profile), m_device_id(input.deviceid), m_slot_kind(midi_input_slot_kind(input))
+MidiProGuitarAxisInput::MidiProGuitarAxisInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile* profile) : m_input(input.input.midiProGuitarAxis), m_device(device), m_profile(profile), m_device_id(input.deviceid), m_slot_kind(midi_input_slot_kind(input))
 {
 }
 bool MidiProGuitarAxisInput::tick_digital()

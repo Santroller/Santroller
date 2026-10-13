@@ -132,9 +132,9 @@ std::unique_ptr<Input> InputFactory::create_input(
         case proto_MidiInput_midiPitchBend_tag:
             return create_midi_input<MidiPitchBendInput, MidiDevice>(profile, source_kind, proto_input.input.midi);
         case proto_MidiInput_midiProGuitarButton_tag:
-            return create_midi_input<MidiProGuitarButtonInput, ProGuitarMidiDevice>(profile, source_kind, proto_input.input.midi);
+            return create_midi_input<MidiProGuitarButtonInput, MidiDevice>(profile, source_kind, proto_input.input.midi);
         case proto_MidiInput_midiProGuitarAxis_tag:
-            return create_midi_input<MidiProGuitarAxisInput, ProGuitarMidiDevice>(profile, source_kind, proto_input.input.midi);
+            return create_midi_input<MidiProGuitarAxisInput, MidiDevice>(profile, source_kind, proto_input.input.midi);
         }
         return nullptr;
     }

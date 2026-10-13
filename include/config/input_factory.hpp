@@ -11,7 +11,6 @@ class PS2Device;
 class BluetoothHostInterface;
 class WiiDevice;
 class MidiDevice;
-class ProGuitarMidiDevice;
 class SNESDevice;
 class JoybusDevice;
 
@@ -31,7 +30,6 @@ public:
             else if constexpr (std::is_same_v<T, BluetoothHostInterface>) return DeviceSlotKind::Bluetooth;
             else if constexpr (std::is_same_v<T, WiiDevice>) return DeviceSlotKind::WiiExtension;
             else if constexpr (std::is_same_v<T, MidiDevice>) return DeviceSlotKind::MIDI;
-            else if constexpr (std::is_same_v<T, ProGuitarMidiDevice>) return DeviceSlotKind::MIDI;
             else return DeviceSlotKind::None;
         }();
 
@@ -57,10 +55,6 @@ public:
                 }
             } else if constexpr (std::is_same_v<T, MidiDevice>) {
                 if (!device->is_midi_device()) {
-                    return nullptr;
-                }
-            } else if constexpr (std::is_same_v<T, ProGuitarMidiDevice>) {
-                if (!device->is_pro_guitar_midi_device()) {
                     return nullptr;
                 }
             } else if constexpr (std::is_same_v<T, SNESDevice>) {
@@ -110,10 +104,6 @@ public:
         std::shared_ptr<DeviceType> typed_device;
         if constexpr (std::is_same_v<DeviceType, MidiDevice>) {
             if (device && device->is_midi_device()) {
-                typed_device = std::static_pointer_cast<DeviceType>(device);
-            }
-        } else if constexpr (std::is_same_v<DeviceType, ProGuitarMidiDevice>) {
-            if (device && device->is_pro_guitar_midi_device()) {
                 typed_device = std::static_pointer_cast<DeviceType>(device);
             }
         }

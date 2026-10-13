@@ -513,6 +513,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
             kind = DeviceSlotKind::Bluetooth;
             break;
         case proto_ProfileAssignmentInfo_midiChannel_tag:
+        case proto_ProfileAssignmentInfo_midiProGuitar_tag:
             kind = DeviceSlotKind::MIDI;
             break;
         default:

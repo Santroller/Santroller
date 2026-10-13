@@ -103,22 +103,20 @@ private:
 class MidiProGuitarButtonInput : public Input
 {
 public:
-    MidiProGuitarButtonInput(proto_MidiInput input, std::shared_ptr<ProGuitarMidiDevice> device, Profile *profile);
+    MidiProGuitarButtonInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile *profile);
     bool tick_digital();
     uint16_t tick_analog();
     void link_device(bool claim_devices) override
     {
         auto device = m_profile->get_midi_source_device(m_device_id, m_slot_kind, !claim_devices);
-        m_device = device && device->is_pro_guitar_midi_device()
-            ? std::static_pointer_cast<ProGuitarMidiDevice>(device)
-            : nullptr;
+        m_device = device && device->is_midi_device() ? std::static_pointer_cast<MidiDevice>(device) : nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
     void setup();
     proto_MidiProGuitarButtonInput m_input;
-    std::shared_ptr<ProGuitarMidiDevice> m_device;
+    std::shared_ptr<MidiDevice> m_device;
     Profile *m_profile;
     uint32_t m_device_id;
     DeviceSlotKind m_slot_kind;
@@ -126,23 +124,21 @@ private:
 class MidiProGuitarAxisInput : public Input
 {
 public:
-    MidiProGuitarAxisInput(proto_MidiInput input, std::shared_ptr<ProGuitarMidiDevice> device, Profile *profile);
+    MidiProGuitarAxisInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile *profile);
     bool tick_digital();
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
     void link_device(bool claim_devices) override
     {
         auto device = m_profile->get_midi_source_device(m_device_id, m_slot_kind, !claim_devices);
-        m_device = device && device->is_pro_guitar_midi_device()
-            ? std::static_pointer_cast<ProGuitarMidiDevice>(device)
-            : nullptr;
+        m_device = device && device->is_midi_device() ? std::static_pointer_cast<MidiDevice>(device) : nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
 
 private:
     void setup();
     proto_MidiProGuitarAxisInput m_input;
-    std::shared_ptr<ProGuitarMidiDevice> m_device;
+    std::shared_ptr<MidiDevice> m_device;
     Profile *m_profile;
     uint32_t m_device_id;
     DeviceSlotKind m_slot_kind;

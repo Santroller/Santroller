@@ -108,6 +108,15 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             list_id
         );
         
+    case proto_ProfileAssignmentInfo_midiProGuitar_tag:
+        return std::make_unique<MidiProGuitarActivationTrigger>(
+            proto_assignment.assignment.midiProGuitar,
+            profile,
+            trigger_id,
+            slot_id,
+            list_id
+        );
+        
     case proto_ProfileAssignmentInfo_ps2Emulation_tag:
         return std::make_unique<PS2ControllerEmulationActivationTrigger>(
             proto_assignment.assignment.ps2Emulation,

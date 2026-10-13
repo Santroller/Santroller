@@ -156,6 +156,35 @@ bool mode_recently_changed()
 // Config chunks arrive back to back, so a gap this long means the tool isn't going to finish
 static constexpr uint32_t CONFIG_WRITE_STALL_MS = 2000;
 
+// Kept out of reload_config, so the event isn't on the stack while the config loads
+static void __noinline send_reload_event()
+{
+    proto_Event event = {which_event : proto_Event_reload_tag, event : {reload : {}}};
+    HIDConfigDevice::send_event(event, true);
+    // The reload may reinit the device stack, which would discard anything still queued
+    HIDConfigDevice::flush_events(100000);
+}
+
+// Reloads the config once it has changed, returning true if it did. This is called straight from
+// the main loop with as little as possible on the stack, as decoding deeply nested inputs (eg a
+// toggle of a shortcut) recurses through nanopb and needs most of core 0's stack.
+static bool __noinline reload_config()
+{
+    auto& config_mgr = ConfigManager::instance();
+    if (config_mgr.is_working() || !config_mgr.should_reinit(millis()))
+    {
+        return false;
+    }
+    if (!HIDConfigDevice::tool_closed())
+    {
+        send_reload_event();
+    }
+    config_mgr.begin_reinit();
+    load();
+    config_mgr.finish_reinit(millis());
+    return true;
+}
+
 void hid_task(void)
 {
     auto& config_mgr = ConfigManager::instance();
@@ -169,21 +198,6 @@ void hid_task(void)
             printf("config write stalled, abandoning it\r\n");
             abort_config_write();
         }
-        return;
-    }
-
-    if (config_mgr.should_reinit(now))
-    {
-        if (!HIDConfigDevice::tool_closed())
-        {
-            proto_Event event = {which_event : proto_Event_reload_tag, event : {reload : {}}};
-            HIDConfigDevice::send_event(event, true);
-            // The reload may reinit the device stack, which would discard anything still queued
-            HIDConfigDevice::flush_events(100000);
-        }
-        config_mgr.begin_reinit();
-        load();
-        config_mgr.finish_reinit(millis());
         return;
     }
     if (config_mgr.take_device_stack_restart())
@@ -240,6 +254,10 @@ void deinitDebug()
 }
 
 
+// Core 1's stack is in main RAM rather than SCRATCH_X, so core 0's stack can use both scratch banks
+static constexpr size_t CORE1_STACK_SIZE = 0x1000;
+static uint32_t core1_stack[CORE1_STACK_SIZE / sizeof(uint32_t)];
+
 void core1()
 {
     // Our own flash writes keep core1 running (see flash_write_begin), but the SDK's flash_safe_execute
@@ -267,7 +285,7 @@ int main()
     // A multiple of 96MHz, so PIO-USB's 48MHz TX and 96MHz RX clocks divide evenly. A fractional divider
     // jitters every bit edge, which some devices (like the 360 wireless receiver) seem sensitive to
     set_sys_clock_khz(192000, true);
-    multicore_launch_core1(core1);
+    multicore_launch_core1_with_stack(core1, core1_stack, sizeof(core1_stack));
     adc_init();
     HidConsoleBridge::instance().init();
     EEPROM.start();
@@ -290,7 +308,10 @@ int main()
     {
         tud_task(); // tinyusb device task
         tuh_task();
-        hid_task();
+        if (!reload_config())
+        {
+            hid_task();
+        }
         HidConsoleBridge::instance().flush();
         EEPROM.tick();
         BluetoothStack::instance().tick();

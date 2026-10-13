@@ -204,6 +204,8 @@ message ProfileAssignmentInfo {
     SubType bluetoothType = 18;
     JoybusAssignment joybusEmulation = 19;
     SNESAssignment snesEmulation = 20;
+    // A Pro Guitar seen over MIDI, ProGuitarMustang or ProGuitarSquier
+    SubType midiProGuitar = 21;
   }
   reserved 12;
 }

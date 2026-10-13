@@ -90,3 +90,17 @@ public:
 protected:
     uint32_t m_channel;
 };
+
+// A Squier or Mustang Pro Guitar, seen by its sysex over MIDI
+class MidiProGuitarActivationTrigger : public ActivationTrigger
+{
+public:
+    MidiProGuitarActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
+    ~MidiProGuitarActivationTrigger() {}
+    bool validate(bool claim_device, bool full_poll, bool send_events);
+    void reset() override;
+    int assignedDevices() { return 0; }
+
+protected:
+    uint8_t m_channel;
+};

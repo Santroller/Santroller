@@ -81,7 +81,7 @@ public:
         bool temporary = false) const
     {
         auto supports_midi = [](const std::shared_ptr<Device> &device) {
-            return device && (device->is_midi_device() || device->is_pro_guitar_midi_device());
+            return device && device->is_midi_device();
         };
 
         if (source_kind != DeviceSlotKind::None) {

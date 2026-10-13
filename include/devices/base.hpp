@@ -91,7 +91,6 @@ public:
     virtual bool is_ps2_device(PS2ControllerType type);
     virtual bool is_wii_device() const { return false; }
     virtual bool is_midi_device() const { return false; }
-    virtual bool is_pro_guitar_midi_device() const { return false; }
     virtual bool is_usb_host_interface() const { return false; }
     virtual bool is_bluetooth_host_interface() const { return false; }
     virtual bool is_ps2_controller() const { return false; }

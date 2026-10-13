@@ -182,7 +182,6 @@ add_subdirectory(lib/pico_fota_bootloader)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   # Activate some compiler / linker options to aid us with diagnosing stack space issues in Debug builds
   add_compile_options(-fstack-usage -Wstack-usage=500)
-  add_compile_definitions(PICO_USE_STACK_GUARDS=1)
   set_source_files_properties(
     ${PICO_SDK_PATH}/lib/mbedtls/library/aes.c
     ${PICO_SDK_PATH}/lib/mbedtls/library/ctr_drbg.c
@@ -191,8 +190,11 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   # add_compile_definitions(PICO_DEBUG_MALLOC=1)
 endif()
 
-# We want a larger stack of 4kb per core instead of the default 2kb
-add_compile_definitions(PICO_STACK_SIZE=0x1000)
+# We want a larger stack of 4kb per core instead of the default 2kb. Core 1's stack is in main RAM
+# (see core1_stack in main.cpp), which leaves SCRATCH_X free for core 0's stack to grow into as well
+add_compile_definitions(PICO_STACK_SIZE=0x1000 PICO_CORE1_STACK_SIZE=0)
+# Fault as soon as a stack overflows, instead of silently corrupting whatever is below it
+add_compile_definitions(PICO_USE_STACK_GUARDS=1)
 
 find_package(Git)
 if(DEFINED SANTROLLER_GIT_REPO_VERSION)

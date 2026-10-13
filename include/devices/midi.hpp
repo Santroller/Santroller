@@ -94,27 +94,3 @@ private:
     MidiInput m_midi;
     bool usbBased;
 };
-
-class ProGuitarMidiDevice : public Device
-{
-public:
-    ProGuitarMidiDevice(uint16_t id, std::shared_ptr<MidiDevice> midi_device) : Device(id), m_midi_device(midi_device) {}
-    ~ProGuitarMidiDevice() {}
-    bool read_pro_guitar_button(proto_ProGuitarMidiButtonType button);
-    uint16_t read_pro_guitar_axis(proto_ProGuitarAxisType axis);
-    void update(bool full_poll, bool send_events) {};
-    void begin() {};
-    void end(bool full) {};
-    bool is_wii_extension(WiiExtType type) { return false; }
-    bool is_usb_device(proto_SpecificUsbDevice type) { return false; }
-    bool is_usb_type(SubType type) { return false; }
-    bool is_bluetooth_device(proto_SpecificBluetoothDevice type) { return false; }
-    bool is_bluetooth_type(SubType type) { return false; }
-    bool is_ps2_device(PS2ControllerType type) { return false; }
-    bool has_midi_channel(uint8_t channel) { return MIDI_CHANNEL_PROGUITAR_MUSTANG == channel || MIDI_CHANNEL_PROGUITAR_SQUIER == channel; }
-    bool is_pro_guitar_midi_device() const override { return true; }
-    bool using_pin(uint8_t pin) { return m_midi_device->using_pin(pin); }
-
-private:
-    std::shared_ptr<MidiDevice> m_midi_device;
-};

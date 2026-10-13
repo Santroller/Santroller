@@ -293,13 +293,3 @@ uint16_t MidiDevice::read_pro_guitar_axis(proto_ProGuitarAxisType axis)
 {
     return m_midi.pro_guitar_axis(axis);
 }
-
-
-bool ProGuitarMidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
-{
-    return m_midi_device->read_pro_guitar_button(button);
-}
-uint16_t ProGuitarMidiDevice::read_pro_guitar_axis(proto_ProGuitarAxisType axis)
-{
-    return m_midi_device->read_pro_guitar_axis(axis);
-}

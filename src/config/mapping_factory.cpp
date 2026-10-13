@@ -7,6 +7,20 @@
 
 static auto& config_mgr = ConfigManager::instance();
 
+// Kept out of line so the converted proto_Mapping copy only takes stack on the konami path,
+// create_mapping runs deep in the config decode on core0's 4k stack
+static __attribute__((noinline)) std::unique_ptr<Mapping> create_converted_mapping(
+    void (*convert)(proto_Mapping &),
+    const proto_Mapping& proto_mapping,
+    std::shared_ptr<Profile> profile,
+    std::unique_ptr<Input> input,
+    uint32_t mapping_id)
+{
+    proto_Mapping converted = proto_mapping;
+    convert(converted);
+    return MappingFactory::create_mapping(converted, std::move(profile), std::move(input), mapping_id);
+}
+
 std::unique_ptr<Mapping> MappingFactory::create_mapping(
     const proto_Mapping& proto_mapping,
     std::shared_ptr<Profile> profile,
@@ -131,13 +145,13 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
         return std::make_unique<ProjectDivaButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         
     case proto_Output_popnButton_tag:
-        return create_mapping(popn_as_gamepad(proto_mapping), profile, std::move(input), mapping_id);
+        return create_converted_mapping(popn_as_gamepad, proto_mapping, profile, std::move(input), mapping_id);
     case proto_Output_bmButton_tag:
-        return create_mapping(beatmania_as_gamepad(proto_mapping), profile, std::move(input), mapping_id);
+        return create_converted_mapping(beatmania_as_gamepad, proto_mapping, profile, std::move(input), mapping_id);
     case proto_Output_gfButton_tag:
-        return create_mapping(guitarfreaks_as_gamepad(proto_mapping), profile, std::move(input), mapping_id);
+        return create_converted_mapping(guitarfreaks_as_gamepad, proto_mapping, profile, std::move(input), mapping_id);
     case proto_Output_dmButton_tag:
-        return create_mapping(drummania_as_gamepad(proto_mapping), profile, std::move(input), mapping_id);
+        return create_converted_mapping(drummania_as_gamepad, proto_mapping, profile, std::move(input), mapping_id);
         
     case proto_Output_ghaAxis_tag:
         return std::make_unique<GuitarHeroArcadeAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);

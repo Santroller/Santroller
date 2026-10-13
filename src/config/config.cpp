@@ -411,7 +411,11 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
         return true;
     }
     auto profile = context->profile;
-    proto_Mapping proto_mapping = proto_Mapping_init_default;
+    // Static as this sits at the bottom of a deep nested decode on core0's 4k stack, and the PIO USB SOF IRQ
+    // stacks on top of that. load_mapping never recurses, and config is only decoded from core0's main loop
+    static const proto_Mapping default_mapping = proto_Mapping_init_default;
+    static proto_Mapping proto_mapping;
+    proto_mapping = default_mapping;
     proto_mapping.input.cb_input.funcs.decode = load_input_dev;
     proto_mapping.input.cb_input.arg = *arg;
     pb_decode_ex(stream, proto_Mapping_fields, &proto_mapping, PB_DECODE_NOINIT);

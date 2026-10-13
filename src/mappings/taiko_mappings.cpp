@@ -5,7 +5,7 @@
 #include "protocols/switch_arcade.hpp"
 #include "protocols/wii.hpp"
 
-TaikoButtonMapping::TaikoButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : PS3GamepadButtonMapping(mapping, std::move(input), id, profile)
+TaikoButtonMapping::TaikoButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : PS3GamepadButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -31,7 +31,7 @@ void TaikoButtonMapping::update_wii(uint8_t, uint8_t *buf)
     }
 }
 
-TaikoAxisMapping::TaikoAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : PS3GamepadAxisMapping(mapping, std::move(input), id, profile)
+TaikoAxisMapping::TaikoAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : PS3GamepadAxisMapping(mapping, std::move(input), id, profile)
 {
 }
 

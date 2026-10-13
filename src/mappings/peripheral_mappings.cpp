@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <utils.h>
 
-WheelButtonMapping::WheelButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+WheelButtonMapping::WheelButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
     
 }
@@ -60,7 +60,7 @@ void WheelButtonMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-WheelAxisMapping::WheelAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
+WheelAxisMapping::WheelAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
 {
 }
 
@@ -109,7 +109,7 @@ void WheelAxisMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-KeyboardButtonMapping::KeyboardButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+KeyboardButtonMapping::KeyboardButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -165,7 +165,7 @@ void KeyboardButtonMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-MouseAxisMapping::MouseAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
+MouseAxisMapping::MouseAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
 {
 }
 
@@ -235,7 +235,7 @@ void MouseAxisMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-MouseButtonMapping::MouseButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+MouseButtonMapping::MouseButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
     
 }
@@ -301,7 +301,7 @@ void MouseButtonMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-MidiNoteMapping::MidiNoteMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+MidiNoteMapping::MidiNoteMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -330,7 +330,7 @@ void MidiNoteMapping::update_hid(uint8_t *buf)
     m_profile->midi_state.set_note(note.channel - 1, note.note, velocity);
 }
 
-MidiControlMapping::MidiControlMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
+MidiControlMapping::MidiControlMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
 {
 }
 
@@ -342,7 +342,7 @@ void MidiControlMapping::update_hid(uint8_t *buf)
     m_profile->midi_state.set_control(control.channel - 1, control.control, m_value);
 }
 
-MidiPitchBendMapping::MidiPitchBendMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
+MidiPitchBendMapping::MidiPitchBendMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
 {
 }
 

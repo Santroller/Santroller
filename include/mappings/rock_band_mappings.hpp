@@ -6,7 +6,7 @@ class RockBandGuitarButtonMapping : public ButtonMapping
 {
 public:
     ~RockBandGuitarButtonMapping() {}
-    RockBandGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    RockBandGuitarButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -23,7 +23,7 @@ class RockBandGuitarAxisMapping : public AxisMapping
 {
 public:
     ~RockBandGuitarAxisMapping() {}
-    RockBandGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    RockBandGuitarAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -48,7 +48,7 @@ class RockBandDrumsButtonMapping : public ButtonMapping
 {
 public:
     ~RockBandDrumsButtonMapping() {}
-    RockBandDrumsButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    RockBandDrumsButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -65,7 +65,7 @@ class RockBandDrumsAxisMapping : public AxisMapping
 {
 public:
     ~RockBandDrumsAxisMapping() {}
-    RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    RockBandDrumsAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -85,7 +85,7 @@ class ProGuitarButtonMapping : public ButtonMapping
 {
 public:
     ~ProGuitarButtonMapping() {}
-    ProGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    ProGuitarButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -102,7 +102,7 @@ class ProGuitarAxisMapping : public AxisMapping
 {
 public:
     ~ProGuitarAxisMapping() {}
-    ProGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    ProGuitarAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -119,7 +119,7 @@ class ProKeysButtonMapping : public ButtonMapping
 {
 public:
     ~ProKeysButtonMapping() {}
-    ProKeysButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    ProKeysButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -136,7 +136,7 @@ class ProKeysAxisMapping : public AxisMapping
 {
 public:
     ~ProKeysAxisMapping() {}
-    ProKeysAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    ProKeysAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -153,7 +153,7 @@ class ProKeysKeyMapping : public Mapping
 {
 public:
     ~ProKeysKeyMapping() {}
-    ProKeysKeyMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    ProKeysKeyMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update(bool full_poll, bool send_events);
     bool wake_pressed() const override { return m_active_keys || m_single_pressed; }
     void update_hid(uint8_t *report);

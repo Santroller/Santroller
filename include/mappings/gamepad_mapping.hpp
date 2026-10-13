@@ -6,7 +6,7 @@ class GamepadAxisMapping : public AxisMapping
 {
 public:
     ~GamepadAxisMapping() {}
-    GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    GamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -25,7 +25,7 @@ class PS3GamepadAxisMapping : public GamepadAxisMapping
 {
 public:
     ~PS3GamepadAxisMapping() {}
-    PS3GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    PS3GamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_ps3(uint8_t *report);
 };
 
@@ -36,7 +36,7 @@ class DrumsGamepadAxisMapping : public GamepadAxisMapping
 {
 public:
     ~DrumsGamepadAxisMapping() {}
-    DrumsGamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile) {}
+    DrumsGamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile) {}
     void update_hid(uint8_t *report);
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
@@ -49,7 +49,7 @@ class RockBandDrumsGamepadAxisMapping : public DrumsGamepadAxisMapping
 {
 public:
     ~RockBandDrumsGamepadAxisMapping();
-    RockBandDrumsGamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    RockBandDrumsGamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_xboxone(uint8_t *report);
 };
 
@@ -60,7 +60,7 @@ class DJHTurntableGamepadAxisMapping : public GamepadAxisMapping
 {
 public:
     ~DJHTurntableGamepadAxisMapping() {}
-    DJHTurntableGamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile) {}
+    DJHTurntableGamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile) {}
     void update_hid(uint8_t *report) { (void)report; }
     void update_xinput(uint8_t *report) { (void)report; }
     void update_ogxbox(uint8_t *report) { (void)report; }
@@ -70,7 +70,7 @@ class RockBandGuitarGamepadAxisMapping : public GamepadAxisMapping
 {
 public:
     ~RockBandGuitarGamepadAxisMapping();
-    RockBandGuitarGamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    RockBandGuitarGamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_xboxone(uint8_t *report);
 };
 
@@ -78,7 +78,7 @@ class GamepadButtonMapping : public ButtonMapping
 {
 public:
     ~GamepadButtonMapping() {}
-    GamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    GamepadButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_wiimote_core(wiimote_buttons *buttons);
@@ -101,6 +101,6 @@ class PS3GamepadButtonMapping : public GamepadButtonMapping
 {
 public:
     ~PS3GamepadButtonMapping() {}
-    PS3GamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    PS3GamepadButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_ps3(uint8_t *report);
 };

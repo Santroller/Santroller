@@ -12,7 +12,7 @@
 #include "protocols/switch_arcade.hpp"
 #include "protocols/santroller_v2.hpp"
 
-GamepadAxisMapping::GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.gamepadAxis == Gamepad_LeftTrigger || mapping.mapping.mapping.gamepadAxis == Gamepad_RightTrigger)
+GamepadAxisMapping::GamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.gamepadAxis == Gamepad_LeftTrigger || mapping.mapping.mapping.gamepadAxis == Gamepad_RightTrigger)
 {
 }
 
@@ -540,7 +540,7 @@ void GamepadAxisMapping::update_xboxone(uint8_t *buf)
         break;
     }
 }
-PS3GamepadAxisMapping::PS3GamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile)
+PS3GamepadAxisMapping::PS3GamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -600,7 +600,7 @@ void PS3GamepadAxisMapping::update_ps3(uint8_t *buf)
 }
 
 const uint8_t GamepadButtonMapping::dpad_bindings[] = {0x08, 0x00, 0x04, 0x08, 0x06, 0x07, 0x05, 0x08, 0x02, 0x01, 0x03};
-GamepadButtonMapping::GamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+GamepadButtonMapping::GamepadButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -1431,7 +1431,7 @@ void GamepadButtonMapping::update_xboxone(uint8_t *buf)
         break;
     }
 }
-PS3GamepadButtonMapping::PS3GamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadButtonMapping(mapping, std::move(input), id, profile)
+PS3GamepadButtonMapping::PS3GamepadButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 void PS3GamepadButtonMapping::update_ps3(uint8_t *buf)

@@ -5,11 +5,11 @@
 class RockRevolutionButtonMapping : public ButtonMapping
 {
 public:
-    RockRevolutionButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    RockRevolutionButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
 };
 
 class RockRevolutionAxisMapping : public AxisMapping
 {
 public:
-    RockRevolutionAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    RockRevolutionAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
 };

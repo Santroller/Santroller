@@ -5,7 +5,7 @@ class KeyboardManiaButtonMapping : public ButtonMapping
 {
 public:
     ~KeyboardManiaButtonMapping() {}
-    KeyboardManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    KeyboardManiaButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -22,7 +22,7 @@ class KeyboardManiaAxisMapping : public AxisMapping
 {
 public:
     ~KeyboardManiaAxisMapping() {}
-    KeyboardManiaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    KeyboardManiaAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -39,7 +39,7 @@ class SDVXButtonMapping : public ButtonMapping
 {
 public:
     ~SDVXButtonMapping() {}
-    SDVXButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    SDVXButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -56,7 +56,7 @@ class SDVXAxisMapping : public AxisMapping
 {
 public:
     ~SDVXAxisMapping() {}
-    SDVXAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    SDVXAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -70,7 +70,7 @@ public:
 };
 
 // pop'n, beatmania, GuitarFreaks and DrumMania buttons have no output of their own, they are converted to the equivalent gamepad mapping
-proto_Mapping popn_as_gamepad(proto_Mapping mapping);
-proto_Mapping beatmania_as_gamepad(proto_Mapping mapping);
-proto_Mapping guitarfreaks_as_gamepad(proto_Mapping mapping);
-proto_Mapping drummania_as_gamepad(proto_Mapping mapping);
+void popn_as_gamepad(proto_Mapping &mapping);
+void beatmania_as_gamepad(proto_Mapping &mapping);
+void guitarfreaks_as_gamepad(proto_Mapping &mapping);
+void drummania_as_gamepad(proto_Mapping &mapping);

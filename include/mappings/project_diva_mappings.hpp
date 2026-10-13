@@ -5,7 +5,7 @@
 class ProjectDivaButtonMapping : public ButtonMapping
 {
 public:
-    ProjectDivaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    ProjectDivaButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_switch(uint8_t *report) override;
     void update_pdloader(uint8_t *report) override;
 };
@@ -13,7 +13,7 @@ public:
 class ProjectDivaAxisMapping : public AxisMapping
 {
 public:
-    ProjectDivaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    ProjectDivaAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_switch(uint8_t *report) override;
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);

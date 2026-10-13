@@ -5,7 +5,7 @@ class WheelButtonMapping : public ButtonMapping
 {
 public:
     ~WheelButtonMapping() {}
-    WheelButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    WheelButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -22,7 +22,7 @@ class WheelAxisMapping : public AxisMapping
 {
 public:
     ~WheelAxisMapping() {}
-    WheelAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    WheelAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -39,7 +39,7 @@ class KeyboardButtonMapping : public ButtonMapping
 {
 public:
     ~KeyboardButtonMapping() {}
-    KeyboardButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    KeyboardButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -56,7 +56,7 @@ class MouseAxisMapping : public AxisMapping
 {
 public:
     ~MouseAxisMapping() {}
-    MouseAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    MouseAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -73,7 +73,7 @@ class MouseButtonMapping : public ButtonMapping
 {
 public:
     ~MouseButtonMapping() {}
-    MouseButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    MouseButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);
     void update_switch(uint8_t *report);
@@ -91,7 +91,7 @@ class MidiNoteMapping : public ButtonMapping
 {
 public:
     ~MidiNoteMapping() {}
-    MidiNoteMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    MidiNoteMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
 };
 
@@ -100,7 +100,7 @@ class MidiControlMapping : public AxisMapping
 {
 public:
     ~MidiControlMapping() {}
-    MidiControlMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    MidiControlMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
 
 private:
@@ -112,7 +112,7 @@ class MidiPitchBendMapping : public AxisMapping
 {
 public:
     ~MidiPitchBendMapping() {}
-    MidiPitchBendMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    MidiPitchBendMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_hid(uint8_t *report);
 
 private:

@@ -7,14 +7,14 @@
 class PowerGigGuitarButtonMapping : public RockBandGuitarButtonMapping
 {
 public:
-    PowerGigGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    PowerGigGuitarButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_ps3(uint8_t *report);
 };
 
 class PowerGigGuitarAxisMapping : public RockBandGuitarAxisMapping
 {
 public:
-    PowerGigGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    PowerGigGuitarAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_ps3(uint8_t *report);
 };
 
@@ -22,13 +22,13 @@ public:
 class PowerGigDrumsButtonMapping : public RockBandDrumsButtonMapping
 {
 public:
-    PowerGigDrumsButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    PowerGigDrumsButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_ps3(uint8_t *report);
 };
 
 class PowerGigDrumsAxisMapping : public RockBandDrumsAxisMapping
 {
 public:
-    PowerGigDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    PowerGigDrumsAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_ps3(uint8_t *report);
 };

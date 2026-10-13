@@ -13,7 +13,7 @@
 #include <utils.h>
 #include <math.h>
 
-RockBandGuitarButtonMapping::RockBandGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+RockBandGuitarButtonMapping::RockBandGuitarButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -358,7 +358,7 @@ void RockBandGuitarButtonMapping::update_xboxone(uint8_t *buf)
 
 // The pickup is calibrated like a trigger, so min / max maps linearly onto the full range
 // rather than being split around a centre point like a stick
-RockBandGuitarAxisMapping::RockBandGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.rbAxis == RockBandGuitar_Whammy || mapping.mapping.mapping.rbAxis == RockBandGuitar_Pickup)
+RockBandGuitarAxisMapping::RockBandGuitarAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.rbAxis == RockBandGuitar_Whammy || mapping.mapping.mapping.rbAxis == RockBandGuitar_Pickup)
 {
     if (mapping.pickupThresholds_count == 4)
     {
@@ -587,7 +587,7 @@ void RockBandGuitarAxisMapping::update_xboxone(uint8_t *buf)
 }
 RockBandGuitarGamepadAxisMapping::~RockBandGuitarGamepadAxisMapping() {}
 
-RockBandGuitarGamepadAxisMapping::RockBandGuitarGamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile)
+RockBandGuitarGamepadAxisMapping::RockBandGuitarGamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile)
 {
 }
 void RockBandGuitarGamepadAxisMapping::update_xboxone(uint8_t *buf)
@@ -622,7 +622,7 @@ void RockBandGuitarGamepadAxisMapping::update_xboxone(uint8_t *buf)
     }
 }
 
-RockBandDrumsButtonMapping::RockBandDrumsButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+RockBandDrumsButtonMapping::RockBandDrumsButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -736,7 +736,7 @@ void RockBandDrumsButtonMapping::update_xboxone(uint8_t *buf)
     }
 }
 
-RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
+RockBandDrumsAxisMapping::RockBandDrumsAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
 {
 }
 
@@ -1294,7 +1294,7 @@ void DrumsGamepadAxisMapping::update_ogxbox(uint8_t *buf)
 
 RockBandDrumsGamepadAxisMapping::~RockBandDrumsGamepadAxisMapping() {}
 
-RockBandDrumsGamepadAxisMapping::RockBandDrumsGamepadAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : DrumsGamepadAxisMapping(mapping, std::move(input), id, profile)
+RockBandDrumsGamepadAxisMapping::RockBandDrumsGamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : DrumsGamepadAxisMapping(mapping, std::move(input), id, profile)
 {
 }
 void RockBandDrumsGamepadAxisMapping::update_xboxone(uint8_t *buf)
@@ -1329,7 +1329,7 @@ void RockBandDrumsGamepadAxisMapping::update_xboxone(uint8_t *buf)
     }
 }
 
-ProGuitarButtonMapping::ProGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+ProGuitarButtonMapping::ProGuitarButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -1570,7 +1570,7 @@ static uint8_t pro_guitar_tilt_report_value(uint16_t value)
     return static_cast<uint8_t>(report_value > 0x7f ? 0x7f : report_value);
 }
 
-ProGuitarAxisMapping::ProGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.proAxis != ProGuitar_Tilt)
+ProGuitarAxisMapping::ProGuitarAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.proAxis != ProGuitar_Tilt)
 {
 }
 
@@ -1820,7 +1820,7 @@ static inline void set_keyboard_key(uint8_t &key1, uint8_t &key2, uint8_t &key3,
     }
 }
 
-ProKeysButtonMapping::ProKeysButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+ProKeysButtonMapping::ProKeysButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -1874,7 +1874,7 @@ void ProKeysButtonMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-ProKeysAxisMapping::ProKeysAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.proKeyboardAxis == ProKeyboardPedal)
+ProKeysAxisMapping::ProKeysAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.proKeyboardAxis == ProKeyboardPedal)
 {
 }
 
@@ -1938,7 +1938,7 @@ void ProKeysAxisMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-ProKeysKeyMapping::ProKeysKeyMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile)
+ProKeysKeyMapping::ProKeysKeyMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile)
     : Mapping(mapping, std::move(input), id, profile)
 {
     m_is_multiple = (mapping.mapping.which_mapping == proto_Output_proKeyMultiple_tag);

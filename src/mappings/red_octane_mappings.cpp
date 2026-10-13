@@ -42,7 +42,7 @@ static uint8_t wii_touch_bar_add_fret(uint8_t code, int fret)
     return wii_touch_bar_single[high];
 }
 
-GuitarHeroGuitarButtonMapping::GuitarHeroGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+GuitarHeroGuitarButtonMapping::GuitarHeroGuitarButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -425,7 +425,7 @@ void GuitarHeroGuitarButtonMapping::update_xboxone(uint8_t *buf)
     }
 }
 
-GuitarHeroGuitarGamepadButtonMapping::GuitarHeroGuitarGamepadButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadButtonMapping(mapping, std::move(input), id, profile)
+GuitarHeroGuitarGamepadButtonMapping::GuitarHeroGuitarGamepadButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 void GuitarHeroGuitarGamepadButtonMapping::update_ps2(uint8_t *buf)
@@ -491,7 +491,7 @@ const uint8_t GuitarHeroGuitarAxisMapping::gh5_slider_mapping[] = {
     0xFA, 0xFC, 0xF8, 0xE6, 0xE2, 0xE4, 0xE0,
     0xE5, 0xE1, 0xE3, 0xDF};
 
-GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghAxis == GuitarHeroGuitar_Whammy), m_supports_slider(profile->supports_slider)
+GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghAxis == GuitarHeroGuitar_Whammy), m_supports_slider(profile->supports_slider)
 {
 }
 
@@ -678,7 +678,7 @@ void GuitarHeroGuitarAxisMapping::update_xboxone(uint8_t *buf)
     }
 }
 
-GuitarHeroDrumsAxisMapping::GuitarHeroDrumsAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
+GuitarHeroDrumsAxisMapping::GuitarHeroDrumsAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
 {
 }
 
@@ -860,7 +860,7 @@ void GuitarHeroDrumsAxisMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-GuitarHeroArcadeButtonMapping::GuitarHeroArcadeButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+GuitarHeroArcadeButtonMapping::GuitarHeroArcadeButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -926,7 +926,7 @@ void GuitarHeroArcadeButtonMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-GuitarHeroArcadeAxisMapping::GuitarHeroArcadeAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
+GuitarHeroArcadeAxisMapping::GuitarHeroArcadeAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
 {
 }
 
@@ -978,7 +978,7 @@ void GuitarHeroArcadeAxisMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-LiveGuitarButtonMapping::LiveGuitarButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+LiveGuitarButtonMapping::LiveGuitarButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -1252,7 +1252,7 @@ void LiveGuitarButtonMapping::update_xboxone(uint8_t *buf)
     }
 }
 
-LiveGuitarAxisMapping::LiveGuitarAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghlAxis == GuitarHeroLiveGuitar_Whammy)
+LiveGuitarAxisMapping::LiveGuitarAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghlAxis == GuitarHeroLiveGuitar_Whammy)
 {
 }
 
@@ -1388,7 +1388,7 @@ void LiveGuitarAxisMapping::update_xboxone(uint8_t *buf)
     }
 }
 
-DJHTurntableButtonMapping::DJHTurntableButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+DJHTurntableButtonMapping::DJHTurntableButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -1548,7 +1548,7 @@ void DJHTurntableButtonMapping::update_xboxone(uint8_t *buf)
     // not a thing
 }
 
-DJHTurntableAxisMapping::DJHTurntableAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
+DJHTurntableAxisMapping::DJHTurntableAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
 {
 }
 

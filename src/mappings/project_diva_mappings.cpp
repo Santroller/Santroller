@@ -4,7 +4,7 @@
 #include "protocols/pdloader.hpp"
 #include "protocols/switch_arcade.hpp"
 
-ProjectDivaButtonMapping::ProjectDivaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+ProjectDivaButtonMapping::ProjectDivaButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -25,7 +25,7 @@ void ProjectDivaButtonMapping::update_pdloader(uint8_t *buf)
     report.set_slider_touches(report.slider_touches() | (uint32_t(1) << (electrode - 1)));
 }
 
-ProjectDivaAxisMapping::ProjectDivaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
+ProjectDivaAxisMapping::ProjectDivaAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
 {
 }
 

@@ -9,7 +9,7 @@
 #include <utils.h>
 
 // L2 and R2 are triggers on gamepads, so buttons on them become trigger axes driven fully by the button
-static proto_Mapping as_gamepad_trigger(proto_Mapping mapping, GamepadAxisType axis)
+static void as_gamepad_trigger(proto_Mapping &mapping, GamepadAxisType axis)
 {
     mapping.mapping.which_mapping = proto_Output_gamepadAxis_tag;
     mapping.mapping.mapping.gamepadAxis = axis;
@@ -23,13 +23,12 @@ static proto_Mapping as_gamepad_trigger(proto_Mapping mapping, GamepadAxisType a
     mapping.min = 0;
     mapping.has_max = true;
     mapping.max = UINT16_MAX;
-    return mapping;
 }
 
 // pop'n buttons are just PS buttons on a digital pad, so they are handled as the equivalent
 // gamepad output.
 // https://github.com/PCSX2/pcsx2/blob/master/pcsx2/SIO/Pad/PadPopn.cpp
-proto_Mapping popn_as_gamepad(proto_Mapping mapping)
+void popn_as_gamepad(proto_Mapping &mapping)
 {
     GamepadButtonType button = Gamepad_A;
     switch (mapping.mapping.mapping.popnButton)
@@ -53,21 +52,22 @@ proto_Mapping popn_as_gamepad(proto_Mapping mapping)
         button = Gamepad_X;
         break;
     case PopNMusic_Button7:
-        return as_gamepad_trigger(mapping, Gamepad_RightTrigger);
+        as_gamepad_trigger(mapping, Gamepad_RightTrigger);
+        return;
     case PopNMusic_Button9:
-        return as_gamepad_trigger(mapping, Gamepad_LeftTrigger);
+        as_gamepad_trigger(mapping, Gamepad_LeftTrigger);
+        return;
     case PopNMusic_Button8:
         button = Gamepad_DpadUp;
         break;
     }
     mapping.mapping.which_mapping = proto_Output_gamepadButton_tag;
     mapping.mapping.mapping.gamepadButton = button;
-    return mapping;
 }
 
 // beatmania IIDX controllers are also PS digital pads, so they are handled as the equivalent gamepad output.
 // https://github.com/PCSX2/pcsx2/issues/10176
-proto_Mapping beatmania_as_gamepad(proto_Mapping mapping)
+void beatmania_as_gamepad(proto_Mapping &mapping)
 {
     GamepadButtonType button = Gamepad_A;
     switch (mapping.mapping.mapping.bmButton)
@@ -94,7 +94,8 @@ proto_Mapping beatmania_as_gamepad(proto_Mapping mapping)
         break;
     // Button 6 (A#, Black 3): L2
     case BeatMania_Button6:
-        return as_gamepad_trigger(mapping, Gamepad_LeftTrigger);
+        as_gamepad_trigger(mapping, Gamepad_LeftTrigger);
+        return;
     // Button 7 (B, White 4): D-Pad Left
     case BeatMania_Button7:
         button = Gamepad_DpadLeft;
@@ -109,23 +110,24 @@ proto_Mapping beatmania_as_gamepad(proto_Mapping mapping)
         break;
     // Foot Pedal: R2
     case BeatMania_Pedal:
-        return as_gamepad_trigger(mapping, Gamepad_RightTrigger);
+        as_gamepad_trigger(mapping, Gamepad_RightTrigger);
+        return;
     }
     mapping.mapping.which_mapping = proto_Output_gamepadButton_tag;
     mapping.mapping.mapping.gamepadButton = button;
-    return mapping;
 }
 
 // GuitarFreaks controllers are PS digital pads holding dpad left and right as an identifier,
 // so they are handled as the equivalent gamepad output.
-proto_Mapping guitarfreaks_as_gamepad(proto_Mapping mapping)
+void guitarfreaks_as_gamepad(proto_Mapping &mapping)
 {
     GamepadButtonType button = Gamepad_A;
     switch (mapping.mapping.mapping.gfButton)
     {
     // R2
     case GuitarFreaks_Red:
-        return as_gamepad_trigger(mapping, Gamepad_RightTrigger);
+        as_gamepad_trigger(mapping, Gamepad_RightTrigger);
+        return;
     // Circle
     case GuitarFreaks_Green:
         button = Gamepad_B;
@@ -136,7 +138,8 @@ proto_Mapping guitarfreaks_as_gamepad(proto_Mapping mapping)
         break;
     // L2
     case GuitarFreaks_Tilt:
-        return as_gamepad_trigger(mapping, Gamepad_LeftTrigger);
+        as_gamepad_trigger(mapping, Gamepad_LeftTrigger);
+        return;
     // Dpad up, the pick is a single input
     case GuitarFreaks_Strum:
         button = Gamepad_DpadUp;
@@ -144,12 +147,11 @@ proto_Mapping guitarfreaks_as_gamepad(proto_Mapping mapping)
     }
     mapping.mapping.which_mapping = proto_Output_gamepadButton_tag;
     mapping.mapping.mapping.gamepadButton = button;
-    return mapping;
 }
 
 // DrumMania kits are PS digital pads holding dpad left, up and right as an identifier,
 // so they are handled as the equivalent gamepad output.
-proto_Mapping drummania_as_gamepad(proto_Mapping mapping)
+void drummania_as_gamepad(proto_Mapping &mapping)
 {
     GamepadButtonType button = Gamepad_A;
     switch (mapping.mapping.mapping.dmButton)
@@ -164,7 +166,8 @@ proto_Mapping drummania_as_gamepad(proto_Mapping mapping)
         break;
     // R2
     case DrumMania_HighTom:
-        return as_gamepad_trigger(mapping, Gamepad_RightTrigger);
+        as_gamepad_trigger(mapping, Gamepad_RightTrigger);
+        return;
     // R1
     case DrumMania_LowTom:
         button = Gamepad_RightShoulder;
@@ -175,14 +178,14 @@ proto_Mapping drummania_as_gamepad(proto_Mapping mapping)
         break;
     // L2
     case DrumMania_BassPedal:
-        return as_gamepad_trigger(mapping, Gamepad_LeftTrigger);
+        as_gamepad_trigger(mapping, Gamepad_LeftTrigger);
+        return;
     }
     mapping.mapping.which_mapping = proto_Output_gamepadButton_tag;
     mapping.mapping.mapping.gamepadButton = button;
-    return mapping;
 }
 
-KeyboardManiaButtonMapping::KeyboardManiaButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+KeyboardManiaButtonMapping::KeyboardManiaButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
 }
 
@@ -223,7 +226,7 @@ void KeyboardManiaButtonMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-KeyboardManiaAxisMapping::KeyboardManiaAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
+KeyboardManiaAxisMapping::KeyboardManiaAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
 {
 }
 
@@ -267,7 +270,7 @@ void KeyboardManiaAxisMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-SDVXButtonMapping::SDVXButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+SDVXButtonMapping::SDVXButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
     
 }
@@ -308,7 +311,7 @@ void SDVXButtonMapping::update_xboxone(uint8_t *buf)
 {
 }
 
-SDVXAxisMapping::SDVXAxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
+SDVXAxisMapping::SDVXAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)
 {
 }
 

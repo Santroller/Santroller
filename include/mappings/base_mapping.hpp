@@ -75,7 +75,7 @@ class ButtonMapping;
 class Mapping
 {
 public:
-    Mapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile) : m_mapping(mapping), m_id(id), m_profile(profile), m_input(std::move(input))
+    Mapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile) : m_mapping(mapping), m_id(id), m_profile(profile), m_input(std::move(input))
     {
         // only mappings that use them pay for the filter state. Everything but a stick rests at min,
         // sticks move it to their center once they know they are one.
@@ -88,7 +88,7 @@ public:
             }
         }
     }
-    Mapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : Mapping(mapping, std::move(input), id, profile.get()) {}
+    Mapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : Mapping(mapping, std::move(input), id, profile.get()) {}
     virtual ~Mapping() {}
     inline void reload()
     {
@@ -158,14 +158,14 @@ class ButtonMapping : public Mapping
 {
 public:
     ~ButtonMapping() {}
-    ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile) : Mapping(mapping, std::move(input), id, profile)
+    ButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile) : Mapping(mapping, std::move(input), id, profile)
     {
         if (mapping.has_rapidTrigger)
         {
             m_rapid_trigger = std::make_unique<RapidTrigger>(mapping.rapidTrigger, mapping.triggerValue);
         }
     }
-    ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : ButtonMapping(mapping, std::move(input), id, profile.get()) {}
+    ButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : ButtonMapping(mapping, std::move(input), id, profile.get()) {}
     void update(bool full_poll, bool send_events);
     // Read and debounce the input without touching the value outputs report
     void sample(bool full_poll, bool send_events);
@@ -202,7 +202,7 @@ class ActionMapping : public ButtonMapping
 {
 public:
     ~ActionMapping() {}
-    ActionMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : ButtonMapping(mapping, std::move(input), id, profile) {}
+    ActionMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : ButtonMapping(mapping, std::move(input), id, profile) {}
     void update_action();
 
 private:
@@ -214,7 +214,7 @@ class AxisMapping : public Mapping
 {
 public:
     ~AxisMapping() {}
-    AxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile, bool trigger) : Mapping(mapping, std::move(input), id, profile), m_trigger(trigger)
+    AxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile, bool trigger) : Mapping(mapping, std::move(input), id, profile), m_trigger(trigger)
     {
         // sections calibrate like a trigger, so they rest at min too
         if (m_filter && !trigger && m_mapping.section == AxisSectionFull)
@@ -222,7 +222,7 @@ public:
             m_filter->set_rest(m_mapping.center);
         }
     }
-    AxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile, bool trigger) : AxisMapping(mapping, std::move(input), id, profile.get(), trigger) {}
+    AxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile, bool trigger) : AxisMapping(mapping, std::move(input), id, profile.get(), trigger) {}
     void update(bool full_poll, bool send_events);
 
 protected:

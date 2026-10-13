@@ -368,4 +368,40 @@ message Mapping {
   // AxisSectionCustom only: the axis value at rest and when fully pressed (0 - 65535)
   optional uint32 sectionStart = 67;
   optional uint32 sectionEnd = 68;
+  // Filters for the raw value of an analog input, run before it is calibrated
+  optional AnalogFilter filter = 69;
+  // Analog to digital buttons only: press and release on movement instead of at a fixed point
+  optional RapidTrigger rapidTrigger = 70;
+}
+
+// Each filter is off unless it is set. They run in the order listed, on the raw 0 - 65535 value.
+message AnalogFilter {
+  // Low pass: smooths out noise above this cutoff, in Hz
+  optional float lowPassCutoff = 1;
+  // ResponsiveAnalogRead (github.com/dxinteractive/ResponsiveAnalogRead): smooths small movements
+  // heavily while letting large ones through quickly. Runs at 1kHz.
+  optional bool responsive = 2;
+  // How quickly it catches up to larger movements (0 - 1), defaults to the library's 0.01
+  optional float responsiveSnap = 3;
+  // Stop moving while the input only changes by this much, in the library's 10 bit units so its
+  // documented values carry over (4 by default). 0 never sleeps.
+  optional float responsiveActivityThreshold = 4;
+  // High pass: removes slow drift below this cutoff, in Hz. The result rests at the rest point
+  // (the center for sticks, min for everything else).
+  optional float highPassCutoff = 5;
+  // Zero point drift compensation: while the input stays within this many raw units of its rest
+  // point, the rest point slowly follows it, so a drifting hall effect sensor stays centred
+  optional uint32 zpdWindow = 6;
+}
+
+// Based on minipad's (github.com/minipadKB/minipad-firmware). Works on the calibrated travel
+// (0 - 65535, using min, max and deadzone), with triggerValue as the actuation point.
+message RapidTrigger {
+  // How far the input has to move back down after releasing to press again
+  required uint32 downSensitivity = 1;
+  // How far the input has to move back up after pressing to release
+  required uint32 upSensitivity = 2;
+  // Keep rapid trigger going until the input is fully released, instead of releasing whenever it
+  // goes back past the actuation point
+  optional bool continuous = 3;
 }

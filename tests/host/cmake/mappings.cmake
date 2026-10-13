@@ -21,6 +21,7 @@ add_executable(mappings_tests
   ${MAPPINGS_SOURCES}
   ${CMAKE_CURRENT_SOURCE_DIR}/support/mappings/fakes.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mappings/calibration_test.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/mappings/analog_filter_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mappings/base_mapping_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mappings/gamepad_mapping_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mappings/guitar_mapping_test.cpp

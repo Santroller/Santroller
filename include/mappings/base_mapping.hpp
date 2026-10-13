@@ -6,6 +6,7 @@
 #include "input.pb.h"
 #include "config.pb.h"
 #include "wiimote.h"
+#include "mappings/analog_filter.hpp"
 
 struct MappingConfig
 {
@@ -72,7 +73,19 @@ class ButtonMapping;
 class Mapping
 {
 public:
-    Mapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile) : m_mapping(mapping), m_id(id), m_profile(profile), m_input(std::move(input)) {}
+    Mapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile) : m_mapping(mapping), m_id(id), m_profile(profile), m_input(std::move(input))
+    {
+        // only mappings that use them pay for the filter state. Everything but a stick rests at min,
+        // sticks move it to their center once they know they are one.
+        if (mapping.has_filter)
+        {
+            m_filter = std::make_unique<AnalogFilter>(mapping.filter, mapping.min);
+            if (!m_filter->enabled())
+            {
+                m_filter.reset();
+            }
+        }
+    }
     Mapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : Mapping(mapping, std::move(input), id, profile.get()) {}
     virtual ~Mapping() {}
     inline void reload()
@@ -102,6 +115,8 @@ public:
     void update_digital(bool full_poll);
     uint16_t sample_ui_event();
     uint16_t calibrate(float val, float max, float min, float deadzone, float center, bool trigger);
+    // The input's analog value, after any configured filters
+    uint16_t tick_filtered_analog();
     uint16_t id() const { return m_id; }
     Input* get_input() const { return m_input.get(); }
     void add_masked_mapping(Mapping* mapping) {
@@ -122,6 +137,7 @@ public:
 
 protected:
     MappingConfig m_mapping;
+    std::unique_ptr<AnalogFilter> m_filter;
     uint16_t m_id;
     Profile *m_profile;
     uint32_t m_last_value_raw = 0;
@@ -140,8 +156,14 @@ class ButtonMapping : public Mapping
 {
 public:
     ~ButtonMapping() {}
-    ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile) : Mapping(mapping, std::move(input), id, profile) {}
-    ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : Mapping(mapping, std::move(input), id, profile) {}
+    ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile) : Mapping(mapping, std::move(input), id, profile)
+    {
+        if (mapping.has_rapidTrigger)
+        {
+            m_rapid_trigger = std::make_unique<RapidTrigger>(mapping.rapidTrigger, mapping.triggerValue);
+        }
+    }
+    ButtonMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : ButtonMapping(mapping, std::move(input), id, profile.get()) {}
     void update(bool full_poll, bool send_events);
     // Read and debounce the input without touching the value outputs report
     void sample(bool full_poll, bool send_events);
@@ -165,6 +187,7 @@ protected:
     uint16_t m_last_sent_pressure = 0;
     bool m_calibrated_value = false;
     uint64_t m_last_poll = 0;
+    std::unique_ptr<RapidTrigger> m_rapid_trigger;
 };
 
 // Runs an action on the controller itself when pressed. Actions are checked every loop from
@@ -186,8 +209,15 @@ class AxisMapping : public Mapping
 {
 public:
     ~AxisMapping() {}
-    AxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile, bool trigger) : Mapping(mapping, std::move(input), id, profile), m_trigger(trigger) {}
-    AxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile, bool trigger) : Mapping(mapping, std::move(input), id, profile), m_trigger(trigger) {}
+    AxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, Profile *profile, bool trigger) : Mapping(mapping, std::move(input), id, profile), m_trigger(trigger)
+    {
+        // sections calibrate like a trigger, so they rest at min too
+        if (m_filter && !trigger && m_mapping.section == AxisSectionFull)
+        {
+            m_filter->set_rest(m_mapping.center);
+        }
+    }
+    AxisMapping(proto_Mapping mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile, bool trigger) : AxisMapping(mapping, std::move(input), id, profile.get(), trigger) {}
     void update(bool full_poll, bool send_events);
 
 protected:

@@ -52,6 +52,12 @@ uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, flo
     return calibrate_axis(val, max, min, deadzone, center, trigger);
 }
 
+uint16_t Mapping::tick_filtered_analog()
+{
+    uint16_t raw = m_input->tick_analog();
+    return m_filter ? m_filter->update(raw, time_us_64()) : raw;
+}
+
 void ButtonMapping::sample(bool full_poll, bool send_events)
 {
     uint16_t event_value = 0;
@@ -69,13 +75,24 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
     if (!event_driven && m_mapping.inverted) {
         calcVal = !calcVal;
     }
-    if (m_mapping.has_trigger)
+    bool analog_trigger = m_mapping.has_trigger || m_rapid_trigger;
+    if (analog_trigger)
     {
-        auto val = event_driven ? event_value : m_input->tick_analog();
+        auto val = event_driven ? event_value : tick_filtered_analog();
         trigger_value = val;
-        calcVal = analog_trigger_pressed(m_mapping.trigger, val, m_mapping.triggerValue, m_mapping.maxTriggerValue);
-        if (!event_driven && m_mapping.inverted) {
-            calcVal = !calcVal;
+        if (m_rapid_trigger)
+        {
+            // without a calibrated range, the travel is the raw value
+            bool calibrated = m_mapping.min != m_mapping.max;
+            uint16_t travel = calibrate(val, calibrated ? m_mapping.max : UINT16_MAX, calibrated ? m_mapping.min : 0, m_mapping.deadzone, 0, true);
+            calcVal = m_rapid_trigger->update(travel);
+        }
+        else
+        {
+            calcVal = analog_trigger_pressed(m_mapping.trigger, val, m_mapping.triggerValue, m_mapping.maxTriggerValue);
+            if (!event_driven && m_mapping.inverted) {
+                calcVal = !calcVal;
+            }
         }
     }
 
@@ -94,7 +111,7 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
     // If this mapping is a shortcut that masks other mappings:
     mask_shortcut_members(physical_pressed);
 
-    uint16_t pressure = m_mapping.has_trigger ? trigger_value
+    uint16_t pressure = analog_trigger ? trigger_value
         : event_driven ? event_value
         : m_input->has_independent_analog_value() ? m_input->tick_analog()
         : calcVal ? UINT16_MAX : 0;
@@ -110,7 +127,7 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
 
     if (send_events)
     {
-        if (m_mapping.has_trigger)
+        if (analog_trigger)
         {
             if (pressure != m_last_sent_pressure || calcVal != m_last_sent_value || full_poll)
             {
@@ -148,7 +165,7 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
     {
         m_last_poll = time_us_64();
         m_live_value = calcVal;
-        m_live_pressure = m_mapping.inverted && !m_mapping.has_trigger ? UINT16_MAX : pressure;
+        m_live_pressure = m_mapping.inverted && !analog_trigger ? UINT16_MAX : pressure;
     }
     else if (!m_mapping.has_debounce || (time_us_64() - m_last_poll) > m_mapping.debounce_us)
     {
@@ -222,7 +239,7 @@ void AxisMapping::update(bool full_poll, bool send_events)
     }
 
     bool event_received = event_driven && m_input->consume_event(event_value);
-    uint32_t uncalibrated = event_driven ? (event_received ? event_value : 0) : m_input->tick_analog();
+    uint32_t uncalibrated = event_driven ? (event_received ? event_value : 0) : tick_filtered_analog();
     uint32_t val = uncalibrated;
     if (m_mapping.has_pressed)
     {

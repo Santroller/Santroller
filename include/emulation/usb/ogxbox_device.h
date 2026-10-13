@@ -48,8 +48,12 @@ public:
     uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
     uint8_t m_epin;
     uint8_t m_epout;
+    bool m_has_slider = false;
 
-    CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_XINPUT_TX_BUFSIZE];
-    CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
+    CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_OGXBOX_TX_BUFSIZE];
+    CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_OGXBOX_RX_BUFSIZE];
+    CFG_TUSB_MEM_ALIGN uint8_t ctrl_buf[CFG_TUD_OGXBOX_RX_BUFSIZE];
     OGXboxGamepad_Data_t m_initial_report;
+    // Last report sent over the interrupt endpoint, also returned for XID GET_REPORT
+    OGXboxGamepad_Data_t m_last_report;
 };

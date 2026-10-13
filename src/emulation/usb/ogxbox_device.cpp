@@ -55,6 +55,10 @@ const OGXboxOutput_Report_t DukeXIDVibrationCapabilities = {
 
 OGXboxGamepadDevice::OGXboxGamepadDevice()
 {
+    for (const auto &profile : profiles)
+    {
+        m_has_slider |= profile->supports_slider;
+    }
 }
 uint16_t OGXboxGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16_t max_len)
 {
@@ -98,11 +102,40 @@ bool OGXboxGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, 
     }
 
     // prepare for new transfer
-    TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x40, false));
+    TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, sizeof(epout_buf), false));
     return true;
 }
 bool OGXboxGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
 {
+    // XID GET_REPORT / SET_REPORT, for hosts that poll or rumble over the control endpoint
+    if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_CLASS &&
+        request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
+    {
+        if (request->bmRequestType_bit.direction == TUSB_DIR_IN &&
+            request->bRequest == HID_REQ_CONTROL_GET_REPORT && request->wValue == 0x0100)
+        {
+            if (stage == CONTROL_STAGE_SETUP)
+            {
+                tud_control_xfer(TUD_OPT_RHPORT, request, &m_last_report, sizeof(m_last_report));
+            }
+            return true;
+        }
+        if (request->bmRequestType_bit.direction == TUSB_DIR_OUT &&
+            request->bRequest == HID_REQ_CONTROL_SET_REPORT && request->wValue == 0x0200)
+        {
+            if (stage == CONTROL_STAGE_SETUP)
+            {
+                TU_VERIFY(request->wLength <= sizeof(ctrl_buf));
+                tud_control_xfer(TUD_OPT_RHPORT, request, ctrl_buf, request->wLength);
+            }
+            else if (stage == CONTROL_STAGE_DATA && request->wLength >= sizeof(OGXboxOutput_Report_t))
+            {
+                auto const *report = (OGXboxOutput_Report_t const *)ctrl_buf;
+                set_rumble(report->left >> 8, report->right >> 8);
+            }
+            return true;
+        }
+    }
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
         if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR)
@@ -180,6 +213,7 @@ void OGXboxGamepadDevice::initialize()
         break;
     }
     m_initial_report.rsize = sizeof(OGXboxGamepad_Data_t);
+    memcpy(&m_last_report, &m_initial_report, sizeof(m_last_report));
 }
 void OGXboxGamepadDevice::process(bool full_poll, bool send_events)
 {
@@ -200,12 +234,11 @@ void OGXboxGamepadDevice::process(bool full_poll, bool send_events)
     }
     if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
+    memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     OGXboxGamepad_Data_t *report = (OGXboxGamepad_Data_t *)epin_buf;
-    report->rid = 0;
-    report->rsize = sizeof(OGXboxGamepad_Data_t);
-    memset(epin_buf, 0, sizeof(epin_buf));
     for (const auto &profile : profiles)
     {
+        profile->reset_drum_state();
         for (const auto &mapping : profile->mappings)
         {
             mapping->update(full_poll, send_events);
@@ -216,7 +249,7 @@ void OGXboxGamepadDevice::process(bool full_poll, bool send_events)
             led->update(full_poll, send_events);
         }
     }
-    if (subtype == GuitarHeroGuitar)
+    if (subtype == GuitarHeroGuitar && m_has_slider)
     {
         // convert bitmask slider to actual hid slider
         OGXboxGuitarHeroGuitar_Data_t *reportGh = (OGXboxGuitarHeroGuitar_Data_t *)report;
@@ -227,7 +260,14 @@ void OGXboxGamepadDevice::process(bool full_poll, bool send_events)
     {
         return;
     }
-    usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(OGXboxGamepad_Data_t), false);
+    if (usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(OGXboxGamepad_Data_t), false))
+    {
+        memcpy(&m_last_report, epin_buf, sizeof(OGXboxGamepad_Data_t));
+    }
+    else
+    {
+        usbd_edpt_release(TUD_OPT_RHPORT, m_epin);
+    }
 }
 
 size_t OGXboxGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)

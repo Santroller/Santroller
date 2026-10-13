@@ -343,8 +343,12 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
   if (request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_INTERFACE)
   {
     auto wIndex = request->wIndex & 0xFF;
+    // Only redirect when there are XInput interfaces to redirect to. XID uses the same request for GET_REPORT
+    // and GET_CAPABILITIES, and redirecting those to nothing stalls them, so older OG Xbox games (eg JSRF)
+    // never start reading the controller.
+    bool has_xinput = XInputGamepadDevice::xinputInterfaces[0] != 0xFF;
     // On an actual 360, the console always uses wIndex 0x00. This is the security interface so redirect the request to the right place
-    if (wIndex == 0x00 && request->wValue == INPUT_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
+    if (has_xinput && wIndex == 0x00 && request->wValue == INPUT_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
     {
       if (XInputGamepadDevice::xinputInterfaces[1] == 0xFF)
       {
@@ -383,7 +387,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         wIndex = XInputGamepadDevice::xinputInterfaces[0];
       }
     }
-    if (wIndex == 0x00 && request->wValue == VIBRATION_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
+    if (has_xinput && wIndex == 0x00 && request->wValue == VIBRATION_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
     {
       wIndex = XInputGamepadDevice::xinputInterfaces[0];
     }
@@ -405,7 +409,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     }
     else
     {
-      dev = ProfileManager::instance().get_usb_instance_by_epout(ep_addr & (~0x80));
+      dev = ProfileManager::instance().get_usb_instance_by_epin(ep_addr & (~0x80));
     }
     if (!dev)
     {

@@ -45,7 +45,9 @@ public:
     void device_descriptor(tusb_desc_device_t *desc);
     bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
     bool control_transfer(uint8_t stage, tusb_control_request_t const *request);
+    bool control_transfer_impl(uint8_t stage, tusb_control_request_t const *request);
     uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
+    void build_report(uint8_t *buf, bool full_poll, bool send_events);
     uint8_t m_epin;
     uint8_t m_epout;
     bool m_has_slider = false;
@@ -54,6 +56,9 @@ public:
     CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_OGXBOX_RX_BUFSIZE];
     CFG_TUSB_MEM_ALIGN uint8_t ctrl_buf[CFG_TUD_OGXBOX_RX_BUFSIZE];
     OGXboxGamepad_Data_t m_initial_report;
-    // Last report sent over the interrupt endpoint, also returned for XID GET_REPORT
+    // Real controllers NAK when nothing has changed, so only send a report when it differs from the last one
     OGXboxGamepad_Data_t m_last_report;
+    bool m_has_last_report = false;
+    uint16_t m_unchanged_frame = 0;
+    bool m_has_unchanged_frame = false;
 };

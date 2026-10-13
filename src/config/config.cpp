@@ -766,6 +766,17 @@ static std::shared_ptr<Profile> decode_profile(pb_istream_t stream, ConfigDecode
     proto_profile.leds.arg = &context;
     pb_decode_ex(&stream, proto_Profile_fields, &proto_profile, PB_DECODE_NOINIT);
     profile->triggers_only = !context.matched && !context.preview;
+    // Need to update capabilities again now the leds have been loaded
+    if (context.matched)
+    {
+        for (const auto &inst : ProfileManager::instance().get_instances_for_profile(profile->profile_id))
+        {
+            if (inst)
+            {
+                inst->update_capabilities();
+            }
+        }
+    }
     return profile;
 }
 

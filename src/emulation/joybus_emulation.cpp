@@ -10,8 +10,7 @@ JoybusEmulationDeviceInstance::JoybusEmulationDeviceInstance(proto_JoybusEmulati
     if (joybus_dev)
     {
         m_joybus_dev = joybus_dev;
-        m_controller = &joybus_dev->get_controller();
-        m_n64 = m_controller->is_n64();
+        m_n64 = joybus_dev->get_controller().is_n64();
     }
 }
 
@@ -22,7 +21,7 @@ JoybusEmulationDeviceInstance::~JoybusEmulationDeviceInstance()
         return;
     }
     // Only release if the device we acquired from still exists; if it was rewired or
-    // removed, its controller is already gone and m_controller would be dangling.
+    // removed, its controller is already gone.
     if (auto joybus_dev = m_joybus_dev.lock())
     {
         joybus_dev->get_controller().release();
@@ -31,9 +30,10 @@ JoybusEmulationDeviceInstance::~JoybusEmulationDeviceInstance()
 
 void JoybusEmulationDeviceInstance::initialize()
 {
-    if (m_controller && !m_acquired)
+    auto joybus_dev = m_joybus_dev.lock();
+    if (joybus_dev && !m_acquired)
     {
-        m_controller->acquire();
+        joybus_dev->get_controller().acquire();
         m_acquired = true;
     }
     memset(m_initial_report, 0, sizeof(m_initial_report));
@@ -70,12 +70,15 @@ void JoybusEmulationDeviceInstance::process(bool full_poll, bool send_events)
             led->update(full_poll, send_events);
         }
     }
-    if (!m_controller)
+    // The device can be rewired or removed while this instance still exists
+    auto joybus_dev = m_joybus_dev.lock();
+    if (!joybus_dev)
     {
         return;
     }
+    JoybusEmulation &controller = joybus_dev->get_controller();
     // Only the GameCube controller has a rumble motor built in
-    uint8_t rumble = m_controller->get_rumble() ? 255 : 0;
+    uint8_t rumble = controller.get_rumble() ? 255 : 0;
     set_rumble(rumble, rumble);
-    m_controller->set_report(m_buffer);
+    controller.set_report(m_buffer);
 }

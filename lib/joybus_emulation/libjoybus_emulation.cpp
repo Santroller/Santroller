@@ -107,6 +107,7 @@ bool JoybusEmulation::begin()
     sm_config_set_clkdiv(&config, (float)clock_get_hz(clk_sys) / 25e6f);
     sm_config_set_out_shift(&config, true, false, 32);
     sm_config_set_in_shift(&config, false, true, 8);
+    sm_config_set_mov_status(&config, STATUS_TX_LESSTHAN, 1);
     pio_sm_init(m_pio, m_sm, m_offset + joybus_offset_inmode, &config);
 
     for (auto &instance : s_instances)
@@ -280,11 +281,7 @@ void __time_critical_func(JoybusEmulation::handle_rx)()
                 m_last_command_ms = to_ms_since_boot(get_absolute_time());
                 m_seen_command = true;
             }
-            // The PIO waits for a reply after every command, so tell it when there isn't one
-            if (!m_replied)
-            {
-                pio_sm_put(m_pio, m_sm, 0);
-            }
+            // With no reply queued, the PIO gives up waiting on its own
             m_command_len = 0;
             m_replied = false;
             continue;
@@ -344,12 +341,39 @@ void __time_critical_func(JoybusEmulation::handle_command)()
 
 void __time_critical_func(JoybusEmulation::reply)(const uint32_t *words, uint8_t count)
 {
-    // The previous reply went out before the PIO started listening again, so the DMA is idle
+    m_replied = true;
+    // Normally the reply is queued before the PIO has even seen the stop bit. If the end of
+    // command marker is already here, we're late, so only reply if the PIO is still waiting
+    // for this command. Anything more than the marker means we've fallen further behind.
+    uint level = pio_sm_get_rx_fifo_level(m_pio, m_sm);
+    if (level > 1 || (level == 1 && pio_sm_get_pc(m_pio, m_sm) < m_offset + joybus_offset_end_of_command))
+    {
+        return;
+    }
+    // A reply only stays queued if it lost the race with the PIO giving up. Left there, it would
+    // go out for the next command, and every reply after would be one command behind.
+    if (dma_channel_is_busy(m_dma) || !pio_sm_is_tx_fifo_empty(m_pio, m_sm))
+    {
+        restart();
+        return;
+    }
     dma_channel_config c = dma_channel_get_default_config(m_dma);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_32);
     channel_config_set_read_increment(&c, true);
     channel_config_set_write_increment(&c, false);
     channel_config_set_dreq(&c, pio_get_dreq(m_pio, m_sm, true));
     dma_channel_configure(m_dma, &c, &m_pio->txf[m_sm], words, count, true);
-    m_replied = true;
+}
+
+// Drop the stale reply and start listening from scratch. The rest of the command being received
+// comes through as garbage, which goes unanswered.
+void __time_critical_func(JoybusEmulation::restart)()
+{
+    pio_sm_set_enabled(m_pio, m_sm, false);
+    dma_channel_abort(m_dma);
+    pio_sm_clear_fifos(m_pio, m_sm);
+    pio_sm_restart(m_pio, m_sm);
+    pio_sm_exec(m_pio, m_sm, pio_encode_jmp(m_offset + joybus_offset_inmode));
+    pio_sm_set_enabled(m_pio, m_sm, true);
+    m_command_len = 0;
 }

@@ -16,7 +16,8 @@
 
 // Device side of a GameCube or N64 controller port. The PIO marks the end of each command
 // and waits for a reply, which the RX interrupt queues as soon as it has seen the whole
-// command, so the reply goes out a fixed time after the console's stop bit.
+// command, so the reply goes out a fixed time after the console's stop bit. A reply that
+// misses the PIO's window is dropped rather than sent late.
 class JoybusEmulation
 {
 public:
@@ -41,6 +42,7 @@ private:
     void handle_rx();
     void handle_command();
     void reply(const uint32_t *words, uint8_t count);
+    void restart();
     uint8_t command_length(uint8_t command) const;
 
     uint8_t m_pin;

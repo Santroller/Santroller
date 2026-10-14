@@ -8,12 +8,14 @@
 ; command, and waits for the CPU's reply.
 ;
 ; Replying: the reply is a succession of (value, enable) bit pairs, LSB first. A pair with enable
-; clear ends the reply, so a first word of 0 means "don't reply". The CPU can queue the reply as soon
-; as it has seen the whole command, so it normally goes out at a fixed time after the stop bit.
+; clear ends the reply. The CPU can queue the reply as soon as it has seen the whole command, so it
+; normally goes out at a fixed time after the stop bit. If nothing is queued within ~44us (because
+; there is no reply, or the CPU had interrupts off) the program goes back to listening, so a late
+; reply can't go out on top of the console's next command. Needs the mov status set to "TX FIFO
+; empty" (STATUS_TX_LESSTHAN, 1).
 .program joybus
-.wrap_target
 PUBLIC outmode:
-    pull block              ; the reply, or 0 for none
+    pull block
     out x, 1                ; x = what should we output
     out y, 1                ; y = should we output something
     jmp !y inmode
@@ -28,6 +30,7 @@ bit:                        ; 4us a bit
     out x, 1
     out y, 1
     jmp y-- bit             ; falls through to inmode after the stop bit
+.wrap_target
 PUBLIC inmode:
     set pindirs, 0
     mov isr, null
@@ -43,6 +46,12 @@ idle:
     jmp bit_low             ; the next bit started
 still_high:
     jmp x-- idle [2]
+PUBLIC end_of_command:      ; from here to the end, the program is waiting for a reply
     mov isr, ~null          ; the line stayed high, so the command is over
     push block
-.wrap
+    set y, 31
+reply_wait:                 ; 34 cycles a loop, 32 loops is ~44us
+    mov x, status           ; all ones while the TX FIFO is empty
+    jmp !x outmode
+    jmp y-- reply_wait [31]
+.wrap                       ; nothing came, so listen again

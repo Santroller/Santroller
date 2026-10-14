@@ -120,8 +120,10 @@ bool XInputGamepadHost::set_config()
         {
             m_subtype = LiveGuitar;
         }
-        // GH drums don't set force feedback
-        if (m_subtype == RockBandDrums && (caps.flags & XINPUT_FLAGS_FORCE_FEEDBACK) == 0)
+        // GH drums don't set force feedback. Some RB kits (e.g. Mad Catz Portable Drum) don't
+        // either, but GH kits always list the sticks for velocity while those zero them
+        bool zeroed_sticks = !caps.leftThumbX && !caps.leftThumbY && !caps.rightThumbX && !caps.rightThumbY;
+        if (m_subtype == RockBandDrums && (caps.flags & XINPUT_FLAGS_FORCE_FEEDBACK) == 0 && !zeroed_sticks)
         {
             m_subtype = GuitarHeroDrums;
         }

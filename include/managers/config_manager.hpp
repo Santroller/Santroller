@@ -56,6 +56,9 @@ public:
     uint32_t get_reinit_time() const { return m_reinit_time; }
     void schedule_reinit(uint32_t when) { m_reinit_time = when; }
     void clear_reinit() { m_reinit_time = 0; }
+    // A profile forces a console mode, but it was skipped as the tool was open
+    bool is_forced_mode_deferred() const { return m_forced_mode_deferred; }
+    void set_forced_mode_deferred(bool deferred) { m_forced_mode_deferred = deferred; }
     
     bool has_seen_assignment(uint32_t mask) const { return m_seen_masks & mask; }
     void mark_seen_assignment(uint32_t mask) { m_seen_masks |= mask; }
@@ -94,6 +97,7 @@ private:
     bool m_full_reload;
     bool m_reinitialize_device_stack;
     bool m_restart_device_stack = false;
+    bool m_forced_mode_deferred = false;
     uint32_t m_last_work = 0;
     uint32_t m_reinit_time;
     uint32_t m_time_since_mode;

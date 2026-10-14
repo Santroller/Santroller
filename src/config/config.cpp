@@ -568,9 +568,18 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
         ConsoleMode forced_usb_mode;
         if (list->forcedConsoleMode(forced_usb_mode))
         {
-            printf("mode forced %d (was %d)\r\n", forced_usb_mode, config_mgr.get_requested_mode());
-            config_mgr.request_mode(forced_usb_mode);
-            usb_mode = forced_usb_mode;
+            if (!HIDConfigDevice::tool_closed())
+            {
+                // Switching modes would drop the tool's connection, so apply it once the tool disconnects
+                printf("mode forced %d deferred, tool is open\r\n", forced_usb_mode);
+                config_mgr.set_forced_mode_deferred(true);
+            }
+            else
+            {
+                printf("mode forced %d (was %d)\r\n", forced_usb_mode, config_mgr.get_requested_mode());
+                config_mgr.request_mode(forced_usb_mode);
+                usb_mode = forced_usb_mode;
+            }
         }
 
         bool xinput_win;

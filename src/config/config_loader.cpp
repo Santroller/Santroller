@@ -38,6 +38,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     config.profiles.funcs.decode = &load_profile;
     config.guiConfig.funcs.decode = nullptr;
     config_mgr.clear_seen_masks();
+    config_mgr.set_forced_mode_deferred(false);
     BatteryManager::instance().begin_config_reload();
     device_mgr.clear_active_devices();
     device_mgr.mark_root_devices_disconnected();

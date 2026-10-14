@@ -87,6 +87,13 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
       tool_lapsed = true;
     }
     ProfileManager::instance().release_tool_profile();
+    // A forced mode was held off while the tool was open, apply it now that the tool is gone
+    auto &config_mgr = ConfigManager::instance();
+    if (config_mgr.is_forced_mode_deferred() && !config_mgr.is_working())
+    {
+      config_mgr.set_forced_mode_deferred(false);
+      reload();
+    }
     return;
   }
   if (tool_lapsed)

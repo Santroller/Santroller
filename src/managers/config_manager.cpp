@@ -39,4 +39,5 @@ void ConfigManager::clear_all()
     m_reinit_time = 0;
     m_time_since_mode = 0;
     m_seen_masks = 0;
+    m_forced_mode_deferred = false;
 }

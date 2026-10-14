@@ -300,7 +300,7 @@ int main()
         printf("Entering secondary pico coprocessor mode\r\n");
         secondary_pico_coprocessor_loop();
     }
-    printf("init %d\r\n", ConfigManager::instance().get_current_mode());
+    printf("init1 %d\r\n", ConfigManager::instance().get_current_mode());
     initialize_device_stack();
     ConfigManager::instance().finish_reinit(millis());
 

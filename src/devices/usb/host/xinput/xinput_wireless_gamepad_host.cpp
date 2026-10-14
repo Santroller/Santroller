@@ -27,6 +27,14 @@
 #endif
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t xbox360w_prescence[] = {0x08, 0x00, 0x0f, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+// Minimum IN polling interval in ms; the receiver advertises 1 but controllers report much more slowly
+#ifndef XINPUT_WIRELESS_POLL_INTERVAL_MS
+#define XINPUT_WIRELESS_POLL_INTERVAL_MS 2
+#endif
+static constexpr uint8_t xinput_wireless_poll_interval_ms = XINPUT_WIRELESS_POLL_INTERVAL_MS;
+// Interval the IN endpoint was actually opened with, shown in the drop line since the open-time print
+// happens before the console is connected and gets lost
+static uint8_t s_opened_in_interval_ms = 0;
 static const char xinput_wireless_gamepad_slot_name[] = "X360 Wireless Receiver Slot 0";
 
 #ifndef XINPUT_WIRELESS_TRACE
@@ -354,7 +362,18 @@ std::shared_ptr<UsbHostInterface> XInputWirelessGamepadHost::open(std::shared_pt
         {
             intf->m_ep_in = desc_ep->bEndpointAddress;
             intf->m_ep_in_size = desc_ep->wMaxPacketSize;
-            TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
+            // The receiver asks to be polled every frame, but controllers only report every few ms and every
+            // poll is a transaction PIO-USB runs from the SOF IRQ. Poll at the controller reporting rate instead
+            tusb_desc_endpoint_t polled_ep = *desc_ep;
+            if (polled_ep.bInterval < xinput_wireless_poll_interval_ms)
+            {
+                polled_ep.bInterval = xinput_wireless_poll_interval_ms;
+            }
+            TU_VERIFY(tuh_edpt_open(dev_addr, &polled_ep), nullptr);
+            s_opened_in_interval_ms = polled_ep.bInterval;
+#if XINPUT_WIRELESS_TRACE
+            printf("w ep %02x interval %u -> %u\r\n", desc_ep->bEndpointAddress, desc_ep->bInterval, polled_ep.bInterval);
+#endif
         }
         else
         {
@@ -508,14 +527,15 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                 // drops caused by bluetooth activity apart from ones caused by relinking or interference.
                 // prev: ms since the previous drop on this slot, up: ms the link had been up for
                 const uint32_t now = millis();
-                printf("w %lu %u drop n=%lu age=%lu adv=%d scan=%d disc=%d inq=%d btc=%d ble=%d prev=%lu up=%lu\r\n",
+                printf("w %lu %u drop n=%lu age=%lu adv=%d scan=%d disc=%d inq=%d btc=%d ble=%d prev=%lu up=%lu poll=%u\r\n",
                        static_cast<unsigned long>(now), m_interface,
                        static_cast<unsigned long>(m_input_count),
                        static_cast<unsigned long>(m_last_input_ms ? now - m_last_input_ms : 0),
                        bt_gamepad_advertising(), ble_background_scan_active(), ble_discovery_active(),
                        btc_inquiry_active(), btc_has_connected_device(), ble_has_connected_device(),
                        static_cast<unsigned long>(m_last_drop_ms ? now - m_last_drop_ms : 0),
-                       static_cast<unsigned long>(m_link_up_ms ? now - m_link_up_ms : 0));
+                       static_cast<unsigned long>(m_link_up_ms ? now - m_link_up_ms : 0),
+                       s_opened_in_interval_ms);
                 m_last_drop_ms = now;
                 wireless_trace_dump();
 #endif

@@ -6,6 +6,17 @@
 #define SWITCH_PRO_CON_SIMPLE_REPORT_ID 0x3F
 #define SWITCH_PRO_CON_SUBCMD_REPORT_ID 0x01
 
+// Match the factory and user stick calibration advertised by the Switch device.
+inline constexpr uint16_t SWITCH_STICK_CENTER = 0x800;
+inline constexpr uint16_t SWITCH_STICK_TRAVEL = 0x6A4;
+
+inline uint16_t switch_stick(uint32_t value)
+{
+    int32_t offset = static_cast<int32_t>(value) - UINT16_MAX / 2;
+    int32_t extent = offset < 0 ? UINT16_MAX / 2 : UINT16_MAX - UINT16_MAX / 2;
+    return SWITCH_STICK_CENTER + offset * SWITCH_STICK_TRAVEL / extent;
+}
+
 // Output report 0x01: packet counter, 8 bytes of rumble (neutral here), then the subcommand and its arguments.
 // Subcommand 0x03 sets the input report mode, 0x30 being the full report with 12 bit sticks. Over Bluetooth
 // the controller starts out in the simple 0x3F mode until it gets this.

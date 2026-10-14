@@ -339,17 +339,37 @@ TEST_F(GamepadAxis, OGXboxSticksAndTriggers)
 
 // Switch: 12 bit sticks with up high, digital ZL / ZR
 
-TEST_F(GamepadAxis, SwitchSticksAreTwelveBit)
+TEST_F(GamepadAxis, SwitchSticksMatchAdvertisedCalibration)
 {
     Report<SwitchInputReport> report;
     axis(Gamepad_LeftStickX, UINT16_MAX)->update_switch(report.buf());
     axis(Gamepad_LeftStickY, UINT16_MAX)->update_switch(report.buf());
     axis(Gamepad_RightStickX, 0)->update_switch(report.buf());
     axis(Gamepad_RightStickY, 0x8000)->update_switch(report.buf());
-    EXPECT_EQ(report->leftStickX, 0xFFF);
-    EXPECT_EQ(report->leftStickY, 0xFFF);
-    EXPECT_EQ(report->rightStickX, 0);
+    EXPECT_EQ(report->leftStickX, 0xEA4);
+    EXPECT_EQ(report->leftStickY, 0xEA4);
+    EXPECT_EQ(report->rightStickX, 0x15C);
     EXPECT_EQ(report->rightStickY, 0x800);
+    EXPECT_EQ(report.bytes()[4], 0xA4);
+    EXPECT_EQ(report.bytes()[5], 0x4E);
+    EXPECT_EQ(report.bytes()[6], 0xEA);
+    EXPECT_EQ(report.bytes()[7], 0x5C);
+    EXPECT_EQ(report.bytes()[8], 0x01);
+    EXPECT_EQ(report.bytes()[9], 0x80);
+}
+
+TEST_F(GamepadAxis, SwitchStickRangeIsMonotonicAndBounded)
+{
+    uint16_t previous = SWITCH_STICK_CENTER - SWITCH_STICK_TRAVEL;
+    for (uint32_t value = 0; value <= UINT16_MAX; value++)
+    {
+        uint16_t stick = switch_stick(value);
+        ASSERT_GE(stick, previous) << value;
+        ASSERT_LE(stick, SWITCH_STICK_CENTER + SWITCH_STICK_TRAVEL) << value;
+        previous = stick;
+    }
+    EXPECT_EQ(switch_stick(UINT16_MAX / 2), SWITCH_STICK_CENTER);
+    EXPECT_EQ(switch_stick(0x8000), SWITCH_STICK_CENTER);
 }
 
 TEST_F(GamepadAxis, SwitchTriggersPressNearTheEnd)

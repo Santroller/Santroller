@@ -11,7 +11,7 @@
 static JoybusEmulation *s_instances[MAX_INSTANCES];
 static uint8_t s_handler_users[NUM_PIOS];
 
-// Turn bytes into the (value, enable) bit pairs the PIO program shifts out, followed by
+// Turn bytes into the (enable, pull_low) bit pairs the PIO program shifts out, followed by
 // a stop marker. N64 uses a special marker for its 2us low stop bit. Returns the word count.
 static uint8_t encode(const uint8_t *data, uint8_t len, uint32_t *result, bool n64)
 {
@@ -22,12 +22,12 @@ static uint8_t encode(const uint8_t *data, uint8_t len, uint32_t *result, bool n
         for (int j = 0; j < 8; j++)
         {
             int bit = 2 * (8 * (i % 2) + j);
-            result[i / 2] |= 1u << (bit + 1);
-            result[i / 2] |= (uint32_t)(!!(data[i] & (0x80u >> j))) << bit;
+            result[i / 2] |= 1u << bit;
+            result[i / 2] |= (uint32_t)(!(data[i] & (0x80u >> j))) << (bit + 1);
         }
     }
     uint8_t stop_pair = 2 * (8 * (len % 2));
-    result[len / 2] |= (n64 ? 1u : 3u) << stop_pair;
+    result[len / 2] |= (n64 ? 2u : 1u) << stop_pair;
     return count;
 }
 
@@ -45,7 +45,7 @@ JoybusEmulation::JoybusEmulation(uint8_t pin, bool n64) : m_pin(pin), m_n64(n64)
     {
         memset(report, 0, sizeof(report));
     }
-    m_report_count = encode(report, n64 ? N64_REPORT_SIZE : GC_REPORT_SIZE, m_report_words, n64);
+    m_report_count = encode(report, n64 ? N64_REPORT_SIZE : GC_REPORT_SIZE, m_report_words[0], n64);
 }
 
 JoybusEmulation::~JoybusEmulation()
@@ -216,12 +216,12 @@ bool JoybusEmulation::is_communicating() const
 
 void JoybusEmulation::set_report(const uint8_t *report)
 {
-    uint32_t words[5];
-    uint8_t count = encode(report, m_n64 ? N64_REPORT_SIZE : GC_REPORT_SIZE, words, m_n64);
-    uint32_t irq_state = save_and_disable_interrupts();
-    memcpy(m_report_words, words, sizeof(words));
-    m_report_count = count;
-    restore_interrupts(irq_state);
+    uint32_t next = m_report_index ^ 1u;
+    __dmb();
+    encode(report, m_n64 ? N64_REPORT_SIZE : GC_REPORT_SIZE, m_report_words[next], m_n64);
+    // Publish only after encoding finishes. A same-core IRQ completes before this writer resumes.
+    __dmb();
+    m_report_index = next;
 }
 
 uint8_t JoybusEmulation::command_length(uint8_t command) const
@@ -307,6 +307,8 @@ void __time_critical_func(JoybusEmulation::handle_command)()
     {
         return;
     }
+    uint32_t report_index = m_report_index;
+    __dmb();
     uint8_t command = m_command[0];
     switch (command)
     {
@@ -320,8 +322,7 @@ void __time_critical_func(JoybusEmulation::handle_command)()
         // No controller pak, so pak reads and writes go unanswered
         if (command == 0x01)
         {
-            memcpy(m_tx_words, m_report_words, m_report_count * sizeof(uint32_t));
-            reply(m_tx_words, m_report_count);
+            reply(m_report_words[report_index], m_report_count);
         }
         return;
     }
@@ -334,8 +335,7 @@ void __time_critical_func(JoybusEmulation::handle_command)()
     case 0x40:
         // the third byte holds the rumble motor state (1 = on, 2 = brake)
         m_rumble = (m_command[2] & 0x03) == 0x01;
-        memcpy(m_tx_words, m_report_words, m_report_count * sizeof(uint32_t));
-        reply(m_tx_words, m_report_count);
+        reply(m_report_words[report_index], m_report_count);
         return;
     }
 }
@@ -358,12 +358,13 @@ void __time_critical_func(JoybusEmulation::reply)(const uint32_t *words, uint8_t
         restart();
         return;
     }
+    memcpy(m_tx_words, words, count * sizeof(uint32_t));
     dma_channel_config c = dma_channel_get_default_config(m_dma);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_32);
     channel_config_set_read_increment(&c, true);
     channel_config_set_write_increment(&c, false);
     channel_config_set_dreq(&c, pio_get_dreq(m_pio, m_sm, true));
-    dma_channel_configure(m_dma, &c, &m_pio->txf[m_sm], words, count, true);
+    dma_channel_configure(m_dma, &c, &m_pio->txf[m_sm], m_tx_words, count, true);
 }
 
 // Drop the stale reply and start listening from scratch. The rest of the command being received

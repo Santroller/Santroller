@@ -7,8 +7,9 @@
 ; drops the stop bit it sampled, pushes 0xFFFFFFFF (which a byte never is) to mark the end of the
 ; command, and waits for the CPU's reply.
 ;
-; Replying: the reply is a succession of (value, enable) bit pairs, LSB first. A pair with enable
-; clear ends the reply. The CPU can queue the reply as soon as it has seen the whole command, so it
+; Replying: the reply is a succession of (enable, pull_low) bit pairs, LSB first. A pair with enable
+; clear ends the reply. The output latch stays low; changing direction releases or pulls down the
+; open-drain line. The CPU can queue the reply as soon as it has seen the whole command, so it
 ; normally goes out at a fixed time after the stop bit. If nothing is queued within ~44us (because
 ; there is no reply, or the CPU had interrupts off) the program goes back to listening, so a late
 ; reply can't go out on top of the console's next command. Needs the mov status set to "TX FIFO
@@ -16,22 +17,20 @@
 .program joybus
 PUBLIC outmode:
     pull block
-    out x, 1                ; x = what should we output
     out y, 1                ; y = should we output something
-    set pins, 1             ; set the level first so taking the line doesn't glitch it low
-    set pindirs, 1
+    set pins, 0             ; never actively drive the line high
 bit:                        ; 4us a bit
-    set pins, 0 [24]
-    mov pins, x [24]
-    mov pins, x [24]
-    set pins, 1 [20]
+    set pindirs, 1 [24]
+    out pindirs, 1 [24]
+    nop [24]
+    set pindirs, 0 [21]
     pull ifempty block
-    out x, 1
     out y, 1
     jmp y-- bit
+    out x, 1                ; disabled pair: x selects the N64 stop pulse
     jmp !x inmode           ; GameCube already sent its ordinary stop bit
-    set pins, 0 [31]        ; N64 stop bit: hold low for 2us, then release
-    set pins, 0 [17]
+    set pindirs, 1 [31]     ; N64 stop bit: hold low for 2us, then release
+    nop [17]
 .wrap_target
 PUBLIC inmode:
     set pindirs, 0

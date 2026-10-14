@@ -190,16 +190,16 @@ void GamepadAxisMapping::update_switch(uint8_t *buf)
     switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:
-        report->leftStickX = m_calibrated_value >> 4;
+        report->leftStickX = switch_stick(m_calibrated_value);
         break;
     case Gamepad_LeftStickY:
-        report->leftStickY = m_calibrated_value >> 4;
+        report->leftStickY = switch_stick(m_calibrated_value);
         break;
     case Gamepad_RightStickX:
-        report->rightStickX = m_calibrated_value >> 4;
+        report->rightStickX = switch_stick(m_calibrated_value);
         break;
     case Gamepad_RightStickY:
-        report->rightStickY = m_calibrated_value >> 4;
+        report->rightStickY = switch_stick(m_calibrated_value);
         break;
     case Gamepad_LeftTrigger:
         report->leftTrigger = m_calibrated_value > 60000;

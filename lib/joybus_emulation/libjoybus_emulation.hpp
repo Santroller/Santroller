@@ -31,7 +31,8 @@ public:
     void acquire();
     void release();
     void tick();
-    // The report sent in reply to a poll (GC_REPORT_SIZE or N64_REPORT_SIZE bytes)
+    // The report sent in reply to a poll (GC_REPORT_SIZE or N64_REPORT_SIZE bytes).
+    // Call from the main loop on the same core that runs the Joybus IRQ.
     void set_report(const uint8_t *report);
     bool is_communicating() const;
     bool get_rumble() const { return m_rumble; }
@@ -71,7 +72,9 @@ private:
     uint8_t m_probe_count = 0;
     uint32_t m_origin_words[6];
     uint8_t m_origin_count = 0;
-    uint32_t m_report_words[5];
+    // Main loop writes the inactive bank; the same-core IRQ reads only the published bank.
+    uint32_t m_report_words[2][5];
+    volatile uint32_t m_report_index = 0;
     uint8_t m_report_count = 0;
     // What the DMA is sending, so set_report can't change a reply mid transfer
     uint32_t m_tx_words[6];

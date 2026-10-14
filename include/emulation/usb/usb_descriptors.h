@@ -38,8 +38,11 @@ public:
 
   bool should_infer_console() const
   {
-    return !m_seen_windows_xb1 && !m_seen_os_descriptor_read && !m_seen_read_any_device_string;
+    return m_console_inference_enabled && !m_seen_windows_xb1 && !m_seen_os_descriptor_read && !m_seen_read_any_device_string;
   }
+
+  // Config changes can alter enumeration behaviour, so inference stays disabled until reboot.
+  void disable_console_inference() { m_console_inference_enabled = false; }
 
   bool seen_windows_xb1() const { return m_seen_windows_xb1; }
   bool seen_windows_string() const { return m_seen_windows_string; }
@@ -54,6 +57,7 @@ public:
 private:
   UsbDetectionState() = default;
 
+  bool m_console_inference_enabled = true;
   bool m_seen_windows_xb1 = false;
   bool m_seen_os_descriptor_read = false;
   bool m_seen_read_any_device_string = false;

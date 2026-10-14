@@ -17,6 +17,7 @@
 #include "config/led_factory.hpp"
 #include "config/config_storage.hpp"
 #include "config/config_loader.hpp"
+#include "emulation/usb/usb_descriptors.h"
 #include "config/aux_config.hpp"
 #include "config/profile_opts.hpp"
 #include "input/input.hpp"
@@ -1058,6 +1059,7 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
         return false;
     }
     printf("Everything matched, saving!\r\n");
+    UsbDetectionState::instance().disable_console_inference();
     reload();
     config_mgr.set_working(false);
     return true;

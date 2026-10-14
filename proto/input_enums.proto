@@ -420,6 +420,10 @@ enum PS2AxisType {
   PS2AxisDualshock2L2 = 26;
   PS2AxisDualshock2R2 = 27;
   PS2AxisFishingReel = 28;
+  PS2AxisFishingMotionX = 29;
+  PS2AxisFishingMotionY = 30;
+  PS2AxisFishingMotionZ = 31;
+  PS2AxisFishingReelAccumulated = 32;
 }
 
 

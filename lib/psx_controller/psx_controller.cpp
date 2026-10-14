@@ -886,6 +886,7 @@ void PSXController::process_data(bool ack, bool timeout)
         {
         case DISCONNECTED:
             m_rumble_enabled = false;
+            m_fishing_reel_acc = 0;
             if (valid)
             {
                 status = CONNECTION_DELAY;
@@ -1045,6 +1046,10 @@ void PSXController::process_data(bool ack, bool timeout)
             PS2_PRINT("[PS2] state ENUMERATED valid=%d\r\n", valid);
             if (valid)
             {
+                if (type == PS2ControllerTypeFishingRod)
+                {
+                    m_fishing_reel_acc += (uint16_t)(ps2Data[12] * 256);
+                }
                 memcpy(lastInputs, ps2Data, BUFFER_SIZE);
                 missing = 0;
             }
@@ -1056,6 +1061,7 @@ void PSXController::process_data(bool ack, bool timeout)
                     status = DISCONNECTED;
                     type = PS2ControllerTypeUnknown;
                     m_rumble_enabled = false;
+                    m_fishing_reel_acc = 0;
                     packet_delay = 10000;
                 }
             }
@@ -1204,8 +1210,18 @@ uint16_t PSXController::read_axis(PS2AxisType axisType)
             return lastInputs[7] << 8;
         case PS2AxisLeftStickY:
             return (255 - lastInputs[8]) << 8;
-        case PS2AxisFishingReel:
-            return lastInputs[12] << 8;
+        case PS2AxisFishingMotionX:
+            return lastInputs[9] << 8;
+        case PS2AxisFishingMotionY:
+            return (255 - lastInputs[10]) << 8;
+        case PS2AxisFishingMotionZ:
+            return lastInputs[11] << 8;
+        case PS2AxisFishingReel: {
+            uint32_t val = (uint32_t)lastInputs[12] * 4000;
+            return val > 65535 ? 65535 : (uint16_t)val;
+        }
+        case PS2AxisFishingReelAccumulated:
+            return m_fishing_reel_acc;
         default:
             return 0;
         }

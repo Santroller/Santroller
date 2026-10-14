@@ -178,6 +178,7 @@ private:
     uint8_t m_rumble_small = 0;
     uint8_t m_rumble_large = 0;
     bool m_rumble_enabled = false;
+    uint16_t m_fishing_reel_acc = 0;
     std::array<uint8_t, 5> m_poll_cmd = psx_poll_command(PS2ControllerTypeUnknown, false, 0, 0);
     int missing = 0;
     bool valid = false;

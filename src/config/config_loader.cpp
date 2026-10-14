@@ -83,6 +83,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     case ModeSwitch:
     case ModeSpice2x:
     case ModePdLoader:
+    case ModeKeyboardMania:
         break;
     case ModeHid:
     case ModeXbox360:

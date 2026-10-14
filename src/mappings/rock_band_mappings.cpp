@@ -1,5 +1,6 @@
 #include <string.h>
 #include "protocols/rb_pickup.hpp"
+#include "protocols/keyboardmania.hpp"
 #include "events.pb.h"
 #include "instance.hpp"
 #include "main.hpp"
@@ -2088,6 +2089,29 @@ void ProKeysKeyMapping::update_ps3(uint8_t *buf)
         if (m_single_pressed)
         {
             set_keyboard_key(report->key1, report->key2, report->key3, report->velocities, m_mapping.mapping.mapping.proKeySingle, m_single_velocity);
+        }
+    }
+}
+// KeyboardMania has two octaves, so the top C of the pro keys is left off
+void ProKeysKeyMapping::update_keyboardmania(uint8_t *buf)
+{
+    KeyboardManiaInputReport *report = (KeyboardManiaInputReport *)buf;
+    if (m_is_multiple)
+    {
+        for (int i = 0; i < 24; i++)
+        {
+            if (m_active_keys & (1 << i))
+            {
+                report->buttons |= 1u << keyboardmania_bits[i];
+            }
+        }
+    }
+    else
+    {
+        int key = m_mapping.mapping.mapping.proKeySingle - 1;
+        if (m_single_pressed && key >= 0 && key < 24)
+        {
+            report->buttons |= 1u << keyboardmania_bits[key];
         }
     }
 }

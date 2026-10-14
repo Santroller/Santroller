@@ -179,6 +179,36 @@ enum BeatManiaButtonType {
   BeatMania_ScratchCounterClockwise = 9;
   BeatMania_Pedal = 10;
 }
+enum KeyboardManiaButtonType {
+  KeyboardMania_C1 = 1;
+  KeyboardMania_CSharp1 = 2;
+  KeyboardMania_D1 = 3;
+  KeyboardMania_DSharp1 = 4;
+  KeyboardMania_E1 = 5;
+  KeyboardMania_F1 = 6;
+  KeyboardMania_FSharp1 = 7;
+  KeyboardMania_G1 = 8;
+  KeyboardMania_GSharp1 = 9;
+  KeyboardMania_A1 = 10;
+  KeyboardMania_ASharp1 = 11;
+  KeyboardMania_B1 = 12;
+  KeyboardMania_C2 = 13;
+  KeyboardMania_CSharp2 = 14;
+  KeyboardMania_D2 = 15;
+  KeyboardMania_DSharp2 = 16;
+  KeyboardMania_E2 = 17;
+  KeyboardMania_F2 = 18;
+  KeyboardMania_FSharp2 = 19;
+  KeyboardMania_G2 = 20;
+  KeyboardMania_GSharp2 = 21;
+  KeyboardMania_A2 = 22;
+  KeyboardMania_ASharp2 = 23;
+  KeyboardMania_B2 = 24;
+  KeyboardMania_Start = 25;
+  KeyboardMania_Select = 26;
+  KeyboardMania_WheelUp = 27;
+  KeyboardMania_WheelDown = 28;
+}
 enum DrumManiaButtonType {
   DrumMania_HiHat = 1;
   DrumMania_Snare = 2;

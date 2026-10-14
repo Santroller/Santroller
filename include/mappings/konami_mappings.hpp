@@ -6,16 +6,7 @@ class KeyboardManiaButtonMapping : public ButtonMapping
 public:
     ~KeyboardManiaButtonMapping() {}
     KeyboardManiaButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
-    void update_hid(uint8_t *report);
-    void update_wii(uint8_t format, uint8_t *buf);
-    void update_switch(uint8_t *report);
-    void update_ps2(uint8_t *report);
-    void update_ps3(uint8_t *report);
-    void update_ps4(uint8_t *report);
-    void update_ps5(uint8_t *report);
-    void update_xinput(uint8_t *report);
-    void update_ogxbox(uint8_t *report);
-    void update_xboxone(uint8_t *report);
+    void update_keyboardmania(uint8_t *report) override;
 };
 
 class KeyboardManiaAxisMapping : public AxisMapping

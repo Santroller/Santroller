@@ -48,6 +48,9 @@ bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
         case ModeWiiRb:
             matched = m_config.consoleType == ConsoleWii_WiiU;
             break;
+        case ModeKeyboardMania:
+            matched = m_config.consoleType == ConsolePS2;
+            break;
         case ModeSwitch:
             matched = m_config.consoleType == ConsoleSwitch_Switch2;
             break;
@@ -91,6 +94,7 @@ bool UsbModeActivationTrigger::forcedConsoleMode(ConsoleMode& mode) const
     case ModeSpice2x:
     case ModePdLoader:
     case ModeGuitarHeroArcade:
+    case ModeKeyboardMania:
         break;
     default:
         printf("Ignoring invalid forced console mode: %d\r\n", m_config.forcedType);

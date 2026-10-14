@@ -22,6 +22,7 @@
 #include "emulation/usb/switch_device.h"
 #include "emulation/usb/gh_arcade_device.h"
 #include "emulation/usb/spice2x_device.h"
+#include "emulation/usb/keyboardmania_device.h"
 #include "emulation/usb/pdloader_device.h"
 #include "emulation/usb/midi_device.h"
 
@@ -197,6 +198,11 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
     {
         config_mgr.request_mode(ModeHid);
     }
+    // KeyboardMania only exists on the PS2, which it detects from ModeHid itself
+    if (subtype == SubType_KeyboardMania && mode != ModeHid && mode != ModeKeyboardMania)
+    {
+        config_mgr.request_mode(ModeHid);
+    }
     switch (mode)
     {
     case ModeHid:
@@ -207,6 +213,10 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
         else if (subtype == SubType_Midi)
         {
             instance = std::make_shared<UsbMidiDevice>();
+        }
+        else if (subtype == SubType_KeyboardMania)
+        {
+            instance = std::make_shared<KeyboardManiaDevice>(false);
         }
         else
         {
@@ -259,6 +269,10 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
 
     case ModePdLoader:
         instance = std::make_shared<PDLoaderDevice>();
+        break;
+
+    case ModeKeyboardMania:
+        instance = std::make_shared<KeyboardManiaDevice>(true);
         break;
 
     case ModeGuitarHeroArcade:

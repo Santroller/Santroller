@@ -109,6 +109,7 @@ public:
     virtual void update_ps5(uint8_t *report) { (void)report; }
     virtual void update_xinput(uint8_t *report) { (void)report; }
     virtual void update_pdloader(uint8_t *report) { (void)report; }
+    virtual void update_keyboardmania(uint8_t *report) { (void)report; }
     virtual void update_ogxbox(uint8_t *report) { (void)report; }
     virtual void update_xboxone(uint8_t *report) { (void)report; }
     // Whether this mapping is currently held as a button, used to wake a suspended host

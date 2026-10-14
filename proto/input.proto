@@ -338,6 +338,7 @@ message Output {
     // The MIDI channel (1 - 16) to bend, from an axis
     uint32 midiPitchBend = 38;
     DrumManiaButtonType dmButton = 39;
+    KeyboardManiaButtonType kbmButton = 40;
   }
 }
 

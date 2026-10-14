@@ -159,6 +159,7 @@ enum SubType {
   Midi = 28;
   BeatMania = 29;
   DrumMania = 30;
+  KeyboardMania = 31;
   Unknown = 255;
 }
 
@@ -289,6 +290,7 @@ enum ConsoleMode {
     ModeGuitarHeroArcade = 10;
     ModeSpice2x = 11;
     ModePdLoader = 12;
+    ModeKeyboardMania = 13;
 };
 
 enum ConsoleType {

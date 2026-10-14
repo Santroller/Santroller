@@ -4,6 +4,7 @@
 #include "mappings/mapping.hpp"
 #include "tusb.h"
 #include "emulation/usb/usb_descriptors.h"
+#include "protocols/keyboardmania.hpp"
 #include <pb_encode.h>
 #include <stdint.h>
 #include <utils.h>
@@ -189,41 +190,14 @@ KeyboardManiaButtonMapping::KeyboardManiaButtonMapping(const proto_Mapping &mapp
 {
 }
 
-void KeyboardManiaButtonMapping::update_hid(uint8_t *buf)
+void KeyboardManiaButtonMapping::update_keyboardmania(uint8_t *buf)
 {
-}
-void KeyboardManiaButtonMapping::update_wii(uint8_t format, uint8_t *buf)
-{
-}
-void KeyboardManiaButtonMapping::update_switch(uint8_t *buf)
-{
-}
-
-void KeyboardManiaButtonMapping::update_ps2(uint8_t *buf)
-{
-    // not a thing, ps2 controller was just hid based
-}
-
-void KeyboardManiaButtonMapping::update_ps3(uint8_t *buf)
-{
-}
-
-void KeyboardManiaButtonMapping::update_ps4(uint8_t *buf)
-{
-}
-
-void KeyboardManiaButtonMapping::update_ps5(uint8_t *buf)
-{
-}
-
-void KeyboardManiaButtonMapping::update_xinput(uint8_t *buf)
-{
-}
-void KeyboardManiaButtonMapping::update_ogxbox(uint8_t *buf)
-{
-}
-void KeyboardManiaButtonMapping::update_xboxone(uint8_t *buf)
-{
+    KeyboardManiaInputReport *report = (KeyboardManiaInputReport *)buf;
+    uint32_t button = m_mapping.mapping.mapping.kbmButton;
+    if (m_last_value && button >= 1 && button <= sizeof(keyboardmania_bits))
+    {
+        report->buttons |= 1u << keyboardmania_bits[button - 1];
+    }
 }
 
 KeyboardManiaAxisMapping::KeyboardManiaAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, true)

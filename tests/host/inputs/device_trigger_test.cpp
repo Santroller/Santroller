@@ -202,7 +202,7 @@ TEST_F(DeviceTriggerTest, ReportsChangesToTheTool)
 TEST_F(DeviceTriggerTest, UsbModeWithoutAConsoleAlwaysMatches)
 {
     UsbModeActivationTrigger trigger(usb_assignment(), profile, 1, 0);
-    for (int mode = ModeHid; mode <= ModePdLoader; mode++)
+    for (int mode = ModeHid; mode <= ModeKeyboardMania; mode++)
     {
         profile->mode = ConsoleMode(mode);
         EXPECT_TRUE(trigger.validate(false, false, false)) << mode;
@@ -226,6 +226,7 @@ TEST_F(DeviceTriggerTest, UsbModeForASpecificConsole)
         {ConsolePS4_PS5, {ModePs4, ModePs5}},
         {ConsoleWii_WiiU, {ModeWiiRb}},
         {ConsoleSwitch_Switch2, {ModeSwitch}},
+        {ConsolePS2, {ModeKeyboardMania}},
     };
     for (const auto &c : cases)
     {
@@ -233,7 +234,7 @@ TEST_F(DeviceTriggerTest, UsbModeForASpecificConsole)
         config.has_consoleType = true;
         config.consoleType = c.console;
         UsbModeActivationTrigger trigger(config, profile, 1, 0);
-        for (int mode = ModeHid; mode <= ModePdLoader; mode++)
+        for (int mode = ModeHid; mode <= ModeKeyboardMania; mode++)
         {
             profile->mode = ConsoleMode(mode);
             bool expected = std::find(c.modes.begin(), c.modes.end(), ConsoleMode(mode)) != c.modes.end();
@@ -268,7 +269,7 @@ TEST_F(DeviceTriggerTest, UsbModeForcedModeAndOptions)
     EXPECT_TRUE(enabled);
 
     // A mode number the firmware doesn't know is ignored rather than forced
-    config.forcedType = ConsoleMode(13);
+    config.forcedType = ConsoleMode(14);
     UsbModeActivationTrigger bad(config, profile, 1, 0);
     mode = ModeHid;
     EXPECT_FALSE(bad.forcedConsoleMode(mode));

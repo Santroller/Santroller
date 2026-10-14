@@ -270,6 +270,7 @@ add_executable(
   src/emulation/usb/switch_device.cpp
   src/emulation/usb/gh_arcade_device.cpp
   src/emulation/usb/spice2x_device.cpp
+  src/emulation/usb/keyboardmania_device.cpp
   src/emulation/usb/pdloader_device.cpp
   src/devices/usb/host/xone_host.cpp
   src/devices/usb/host/midi_host.cpp

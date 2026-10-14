@@ -76,6 +76,9 @@ void XboxWirelessController::disconnect()
 
 void XboxWirelessController::send_report_from_host(XGIPProtocol *report)
 {
+    // The console is now driving auth, so any earlier local auth-complete is stale.
+    // The forwarded packet itself may be the console's auth-complete.
+    m_controller.gip_device.auth_complete_sent = false;
     m_controller.gip_device.outgoing_xgip->copyAttributes(report);
     if (m_controller.gip_device.outgoing_xgip->getSequence() == 0) {
         uint8_t seq = gip_sequence_pool_next(&m_controller.gip_device.tx_sequence_pools, m_controller.gip_device.outgoing_xgip->getCommand());
@@ -153,7 +156,21 @@ void XboxWirelessController::on_device_descriptor(SubType subtype)
     m_controller.gip_device.subtype = subtype;
     m_subtype = subtype;
     m_controller.status = XBOX_CONTROLLER_READY;
-        
+
+    // No USB product string for a wireless controller, so build one (UTF-16LE string descriptor)
+    // from the GIP descriptor's display name for the config tool
+    memset(m_name, 0, sizeof(m_name));
+    if (const char *name = m_controller.gip_device.display_name)
+    {
+        size_t len = strnlen(name, sizeof(m_name) / 2 - 1);
+        m_name[0] = (len + 1) * 2;
+        m_name[1] = TUSB_DESC_STRING;
+        for (size_t i = 0; i < len; i++)
+        {
+            m_name[(i + 1) * 2] = name[i];
+        }
+    }
+
     usb_host_add_assignable_interface(m_adapter->get_controller_interface(m_controller_idx));
     gip_send_power_on_sequence(&m_controller.gip_device);
     process_delayed_init();
@@ -270,10 +287,20 @@ void XboxWirelessController::set_rumble(uint8_t left, uint8_t right)
     rumble.rightMotor = (uint16_t)right * 100 / 255;
     rumble.duration = (left || right) ? 0xFF : 0;
 
-    controller->gip_device.outgoing_xgip->reset();
-    controller->gip_device.outgoing_xgip->setCommand(GIP_CMD_RUMBLE);
-    controller->gip_device.outgoing_xgip->setData((uint8_t *)&rumble, sizeof(rumble));
-    send_report_from_host(controller->gip_device.outgoing_xgip);
+    send_feedback_packet(GIP_CMD_RUMBLE, false, (uint8_t *)&rumble, sizeof(rumble));
+}
+
+// Feedback must not touch gip_device.outgoing_xgip: it may hold an in-flight
+// chunked auth transfer forwarded from the console, and resetting it mid-transfer
+// truncates the auth exchange.
+void XboxWirelessController::send_feedback_packet(uint8_t command, bool system, const uint8_t *data, uint16_t len)
+{
+    static XGIPProtocol feedback;
+    feedback.reset();
+    feedback.setAttributes(command, gip_sequence_pool_next(&m_controller.gip_device.tx_sequence_pools, command), system, 0, 0);
+    feedback.setData(data, len);
+    uint8_t *packet = feedback.generatePacket();
+    m_adapter->send_report_from_host(m_controller_idx + 1, m_controller.mac_addr, packet, feedback.getPacketLength());
 }
 
 void XboxWirelessController::set_player_led(uint8_t player)
@@ -284,9 +311,7 @@ void XboxWirelessController::set_player_led(uint8_t player)
         return;
     }
     uint8_t data[3] = {0x00, (uint8_t)(player ? 0x01 : 0x00), 0x14};
-    controller->gip_device.outgoing_xgip->reset();
-    controller->gip_device.outgoing_xgip->setCommand(GIP_CMD_LED_ON);
-    controller->gip_device.outgoing_xgip->setData(data, sizeof(data));
-    send_report_from_host(controller->gip_device.outgoing_xgip);
+    // LED is a system message ([MS-GIPUSB] Table 41)
+    send_feedback_packet(GIP_CMD_LED_ON, true, data, sizeof(data));
 }
 

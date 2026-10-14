@@ -66,13 +66,19 @@ public:
      * auth responses from the host device, so they can be relayed back to
      * the console instead of the host faking an auth-complete locally.
      */
-    void register_response_handler(ConsoleMode mode, AuthHandler handler);
+    void register_response_handler(ConsoleMode mode, AuthHandler handler, const void *owner = nullptr);
 
     /**
      * Unregister the response handler for a console mode
-     * Called by the emulated USB device on disconnect/teardown
      */
     void unregister_response_handler(ConsoleMode mode);
+
+    /**
+     * Unregister the response handler for a console mode, but only if owner registered it.
+     * Called by the emulated USB device on teardown: on a config reload the replacement
+     * device registers before the old one is destroyed, so this must not remove its handler.
+     */
+    void unregister_response_handler(ConsoleMode mode, const void *owner);
 
     /**
      * Forward a real auth response packet from the host device to the
@@ -98,6 +104,7 @@ private:
     std::map<ConsoleMode, AuthHandler> handlers;
     std::map<ConsoleMode, std::shared_ptr<UsbHostInterface>> auth_devices;
     std::map<ConsoleMode, AuthHandler> response_handlers;
+    std::map<ConsoleMode, const void *> response_handler_owners;
 };
 
 // Global auth broker instance

@@ -145,7 +145,8 @@ std::shared_ptr<UsbHostInterface> XboxWirelessHost::open(std::shared_ptr<UsbHost
     uint8_t const *p_desc = (uint8_t const *)desc_itf;
 
     auto intf = std::make_shared<XboxWirelessHost>(dev_addr, desc_itf->bInterfaceNumber, list->m_id);
-    intf->set_subtype(SubType_Gamepad);
+    // The adapter itself isn't a controller; the config tool shows Unknown without a type badge
+    intf->set_subtype(SubType_Unknown);
     intf->m_adapter_pid = pid;
     uint8_t endpoints = desc_itf->bNumEndpoints;
     printf("XboxWirelessHost: Parsing %d endpoints\r\n", endpoints);

@@ -50,16 +50,25 @@ void AuthBroker::unregister_auth_device(ConsoleMode mode) {
     }
 }
 
-void AuthBroker::register_response_handler(ConsoleMode mode, AuthHandler handler) {
+void AuthBroker::register_response_handler(ConsoleMode mode, AuthHandler handler, const void *owner) {
     unregister_response_handler(mode);
     response_handlers[mode] = std::move(handler);
+    response_handler_owners[mode] = owner;
 }
 
 void AuthBroker::unregister_response_handler(ConsoleMode mode) {
+    response_handler_owners.erase(mode);
     auto it = response_handlers.find(mode);
     if (it != response_handlers.end()) {
         auto handler = std::move(it->second);
         response_handlers.erase(it);
+    }
+}
+
+void AuthBroker::unregister_response_handler(ConsoleMode mode, const void *owner) {
+    auto it = response_handler_owners.find(mode);
+    if (it != response_handler_owners.end() && it->second == owner) {
+        unregister_response_handler(mode);
     }
 }
 

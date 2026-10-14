@@ -41,6 +41,7 @@ public:
     uint8_t m_controller_idx;
     
 private:
+    void send_feedback_packet(uint8_t command, bool system, const uint8_t *data, uint16_t len);
     XboxWirelessHost* m_adapter;
     bool m_auth_registered = false;
 };

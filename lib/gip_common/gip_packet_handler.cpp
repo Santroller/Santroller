@@ -91,14 +91,15 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device)
         if (interface->on_device_descriptor)
         {
             // Detect device subtype from descriptor data using shared mappings
-            uint8_t subtype = gip_detect_device_subtype(
+            const gip_device_type_mapping_t *mapping = gip_detect_device_type(
                 xgip->getData(),
                 xgip->getDataLength(),
                 GIP_DEVICE_TYPE_MAPPINGS,
                 GIP_DEVICE_TYPE_MAPPING_COUNT);
+            device->display_name = mapping ? mapping->display_name : NULL;
 
             // Pass detected subtype to callback
-            interface->on_device_descriptor(context, (SubType)subtype);
+            interface->on_device_descriptor(context, mapping ? (SubType)mapping->subtype : Unknown);
 
             // Only hold off auth when an emulated Xbox One device (i.e. Xbox One
             // mode with a loaded profile) will pass the console's auth through.
@@ -169,7 +170,7 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device)
     }
 }
 
-uint8_t gip_detect_device_subtype(
+const gip_device_type_mapping_t *gip_detect_device_type(
     const uint8_t *data,
     uint16_t len,
     const gip_device_type_mapping_t *mappings,
@@ -177,7 +178,7 @@ uint8_t gip_detect_device_subtype(
 {
     if (!data || len < sizeof(BinaryMetadataHeader) + sizeof(BinaryDeviceMetadata))
     {
-        return 0xFF;
+        return NULL;
     }
 
     // Skip BinaryMetadataHeader
@@ -189,7 +190,7 @@ uint8_t gip_detect_device_subtype(
     // Check if we have enough data
     if (metadata->preferred_types_offset >= len)
     {
-        return 0xFF;
+        return NULL;
     }
 
     // Move to preferred types
@@ -198,7 +199,7 @@ uint8_t gip_detect_device_subtype(
 
     if (len < 1)
     {
-        return 0xFF;
+        return NULL;
     }
 
     // First byte is count of preferred type strings
@@ -229,7 +230,7 @@ uint8_t gip_detect_device_subtype(
             {
                 printf("GIP: Detected device type: %s (subtype %d)\r\n",
                        mappings[i].name, mappings[i].subtype);
-                return mappings[i].subtype;
+                return &mappings[i];
             }
         }
 
@@ -238,7 +239,17 @@ uint8_t gip_detect_device_subtype(
         len -= str_len;
     }
 
-    return 0xFF; // Unknown device
+    return NULL; // Unknown device
+}
+
+uint8_t gip_detect_device_subtype(
+    const uint8_t *data,
+    uint16_t len,
+    const gip_device_type_mapping_t *mappings,
+    size_t mapping_count)
+{
+    const gip_device_type_mapping_t *mapping = gip_detect_device_type(data, len, mappings, mapping_count);
+    return mapping ? mapping->subtype : 0xFF;
 }
 
 // Windows.Xbox.Input.IConsoleFunctionMap {ECDDD2FE-D387-4294-BD96-1A712E3DC77D}, little-endian GUID layout

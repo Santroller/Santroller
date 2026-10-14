@@ -207,7 +207,7 @@ const uint8_t xb1_descriptor_gamepad[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 XboxOneGamepadDevice::~XboxOneGamepadDevice()
 {
-    auth_broker.unregister_response_handler(ModeXboxOne);
+    auth_broker.unregister_response_handler(ModeXboxOne, this);
 }
 XboxOneGamepadDevice::XboxOneGamepadDevice()
 {
@@ -219,7 +219,7 @@ XboxOneGamepadDevice::XboxOneGamepadDevice()
     xbone_led_mode = 0;
     auth_handler_connected = auth_broker.has_handler(ModeXboxOne);
     auth_broker.register_response_handler(ModeXboxOne, [this](XGIPProtocol *report)
-                                          { send_report_from_controller(report); });
+                                          { send_report_from_controller(report); }, this);
 }
 
 uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16_t max_len)

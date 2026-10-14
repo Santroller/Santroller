@@ -201,6 +201,31 @@ TEST_F(GipDevice, AuthResponsesAreRelayedToTheConsole)
     EXPECT_FALSE(dev.auth_complete_sent);
 }
 
+// On a config reload the replacement emulated device registers before the old one is
+// destroyed, so the old one's teardown must not remove the new relay
+TEST_F(GipDevice, ReplacedEmulatedDeviceTeardownKeepsTheNewRelay)
+{
+    int old_owner = 0;
+    int new_owner = 0;
+    std::vector<Bytes> relayed;
+    auth_broker.register_response_handler(ModeXboxOne, [](XGIPProtocol *) {}, &old_owner);
+    auth_broker.register_response_handler(ModeXboxOne, [&](XGIPProtocol *p) {
+        relayed.emplace_back(p->getData(), p->getData() + p->getDataLength());
+    }, &new_owner);
+    auth_broker.unregister_response_handler(ModeXboxOne, &old_owner);
+    ASSERT_TRUE(auth_broker.has_response_handler(ModeXboxOne));
+
+    Bytes message = message_bytes(150, 4);
+    for (auto &f : fragments(GIP_AUTH, 0x09, message))
+        feed(f);
+    feed(fragment_complete(GIP_AUTH, 0x09, message.size()));
+    ASSERT_EQ(relayed.size(), 1u);
+    EXPECT_EQ(relayed[0], message);
+
+    auth_broker.unregister_response_handler(ModeXboxOne, &new_owner);
+    EXPECT_FALSE(auth_broker.has_response_handler(ModeXboxOne));
+}
+
 // [MS-GIPUSB] Table 30: status bits 7:6 are the power level, 00 = powering off / resetting
 TEST_F(GipDevice, StatusPoweringOffDisconnects)
 {

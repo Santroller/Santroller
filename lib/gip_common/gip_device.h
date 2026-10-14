@@ -35,6 +35,7 @@ typedef struct gip_device_t {
     uint16_t console_function_offset;     // Offset of IConsoleFunctionMap in the 0x20 input report, 0 = unsupported
     bool auth_complete_sent;              // Auth-complete packet has already been queued
     uint32_t last_ghl_poke;               // Timestamp of last GHL magic poke sent
+    const char *display_name;             // Display name from the matched descriptor mapping, NULL = unknown
     void *user_context;           // User context (e.g., pointer to owning controller instance)
     const gip_device_interface_t *interface;  // Interface for callbacks
 } gip_device_t;

@@ -17,6 +17,7 @@ typedef struct gip_device_t gip_device_t;
 typedef struct {
     uint8_t subtype;
     const char *name;
+    const char *display_name;
 } gip_device_type_mapping_t;
 
 /**
@@ -51,6 +52,18 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device);
  * @return Detected subtype, or 0xFF if unknown
  */
 uint8_t gip_detect_device_subtype(
+    const uint8_t *data,
+    uint16_t len,
+    const gip_device_type_mapping_t *mappings,
+    size_t mapping_count
+);
+
+/**
+ * Same as gip_detect_device_subtype, but returns the matched mapping entry
+ *
+ * @return Matched mapping, or NULL if unknown
+ */
+const gip_device_type_mapping_t *gip_detect_device_type(
     const uint8_t *data,
     uint16_t len,
     const gip_device_type_mapping_t *mappings,

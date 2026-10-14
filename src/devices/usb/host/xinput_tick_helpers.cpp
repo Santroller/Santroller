@@ -10,114 +10,26 @@ uint16_t xinput_rb_drum_velocity(int16_t velocity)
 
 XInputRockBandDrumHits xinput_decode_rb_drums(const XInputRockBandDrums_Data_t *data, bool rb2)
 {
-    XInputRockBandDrumHits hits = {};
-    if (!rb2)
-    {
-        hits.red_pad = data->b ? UINT16_MAX : 0;
-        hits.yellow_pad = data->y ? UINT16_MAX : 0;
-        hits.blue_pad = data->x ? UINT16_MAX : 0;
-        hits.green_pad = data->a ? UINT16_MAX : 0;
-        return hits;
-    }
-    bool green = data->a;
-    bool red = data->b;
-    bool yellow = data->y;
-    bool blue = data->x;
-    bool pad = data->padFlag;
-    bool cymbal = data->cymbalFlag;
-    bool up = data->dpadUp;
-    bool down = data->dpadDown;
-    uint16_t red_velocity = xinput_rb_drum_velocity(data->redVelocity);
-    uint16_t yellow_velocity = xinput_rb_drum_velocity(data->yellowVelocity);
-    uint16_t blue_velocity = xinput_rb_drum_velocity(data->blueVelocity);
-    uint16_t green_velocity = xinput_rb_drum_velocity(data->greenVelocity);
-    if (pad && cymbal)
-    {
-        // Only the d-pad is checked to resolve a pad+cymbal hit, as the colour flag can be
-        // released before the d-pad is (particularly at high polling rates)
-        if (!red && data->redVelocity)
-        {
-            // Pad and cymbal of the same colour hit together: the cymbal velocity goes in
-            // redVelocity, without red being pressed
-            if (up)
-            {
-                hits.yellow_cymbal = red_velocity;
-                hits.yellow_pad = yellow_velocity;
-            }
-            else if (down)
-            {
-                hits.blue_cymbal = red_velocity;
-                hits.blue_pad = blue_velocity;
-            }
-            else
-            {
-                hits.green_cymbal = red_velocity;
-                hits.green_pad = green_velocity;
-            }
-            return hits;
-        }
-        if (up)
-        {
-            hits.yellow_cymbal = yellow_velocity;
-            yellow = false;
-        }
-        if (down)
-        {
-            hits.blue_cymbal = blue_velocity;
-            blue = false;
-        }
-        if (!(up || down))
-        {
-            hits.green_cymbal = green_velocity;
-            green = false;
-        }
-        cymbal = false;
-    }
-    if (pad)
-    {
-        if (red)
-            hits.red_pad = red_velocity;
-        if (yellow)
-            hits.yellow_pad = yellow_velocity;
-        if (blue)
-            hits.blue_pad = blue_velocity;
-        if (green)
-            hits.green_pad = green_velocity;
-    }
-    if (cymbal)
-    {
-        if (yellow)
-            hits.yellow_cymbal = yellow_velocity;
-        if (blue)
-            hits.blue_cymbal = blue_velocity;
-        if (green)
-            hits.green_cymbal = green_velocity;
-    }
-    return hits;
+    RockBandDrumReport report = {};
+    report.green = data->a;
+    report.red = data->b;
+    report.yellow = data->y;
+    report.blue = data->x;
+    report.pad = data->padFlag;
+    report.cymbal = data->cymbalFlag;
+    report.up = data->dpadUp;
+    report.down = data->dpadDown;
+    report.red_velocity_set = data->redVelocity != 0;
+    report.red_velocity = xinput_rb_drum_velocity(data->redVelocity);
+    report.yellow_velocity = xinput_rb_drum_velocity(data->yellowVelocity);
+    report.blue_velocity = xinput_rb_drum_velocity(data->blueVelocity);
+    report.green_velocity = xinput_rb_drum_velocity(data->greenVelocity);
+    return rb_decode_drum_hits(report, rb2);
 }
 
 uint16_t xinput_rb_drum_axis(const uint8_t *ep_in_buf, RockBandDrumsAxisType axis, bool rb2)
 {
-    auto hits = xinput_decode_rb_drums((const XInputRockBandDrums_Data_t *)ep_in_buf, rb2);
-    switch (axis)
-    {
-    case RockBandDrums_RedPad:
-        return hits.red_pad;
-    case RockBandDrums_YellowPad:
-        return hits.yellow_pad;
-    case RockBandDrums_BluePad:
-        return hits.blue_pad;
-    case RockBandDrums_GreenPad:
-        return hits.green_pad;
-    case RockBandDrums_YellowCymbal:
-        return hits.yellow_cymbal;
-    case RockBandDrums_BlueCymbal:
-        return hits.blue_cymbal;
-    case RockBandDrums_GreenCymbal:
-        return hits.green_cymbal;
-    default:
-        return 0;
-    }
+    return rb_drum_hit(xinput_decode_rb_drums((const XInputRockBandDrums_Data_t *)ep_in_buf, rb2), axis);
 }
 
 uint16_t xinput_gh_drum_axis(const uint8_t *ep_in_buf, GuitarHeroDrumsAxisType axis)

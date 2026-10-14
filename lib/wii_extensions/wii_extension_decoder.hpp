@@ -17,6 +17,9 @@ public:
     bool hiRes = false;
     bool hasTapBar = false;
     uint8_t s_box = 0;
+    // Velocity of each pad hit in the latest drum report, indexed by GuitarHeroDrumsAxisType - 1.
+    // A report only ever carries one hit.
+    uint16_t mDrumHits[GuitarHeroDrums_KickPedal] = {};
 
     void reset();
 

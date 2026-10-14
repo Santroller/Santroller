@@ -349,7 +349,7 @@ bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
     return true;
 }
 
-bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool wt)
+bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool wt, bool rb2)
 {
     const uint8_t *m_ep_in_buf = buf;
     if (!third_party)
@@ -417,6 +417,25 @@ bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
     if (type.which_mapping == proto_Output_gamepadButton_tag)
     {
         auto data = (PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf;
+        // RB2 kits press the face buttons and d-pad when hitting pads and cymbals, only
+        // treat them as navigation when no hit is flagged
+        if (subtype == RockBandDrums && rb2 && ps3_rb_drums_hit_flagged(m_ep_in_buf))
+        {
+            switch (type.mapping.gamepadButton)
+            {
+            case Gamepad_A:
+            case Gamepad_B:
+            case Gamepad_X:
+            case Gamepad_Y:
+            case Gamepad_DpadUp:
+            case Gamepad_DpadDown:
+            case Gamepad_DpadLeft:
+            case Gamepad_DpadRight:
+                return false;
+            default:
+                break;
+            }
+        }
         switch (type.mapping.gamepadButton)
         {
         case Gamepad_A:
@@ -596,6 +615,16 @@ bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
             }
         }
         return false;
+    case GuitarHeroDrums:
+        if (type.which_mapping == proto_Output_ghDrumAxis_tag)
+            return ps3_gh_drum_axis(m_ep_in_buf, type.mapping.ghDrumAxis) != 0;
+        return false;
+    case RockBandDrums:
+        if (type.which_mapping == proto_Output_rbDrumButton_tag)
+            return ps3_rb_drum_button(m_ep_in_buf, type.mapping.rbDrumButton);
+        if (type.which_mapping == proto_Output_rbDrumAxis_tag)
+            return rb_drum_hit(ps3_decode_rb_drums(m_ep_in_buf, rb2), type.mapping.rbDrumAxis) != 0;
+        return false;
     case ProKeys:
         if (type.which_mapping == proto_Output_proKeySingle_tag ||
             type.which_mapping == proto_Output_proKeyMultiple_tag)
@@ -664,7 +693,7 @@ uint16_t ps3_tick_button_pressure(const uint8_t *buf, SubType subtype, bool thir
     }
 }
 
-uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type)
+uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool rb2)
 {
     const uint8_t *m_ep_in_buf = buf;
     if (!third_party)
@@ -814,6 +843,14 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             }
         }
         break;
+    case GuitarHeroDrums:
+        if (type.which_mapping == proto_Output_ghDrumAxis_tag)
+            return ps3_gh_drum_axis(m_ep_in_buf, type.mapping.ghDrumAxis);
+        break;
+    case RockBandDrums:
+        if (type.which_mapping == proto_Output_rbDrumAxis_tag)
+            return rb_drum_hit(ps3_decode_rb_drums(m_ep_in_buf, rb2), type.mapping.rbDrumAxis);
+        break;
     case ProKeys:
         if (type.which_mapping == proto_Output_proKeyboardAxis_tag)
         {
@@ -842,7 +879,7 @@ bool Ps3Host::tick_digital(proto_Output &type)
         return false;
     if (m_dancepad && !m_valid_dancepad_report)
         return false;
-    return ps3_tick_digital(m_ep_in_buf, m_subtype, m_third_party, type, m_wt);
+    return ps3_tick_digital(m_ep_in_buf, m_subtype, m_third_party, type, m_wt, m_rb2);
 }
 
 uint16_t Ps3Host::tick_analog(proto_Output &type)
@@ -851,7 +888,7 @@ uint16_t Ps3Host::tick_analog(proto_Output &type)
         return 0;
     if (m_dancepad && !m_valid_dancepad_report)
         return 0;
-    return ps3_tick_analog(m_ep_in_buf, m_subtype, m_third_party, type);
+    return ps3_tick_analog(m_ep_in_buf, m_subtype, m_third_party, type, m_rb2);
 }
 
 bool Ps3Host::tick_axis_digital(proto_Output &type)

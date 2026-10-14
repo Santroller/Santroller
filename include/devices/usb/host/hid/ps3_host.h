@@ -1,12 +1,13 @@
 #pragma once
 #include "devices/usb/host/hid/hid_host.h"
 #include "protocols/ps3.hpp"
+#include "protocols/ps3_drums.hpp"
 #include "protocols/switch_arcade.hpp"
 #include "utils.h"
 
 // Shared tick implementations — callable from both USB and BT hosts
-bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool wt = false);
-uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool wt = false, bool rb2 = false);
+uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool rb2 = false);
 uint16_t ps3_tick_button_pressure(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
 
 class Ps3Host : public HidHost

@@ -712,6 +712,62 @@ TEST(WiiDrums, NoMidiWithoutADevice)
     EXPECT_TRUE(fake_midi::packets.empty());
 }
 
+namespace
+{
+proto_Output gh_drum_axis(GuitarHeroDrumsAxisType axis)
+{
+    proto_Output out;
+    memset(&out, 0, sizeof(out));
+    out.which_mapping = proto_Output_ghDrumAxis_tag;
+    out.mapping.ghDrumAxis = axis;
+    return out;
+}
+} // namespace
+
+TEST(WiiDrums, PadHitsMapStraightToDrumOutputs)
+{
+    // For hosts that map the whole extension (the Bluetooth Wiimote), with wiibrew's pad notes.
+    // The hi-hat pedal (100) has nowhere else to go on a Guitar Hero kit, so it's a kick.
+    const std::pair<uint8_t, GuitarHeroDrumsAxisType> pads[] = {
+        {36, GuitarHeroDrums_KickPedal}, {38, GuitarHeroDrums_RedPad}, {45, GuitarHeroDrums_GreenPad},
+        {46, GuitarHeroDrums_YellowPad}, {48, GuitarHeroDrums_BluePad}, {49, GuitarHeroDrums_OrangePad},
+        {100, GuitarHeroDrums_KickPedal}};
+    for (const auto &[note, hit] : pads)
+    {
+        auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});
+        feed(decoder, drums(note, 9, 100));
+        for (auto axis : {GuitarHeroDrums_RedPad, GuitarHeroDrums_YellowPad, GuitarHeroDrums_BluePad,
+                          GuitarHeroDrums_OrangePad, GuitarHeroDrums_GreenPad, GuitarHeroDrums_KickPedal})
+        {
+            auto out = gh_drum_axis(axis);
+            EXPECT_EQ(decoder.tick_analog(out), axis == hit ? 100 << 9 : 0) << int(note) << " " << axis;
+            EXPECT_EQ(decoder.tick_digital(out), axis == hit) << int(note) << " " << axis;
+        }
+    }
+}
+
+TEST(WiiDrums, HitsOnlyLastForTheirReport)
+{
+    auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});
+    auto red = gh_drum_axis(GuitarHeroDrums_RedPad);
+    feed(decoder, drums(38, 9, 100));
+    EXPECT_NE(decoder.tick_analog(red), 0);
+    feed(decoder, {0x20, 0x20, 0xFF, 0xFF, 0xFF, 0xFF});
+    EXPECT_EQ(decoder.tick_analog(red), 0);
+}
+
+TEST(WiiDrums, OtherChannelsAndCorruptReportsAreNotHits)
+{
+    auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});
+    auto red = gh_drum_axis(GuitarHeroDrums_RedPad);
+    feed(decoder, drums(38, 3, 100));
+    EXPECT_EQ(decoder.tick_analog(red), 0);
+    auto report = drums(38, 9, 100);
+    report[0] |= 0x80;
+    feed(decoder, report);
+    EXPECT_EQ(decoder.tick_analog(red), 0);
+}
+
 TEST(WiiDrums, StickAndPlusMinus)
 {
     auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});

@@ -8,8 +8,8 @@
 
 // The USB host headers pull in TinyUSB, whose HID enums clash with btstack's, so the
 // shared tick functions from the USB hosts are declared here instead.
-bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool wt = false);
-uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool wt = false, bool rb2 = false);
+uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, bool rb2 = false);
 uint16_t ps3_tick_button_pressure(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
 
 // ============================================================================

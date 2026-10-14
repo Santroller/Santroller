@@ -2,6 +2,7 @@
 
 #include "protocols/xinput.hpp"
 #include "config.pb.h"
+#include "protocols/rock_band_drums.hpp"
 
 // Shared tick_digital and tick_analog implementations for XInput devices, in
 // src/devices/usb/host/xinput_tick_helpers.cpp
@@ -12,20 +13,10 @@
 // negative while hit (-1 to -32768). Only meaningful while the matching colour is hit.
 uint16_t xinput_rb_drum_velocity(int16_t velocity);
 
-struct XInputRockBandDrumHits
-{
-    uint16_t red_pad;
-    uint16_t yellow_pad;
-    uint16_t blue_pad;
-    uint16_t green_pad;
-    uint16_t yellow_cymbal;
-    uint16_t blue_cymbal;
-    uint16_t green_cymbal;
-};
+using XInputRockBandDrumHits = RockBandDrumHits;
 
-// RB1 kits have no velocity or cymbals and report every hit as a plain face button. RB2+ kits
-// flag pads and cymbals and use the d-pad to tell which colour a cymbal hit was. Hosts tell
-// them apart with XINPUT_CAPS_BUTTON_RIGHT_THUMB in the kit's capabilities.
+// RB2+ kits are told apart from RB1 kits with XINPUT_CAPS_BUTTON_RIGHT_THUMB in the kit's
+// capabilities, see rb_decode_drum_hits
 XInputRockBandDrumHits xinput_decode_rb_drums(const XInputRockBandDrums_Data_t *data, bool rb2);
 
 uint16_t xinput_rb_drum_axis(const uint8_t *ep_in_buf, RockBandDrumsAxisType axis, bool rb2);

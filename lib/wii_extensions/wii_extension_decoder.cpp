@@ -14,6 +14,7 @@ void WiiExtensionDecoder::reset()
     hiRes = false;
     hasTapBar = false;
     s_box = 0;
+    memset(mDrumHits, 0, sizeof(mDrumHits));
 }
 
 void WiiExtensionDecoder::decode_id(const uint8_t *id_bytes)
@@ -22,6 +23,31 @@ void WiiExtensionDecoder::decode_id(const uint8_t *id_bytes)
     hiRes = false;
     hasTapBar = false;
     s_box = 0;
+    memset(mDrumHits, 0, sizeof(mDrumHits));
+}
+
+// The pad a Wii drum note is from (wiibrew's pad table), as a GuitarHeroDrumsAxisType, or 0. The
+// hi-hat pedal counts as the kick, as there's nothing else for it on a Guitar Hero kit.
+static uint8_t wii_drum_pad(uint8_t note)
+{
+    switch (note)
+    {
+    case 36:
+    case 100:
+        return GuitarHeroDrums_KickPedal;
+    case 38:
+        return GuitarHeroDrums_RedPad;
+    case 45:
+        return GuitarHeroDrums_GreenPad;
+    case 46:
+        return GuitarHeroDrums_YellowPad;
+    case 48:
+        return GuitarHeroDrums_BluePad;
+    case 49:
+        return GuitarHeroDrums_OrangePad;
+    default:
+        return 0;
+    }
 }
 
 void WiiExtensionDecoder::update_data(const uint8_t *data, uint8_t len, MidiDevice *midi_device)
@@ -39,7 +65,11 @@ void WiiExtensionDecoder::update_data(const uint8_t *data, uint8_t len, MidiDevi
 
     // wiibrew: bytes 0 and 1 are 0 0 SX / 0 0 SY, byte 4 is vel<1> 1 1 B- 1 B+ 1 vel<0> and byte 5 ends in 1 1.
     // A corrupted read that slips past verifyData would otherwise turn into a note on some random channel.
-    if (mType == WiiExtType::WiiGuitarHeroDrums && midi_device && copy_len >= 6 &&
+    if (mType == WiiExtType::WiiGuitarHeroDrums)
+    {
+        memset(mDrumHits, 0, sizeof(mDrumHits));
+    }
+    if (mType == WiiExtType::WiiGuitarHeroDrums && copy_len >= 6 &&
         !(mBuffer[0] & 0xC0) && !(mBuffer[1] & 0xC0) &&
         (mBuffer[4] & 0x6A) == 0x6A && (mBuffer[5] & 0x03) == 0x03)
     {
@@ -55,8 +85,16 @@ void WiiExtensionDecoder::update_data(const uint8_t *data, uint8_t len, MidiDevi
         // The pads are on channel 10, and only that channel is hooked up. A note on with no velocity doesn't hit anything.
         if (channel == WII_DRUM_MIDI_CHANNEL && velocity)
         {
-            uint8_t packet[] = {0, (uint8_t)(MIDI_CIN_NOTE_ON << 4 | WII_DRUM_MIDI_CHANNEL), note, velocity};
-            midi_device->process_midi_data(packet, sizeof(packet));
+            uint8_t pad = wii_drum_pad(note);
+            if (pad)
+            {
+                mDrumHits[pad - 1] = velocity << 9;
+            }
+            if (midi_device)
+            {
+                uint8_t packet[] = {0, (uint8_t)(MIDI_CIN_NOTE_ON << 4 | WII_DRUM_MIDI_CHANNEL), note, velocity};
+                midi_device->process_midi_data(packet, sizeof(packet));
+            }
         }
     }
 
@@ -469,6 +507,10 @@ bool WiiExtensionDecoder::read_button(proto_WiiButtonType type) const
 
 bool WiiExtensionDecoder::tick_digital(proto_Output &type) const
 {
+    if (mType == WiiGuitarHeroDrums && type.which_mapping == proto_Output_ghDrumAxis_tag)
+    {
+        return tick_analog(type) != 0;
+    }
     if ((mType == WiiClassicController || mType == WiiClassicControllerPro) &&
         type.which_mapping == proto_Output_gamepadAxis_tag)
     {
@@ -633,6 +675,11 @@ bool WiiExtensionDecoder::tick_digital(proto_Output &type) const
 
 uint16_t WiiExtensionDecoder::tick_analog(proto_Output &type) const
 {
+    if (mType == WiiGuitarHeroDrums && type.which_mapping == proto_Output_ghDrumAxis_tag)
+    {
+        uint8_t axis = type.mapping.ghDrumAxis;
+        return axis >= 1 && axis <= GuitarHeroDrums_KickPedal ? mDrumHits[axis - 1] : 0;
+    }
     if (type.which_mapping == proto_Output_ghAxis_tag)
     {
         if (mType == WiiExtType::WiiGuitarHeroGuitar)

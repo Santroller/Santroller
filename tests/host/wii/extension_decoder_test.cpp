@@ -661,17 +661,46 @@ TEST(WiiDrums, EveryVelocityBitIsReassembled)
     }
 }
 
-TEST(WiiDrums, ChannelComesFromByteThree)
+TEST(WiiDrums, OnlyChannel10IsHookedUp)
 {
-    // the hi-hat pedal input and the MIDI in port can use other channels
-    for (uint8_t channel : {0, 1, 5, 15})
+    // byte 3 carries a channel, but only the pads' channel 10 is passed on
+    for (uint8_t channel : {0, 1, 5, 8, 10, 15})
     {
         reset_wii_fakes();
         auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});
         feed(decoder, drums(100, channel, 64), fake_midi_device());
-        ASSERT_EQ(fake_midi::packets.size(), 1u);
-        EXPECT_EQ(fake_midi::packets[0][1], 0x90 | channel);
-        EXPECT_EQ(fake_midi::packets[0][2], 100);
+        EXPECT_TRUE(fake_midi::packets.empty()) << int(channel);
+    }
+    reset_wii_fakes();
+    auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});
+    feed(decoder, drums(100, 9, 64), fake_midi_device());
+    ASSERT_EQ(fake_midi::packets.size(), 1u);
+    EXPECT_EQ(fake_midi::packets[0][1], 0x99);
+    EXPECT_EQ(fake_midi::packets[0][2], 100);
+}
+
+TEST(WiiDrums, NoteWithoutVelocitySendsNoMidi)
+{
+    // a note on with velocity 0 would still mark its channel as seen
+    reset_wii_fakes();
+    auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});
+    feed(decoder, drums(38, 9, 0), fake_midi_device());
+    EXPECT_TRUE(fake_midi::packets.empty());
+}
+
+TEST(WiiDrums, CorruptReportsSendNoMidi)
+{
+    // reads that aren't all 00 or all FF get past verifyData, but break the fixed bits
+    const std::vector<uint8_t> valid = drums(38, 9, 100);
+    const std::pair<int, uint8_t> corruptions[] = {{0, 0x80}, {0, 0x40}, {1, 0xC0}, {4, 0x40}, {4, 0x08}, {5, 0x01}};
+    for (const auto &[byte, flip] : corruptions)
+    {
+        reset_wii_fakes();
+        auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});
+        auto report = valid;
+        report[byte] ^= flip;
+        feed(decoder, report, fake_midi_device());
+        EXPECT_TRUE(fake_midi::packets.empty()) << byte << " " << int(flip);
     }
 }
 

@@ -37,7 +37,11 @@ void WiiExtensionDecoder::update_data(const uint8_t *data, uint8_t len, MidiDevi
         }
     }
 
-    if (mType == WiiExtType::WiiGuitarHeroDrums && midi_device)
+    // wiibrew: bytes 0 and 1 are 0 0 SX / 0 0 SY, byte 4 is vel<1> 1 1 B- 1 B+ 1 vel<0> and byte 5 ends in 1 1.
+    // A corrupted read that slips past verifyData would otherwise turn into a note on some random channel.
+    if (mType == WiiExtType::WiiGuitarHeroDrums && midi_device && copy_len >= 6 &&
+        !(mBuffer[0] & 0xC0) && !(mBuffer[1] & 0xC0) &&
+        (mBuffer[4] & 0x6A) == 0x6A && (mBuffer[5] & 0x03) == 0x03)
     {
         uint8_t velocity = ((mBuffer[4] & 0b00000001) |
                             ((mBuffer[4] & 0b10000000) >> 6) |
@@ -48,9 +52,10 @@ void WiiExtensionDecoder::update_data(const uint8_t *data, uint8_t len, MidiDevi
         uint8_t channel = ((~mBuffer[3]) >> 1) & 0xF;
         velocity = 0x7F - velocity;
         note = 0x7F - note;
-        if (velocity || note)
+        // The pads are on channel 10, and only that channel is hooked up. A note on with no velocity doesn't hit anything.
+        if (channel == WII_DRUM_MIDI_CHANNEL && velocity)
         {
-            uint8_t packet[] = {0, (uint8_t)(MIDI_CIN_NOTE_ON << 4 | channel), note, velocity};
+            uint8_t packet[] = {0, (uint8_t)(MIDI_CIN_NOTE_ON << 4 | WII_DRUM_MIDI_CHANNEL), note, velocity};
             midi_device->process_midi_data(packet, sizeof(packet));
         }
     }

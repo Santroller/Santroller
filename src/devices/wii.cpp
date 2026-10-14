@@ -55,9 +55,15 @@ void WiiDevice::end(bool full)
 {
     m_extension.end();
 }
+// Drum MIDI comes from the one extension, so its channels don't get their own assignable slots
+// like a MIDI bus would. Seeing a new channel shouldn't add a slot or reload.
+bool WiiDevice::mark_channel_seen(uint8_t channel)
+{
+    return false;
+}
+
 void WiiDevice::rescan(bool first)
 {
-    MidiDevice::rescan(first);
     if (first)
     {
         DeviceManager::instance().add_assignable_device(DeviceManager::instance().get_root_device(m_id));

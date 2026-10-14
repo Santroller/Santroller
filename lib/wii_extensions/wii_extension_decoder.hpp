@@ -6,6 +6,9 @@
 
 class MidiDevice;
 
+// MIDI channel 10, where General MIDI (and the GHWT kit) puts drums. The only channel Wii drums hook up.
+#define WII_DRUM_MIDI_CHANNEL 9
+
 class WiiExtensionDecoder
 {
 public:

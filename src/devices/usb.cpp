@@ -64,11 +64,36 @@ static void erase_usb_interfaces_if(std::vector<std::shared_ptr<UsbHostInterface
 
 void usb_host_add_assignable_interface(std::shared_ptr<UsbHostInterface> device)
 {
+    if (!device)
+    {
+        return;
+    }
+    erase_usb_interfaces_if(usb_enumerating_interfaces, [&device](const auto &candidate)
+                            { return candidate.get() == device.get() ||
+                                     (candidate->dev_addr() == device->dev_addr() && candidate->interface() == device->interface()); });
+    erase_usb_interfaces_if(usb_assignable_interfaces, [&device](const auto &candidate)
+                            { return candidate.get() == device.get() ||
+                                     (candidate->dev_addr() == device->dev_addr() && candidate->interface() == device->interface()); });
     usb_assignable_interfaces.push_back(device);
 }
 
 void usb_host_add_enumerating_interface(std::shared_ptr<UsbHostInterface> device)
 {
+    if (!device)
+    {
+        return;
+    }
+    for (const auto &candidate : usb_assignable_interfaces)
+    {
+        if (candidate.get() == device.get() ||
+            (candidate->dev_addr() == device->dev_addr() && candidate->interface() == device->interface()))
+        {
+            return;
+        }
+    }
+    erase_usb_interfaces_if(usb_enumerating_interfaces, [&device](const auto &candidate)
+                            { return candidate.get() == device.get() ||
+                                     (candidate->dev_addr() == device->dev_addr() && candidate->interface() == device->interface()); });
     usb_enumerating_interfaces.push_back(device);
 }
 
@@ -177,7 +202,7 @@ void usb_host_update_interfaces(bool full_poll, bool send_events)
 
         auto promoted = *it;
         usb_enumerating_interfaces.erase(it);
-        usb_assignable_interfaces.push_back(std::move(promoted));
+        usb_host_add_assignable_interface(promoted);
         printf("Promoted USB MIDI interface to assignable: %u:%u\r\n", device->dev_addr(), device->interface());
     }
     usb_pending_promotions.clear();
@@ -210,6 +235,10 @@ bool USBHostHardwareDevice::matches_reload_config(const proto_Device &config) co
 USBHostHardwareDevice::~USBHostHardwareDevice()
 {
     printf("USBHostHardwareDevice destructor\r\n");
+    if (m_initialized)
+    {
+        end(true);
+    }
 }
 void USBHostHardwareDevice::begin()
 {
@@ -615,6 +644,13 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
         }
         if (dev)
         {
+            auto existing = device_container->host_devices_by_itf[desc_itf->bInterfaceNumber];
+            if (existing && existing != dev)
+            {
+                usb_host_remove_assignable_interface(existing.get());
+                usb_host_remove_enumerating_interface(existing.get());
+                DeviceManager::instance().remove_device(existing.get());
+            }
             device_container->host_devices_by_itf[desc_itf->bInterfaceNumber] = dev;
             return out_len;
         }

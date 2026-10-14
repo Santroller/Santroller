@@ -18,7 +18,7 @@ TEST(PsxPollCommand, UnsupportedControllersNeverReceiveMotorValues)
                       PS2ControllerTypeNegCon, PS2ControllerTypeJogCon,
                       PS2ControllerTypeGunCon, PS2ControllerTypeMouse,
                       PS2ControllerTypeTaiko, PS2ControllerTypePopNMusic, PS2ControllerTypeDrumMania,
-                      PS2ControllerTypeGuitarFreaks})
+                      PS2ControllerTypeGuitarFreaks, PS2ControllerTypeFishingRod})
     {
         EXPECT_EQ(psx_poll_command(type, true, 255, 255), expected);
     }

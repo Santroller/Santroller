@@ -25,7 +25,11 @@ static inline bool isNegconReply(const uint8_t *status)
 }
 static inline bool isJogconReply(const uint8_t *status)
 {
-    return isValidReply(status) && (status[1] & 0xF0) == 0xE0;
+    return isValidReply(status) && status[1] == 0xE3;
+}
+static inline bool isFishingRodReply(const uint8_t *status)
+{
+    return isValidReply(status) && status[1] == 0xE5;
 }
 
 static inline bool isGunconReply(const uint8_t *status)
@@ -1013,6 +1017,8 @@ void PSXController::process_data(bool ack, bool timeout)
                 type = PS2ControllerTypeNegCon;
             else if (isJogconReply(ps2Data))
                 type = PS2ControllerTypeJogCon;
+            else if (isFishingRodReply(ps2Data))
+                type = PS2ControllerTypeFishingRod;
             else if (isGunconReply(ps2Data))
                 type = PS2ControllerTypeGunCon;
             else if (isMouseReply(ps2Data))
@@ -1191,6 +1197,19 @@ uint16_t PSXController::read_axis(PS2AxisType axisType)
             return 0;
         }
         break;
+    case PS2ControllerTypeFishingRod:
+        switch (axisType)
+        {
+        case PS2AxisLeftStickX:
+            return lastInputs[7] << 8;
+        case PS2AxisLeftStickY:
+            return (255 - lastInputs[8]) << 8;
+        case PS2AxisFishingReel:
+            return lastInputs[12] << 8;
+        default:
+            return 0;
+        }
+        break;
     case PS2ControllerTypeGunCon:
         switch (axisType)
         {
@@ -1329,6 +1348,7 @@ bool PSXController::read_button(PS2ButtonType buttonType)
         return 0;
     case PS2ControllerTypeGunCon:
     case PS2ControllerTypeJogCon:
+    case PS2ControllerTypeFishingRod:
     case PS2ControllerTypeDigital:
     case PS2ControllerTypePopNMusic:
     case PS2ControllerTypeGuitarFreaks:

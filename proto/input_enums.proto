@@ -419,6 +419,7 @@ enum PS2AxisType {
   PS2AxisDualshock2Square = 25;
   PS2AxisDualshock2L2 = 26;
   PS2AxisDualshock2R2 = 27;
+  PS2AxisFishingReel = 28;
 }
 
 

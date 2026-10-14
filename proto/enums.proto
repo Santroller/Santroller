@@ -226,6 +226,7 @@ enum PS2ControllerType {
   PS2ControllerTypePopNMusic = 12;
   PS2ControllerTypeGuitarFreaks = 13;
   PS2ControllerTypeDrumMania = 14;
+  PS2ControllerTypeFishingRod = 15;
 }
 
 enum SNESControllerType {

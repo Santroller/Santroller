@@ -23,7 +23,6 @@ public:
 private:
     proto_PSXEmulationDevice m_device;
     std::weak_ptr<class PSXEmulationDevice> m_psx_dev;
-    PSXEmulation *m_controller = nullptr;
     bool m_acquired = false;
     uint8_t m_size;
     uint8_t m_initial_report[32];

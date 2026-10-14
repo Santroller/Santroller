@@ -19,7 +19,6 @@ public:
 private:
     proto_SNESEmulationDevice m_device;
     std::weak_ptr<class SNESEmulationDevice> m_snes_dev;
-    SnesEmulation *m_controller = nullptr;
     bool m_acquired = false;
     bool m_nes = false;
 };

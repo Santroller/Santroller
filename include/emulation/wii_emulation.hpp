@@ -23,7 +23,6 @@ public:
 private:
     proto_WiiEmulationDevice m_device;
     std::weak_ptr<class WiiExtensionEmulationDevice> m_wii_dev;
-    WiiExtensionEmulation *m_controller = nullptr;
     bool m_acquired = false;
     uint8_t m_report_size;
     uint8_t m_last_format = 1;

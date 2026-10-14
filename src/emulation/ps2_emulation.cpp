@@ -17,7 +17,6 @@ Ps2EmulationDeviceInstance::Ps2EmulationDeviceInstance(proto_PSXEmulationDevice 
     if (psx_dev)
     {
         m_psx_dev = psx_dev;
-        m_controller = &psx_dev->get_controller();
     }
 }
 Ps2EmulationDeviceInstance::~Ps2EmulationDeviceInstance()
@@ -27,7 +26,7 @@ Ps2EmulationDeviceInstance::~Ps2EmulationDeviceInstance()
         return;
     }
     // Only release if the PSX device we acquired from still exists; if it was rewired or
-    // removed, its controller is already gone and m_controller would be dangling.
+    // removed, its controller is already gone.
     if (auto psx_dev = m_psx_dev.lock())
     {
         psx_dev->get_controller().release();
@@ -35,14 +34,15 @@ Ps2EmulationDeviceInstance::~Ps2EmulationDeviceInstance()
 }
 void Ps2EmulationDeviceInstance::initialize()
 {
-    if (m_controller)
+    if (auto psx_dev = m_psx_dev.lock())
     {
+        PSXEmulation &controller = psx_dev->get_controller();
         if (!m_acquired)
         {
-            m_controller->acquire();
+            controller.acquire();
             m_acquired = true;
         }
-        m_controller->begin(subtype);
+        controller.begin(subtype);
     }
     switch (subtype)
     {
@@ -126,26 +126,29 @@ void Ps2EmulationDeviceInstance::process(bool full_poll, bool send_events)
         PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)m_buffer;
         report->dpad = guitar_dpad_bindings[report->dpad];
     }
+    // The device can be rewired or removed while this instance still exists
+    auto psx_dev = m_psx_dev.lock();
     uint8_t small = 0, large = 0;
-    if (m_controller)
+    if (psx_dev)
     {
-        m_controller->get_rumble(small, large);
+        psx_dev->get_controller().get_rumble(small, large);
     }
     set_rumble(large, small ? 255 : 0);
 
-    if (!m_controller)
+    if (!psx_dev)
     {
         return;
     }
+    PSXEmulation &controller = psx_dev->get_controller();
 
     if (subtype == Gamepad)
     {
         // Always hand the complete 18-byte controller report to the PSX
         // protocol layer. Formatting is deferred until the next SPI transaction
         // is armed, so the current command/state machine is authoritative.
-        m_controller->getReportFormat();
-        m_controller->sendData(18, m_buffer);
+        controller.getReportFormat();
+        controller.sendData(18, m_buffer);
         return;
     }
-    m_controller->sendData(m_size, m_buffer);
+    controller.sendData(m_size, m_buffer);
 }

@@ -18,7 +18,6 @@ PUBLIC outmode:
     pull block
     out x, 1                ; x = what should we output
     out y, 1                ; y = should we output something
-    jmp !y inmode
     set pins, 1             ; set the level first so taking the line doesn't glitch it low
     set pindirs, 1
 bit:                        ; 4us a bit
@@ -29,21 +28,23 @@ bit:                        ; 4us a bit
     pull ifempty block
     out x, 1
     out y, 1
-    jmp y-- bit             ; falls through to inmode after the stop bit
+    jmp y-- bit
+    jmp !x inmode           ; GameCube already sent its ordinary stop bit
+    set pins, 0 [31]        ; N64 stop bit: hold low for 2us, then release
+    set pins, 0 [17]
 .wrap_target
 PUBLIC inmode:
     set pindirs, 0
     mov isr, null
     wait 0 pin 0 [2]        ; about as late as the idle loop below notices a falling edge
+idle:
+    jmp pin still_high      ; 4 cycles a loop, 28 loops is ~4.5us
 bit_low:
     nop [31]
     nop [25]
     in pins, 1              ; ~2.5us after the falling edge
     wait 1 pin 0
     set x, 27
-idle:
-    jmp pin still_high      ; 4 cycles a loop, 28 loops is ~4.5us
-    jmp bit_low             ; the next bit started
 still_high:
     jmp x-- idle [2]
 PUBLIC end_of_command:      ; from here to the end, the program is waiting for a reply

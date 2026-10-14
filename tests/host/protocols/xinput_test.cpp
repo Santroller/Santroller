@@ -21,7 +21,7 @@ TEST(XInput, SubtypeValues)
 TEST(XInput, SubtypesRoundTrip)
 {
     for (SubType t : {Gamepad, Wheel, FightStick, FlightStick, Dancepad, RockBandGuitar, GuitarHeroGuitar, RockBandDrums,
-                      StageKit, ProKeys, DjHeroTurntable, ProGuitarSquier, DisneyInfinity, Skylanders})
+                      StageKit, ProKeys, DjHeroTurntable, ProGuitarMustang, DisneyInfinity, Skylanders})
         EXPECT_EQ(get_subtype_from_xinput(get_xinput_subtype(t)), t) << t;
 }
 
@@ -29,7 +29,7 @@ TEST(XInput, SubtypesXInputCantTellApart)
 {
     // XInput only has one drum and one pro guitar subtype, and Guitar Hero drums use the drum subtype
     EXPECT_EQ(get_xinput_subtype(GuitarHeroDrums), XINPUT_DRUMS);
-    EXPECT_EQ(get_xinput_subtype(ProGuitarMustang), XINPUT_PRO_GUITAR);
+    EXPECT_EQ(get_xinput_subtype(ProGuitarSquier), XINPUT_PRO_GUITAR);
     EXPECT_EQ(get_xinput_subtype(LegoDimensions), XINPUT_DISNEY_INFINITY_AND_LEGO_DIMENSIONS);
     EXPECT_EQ(get_subtype_from_xinput(XINPUT_GUITAR_BASS), RockBandGuitar);
     EXPECT_EQ(get_subtype_from_xinput(XINPUT_ARCADE_PAD), Gamepad);

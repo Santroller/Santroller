@@ -12,8 +12,8 @@ static JoybusEmulation *s_instances[MAX_INSTANCES];
 static uint8_t s_handler_users[NUM_PIOS];
 
 // Turn bytes into the (value, enable) bit pairs the PIO program shifts out, followed by
-// the stop bit. Returns the number of words.
-static uint8_t encode(const uint8_t *data, uint8_t len, uint32_t *result)
+// a stop marker. N64 uses a special marker for its 2us low stop bit. Returns the word count.
+static uint8_t encode(const uint8_t *data, uint8_t len, uint32_t *result, bool n64)
 {
     uint8_t count = len / 2 + 1;
     memset(result, 0, count * sizeof(uint32_t));
@@ -26,7 +26,8 @@ static uint8_t encode(const uint8_t *data, uint8_t len, uint32_t *result)
             result[i / 2] |= (uint32_t)(!!(data[i] & (0x80u >> j))) << bit;
         }
     }
-    result[len / 2] |= 3u << (2 * (8 * (len % 2)));
+    uint8_t stop_pair = 2 * (8 * (len % 2));
+    result[len / 2] |= (n64 ? 1u : 3u) << stop_pair;
     return count;
 }
 
@@ -35,16 +36,16 @@ JoybusEmulation::JoybusEmulation(uint8_t pin, bool n64) : m_pin(pin), m_n64(n64)
     // GameCube reports its rumble motor is supported, N64 reports no controller pak
     static const uint8_t gc_probe[] = {0x09, 0x00, 0x03};
     static const uint8_t n64_probe[] = {0x05, 0x00, 0x02};
-    m_probe_count = encode(n64 ? n64_probe : gc_probe, 3, m_probe_words);
+    m_probe_count = encode(n64 ? n64_probe : gc_probe, 3, m_probe_words, n64);
     // Centered sticks and released triggers, which is what the console calibrates against
     static const uint8_t origin[] = {0x00, 0x80, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00, 0x00, 0x00};
-    m_origin_count = encode(origin, sizeof(origin), m_origin_words);
+    m_origin_count = encode(origin, sizeof(origin), m_origin_words, false);
     uint8_t report[GC_REPORT_SIZE] = {0x00, 0x80, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00};
     if (n64)
     {
         memset(report, 0, sizeof(report));
     }
-    m_report_count = encode(report, n64 ? N64_REPORT_SIZE : GC_REPORT_SIZE, m_report_words);
+    m_report_count = encode(report, n64 ? N64_REPORT_SIZE : GC_REPORT_SIZE, m_report_words, n64);
 }
 
 JoybusEmulation::~JoybusEmulation()
@@ -216,7 +217,7 @@ bool JoybusEmulation::is_communicating() const
 void JoybusEmulation::set_report(const uint8_t *report)
 {
     uint32_t words[5];
-    uint8_t count = encode(report, m_n64 ? N64_REPORT_SIZE : GC_REPORT_SIZE, words);
+    uint8_t count = encode(report, m_n64 ? N64_REPORT_SIZE : GC_REPORT_SIZE, words, m_n64);
     uint32_t irq_state = save_and_disable_interrupts();
     memcpy(m_report_words, words, sizeof(words));
     m_report_count = count;

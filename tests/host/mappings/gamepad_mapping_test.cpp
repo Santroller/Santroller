@@ -696,7 +696,7 @@ TEST_F(GamepadAxis, N64StickIsSignedAndLimitedToARealSticksRange)
     axis(Gamepad_LeftStickX, 0)->update_n64(report.buf());
     axis(Gamepad_LeftStickY, UINT16_MAX)->update_n64(report.buf());
     EXPECT_EQ((int8_t)report.bytes()[2], -N64_STICK_RANGE);
-    EXPECT_EQ((int8_t)report.bytes()[3], 84);
+    EXPECT_EQ((int8_t)report.bytes()[3], N64_STICK_RANGE);
 }
 
 TEST_F(GamepadAxis, N64RightStickPressesCButtons)

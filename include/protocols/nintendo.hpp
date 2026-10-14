@@ -34,8 +34,10 @@ typedef struct
     uint8_t rightTrigger;
 } __attribute__((packed)) GameCubeGamepad_Data_t;
 
-// Real sticks only reach about this far from center, so games are tuned for it
-#define N64_STICK_RANGE 85
+// Real sticks only reach about this far from center, so games are tuned for it. Some
+// consoles (at least the Analogue 3D) scale the value and wrap around to the other
+// direction somewhere past +-84, so stay clear of that.
+#define N64_STICK_RANGE 80
 
 // N64 poll response
 typedef struct

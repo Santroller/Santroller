@@ -292,7 +292,8 @@ void GamepadAxisMapping::update_gamecube(uint8_t *buf)
 
 static int8_t n64_stick(uint32_t value)
 {
-    return ((int32_t)(value >> 8) - 128) * N64_STICK_RANGE / 128;
+    // symmetric, so both directions reach exactly +-N64_STICK_RANGE
+    return ((int32_t)value - 32768) * N64_STICK_RANGE / 32767;
 }
 
 void GamepadAxisMapping::update_n64(uint8_t *buf)

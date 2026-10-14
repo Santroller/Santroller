@@ -67,6 +67,20 @@ void DeviceManager::remove_disconnected_root_devices()
 
 void DeviceManager::add_assignable_device(std::shared_ptr<Device> device)
 {
+    if (!device)
+    {
+        return;
+    }
+    if (!device->is_midi_device())
+    {
+        for (const auto &existing : m_assignable_devices)
+        {
+            if (existing.get() == device.get())
+            {
+                return;
+            }
+        }
+    }
     m_assignable_devices.push_back(device);
 }
 

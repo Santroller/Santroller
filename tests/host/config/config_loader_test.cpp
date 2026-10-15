@@ -61,6 +61,7 @@ protected:
         DeviceFactory::clear_toggle_states();
         DeviceFactory::clear_arcade_side();
         DeviceFactory::clear_bluetooth_pairing_states();
+        ConfigLoader::reset_bluetooth_loaded();
     }
 
     // Store main + aux the way the tool uploads them, then load the cached image like load() does
@@ -211,8 +212,28 @@ TEST_F(ConfigLoaderTest, StateFromThePreviousConfigIsClearedOnReload)
     ASSERT_TRUE(store_and_apply(encode_config({}), {}));
     EXPECT_EQ(DeviceFactory::get_cycle_state(3), 0);
     EXPECT_FALSE(DeviceFactory::get_toggle_state(4));
+}
+
+TEST_F(ConfigLoaderTest, PairingsInMemorySurviveAReloadOverTheUploadedOnes)
+{
+    AuxSpec boot;
+    boot.bluetooth.push_back(bluetooth_pairing(1, {9, 9, 9, 9, 9, 9}, "Old", false));
+    ASSERT_TRUE(store_and_apply(encode_config({}), encode_aux(boot)));
+    // Paired after boot, so only in memory
+    const uint8_t mac[6] = {1, 2, 3, 4, 5, 6};
+    DeviceFactory::set_bluetooth_pairing_state(2, mac, "New", true, Gamepad,
+                                               BtControllerType_BtControllerTypeGeneric, 0, 0, nullptr);
+
+    // The tool's copy is older and has a pairing the device has since forgotten
+    AuxSpec uploaded;
+    uploaded.bluetooth.push_back(bluetooth_pairing(3, {7, 7, 7, 7, 7, 7}, "Stale", false));
+    ASSERT_TRUE(store_and_apply(encode_config({}), encode_aux(uploaded)));
+
     DeviceFactory::BluetoothPairingStateData pairing{};
-    EXPECT_FALSE(DeviceFactory::get_bluetooth_pairing_state(1, pairing));
+    EXPECT_TRUE(DeviceFactory::get_bluetooth_pairing_state(1, pairing));
+    ASSERT_TRUE(DeviceFactory::get_bluetooth_pairing_state(2, pairing));
+    EXPECT_STREQ(pairing.name, "New");
+    EXPECT_FALSE(DeviceFactory::get_bluetooth_pairing_state(3, pairing));
 }
 
 TEST_F(ConfigLoaderTest, ACorruptAuxSectionStillLoadsTheMainConfig)

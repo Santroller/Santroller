@@ -29,7 +29,6 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
 
     // Pairings and bonds are learned by the device itself, so after the first load the copy in memory is
     // the real one. The tool's copy in an uploaded config can be older, and would forget new pairings
-    static bool s_bluetooth_loaded = false;
     const bool load_bluetooth = !s_bluetooth_loaded;
     s_bluetooth_loaded = true;
 

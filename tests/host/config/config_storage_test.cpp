@@ -582,6 +582,19 @@ TEST_F(ConfigStorageTest, UpdatingTheAuxBlockKeepsTheMainConfigAndCommits)
     EXPECT_EQ(image_bytes(image), concat(main, aux.bytes));
 }
 
+TEST_F(ConfigStorageTest, AnAuxUpdateCanLeaveFlashAlone)
+{
+    // Putting the device's pairings back over an upload's copy shouldn't save an upload nobody saved
+    const auto main = pattern(400, 73);
+    ASSERT_EQ(upload(storage, main, pattern(30, 74)), WriteResult::Done);
+    AuxWrite aux{pattern(40, 75)};
+    ASSERT_TRUE(storage.update_auxiliary(write_aux, &aux, false));
+    EXPECT_EQ(EEPROM.should_commit_at, 0u);
+    ConfigImage image;
+    ASSERT_TRUE(storage.read_flash(image, true));
+    EXPECT_EQ(image_bytes(image), concat(main, aux.bytes));
+}
+
 TEST_F(ConfigStorageTest, AnAuxBlockCanShrinkToNothing)
 {
     const auto main = pattern(100);

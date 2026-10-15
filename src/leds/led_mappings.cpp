@@ -37,6 +37,10 @@ void RumbleLedMapping::set_rumble(uint8_t left, uint8_t right)
 
 void RumbleLedMapping::reload()
 {
+    if (m_device)
+    {
+        m_device->setup();
+    }
 }
 void StageKitLedMapping::update(bool full_poll, bool send_events)
 {
@@ -44,6 +48,10 @@ void StageKitLedMapping::update(bool full_poll, bool send_events)
 
 void StageKitLedMapping::reload()
 {
+    if (m_device)
+    {
+        m_device->setup();
+    }
 }
 void StageKitLedMapping::set_stagekit_led(uint8_t fog, uint8_t strobe, uint8_t blue, uint8_t green, uint8_t yellow, uint8_t red)
 {
@@ -118,6 +126,10 @@ void PlaystationLedMapping::update(bool full_poll, bool send_events)
 
 void PlaystationLedMapping::reload()
 {
+    if (m_device)
+    {
+        m_device->setup();
+    }
 }
 void PlaystationLedMapping::set_lightbar(uint8_t r, uint8_t g, uint8_t b)
 {
@@ -132,6 +144,10 @@ void EuphoriaLedMapping::update(bool full_poll, bool send_events)
 
 void EuphoriaLedMapping::reload()
 {
+    if (m_device)
+    {
+        m_device->setup();
+    }
 }
 void EuphoriaLedMapping::set_euphoria_led(uint8_t val)
 {
@@ -147,6 +163,10 @@ void PlayerLedMapping::set_player_led(uint8_t player)
 
 void PlayerLedMapping::reload()
 {
+    if (m_device)
+    {
+        m_device->setup();
+    }
 }
 void KeyboardLedMapping::set_keyboard_leds(uint8_t leds)
 {

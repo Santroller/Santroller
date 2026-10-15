@@ -43,10 +43,11 @@ void Instance::update_stagekit()
 
 void Instance::set_player_led(uint8_t player)
 {
-    if (player_led == player)
+    if (player_led_set && player_led == player)
     {
         return;
     }
+    player_led_set = true;
     player_led = player;
     update_feedback();
 }

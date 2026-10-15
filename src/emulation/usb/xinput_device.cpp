@@ -283,10 +283,13 @@ bool XInputGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, 
         XInputRumbleReport_t const *rumbleReport = (XInputRumbleReport_t const *)epout_buf;
         if (ledReport->rid == XBOX_LED_ID)
         {
-            uint8_t player = xbox_players[ledReport->led];
-            if (player)
+            if (ledReport->led < sizeof(xbox_players))
             {
-                set_player_led(player);
+                uint8_t player = xbox_players[ledReport->led];
+                if (player || ledReport->led == 0x00)
+                {
+                    set_player_led(player);
+                }
             }
         }
         else if (rumbleReport->rid == XBOX_RUMBLE_ID)

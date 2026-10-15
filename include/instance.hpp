@@ -29,6 +29,7 @@ public:
     uint8_t rumble_left = 0;
     uint8_t rumble_right = 0;
     uint8_t player_led = 1;
+    bool player_led_set = false;
     uint8_t euphoria_led = 0;
     uint8_t lightbar_red = 0;
     uint8_t lightbar_green = 0;

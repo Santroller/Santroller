@@ -124,7 +124,7 @@ class KeyboardLedMapping : public LedMapping
 public:
     KeyboardLedMapping(std::unique_ptr<LedMappingDevice> device, proto_KeyboardLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
     void update(bool full_poll, bool send_events) {}
-    void reload() {}
+    void reload() { if (m_device) m_device->setup(); }
     void set_keyboard_leds(uint8_t leds) override;
 
 protected:
@@ -136,7 +136,7 @@ class GameFeedbackLedMapping : public LedMapping
 public:
     GameFeedbackLedMapping(std::unique_ptr<LedMappingDevice> device, proto_GameFeedbackLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
     void update(bool full_poll, bool send_events) {}
-    void reload() {}
+    void reload() { if (m_device) m_device->setup(); }
     void set_game_feedback(const GameFeedback &feedback) override;
 
 protected:
@@ -149,7 +149,7 @@ class StatusLedMapping : public LedMapping
 public:
     StatusLedMapping(std::unique_ptr<LedMappingDevice> device, proto_StatusLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
     void update(bool full_poll, bool send_events);
-    void reload() {}
+    void reload() { if (m_device) m_device->setup(); }
 
 protected:
     proto_StatusLedMapping m_mapping;

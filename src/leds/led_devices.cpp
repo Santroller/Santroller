@@ -203,6 +203,7 @@ void GpioLedDevice::write_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b, ui
     if (m_device.analog)
     {
         pwm_set_gpio_level(m_device.pin, r);
+        return;
     }
     gpio_put(m_device.pin, r || g || b);
 }

@@ -38,6 +38,7 @@ typedef struct pio_spi_t
     pio_spi_config_t config;
     psx_spi_protocol_state_t protocol;
     volatile uint8_t dma_buf[32];
+#if PSX_SPI_DEBUG_LOGGING
     uint8_t read_idx_read;
     uint8_t read_idx_write;
     volatile uint8_t dma_buf_test[8][8];
@@ -62,11 +63,13 @@ typedef struct pio_spi_t
     // Captured bytes from the most recent completed SPI transaction.
     volatile bool has_new_transaction;
     volatile uint8_t transaction_buf[32];
+#endif
     // Complete controller report supplied by the caller; formatted only when
     // the next SPI transaction is prepared.
     volatile uint8_t raw_report[32];
     volatile uint8_t response_buf[32];
     volatile uint8_t response_len;
+#if PSX_SPI_DEBUG_LOGGING
     volatile uint8_t last_response_buf[32];
     volatile uint8_t last_response_len;
 
@@ -94,6 +97,7 @@ typedef struct pio_spi_t
     volatile uint8_t config_index_trace_value[16];
     volatile uint8_t config_index_trace_reg[16];
     volatile uint8_t config_index_trace_idx;
+#endif
     SubType type;
     // written from the PIO IRQ
     volatile bool watchdog_active;

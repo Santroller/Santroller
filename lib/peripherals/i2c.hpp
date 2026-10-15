@@ -18,6 +18,8 @@ public:
     ~I2CDMAInterface() {};
     virtual void process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected) = 0;
 };
+#define I2C_MAX_DEVICES 16
+
 typedef struct
 {
     uint8_t addr;
@@ -27,6 +29,16 @@ typedef struct
     size_t rbuf_len;
     uint16_t* cmds;
 } i2c_dma_transfer_t;
+
+typedef struct
+{
+    uint8_t addr;
+    bool in_use;
+    I2CDMAInterface *dmaInterface;
+    volatile i2c_dma_transfer_t waitingTransfer;
+    volatile bool hasWaitingTransfer;
+} i2c_dma_slot_t;
+
 typedef struct i2c_dma_s
 {
     i2c_inst_t *i2c;
@@ -42,7 +54,7 @@ typedef struct i2c_dma_s
     bool reading;
     bool writing;
     uint device_count;
-    volatile uint currentDevAddr;
+    volatile int currentSlot;
 
     volatile bool stop_detected;
     volatile bool abort_detected;
@@ -53,9 +65,7 @@ typedef struct i2c_dma_s
     alarm_id_t timeout_alarm_id;
 
     uint16_t data_cmds[I2C_MAX_TRANSFER_SIZE];
-    I2CDMAInterface *dmaInterface[I2C_MAX_ADDR];
-    volatile i2c_dma_transfer_t waitingTransfers[I2C_MAX_ADDR];
-    volatile bool hasWaitingTransfer[I2C_MAX_ADDR];
+    i2c_dma_slot_t slots[I2C_MAX_DEVICES];
 } i2c_dma_t;
 
 class I2CMasterInterface

@@ -569,11 +569,18 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
     spi->protocol.cmd_id = 0;
     spi->watchdog_active = false;
     spi->watchdog_last_activity_ms = 0;
+#if PSX_SPI_DEBUG_LOGGING
+    spi->transaction_idx_read = 0;
+    spi->transaction_idx_write = 0;
+    spi->transaction_trace_overflow = false;
+    spi->has_new_write = false;
+    spi->has_new_transaction = false;
     spi->write_id = 0;
     spi->read_idx_read = 0;
     spi->read_idx_write = 0;
     spi->write_idx_read = 0;
     spi->write_idx_write = 0;
+#endif
     gpio_init(config->cs_pin);
     gpio_init(config->sck_pin);
     gpio_init(config->copi_pin);

@@ -36,7 +36,8 @@ static btstack_packet_callback_registration_t hci_event_callback_registration;
 // SDP
 static uint8_t hid_descriptor_storage[2048];
 
-#define MAX_DEVICES 20
+#define MAX_DEVICES 10
+#define BT_MAX_NAME_LEN 64
 enum DEVICE_STATE
 {
     REMOTE_NAME_REQUEST,
@@ -49,7 +50,7 @@ struct device
     uint8_t pageScanRepetitionMode;
     uint16_t clockOffset;
     uint32_t cod;
-    char name_buffer[240 + 2 + SIZE_OF_BD_ADDRESS];
+    char name_buffer[BT_MAX_NAME_LEN + SIZE_OF_BD_ADDRESS + 4];
     enum DEVICE_STATE state;
 };
 static struct device devices[MAX_DEVICES];
@@ -662,6 +663,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 if (gap_event_inquiry_result_get_name_available(packet))
                 {
                     int name_len = gap_event_inquiry_result_get_name_len(packet);
+                    if (name_len > BT_MAX_NAME_LEN)
+                    {
+                        name_len = BT_MAX_NAME_LEN;
+                    }
                     memcpy(devices[deviceCount].name_buffer,
                            gap_event_inquiry_result_get_name(packet), name_len);
                     devices[deviceCount].name_buffer[name_len] = ' ';
@@ -724,6 +729,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 {
                     const char *name = hci_event_remote_name_request_complete_get_remote_name(packet);
                     int name_len = strlen(name);
+                    if (name_len > BT_MAX_NAME_LEN)
+                    {
+                        name_len = BT_MAX_NAME_LEN;
+                    }
                     memcpy(devices[index].name_buffer, name, name_len);
                     devices[index].name_buffer[name_len] = 0;
                     printf("Found device '%s'\r\n", devices[index].name_buffer);

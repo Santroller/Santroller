@@ -110,6 +110,7 @@ message DMXLedDevice {
 message GpioLedDevice {
   required int32 pin = 1;
   required bool analog = 3;
+  optional bool inverted = 4;
 }
 message VTechGuitarIOExpanderLedDevice {
   required int32 deviceId = 1;

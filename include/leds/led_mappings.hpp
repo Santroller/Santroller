@@ -34,6 +34,9 @@ public:
     virtual void set_stagekit_led(uint8_t fog, uint8_t strobe, uint8_t blue, uint8_t green, uint8_t yellow, uint8_t red) {};
     virtual void set_game_feedback(const GameFeedback &feedback) {};
     virtual void set_keyboard_leds(uint8_t leds) {};
+    void test(uint32_t duration_ms = 2000);
+    bool is_testing() const;
+    bool tick_test(bool send_events);
     // the Capability bits this mapping lets the host drive
     virtual uint8_t capabilities() const { return 0; }
     // Around each pass of the host's feedback through the set_ functions, to notice when it changes
@@ -57,6 +60,7 @@ private:
     uint32_t m_last_feedback = LedMappingDevice::NOTHING_WRITTEN;
     uint32_t m_commanded_at = 0;
     bool m_was_commanded = false;
+    uint32_t m_test_until = 0;
 };
 class RumbleLedMapping : public LedMapping
 {
@@ -123,7 +127,7 @@ class KeyboardLedMapping : public LedMapping
 {
 public:
     KeyboardLedMapping(std::unique_ptr<LedMappingDevice> device, proto_KeyboardLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
-    void update(bool full_poll, bool send_events) {}
+    void update(bool full_poll, bool send_events) override { tick_test(send_events); }
     void reload() { if (m_device) m_device->setup(); }
     void set_keyboard_leds(uint8_t leds) override;
 
@@ -135,7 +139,7 @@ class GameFeedbackLedMapping : public LedMapping
 {
 public:
     GameFeedbackLedMapping(std::unique_ptr<LedMappingDevice> device, proto_GameFeedbackLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping) {}
-    void update(bool full_poll, bool send_events) {}
+    void update(bool full_poll, bool send_events) override { tick_test(send_events); }
     void reload() { if (m_device) m_device->setup(); }
     void set_game_feedback(const GameFeedback &feedback) override;
 

@@ -75,6 +75,20 @@ void RgbLedDevice::off()
         m_led_device->set_led(m_device.activeLed[i], 0, 0, 0, 0);
     }
 }
+void RgbLedDevice::test_on()
+{
+    if (endR || endG || endB)
+    {
+        write_val(UINT16_MAX);
+    }
+    else
+    {
+        for (int i = 0; i < m_device.activeLed_count; i++)
+        {
+            m_led_device->set_led(m_device.activeLed[i], 255, 255, 255, 255);
+        }
+    }
+}
 void STP16CPCLedDevice::write_val(uint16_t val)
 {
     for (int i = 0; i < m_device.activeLed_count; i++)
@@ -178,34 +192,42 @@ void VTechGuitarIoExpanderLedDevice::off()
 }
 void GpioLedDevice::setup()
 {
+    bool inv = m_device.has_inverted && m_device.inverted;
     if (m_device.analog)
     {
         gpio_set_function(m_device.pin, GPIO_FUNC_PWM);
-        pwm_set_gpio_level(m_device.pin, 0);
+        uint slice_num = pwm_gpio_to_slice_num(m_device.pin);
+        pwm_set_enabled(slice_num, true);
+        pwm_set_gpio_level(m_device.pin, inv ? 65535 : 0);
     }
     else
     {
         gpio_init(m_device.pin);
         gpio_set_dir(m_device.pin, true);
+        gpio_put(m_device.pin, inv ? 1 : 0);
     }
 }
 void GpioLedDevice::write_val(uint16_t val)
 {
+    bool inv = m_device.has_inverted && m_device.inverted;
     if (m_device.analog)
     {
-        pwm_set_gpio_level(m_device.pin, val);
+        pwm_set_gpio_level(m_device.pin, inv ? (65535 - val) : val);
         return;
     }
-    gpio_put(m_device.pin, val);
+    gpio_put(m_device.pin, inv ? !val : !!val);
 }
 void GpioLedDevice::write_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
+    bool inv = m_device.has_inverted && m_device.inverted;
     if (m_device.analog)
     {
-        pwm_set_gpio_level(m_device.pin, r);
+        uint16_t val = ((uint16_t)r << 8) | r;
+        pwm_set_gpio_level(m_device.pin, inv ? (65535 - val) : val);
         return;
     }
-    gpio_put(m_device.pin, r || g || b);
+    bool on = r || g || b;
+    gpio_put(m_device.pin, inv ? !on : on);
 }
 uint8_t GpioLedDevice::led_count()
 {
@@ -223,7 +245,13 @@ bool GpioLedDevice::supports_brightness()
 }
 void GpioLedDevice::off()
 {
-    gpio_put(m_device.pin, 0);
+    bool inv = m_device.has_inverted && m_device.inverted;
+    if (m_device.analog)
+    {
+        pwm_set_gpio_level(m_device.pin, inv ? 65535 : 0);
+        return;
+    }
+    gpio_put(m_device.pin, inv ? 1 : 0);
 }
 void InputLedMapping::reload()
 {

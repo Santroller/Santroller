@@ -37,6 +37,11 @@ message CrkdCalibrationUpdateCommand {
   required CrkdDrumAxisType axisType = 3;
   required uint32 val = 4;
 }
+message TestLedCommand {
+  optional uint32 id = 1;
+  optional uint32 durationMs = 2;
+  optional uint32 profileId = 3;
+}
 message Command {
     oneof command {
         SetProfileCommand setProfile = 1;
@@ -47,5 +52,6 @@ message Command {
         ScanCommand scan = 6;
         SaveCommand save = 7;
         UnpairBluetoothCommand unpairBluetooth = 8;
+        TestLedCommand testLed = 9;
     }
 }

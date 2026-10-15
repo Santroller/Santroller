@@ -10,7 +10,7 @@ class PinLedDevice : public LedMappingDevice
 public:
     PinLedDevice(uint32_t pin, uint16_t *value) : m_pin(pin), m_value(value) {}
     void setup() override {}
-    void off() override {}
+    void off() override { *m_value = 0; }
     bool supports_brightness() override { return false; }
     uint8_t led_count() override { return 1; }
     LedId led_id(uint8_t) override
@@ -44,8 +44,12 @@ class ButtonLedMapping : public LedMapping
 public:
     using LedMapping::LedMapping;
     bool held = false;
-    void update(bool, bool) override
+    void update(bool, bool send_events) override
     {
+        if (tick_test(send_events))
+        {
+            return;
+        }
         if (!overridden())
         {
             m_device->set_val(held ? UINT16_MAX : 0);
@@ -147,4 +151,36 @@ TEST_F(LedOverrideTest, OtherLedsAreUnaffected)
     other->held = true;
     other->update(false, false);
     EXPECT_EQ(pin2, UINT16_MAX);
+}
+
+TEST_F(LedOverrideTest, LedMappingTestModeTurnsOnAndTimesOut)
+{
+    EXPECT_EQ(pin1, 0);
+    button->test(500);
+    EXPECT_EQ(pin1, UINT16_MAX);
+    EXPECT_TRUE(button->is_testing());
+
+    // While test is running, update should keep it on even if button is not held
+    button->held = false;
+    clock_ms::advance(499);
+    button->update(false, false);
+    EXPECT_EQ(pin1, UINT16_MAX);
+    EXPECT_TRUE(button->is_testing());
+
+    // Once duration expires, update turns it off
+    clock_ms::advance(2);
+    EXPECT_FALSE(button->is_testing());
+    button->update(false, false);
+    EXPECT_EQ(pin1, 0);
+}
+
+TEST_F(LedOverrideTest, LedMappingTestModeCanBeCancelledImmediately)
+{
+    button->test(500);
+    EXPECT_EQ(pin1, UINT16_MAX);
+    EXPECT_TRUE(button->is_testing());
+
+    button->test(0);
+    EXPECT_EQ(pin1, 0);
+    EXPECT_FALSE(button->is_testing());
 }

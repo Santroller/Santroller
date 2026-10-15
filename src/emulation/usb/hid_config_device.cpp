@@ -4,6 +4,7 @@
 #include "config/config.hpp"
 #include "config/FlashPROM.h"
 #include "managers/profile_manager.hpp"
+#include "leds/led_mappings.hpp"
 
 #include "commands.pb.h"
 #include "enums.pb.h"
@@ -378,6 +379,35 @@ void HIDConfigDevice::handle_command(proto_Command command)
   case proto_Command_crkdDrum_tag:
   {
     std::static_pointer_cast<CrkdDrumDevice>(DeviceManager::instance().get_root_device(command.command.crkdDrum.id))->drum.setParam(command.command.crkdDrum.type, command.command.crkdDrum.axisType, command.command.crkdDrum.val);
+    break;
+  }
+  case proto_Command_testLed_tag:
+  {
+    uint32_t prof_id = command.command.testLed.has_profileId ? command.command.testLed.profileId : selected_profile;
+    uint32_t duration = command.command.testLed.has_durationMs ? command.command.testLed.durationMs : 2000;
+    auto prof = ProfileManager::instance().get_profile(prof_id, selected_instance);
+    if (!prof)
+    {
+      prof = ProfileManager::instance().load_tool_profile(prof_id, selected_instance);
+    }
+    if (prof)
+    {
+      uint32_t led_id = command.command.testLed.has_id ? command.command.testLed.id : UINT32_MAX;
+      if (led_id == UINT32_MAX)
+      {
+        for (const auto &led : prof->leds)
+        {
+          if (led)
+          {
+            led->test(duration);
+          }
+        }
+      }
+      else if (led_id < prof->leds.size() && prof->leds[led_id])
+      {
+        prof->leds[led_id]->test(duration);
+      }
+    }
     break;
   }
   case proto_Command_detectPin_tag:

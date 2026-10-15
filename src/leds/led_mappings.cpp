@@ -22,6 +22,7 @@ PlayerLedMapping::PlayerLedMapping(std::unique_ptr<LedMappingDevice> device, pro
 
 void RumbleLedMapping::update(bool full_poll, bool send_events)
 {
+    tick_test(send_events);
 }
 void RumbleLedMapping::set_rumble(uint8_t left, uint8_t right)
 {
@@ -44,6 +45,7 @@ void RumbleLedMapping::reload()
 }
 void StageKitLedMapping::update(bool full_poll, bool send_events)
 {
+    tick_test(send_events);
 }
 
 void StageKitLedMapping::reload()
@@ -122,6 +124,7 @@ void StageKitLedMapping::set_stagekit_led(uint8_t fog, uint8_t strobe, uint8_t b
 }
 void PlaystationLedMapping::update(bool full_poll, bool send_events)
 {
+    tick_test(send_events);
 }
 
 void PlaystationLedMapping::reload()
@@ -140,6 +143,7 @@ void PlaystationLedMapping::set_lightbar(uint8_t r, uint8_t g, uint8_t b)
 }
 void EuphoriaLedMapping::update(bool full_poll, bool send_events)
 {
+    tick_test(send_events);
 }
 
 void EuphoriaLedMapping::reload()
@@ -155,6 +159,7 @@ void EuphoriaLedMapping::set_euphoria_led(uint8_t val)
 }
 void PlayerLedMapping::update(bool full_poll, bool send_events)
 {
+    tick_test(send_events);
 }
 void PlayerLedMapping::set_player_led(uint8_t player)
 {
@@ -214,6 +219,10 @@ void GameFeedbackLedMapping::set_game_feedback(const GameFeedback &feedback)
 
 void StatusLedMapping::update(bool full_poll, bool send_events)
 {
+    if (tick_test(send_events))
+    {
+        return;
+    }
     auto mode = ConfigManager::instance().get_current_mode();
     bool on = false;
     switch (m_mapping.type)
@@ -236,6 +245,10 @@ void StatusLedMapping::update(bool full_poll, bool send_events)
 
 void InputLedMapping::update(bool full_poll, bool send_events)
 {
+    if (tick_test(send_events))
+    {
+        return;
+    }
     uint16_t raw = m_input->tick_analog();
     uint16_t curr = scale(raw);
     if (send_events && ((full_poll || (raw != m_last_val)) && (millis() - m_last_poll) > 10))
@@ -310,6 +323,10 @@ PatternLedMapping::PatternLedMapping(std::unique_ptr<LedMappingDevice> device, p
 }
 void PatternLedMapping::update(bool full_poll, bool send_events)
 {
+    if (tick_test(send_events))
+    {
+        return;
+    }
     // Paused while the host has the LEDs
     if (millis() < m_next_poll || overridden())
     {
@@ -381,6 +398,10 @@ void PatternLedMapping::update(bool full_poll, bool send_events)
 }
 void StaticLedMapping::update(bool full_poll, bool send_events)
 {
+    if (tick_test(send_events))
+    {
+        return;
+    }
     if (!overridden())
     {
         m_device->set_val(UINT16_MAX);

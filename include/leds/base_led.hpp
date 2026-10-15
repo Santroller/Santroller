@@ -40,6 +40,7 @@ public:
     }
     virtual void setup() = 0;
     virtual void off() = 0;
+    virtual void test_on() { set_val(UINT16_MAX); }
     virtual bool supports_brightness() = 0;
     virtual uint8_t led_count() = 0;
     // The physical LED the i'th LED of this device is

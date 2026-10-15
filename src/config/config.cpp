@@ -567,7 +567,8 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
         int assignedDevices = list->assignedDevices();
         ConsoleMode usb_mode = config_mgr.get_requested_mode();
         ConsoleMode forced_usb_mode;
-        if (list->forcedConsoleMode(forced_usb_mode))
+        bool is_mode_forced = list->forcedConsoleMode(forced_usb_mode);
+        if (is_mode_forced)
         {
             if (!HIDConfigDevice::tool_closed())
             {
@@ -587,6 +588,24 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
         if (list->xinputOnWindows(xinput_win))
         {
             profile->xinput_on_windows = xinput_win;
+        }
+
+        if (!is_mode_forced)
+        {
+            auto &detection = UsbDetectionState::instance();
+            if (profile->xinput_on_windows && detection.seen_windows_xb1() && detection.seen_windows_string())
+            {
+                if (config_mgr.get_requested_mode() != ModeXbox360)
+                {
+                    config_mgr.request_mode(ModeXbox360);
+                    usb_mode = ModeXbox360;
+                }
+            }
+            else if (!profile->xinput_on_windows && config_mgr.get_requested_mode() == ModeXbox360)
+            {
+                config_mgr.request_mode(ModeHid);
+                usb_mode = ModeHid;
+            }
         }
 
         bool ps4_mode;

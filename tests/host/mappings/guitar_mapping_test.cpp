@@ -357,6 +357,23 @@ TEST_F(Guitar, RBXInputWhammyAndTilt)
     EXPECT_EQ(report->tilt, INT16_MIN);
 }
 
+TEST_F(Guitar, RBXInputWhammyRestsAtTheBottomOfTheAxis)
+{
+    Report<XInputRockBandGuitar_Data_t> report;
+    at<RockBandGuitarAxisMapping>(rb_axis(RockBandGuitar_Whammy), UINT16_MAX)->update_xinput(report.buf());
+    EXPECT_EQ(report->whammy, INT16_MAX);
+    at<RockBandGuitarAxisMapping>(rb_axis(RockBandGuitar_Whammy), 1)->update_xinput(report.buf());
+    EXPECT_EQ(report->whammy, INT16_MIN + 1);
+}
+
+TEST_F(Guitar, RBWhammyAtRestIsLeftAlone)
+{
+    Report<XInputRockBandGuitar_Data_t> report;
+    report->whammy = 99;
+    at<RockBandGuitarAxisMapping>(rb_axis(RockBandGuitar_Whammy), 0)->update_xinput(report.buf());
+    EXPECT_EQ(report->whammy, 99);
+}
+
 TEST_F(Guitar, RBPickupEqualBands)
 {
     // without thresholds the range is split into five equal notches

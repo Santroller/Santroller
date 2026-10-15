@@ -87,6 +87,12 @@ void XInputGamepadDevice::initialize()
         report->whammy = INT16_MIN;
         break;
     }
+    case RockBandGuitar:
+    {
+        XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)&m_initial_report;
+        report->whammy = INT16_MIN;
+        break;
+    }
     case LiveGuitar:
     {
         XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&m_initial_report;
@@ -238,14 +244,14 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
         m_has_last_report = false;
     }
 
-    // if (m_has_last_report &&
-    //     memcmp(&m_last_report, epin_buf, sizeof(XInputGamepad_Data_t)) == 0)
-    // {
-    //     // Nothing to send, so wait for the next frame before building another report
-    //     m_unchanged_frame = frame;
-    //     m_has_unchanged_frame = true;
-    //     return;
-    // }
+    if (m_has_last_report &&
+        memcmp(&m_last_report, epin_buf, sizeof(XInputGamepad_Data_t)) == 0)
+    {
+        // Nothing to send, so wait for the next frame before building another report
+        m_unchanged_frame = frame;
+        m_has_unchanged_frame = true;
+        return;
+    }
     m_has_unchanged_frame = false;
 
     if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))

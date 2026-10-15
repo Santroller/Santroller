@@ -63,6 +63,12 @@ void HIDGamepadDevice::initialize()
     report->whammy = INT16_MIN;
     break;
   }
+  case RockBandGuitar:
+  {
+    XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)&m_initial_report;
+    report->whammy = INT16_MIN;
+    break;
+  }
   case LiveGuitar:
   {
     XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&m_initial_report;

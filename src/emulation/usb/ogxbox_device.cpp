@@ -344,6 +344,12 @@ void OGXboxGamepadDevice::initialize()
         report->whammy = INT16_MIN;
         break;
     }
+    case RockBandGuitar:
+    {
+        OGXboxRockBandGuitar_Data_t *report = (OGXboxRockBandGuitar_Data_t *)&m_initial_report;
+        report->whammy = INT16_MIN;
+        break;
+    }
     case LiveGuitar:
     {
         OGXboxGHLGuitar_Data_t *report = (OGXboxGHLGuitar_Data_t *)&m_initial_report;
@@ -410,15 +416,11 @@ void OGXboxGamepadDevice::process(bool full_poll, bool send_events)
     }
     if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
-    // Build at most one report per frame while nothing is changing, so the mappings still run once per
-    // poll instead of every loop, which time based logic like the cymbal glitch fix isn't written for.
     uint16_t frame = usb_hw->sof_rd & USB_SOF_RD_BITS;
     if (m_has_unchanged_frame && frame == m_unchanged_frame)
         return;
     build_report(epin_buf, full_poll, send_events);
 
-    // Real controllers NAK the IN endpoint until something changes. Always having a report ready floods
-    // older XAPI versions (eg JSRF) with completions, which slows their polling down and drops input.
     if (m_has_last_report && memcmp(&m_last_report, epin_buf, sizeof(OGXboxGamepad_Data_t)) == 0)
     {
         m_unchanged_frame = frame;

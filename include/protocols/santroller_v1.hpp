@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define SANTROLLER_V1_PID 0x2882
+
 // Santroller 1 PC Reports (from Ardwiino-old include/reports/pc_reports.h)
 
 typedef struct {

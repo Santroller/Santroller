@@ -4,7 +4,7 @@
 #include "input.pb.h"
 
 #define SANTROLLER_VID 0x1209
-#define SANTROLLER_PID 0x2882
+#define SANTROLLER_PID 0x2883
 
 // Santroller 2 HID gamepad reports (report id 1) mirror the XInput layout, except the low
 // nibble of byte 2 is a hat. Turn it into XInput's dpad bits (a dancepad already reports

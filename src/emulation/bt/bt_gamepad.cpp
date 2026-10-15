@@ -274,7 +274,7 @@ void BTGamepadDevice::initialize()
 
     // setup device information service
     device_information_service_server_init();
-    device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, 0x1209, 0x2882, 0);
+    device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, 0x1209, 0x2883, 0);
     char id[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2];
     pico_get_unique_board_id_string(id, sizeof(id));
     device_information_service_server_set_serial_number(id);

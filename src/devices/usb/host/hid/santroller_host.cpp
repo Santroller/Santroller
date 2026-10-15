@@ -22,7 +22,7 @@ static bool has_generic_desktop_input(const HID_ReportInfo_t *info)
 
 std::shared_ptr<UsbHostInterface> SantrollerHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
-    if (vid != SANTROLLER_VID || pid != SANTROLLER_PID || !info)
+    if (vid != SANTROLLER_VID || (pid != SANTROLLER_PID && pid != SANTROLLER_V1_PID) || !info)
     {
         return nullptr;
     }

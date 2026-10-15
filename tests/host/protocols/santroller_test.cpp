@@ -269,7 +269,7 @@ TEST(SantrollerV2, Ids)
 {
     // pid.codes vendor id, Santroller's pid.codes product id
     EXPECT_EQ(SANTROLLER_VID, 0x1209);
-    EXPECT_EQ(SANTROLLER_PID, 0x2882);
+    EXPECT_EQ(SANTROLLER_PID, 0x2883);
 }
 
 TEST(SantrollerV2, HatBecomesXInputDpadBits)

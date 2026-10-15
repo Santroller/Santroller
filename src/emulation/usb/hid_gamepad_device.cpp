@@ -97,7 +97,7 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
   // Deal with devices that don't have easy detection methods
   // This has to run before the tud_ready() check, as the PS2 never configures the device
   auto &detection = UsbDetectionState::instance();
-  if (!mode_recently_changed() && detection.should_infer_console() && tud_connected())
+  if (!mode_recently_changed() && detection.should_infer_console(millis()))
   {
     // Switch 2 does read the hid descriptor
     if (detection.seen_hid_descriptor_read())

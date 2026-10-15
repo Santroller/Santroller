@@ -4,6 +4,7 @@
 #include "managers/profile_manager.hpp"
 
 #include "tusb.h"
+#include "utils.h"
 #include "emulation/usb/gh_arcade_device.h"
 #include "emulation/usb/pdloader_device.h"
 #include "emulation/usb/xinput_device.h"
@@ -69,6 +70,7 @@ uint8_t descriptor_buffer[0x7ff];
 
 uint8_t const *tud_descriptor_device_cb(void)
 {
+  UsbDetectionState::instance().mark_device_descriptor_read(millis());
   memcpy(descriptor_buffer, &desc_device_init, sizeof(desc_device_init));
   ProfileManager::instance().for_each_usb_instance([](const auto &instance)
   {

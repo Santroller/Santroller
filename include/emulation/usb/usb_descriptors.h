@@ -34,11 +34,15 @@ public:
     m_seen_read_any_device_string = false;
     m_seen_windows_string = false;
     m_seen_hid_descriptor_read = false;
+    m_first_device_desc_ms = 0;
   }
 
-  bool should_infer_console() const
+  // Waits from the first device descriptor read rather than from stack init, as a host that is slow to
+  // start enumerating (eg linux after a retry) would otherwise get inferred before it reads any strings
+  bool should_infer_console(uint32_t now) const
   {
-    return m_console_inference_enabled && !m_seen_windows_xb1 && !m_seen_os_descriptor_read && !m_seen_read_any_device_string;
+    return m_console_inference_enabled && m_first_device_desc_ms && (now - m_first_device_desc_ms) > CONSOLE_INFERENCE_DELAY_MS &&
+           !m_seen_windows_xb1 && !m_seen_os_descriptor_read && !m_seen_read_any_device_string;
   }
 
   // Config changes can alter enumeration behaviour, so inference stays disabled until reboot.
@@ -53,6 +57,14 @@ public:
   void mark_os_descriptor_read() { m_seen_os_descriptor_read = true; }
   void mark_device_string_read() { m_seen_read_any_device_string = true; }
   void mark_hid_descriptor_read() { m_seen_hid_descriptor_read = true; }
+  void mark_device_descriptor_read(uint32_t now)
+  {
+    if (!m_first_device_desc_ms)
+    {
+      // 0 means not seen yet
+      m_first_device_desc_ms = now ? now : 1;
+    }
+  }
 
 private:
   UsbDetectionState() = default;
@@ -63,6 +75,9 @@ private:
   bool m_seen_read_any_device_string = false;
   bool m_seen_windows_string = false;
   bool m_seen_hid_descriptor_read = false;
+  uint32_t m_first_device_desc_ms = 0;
+
+  static constexpr uint32_t CONSOLE_INFERENCE_DELAY_MS = 5000;
 };
 
 typedef struct {

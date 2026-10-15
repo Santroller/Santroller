@@ -1,3 +1,4 @@
+#include "utils.h"
 #include "emulation/usb/keyboardmania_device.h"
 #include "main.hpp"
 #include "managers/config_manager.hpp"
@@ -22,8 +23,8 @@ void KeyboardManiaDevice::process(bool full_poll, bool send_events) {
     // so swap to the real controller for it. This has to run before the tud_ready() check, as
     // the PS2 never configures the device either.
     auto &detection = UsbDetectionState::instance();
-    if (!m_native && !mode_recently_changed() && detection.should_infer_console() &&
-        tud_connected() && !detection.seen_hid_descriptor_read()) {
+    if (!m_native && !mode_recently_changed() && detection.should_infer_console(millis()) &&
+        !detection.seen_hid_descriptor_read()) {
         ConfigManager::instance().request_mode(ModeKeyboardMania);
     }
     if (!tud_ready()) {

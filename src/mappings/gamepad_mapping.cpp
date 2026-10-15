@@ -11,6 +11,7 @@
 #include <config/config.hpp>
 #include "protocols/switch_arcade.hpp"
 #include "protocols/santroller_v2.hpp"
+#include "protocols/face_buttons.hpp"
 
 GamepadAxisMapping::GamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.gamepadAxis == Gamepad_LeftTrigger || mapping.mapping.mapping.gamepadAxis == Gamepad_RightTrigger)
 {
@@ -624,6 +625,20 @@ GamepadButtonMapping::GamepadButtonMapping(const proto_Mapping &mapping, std::un
 {
 }
 
+// The legend to press on a Nintendo pad. In legend based mode that is the mapped legend, while in
+// position based mode it is whichever legend sits at the mapped position.
+GamepadButtonType GamepadButtonMapping::nintendo_button() const
+{
+    auto button = m_mapping.mapping.mapping.gamepadButton;
+    return m_profile && m_profile->position_based_face_buttons ? swap_nintendo_face_button(button) : button;
+}
+
+GamepadButtonType GamepadButtonMapping::gamecube_button() const
+{
+    auto button = m_mapping.mapping.mapping.gamepadButton;
+    return m_profile && m_profile->position_based_face_buttons ? gamecube_button_at(button) : button;
+}
+
 void GamepadButtonMapping::update_hid(uint8_t *buf)
 {
     // santroller hid uses an xinput style report descriptor for compatibility reasons
@@ -634,7 +649,7 @@ void GamepadButtonMapping::update_wii(uint8_t format, uint8_t *buf)
     if (format == 1)
     {
         WiiClassicDataFormat1_t *report = (WiiClassicDataFormat1_t *)buf;
-        switch (m_mapping.mapping.mapping.gamepadButton)
+        switch (nintendo_button())
         {
         case Gamepad_A:
             report->a |= m_last_value;
@@ -685,7 +700,7 @@ void GamepadButtonMapping::update_wii(uint8_t format, uint8_t *buf)
     if (format == 2)
     {
         WiiClassicDataFormat2_t *report = (WiiClassicDataFormat2_t *)buf;
-        switch (m_mapping.mapping.mapping.gamepadButton)
+        switch (nintendo_button())
         {
         case Gamepad_A:
             report->a |= m_last_value;
@@ -736,7 +751,7 @@ void GamepadButtonMapping::update_wii(uint8_t format, uint8_t *buf)
     if (format == 3)
     {
         WiiClassicDataFormat3_t *report = (WiiClassicDataFormat3_t *)buf;
-        switch (m_mapping.mapping.mapping.gamepadButton)
+        switch (nintendo_button())
         {
         case Gamepad_A:
             report->a |= m_last_value;
@@ -806,7 +821,7 @@ void GamepadButtonMapping::update_wiimote_core(wiimote_buttons *buttons)
 void GamepadButtonMapping::update_switch(uint8_t *buf)
 {
     SwitchInputReport *report = (SwitchInputReport *)buf;
-    switch (m_mapping.mapping.mapping.gamepadButton)
+    switch (nintendo_button())
     {
     case Gamepad_A:
         report->a |= m_last_value;
@@ -924,21 +939,19 @@ void GamepadButtonMapping::update_ps2(uint8_t *buf)
         break;
     }
 }
-// Face buttons on the Nintendo consoles go by position rather than legend, so A (the bottom
-// button) presses whichever button sits at the bottom of that console's pad
 void GamepadButtonMapping::update_gamecube(uint8_t *buf)
 {
     GameCubeGamepad_Data_t *report = (GameCubeGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.mapping.gamepadButton)
+    switch (gamecube_button())
     {
     case Gamepad_A:
         report->a |= m_last_value;
         break;
     case Gamepad_B:
-        report->x |= m_last_value;
+        report->b |= m_last_value;
         break;
     case Gamepad_X:
-        report->b |= m_last_value;
+        report->x |= m_last_value;
         break;
     case Gamepad_Y:
         report->y |= m_last_value;
@@ -1008,19 +1021,19 @@ void GamepadButtonMapping::update_n64(uint8_t *buf)
 void GamepadButtonMapping::update_snes(uint8_t *buf)
 {
     SNESGamepad_Data_t *report = (SNESGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.mapping.gamepadButton)
+    switch (nintendo_button())
     {
     case Gamepad_A:
-        report->b |= m_last_value;
-        break;
-    case Gamepad_B:
         report->a |= m_last_value;
         break;
+    case Gamepad_B:
+        report->b |= m_last_value;
+        break;
     case Gamepad_X:
-        report->y |= m_last_value;
+        report->x |= m_last_value;
         break;
     case Gamepad_Y:
-        report->x |= m_last_value;
+        report->y |= m_last_value;
         break;
     case Gamepad_Start:
         report->start |= m_last_value;
@@ -1054,13 +1067,13 @@ void GamepadButtonMapping::update_snes(uint8_t *buf)
 void GamepadButtonMapping::update_nes(uint8_t *buf)
 {
     NESGamepad_Data_t *report = (NESGamepad_Data_t *)buf;
-    switch (m_mapping.mapping.mapping.gamepadButton)
+    switch (nintendo_button())
     {
     case Gamepad_A:
-        report->b |= m_last_value;
+        report->a |= m_last_value;
         break;
     case Gamepad_B:
-        report->a |= m_last_value;
+        report->b |= m_last_value;
         break;
     case Gamepad_Start:
         report->start |= m_last_value;

@@ -27,6 +27,13 @@ public:
     bool tick_axis_digital(proto_Output &type) override;
     uint16_t tick_button_pressure(proto_Output &type) override;
 
+    // A bare Wii Remote's A and B aren't laid out like a pad's face buttons, so only the Classic
+    // Controllers and the Wii U Pro Controller count
+    bool nintendo_face_layout() const override
+    {
+        return m_is_pro || m_decoder.mType == WiiClassicController || m_decoder.mType == WiiClassicControllerPro;
+    }
+
     bool is_wii_extension(WiiExtType type) override
     {
         return m_decoder.mType == type;

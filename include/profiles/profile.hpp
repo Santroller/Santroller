@@ -51,6 +51,8 @@ public:
     bool ps3_on_rpcs3 = true;
     bool disconnect_bluetooth_on_suspend = false;
     bool select_to_dpad_left = false;
+    // Gamepad face buttons are mapped by position instead of by legend, see protocols/face_buttons.hpp
+    bool position_based_face_buttons = false;
     bool select_as_dpad_left() const
     {
         return select_to_dpad_left && (subtype == GuitarHeroGuitar || subtype == RockBandGuitar);

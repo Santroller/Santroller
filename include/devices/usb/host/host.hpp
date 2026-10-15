@@ -43,6 +43,8 @@ public:
     virtual uint16_t mouse_axis(MouseAxisType axis) { return UINT16_MAX / 2; }
     virtual bool key_pressed(uint8_t keycode) { return false; }
     virtual uint16_t tick_button_pressure(proto_Output& type) { return tick_digital(type) ? UINT16_MAX : 0; }
+    // Whether Gamepad_A / B / X / Y read the legends of a Nintendo style pad (A east, B south, X north, Y west)
+    virtual bool nintendo_face_layout() const { return false; }
     virtual void update(bool full_poll, bool send_events);
     bool is_wii_extension(WiiExtType type)
     {

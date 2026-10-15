@@ -96,6 +96,10 @@ public:
     void update_xboxone(uint8_t *report);
     // HID hat values for the dpad bits (up 1, down 2, left 4, right 8), 8 being neutral
     static const uint8_t dpad_bindings[16];
+
+protected:
+    GamepadButtonType nintendo_button() const;
+    GamepadButtonType gamecube_button() const;
 };
 
 class PS3GamepadButtonMapping : public GamepadButtonMapping

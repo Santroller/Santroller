@@ -98,6 +98,8 @@ public:
     virtual uint16_t tick_analog(proto_Output &type) = 0;
     virtual bool tick_axis_digital(proto_Output &type) { return tick_analog(type) != 0; }
     virtual uint16_t tick_button_pressure(proto_Output &type) { return tick_digital(type) ? UINT16_MAX : 0; }
+    // Whether Gamepad_A / B / X / Y read the legends of a Nintendo style pad (A east, B south, X north, Y west)
+    virtual bool nintendo_face_layout() const { return false; }
 
     // Device lifecycle (mirrors UsbHostInterface)
     virtual void update(bool full_poll, bool send_events);

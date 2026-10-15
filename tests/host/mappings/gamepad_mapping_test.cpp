@@ -2,6 +2,7 @@
 #include "mappings/mapping_test_support.hpp"
 #include "devices/usb/host/xinput_tick_helpers.h"
 #include "protocols/santroller_v2.hpp"
+#include "protocols/face_buttons.hpp"
 
 // How the gamepad mappings pack a calibrated 0 - 65535 axis (stick up / right is high) or a
 // button into each console's report
@@ -639,6 +640,88 @@ TEST_F(GamepadButton, SwitchButtons)
     EXPECT_TRUE(report->dpadDown);
 }
 
+// Legend based: the mapped legend is pressed, wherever it sits on the console's pad
+TEST_F(GamepadButton, SwitchFaceButtonsGoByLegend)
+{
+    Report<SwitchInputReport> report;
+    pressed(Gamepad_A)->update_switch(report.buf());
+    pressed(Gamepad_X)->update_switch(report.buf());
+    EXPECT_TRUE(report->a);
+    EXPECT_TRUE(report->x);
+    EXPECT_FALSE(report->b);
+    EXPECT_FALSE(report->y);
+}
+
+// Position based: A is the bottom button, which is B on a Switch pad, and X the left one, which is Y
+TEST_F(GamepadButton, SwitchFaceButtonsGoByPositionInPositionMode)
+{
+    profile->position_based_face_buttons = true;
+    Report<SwitchInputReport> report;
+    pressed(Gamepad_A)->update_switch(report.buf());
+    pressed(Gamepad_X)->update_switch(report.buf());
+    EXPECT_TRUE(report->b);
+    EXPECT_TRUE(report->y);
+    EXPECT_FALSE(report->a);
+    EXPECT_FALSE(report->x);
+    pressed(Gamepad_B)->update_switch(report.buf());
+    pressed(Gamepad_Y)->update_switch(report.buf());
+    EXPECT_TRUE(report->a);
+    EXPECT_TRUE(report->x);
+}
+
+TEST_F(GamepadButton, XboxLayoutsAreTheSameInPositionMode)
+{
+    profile->position_based_face_buttons = true;
+    Report<XInputGamepad_Data_t> report;
+    pressed(Gamepad_A)->update_xinput(report.buf());
+    pressed(Gamepad_X)->update_xinput(report.buf());
+    EXPECT_TRUE(report->a);
+    EXPECT_TRUE(report->x);
+    EXPECT_FALSE(report->b);
+    EXPECT_FALSE(report->y);
+}
+
+TEST_F(GamepadButton, WiiClassicFaceButtonsGoByPositionInPositionMode)
+{
+    profile->position_based_face_buttons = true;
+    Report<WiiClassicDataFormat3_t> report;
+    pressed(Gamepad_A)->update_wii(3, report.buf());
+    EXPECT_TRUE(report->b);
+    EXPECT_FALSE(report->a);
+}
+
+// A Nintendo pad being read in position based mode: the bottom position reads its B, and so on
+TEST(FaceButtons, NintendoPadsSwapBothPairs)
+{
+    proto_Output output = {};
+    output.which_mapping = proto_Output_gamepadButton_tag;
+    const struct
+    {
+        GamepadButtonType position;
+        GamepadButtonType legend;
+    } expected[] = {
+        {Gamepad_A, Gamepad_B},
+        {Gamepad_B, Gamepad_A},
+        {Gamepad_X, Gamepad_Y},
+        {Gamepad_Y, Gamepad_X},
+        {Gamepad_Start, Gamepad_Start},
+        {Gamepad_DpadUp, Gamepad_DpadUp},
+    };
+    for (const auto &c : expected)
+    {
+        output.mapping.gamepadButton = c.position;
+        EXPECT_EQ(swap_nintendo_face_button(output).mapping.gamepadButton, c.legend) << int(c.position);
+    }
+}
+
+TEST(FaceButtons, OnlyGamepadButtonsAreSwapped)
+{
+    proto_Output output = {};
+    output.which_mapping = proto_Output_gamepadAxis_tag;
+    output.mapping.gamepadAxis = Gamepad_LeftStickX;
+    EXPECT_EQ(swap_nintendo_face_button(output).mapping.gamepadAxis, Gamepad_LeftStickX);
+}
+
 TEST_F(GamepadButton, WiiClassicButtonsInEachFormat)
 {
     Report<WiiClassicDataFormat1_t> f1;
@@ -737,8 +820,22 @@ TEST_F(GamepadAxis, N64TriggersAreZ)
     EXPECT_EQ(report.bytes()[0], 0x20);
 }
 
-TEST_F(GamepadButton, GameCubeFaceButtonsGoByPosition)
+TEST_F(GamepadButton, GameCubeFaceButtonsGoByLegend)
 {
+    Report<GameCubeGamepad_Data_t> report;
+    pressed(Gamepad_A)->update_gamecube(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x01);
+    pressed(Gamepad_X)->update_gamecube(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x05);
+    pressed(Gamepad_B)->update_gamecube(report.buf());
+    pressed(Gamepad_Y)->update_gamecube(report.buf());
+    pressed(Gamepad_Start)->update_gamecube(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x1F);
+}
+
+TEST_F(GamepadButton, GameCubeFaceButtonsGoByPositionInPositionMode)
+{
+    profile->position_based_face_buttons = true;
     Report<GameCubeGamepad_Data_t> report;
     pressed(Gamepad_A)->update_gamecube(report.buf());
     EXPECT_EQ(report.bytes()[0], 0x01);
@@ -773,8 +870,23 @@ TEST_F(GamepadButton, N64Buttons)
     EXPECT_EQ(report.bytes()[1], 0x30);
 }
 
-TEST_F(GamepadButton, SnesFaceButtonsGoByPosition)
+TEST_F(GamepadButton, SnesFaceButtonsGoByLegend)
 {
+    Report<SNESGamepad_Data_t> report;
+    // A is in the second byte, B is the first bit clocked out
+    pressed(Gamepad_A)->update_snes(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x00);
+    EXPECT_EQ(report.bytes()[1], 0x01);
+    pressed(Gamepad_B)->update_snes(report.buf());
+    pressed(Gamepad_Y)->update_snes(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x03);
+    pressed(Gamepad_X)->update_snes(report.buf());
+    EXPECT_EQ(report.bytes()[1], 0x03);
+}
+
+TEST_F(GamepadButton, SnesFaceButtonsGoByPositionInPositionMode)
+{
+    profile->position_based_face_buttons = true;
     Report<SNESGamepad_Data_t> report;
     // A is the bottom button, which is B on a SNES pad and the first bit clocked out
     pressed(Gamepad_A)->update_snes(report.buf());
@@ -790,8 +902,18 @@ TEST_F(GamepadButton, SnesFaceButtonsGoByPosition)
     EXPECT_EQ(report.bytes()[0], 0x87);
 }
 
-TEST_F(GamepadButton, NesButtons)
+TEST_F(GamepadButton, NesButtonsGoByLegend)
 {
+    Report<NESGamepad_Data_t> report;
+    pressed(Gamepad_A)->update_nes(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x01);
+    pressed(Gamepad_B)->update_nes(report.buf());
+    EXPECT_EQ(report.bytes()[0], 0x03);
+}
+
+TEST_F(GamepadButton, NesButtonsGoByPositionInPositionMode)
+{
+    profile->position_based_face_buttons = true;
     Report<NESGamepad_Data_t> report;
     // B (the right button) is A on a NES pad, the first bit clocked out
     pressed(Gamepad_B)->update_nes(report.buf());

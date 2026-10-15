@@ -705,6 +705,7 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->full_range_turntable_on_pc = opts.has_fullRangeTurntableOnPc && opts.fullRangeTurntableOnPc;
     profile->ps3_on_rpcs3 = rpcs3_passthrough_supported(opts.deviceToEmulate) && (!opts.has_ps3OnRpcs3 || opts.ps3OnRpcs3);
     profile->select_to_dpad_left = opts.has_selectToDpadLeft && opts.selectToDpadLeft;
+    profile->position_based_face_buttons = opts.faceButtonMappingMode == PositionBased;
     profile->combined_strum_debounce = opts.has_combinedStrumDebounce && opts.combinedStrumDebounce;
     profile->disconnect_bluetooth_on_suspend = opts.has_disconnectBluetoothOnSuspend && opts.disconnectBluetoothOnSuspend;
     profile->per_kind_slot_ids = opts.has_deviceSlotIdVersion && opts.deviceSlotIdVersion >= 1;

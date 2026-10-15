@@ -56,6 +56,7 @@ public:
 
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
+    bool nintendo_face_layout() const override { return true; }
 
     // Switch 2 controllers use a different output protocol
     void set_rumble(uint8_t left, uint8_t right) override { m_output.set_rumble(left, right); }
@@ -89,6 +90,7 @@ public:
 
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
+    bool nintendo_face_layout() const override { return true; }
 
 private:
     Switch2ControllerState m_state = {};

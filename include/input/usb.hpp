@@ -57,6 +57,7 @@ public:
 
 private:
     void setup();
+    bool by_position() const;
     proto_USBButtonInput m_input;
     std::shared_ptr<UsbHostInterface> m_device;
     Profile *m_profile;

@@ -2,6 +2,7 @@
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 #include "stdio.h"
+#include "protocols/face_buttons.hpp"
 
 USBAxisInput::USBAxisInput(proto_USBAxisInput input, std::shared_ptr<UsbHostInterface> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
 {
@@ -22,14 +23,29 @@ void USBAxisInput::setup()
 USBButtonInput::USBButtonInput(proto_USBButtonInput input, std::shared_ptr<UsbHostInterface> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
+// In position based mode the mapped button is a position, so read whichever legend sits there on the pad
+bool USBButtonInput::by_position() const
+{
+    return m_profile && m_profile->position_based_face_buttons && m_device->nintendo_face_layout();
+}
 bool USBButtonInput::tick_digital()
 {
     if (!m_device) return false;
+    if (by_position())
+    {
+        proto_Output button = swap_nintendo_face_button(m_input.button);
+        return m_device->tick_digital(button);
+    }
     return m_device->tick_digital(m_input.button);
 }
 uint16_t USBButtonInput::tick_analog()
 {
     if (!m_device) return 0;
+    if (by_position())
+    {
+        proto_Output button = swap_nintendo_face_button(m_input.button);
+        return m_device->tick_button_pressure(button);
+    }
     return m_device->tick_button_pressure(m_input.button);
 }
 bool USBButtonInput::tick_pro_key_range(uint32_t &active_keys, uint8_t *velocities, uint8_t key_count)

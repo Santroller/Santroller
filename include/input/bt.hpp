@@ -36,6 +36,7 @@ public:
 
 private:
     void setup();
+    bool by_position() const;
     proto_BTButtonInput m_input;
     std::shared_ptr<BluetoothHostInterface> m_device;
     Profile *m_profile;

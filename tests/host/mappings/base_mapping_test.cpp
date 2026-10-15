@@ -445,6 +445,26 @@ proto_Mapping press_debounced_button(uint32_t debounce100us)
     config.debounceMode = DebouncePress;
     return config;
 }
+
+proto_Mapping impulse_debounced_button(uint32_t debounce100us)
+{
+    auto config = gamepad_button(Gamepad_A);
+    config.has_debounce100us = true;
+    config.debounce100us = debounce100us;
+    config.has_debounceMode = true;
+    config.debounceMode = DebounceImpulse;
+    return config;
+}
+
+proto_Mapping impulse_debounced_axis(uint32_t debounce100us)
+{
+    auto config = trigger_config();
+    config.has_debounce100us = true;
+    config.debounce100us = debounce100us;
+    config.has_debounceMode = true;
+    config.debounceMode = DebounceImpulse;
+    return with_gamepad_axis(config, Gamepad_LeftTrigger);
+}
 } // namespace
 
 TEST_F(ButtonUpdate, PressDebounceWaitsForTheDebounceTime)
@@ -499,6 +519,105 @@ TEST_F(ButtonUpdate, PressDebounceReportsNoPressureUntilPressed)
     fake_time::advance_us(2000);
     button.set_digital(true);
     EXPECT_EQ(button->pressure(), 12345);
+}
+
+TEST_F(ButtonUpdate, ImpulseDebounceOutputsForDebounceTimeWhileHeld)
+{
+    auto button = drive<ProbeButton>(impulse_debounced_button(20), profile); // 2ms = 2000us
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
+    fake_time::advance_us(1999);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
+    fake_time::advance_us(1);
+    button.set_digital(true);
+    EXPECT_FALSE(button->value()); // Automatically drops after debounce period even though still held
+}
+
+TEST_F(ButtonUpdate, ImpulseDebounceRequiresReleaseAndRepress)
+{
+    auto button = drive<ProbeButton>(impulse_debounced_button(20), profile);
+    button.set_digital(true);
+    fake_time::advance_us(2000);
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
+    // Still held down after 5ms
+    fake_time::advance_us(5000);
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
+    // Released
+    button.set_digital(false);
+    EXPECT_FALSE(button->value());
+    // Re-pressed
+    fake_time::advance_us(100);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
+}
+
+TEST_F(ButtonUpdate, ImpulseDebounceHoldsForFullDurationOnQuickRelease)
+{
+    auto button = drive<ProbeButton>(impulse_debounced_button(20), profile);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
+    fake_time::advance_us(500);
+    button.set_digital(false);
+    EXPECT_TRUE(button->value()); // Stays active for full debounce duration
+    fake_time::advance_us(1499);
+    button.set_digital(false);
+    EXPECT_TRUE(button->value());
+    fake_time::advance_us(1);
+    button.set_digital(false);
+    EXPECT_FALSE(button->value()); // Drops at 2000us
+}
+
+TEST_F(AxisUpdate, ImpulseDebounceOutputsForDebounceTimeWhileHeld)
+{
+    auto axis = drive<ProbeAxis>(impulse_debounced_axis(20), profile); // 2ms = 2000us
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
+    EXPECT_FALSE(axis->centered());
+    fake_time::advance_us(1999);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
+    fake_time::advance_us(1);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 0u); // Returns to rest
+    EXPECT_TRUE(axis->centered());
+}
+
+TEST_F(AxisUpdate, ImpulseDebounceRequiresReleaseAndRepress)
+{
+    auto axis = drive<ProbeAxis>(impulse_debounced_axis(20), profile);
+    axis.set_analog(UINT16_MAX);
+    fake_time::advance_us(2000);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 0u);
+    fake_time::advance_us(5000);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 0u);
+    // Release
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 0u);
+    // Repress
+    fake_time::advance_us(100);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
+}
+
+TEST_F(AxisUpdate, ImpulseDebounceHoldsForFullDurationOnQuickRelease)
+{
+    auto axis = drive<ProbeAxis>(impulse_debounced_axis(20), profile);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
+    fake_time::advance_us(500);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), UINT16_MAX); // Stays active for full debounce duration
+    fake_time::advance_us(1499);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
+    fake_time::advance_us(1);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 0u);
 }
 
 TEST_F(ButtonUpdate, ShortcutMaskHoldsReleasedUntilLetGo)

@@ -69,6 +69,54 @@ TEST_F(Drums, GHNoHitLeavesTheReportAlone)
     EXPECT_FALSE(report->a);
 }
 
+TEST_F(Drums, GHTwoKickPedalsWithImpulseDebounce)
+{
+    profile->subtype = GuitarHeroDrums;
+    auto pedal1_cfg = gh_drum(GuitarHeroDrums_KickPedal);
+    pedal1_cfg.has_debounce100us = true;
+    pedal1_cfg.debounce100us = 20; // 2ms
+    pedal1_cfg.has_debounceMode = true;
+    pedal1_cfg.debounceMode = DebounceImpulse;
+
+    auto pedal2_cfg = gh_drum(GuitarHeroDrums_KickPedal);
+    pedal2_cfg.has_debounce100us = true;
+    pedal2_cfg.debounce100us = 20; // 2ms
+    pedal2_cfg.has_debounceMode = true;
+    pedal2_cfg.debounceMode = DebounceImpulse;
+
+    auto pedal1 = drive<GuitarHeroDrumsAxisMapping>(pedal1_cfg, profile);
+    auto pedal2 = drive<GuitarHeroDrumsAxisMapping>(pedal2_cfg, profile);
+
+    // Press pedal 1
+    pedal1.set_analog(UINT16_MAX);
+    pedal2.set_analog(0);
+    Report<XInputGuitarHeroDrums_Data_t> report1;
+    pedal1->update_xinput(report1.buf());
+    pedal2->update_xinput(report1.buf());
+    EXPECT_EQ(report1->kickVelocity, 0x7F);
+    EXPECT_TRUE(report1->leftShoulder);
+
+    // After 2ms, pedal 1 is still physically held down
+    fake_time::advance_us(2000);
+    pedal1.set_analog(UINT16_MAX);
+    pedal2.set_analog(0);
+    Report<XInputGuitarHeroDrums_Data_t> report2;
+    pedal1->update_xinput(report2.buf());
+    pedal2->update_xinput(report2.buf());
+    EXPECT_EQ(report2->kickVelocity, 0);
+    EXPECT_FALSE(report2->leftShoulder);
+
+    // While pedal 1 remains held down, pedal 2 is struck!
+    fake_time::advance_us(5000);
+    pedal1.set_analog(UINT16_MAX);
+    pedal2.set_analog(UINT16_MAX);
+    Report<XInputGuitarHeroDrums_Data_t> report3;
+    pedal1->update_xinput(report3.buf());
+    pedal2->update_xinput(report3.buf());
+    EXPECT_EQ(report3->kickVelocity, 0x7F);
+    EXPECT_TRUE(report3->leftShoulder);
+}
+
 TEST_F(Drums, GHPS3Velocities)
 {
     profile->subtype = GuitarHeroDrums;

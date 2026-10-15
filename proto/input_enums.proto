@@ -279,10 +279,12 @@ enum AxisSection {
 // What a button's debounce time applies to. Release presses straight away and holds the press
 // for the debounce time after letting go, so a bouncing switch can't release early. Press
 // only registers a press once it has been held for the debounce time and releases straight
-// away, so presses shorter than that (and bounces) are ignored.
+// away, so presses shorter than that (and bounces) are ignored. Impulse outputs the press
+// for the debounce time and then releases, requiring a release and repress to send again.
 enum DebounceMode {
   DebounceRelease = 0;
   DebouncePress = 1;
+  DebounceImpulse = 2;
 }
 
 enum AnalogToDigitalTriggerType {

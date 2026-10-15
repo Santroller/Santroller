@@ -232,4 +232,5 @@ protected:
     bool m_trigger;
     uint32_t m_last_value = 0;
     uint64_t m_last_poll = 0;
+    bool m_was_pressed = false;
 };

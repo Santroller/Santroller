@@ -373,7 +373,7 @@ message Mapping {
   optional AnalogFilter filter = 69;
   // Analog to digital buttons only: press and release on movement instead of at a fixed point
   optional RapidTrigger rapidTrigger = 70;
-  // Buttons only: whether the debounce time holds releases or delays presses
+  // Buttons and axes: whether the debounce time holds releases, delays presses, or outputs an impulse
   optional DebounceMode debounceMode = 71;
 }
 

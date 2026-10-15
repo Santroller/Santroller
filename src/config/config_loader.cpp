@@ -27,10 +27,19 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     ProfileManager &profile_mgr = ProfileManager::instance();
     ConfigManager &config_mgr = ConfigManager::instance();
 
+    // Pairings and bonds are learned by the device itself, so after the first load the copy in memory is
+    // the real one. The tool's copy in an uploaded config can be older, and would forget new pairings
+    static bool s_bluetooth_loaded = false;
+    const bool load_bluetooth = !s_bluetooth_loaded;
+    s_bluetooth_loaded = true;
+
     DeviceFactory::clear_cycle_states();
     DeviceFactory::clear_toggle_states();
     DeviceFactory::clear_arcade_side();
-    DeviceFactory::clear_bluetooth_pairing_states();
+    if (load_bluetooth)
+    {
+        DeviceFactory::clear_bluetooth_pairing_states();
+    }
     pb_istream_t inputStream = pb_istream_from_buffer(image.data, image.main_size);
     device_mgr.clear_assignable_devices();
 
@@ -50,8 +59,11 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     proto_AuxConfigBlock block proto_AuxConfigBlock_init_zero;
     block.states.funcs.decode = decode_cycle_input_states;
     block.toggleStates.funcs.decode = decode_toggle_input_states;
-    block.bluetoothStates.funcs.decode = decode_bluetooth_states;
-    block.tlvEntries.funcs.decode = decode_bluetooth_tlv_entries;
+    if (load_bluetooth)
+    {
+        block.bluetoothStates.funcs.decode = decode_bluetooth_states;
+        block.tlvEntries.funcs.decode = decode_bluetooth_tlv_entries;
+    }
     pb_decode(&auxInputStream, proto_AuxConfigBlock_fields, &block);
     if (block.has_ghArcadeSide && (block.ghArcadeSide == 1 || block.ghArcadeSide == 2))
     {

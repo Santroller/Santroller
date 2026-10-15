@@ -114,6 +114,10 @@ static auto &config_mgr = ConfigManager::instance();
 static ConfigStorage config_storage;
 // A save that arrived while an upload was still sending its data
 static bool save_after_upload = false;
+// The cached aux block is behind the pairings and bonds in memory, and has to be rewritten
+static bool aux_pending = false;
+// and that rewrite also has to be committed to flash
+static bool aux_commit_pending = false;
 
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
@@ -1038,14 +1042,43 @@ void update_aux_arcade_side(uint8_t side)
     config_storage.update_auxiliary(encode_auxiliary);
 }
 
-void remove_aux_bluetooth_pairing(int32_t id)
+static bool can_write_aux()
 {
-    DeviceFactory::remove_bluetooth_pairing_state(id);
-    if (config_mgr.get_reinit_time())
+    return !config_mgr.get_reinit_time() && !config_mgr.is_reloading() && !config_storage.upload_active();
+}
+
+// Pairings and bonds stay in memory across reloads, so a change to them can't be dropped just because
+// the cache can't be written right now. It's written by flush_pending_aux once it can be
+static void save_bluetooth_aux()
+{
+    if (can_write_aux() && config_storage.update_auxiliary(encode_auxiliary))
     {
         return;
     }
-    config_storage.update_auxiliary(encode_auxiliary);
+    aux_pending = true;
+    aux_commit_pending = true;
+}
+
+void flush_pending_aux()
+{
+    if (!aux_pending || !can_write_aux())
+    {
+        return;
+    }
+    if (!config_storage.update_auxiliary(encode_auxiliary, nullptr, aux_commit_pending) && aux_commit_pending)
+    {
+        // Still save what's cached rather than dropping a save that was waiting on this
+        printf("couldn't write back the pairings, saving the cached config as is\r\n");
+        EEPROM.commit();
+    }
+    aux_pending = false;
+    aux_commit_pending = false;
+}
+
+void remove_aux_bluetooth_pairing(int32_t id)
+{
+    DeviceFactory::remove_bluetooth_pairing_state(id);
+    save_bluetooth_aux();
 }
 
 void update_aux_bluetooth_pairing(uint32_t id, const uint8_t mac[6], const char *name, bool ble,
@@ -1053,21 +1086,13 @@ void update_aux_bluetooth_pairing(uint32_t id, const uint8_t mac[6], const char 
                                   uint16_t vid, uint16_t pid,
                                   const uint8_t *link_key)
 {
-    if (config_mgr.get_reinit_time())
-    {
-        return;
-    }
     DeviceFactory::set_bluetooth_pairing_state(id, mac, name, ble, subtype, controller_type, vid, pid, link_key);
-    config_storage.update_auxiliary(encode_auxiliary);
+    save_bluetooth_aux();
 }
 
 void update_aux_tlv()
 {
-    if (config_mgr.get_reinit_time())
-    {
-        return;
-    }
-    config_storage.update_auxiliary(encode_auxiliary);
+    save_bluetooth_aux();
 }
 
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
@@ -1094,7 +1119,15 @@ void save_config()
         save_after_upload = true;
         return;
     }
-    EEPROM.commit_now();
+    if (aux_pending)
+    {
+        // The cache still has an upload's copy of the pairings, so commit once they're written back
+        aux_commit_pending = true;
+    }
+    else
+    {
+        EEPROM.commit_now();
+    }
     config_mgr.set_full_reload(true);
     reload();
 }
@@ -1108,6 +1141,8 @@ void abort_config_write()
     }
     config_storage.abort_write();
     config_mgr.set_working(false);
+    // If the old config had to come back from flash, its pairings may be older than the ones in memory
+    aux_pending = true;
 }
 
 bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
@@ -1128,10 +1163,12 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     }
     printf("Everything matched, saving!\r\n");
     UsbDetectionState::instance().disable_console_inference();
+    // The upload carries the tool's copy of the pairings, put the device's back once it has loaded
+    aux_pending = true;
     if (save_after_upload)
     {
         save_after_upload = false;
-        EEPROM.commit_now();
+        aux_commit_pending = true;
         config_mgr.set_full_reload(true);
     }
     reload();

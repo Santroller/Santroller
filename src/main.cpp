@@ -200,6 +200,7 @@ void hid_task(void)
         }
         return;
     }
+    flush_pending_aux();
     if (config_mgr.take_device_stack_restart())
     {
         printf("restarting device stack\r\n");

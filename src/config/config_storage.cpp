@@ -201,7 +201,7 @@ void ConfigStorage::abort_write()
     memset(EEPROM.writeCache, 0, MAX_DATA_SIZE - image.data_size);
 }
 
-bool ConfigStorage::update_auxiliary(AuxiliaryWriter writer, void *context) const
+bool ConfigStorage::update_auxiliary(AuxiliaryWriter writer, void *context, bool commit) const
 {
     // Only re-sign a config that is valid as it stands, never a half finished or failed upload
     ConfigImage image;
@@ -233,6 +233,9 @@ bool ConfigStorage::update_auxiliary(AuxiliaryWriter writer, void *context) cons
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize,
             EEPROM.writeCache, footer->dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize);
-    EEPROM.commit();
+    if (commit)
+    {
+        EEPROM.commit();
+    }
     return true;
 }

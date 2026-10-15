@@ -44,7 +44,8 @@ public:
     bool upload_active() const { return m_upload_active; }
     // Throw away an upload that failed or was never finished, putting back the config it was replacing
     void abort_write();
-    bool update_auxiliary(AuxiliaryWriter writer, void *context = nullptr) const;
+    // Rewrite the aux block from writer, committing it to flash unless commit is false
+    bool update_auxiliary(AuxiliaryWriter writer, void *context = nullptr, bool commit = true) const;
 private:
     bool m_should_commit = false;
     // Set while write_info's upload is waiting for its data

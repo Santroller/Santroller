@@ -45,3 +45,5 @@ void update_aux_bluetooth_pairing(uint32_t id, const uint8_t mac[6], const char 
                                   uint16_t vid = 0, uint16_t pid = 0,
                                   const uint8_t *link_key = nullptr);
 void update_aux_tlv();
+// Write any aux change that had to wait for an upload or reload to finish
+void flush_pending_aux();

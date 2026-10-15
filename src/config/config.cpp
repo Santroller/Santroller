@@ -797,7 +797,9 @@ static std::shared_ptr<Profile> decode_profile(pb_istream_t stream, ConfigDecode
 
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    // printf("load_profile\r\n");
+    // Clean up any disconnected root devices before decoding profiles to free memory
+    device_mgr.remove_disconnected_root_devices();
+
     // Snapshot this profile submessage'bytes (config is decoded from an in-memory
     // buffer, so this is just a cheap copy of the stream cursor) so it can be
     // re-decoded once per physical device combo that matches its triggers. That
@@ -826,20 +828,43 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 
         if (!added)
         {
+            profile->action_mappings.clear();
+            profile->action_mappings.shrink_to_fit();
+            profile->strum_mappings.clear();
+            profile->strum_mappings.shrink_to_fit();
             profile->mappings.clear();
+            profile->mappings.shrink_to_fit();
             profile->triggers.clear();
+            profile->triggers.shrink_to_fit();
             profile->leds.clear();
+            profile->leds.shrink_to_fit();
             profile->devices.clear();
+            profile->temp_devices.clear();
+            profile->claimed_devices.clear();
+            profile->temp_claimed_devices.clear();
+            profile->queued_mappings.clear();
+            profile->queued_mappings.shrink_to_fit();
+            profile->queued_last_live.clear();
+            profile->queued_last_live.shrink_to_fit();
+        }
+        else
+        {
+            profile->mappings.shrink_to_fit();
+            profile->triggers.shrink_to_fit();
+            profile->leds.shrink_to_fit();
+            profile->action_mappings.shrink_to_fit();
+            profile->strum_mappings.shrink_to_fit();
+            profile->queued_mappings.shrink_to_fit();
+            profile->queued_last_live.shrink_to_fit();
         }
 
-        if (!context.matched || device_mgr.assignable_device_count() == assignable_before)
+        if (!context.matched || device_mgr.assignable_device_count() == assignable_before || device_mgr.assignable_device_count() == 0)
         {
             break;
         }
 
         // loop again: other still-assignable devices may satisfy this profile too
     }
-    // printf("load_profile: finished processing profile bytes\r\n");
     return true;
 }
 

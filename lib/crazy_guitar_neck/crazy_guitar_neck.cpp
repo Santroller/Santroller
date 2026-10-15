@@ -13,11 +13,12 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 void CrazyGuitarNeck::tick()
 {
     interface.tick();
-    if (lastPoll && to_ms_since_boot(get_absolute_time()) - lastPoll > 500)
+    if (lastPoll && !restart_alarm_id && to_ms_since_boot(get_absolute_time()) - lastPoll > 1000)
     {
-        process_data(CLONE_ADDR, false, false, false, false);
+        status = CLONE_NECK_CHECK_STATUS;
+        process_data(0, false, false, false, false);
     }
-};
+}
 
 // The necks don't like being polled too quickly, so leave this long between each transfer
 #define CLONE_POLL_INTERVAL_US 4000
@@ -28,8 +29,12 @@ static const uint8_t clone_request[] = {0x53, 0x10, 0x00, 0x01};
 void CrazyGuitarNeck::begin()
 {
     interface.dmaInit(CLONE_ADDR, this);
+    failCount = 0;
+    connected = false;
+    clear_buttons();
     status = CLONE_NECK_CHECK_STATUS;
-    restart_alarm_id = add_alarm_in_ms(CLONE_STARTUP_MS, restart_handler, this, true);
+    alarm_id_t id = add_alarm_in_ms(CLONE_STARTUP_MS, restart_handler, this, true);
+    restart_alarm_id = (id > 0) ? id : 0;
 }
 void CrazyGuitarNeck::end()
 {
@@ -58,13 +63,14 @@ void CrazyGuitarNeck::process_data(uint8_t addr, bool running, bool timeout, boo
     if (timeout || abort_detected)
     {
         status = CLONE_NECK_CHECK_STATUS;
-        restart_alarm_id = add_alarm_in_ms(CLONE_STARTUP_MS, restart_handler, this, true);
         failCount++;
         if (failCount > 10)
         {
             connected = false;
             clear_buttons();
         }
+        alarm_id_t id = add_alarm_in_ms(CLONE_STARTUP_MS, restart_handler, this, true);
+        restart_alarm_id = (id > 0) ? id : 0;
         return;
     }
     if (stop_detected)
@@ -95,7 +101,8 @@ void CrazyGuitarNeck::process_data(uint8_t addr, bool running, bool timeout, boo
             soloOrange = bufferRx[2] & 0x80;
             break;
         }
-        restart_alarm_id = add_alarm_in_us(CLONE_POLL_INTERVAL_US, restart_handler, this, true);
+        alarm_id_t id = add_alarm_in_us(CLONE_POLL_INTERVAL_US, restart_handler, this, true);
+        restart_alarm_id = (id > 0) ? id : 0;
         return;
     }
     switch (status)

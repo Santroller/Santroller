@@ -210,7 +210,13 @@ void usb_host_update_interfaces(bool full_poll, bool send_events)
 
 void process_delayed_init()
 {
-    m_devices_changed = millis() + 500;
+    // Debounce delayed inits (e.g. multiple wireless controllers turning on or reconnecting)
+    // so we don't reload and restart the device stack repeatedly while controllers are still linking up
+    uint32_t target = millis() + 1200;
+    if (m_devices_changed < target)
+    {
+        m_devices_changed = target;
+    }
 }
 USBHostHardwareDevice::USBHostHardwareDevice(proto_UsbHostDevice device, uint16_t id) : UsbHostInterface(0, 0, id), m_device(device)
 {

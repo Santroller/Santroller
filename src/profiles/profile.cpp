@@ -25,11 +25,17 @@ void Profile::release_to_triggers()
         led->off();
     }
     queued_mappings.clear();
+    queued_mappings.shrink_to_fit();
     queued_last_live.clear();
+    queued_last_live.shrink_to_fit();
     action_mappings.clear();
+    action_mappings.shrink_to_fit();
     strum_mappings.clear();
+    strum_mappings.shrink_to_fit();
     mappings.clear();
+    mappings.shrink_to_fit();
     leds.clear();
+    leds.shrink_to_fit();
     triggers_only = true;
 }
 

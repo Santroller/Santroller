@@ -35,7 +35,16 @@ static int mt76_send_firmware_part(struct mt76_dev *dev, uint32_t base_offset,
 
 static uint8_t firmware_stream_output[MT_FW_TRANSFER_CHUNK_SIZE];
 static uint8_t firmware_stream_chunk[MT_FW_TRANSFER_CHUNK_SIZE];
-static uint8_t firmware_stream_dictionary[32768];
+static uint8_t *firmware_stream_dictionary = NULL;
+
+static void mt76_free_dictionary(void)
+{
+    if (firmware_stream_dictionary)
+    {
+        free(firmware_stream_dictionary);
+        firmware_stream_dictionary = NULL;
+    }
+}
 
 struct mt76_firmware_stream {
     struct mt76_fw_header header;
@@ -141,12 +150,25 @@ int mt76_begin_firmware_compressed(struct mt76_dev *dev, const uint8_t *compress
         return 0;
     }
 
+    if (!firmware_stream_dictionary)
+    {
+        firmware_stream_dictionary = (uint8_t *)malloc(32768);
+        if (!firmware_stream_dictionary)
+        {
+            printf("MT76: Failed to allocate decompression dictionary\n");
+            return -1;
+        }
+    }
+
     memset(&firmware_stream, 0, sizeof(firmware_stream));
-    uzlib_uncompress_init(&firmware_stream_decompressor, firmware_stream_dictionary,
-                          sizeof(firmware_stream_dictionary));
+    uzlib_uncompress_init(&firmware_stream_decompressor, firmware_stream_dictionary, 32768);
     firmware_stream_decompressor.source = compressed_data;
     firmware_stream_decompressor.source_limit = compressed_data + compressed_len - 4;
-    if (uzlib_gzip_parse_header(&firmware_stream_decompressor) != TINF_OK) return -1;
+    if (uzlib_gzip_parse_header(&firmware_stream_decompressor) != TINF_OK)
+    {
+        mt76_free_dictionary();
+        return -1;
+    }
 
     firmware_stream_expected_len = decompressed_len;
     firmware_stream_active = true;
@@ -169,11 +191,13 @@ int mt76_step_firmware_compressed(struct mt76_dev *dev)
         firmware_stream.output_len > firmware_stream_expected_len)
     {
         firmware_stream_active = false;
+        mt76_free_dictionary();
         return -1;
     }
 
     if (result == TINF_OK) return 1;
     firmware_stream_active = false;
+    mt76_free_dictionary();
     if (result != TINF_DONE || !firmware_stream.configured ||
         firmware_stream.output_len != firmware_stream_expected_len ||
         firmware_stream.section != 2 || firmware_stream.chunk_len != 0) return -1;
@@ -212,6 +236,7 @@ bool mt76_init(struct mt76_dev *dev, uint8_t dev_addr) {
 
 void mt76_deinit(struct mt76_dev *dev) {
     dev->initialized = false;
+    mt76_free_dictionary();
 }
 
 uint32_t mt76_read_register(struct mt76_dev *dev, uint32_t addr) {
@@ -333,6 +358,8 @@ int mt76_load_ivb(struct mt76_dev *dev) {
 }
 
 int mt76_reset_firmware(struct mt76_dev *dev) {
+    firmware_stream_active = false;
+    mt76_free_dictionary();
     printf("MT76: Resetting firmware...\n");
 
     /* Apply power-on RF patch */

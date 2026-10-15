@@ -231,6 +231,7 @@ void reinitialize_device_stack()
 {
     ProfileManager::instance().deinitialize_device_bluetooth();
     tud_deinit(TUD_OPT_RHPORT);
+    ProfileManager::instance().finish_config_reload();
     initialize_device_stack();
 }
 

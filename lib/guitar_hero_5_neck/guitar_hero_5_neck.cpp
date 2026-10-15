@@ -14,73 +14,82 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 void GuitarHero5Neck::tick()
 {
     interface.tick();
-    if (lastPoll && to_ms_since_boot(get_absolute_time()) - lastPoll > 500)
+    if (lastPoll && !restart_alarm_id && to_ms_since_boot(get_absolute_time()) - lastPoll > 1000)
     {
-        process_data(GH5NECK_ADDR, false, false, false, false);
+        process_data(0, false, false, false, false);
     }
-};
+}
 
 void GuitarHero5Neck::begin()
 {
     printf("GuitarHero5Neck begin\n");
     interface.dmaInit(GH5NECK_ADDR, this);
-    status = GH5_NECK_CHECK_STATUS;
-    process_data(GH5NECK_ADDR, false, false, false, false);
+    failCount = 0;
+    connected = false;
+    clear_buttons();
+    alarm_id_t id = add_alarm_in_ms(GH5_STARTUP_MS, restart_handler, this, true);
+    restart_alarm_id = (id > 0) ? id : 0;
 }
+
 void GuitarHero5Neck::end()
 {
     printf("GuitarHero5Neck end\n");
-    cancel_alarm(restart_alarm_id);
+    if (restart_alarm_id)
+    {
+        cancel_alarm(restart_alarm_id);
+        restart_alarm_id = 0;
+    }
     interface.dmaDeinit(GH5NECK_ADDR);
+    connected = false;
+    clear_buttons();
 }
+
+void GuitarHero5Neck::clear_buttons()
+{
+    green = red = yellow = blue = orange = false;
+    tapGreen = tapRed = tapYellow = tapBlue = tapOrange = false;
+}
+
 void GuitarHero5Neck::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     lastPoll = to_ms_since_boot(get_absolute_time());
-    cancel_alarm(restart_alarm_id);
+    if (restart_alarm_id)
+    {
+        cancel_alarm(restart_alarm_id);
+        restart_alarm_id = 0;
+    }
     if (timeout || abort_detected)
     {
-        status = GH5_NECK_CHECK_STATUS;
-        restart_alarm_id = add_alarm_in_ms(500, restart_handler, this, true);
         failCount++;
         if (failCount > 10)
         {
             connected = false;
+            clear_buttons();
         }
+        alarm_id_t id = add_alarm_in_ms(500, restart_handler, this, true);
+        restart_alarm_id = (id > 0) ? id : 0;
         return;
     }
     if (stop_detected)
     {
         connected = true;
         failCount = 0;
-        switch (status)
-        {
-        case GH5_NECK_CHECK_STATUS:
-            if (bufferRx[1])
-            {
-                status = GH5_NECK_READ_DATA;
-                interface.dmaWriteRead(GH5NECK_ADDR, nullptr, 0, bufferRx, 4);
-                return;
-            }
-            break;
-        case GH5_NECK_READ_DATA:
-            status = GH5_NECK_CHECK_STATUS;
-            green = bufferRx[0] & 1 << 4;
-            red = bufferRx[0] & 1 << 5;
-            yellow = bufferRx[0] & 1 << 7;
-            blue = bufferRx[0] & 1 << 6;
-            orange = bufferRx[0] & 1 << 0;
-            tapGreen = bufferRx[3] & 1 << 4;
-            tapRed = bufferRx[3] & 1 << 3;
-            tapYellow = bufferRx[3] & 1 << 2;
-            tapBlue = bufferRx[3] & 1 << 1;
-            tapOrange = bufferRx[3] & 1 << 0;
-            break;
-        }
+        green = bufferRx[0] & (1 << 4);
+        red = bufferRx[0] & (1 << 5);
+        yellow = bufferRx[0] & (1 << 7);
+        blue = bufferRx[0] & (1 << 6);
+        orange = bufferRx[0] & (1 << 0);
+        tapGreen = bufferRx[3] & (1 << 4);
+        tapRed = bufferRx[3] & (1 << 3);
+        tapYellow = bufferRx[3] & (1 << 2);
+        tapBlue = bufferRx[3] & (1 << 1);
+        tapOrange = bufferRx[3] & (1 << 0);
 
-        restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+        alarm_id_t id = add_alarm_in_us(GH5_POLL_INTERVAL_US, restart_handler, this, true);
+        restart_alarm_id = (id > 0) ? id : 0;
         return;
     }
-    status = GH5_NECK_CHECK_STATUS;
+
     bufferTx[0] = GH5NECK_BUTTONS_PTR;
-    interface.dmaWriteRead(GH5NECK_ADDR, bufferTx, 1, bufferRx, 2);
+    interface.dmaWriteRead(GH5NECK_ADDR, bufferTx, 1, bufferRx, 4);
 }

@@ -12,20 +12,33 @@
 
 namespace
 {
+    template <typename T>
+    inline void free_vector(std::vector<T> &v)
+    {
+        v.clear();
+        v.shrink_to_fit();
+    }
+
     void release_profile_contents(std::unordered_map<uint32_t, std::vector<std::shared_ptr<Profile>>> &profiles)
     {
         for (auto &profile_pair : profiles)
         {
             for (auto &profile : profile_pair.second)
             {
-                profile->action_mappings.clear();
-                profile->strum_mappings.clear();
-                profile->mappings.clear();
-                profile->triggers.clear();
-                profile->leds.clear();
-                profile->devices.clear();
-                profile->claimed_devices.clear();
-                profile->temp_claimed_devices.clear();
+                if (profile)
+                {
+                    free_vector(profile->action_mappings);
+                    free_vector(profile->strum_mappings);
+                    free_vector(profile->mappings);
+                    free_vector(profile->triggers);
+                    free_vector(profile->leds);
+                    profile->devices.clear();
+                    profile->temp_devices.clear();
+                    profile->claimed_devices.clear();
+                    profile->temp_claimed_devices.clear();
+                    free_vector(profile->queued_mappings);
+                    free_vector(profile->queued_last_live);
+                }
             }
         }
     }
@@ -358,15 +371,21 @@ void ProfileManager::prepare_for_config_reload()
 
     for (size_t i = 0; i < std::size(m_previous_usb_instances); ++i)
     {
-        if (m_previous_usb_instances[i] && m_previous_usb_reload_identities[i].valid &&
-            !m_previous_usb_reload_identities[i].auxiliary)
+        if (m_previous_usb_instances[i])
         {
-            m_previous_usb_instances[i]->profiles.clear();
+            free_vector(m_previous_usb_instances[i]->profiles);
         }
     }
 
-    m_instances.clear();
-    m_active_instances.clear();
+    for (auto &instance : m_instances)
+    {
+        if (instance)
+        {
+            free_vector(instance->profiles);
+        }
+    }
+    free_vector(m_instances);
+    free_vector(m_active_instances);
     release_profile_contents(m_profiles);
     m_profiles.clear();
     m_profile_to_instance.clear();

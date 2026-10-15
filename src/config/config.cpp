@@ -16,6 +16,7 @@
 #include "config/trigger_factory.hpp"
 #include "config/led_factory.hpp"
 #include "config/config_storage.hpp"
+#include "config/FlashPROM.h"
 #include "config/config_loader.hpp"
 #include "emulation/usb/usb_descriptors.h"
 #include "config/aux_config.hpp"
@@ -111,6 +112,8 @@ static auto &profile_mgr = ProfileManager::instance();
 static auto &device_mgr = DeviceManager::instance();
 static auto &config_mgr = ConfigManager::instance();
 static ConfigStorage config_storage;
+// A save that arrived while an upload was still sending its data
+static bool save_after_upload = false;
 
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
@@ -1081,8 +1084,28 @@ bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
     return true;
 }
 
+void save_config()
+{
+    // The upload has already replaced the cached footer, committing now would store the new footer
+    // over the old data. Hold the save until the data has all arrived
+    if (config_storage.upload_active())
+    {
+        printf("save waiting for the config upload to finish\r\n");
+        save_after_upload = true;
+        return;
+    }
+    EEPROM.commit_now();
+    config_mgr.set_full_reload(true);
+    reload();
+}
+
 void abort_config_write()
 {
+    if (save_after_upload)
+    {
+        printf("dropping the save that was waiting on it\r\n");
+        save_after_upload = false;
+    }
     config_storage.abort_write();
     config_mgr.set_working(false);
 }
@@ -1105,6 +1128,12 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     }
     printf("Everything matched, saving!\r\n");
     UsbDetectionState::instance().disable_console_inference();
+    if (save_after_upload)
+    {
+        save_after_upload = false;
+        EEPROM.commit_now();
+        config_mgr.set_full_reload(true);
+    }
     reload();
     config_mgr.set_working(false);
     return true;

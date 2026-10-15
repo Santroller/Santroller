@@ -28,6 +28,8 @@ uint32_t copy_config(uint8_t *buffer, uint32_t start, bool cached);
 uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload);
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize);
 bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start);
+// Commit the cached config to flash, once any upload in progress has finished
+void save_config();
 // Give up on a config write the tool never finished
 void abort_config_write();
 void update();

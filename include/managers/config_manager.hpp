@@ -3,6 +3,8 @@
 #include <vector>
 #include "config.pb.h"
 
+class Profile;
+
 // A startup trigger that matched. Inputs read from a slot also remember the device they read, so
 // the latch doesn't carry over to another device that fills the same slot
 struct StartupTriggerKey
@@ -101,7 +103,16 @@ public:
     
     bool has_seen_assignment(uint32_t mask) const { return m_seen_masks & mask; }
     void mark_seen_assignment(uint32_t mask) { m_seen_masks |= mask; }
-    void clear_seen_masks() { m_seen_masks = 0; }
+    void clear_seen_masks()
+    {
+        m_seen_masks = 0;
+        m_local_inputs_owner = nullptr;
+    }
+
+    // The onboard inputs go to the first profile that claims them each load, so only one of the
+    // profiles that output them (eg one for USB and one for bluetooth) is active at a time
+    bool local_inputs_available_to(const Profile *profile) const { return !m_local_inputs_owner || m_local_inputs_owner == profile; }
+    void claim_local_inputs(const Profile *profile) { m_local_inputs_owner = profile; }
 
     // Startup triggers that matched, so the profile they picked survives later reloads (eg once
     // the console is detected), long after the input was let go. Kept until a new config is written.
@@ -151,5 +162,6 @@ private:
     uint32_t m_reinit_time;
     uint32_t m_time_since_mode;
     uint32_t m_seen_masks;
+    const Profile *m_local_inputs_owner = nullptr;
     std::vector<StartupTriggerKey> m_latched_startup_triggers;
 };

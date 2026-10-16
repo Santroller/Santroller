@@ -149,6 +149,13 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             list_id
         );
         
+    case proto_ProfileAssignmentInfo_localInputs_tag:
+        return std::make_unique<LocalInputsActivationTrigger>(
+            profile,
+            trigger_id,
+            list_id
+        );
+
     case proto_ProfileAssignmentInfo_bluetooth_tag:
         return std::make_unique<BluetoothModeActivationTrigger>(
             proto_assignment.assignment.bluetooth,

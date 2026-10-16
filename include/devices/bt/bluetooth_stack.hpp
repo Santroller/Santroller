@@ -37,6 +37,9 @@ public:
     // The controller's BD_ADDR (most significant byte first), once the stack is up and
     // running. Returns false if bluetooth isn't enabled or isn't ready yet.
     bool local_address(uint8_t addr[6]) const;
+    // Whether the USB port has power, which the CYW43 senses on boards like the Pico W. Returns
+    // false when that isn't known (no CYW43, or it isn't up yet).
+    bool vbus_present(bool &present, uint32_t now);
     uint16_t device_id() const { return m_device_id; }
     void set_device_id(uint16_t device_id) { m_device_id = device_id; }
 
@@ -49,4 +52,6 @@ private:
     bool m_restarting = false;
     void *m_wiimote_report = nullptr;
     uint16_t m_device_id = 0;
+    bool m_vbus = false;
+    uint32_t m_vbus_read_ms = 0;
 };

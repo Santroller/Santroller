@@ -1,6 +1,7 @@
 #include "triggers/device_type_triggers.hpp"
 #include "managers/device_manager.hpp"
 #include "managers/profile_manager.hpp"
+#include "managers/config_manager.hpp"
 
 #include "tusb.h"
 #include "emulation/usb/usb_descriptors.h"
@@ -342,4 +343,28 @@ bool MidiProGuitarActivationTrigger::validate(bool claim_device, bool full_poll,
 void MidiProGuitarActivationTrigger::reset()
 {
     clear_profile_temp_devices(m_profile);
+}
+
+LocalInputsActivationTrigger::LocalInputsActivationTrigger(std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id)
+{
+}
+
+bool LocalInputsActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+{
+    auto &config_mgr = ConfigManager::instance();
+    bool matched = config_mgr.local_inputs_available_to(m_profile);
+    if (send_events && (matched != m_last_val || full_poll))
+    {
+        m_last_val = matched;
+        send_activation_event(m_id, m_list_id, m_last_analog_val, m_last_val);
+    }
+    else
+    {
+        m_last_val = matched;
+    }
+    if (matched && claim_device)
+    {
+        config_mgr.claim_local_inputs(m_profile);
+    }
+    return matched;
 }

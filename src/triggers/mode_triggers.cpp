@@ -8,6 +8,7 @@
 #include "main.hpp"
 #include "config/config.hpp"
 #include "emulation/usb/hid_device.h"
+#include "emulation/usb/usb_host_presence.hpp"
 
 UsbModeActivationTrigger::UsbModeActivationTrigger(proto_UsbDeviceAssignment config, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_config(config)
 {
@@ -58,6 +59,12 @@ bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
             break;
         }
         eligible = matched;
+    }
+    // Without a host, a profile further down (eg bluetooth) gets the inputs instead
+    if (!UsbHostPresence::instance().present())
+    {
+        eligible = false;
+        matched = false;
     }
 
     if (send_events && (matched != m_last_val || full_poll))

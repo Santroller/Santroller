@@ -67,6 +67,7 @@ void ConfigManager::clear_all()
     m_reinit_time = 0;
     m_time_since_mode = 0;
     m_seen_masks = 0;
+    m_local_inputs_owner = nullptr;
     m_forced_mode_deferred = false;
     m_mode_from_profile = false;
     m_rpcs3_detected = false;

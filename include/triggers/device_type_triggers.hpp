@@ -104,3 +104,13 @@ public:
 protected:
     uint8_t m_channel;
 };
+
+// The onboard inputs, which only the first profile that claims them each load gets
+class LocalInputsActivationTrigger : public ActivationTrigger
+{
+public:
+    LocalInputsActivationTrigger(std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id);
+    ~LocalInputsActivationTrigger() {}
+    bool validate(bool claim_device, bool full_poll, bool send_events);
+    int assignedDevices() { return 0; }
+};

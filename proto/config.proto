@@ -187,6 +187,11 @@ message JoybusAssignment {
 message SNESAssignment {
 
 }
+// The inputs on this device itself (GPIO, ADC, I2C peripherals etc). Only one active profile can have
+// them, so profiles that output them in different ways (eg USB, then bluetooth) don't all match at once
+message LocalInputsAssignment {
+
+}
 
 message ProfileAssignmentInfo {
   oneof assignment {
@@ -207,6 +212,7 @@ message ProfileAssignmentInfo {
     SNESAssignment snesEmulation = 20;
     // A Pro Guitar seen over MIDI, ProGuitarMustang or ProGuitarSquier
     SubType midiProGuitar = 21;
+    LocalInputsAssignment localInputs = 22;
   }
   reserved 12;
 }

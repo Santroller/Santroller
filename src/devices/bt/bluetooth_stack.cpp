@@ -200,6 +200,26 @@ bool BluetoothStack::initialized() const
     return m_initialized;
 }
 
+bool BluetoothStack::vbus_present(bool &present, uint32_t now)
+{
+#ifdef CYW43_WL_GPIO_VBUS_PIN
+    if (!m_initialized || m_usb_dongle)
+    {
+        return false;
+    }
+    // Each read is a transaction with the CYW43, so don't do it every loop
+    if (!m_vbus_read_ms || now - m_vbus_read_ms >= 10)
+    {
+        m_vbus_read_ms = now ? now : 1;
+        m_vbus = cyw43_arch_gpio_get(CYW43_WL_GPIO_VBUS_PIN);
+    }
+    present = m_vbus;
+    return true;
+#else
+    return false;
+#endif
+}
+
 bool BluetoothStack::local_address(uint8_t addr[6]) const
 {
     if (!m_initialized || !m_powered || hci_get_state() != HCI_STATE_WORKING)

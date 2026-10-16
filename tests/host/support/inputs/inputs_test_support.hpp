@@ -18,6 +18,7 @@
 #include "pico/bootrom.h"
 #include "emulation/usb/hid_device.h"
 #include "fake_devices.hpp"
+#include "emulation/usb/usb_host_presence.hpp"
 
 // An input a test drives directly. hw is what shortcut masking matches inputs by.
 class TestInput : public Input
@@ -209,6 +210,7 @@ protected:
         fake_bootrom::reset_count = 0;
         fake_pins::reset();
         ConfigManager::instance().clear_all();
+        UsbHostPresence::instance().reset(0);
         DeviceManager::instance().clear_assignable_devices();
         ProfileManager::instance().instances.clear();
     }

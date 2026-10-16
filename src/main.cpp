@@ -48,6 +48,7 @@
 #include <pico/cyw43_arch.h>
 
 #include "emulation/usb/usb_descriptors.h"
+#include "emulation/usb/usb_host_presence.hpp"
 #include <pico_fota_bootloader/core.h>
 #include "ring_buffer.h"
 #include "hci.h"
@@ -248,6 +249,21 @@ void reinitialize_device_stack()
     initialize_device_stack();
 }
 
+// Picks the profiles again when a USB host comes or goes
+static void update_usb_host_presence()
+{
+    uint32_t now = millis();
+    bool host_active = tud_connected() && !tud_suspended();
+    bool vbus = false;
+    bool vbus_known = BluetoothStack::instance().vbus_present(vbus, now);
+    auto &presence = UsbHostPresence::instance();
+    if (presence.update(host_active, vbus_known, vbus, now))
+    {
+        printf("usb host present=%d\r\n", presence.present());
+        reload();
+    }
+}
+
 bool send_timeout = false;
 
 void update()
@@ -322,6 +338,7 @@ int main()
     {
         tud_task(); // tinyusb device task
         tuh_task();
+        update_usb_host_presence();
         if (!reload_config())
         {
             hid_task();

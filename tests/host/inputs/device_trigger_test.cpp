@@ -352,3 +352,153 @@ TEST_F(DeviceTriggerTest, SnesEmulationNeedsAConsoleTalking)
     ConfigManager::instance().mark_seen_assignment(AssignJoybus);
     EXPECT_TRUE(trigger.validate(true, false, false));
 }
+
+namespace
+{
+// No host turns up after powering on
+void no_host(uint32_t from = 0)
+{
+    auto &presence = UsbHostPresence::instance();
+    presence.update(false, false, false, from);
+    presence.update(false, false, false, from + UsbHostPresence::ABSENT_MS);
+}
+void host_talks(uint32_t now)
+{
+    UsbHostPresence::instance().update(true, false, false, now);
+}
+} // namespace
+
+TEST_F(DeviceTriggerTest, HostPresenceWaitsForAHostAfterPoweringOn)
+{
+    auto &presence = UsbHostPresence::instance();
+    // Assumed present at boot, until a host has had time to enumerate us
+    EXPECT_TRUE(presence.present());
+    EXPECT_FALSE(presence.update(false, false, false, 100));
+    EXPECT_FALSE(presence.update(false, false, false, 100 + UsbHostPresence::ABSENT_MS - 1));
+    EXPECT_TRUE(presence.update(false, false, false, 100 + UsbHostPresence::ABSENT_MS));
+    EXPECT_FALSE(presence.present());
+    EXPECT_FALSE(presence.update(false, false, false, 5000));
+
+    EXPECT_TRUE(presence.update(true, false, false, 6000));
+    EXPECT_TRUE(presence.present());
+}
+
+TEST_F(DeviceTriggerTest, HostPresenceSurvivesTheHostSleeping)
+{
+    auto &presence = UsbHostPresence::instance();
+    EXPECT_FALSE(presence.update(true, false, false, 100));
+    // Suspended, or the device stack restarting: the host is still there
+    EXPECT_FALSE(presence.update(false, false, false, 200));
+    EXPECT_FALSE(presence.update(false, false, false, 100000));
+    EXPECT_TRUE(presence.present());
+    // Same with VBUS sensing, as long as there is power
+    EXPECT_FALSE(presence.update(false, true, true, 200000));
+    EXPECT_TRUE(presence.present());
+}
+
+TEST_F(DeviceTriggerTest, HostPresenceGoesWithVbus)
+{
+    auto &presence = UsbHostPresence::instance();
+    presence.update(true, true, true, 100);
+    EXPECT_FALSE(presence.update(false, true, false, 1000));
+    EXPECT_FALSE(presence.update(false, true, false, 1000 + UsbHostPresence::NO_VBUS_MS - 1));
+    EXPECT_TRUE(presence.update(false, true, false, 1000 + UsbHostPresence::NO_VBUS_MS));
+    EXPECT_FALSE(presence.present());
+
+    // A charger: power but nobody talking
+    EXPECT_FALSE(presence.update(false, true, true, 5000));
+    EXPECT_FALSE(presence.update(false, true, true, 50000));
+    EXPECT_FALSE(presence.present());
+
+    EXPECT_TRUE(presence.update(true, true, true, 60000));
+    EXPECT_TRUE(presence.present());
+
+    // A bounce as the cable goes in isn't an unplug
+    EXPECT_FALSE(presence.update(false, true, false, 70000));
+    EXPECT_FALSE(presence.update(true, true, true, 70010));
+    EXPECT_FALSE(presence.update(true, true, true, 80000));
+    EXPECT_TRUE(presence.present());
+}
+
+TEST_F(DeviceTriggerTest, UsbModeNeedsAHost)
+{
+    auto config = usb_assignment();
+    UsbModeActivationTrigger trigger(config, profile, 1, 0);
+    EXPECT_TRUE(trigger.validate(false, false, false));
+
+    no_host();
+    EXPECT_FALSE(trigger.validate(false, false, false));
+    EXPECT_FALSE(trigger.validate(true, false, false));
+
+    host_talks(10000);
+    EXPECT_TRUE(trigger.validate(false, false, false));
+
+    // Still needs the right console as well
+    config.has_consoleType = true;
+    config.consoleType = ConsolePS3;
+    UsbModeActivationTrigger ps3(config, profile, 2, 0);
+    profile->mode = ModePs3;
+    EXPECT_TRUE(ps3.validate(false, false, false));
+    // Powered on again without one
+    UsbHostPresence::instance().reset(30000);
+    no_host(30000);
+    EXPECT_FALSE(ps3.validate(false, false, false));
+
+    // The tool sees it as unmatched
+    ps3.validate(false, true, true);
+    ASSERT_EQ(HIDConfigDevice::sent_events.size(), 1u);
+    EXPECT_FALSE(HIDConfigDevice::sent_events[0].event.trigger.state);
+}
+
+TEST_F(DeviceTriggerTest, LocalInputsGoToTheFirstProfileThatClaimsThem)
+{
+    auto other = make_profile();
+    other->profile_id = 2;
+    LocalInputsActivationTrigger first(profile, 1, 0);
+    LocalInputsActivationTrigger second(other, 1, 0);
+    EXPECT_EQ(first.assignedDevices(), 0);
+
+    // Checking doesn't take them
+    EXPECT_TRUE(first.validate(false, false, false));
+    EXPECT_TRUE(second.validate(false, false, false));
+
+    EXPECT_TRUE(first.validate(true, false, false));
+    EXPECT_FALSE(second.validate(false, false, false));
+    EXPECT_FALSE(second.validate(true, false, false));
+    // The owner keeps matching
+    EXPECT_TRUE(first.validate(false, false, false));
+
+    // Free again for the next load
+    ConfigManager::instance().clear_seen_masks();
+    EXPECT_TRUE(second.validate(true, false, false));
+    EXPECT_FALSE(first.validate(false, false, false));
+}
+
+// A guitar with a USB profile, then a bluetooth one, both claiming the onboard inputs: only one of
+// them is picked, depending on whether there is a host
+TEST_F(DeviceTriggerTest, LocalInputsFallBackFromUsbToBluetooth)
+{
+    auto bt_profile = make_profile();
+    bt_profile->profile_id = 2;
+    auto config = usb_assignment();
+
+    // What loading the config does: each profile's list, in order, claiming if it matches
+    auto load = [&]() {
+        ConfigManager::instance().clear_seen_masks();
+        ActivationTriggerList usb;
+        usb.triggers.emplace_back(new UsbModeActivationTrigger(config, profile, 1, 0));
+        usb.triggers.emplace_back(new LocalInputsActivationTrigger(profile, 2, 0));
+        ActivationTriggerList bt;
+        bt.triggers.emplace_back(new BluetoothModeActivationTrigger(BTStandard, bt_profile, 1, 0));
+        bt.triggers.emplace_back(new LocalInputsActivationTrigger(bt_profile, 2, 0));
+        bool usb_active = usb.validate(true, false, false);
+        bool bt_active = bt.validate(true, false, false);
+        return std::make_pair(usb_active, bt_active);
+    };
+
+    EXPECT_EQ(load(), std::make_pair(true, false));
+    no_host();
+    EXPECT_EQ(load(), std::make_pair(false, true));
+    host_talks(10000);
+    EXPECT_EQ(load(), std::make_pair(true, false));
+}

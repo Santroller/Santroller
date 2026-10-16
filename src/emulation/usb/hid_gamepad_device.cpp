@@ -305,7 +305,7 @@ uint16_t HIDGamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
     // RPCS3 sends this when probing the controller
     if (std::any_of(profiles.begin(), profiles.end(), [](const auto &profile) { return profile->ps3_on_rpcs3; }))
     {
-      ConfigManager::instance().request_mode(ModePs3);
+      ConfigManager::instance().rpcs3_detected();
     }
     return 0;
   case ReportId::ReportIdPs4Feature:

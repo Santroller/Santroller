@@ -592,6 +592,14 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
                 usb_mode = forced_usb_mode;
             }
         }
+        else if (profile->ps3_on_rpcs3 && config_mgr.is_rpcs3_detected())
+        {
+            // Not held off for the tool, someone who left it open is trying to play in RPCS3
+            printf("rpcs3 mode (was %d)\r\n", config_mgr.get_requested_mode());
+            config_mgr.request_mode(ModePs3);
+            config_mgr.set_mode_from_profile(true);
+            usb_mode = ModePs3;
+        }
 
         bool xinput_win;
         if (list->xinputOnWindows(xinput_win))

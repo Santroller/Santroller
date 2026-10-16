@@ -522,7 +522,7 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
             {
                 uint8_t const report_id = tu_u16_low(request->wValue);
                 if (report_id == 0xF2 && ProfileManager::instance().ps3_on_rpcs3())
-                    ConfigManager::instance().request_mode(ModePs3);
+                    ConfigManager::instance().rpcs3_detected();
             }
             break;
         }

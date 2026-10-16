@@ -89,6 +89,15 @@ public:
     // The requested mode came from a profile forcing it, rather than from detecting the host
     bool is_mode_from_profile() const { return m_mode_from_profile; }
     void set_mode_from_profile(bool forced) { m_mode_from_profile = forced; }
+    // RPCS3 probed us, so profiles with ps3_on_rpcs3 run in PS3 mode. Kept across reloads, as the
+    // profile picks the mode again on each load, like one that forces it
+    bool is_rpcs3_detected() const { return m_rpcs3_detected; }
+    void rpcs3_detected()
+    {
+        m_rpcs3_detected = true;
+        m_requested_mode = ModePs3;
+        m_mode_from_profile = true;
+    }
     
     bool has_seen_assignment(uint32_t mask) const { return m_seen_masks & mask; }
     void mark_seen_assignment(uint32_t mask) { m_seen_masks |= mask; }
@@ -134,6 +143,7 @@ private:
     bool m_reinitialize_device_stack;
     bool m_restart_device_stack = false;
     bool m_forced_mode_deferred = false;
+    bool m_rpcs3_detected = false;
     ConsoleMode m_deferred_mode = ModeHid;
     bool m_mode_from_profile = false;
     ConsoleMode m_detected_mode = ModeHid;

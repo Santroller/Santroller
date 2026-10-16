@@ -69,6 +69,7 @@ void ConfigManager::clear_all()
     m_seen_masks = 0;
     m_forced_mode_deferred = false;
     m_mode_from_profile = false;
+    m_rpcs3_detected = false;
     m_detected_mode = ModeHid;
     m_latched_startup_triggers.clear();
 }

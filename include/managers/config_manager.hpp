@@ -37,6 +37,11 @@ public:
     bool mode_recently_changed(uint32_t now, uint32_t window_ms = 2000) const;
     void mark_mode_change_time(uint32_t now) { m_time_since_mode = now; }
     void sync_requested_mode_to_current() { m_current_mode = m_requested_mode; }
+    // The host detected from how it enumerates us (ModeHid for a PC or a host not detected yet). It's
+    // kept across reloads, so a reload goes straight back to the host's mode instead of starting over
+    // in ModeHid and being detected all over again.
+    ConsoleMode get_detected_mode() const { return m_detected_mode; }
+    void host_detected(ConsoleMode mode);
     
     // Config loading state
     bool is_working() const { return m_working; }
@@ -124,6 +129,7 @@ private:
     bool m_restart_device_stack = false;
     bool m_forced_mode_deferred = false;
     bool m_mode_from_profile = false;
+    ConsoleMode m_detected_mode = ModeHid;
     uint32_t m_last_work = 0;
     uint32_t m_reinit_time;
     uint32_t m_time_since_mode;

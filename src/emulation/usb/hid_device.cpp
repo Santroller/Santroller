@@ -3,6 +3,7 @@
 #include "commands.pb.h"
 #include "enums.pb.h"
 #include "config/config.hpp"
+#include "config/instance_factory.hpp"
 #include "managers/config_manager.hpp"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
@@ -89,7 +90,7 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
     clearedOut |= tu_edpt_dir(request->wIndex) == TUSB_DIR_OUT;
     if (clearedIn && clearedOut && ConfigManager::instance().get_current_mode() == ModeHid)
     {
-      ConfigManager::instance().request_mode(ModeSwitch);
+      ConfigManager::instance().host_detected(ModeSwitch);
       return false;
     }
   }
@@ -100,7 +101,7 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
     {
       if (request->bRequest == 6 && request->wValue == 0x4200)
       {
-        ConfigManager::instance().request_mode(ModeOgXbox);
+        ConfigManager::instance().host_detected(ModeOgXbox);
         return false;
       }
     }
@@ -126,14 +127,16 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
         {
           if (detection.seen_windows_string())
           {
-            if (xinput_on_windows)
+            // Built before we knew it was windows, reload so this profile comes back as xinput.
+            // Windows is remembered across the reload, so it is only built as HID the first time.
+            if (InstanceFactory::uses_xinput_on_windows(subtype, xinput_on_windows))
             {
-              ConfigManager::instance().request_mode(ModeXbox360);
+              reload();
             }
           }
           else
           {
-            ConfigManager::instance().request_mode(ModeXboxOne);
+            ConfigManager::instance().host_detected(ModeXboxOne);
           }
         }
       }

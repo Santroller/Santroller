@@ -37,6 +37,7 @@ struct State
 
     // Inputs to apply
     ConsoleMode requested_mode = ModeHid;
+    ConsoleMode detected_mode = ModeHid;
     bool has_active_instances = true;
     bool should_reinitialize_device_stack = false;
     bool battery_present_changed = false;

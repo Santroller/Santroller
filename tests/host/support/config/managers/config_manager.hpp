@@ -20,6 +20,7 @@ public:
         fake_loader::state.requested_mode = mode;
     }
     ConsoleMode get_requested_mode() const { return fake_loader::state.requested_mode; }
+    ConsoleMode get_detected_mode() const { return fake_loader::state.detected_mode; }
     bool should_reinitialize_device_stack() const { return fake_loader::state.should_reinitialize_device_stack; }
     void request_device_stack_reinit() { fake_loader::state.should_reinitialize_device_stack = true; }
     void sync_requested_mode_to_current() { fake_loader::state.calls.push_back("sync_requested_mode_to_current"); }

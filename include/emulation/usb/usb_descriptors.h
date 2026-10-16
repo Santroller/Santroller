@@ -58,6 +58,8 @@ public:
 
   bool seen_windows_xb1() const { return m_seen_windows_xb1; }
   bool seen_windows_string() const { return m_seen_windows_string; }
+  // An xbox one reads the OS descriptors too, but not the strings
+  bool host_is_windows() const { return m_seen_windows_xb1 && m_seen_windows_string; }
   bool seen_hid_descriptor_read() const { return m_seen_hid_descriptor_read; }
 
   void mark_windows_xb1_seen() { m_seen_windows_xb1 = true; }

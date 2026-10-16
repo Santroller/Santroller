@@ -21,6 +21,18 @@ void ConfigManager::latch_startup_trigger(const StartupTriggerKey &key)
         m_latched_startup_triggers.push_back(key);
 }
 
+void ConfigManager::host_detected(ConsoleMode mode)
+{
+    // Already known, and a profile picked another mode for it (eg a keyboard can only be HID).
+    // Requesting it again would just reload back into that mode.
+    if (mode == m_detected_mode && m_current_mode != mode)
+    {
+        return;
+    }
+    m_detected_mode = mode;
+    m_requested_mode = mode;
+}
+
 bool ConfigManager::should_reinit(uint32_t now) const
 {
     return m_requested_mode != m_current_mode || (m_reinit_time && now > m_reinit_time);
@@ -57,5 +69,6 @@ void ConfigManager::clear_all()
     m_seen_masks = 0;
     m_forced_mode_deferred = false;
     m_mode_from_profile = false;
+    m_detected_mode = ModeHid;
     m_latched_startup_triggers.clear();
 }

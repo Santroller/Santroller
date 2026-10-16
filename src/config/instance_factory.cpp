@@ -25,6 +25,7 @@
 #include "emulation/usb/keyboardmania_device.h"
 #include "emulation/usb/pdloader_device.h"
 #include "emulation/usb/midi_device.h"
+#include "emulation/usb/usb_descriptors.h"
 
 static auto &profile_mgr = ProfileManager::instance();
 static auto &config_mgr = ConfigManager::instance();
@@ -40,6 +41,13 @@ void InstanceFactory::setup_instance_from_profile(
     instance->supports_ps4 = profile->supports_ps4;
     // otherwise they're only worked out once a host device is claimed
     instance->update_capabilities();
+}
+
+bool InstanceFactory::uses_xinput_on_windows(SubType subtype, bool xinput_on_windows)
+{
+    // There is no xinput keyboard, MIDI device or KeyboardMania
+    return xinput_on_windows && subtype != SubType_KeyboardMouse && subtype != SubType_Midi &&
+           subtype != SubType_KeyboardMania;
 }
 
 std::shared_ptr<Instance> InstanceFactory::create_instance(
@@ -109,6 +117,11 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
     }
     else if (assignment_mask & ProfileAssignMask_AssignUsb)
     {
+        if (usb_mode == ModeHid && UsbDetectionState::instance().host_is_windows() &&
+            uses_xinput_on_windows(profile->subtype, profile->xinput_on_windows))
+        {
+            usb_mode = ModeXbox360;
+        }
         if (usb_mode == ModeXboxOne)
         {
             auto existing_dev = profile_mgr.get_emulated_device(ModeXboxOne);

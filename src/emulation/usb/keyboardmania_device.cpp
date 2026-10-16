@@ -25,7 +25,7 @@ void KeyboardManiaDevice::process(bool full_poll, bool send_events) {
     auto &detection = UsbDetectionState::instance();
     if (!m_native && !mode_recently_changed() && detection.should_infer_console(millis()) &&
         !detection.seen_hid_descriptor_read()) {
-        ConfigManager::instance().request_mode(ModeKeyboardMania);
+        ConfigManager::instance().host_detected(ModeKeyboardMania);
     }
     if (!tud_ready()) {
         for (auto const &profile : profiles)

@@ -75,11 +75,11 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     config_mgr.set_forced_mode_deferred(false);
     if (config_mgr.is_mode_from_profile() && HIDConfigDevice::tool_closed())
     {
-        // A profile forced the current mode. Start over from ModeHid so the host is detected again if none
-        // of the active profiles force it now, any that still do put it back. Left alone while the tool is
-        // open, as switching modes would drop its connection.
+        // A profile forced the current mode. Go back to the detected host's mode in case none of the active
+        // profiles force it now, any that still do put it back. Left alone while the tool is open, as
+        // switching modes would drop its connection.
         config_mgr.set_mode_from_profile(false);
-        config_mgr.request_mode(ModeHid);
+        config_mgr.request_mode(config_mgr.get_detected_mode());
     }
     BatteryManager::instance().begin_config_reload();
     device_mgr.clear_active_devices();

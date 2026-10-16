@@ -70,7 +70,7 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
 {
   if (clearedIn && clearedOut)
   {
-    ConfigManager::instance().request_mode(ModeSwitch);
+    ConfigManager::instance().host_detected(ModeSwitch);
   }
   // if (millis() - lastKeepAlive > 10000) {
   //   if (debug_enabled) {

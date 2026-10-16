@@ -323,6 +323,17 @@ TEST_F(ConfigLoaderTest, AModeForcedByAProfileGoesBackToHidDetection)
     EXPECT_EQ(fake_loader::state.reinitialize_device_stack_calls, 1);
 }
 
+TEST_F(ConfigLoaderTest, AModeForcedByAProfileGoesBackToTheDetectedHost)
+{
+    // The host was already detected, so there's no need to come up in ModeHid and detect it again
+    fake_loader::state.requested_mode = ModePs4;
+    fake_loader::state.detected_mode = ModeSwitch;
+    fake_loader::state.mode_from_profile = true;
+    ASSERT_TRUE(store_and_apply(encode_config({}), {}, ModePs4));
+    EXPECT_EQ(fake_loader::state.requested_mode, ModeSwitch);
+    EXPECT_FALSE(fake_loader::state.mode_from_profile);
+}
+
 TEST_F(ConfigLoaderTest, AModeForcedByAProfileIsKeptWhileTheToolIsOpen)
 {
     fake_loader::state.requested_mode = ModePs4;

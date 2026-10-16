@@ -102,18 +102,18 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
     // Switch 2 does read the hid descriptor
     if (detection.seen_hid_descriptor_read())
     {
-      ConfigManager::instance().request_mode(ModeSwitch);
+      ConfigManager::instance().host_detected(ModeSwitch);
     }
     else if (tud_ready() && (subtype == RockBandGuitar || subtype == RockBandDrums))
     {
       // PS2 / Wii / WiiU does not read hid descriptor
       // The wii however will configure the usb device before it stops communicating
-      ConfigManager::instance().request_mode(ModeWiiRb);
+      ConfigManager::instance().host_detected(ModeWiiRb);
     }
     else
     {
       // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
-      ConfigManager::instance().request_mode(ModePs3);
+      ConfigManager::instance().host_detected(ModePs3);
     }
   }
   if (!tud_ready())
@@ -283,7 +283,7 @@ void HIDGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
     switch (report_id)
     {
     case ReportId::ReportIdPs3F4:
-      ConfigManager::instance().request_mode(ModePs3);
+      ConfigManager::instance().host_detected(ModePs3);
       break;
     }
   }
@@ -313,16 +313,16 @@ uint16_t HIDGamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
     {
       if (auth_broker.has_handler(ModePs5))
       {
-        ConfigManager::instance().request_mode(ModePs5);
+        ConfigManager::instance().host_detected(ModePs5);
       }
       else
       {
-        ConfigManager::instance().request_mode(ModePs4);
+        ConfigManager::instance().host_detected(ModePs4);
       }
     }
     else
     {
-      ConfigManager::instance().request_mode(ModePs3);
+      ConfigManager::instance().host_detected(ModePs3);
     }
     return 0;
   }

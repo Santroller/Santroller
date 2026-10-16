@@ -604,24 +604,6 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
             profile->xinput_on_windows = false;
         }
 
-        if (!is_mode_forced)
-        {
-            auto &detection = UsbDetectionState::instance();
-            if (profile->xinput_on_windows && detection.seen_windows_xb1() && detection.seen_windows_string())
-            {
-                if (config_mgr.get_requested_mode() != ModeXbox360)
-                {
-                    config_mgr.request_mode(ModeXbox360);
-                    usb_mode = ModeXbox360;
-                }
-            }
-            else if (!profile->xinput_on_windows && config_mgr.get_requested_mode() == ModeXbox360)
-            {
-                config_mgr.request_mode(ModeHid);
-                usb_mode = ModeHid;
-            }
-        }
-
         bool ps4_mode;
         if (list->ps4OrPs5Mode(ps4_mode))
         {

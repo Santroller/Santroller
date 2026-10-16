@@ -12,7 +12,7 @@
 	url = https://github.com/sanjay900/pico_fota_bootloader
 [submodule "lib/dmx"]
 	path = lib/dmx
-	url = https://github.com/jostlowe/Pico-DMX
+	url = https://github.com/sanjay900/Pico-DMX
 [submodule "lib/uzlib"]
 	path = lib/uzlib
 	url = https://github.com/pfalcon/uzlib.git

@@ -220,7 +220,7 @@ void send_debug(uint8_t *data, size_t len)
 static void initialize_device_stack()
 {
     HIDConfigDevice::reset_keepalive();
-    UsbDetectionState::instance().reset();
+    UsbDetectionState::instance().restart_enumeration();
     const tusb_rhport_init_t rh_init = {
         .role = TUSB_ROLE_DEVICE,
         .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL};

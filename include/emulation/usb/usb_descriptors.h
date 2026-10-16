@@ -30,9 +30,17 @@ public:
   void reset()
   {
     m_seen_windows_xb1 = false;
+    m_seen_windows_string = false;
+    restart_enumeration();
+  }
+
+  // For a device stack restart (eg a config reload). The host hasn't changed, so knowing it is windows
+  // is kept: otherwise we'd come back up in ModeHid just to be detected as windows and swap to xinput
+  // again, and windows caches the OS descriptors so it may not even read them a second time.
+  void restart_enumeration()
+  {
     m_seen_os_descriptor_read = false;
     m_seen_read_any_device_string = false;
-    m_seen_windows_string = false;
     m_seen_hid_descriptor_read = false;
     m_first_device_desc_ms = 0;
   }

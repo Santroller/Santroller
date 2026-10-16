@@ -34,6 +34,28 @@ TEST(UsbDetection, ConfigChangesDisableInferenceUntilRebootButOrdinaryReloadsDoN
     EXPECT_FALSE(detection.should_infer_console(LATER));
 }
 
+TEST(UsbDetection, StackRestartKeepsWindowsButClearsEnumeration)
+{
+    auto &detection = UsbDetectionState::instance();
+    detection.reset();
+    detection.mark_device_descriptor_read(1000);
+    detection.mark_windows_xb1_seen();
+    detection.mark_windows_string_seen();
+    detection.mark_hid_descriptor_read();
+
+    detection.restart_enumeration();
+    EXPECT_TRUE(detection.seen_windows_xb1());
+    EXPECT_TRUE(detection.seen_windows_string());
+    EXPECT_FALSE(detection.seen_hid_descriptor_read());
+    // Never inferred as a console, even if windows doesn't read anything this time
+    detection.mark_device_descriptor_read(1000);
+    EXPECT_FALSE(detection.should_infer_console(LATER));
+
+    detection.reset();
+    EXPECT_FALSE(detection.seen_windows_xb1());
+    EXPECT_FALSE(detection.seen_windows_string());
+}
+
 TEST(UsbDetection, InferenceWaitsForDelayAfterFirstDeviceDescriptorRead)
 {
     // Inference may already be disabled by the test above (it is a singleton), so this only checks the negatives

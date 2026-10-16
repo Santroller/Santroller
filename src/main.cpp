@@ -165,6 +165,12 @@ static void __noinline send_reload_event()
     HIDConfigDevice::flush_events(100000);
 }
 
+static void __noinline send_loaded_event()
+{
+    proto_Event event = {which_event : proto_Event_loaded_tag, event : {loaded : {}}};
+    HIDConfigDevice::send_event(event, true);
+}
+
 // Reloads the config once it has changed, returning true if it did. This is called straight from
 // the main loop with as little as possible on the stack, as decoding deeply nested inputs (eg a
 // toggle of a shortcut) recurses through nanopb and needs most of core 0's stack.
@@ -182,6 +188,12 @@ static bool __noinline reload_config()
     config_mgr.begin_reinit();
     load();
     config_mgr.finish_reinit(millis());
+    // Re-enumerating drops the tool, which then reconnects and reads everything again. Otherwise it
+    // has to be told, or it keeps showing the profiles that were active before
+    if (!HIDConfigDevice::tool_closed())
+    {
+        send_loaded_event();
+    }
     return true;
 }
 
@@ -219,7 +231,7 @@ void send_debug(uint8_t *data, size_t len)
 
 static void initialize_device_stack()
 {
-    HIDConfigDevice::reset_keepalive();
+    HIDConfigDevice::restart_keepalive();
     UsbDetectionState::instance().restart_enumeration();
     const tusb_rhport_init_t rh_init = {
         .role = TUSB_ROLE_DEVICE,

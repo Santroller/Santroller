@@ -131,6 +131,11 @@ message ReloadEvent {
 
 }
 
+// A reload finished without the device re-enumerating, so the tool won't reconnect to pick up what changed
+message LoadedEvent {
+
+}
+
 message Event {
     oneof event{
         ButtonEvent button = 1;   
@@ -154,6 +159,7 @@ message Event {
         BtDeviceHotplugEvent bt = 19;
         SNESDeviceHotplugEvent snes = 20;
         JoybusDeviceHotplugEvent joybus = 21;
+        LoadedEvent loaded = 22;
     };
 }
 

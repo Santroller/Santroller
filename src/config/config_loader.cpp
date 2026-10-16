@@ -72,8 +72,8 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     config.profiles.funcs.decode = &load_profile;
     config.guiConfig.funcs.decode = nullptr;
     config_mgr.clear_seen_masks();
-    config_mgr.set_forced_mode_deferred(false);
-    if (config_mgr.is_mode_from_profile() && HIDConfigDevice::tool_closed())
+    config_mgr.clear_deferred_forced_mode();
+    if (config_mgr.is_mode_from_profile() && !HIDConfigDevice::tool_may_be_open())
     {
         // A profile forced the current mode. Go back to the detected host's mode in case none of the active
         // profiles force it now, any that still do put it back. Left alone while the tool is open, as

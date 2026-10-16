@@ -9,4 +9,5 @@ class HIDConfigDevice : public UsbDevice
 public:
     static inline std::shared_ptr<HIDConfigDevice> instance = std::make_shared<HIDConfigDevice>();
     static bool tool_closed() { return fake_loader::state.tool_closed; }
+    static bool tool_may_be_open() { return !fake_loader::state.tool_closed; }
 };

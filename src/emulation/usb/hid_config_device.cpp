@@ -90,9 +90,9 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
     ProfileManager::instance().release_tool_profile();
     // A forced mode was held off while the tool was open, apply it now that the tool is gone
     auto &config_mgr = ConfigManager::instance();
-    if (config_mgr.is_forced_mode_deferred() && !config_mgr.is_working())
+    if (config_mgr.is_forced_mode_deferred() && !config_mgr.is_working() && !tool_may_be_open())
     {
-      config_mgr.set_forced_mode_deferred(false);
+      config_mgr.clear_deferred_forced_mode();
       reload();
     }
     return;
@@ -819,6 +819,12 @@ uint16_t HIDConfigDevice::handle_get_report(uint8_t report_id, hid_report_type_t
     auto stream = pb_ostream_from_buffer(buffer, reqlen - 1);
     proto_GetActiveProfiles resp = proto_GetActiveProfiles_init_zero;
     resp.profiles.funcs.encode = encode_active_profiles;
+    auto &config_mgr = ConfigManager::instance();
+    if (config_mgr.is_forced_mode_deferred())
+    {
+      resp.has_deferredMode = true;
+      resp.deferredMode = config_mgr.get_deferred_mode();
+    }
     if (!pb_encode_delimited(&stream, proto_GetActiveProfiles_fields, &resp))
       return 1;
     return 64;
@@ -858,6 +864,16 @@ bool HIDConfigDevice::tool_closed()
     return true;
   }
   return millis() - dev->lastKeepAlive > 1000;
+}
+
+bool HIDConfigDevice::tool_may_be_open()
+{
+  auto dev = HIDConfigDevice::instance;
+  if (!tool_closed())
+  {
+    return true;
+  }
+  return dev && dev->tool_return_deadline && (int32_t)(dev->tool_return_deadline - millis()) > 0;
 }
 
 bool HIDConfigDevice::has_event_space()
@@ -952,10 +968,24 @@ void HIDConfigDevice::reset_keepalive()
   auto dev = HIDConfigDevice::instance;
   dev->lastKeepAlive = 0;
   dev->tool_seen = false;
+  dev->tool_return_deadline = 0;
   dev->selected_profile = 0;
   dev->profile_selected = false;
   dev->profile_changed = false;
   dev->tool_lapsed = false;
+}
+
+void HIDConfigDevice::restart_keepalive()
+{
+  // The tool waits this long for the device to come back after a reload
+  constexpr uint32_t TOOL_RETURN_GRACE_MS = 10000;
+  const bool was_open = !tool_closed();
+  reset_keepalive();
+  if (was_open)
+  {
+    // 0 means no deadline
+    instance->tool_return_deadline = (millis() + TOOL_RETURN_GRACE_MS) | 1;
+  }
 }
 
 std::shared_ptr<HIDConfigDevice> HIDConfigDevice::instance = std::make_shared<HIDConfigDevice>();

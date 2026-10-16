@@ -11,7 +11,7 @@ public:
         return manager;
     }
     void clear_seen_masks() { fake_loader::state.calls.push_back("clear_seen_masks"); }
-    void set_forced_mode_deferred(bool) {}
+    void clear_deferred_forced_mode() {}
     bool is_mode_from_profile() const { return fake_loader::state.mode_from_profile; }
     void set_mode_from_profile(bool forced) { fake_loader::state.mode_from_profile = forced; }
     void request_mode(ConsoleMode mode)

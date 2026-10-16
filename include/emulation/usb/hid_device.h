@@ -70,7 +70,11 @@ public:
   void initialize();
   void process(bool full_poll, bool send_events);
   static bool tool_closed();
+  // Also true for a while after the device stack restarted under an open tool, as it reconnects
+  static bool tool_may_be_open();
   static void reset_keepalive();
+  // For a device stack restart: the tool, if open, will be back once the device re-enumerates
+  static void restart_keepalive();
   size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
   size_t config_descriptor(uint8_t *desc, size_t remaining);
   size_t device_name(uint8_t idx, char *desc);
@@ -113,6 +117,8 @@ private:
   uint8_t current_pos = 1;
   uint32_t m_valid_pins;
   bool tool_seen = false;
+  // Until this, the tool is still treated as open after the device stack restarted under it
+  uint32_t tool_return_deadline = 0;
   bool just_loaded = false;
   bool profile_selected = false;
   // The keepalive lapsed while a profile was selected, so put it back when the tool returns

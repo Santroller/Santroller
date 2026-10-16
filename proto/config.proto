@@ -302,6 +302,8 @@ message ConfigInfo {
 
 message GetActiveProfiles {
   repeated int32 profiles = 1;
+  // A profile forces this mode, but switching was held off as it would drop the tool's connection
+  optional ConsoleMode deferredMode = 2;
 }
 
 message GetVersion {

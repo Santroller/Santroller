@@ -578,11 +578,11 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
         bool is_mode_forced = list->forcedConsoleMode(forced_usb_mode);
         if (is_mode_forced)
         {
-            if (!HIDConfigDevice::tool_closed())
+            if (HIDConfigDevice::tool_may_be_open())
             {
                 // Switching modes would drop the tool's connection, so apply it once the tool disconnects
                 printf("mode forced %d deferred, tool is open\r\n", forced_usb_mode);
-                config_mgr.set_forced_mode_deferred(true);
+                config_mgr.defer_forced_mode(forced_usb_mode);
             }
             else
             {

@@ -596,7 +596,8 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
     {
         hci_con_handle_t handle = gatt_event_characteristic_query_result_get_handle(packet);
         auto ctx = ble_context_by_handle(handle);
-        if (ctx)
+        // A repeat pairing/re-encryption reruns discovery, which mustn't clobber the characteristics in use
+        if (ctx && !ctx->host)
         {
             if (ctx->is_midi)
             {
@@ -697,6 +698,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
 
             uint16_t device_id = BluetoothStack::instance().device_id();
             auto host = std::make_shared<BleSteamTritonHost>(device_id);
+            host->set_ble(true);
             memcpy(host->m_addr, ctx->addr, 6);
             host->m_addr_type = ctx->addr_type;
             host->m_cid = handle;
@@ -729,6 +731,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
 
             uint16_t device_id = BluetoothStack::instance().device_id();
             auto host = std::make_shared<BleSteamHost>(device_id);
+            host->set_ble(true);
             memcpy(host->m_addr, ctx->addr, 6);
             host->m_addr_type = ctx->addr_type;
             host->m_cid = handle;
@@ -760,6 +763,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
 
             uint16_t device_id = BluetoothStack::instance().device_id();
             auto host = std::make_shared<BleGhlIosHost>(device_id);
+            host->set_ble(true);
             memcpy(host->m_addr, ctx->addr, 6);
             host->m_addr_type = ctx->addr_type;
             host->m_cid = handle;

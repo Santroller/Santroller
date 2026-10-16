@@ -249,7 +249,9 @@ void BTGamepadDevice::initialize()
     }
     s_instance = this;
     sm_set_io_capabilities(IO_CAPABILITY_NO_INPUT_NO_OUTPUT);
-    sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_MITM_PROTECTION | SM_AUTHREQ_BONDING);
+    // The SM settings are shared with the BLE central (ble_main). No MITM: with no IO it is Just Works either way, but as
+    // a central btstack would then re-pair a Just Works bond instead of re-encrypting it, which bonded devices reject
+    sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_BONDING);
 
     // setup ATT server. Each mode has its own database (bt.gatt, bt_keyboard.gatt, bt_config.gatt) whose HID
     // service only references the reports in that mode's report map. They're laid out differently, so a

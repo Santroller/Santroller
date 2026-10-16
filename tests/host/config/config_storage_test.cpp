@@ -518,19 +518,39 @@ TEST_F(ConfigStorageTest, ReadingPastTheEndReturnsNothing)
 
 // Empty config ----------------------------------------------------------------------------------------
 
-TEST_F(ConfigStorageTest, InitializeEmptyWritesAValidEmptyImageToFlash)
+TEST_F(ConfigStorageTest, InitializeEmptyCachesAValidEmptyImage)
 {
     ASSERT_TRUE(storage.initialize_empty());
     ConfigImage image;
     ASSERT_TRUE(storage.read_flash(image, true));
     EXPECT_EQ(image.data_size, 0u);
-    EXPECT_FALSE(storage.read_flash(image, false)) << "committed before the write delay";
-    run_pending_commit();
-    ASSERT_TRUE(storage.read_flash(image, false));
-    EXPECT_EQ(image.data_size, 0u);
     EXPECT_EQ(image.main_size, 0u);
     EXPECT_EQ(image.aux_size, 0u);
-    EXPECT_EQ(read_raw_footer(flash_area()).current_profile, 0u);
+    EXPECT_TRUE(storage.preserving_flash());
+}
+
+// The firmware falls back to an empty config when the stored one doesn't load, which can be a perfectly
+// good config (eg one from newer firmware). That mustn't cost the user their config
+TEST_F(ConfigStorageTest, FallingBackToAnEmptyConfigLeavesTheStoredOneInFlash)
+{
+    const auto main = pattern(300, 80);
+    const auto aux = pattern(20, 81);
+    write_raw_image(flash_area(), concat(main, aux), valid_footer(main, aux));
+    ASSERT_TRUE(storage.initialize_empty());
+    EXPECT_EQ(EEPROM.should_commit_at, 0u);
+    run_pending_commit();
+    ConfigImage image;
+    ASSERT_TRUE(storage.read_flash(image, false));
+    EXPECT_EQ(image_bytes(image), concat(main, aux));
+}
+
+TEST_F(ConfigStorageTest, MetadataOfFlashWithoutAConfigIsEmpty)
+{
+    // Erased flash, the tool asking for the saved config mustn't be told it's 4GB
+    const ConfigMetadata metadata = storage.read_metadata(false);
+    EXPECT_EQ(metadata.data_size, 0u);
+    EXPECT_EQ(metadata.main_size, 0u);
+    EXPECT_EQ(metadata.aux_size, 0u);
 }
 
 // Auxiliary block -------------------------------------------------------------------------------------
@@ -709,4 +729,31 @@ TEST_F(ConfigStorageTest, AnAuxUpdateDoesNotResignAnInvalidImage)
     {
         EXPECT_EQ(std::vector<uint8_t>(image.data, image.data + image.main_size), old_main);
     }
+}
+
+// Fallback config and the aux block ------------------------------------------------------------------
+
+TEST_F(ConfigStorageTest, AuxUpdatesOnTheFallbackConfigDontReachFlash)
+{
+    const auto main = pattern(300, 82);
+    const auto aux = pattern(20, 83);
+    write_raw_image(flash_area(), concat(main, aux), valid_footer(main, aux));
+    ASSERT_TRUE(storage.initialize_empty());
+    AuxWrite pairings{pattern(40, 84)};
+    ASSERT_TRUE(storage.update_auxiliary(write_aux, &pairings));
+    EXPECT_EQ(EEPROM.should_commit_at, 0u);
+    run_pending_commit();
+    ConfigImage image;
+    ASSERT_TRUE(storage.read_flash(image, false));
+    EXPECT_EQ(image_bytes(image), concat(main, aux));
+}
+
+TEST_F(ConfigStorageTest, AnUploadAfterTheFallbackCanBeSavedAgain)
+{
+    ASSERT_TRUE(storage.initialize_empty());
+    ASSERT_EQ(upload(storage, pattern(100, 85), pattern(10, 86)), WriteResult::Done);
+    EXPECT_FALSE(storage.preserving_flash());
+    AuxWrite pairings{pattern(12, 87)};
+    ASSERT_TRUE(storage.update_auxiliary(write_aux, &pairings));
+    EXPECT_NE(EEPROM.should_commit_at, 0u);
 }

@@ -154,10 +154,6 @@ const OGXboxOutput_Report_t DukeXIDVibrationCapabilities = {
 
 OGXboxGamepadDevice::OGXboxGamepadDevice()
 {
-    for (const auto &profile : profiles)
-    {
-        m_has_slider |= profile->supports_slider;
-    }
 }
 uint16_t OGXboxGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16_t max_len)
 {
@@ -370,8 +366,11 @@ void OGXboxGamepadDevice::initialize()
 void OGXboxGamepadDevice::build_report(uint8_t *buf, bool full_poll, bool send_events)
 {
     memcpy(buf, &m_initial_report, sizeof(m_initial_report));
+    // Profiles are attached after construction, so this can't be cached in the constructor
+    bool has_slider = false;
     for (const auto &profile : profiles)
     {
+        has_slider |= profile->supports_slider;
         profile->reset_drum_state();
         for (const auto &mapping : profile->mappings)
         {
@@ -383,7 +382,7 @@ void OGXboxGamepadDevice::build_report(uint8_t *buf, bool full_poll, bool send_e
             led->update(full_poll, send_events);
         }
     }
-    if (subtype == GuitarHeroGuitar && m_has_slider)
+    if (subtype == GuitarHeroGuitar && has_slider)
     {
         // convert bitmask slider to actual hid slider
         OGXboxGuitarHeroGuitar_Data_t *reportGh = (OGXboxGuitarHeroGuitar_Data_t *)buf;

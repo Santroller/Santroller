@@ -20,6 +20,32 @@
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg);
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg);
 
+// Collects the ids of the config's devices without building them
+static bool collect_device_id(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto *ids = static_cast<std::vector<uint32_t> *>(*arg);
+    pb_wire_type_t wire_type;
+    uint32_t tag;
+    bool eof;
+    while (pb_decode_tag(stream, &wire_type, &tag, &eof))
+    {
+        if (tag == proto_Device_deviceid_tag && wire_type == PB_WT_VARINT)
+        {
+            uint64_t id;
+            if (!pb_decode_varint(stream, &id))
+            {
+                return false;
+            }
+            ids->push_back(static_cast<uint32_t>(id));
+        }
+        else if (!pb_skip_field(stream, wire_type))
+        {
+            return false;
+        }
+    }
+    return eof;
+}
+
 bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
 {
     proto_Config config proto_Config_init_zero;
@@ -67,6 +93,25 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     if (block.has_ghArcadeSide && (block.ghArcadeSide == 1 || block.ghArcadeSide == 2))
     {
         DeviceFactory::set_arcade_side(block.ghArcadeSide);
+    }
+    {
+        // Devices the new config doesn't have go before it builds its own. One whose id changed would
+        // otherwise run alongside its replacement on the same hardware until the end of the reload,
+        // eg still polling a bus from its alarms while the replacement resets it
+        // (reusing config for the scan, it's big and core0's stack is tight during a reload)
+        std::vector<uint32_t> ids;
+        config = proto_Config_init_zero;
+        config.devices.funcs.decode = &collect_device_id;
+        config.devices.arg = &ids;
+        pb_istream_t scanStream = pb_istream_from_buffer(image.data, image.main_size);
+        if (pb_decode(&scanStream, proto_Config_fields, &config))
+        {
+            device_mgr.remove_root_devices_not_in(ids);
+        }
+        config = proto_Config_init_zero;
+        config.devices.funcs.decode = &load_device;
+        config.profiles.funcs.decode = &load_profile;
+        config.guiConfig.funcs.decode = nullptr;
     }
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
     InactivityManager::instance().configure(config.has_inactivity ? &config.inactivity : nullptr);

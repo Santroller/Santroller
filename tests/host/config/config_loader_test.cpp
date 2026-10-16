@@ -350,6 +350,30 @@ TEST_F(ConfigLoaderTest, DevicesAreResetBeforeDecodingAndPrunedAfter)
     EXPECT_EQ(calls.back(), "sync_requested_mode_to_current");
 }
 
+// A device whose id changed would otherwise run alongside its replacement on the same hardware until the
+// end of the reload, eg an old drum polling an SPI bus from its alarm while the new one resets it
+TEST_F(ConfigLoaderTest, DevicesMissingFromTheConfigAreDroppedBeforeAnyAreBuilt)
+{
+    ASSERT_TRUE(store_and_apply(encode_config(realistic_config()), {}));
+    const auto &calls = fake_loader::state.calls;
+    auto first = [&](const std::string &name)
+    {
+        for (size_t i = 0; i < calls.size(); i++)
+        {
+            if (calls[i] == name)
+            {
+                return int(i);
+            }
+        }
+        return -1;
+    };
+    ASSERT_GE(first("remove_root_devices_not_in"), 0);
+    EXPECT_LT(first("remove_root_devices_not_in"), first("load_device"));
+    EXPECT_EQ(fake_loader::state.kept_root_device_ids, (std::vector<uint32_t>{1, 2, 3}));
+    // and the scan doesn't build anything itself
+    EXPECT_EQ(fake_loader::state.devices.size(), 3u);
+}
+
 TEST_F(ConfigLoaderTest, TheSavedArcadeSideIsRestored)
 {
     AuxSpec aux;

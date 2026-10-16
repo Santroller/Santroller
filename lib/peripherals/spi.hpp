@@ -30,6 +30,8 @@ private:
     spi_inst_t *_hardwareBlocks[NUM_I2CS] = {spi0, spi1};
     bool m_msbfirst;
     bool m_valid;
+    // How long a blocking transfer may take per byte before it's given up on
+    uint32_t m_byte_timeout_us;
     int m_dma_tx = -1;
     int m_dma_rx = -1;
     int m_dma_timer = -1;

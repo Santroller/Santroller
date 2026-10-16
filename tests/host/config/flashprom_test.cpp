@@ -131,6 +131,7 @@ TEST_F(FlashPROMTest, TheUsbHostIsHandedBackAfterAWrite)
 TEST_F(FlashPROMTest, ResetLeavesFlashThatIsNotAConfig)
 {
     ASSERT_TRUE(storage.initialize_empty());
+    EEPROM.commit();
     run_pending_commit();
     ConfigImage image;
     ASSERT_TRUE(storage.read_flash(image, false));

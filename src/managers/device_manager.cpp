@@ -48,6 +48,23 @@ void DeviceManager::mark_root_devices_disconnected()
     }
 }
 
+void DeviceManager::remove_root_devices_not_in(const std::vector<uint32_t> &ids)
+{
+    auto it = m_root_devices.begin();
+    while (it != m_root_devices.end())
+    {
+        if (std::find(ids.begin(), ids.end(), it->first) == ids.end())
+        {
+            it->second->end(true);
+            it = m_root_devices.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
 void DeviceManager::remove_disconnected_root_devices()
 {
     auto it = m_root_devices.begin();

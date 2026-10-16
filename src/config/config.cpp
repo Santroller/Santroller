@@ -597,6 +597,11 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
         {
             profile->xinput_on_windows = xinput_win;
         }
+        // KeyboardMania is HID only, so it always stays in HID mode on windows
+        if (profile->subtype == SubType_KeyboardMania)
+        {
+            profile->xinput_on_windows = false;
+        }
 
         if (!is_mode_forced)
         {
@@ -1066,7 +1071,8 @@ void flush_pending_aux()
     {
         return;
     }
-    if (!config_storage.update_auxiliary(encode_auxiliary, nullptr, aux_commit_pending) && aux_commit_pending)
+    if (!config_storage.update_auxiliary(encode_auxiliary, nullptr, aux_commit_pending) && aux_commit_pending &&
+        !config_storage.preserving_flash())
     {
         // Still save what's cached rather than dropping a save that was waiting on this
         printf("couldn't write back the pairings, saving the cached config as is\r\n");
@@ -1120,6 +1126,8 @@ void save_config()
         save_after_upload = true;
         return;
     }
+    // Saving is the user asking for exactly this config, even the empty one a failed load left
+    config_storage.stop_preserving_flash();
     if (aux_pending)
     {
         // The cache still has an upload's copy of the pairings, so commit once they're written back
@@ -1188,10 +1196,15 @@ bool load()
     ConfigImage image;
     if (!config_storage.read_flash(image, true))
     {
+        printf("no valid config stored\r\n");
         return false;
     }
 
     const bool loaded = ConfigLoader::apply(image, config_mgr.get_current_mode());
+    if (!loaded)
+    {
+        printf("stored config didn't load, keeping it in flash\r\n");
+    }
     config_mgr.set_loaded_any(loaded);
     return loaded;
 }

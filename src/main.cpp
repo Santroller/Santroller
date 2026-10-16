@@ -293,7 +293,7 @@ int main()
     EEPROM.start();
     if (!load())
     {
-        // config was not valid, save a empty config
+        // Run from an empty config, without writing it over what's stored
         load_empty();
         // load();
     }

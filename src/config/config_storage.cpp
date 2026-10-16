@@ -78,7 +78,7 @@ uint32_t ConfigStorage::read_chunk(uint8_t *buffer, uint32_t start, uint32_t max
     return size;
 }
 
-bool ConfigStorage::initialize_empty() const
+bool ConfigStorage::initialize_empty()
 {
     ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(
         EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter));
@@ -88,7 +88,9 @@ bool ConfigStorage::initialize_empty() const
     footer->dataCrc = CRC32::calculate(EEPROM.writeCache, 0);
     footer->magic = FOOTER_MAGIC;
     footer->currentProfile = 0;
-    EEPROM.commit();
+    // Don't commit: a config that failed to load may still be perfectly good data (eg one written by
+    // newer firmware), and committing this would replace it with nothing on the first boot
+    m_preserve_flash = true;
     return true;
 }
 
@@ -98,6 +100,12 @@ ConfigMetadata ConfigStorage::read_metadata(bool cached) const
                                ? reinterpret_cast<const uint8_t *>(EEPROM.writeCache)
                                : reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START);
     const ConfigFooter *footer = footer_at(start + EEPROM_SIZE_BYTES);
+    // Flash that never had a config (or lost it) has no footer, so don't hand the tool garbage sizes to
+    // read. (Only the footer itself is checked: mid upload the footer is in place before its data)
+    if (footer->magic != FOOTER_MAGIC || !sizes_fit(footer->dataSize, footer->mainSize, footer->auxSize))
+    {
+        return {0, CRC32::calculate(start, 0), 0, 0, footer->magic, 0};
+    }
     return {
         footer->dataSize,
         footer->dataCrc,
@@ -176,6 +184,8 @@ ConfigStorage::WriteResult ConfigStorage::write_chunk(const uint8_t *buffer, uin
             EEPROM.writeCache, footer.dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
     m_have_previous_footer = false;
+    // The tool has written a real config, flash can follow the cache again
+    m_preserve_flash = false;
     return WriteResult::Done;
 }
 
@@ -233,7 +243,8 @@ bool ConfigStorage::update_auxiliary(AuxiliaryWriter writer, void *context, bool
     memmove(EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize,
             EEPROM.writeCache, footer->dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize);
-    if (commit)
+    // Pairings changing on an empty fallback config mustn't write it over the config flash still has
+    if (commit && !m_preserve_flash)
     {
         EEPROM.commit();
     }

@@ -50,7 +50,6 @@ public:
     void build_report(uint8_t *buf, bool full_poll, bool send_events);
     uint8_t m_epin;
     uint8_t m_epout;
-    bool m_has_slider = false;
 
     CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_OGXBOX_TX_BUFSIZE];
     CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_OGXBOX_RX_BUFSIZE];

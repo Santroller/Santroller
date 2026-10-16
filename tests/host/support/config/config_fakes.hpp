@@ -32,6 +32,8 @@ struct State
 
     // Calls into the managers, in the order apply made them
     std::vector<std::string> calls;
+    // The ids apply kept when it dropped the devices the new config doesn't have
+    std::vector<uint32_t> kept_root_device_ids;
 
     // Inputs to apply
     ConsoleMode requested_mode = ModeHid;

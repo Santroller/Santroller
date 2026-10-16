@@ -6,13 +6,55 @@
 #include <string.h>
 #include "utils.h"
 #include <stdio.h>
+#include <hardware/sync.h>
+
+// The SDK's spi_write_read_blocking waits forever for every byte to come back. If the block is reset
+// or reconfigured underneath it (eg a replacement device's spi_init during a reload) the byte never
+// arrives, and since the drivers transfer from alarm callbacks that deadlocks core0. Give up instead,
+// reading what an absent device with a pulled up MISO would
+static bool spi_write_read_bounded(spi_inst_t *spi, const uint8_t *src, uint8_t *dst, size_t len, uint32_t timeout_us)
+{
+    const size_t fifo_depth = 8;
+    size_t rx_remaining = len, tx_remaining = len;
+    const uint32_t start = time_us_32();
+    while (rx_remaining || tx_remaining)
+    {
+        if (tx_remaining && spi_is_writable(spi) && rx_remaining < tx_remaining + fifo_depth)
+        {
+            spi_get_hw(spi)->dr = (uint32_t)*src++;
+            --tx_remaining;
+        }
+        if (rx_remaining && spi_is_readable(spi))
+        {
+            *dst++ = (uint8_t)spi_get_hw(spi)->dr;
+            --rx_remaining;
+        }
+        if (time_us_32() - start > timeout_us)
+        {
+            // Drop anything left over so the next transfer starts in step
+            while (spi_is_readable(spi))
+            {
+                (void)spi_get_hw(spi)->dr;
+            }
+            memset(dst, 0xFF, rx_remaining);
+            return false;
+        }
+    }
+    return true;
+}
 
 SPIMasterInterface::SPIMasterInterface(uint8_t block, spi_cpha_t cpha, spi_cpol_t cpol, int8_t sck, int8_t mosi, int8_t miso, bool msbfirst, uint32_t clock): m_msbfirst(msbfirst)
 {
     spi = _hardwareBlocks[block];
     printf("spi: %d %d %d %d %d\r\n", sck, mosi, miso, block, clock);
+    // A byte takes 8 clocks, allow plenty of slack on top
+    m_byte_timeout_us = (8000000 / (clock ? clock : 1)) * 4 + 100;
+    // Another device on this block (eg the one this replaces, still running during a reload) may be
+    // polling it from an alarm. Don't let that run while the block is reset and half configured
+    uint32_t irq_status = save_and_disable_interrupts();
     spi_init(spi, clock);
     spi_set_format(spi, 8, cpol, cpha, SPI_MSB_FIRST);
+    restore_interrupts(irq_status);
     if (sck != -1) {
         gpio_set_function(sck, GPIO_FUNC_SPI);
     }
@@ -57,7 +99,7 @@ uint8_t SPIMasterInterface::transfer(uint8_t data)
         data = revbits(data);
     }
     uint8_t ret = 0;
-    spi_write_read_blocking(spi, &data, &ret, 1);
+    spi_write_read_bounded(spi, &data, &ret, 1, m_byte_timeout_us);
     if (!m_msbfirst) {
         ret = revbits(ret);
     }
@@ -70,12 +112,12 @@ void SPIMasterInterface::transfer(const uint8_t *tx, uint8_t *rx, size_t len)
         return;
     }
     if (m_msbfirst) {
-        spi_write_read_blocking(spi, tx, rx, len);
+        spi_write_read_bounded(spi, tx, rx, len, m_byte_timeout_us * len);
     } else {
         for (size_t i = 0; i < len; i++) {
             uint8_t data = revbits(tx[i]);
             uint8_t ret = 0;
-            spi_write_read_blocking(spi, &data, &ret, 1);
+            spi_write_read_bounded(spi, &data, &ret, 1, m_byte_timeout_us);
             rx[i] = revbits(ret);
         }
     }

@@ -48,10 +48,6 @@ void XInputGamepadDevice::reset()
 XInputGamepadDevice::XInputGamepadDevice()
 {
     reset();
-    for (const auto &profile : profiles)
-    {
-        m_has_slider |= profile->supports_slider;
-    }
 }
 void XInputGamepadDevice::initialize()
 {
@@ -218,8 +214,11 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
     update_stagekit();
     memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)epin_buf;
+    // Profiles are attached after construction, so this can't be cached in the constructor
+    bool has_slider = false;
     for (const auto &profile : profiles)
     {
+        has_slider |= profile->supports_slider;
         profile->reset_drum_state();
         for (const auto &mapping : profile->mappings)
         {
@@ -231,7 +230,7 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
             led->update(full_poll, send_events);
         }
     }
-    if (subtype == GuitarHeroGuitar && m_has_slider)
+    if (subtype == GuitarHeroGuitar && has_slider)
     {
         // convert bitmask slider to actual hid slider
         XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;

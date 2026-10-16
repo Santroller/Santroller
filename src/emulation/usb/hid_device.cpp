@@ -120,7 +120,9 @@ bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *re
       {
         TU_VERIFY(tud_control_xfer(TUD_OPT_RHPORT, request, (void *)(uintptr_t)report_descriptor(), report_desc_len()));
         auto& detection = UsbDetectionState::instance();
-        if (ConfigManager::instance().get_current_mode() == ModeHid && detection.seen_windows_xb1())
+        // KeyboardMania is HID only, there is no xinput or xbox one equivalent to swap to
+        if (ConfigManager::instance().get_current_mode() == ModeHid && subtype != SubType_KeyboardMania &&
+            detection.seen_windows_xb1())
         {
           if (detection.seen_windows_string())
           {

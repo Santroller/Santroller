@@ -33,7 +33,12 @@ public:
         Invalid
     };
 
-    bool initialize_empty() const;
+    // Run from an empty config held in the cache only. Flash keeps whatever it had (eg a config this
+    // firmware couldn't load) until the tool writes a real one or saves, see preserving_flash
+    bool initialize_empty();
+    // Set by initialize_empty: nothing but an upload or an explicit save may commit the cache to flash
+    bool preserving_flash() const { return m_preserve_flash; }
+    void stop_preserving_flash() { m_preserve_flash = false; }
     bool read_flash(ConfigImage &image, bool cached) const;
     // Copy up to max_size bytes of the stored image, starting start bytes in. Returns how many were copied
     uint32_t read_chunk(uint8_t *buffer, uint32_t start, uint32_t max_size, bool cached) const;
@@ -48,6 +53,7 @@ public:
     bool update_auxiliary(AuxiliaryWriter writer, void *context = nullptr, bool commit = true) const;
 private:
     bool m_should_commit = false;
+    bool m_preserve_flash = false;
     // Set while write_info's upload is waiting for its data
     bool m_upload_active = false;
     // write_info replaces the cached footer, this is the one it replaced

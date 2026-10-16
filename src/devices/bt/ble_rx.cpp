@@ -36,7 +36,9 @@
 #define MAX_DEVICES_TO_SCAN 10
 
 static hid_protocol_mode_t protocol_mode = HID_PROTOCOL_MODE_REPORT;
-static uint8_t hid_descriptor_storage[500];
+// Shared by every connected HIDS host. A Santroller alone has two report maps (gamepad + config,
+// ~415 bytes), and a truncated one loses the capabilities usage it is told apart from a Santroller 1 by
+static uint8_t hid_descriptor_storage[MAX_NR_HIDS_HOSTS * 512];
 
 // Guitar Hero Live iOS BLE Guitar characteristic UUID: 533e1524-3abe-f33f-cd00-594e8b0a8ea3
 static const uint8_t ghl_ios_char_uuid[16] = {
@@ -539,6 +541,24 @@ static bool ble_can_skip_dis(const BleConnectionContext *ctx)
     return ctx->vid != 0 && ctx->vid != SANTROLLER_VID;
 }
 
+static void ble_copy_descriptor(BleConnectionContext *ctx, uint16_t cid)
+{
+    const uint8_t *desc = hids_host_descriptor_storage_get_descriptor_data(cid, 0);
+    uint16_t len = hids_host_descriptor_storage_get_descriptor_len(cid, 0);
+    uint8_t status = hids_host_descriptor_storage_get_descriptor_status(cid, 0);
+    if (status == ERROR_CODE_SUCCESS && desc && len > 0 && len <= sizeof(ctx->desc_copy))
+    {
+        memcpy(ctx->desc_copy, desc, len);
+        ctx->desc_len = len;
+    }
+    else
+    {
+        // oversized, truncated or missing: create with no descriptor rather than parse part of one
+        printf("BLE report map unusable (cid 0x%04x, len %u, status 0x%02x)\r\n", cid, len, status);
+        ctx->desc_len = 0;
+    }
+}
+
 static void ble_register_hids_host(BleConnectionContext *ctx, uint16_t cid)
 {
     if (!ctx || ctx->host)
@@ -801,17 +821,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
 
             if (!ctx->host && !ctx->host_create_queued)
             {
-                const uint8_t *desc = hids_host_descriptor_storage_get_descriptor_data(cid, 0);
-                uint16_t len = hids_host_descriptor_storage_get_descriptor_len(cid, 0);
-                if (desc && len > 0 && len <= sizeof(ctx->desc_copy))
-                {
-                    memcpy(ctx->desc_copy, desc, len);
-                    ctx->desc_len = len;
-                }
-                else
-                {
-                    ctx->desc_len = 0; // oversized or missing — create with no descriptor rather than truncate silently
-                }
+                ble_copy_descriptor(ctx, cid);
                 ctx->pending_hids_cid = cid;
                 ctx->pending_host_create = true;
                 ctx->host_create_queued = true;
@@ -891,17 +901,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
         auto ctx = ble_context_by_cid(cid);
         if (ctx && !ctx->host && !ctx->host_create_queued)
         {
-            const uint8_t *desc = hids_host_descriptor_storage_get_descriptor_data(cid, 0);
-            uint16_t len = hids_host_descriptor_storage_get_descriptor_len(cid, 0);
-            if (desc && len > 0 && len <= sizeof(ctx->desc_copy))
-            {
-                memcpy(ctx->desc_copy, desc, len);
-                ctx->desc_len = len;
-            }
-            else
-            {
-                ctx->desc_len = 0; // oversized or missing — create with no descriptor rather than truncate silently
-            }
+            ble_copy_descriptor(ctx, cid);
             ctx->pending_hids_cid = cid;
             ctx->pending_host_create = true;
             ctx->host_create_queued = true;

@@ -1,10 +1,8 @@
 #pragma once
 #include "devices/bt/bt_host.hpp"
 #include "protocols/santroller_output.hpp"
-
-#define ARDWIINO_VID     0x1209
-#define ARDWIINO_PID     0x2882
-#define ARDWIINO_PID_BLE 0x2885
+#include "protocols/santroller_v1.hpp"
+#include "protocols/santroller_v2.hpp"
 
 // ---------------------------------------------------------------------------
 // Santroller 1 & 2 BLE Host

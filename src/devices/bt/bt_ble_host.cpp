@@ -15,15 +15,15 @@ std::shared_ptr<BluetoothHostInterface> ble_create_host(uint16_t vid, uint16_t p
                                                          HID_ReportInfo_t *info,
                                                          SubType known_subtype)
 {
-    bool is_santroller = (vid == ARDWIINO_VID && (pid == ARDWIINO_PID || pid == ARDWIINO_PID_BLE));
+    bool is_santroller = (vid == SANTROLLER_VID && (pid == SANTROLLER_PID || pid == SANTROLLER_V1_PID || pid == SANTROLLER_V1_BLE_PID));
 
     if (is_santroller)
     {
         // info is null when the report map couldn't be read
         const bool is_v2 = info && info->foundSantrollerV2OutputUsage;
         auto host = std::make_shared<BleSantrollerHost>(device_id, is_v2, version, known_subtype);
-        host->m_vid = vid ? vid : ARDWIINO_VID;
-        host->m_pid = pid ? pid : (is_v2 ? ARDWIINO_PID : ARDWIINO_PID_BLE);
+        host->m_vid = vid ? vid : SANTROLLER_VID;
+        host->m_pid = pid ? pid : (is_v2 ? SANTROLLER_PID : SANTROLLER_V1_BLE_PID);
         return host;
     }
 

@@ -536,7 +536,7 @@ static void handle_outgoing_connection_error(hci_con_handle_t con_handle)
 // reconfigured as something else after pairing, so it needs reading on every connection
 static bool ble_can_skip_dis(const BleConnectionContext *ctx)
 {
-    return ctx->vid != 0 && ctx->vid != ARDWIINO_VID;
+    return ctx->vid != 0 && ctx->vid != SANTROLLER_VID;
 }
 
 static void ble_register_hids_host(BleConnectionContext *ctx, uint16_t cid)

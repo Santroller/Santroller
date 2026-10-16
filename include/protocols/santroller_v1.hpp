@@ -3,6 +3,8 @@
 #include <stdbool.h>
 
 #define SANTROLLER_V1_PID 0x2882
+// Santroller 1 reports this PID over BLE instead
+#define SANTROLLER_V1_BLE_PID 0x2885
 
 // Santroller 1 PC Reports (from Ardwiino-old include/reports/pc_reports.h)
 

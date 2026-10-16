@@ -13,6 +13,7 @@ add_executable(config_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/config/flashprom_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/config/config_loader_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/config/aux_config_test.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/config/nanopb_oneof_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/config/configurator_fixture_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/config/profile_opts_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/config/slot_ids_test.cpp

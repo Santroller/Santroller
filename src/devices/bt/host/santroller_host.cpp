@@ -143,22 +143,23 @@ void BleSantrollerHost::handle_report_v1(const uint8_t *data, uint16_t len)
 void BleSantrollerHost::update(bool full_poll, bool send_events)
 {
     BluetoothHostInterface::update(full_poll, send_events);
-    if (!m_ready || !m_cid)
+    if (!m_ready || !m_cid || m_write_pending)
         return;
     sync_output();
     // one pending rumble / LED / stage kit command per pass. A HOGP report write carries
     // the report id in the characteristic, so the payload starts at the command byte.
-    uint8_t buf[8];
-    uint8_t len = m_output.peek(buf, sizeof(buf));
+    uint8_t len = m_output.peek(m_out_buf, sizeof(m_out_buf));
     if (!len)
         return;
     uint8_t status;
     {
         BtStackLock lock;
-        status = hids_host_send_write_report(m_cid, ReportIdGamepad, HID_REPORT_TYPE_OUTPUT, buf + 1, len - 1);
+        status = hids_host_send_write_report(m_cid, ReportIdGamepad, HID_REPORT_TYPE_OUTPUT, m_out_buf + 1, len - 1);
+        if (status == ERROR_CODE_SUCCESS)
+            m_write_pending = true;
     }
     if (status == ERROR_CODE_SUCCESS)
-        m_output.commit(buf[1]);
+        m_output.commit(m_out_buf[1]);
 }
 
 bool BleSantrollerHost::tick_digital(proto_Output &type)

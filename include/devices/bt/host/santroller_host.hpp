@@ -23,6 +23,7 @@ public:
     uint16_t tick_button_pressure(proto_Output &type) override;
 
     void update(bool full_poll, bool send_events) override;
+    void on_report_written() override { m_write_pending = false; }
     void set_rumble(uint8_t left, uint8_t right) override { sync_output(); m_output.set_rumble(left, right); }
     void set_player_led(uint8_t player) override { m_output.set_player(player); }
     void set_lightbar(uint8_t r, uint8_t g, uint8_t b) override { m_output.set_rgb(r, g, b); }
@@ -43,4 +44,8 @@ private:
     bool m_is_v2 = false;
     uint8_t m_capabilities = 0;
     uint8_t m_query_attempts = 0;
+    // hids_host keeps a pointer to the report until the write has gone out, so it can't
+    // live on the stack, and can't be refilled until on_report_written
+    uint8_t m_out_buf[8] = {};
+    volatile bool m_write_pending = false;
 };

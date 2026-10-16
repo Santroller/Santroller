@@ -928,6 +928,14 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
         break;
     }
 
+    case GATTSERVICE_SUBEVENT_HID_REPORT_WRITTEN:
+    {
+        auto ctx = ble_context_by_cid(gattservice_subevent_hid_report_written_get_hids_cid(packet));
+        if (ctx && ctx->host)
+            ctx->host->on_report_written();
+        break;
+    }
+
     default:
         break;
     }

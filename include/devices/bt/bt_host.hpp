@@ -65,6 +65,8 @@ public:
     // Called when a feature report response arrives
     virtual void handle_feature_report(const uint8_t *data, uint16_t len) {}
     virtual void handle_feature_report_failed() { m_ready = true; }
+    // Called when a write started with hids_host_send_write_report has finished
+    virtual void on_report_written() {}
     // True if a GET_REPORT response belongs to a read that was only sent to switch the report mode
     virtual bool consume_mode_switch_response() { return false; }
     virtual void send_init_packets() {m_init_packets_sent = true;}

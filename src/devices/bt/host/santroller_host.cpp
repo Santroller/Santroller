@@ -58,11 +58,8 @@ void BleSantrollerHost::on_connected()
         {
             set_ready(true);
         }
-        // Query Santroller capabilities (Report 0x10) over GATT. Even with the subtype
-        // already known from pairing, the capability bits decide which outputs to send.
-        hids_host_send_get_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_INPUT);
-        static const uint8_t cmd[2] = {ReportIdSantrollerCapabilities, 0};
-        hids_host_send_write_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_OUTPUT, cmd, sizeof(cmd));
+        // The capabilities are queried from update / update_pending, as the HIDS client is
+        // usually still reading the HID information here and would reject the query
     }
     else
     {
@@ -96,6 +93,7 @@ void BleSantrollerHost::handle_report_v2(const uint8_t *data, uint16_t len)
             {
                 m_capabilities = data[2];
             }
+            m_caps_received = true;
             m_output.subtype = m_subtype;
             m_output.capabilities = m_capabilities;
             m_output.mark_all_dirty();
@@ -112,21 +110,7 @@ void BleSantrollerHost::handle_report_v2(const uint8_t *data, uint16_t len)
         return;
     }
 
-    if (data[0] != 1) return;
-
-    // Still asked for after the readiness timeout registers it as Unknown, so the reply
-    // can fix the subtype (and the saved pairing) later on
-    if (!m_ready || m_subtype == SubType_Unknown)
-    {
-        if (++m_query_attempts % 30 == 1)
-        {
-            hids_host_send_get_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_INPUT);
-            static const uint8_t cmd[2] = {ReportIdSantrollerCapabilities, 0};
-            hids_host_send_write_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_OUTPUT, cmd, sizeof(cmd));
-        }
-        if (!m_ready)
-            return;
-    }
+    if (data[0] != 1 || !m_ready) return;
 
     uint16_t copy_len = len < sizeof(m_report_buf) ? len : sizeof(m_report_buf);
     memcpy(m_report_buf, data, copy_len);
@@ -143,6 +127,9 @@ void BleSantrollerHost::handle_report_v1(const uint8_t *data, uint16_t len)
 void BleSantrollerHost::update(bool full_poll, bool send_events)
 {
     BluetoothHostInterface::update(full_poll, send_events);
+    // Still asked for after the readiness timeout registers it as Unknown, so the reply
+    // can fix the subtype (and the saved pairing) later on
+    query_capabilities();
     if (!m_ready || !m_cid || m_write_pending)
         return;
     sync_output();
@@ -160,6 +147,38 @@ void BleSantrollerHost::update(bool full_poll, bool send_events)
     }
     if (status == ERROR_CODE_SUCCESS)
         m_output.commit(m_out_buf[1]);
+}
+
+void BleSantrollerHost::query_capabilities()
+{
+    // Until the capabilities report (0x10) arrives. Even with the subtype already known from
+    // pairing, the capability bits decide which outputs to send. This runs on a timer rather
+    // than per input report, as an idle device (drums) sends none.
+    if (!m_is_v2 || m_caps_received || !m_cid)
+        return;
+    uint32_t now = millis();
+    if (m_query_attempts && now - m_last_query_ms < 250)
+        return;
+    uint8_t status;
+    {
+        BtStackLock lock;
+        // A read is answered directly. Some hosts' stacks can't read input reports, so every
+        // other attempt writes the query instead, which the device answers with a notification.
+        if (m_query_attempts % 2 == 0)
+        {
+            status = hids_host_send_get_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_INPUT);
+        }
+        else
+        {
+            static const uint8_t cmd[2] = {ReportIdSantrollerCapabilities, 0};
+            status = hids_host_send_write_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_OUTPUT, cmd, sizeof(cmd));
+        }
+    }
+    // busy with another query: try again on the next pass
+    if (status != ERROR_CODE_SUCCESS)
+        return;
+    m_query_attempts++;
+    m_last_query_ms = now;
 }
 
 bool BleSantrollerHost::tick_digital(proto_Output &type)

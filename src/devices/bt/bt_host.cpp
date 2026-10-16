@@ -139,6 +139,7 @@ void bt_host_update_interfaces(bool full_poll, bool send_events)
         }
         else
         {
+            device->update_pending();
             ++it;
         }
     }

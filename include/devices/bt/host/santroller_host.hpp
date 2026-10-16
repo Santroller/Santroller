@@ -23,6 +23,7 @@ public:
     uint16_t tick_button_pressure(proto_Output &type) override;
 
     void update(bool full_poll, bool send_events) override;
+    void update_pending() override { query_capabilities(); }
     void on_report_written() override { m_write_pending = false; }
     void set_rumble(uint8_t left, uint8_t right) override { sync_output(); m_output.set_rumble(left, right); }
     void set_player_led(uint8_t player) override { m_output.set_player(player); }
@@ -40,10 +41,13 @@ private:
     SantrollerOutputState m_output;
     void handle_report_v1(const uint8_t *data, uint16_t len);
     void handle_report_v2(const uint8_t *data, uint16_t len);
+    void query_capabilities();
 
     bool m_is_v2 = false;
     uint8_t m_capabilities = 0;
     uint8_t m_query_attempts = 0;
+    uint32_t m_last_query_ms = 0;
+    volatile bool m_caps_received = false;
     // hids_host keeps a pointer to the report until the write has gone out, so it can't
     // live on the stack, and can't be refilled until on_report_written
     uint8_t m_out_buf[8] = {};

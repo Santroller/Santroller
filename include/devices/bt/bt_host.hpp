@@ -65,6 +65,8 @@ public:
     // Called when a feature report response arrives
     virtual void handle_feature_report(const uint8_t *data, uint16_t len) {}
     virtual void handle_feature_report_failed() { m_ready = true; }
+    // Called each pass while the device is still waiting to become ready (update isn't yet)
+    virtual void update_pending() {}
     // Called when a write started with hids_host_send_write_report has finished
     virtual void on_report_written() {}
     // True if a GET_REPORT response belongs to a read that was only sent to switch the report mode

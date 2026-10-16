@@ -5,6 +5,7 @@
 #include "utils.h"
 #include "emulation/usb/usb_descriptors.h"
 #include "protocols/santroller_v2.hpp"
+#include "protocols/stagekit.hpp"
 
 void Instance::set_rumble(uint8_t left, uint8_t right)
 {
@@ -263,9 +264,13 @@ void Instance::update_capabilities()
                 {
                     caps |= CapabilityHasStandardPlayerLeds;
                 }
-                if (dev_pair.second->has_euphoria_led() || dev_pair.second->has_lightbar())
+                if (dev_pair.second->has_lightbar())
                 {
                     caps |= CapabilityHasRGBIndicatorLed;
+                }
+                if (dev_pair.second->has_euphoria_led())
+                {
+                    caps |= CapabilityHasEuphoriaLed;
                 }
                 if (dev_pair.second->has_stagekit_led())
                 {
@@ -285,9 +290,13 @@ void Instance::update_capabilities()
                 {
                     caps |= CapabilityHasStandardPlayerLeds;
                 }
-                if (dev_pair.second->has_euphoria_led() || dev_pair.second->has_lightbar())
+                if (dev_pair.second->has_lightbar())
                 {
                     caps |= CapabilityHasRGBIndicatorLed;
+                }
+                if (dev_pair.second->has_euphoria_led())
+                {
+                    caps |= CapabilityHasEuphoriaLed;
                 }
                 if (dev_pair.second->has_stagekit_led())
                 {
@@ -302,6 +311,16 @@ void Instance::update_capabilities()
                 caps |= led->capabilities();
             }
         }
+    }
+    if (subtype_supports_stagekit(subtype))
+    {
+        // the rumble command drives the instrument LEDs on these, so there are no motors to report
+        caps &= ~CapabilityHasRumble;
+    }
+    if (subtype != DjHeroTurntable)
+    {
+        // only a turntable takes the euphoria LED through the rumble command
+        caps &= ~CapabilityHasEuphoriaLed;
     }
     if (subtype == Dancepad)
     {

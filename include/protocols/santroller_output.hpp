@@ -113,7 +113,7 @@ struct SantrollerOutputState
     bool supports(uint8_t cap) const { return !is_v2 || (capabilities & cap); }
     bool has_rumble() const { return !subtype_supports_stagekit(subtype) && supports(CapabilityHasRumble); }
     bool has_stagekit() const { return subtype_supports_stagekit(subtype) && subtype != DjHeroTurntable && supports(CapabilityHasInstrumentLeds); }
-    bool has_euphoria() const { return subtype == DjHeroTurntable && supports(CapabilityHasRGBIndicatorLed); }
+    bool has_euphoria() const { return subtype == DjHeroTurntable && supports(CapabilityHasEuphoriaLed); }
 
 private:
     void update_rumble(uint8_t left, uint8_t right)
@@ -128,7 +128,7 @@ private:
     uint8_t rumble_capability() const
     {
         if (subtype == DjHeroTurntable)
-            return CapabilityHasRGBIndicatorLed;
+            return CapabilityHasEuphoriaLed;
         return subtype_supports_stagekit(subtype) ? CapabilityHasInstrumentLeds : CapabilityHasRumble;
     }
     uint8_t m_rumble[2] = {};

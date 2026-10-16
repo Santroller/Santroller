@@ -20,4 +20,5 @@ protected:
     bool m_any_time;
 private:
     bool calc_val();
+    uint64_t startup_key() const;
 };

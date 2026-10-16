@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <vector>
 #include "config.pb.h"
 
 class ConfigManager
@@ -63,6 +64,12 @@ public:
     bool has_seen_assignment(uint32_t mask) const { return m_seen_masks & mask; }
     void mark_seen_assignment(uint32_t mask) { m_seen_masks |= mask; }
     void clear_seen_masks() { m_seen_masks = 0; }
+
+    // Startup triggers that matched, so the profile they picked survives later reloads (eg once
+    // the console is detected), long after the input was let go. Kept until a new config is written.
+    bool is_startup_trigger_latched(uint64_t key) const;
+    void latch_startup_trigger(uint64_t key);
+    void clear_startup_triggers() { m_latched_startup_triggers.clear(); }
     
     // Clear all state
     void clear_all();
@@ -102,4 +109,5 @@ private:
     uint32_t m_reinit_time;
     uint32_t m_time_since_mode;
     uint32_t m_seen_masks;
+    std::vector<uint64_t> m_latched_startup_triggers;
 };

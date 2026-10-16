@@ -5,6 +5,8 @@
 #include "main.hpp"
 #include "config/config.hpp"
 #include "emulation/usb/hid_device.h"
+#include "managers/config_manager.hpp"
+#include "profiles/profile.hpp"
 
 InputActivationTrigger::InputActivationTrigger(bool any_time, proto_InputActivationTrigger activation_trigger, std::unique_ptr<Input> input, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_activation_trigger(activation_trigger), m_input(std::move(input)), m_any_time(any_time)
 {
@@ -70,10 +72,33 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
         m_initialised = true;
         m_last_val = val;
     }
-    if (((m_any_time || mode_recently_changed()) && val != m_last_val && val))
+    bool latched = false;
+    if (!m_any_time)
+    {
+        auto &config_mgr = ConfigManager::instance();
+        const uint64_t key = startup_key();
+        latched = config_mgr.is_startup_trigger_latched(key);
+        if (!latched && val && mode_recently_changed())
+        {
+            config_mgr.latch_startup_trigger(key);
+            // Seen for the first time after the config loaded (eg the input's device was still
+            // starting up), so load it again to pick this profile
+            if (val != m_last_val)
+            {
+                reload();
+            }
+            latched = true;
+        }
+    }
+    else if (val != m_last_val && val)
     {
         reload();
     }
     m_last_val = val;
-    return val && (m_any_time || mode_recently_changed());
+    return latched || (m_any_time && val);
+}
+
+uint64_t InputActivationTrigger::startup_key() const
+{
+    return ((uint64_t)m_profile->profile_id << 32) | ((uint32_t)m_list_id << 16) | m_id;
 }

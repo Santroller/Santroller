@@ -532,6 +532,13 @@ static void handle_outgoing_connection_error(hci_con_handle_t con_handle)
     gap_disconnect(con_handle);
 }
 
+// A Santroller 1 only reports its subtype through the PnP ID version, and it can be
+// reconfigured as something else after pairing, so it needs reading on every connection
+static bool ble_can_skip_dis(const BleConnectionContext *ctx)
+{
+    return ctx->vid != 0 && ctx->vid != ARDWIINO_VID;
+}
+
 static void ble_register_hids_host(BleConnectionContext *ctx, uint16_t cid)
 {
     if (!ctx || ctx->host)
@@ -1284,7 +1291,7 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel,
                     0xffff,
                     ghl_ios_char_uuid);
             }
-            else if (ctx->vid != 0)
+            else if (ble_can_skip_dis(ctx))
             {
                 printf("Paired BLE device: skipping DIS query, connecting HIDS directly\r\n");
                 uint16_t hids_cid = 0;
@@ -1364,7 +1371,7 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel,
                 0xffff,
                 ghl_ios_char_uuid);
         }
-        else if (ctx->vid != 0)
+        else if (ble_can_skip_dis(ctx))
         {
             printf("Paired BLE device: skipping DIS query, connecting HIDS directly\r\n");
             uint16_t hids_cid = 0;

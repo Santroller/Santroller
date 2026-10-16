@@ -1,6 +1,7 @@
 // Input based profile activation ("Activation Condition" in the profile setup):
 //  - "Hold Button at Startup" / assignmentTypeDesc.input: "Match if an input is held when
-//    powering on this device". The firmware gives it the 2 s after the last mode change / reload.
+//    powering on this device". The firmware gives it the 2 s after the last mode change / reload,
+//    and once matched it stays matched until a new config is written.
 //  - "Press Button Anytime" / assignmentTypeDesc.inputAnyTime: "Match on input is pressed at any
 //    time". A press reloads the config so the profiles get reassigned.
 // Plus ActivationTriggerList, which ANDs the triggers of one list ("logic_and") and latches once
@@ -110,12 +111,41 @@ TEST_F(InputTriggerTest, StartupTriggerOnlyCountsJustAfterStartup)
 {
     boot();
     auto trigger = make(false);
+    clock_ms::advance(2000);
     button->set(true);
-    clock_ms::advance(1999);
-    EXPECT_TRUE(trigger->validate(false, false, false));
-    clock_ms::advance(1);
     // 2 s after the reload the button no longer selects the profile
     EXPECT_FALSE(trigger->validate(false, false, false));
+}
+
+TEST_F(InputTriggerTest, StartupTriggerStaysMatchedAfterLaterReloads)
+{
+    boot();
+    auto trigger = make(false);
+    button->set(true);
+    EXPECT_TRUE(trigger->validate(false, false, false));
+    button->set(false);
+    clock_ms::advance(5000);
+    EXPECT_TRUE(trigger->validate(false, false, false));
+
+    // eg the console was detected, and the config loaded again with the button let go
+    trigger.reset();
+    auto reloaded = make(false);
+    EXPECT_TRUE(reloaded->validate(false, false, false));
+    EXPECT_EQ(fake_config::reload_count, 0);
+}
+
+TEST_F(InputTriggerTest, StartupTriggerForgottenWhenANewConfigIsWritten)
+{
+    boot();
+    auto trigger = make(false);
+    button->set(true);
+    EXPECT_TRUE(trigger->validate(false, false, false));
+    button->set(false);
+    clock_ms::advance(5000);
+
+    ConfigManager::instance().clear_startup_triggers();
+    auto reloaded = make(false);
+    EXPECT_FALSE(reloaded->validate(false, false, false));
 }
 
 TEST_F(InputTriggerTest, StartupTriggerNotHeldDoesNotMatch)

@@ -328,6 +328,7 @@ enum CapabilitiyFlags {
     CapabilityHasRumble=8; /* Has rumble */
     CapabilityDpadAsButtons=16; /* Treat D-pad as buttons instead of hat */
     CapabilityXInputYAxis=32; /* Stick Y axes are up at the max (XInput) instead of down at the max (HID): instruments, and gamepads with the Y axis inverted */
+    CapabilityHasEuphoriaLed=64; /* Has a DJ Hero euphoria LED, set through the rumble command with equal values */
 }
 
 enum ProfileAssignMask {

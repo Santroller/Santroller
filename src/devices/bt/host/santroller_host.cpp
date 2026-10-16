@@ -34,14 +34,15 @@ BleSantrollerHost::BleSantrollerHost(uint16_t id, bool is_v2, uint16_t version, 
     }
     else
     {
-        // Santroller 1: SubType is encoded in the version's high byte
-        if (known_subtype != SubType_Unknown)
+        // Santroller 1: SubType is encoded in the version's high byte. Prefer it over the
+        // subtype remembered from pairing, as the device may have been reconfigured since.
+        if (version != 0 || known_subtype == SubType_Unknown)
         {
-            m_subtype = known_subtype;
+            m_subtype = santroller_v1_subtype(version);
         }
         else
         {
-            m_subtype = santroller_v1_subtype(version);
+            m_subtype = known_subtype;
         }
         m_ready = true;
     }

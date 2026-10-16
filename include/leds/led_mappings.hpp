@@ -106,7 +106,7 @@ public:
     void update(bool full_poll, bool send_events);
     void reload();
     void set_euphoria_led(uint8_t val) override;
-    uint8_t capabilities() const override { return CapabilityHasRGBIndicatorLed; }
+    uint8_t capabilities() const override { return CapabilityHasEuphoriaLed; }
 
 protected:
     proto_EuphoriaLedMapping m_mapping;

@@ -244,17 +244,17 @@ TEST(SantrollerOutput, Santroller2InstrumentsNeedInstrumentLeds)
     EXPECT_TRUE(leds.has_stagekit());
 }
 
-TEST(SantrollerOutput, Santroller2TurntableEuphoriaIsTheRgbLed)
+TEST(SantrollerOutput, Santroller2TurntableEuphoriaHasItsOwnCapability)
 {
-    auto none = v2(DjHeroTurntable, CapabilityHasInstrumentLeds | CapabilityHasRumble);
+    auto none = v2(DjHeroTurntable, CapabilityHasInstrumentLeds | CapabilityHasRumble | CapabilityHasRGBIndicatorLed);
     none.set_euphoria(true);
     EXPECT_TRUE(peek(none).empty());
     EXPECT_FALSE(none.has_euphoria());
 
-    auto rgb = v2(DjHeroTurntable, CapabilityHasRGBIndicatorLed);
-    rgb.set_euphoria(true);
-    EXPECT_EQ(peek(rgb), (Bytes{0x01, SANTROLLER_COMMAND_RUMBLE, 0xFF, 0xFF}));
-    EXPECT_TRUE(rgb.has_euphoria());
+    auto euphoria = v2(DjHeroTurntable, CapabilityHasEuphoriaLed);
+    euphoria.set_euphoria(true);
+    EXPECT_EQ(peek(euphoria), (Bytes{0x01, SANTROLLER_COMMAND_RUMBLE, 0xFF, 0xFF}));
+    EXPECT_TRUE(euphoria.has_euphoria());
 }
 
 TEST(Stagekit, InstrumentSubtypesCarryStageKitCommands)

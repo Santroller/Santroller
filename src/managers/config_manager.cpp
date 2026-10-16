@@ -5,6 +5,22 @@ bool ConfigManager::mode_recently_changed(uint32_t now, uint32_t window_ms) cons
     return (now - m_time_since_mode) < window_ms;
 }
 
+bool ConfigManager::is_startup_trigger_latched(uint64_t key) const
+{
+    for (uint64_t latched : m_latched_startup_triggers)
+    {
+        if (latched == key)
+            return true;
+    }
+    return false;
+}
+
+void ConfigManager::latch_startup_trigger(uint64_t key)
+{
+    if (!is_startup_trigger_latched(key))
+        m_latched_startup_triggers.push_back(key);
+}
+
 bool ConfigManager::should_reinit(uint32_t now) const
 {
     return m_requested_mode != m_current_mode || (m_reinit_time && now > m_reinit_time);
@@ -40,4 +56,5 @@ void ConfigManager::clear_all()
     m_time_since_mode = 0;
     m_seen_masks = 0;
     m_forced_mode_deferred = false;
+    m_latched_startup_triggers.clear();
 }

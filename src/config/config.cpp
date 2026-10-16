@@ -1163,6 +1163,8 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     }
     printf("Everything matched, saving!\r\n");
     UsbDetectionState::instance().disable_console_inference();
+    // The triggers may have changed, so pick profiles from scratch
+    config_mgr.clear_startup_triggers();
     // The upload carries the tool's copy of the pairings, put the device's back once it has loaded
     aux_pending = true;
     if (save_after_upload)

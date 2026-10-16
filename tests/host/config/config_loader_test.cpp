@@ -312,6 +312,35 @@ TEST_F(ConfigLoaderTest, AnUnchangedModeDoesNotReinitialiseTheDeviceStack)
     EXPECT_EQ(fake_loader::state.reinitialize_device_stack_calls, 0);
 }
 
+TEST_F(ConfigLoaderTest, AModeForcedByAProfileGoesBackToHidDetection)
+{
+    // Nothing in the new config forces it, so the host is detected again
+    fake_loader::state.requested_mode = ModePs4;
+    fake_loader::state.mode_from_profile = true;
+    ASSERT_TRUE(store_and_apply(encode_config({}), {}, ModePs4));
+    EXPECT_EQ(fake_loader::state.requested_mode, ModeHid);
+    EXPECT_FALSE(fake_loader::state.mode_from_profile);
+    EXPECT_EQ(fake_loader::state.reinitialize_device_stack_calls, 1);
+}
+
+TEST_F(ConfigLoaderTest, AModeForcedByAProfileIsKeptWhileTheToolIsOpen)
+{
+    fake_loader::state.requested_mode = ModePs4;
+    fake_loader::state.mode_from_profile = true;
+    fake_loader::state.tool_closed = false;
+    ASSERT_TRUE(store_and_apply(encode_config({}), {}, ModePs4));
+    EXPECT_EQ(fake_loader::state.requested_mode, ModePs4);
+    EXPECT_TRUE(fake_loader::state.mode_from_profile);
+    EXPECT_EQ(fake_loader::state.reinitialize_device_stack_calls, 0);
+}
+
+TEST_F(ConfigLoaderTest, ADetectedModeIsKept)
+{
+    fake_loader::state.requested_mode = ModePs4;
+    ASSERT_TRUE(store_and_apply(encode_config({}), {}, ModePs4));
+    EXPECT_EQ(fake_loader::state.requested_mode, ModePs4);
+}
+
 TEST_F(ConfigLoaderTest, ABatteryAppearingReinitialisesTheDeviceStack)
 {
     fake_loader::state.requested_mode = ModePs4;

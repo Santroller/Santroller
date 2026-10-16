@@ -41,6 +41,8 @@ struct State
     bool should_reinitialize_device_stack = false;
     bool battery_present_changed = false;
     bool changed_types = false;
+    bool mode_from_profile = false;
+    bool tool_closed = true;
 
     // Outputs of apply
     bool inactivity_configured = false;

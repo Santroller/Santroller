@@ -7,6 +7,7 @@
 #include "main.hpp"
 #include "config/config.hpp"
 #include "emulation/usb/hid_device.h"
+#include <algorithm>
 
 // Destructor must be defined where ActivationTrigger is a complete type
 ActivationTriggerList::~ActivationTriggerList() = default;
@@ -70,6 +71,14 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
     }
     m_claimed = true;
     return true;
+}
+
+void ActivationTriggerList::order_triggers()
+{
+    // An input can read a device that another trigger of the list puts in a slot (eg a button on
+    // the guitar a USB type trigger picked), which only works once that trigger has been checked
+    std::stable_partition(triggers.begin(), triggers.end(), [](const auto &trigger)
+                          { return !trigger->reads_input(); });
 }
 
 int ActivationTriggerList::assignedDevices()

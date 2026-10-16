@@ -76,7 +76,7 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
     if (!m_any_time)
     {
         auto &config_mgr = ConfigManager::instance();
-        const uint64_t key = startup_key();
+        const StartupTriggerKey key = startup_key();
         latched = config_mgr.is_startup_trigger_latched(key);
         if (!latched && val && mode_recently_changed())
         {
@@ -98,7 +98,7 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
     return latched || (m_any_time && val);
 }
 
-uint64_t InputActivationTrigger::startup_key() const
+StartupTriggerKey InputActivationTrigger::startup_key() const
 {
-    return ((uint64_t)m_profile->profile_id << 32) | ((uint32_t)m_list_id << 16) | m_id;
+    return {m_profile->profile_id, m_list_id, m_id, m_input->linked_device_serial()};
 }

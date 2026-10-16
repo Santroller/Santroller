@@ -56,6 +56,16 @@ public:
     }
     virtual uint64_t hardware_id() const { return 0; }
     virtual void link_device(bool claim_devices) {}
+    // The Device::m_serial of what link_device() picked out of the profile's slots, or 0 for none
+    virtual uint32_t linked_device_serial() const { return 0; }
+
+protected:
+    // For inputs that wrap several others, folds an inner input's device into one serial
+    static uint32_t mix_serial(uint32_t serial, const Input *input)
+    {
+        uint32_t inner = input ? input->linked_device_serial() : 0;
+        return inner ? serial * 31 + inner : serial;
+    }
 };
 
 

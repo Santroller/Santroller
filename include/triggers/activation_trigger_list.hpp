@@ -14,6 +14,8 @@ public:
     uint32_t list_id;
     std::vector<std::unique_ptr<ActivationTrigger>> triggers;
     bool validate(bool claim_devices, bool full_poll, bool send_events);
+    // Puts input triggers after the rest, once the list has been loaded
+    void order_triggers();
     int assignedDevices();
     bool forcedConsoleMode(ConsoleMode& mode) const;
     bool xinputOnWindows(bool &enabled) const;

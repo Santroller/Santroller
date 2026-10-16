@@ -17,6 +17,7 @@ public:
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
+    uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
     uint64_t hardware_id() const override
     {
         return (static_cast<uint64_t>(InputHw_BTButton) << 56) |
@@ -53,6 +54,7 @@ public:
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
+    uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
     void link_device(bool claim_devices) override
     {
         auto device = m_profile->get_claimed_device(DeviceSlotKind::Bluetooth, m_input.deviceid, !claim_devices);

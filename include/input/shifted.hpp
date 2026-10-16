@@ -17,6 +17,12 @@ public:
     Input* get_inner_input() const { return m_input.get(); }
     Input* get_shift_input() const { return m_shift.get(); }
     bool valid() const override { return (m_input && m_input->valid()) && (m_shift && m_shift->valid()); }
+    void link_device(bool claim_devices) override
+    {
+        if (m_input) m_input->link_device(claim_devices);
+        if (m_shift) m_shift->link_device(claim_devices);
+    }
+    uint32_t linked_device_serial() const override { return mix_serial(mix_serial(0, m_input.get()), m_shift.get()); }
 
 private:
     std::unique_ptr<Input> m_input;

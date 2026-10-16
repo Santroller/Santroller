@@ -22,6 +22,7 @@ public:
         m_device = device && device->is_usb_host_interface() ? std::static_pointer_cast<UsbHostInterface>(device) : nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
+    uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
 
 private:
     void setup();
@@ -54,6 +55,7 @@ public:
         m_device = device && device->is_usb_host_interface() ? std::static_pointer_cast<UsbHostInterface>(device) : nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
+    uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
 
 private:
     void setup();
@@ -79,6 +81,7 @@ public:
         m_device = device && device->is_usb_host_interface() ? std::static_pointer_cast<UsbHostInterface>(device) : nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
+    uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
 
 private:
     void setup();
@@ -102,6 +105,7 @@ public:
         m_device = device && device->is_usb_host_interface() ? std::static_pointer_cast<UsbHostInterface>(device) : nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
+    uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
 
 private:
     void setup();
@@ -126,6 +130,7 @@ public:
         m_device = device && device->is_usb_host_interface() ? std::static_pointer_cast<UsbHostInterface>(device) : nullptr;
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
+    uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
 
 private:
     void setup();

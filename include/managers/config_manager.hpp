@@ -3,6 +3,21 @@
 #include <vector>
 #include "config.pb.h"
 
+// A startup trigger that matched. Inputs read from a slot also remember the device they read, so
+// the latch doesn't carry over to another device that fills the same slot
+struct StartupTriggerKey
+{
+    uint32_t profile_id;
+    uint16_t list_id;
+    uint16_t trigger_id;
+    uint32_t device_serial;
+    bool operator==(const StartupTriggerKey &other) const
+    {
+        return profile_id == other.profile_id && list_id == other.list_id &&
+               trigger_id == other.trigger_id && device_serial == other.device_serial;
+    }
+};
+
 class ConfigManager
 {
 public:
@@ -67,8 +82,8 @@ public:
 
     // Startup triggers that matched, so the profile they picked survives later reloads (eg once
     // the console is detected), long after the input was let go. Kept until a new config is written.
-    bool is_startup_trigger_latched(uint64_t key) const;
-    void latch_startup_trigger(uint64_t key);
+    bool is_startup_trigger_latched(const StartupTriggerKey &key) const;
+    void latch_startup_trigger(const StartupTriggerKey &key);
     void clear_startup_triggers() { m_latched_startup_triggers.clear(); }
     
     // Clear all state
@@ -109,5 +124,5 @@ private:
     uint32_t m_reinit_time;
     uint32_t m_time_since_mode;
     uint32_t m_seen_masks;
-    std::vector<uint64_t> m_latched_startup_triggers;
+    std::vector<StartupTriggerKey> m_latched_startup_triggers;
 };

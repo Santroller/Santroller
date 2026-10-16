@@ -1,6 +1,7 @@
 #pragma once
 #include "triggers/base_trigger.hpp"
 #include "input.pb.h"
+#include "managers/config_manager.hpp"
 #include <memory>
 
 class Input;
@@ -13,6 +14,7 @@ public:
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset();
     int assignedDevices() { return 0; }
+    bool reads_input() const override { return true; }
 
 protected:
     proto_InputActivationTrigger m_activation_trigger;
@@ -20,5 +22,5 @@ protected:
     bool m_any_time;
 private:
     bool calc_val();
-    uint64_t startup_key() const;
+    StartupTriggerKey startup_key() const;
 };

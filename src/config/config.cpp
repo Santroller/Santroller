@@ -563,6 +563,7 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_assignment.assignments.funcs.decode = &load_assignment_info;
     proto_assignment.assignments.arg = *arg;
     pb_decode_ex(stream, proto_ProfileAssignment_fields, &proto_assignment, PB_DECODE_NOINIT);
+    list->order_triggers();
     if (context->preview)
     {
         return true;

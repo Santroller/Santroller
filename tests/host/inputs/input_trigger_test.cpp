@@ -8,6 +8,10 @@
 // it has claimed its devices.
 #include "inputs_test_support.hpp"
 #include "triggers/input_trigger.hpp"
+#include "triggers/device_type_triggers.hpp"
+#include "input/held.hpp"
+#include "input/shortcut.hpp"
+#include <algorithm>
 
 namespace
 {
@@ -77,6 +81,27 @@ public:
 private:
     bool *m_matches;
     int m_assigned;
+};
+
+// A button on whichever device fills a USB slot, like USBButtonInput
+class SlotInput : public Input
+{
+public:
+    SlotInput(Profile *profile, uint16_t slot, const std::vector<Device *> *held) : m_profile(profile), m_slot(slot), m_held(held) {}
+    bool tick_digital() override
+    {
+        return m_device && std::find(m_held->begin(), m_held->end(), m_device.get()) != m_held->end();
+    }
+    uint16_t tick_analog() override { return tick_digital() ? UINT16_MAX : 0; }
+    void setup() override {}
+    void link_device(bool claim) override { m_device = m_profile->get_claimed_device(DeviceSlotKind::USB, m_slot, !claim); }
+    uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
+
+private:
+    Profile *m_profile;
+    uint16_t m_slot;
+    const std::vector<Device *> *m_held;
+    std::shared_ptr<Device> m_device;
 };
 
 class InputTriggerTest : public InputsTest
@@ -391,4 +416,129 @@ TEST_F(InputTriggerTest, AnyTimePressThroughAListReloadsOnce)
     ASSERT_TRUE(list.validate(false, false, false));
     EXPECT_TRUE(list.validate(true, false, false));
     EXPECT_EQ(fake_config::reload_count, 1);
+}
+
+namespace
+{
+class SlotTriggerTest : public InputTriggerTest
+{
+protected:
+    std::vector<Device *> held;
+
+    std::shared_ptr<TestDevice> plug_in_guitar(uint16_t id)
+    {
+        auto device = std::make_shared<TestDevice>(id);
+        device->usb_type = GuitarHeroGuitar;
+        DeviceManager::instance().add_assignable_device(device);
+        return device;
+    }
+
+    // "Hold Button at Startup" on the guitar in USB slot 1, listed before the USB type trigger
+    // that fills the slot
+    std::unique_ptr<SlotInput> slot_input(const std::shared_ptr<Profile> &for_profile)
+    {
+        return std::make_unique<SlotInput>(for_profile.get(), 1, &held);
+    }
+
+    std::unique_ptr<ActivationTriggerList> load_list(std::shared_ptr<Profile> for_profile, std::unique_ptr<Input> input = nullptr)
+    {
+        if (!input)
+        {
+            input = slot_input(for_profile);
+        }
+        auto list = std::make_unique<ActivationTriggerList>();
+        list->triggers.emplace_back(new InputActivationTrigger(
+            false, plain_trigger(), std::move(input), for_profile, 0, 0));
+        list->triggers.emplace_back(new UsbTypeActivationTrigger(GuitarHeroGuitar, for_profile, 1, 1, 0));
+        list->order_triggers();
+        return list;
+    }
+};
+} // namespace
+
+TEST_F(SlotTriggerTest, InputListedBeforeTheTriggerThatFillsItsSlotStillReadsIt)
+{
+    boot();
+    auto guitar = plug_in_guitar(10);
+    held.push_back(guitar.get());
+    auto list = load_list(profile);
+    EXPECT_TRUE(list->validate(true, false, false));
+    EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::USB, 1), guitar);
+}
+
+TEST_F(SlotTriggerTest, NotHeldDoesNotMatch)
+{
+    boot();
+    plug_in_guitar(10);
+    auto list = load_list(profile);
+    EXPECT_FALSE(list->validate(true, false, false));
+}
+
+TEST_F(SlotTriggerTest, LatchOnlyCoversTheDeviceThatWasHeld)
+{
+    boot();
+    auto first = plug_in_guitar(10);
+    held.push_back(first.get());
+    auto list = load_list(profile);
+    EXPECT_TRUE(list->validate(true, false, false));
+
+    // The profile is loaded again for a second, identical guitar, whose button isn't held. Every
+    // interface on the USB host port has the port's id, so the two only differ by object
+    clock_ms::advance(5000);
+    held.clear();
+    auto second_profile = make_profile();
+    plug_in_guitar(10);
+    auto second = load_list(second_profile);
+    EXPECT_FALSE(second->validate(true, false, false));
+}
+
+TEST_F(SlotTriggerTest, ReplugWithoutHoldingDoesNotMatch)
+{
+    boot();
+    auto guitar = plug_in_guitar(10);
+    held.push_back(guitar.get());
+    EXPECT_TRUE(load_list(profile)->validate(true, false, false));
+
+    // Unplugged, then plugged back in (a new interface object, with the same id) and reloaded
+    clock_ms::advance(5000);
+    held.clear();
+    DeviceManager::instance().clear_assignable_devices();
+    guitar.reset();
+    auto replugged_profile = make_profile();
+    plug_in_guitar(10);
+    boot();
+    EXPECT_FALSE(load_list(replugged_profile)->validate(true, false, false));
+}
+
+TEST_F(SlotTriggerTest, ShortcutOnTheSlotReadsTheDevice)
+{
+    boot();
+    auto guitar = plug_in_guitar(10);
+    auto shortcut = std::make_unique<ShortcutInput>();
+    shortcut->inputs.push_back(slot_input(profile));
+    auto *wrapped = shortcut.get();
+    auto list = load_list(profile, std::move(shortcut));
+    EXPECT_FALSE(list->validate(false, false, false));
+
+    held.push_back(guitar.get());
+    EXPECT_TRUE(list->validate(true, false, false));
+    // The latch is keyed on the guitar, not just the slot
+    EXPECT_EQ(wrapped->linked_device_serial(), guitar->m_serial);
+}
+
+TEST_F(SlotTriggerTest, HeldOnTheSlotReadsTheDevice)
+{
+    boot();
+    auto guitar = plug_in_guitar(10);
+    held.push_back(guitar.get());
+    proto_HeldInput config;
+    memset(&config, 0, sizeof(config));
+    config.time = 500;
+    auto held_input = std::make_unique<HeldInput>();
+    held_input->load(config, slot_input(profile));
+    auto list = load_list(profile, std::move(held_input));
+    EXPECT_FALSE(list->validate(false, false, false));
+    clock_ms::advance(600);
+    EXPECT_TRUE(list->validate(true, false, false));
+    EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::USB, 1), guitar);
 }

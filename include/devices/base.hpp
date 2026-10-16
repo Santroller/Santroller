@@ -77,7 +77,7 @@ struct DeviceReloadState
 class Device
 {
 public:
-    Device(uint16_t id) : m_id(id) {}
+    Device(uint16_t id) : m_id(id), m_serial(++s_next_serial) {}
     virtual ~Device() {}
     virtual bool valid() { return true; }
     virtual void begin() = 0;
@@ -115,10 +115,16 @@ public:
     virtual bool has_lightbar() const { return false; }
     virtual bool has_stagekit_led() const { return false; }
     uint16_t m_id;
+    // Unique to this object, unlike m_id, which every interface on a USB host port shares and a
+    // controller keeps when it is plugged in again
+    uint32_t m_serial;
     bool still_connected = false;
 
 protected:
     bool m_lastConnected;
+
+private:
+    static inline uint32_t s_next_serial = 0;
 };
 
 class LedDevice : public Device

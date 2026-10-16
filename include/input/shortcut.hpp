@@ -19,4 +19,14 @@ class ShortcutInput: public Input {
         }
         return true;
     }
+    void link_device(bool claim_devices) override
+    {
+        for (const auto &input : inputs) input->link_device(claim_devices);
+    }
+    uint32_t linked_device_serial() const override
+    {
+        uint32_t serial = 0;
+        for (const auto &input : inputs) serial = mix_serial(serial, input.get());
+        return serial;
+    }
 };

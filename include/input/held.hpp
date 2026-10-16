@@ -16,6 +16,11 @@ public:
     uint64_t hardware_id() const override { return m_input ? m_input->hardware_id() : 0; }
     Input* get_inner_input() const { return m_input.get(); }
     bool valid() const override { return m_input ? m_input->valid() : false; }
+    void link_device(bool claim_devices) override
+    {
+        if (m_input) m_input->link_device(claim_devices);
+    }
+    uint32_t linked_device_serial() const override { return m_input ? m_input->linked_device_serial() : 0; }
 
 private:
     std::unique_ptr<Input> m_input;

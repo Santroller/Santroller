@@ -26,11 +26,12 @@ static const uint8_t profile_data[] =
     // gamepad HID service, so hosts don't see a gamepad that never sends anything.
     // 0x0001 PRIMARY_SERVICE-GAP_SERVICE
     0x0a, 0x00, 0x02, 0x00, 0x01, 0x00, 0x00, 0x28, 0x00, 0x18, 
-    // 0x0002 CHARACTERISTIC-GAP_DEVICE_NAME - READ
+    // Served by bt_gamepad.cpp, as it is the name of the profile using bluetooth
+    // 0x0002 CHARACTERISTIC-GAP_DEVICE_NAME - READ | DYNAMIC
     0x0d, 0x00, 0x02, 0x00, 0x02, 0x00, 0x03, 0x28, 0x02, 0x03, 0x00, 0x00, 0x2a, 
-    // 0x0003 VALUE CHARACTERISTIC-GAP_DEVICE_NAME - READ -'SantrollerBT'
+    // 0x0003 VALUE CHARACTERISTIC-GAP_DEVICE_NAME - READ | DYNAMIC
     // READ_ANYBODY
-    0x14, 0x00, 0x02, 0x00, 0x03, 0x00, 0x00, 0x2a, 0x53, 0x61, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x6c, 0x65, 0x72, 0x42, 0x54, 
+    0x08, 0x00, 0x02, 0x01, 0x03, 0x00, 0x00, 0x2a, 
     // Straight after the GAP service in every database, so Service Changed has the same handle whichever
     // database a host last saw. Hosts like Windows cache the GATT layout of a bonded device and only
     // re-discover when told the layout changed (see bt_gatt_changes.cpp), which happens when the mode does.

@@ -588,6 +588,7 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
             {
                 printf("mode forced %d (was %d)\r\n", forced_usb_mode, config_mgr.get_requested_mode());
                 config_mgr.request_mode(forced_usb_mode);
+                config_mgr.set_mode_from_profile(true);
                 usb_mode = forced_usb_mode;
             }
         }

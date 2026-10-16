@@ -12,6 +12,8 @@
 #define BT_GATT_SERVICE_END_HANDLE 0x0009
 #define BT_GATT_SERVICE_CHANGED_VALUE_HANDLE 0x0006
 #define BT_GATT_SERVICE_CHANGED_CLIENT_CONFIGURATION_HANDLE 0x0007
+// The GAP device name, read dynamically so it can be the profile name (bt_gamepad.cpp)
+#define BT_GAP_DEVICE_NAME_VALUE_HANDLE 0x0003
 
 // Call with the bluetooth stack lock held, after att_server_init with the database in use
 void bt_gatt_changes_init();

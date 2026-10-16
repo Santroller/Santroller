@@ -22,6 +22,7 @@ static_assert(ATT_SERVICE_GATT_SERVICE_START_HANDLE == BT_GATT_SERVICE_START_HAN
 static_assert(ATT_SERVICE_GATT_SERVICE_END_HANDLE == BT_GATT_SERVICE_END_HANDLE, "GATT service moved");
 static_assert(ATT_CHARACTERISTIC_GATT_SERVICE_CHANGED_01_VALUE_HANDLE == BT_GATT_SERVICE_CHANGED_VALUE_HANDLE, "Service Changed moved");
 static_assert(ATT_CHARACTERISTIC_GATT_SERVICE_CHANGED_01_CLIENT_CONFIGURATION_HANDLE == BT_GATT_SERVICE_CHANGED_CLIENT_CONFIGURATION_HANDLE, "Service Changed moved");
+static_assert(ATT_CHARACTERISTIC_GAP_DEVICE_NAME_01_VALUE_HANDLE == BT_GAP_DEVICE_NAME_VALUE_HANDLE, "GAP device name moved");
 #include "managers/config_manager.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
 #include "btstack.h"
@@ -36,109 +37,71 @@ static hci_con_handle_t con_handle = HCI_CON_HANDLE_INVALID;
 // a host connected to us, from the moment it connects (con_handle is only set once it subscribes to reports)
 static hci_con_handle_t peripheral_handle = HCI_CON_HANDLE_INVALID;
 static uint8_t protocol_mode = 1;
+// A capabilities request is waiting for HIDS_SUBEVENT_CAN_SEND_NOW
+static bool s_capabilities_pending = false;
 static BTGamepadDevice *s_instance = nullptr;
 static hids_device_report_t report_storage[6];
 static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
 static void get_report_callback(hci_con_handle_t con_hdl, hid_report_type_t report_type, uint16_t report_id, uint16_t max_report_size, uint8_t * out_report);
 // Appearance HID - Keyboard (Category 15, Sub-Category 1)
-#define APPEARANCE_KEYBOARD 0xC1
+#define APPEARANCE_KEYBOARD 0x03C1
 // Appearance HID - Gamepad (Category 15, Sub-Category 4)
-#define APPEARANCE_GAMEPAD 0xC4
-// TODO: we could just build this on the fly, grabbing the name from the profile
-static const uint8_t adv_data_keyboard[] = {
-    // Flags general discoverable, BR/EDR not supported
-    0x02,
-    BLUETOOTH_DATA_TYPE_FLAGS,
-    0x06,
-    // Name
-    0x0d,
-    BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME,
-    'S',
-    'a',
-    'n',
-    't',
-    'r',
-    'o',
-    'l',
-    'l',
-    'e',
-    'r',
-    'B',
-    'T',
-    // 16-bit Service UUIDs
-    0x03,
-    BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS,
-    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE & 0xff,
-    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE >> 8,
-    0x03,
-    BLUETOOTH_DATA_TYPE_APPEARANCE,
-    // Appearance HID - Keyboard (Category 15, Sub-Category 1)
-    0xC1,
-    0x03,
-};
-static const uint8_t adv_data_gamepad[] = {
-    // Flags general discoverable, BR/EDR not supported
-    0x02,
-    BLUETOOTH_DATA_TYPE_FLAGS,
-    0x06,
-    // Name
-    0x0d,
-    BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME,
-    'S',
-    'a',
-    'n',
-    't',
-    'r',
-    'o',
-    'l',
-    'l',
-    'e',
-    'r',
-    'B',
-    'T',
-    // 16-bit Service UUIDs
-    0x03,
-    BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS,
-    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE & 0xff,
-    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE >> 8,
-    0x03,
-    BLUETOOTH_DATA_TYPE_APPEARANCE,
-    // Appearance HID - Gamepad (Category 15, Sub-Category 4)
-    0xC4,
-    0x03,
-};
-// While only the configurator can connect, show up as a generic HID device rather than a gamepad
-static const uint8_t adv_data_config[] = {
-    // Flags general discoverable, BR/EDR not supported
-    0x02,
-    BLUETOOTH_DATA_TYPE_FLAGS,
-    0x06,
-    // Name
-    0x0d,
-    BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME,
-    'S',
-    'a',
-    'n',
-    't',
-    'r',
-    'o',
-    'l',
-    'l',
-    'e',
-    'r',
-    'B',
-    'T',
-    // 16-bit Service UUIDs
-    0x03,
-    BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS,
-    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE & 0xff,
-    ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE >> 8,
-    0x03,
-    BLUETOOTH_DATA_TYPE_APPEARANCE,
-    // Appearance HID - Generic (Category 15)
-    0xC0,
-    0x03,
-};
+#define APPEARANCE_GAMEPAD 0x03C4
+// Appearance HID - Generic (Category 15)
+#define APPEARANCE_GENERIC_HID 0x03C0
+// What hosts list us as: the name of the profile using bluetooth, or SantrollerBT when there isn't one
+static char s_name[sizeof(Profile::name)] = "SantrollerBT";
+// gap_advertisements_set_data and gap_scan_response_set_data keep the pointers, so these must outlive advertising
+static uint8_t s_adv_data[LE_ADVERTISING_DATA_SIZE];
+static uint8_t s_scan_response[LE_ADVERTISING_DATA_SIZE];
+
+static uint8_t add_ad_field(uint8_t *dest, uint8_t pos, uint8_t type, const void *data, uint8_t len)
+{
+    dest[pos++] = len + 1;
+    dest[pos++] = type;
+    memcpy(dest + pos, data, len);
+    return pos + len;
+}
+
+// Advertises as discoverable HID with the given appearance. The name goes in the advertisement if it fits, otherwise
+// a shortened one does and the full name goes in the scan response, which hosts ask for before listing us.
+static void set_advertisement(uint16_t appearance)
+{
+    static const uint8_t flags = 0x06; // general discoverable, BR/EDR not supported
+    static const uint8_t uuids[] = {ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE & 0xff, ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE >> 8};
+    const uint8_t appearance_le[] = {(uint8_t)(appearance & 0xff), (uint8_t)(appearance >> 8)};
+    uint8_t adv_len = 0;
+    adv_len = add_ad_field(s_adv_data, adv_len, BLUETOOTH_DATA_TYPE_FLAGS, &flags, sizeof(flags));
+    adv_len = add_ad_field(s_adv_data, adv_len, BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS, uuids, sizeof(uuids));
+    adv_len = add_ad_field(s_adv_data, adv_len, BLUETOOTH_DATA_TYPE_APPEARANCE, appearance_le, sizeof(appearance_le));
+
+    uint8_t name_len = strlen(s_name);
+    uint8_t name_room = sizeof(s_adv_data) - adv_len - 2;
+    uint8_t scan_len = 0;
+    if (name_len <= name_room)
+    {
+        adv_len = add_ad_field(s_adv_data, adv_len, BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME, s_name, name_len);
+    }
+    else
+    {
+        adv_len = add_ad_field(s_adv_data, adv_len, BLUETOOTH_DATA_TYPE_SHORTENED_LOCAL_NAME, s_name, name_room);
+        uint8_t full_len = btstack_min(name_len, sizeof(s_scan_response) - 2);
+        scan_len = add_ad_field(s_scan_response, scan_len, BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME, s_name, full_len);
+    }
+    gap_advertisements_set_data(adv_len, s_adv_data);
+    gap_scan_response_set_data(scan_len, s_scan_response);
+}
+
+static uint16_t att_read_callback(hci_con_handle_t con_handle, uint16_t att_handle, uint16_t offset, uint8_t *buffer, uint16_t buffer_size)
+{
+    UNUSED(con_handle);
+    if (att_handle == BT_GAP_DEVICE_NAME_VALUE_HANDLE)
+    {
+        return att_read_callback_handle_blob((const uint8_t *)s_name, strlen(s_name), offset, buffer, buffer_size);
+    }
+    return 0;
+}
+
 bool check_bluetooth_ready()
 {
     return con_handle != HCI_CON_HANDLE_INVALID;
@@ -180,8 +143,6 @@ static void get_report_callback(hci_con_handle_t con_hdl, hid_report_type_t repo
         }
     }
 }
-const uint8_t adv_data_len = sizeof(adv_data_gamepad);
-
 void set_battery_state(uint8_t state)
 {
     BtStackLock lock;
@@ -219,6 +180,7 @@ void BTGamepadDevice::deinitialize()
     hids_device_register_packet_handler(nullptr);
     gap_advertisements_enable(0);
     gap_advertisements_set_data(0, nullptr);
+    gap_scan_response_set_data(0, nullptr);
     hci_remove_event_handler(&hci_event_callback_registration);
     sm_remove_event_handler(&sm_event_callback_registration);
     // clears every registered service handler, so the next init starts clean, possibly with the other database
@@ -267,7 +229,14 @@ void BTGamepadDevice::initialize()
     {
         db = bt_keyboard_profile(&config_start, &config_end);
     }
-    att_server_init(db, NULL, NULL);
+    const char *name = "SantrollerBT";
+    if (!m_config_only && !profiles.empty() && profiles[0]->name[0])
+    {
+        name = profiles[0]->name;
+    }
+    strncpy(s_name, name, sizeof(s_name) - 1);
+    s_name[sizeof(s_name) - 1] = '\0';
+    att_server_init(db, att_read_callback, NULL);
     att_server_register_packet_handler(packet_handler);
     bt_gatt_changes_init();
 
@@ -316,20 +285,21 @@ void BTGamepadDevice::initialize()
     switch (m_config_only ? SubType_Unknown : subtype)
     {
     case SubType_Unknown:
-        gap_advertisements_set_data(sizeof(adv_data_config), (uint8_t *)adv_data_config);
+        // While only the configurator can connect, show up as a generic HID device rather than a gamepad
+        set_advertisement(APPEARANCE_GENERIC_HID);
         break;
     case SubType_KeyboardMouse:
-        gap_advertisements_set_data(adv_data_len, (uint8_t *)adv_data_keyboard);
+        set_advertisement(APPEARANCE_KEYBOARD);
         break;
     default:
-        gap_advertisements_set_data(adv_data_len, (uint8_t *)adv_data_gamepad);
+        set_advertisement(APPEARANCE_GAMEPAD);
         break;
     }
     gap_advertisements_enable(1);
     {
         bd_addr_t local_addr;
         gap_local_bd_addr(local_addr);
-        printf("BT: advertising as SantrollerBT from %s, %s %d\r\n", bd_addr_to_str(local_addr), m_config_only ? "config only, subtype" : "subtype", subtype);
+        printf("BT: advertising as %s from %s, %s %d\r\n", s_name, bd_addr_to_str(local_addr), m_config_only ? "config only, subtype" : "subtype", subtype);
     }
 
     // register for HCI events
@@ -581,6 +551,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             peripheral_handle = HCI_CON_HANDLE_INVALID;
         }
         con_handle = HCI_CON_HANDLE_INVALID;
+        s_capabilities_pending = false;
         bt_config_service_disconnected();
         // 0x05 auth failure, 0x08 supervision timeout, 0x13 remote closed, 0x16 we closed, 0x3d MIC failure (bad keys)
         printf("BT: disconnected handle 0x%04x reason 0x%02x\r\n", hci_event_disconnection_complete_get_connection_handle(packet), hci_event_disconnection_complete_get_reason(packet));
@@ -780,13 +751,12 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 }
                 if (report_id == ReportIdSantrollerCapabilities || (report_len > 0 && report_data[0] == ReportIdSantrollerCapabilities))
                 {
+                    // We are inside the ATT write callback, and the outgoing buffer is held for the write
+                    // response, so a notification sent now is dropped. Answer once btstack can send again.
                     if (s_instance)
                     {
-                        uint8_t epin_buf[3];
-                        epin_buf[0] = ReportIdSantrollerCapabilities;
-                        epin_buf[1] = s_instance->subtype;
-                        epin_buf[2] = s_instance->capabilities;
-                        send_report(sizeof(epin_buf), epin_buf);
+                        s_capabilities_pending = true;
+                        hids_device_request_can_send_now_event(hids_subevent_set_report_get_con_handle(packet));
                     }
                 }
             }
@@ -795,6 +765,14 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         case HIDS_SUBEVENT_CAN_SEND_NOW:
         {
             printf("can send now\r\n");
+            if (s_capabilities_pending && s_instance)
+            {
+                const uint8_t caps[2] = {s_instance->subtype, s_instance->capabilities};
+                s_capabilities_pending = false;
+                hids_device_send_input_report_for_id(hids_subevent_can_send_now_get_con_handle(packet),
+                                                     ReportIdSantrollerCapabilities, caps, sizeof(caps));
+            }
+            break;
         }
         default:
             break;

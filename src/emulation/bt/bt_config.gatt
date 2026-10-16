@@ -1,7 +1,8 @@
 // Used instead of bt.gatt while no profile is using bluetooth: the same config services, without the
 // gamepad HID service, so hosts don't see a gamepad that never sends anything.
 PRIMARY_SERVICE, GAP_SERVICE
-CHARACTERISTIC, GAP_DEVICE_NAME, READ, "SantrollerBT"
+// Served by bt_gamepad.cpp, as it is the name of the profile using bluetooth
+CHARACTERISTIC, GAP_DEVICE_NAME, READ | DYNAMIC,
 
 // Straight after the GAP service in every database, so Service Changed has the same handle whichever
 // database a host last saw. Hosts like Windows cache the GATT layout of a bonded device and only

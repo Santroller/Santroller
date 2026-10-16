@@ -75,6 +75,9 @@ public:
     // A profile forces a console mode, but it was skipped as the tool was open
     bool is_forced_mode_deferred() const { return m_forced_mode_deferred; }
     void set_forced_mode_deferred(bool deferred) { m_forced_mode_deferred = deferred; }
+    // The requested mode came from a profile forcing it, rather than from detecting the host
+    bool is_mode_from_profile() const { return m_mode_from_profile; }
+    void set_mode_from_profile(bool forced) { m_mode_from_profile = forced; }
     
     bool has_seen_assignment(uint32_t mask) const { return m_seen_masks & mask; }
     void mark_seen_assignment(uint32_t mask) { m_seen_masks |= mask; }
@@ -120,6 +123,7 @@ private:
     bool m_reinitialize_device_stack;
     bool m_restart_device_stack = false;
     bool m_forced_mode_deferred = false;
+    bool m_mode_from_profile = false;
     uint32_t m_last_work = 0;
     uint32_t m_reinit_time;
     uint32_t m_time_since_mode;

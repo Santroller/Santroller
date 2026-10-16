@@ -2033,9 +2033,11 @@ class ProtoFile:
         # Fix field data types where enums have negative values.
         for enum in other.enums:
             if not enum.has_negative():
+                # Fields reference an enum from another file by its unmangled name
+                enum_names = (str(enum.names), str(other.manglenames.unmangle(enum.names)))
                 for message in self.messages:
                     for field in message.all_fields():
-                        if field.pbtype == 'ENUM' and field.ctype == enum.names:
+                        if field.pbtype == 'ENUM' and str(field.ctype) in enum_names:
                             field.pbtype = 'UENUM'
 
     def generate_header(self, includes, headername, options):

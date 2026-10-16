@@ -1,6 +1,7 @@
 // The auxiliary block: state the device saves for itself (cycle and toggle inputs, bluetooth pairings and
 // BTstack's TLV entries) after the main config. encode_auxiliary writes it, the decode_* callbacks read it.
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <cstring>
 #include <vector>
 #include <pb_decode.h>
@@ -236,6 +237,38 @@ TEST_F(AuxConfigTest, SavedStateSurvivesAnAuxUpdateAndAReboot)
     DeviceFactory::BluetoothPairingStateData state{};
     ASSERT_TRUE(DeviceFactory::get_bluetooth_pairing_state(0, state));
     EXPECT_STREQ(state.name, "Pad");
+}
+
+TEST_F(AuxConfigTest, AnUnknownSubtypeIsEncodedUnsigned)
+{
+    AuxSpec aux;
+    auto pairing = bluetooth_pairing(2, {0xAA, 0xBB, 0xCC, 1, 2, 3}, "Drums", true);
+    pairing.has_subtype = true;
+    pairing.subtype = SubType_Unknown;
+    aux.bluetooth.push_back(pairing);
+    auto bytes = encode_aux(aux);
+    // 255 is two bytes, a sign extended -1 would be ten
+    const std::vector<uint8_t> unknown = {0x28, 0xFF, 0x01};
+    EXPECT_NE(std::search(bytes.begin(), bytes.end(), unknown.begin(), unknown.end()), bytes.end());
+    ASSERT_TRUE(decode(bytes));
+    DeviceFactory::BluetoothPairingStateData state{};
+    ASSERT_TRUE(DeviceFactory::get_bluetooth_pairing_state(2, state));
+    EXPECT_EQ(state.subtype, SubType_Unknown);
+}
+
+TEST_F(AuxConfigTest, AnUnknownSubtypeSavedSignedStillDecodes)
+{
+    // Older firmware encoded SubType signed, so Unknown (255) was saved as -1
+    std::vector<uint8_t> pairing = {0x08, 0x02};
+    auto mac = field(0x12, {0xAA, 0xBB, 0xCC, 1, 2, 3});
+    auto name = field(0x1A, {'D', 'r', 'u', 'm', 's'});
+    pairing = cat(pairing, mac, name, {0x20, 0x01});
+    pairing = cat(pairing, {0x28, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01}, {}, {});
+    ASSERT_TRUE(decode(field(0x1A, pairing)));
+    DeviceFactory::BluetoothPairingStateData state{};
+    ASSERT_TRUE(DeviceFactory::get_bluetooth_pairing_state(2, state));
+    EXPECT_STREQ(state.name, "Drums");
+    EXPECT_EQ(state.subtype, SubType_Unknown);
 }
 
 TEST_F(AuxConfigTest, ATruncatedBluetoothPairingIsNotApplied)

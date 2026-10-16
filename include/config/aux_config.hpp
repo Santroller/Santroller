@@ -49,7 +49,15 @@ inline bool decode_bluetooth_states(pb_istream_t *stream, const pb_field_t *fiel
     auto ret = pb_decode(stream, proto_BluetoothPairingState_fields, &proto_bluetooth);
     if (ret)
     {
-        SubType subtype = proto_bluetooth.has_subtype ? proto_bluetooth.subtype : SubType_Gamepad;
+        SubType subtype = SubType_Gamepad;
+        if (proto_bluetooth.has_subtype)
+        {
+            // Older firmware saved Unknown (255) signed as -1, which fills the whole field where the enum is
+            // wider than a byte. Every SubType fits in the low byte, so only that is read.
+            uint8_t raw;
+            memcpy(&raw, &proto_bluetooth.subtype, sizeof(raw));
+            subtype = (SubType)raw;
+        }
         BtControllerType ctrl_type = proto_bluetooth.has_controllerType ? proto_bluetooth.controllerType : BtControllerType_BtControllerTypeGeneric;
         uint16_t vid = proto_bluetooth.has_vid ? proto_bluetooth.vid : 0;
         uint16_t pid = proto_bluetooth.has_pid ? proto_bluetooth.pid : 0;

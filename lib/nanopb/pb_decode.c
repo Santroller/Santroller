@@ -1478,7 +1478,17 @@ static bool checkreturn pb_dec_varint(pb_istream_t *stream, const pb_field_iter_
             PB_RETURN_ERROR(stream, "invalid data_size");
 
         if (clamped != value)
-            PB_RETURN_ERROR(stream, "integer too large");
+        {
+            /* Santroller: enums imported from another .proto used to be encoded signed, so a
+             * 1 byte SubType of Unknown (255) was saved as -1. Accept the sign extended form. */
+            pb_int64_t svalue = (pb_int64_t)value;
+            bool sign_extended =
+                (field->data_size == sizeof(uint_least8_t) && svalue == (int_least8_t)clamped) ||
+                (field->data_size == sizeof(uint_least16_t) && svalue == (int_least16_t)clamped) ||
+                (field->data_size == sizeof(uint32_t) && svalue == (int32_t)clamped);
+            if (!sign_extended)
+                PB_RETURN_ERROR(stream, "integer too large");
+        }
 
         return true;
     }

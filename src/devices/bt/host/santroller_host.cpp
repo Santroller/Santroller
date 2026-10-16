@@ -114,7 +114,9 @@ void BleSantrollerHost::handle_report_v2(const uint8_t *data, uint16_t len)
 
     if (data[0] != 1) return;
 
-    if (!m_ready)
+    // Still asked for after the readiness timeout registers it as Unknown, so the reply
+    // can fix the subtype (and the saved pairing) later on
+    if (!m_ready || m_subtype == SubType_Unknown)
     {
         if (++m_query_attempts % 30 == 1)
         {
@@ -122,7 +124,8 @@ void BleSantrollerHost::handle_report_v2(const uint8_t *data, uint16_t len)
             static const uint8_t cmd[2] = {ReportIdSantrollerCapabilities, 0};
             hids_host_send_write_report(m_cid, ReportIdSantrollerCapabilities, HID_REPORT_TYPE_OUTPUT, cmd, sizeof(cmd));
         }
-        return;
+        if (!m_ready)
+            return;
     }
 
     uint16_t copy_len = len < sizeof(m_report_buf) ? len : sizeof(m_report_buf);

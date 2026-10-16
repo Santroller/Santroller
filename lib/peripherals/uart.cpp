@@ -151,17 +151,20 @@ void UARTInterface::setup_interrupts(uint8_t *dest, uint8_t start_char, size_t m
 void UARTInterface::disable_interrupts()
 {
     printf("disable interrupts uart\r\n");
+    // Remove the handler too, so another driver (eg MIDI serial) can install its own on this UART
     if (uart == uart0)
     {
-        irq_set_enabled(UART0_IRQ, false);
         uart_set_irqs_enabled(uart, false, false);
+        irq_set_enabled(UART0_IRQ, false);
         running_0 = false;
+        irq_remove_handler(UART0_IRQ, on_uart_rx_0);
     }
     if (uart == uart1)
     {
-        irq_set_enabled(UART1_IRQ, false);
         uart_set_irqs_enabled(uart, false, false);
+        irq_set_enabled(UART1_IRQ, false);
         running_1 = false;
+        irq_remove_handler(UART1_IRQ, on_uart_rx_1);
     }
 }
 

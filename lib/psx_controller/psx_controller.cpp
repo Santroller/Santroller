@@ -586,12 +586,14 @@ void PSXController::set_bus_clock(uint32_t clock)
 void PSXController::end()
 {
     m_begun = false;
-    cancel_alarm(timeout_alarm_id);
+    // Detach first so the bus's interrupts can't schedule another timeout, then cancel the pending one
     if (m_bus)
     {
         m_bus->detach(this);
         m_bus.reset();
     }
+    cancel_alarm(timeout_alarm_id);
+    timeout_alarm_id = 0;
     spi_active = false;
     spi_started = false;
 }

@@ -140,8 +140,21 @@ void JoybusEmulation::end()
     {
         return;
     }
+    // The IRQ is shared with any other instance on this PIO, and its handler runs every instance in
+    // s_instances. Leave that list before releasing the DMA channel, or another instance's IRQ would
+    // reply on channel -1
+    uint32_t irq_status = save_and_disable_interrupts();
+    for (auto &instance : s_instances)
+    {
+        if (instance == this)
+        {
+            instance = nullptr;
+        }
+    }
+    restore_interrupts(irq_status);
     pio_set_irqn_source_enabled(m_pio, 0, pio_get_rx_fifo_not_empty_interrupt_source(m_sm), false);
     pio_sm_set_enabled(m_pio, m_sm, false);
+    pio_sm_clear_fifos(m_pio, m_sm);
     dma_channel_abort(m_dma);
     dma_channel_unclaim(m_dma);
     m_dma = -1;
@@ -151,13 +164,6 @@ void JoybusEmulation::end()
     {
         irq_set_enabled(irq, false);
         irq_remove_handler(irq, irq_handler);
-    }
-    for (auto &instance : s_instances)
-    {
-        if (instance == this)
-        {
-            instance = nullptr;
-        }
     }
     pio_remove_program(m_pio, &joybus_program, m_offset);
     pio_sm_unclaim(m_pio, m_sm);

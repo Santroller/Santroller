@@ -1,4 +1,5 @@
 #include "libads1115.hpp"
+#include "hardware/sync.h"
 #include "main.hpp"
 #include "stdio.h"
 
@@ -14,6 +15,10 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 static ADS1115 *ready_handlers[NUM_BANK0_GPIOS] = {};
 void ADS1115::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
+    if (m_stopped)
+    {
+        return;
+    }
     if (status != ADS1115_INIT && addr && addr != address)
     {
         return;
@@ -154,6 +159,7 @@ void ADS1115::ready()
 void ADS1115::begin()
 {
     printf("ads1115 begin\r\n");
+    m_stopped = false;
 
     if (alert == 0xFF)
     {
@@ -179,7 +185,9 @@ void ADS1115::begin()
 void ADS1115::end()
 {
     printf("ads1115 end\r\n");
-    cancel_alarm(restart_alarm_id);
+    // Stop polls scheduling more before cancelling the pending one, or one finishing in between
+    // would leave an alarm that fires after this is freed
+    m_stopped = true;
     if (alert != 0xFF)
     {
         m_ready = false;
@@ -192,6 +200,8 @@ void ADS1115::end()
     interface.dmaDeinit(ADS1115_ADDRESS_ADDR_VDD);
     interface.dmaDeinit(ADS1115_ADDRESS_ADDR_SDA);
     interface.dmaDeinit(ADS1115_ADDRESS_ADDR_SCL);
+    cancel_alarm(restart_alarm_id);
+    restart_alarm_id = 0;
 }
 void ADS1115::tick()
 {
@@ -199,15 +209,21 @@ void ADS1115::tick()
     {
         return;
     }
+    // Masked so the I2C interrupt can't schedule a poll between process_data cancelling the old alarm
+    // and storing the new one, which would leave an alarm that end() can't cancel
     if (m_ready && status == ADS1115_POLL_WAIT)
     {
+        uint32_t irq_status = save_and_disable_interrupts();
         m_ready = false;
         status = ADS1115_POLL;
         process_data(0, false, false, false, false);
+        restore_interrupts(irq_status);
     }
     interface.tick();
     if (lastPoll && to_ms_since_boot(get_absolute_time()) - lastPoll > 500)
     {
+        uint32_t irq_status = save_and_disable_interrupts();
         process_data(address, false, false, false, false);
+        restore_interrupts(irq_status);
     }
 }

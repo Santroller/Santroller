@@ -15,7 +15,10 @@ static void on_uart_rx_0()
     while (uart_is_readable(uart0))
     {
         uint8_t data = uart_getc(uart0);
-        uart0_midi_device->process_midi_data(&data, 1);
+        if (uart0_midi_device)
+        {
+            uart0_midi_device->process_midi_data(&data, 1);
+        }
     }
 }
 
@@ -24,11 +27,14 @@ static void on_uart_rx_1()
     while (uart_is_readable(uart1))
     {
         uint8_t data = uart_getc(uart1);
-        uart1_midi_device->process_midi_data(&data, 1);
+        if (uart1_midi_device)
+        {
+            uart1_midi_device->process_midi_data(&data, 1);
+        }
     }
 }
 
-MidiSerial::MidiSerial(MidiDevice *midiDevice, uint8_t block, int8_t tx, int8_t rx, uint32_t clock) : interface(block, tx, rx, clock)
+MidiSerial::MidiSerial(MidiDevice *midiDevice, uint8_t block, int8_t tx, int8_t rx, uint32_t clock) : interface(block, tx, rx, clock), m_device(midiDevice)
 {
     if (interface.is_uart0())
     {
@@ -52,19 +58,21 @@ MidiSerial::MidiSerial(MidiDevice *midiDevice, uint8_t block, int8_t tx, int8_t 
 }
 MidiSerial::~MidiSerial()
 {
-    if (interface.is_uart0())
+    // Stop the interrupt before clearing the device it hands bytes to. A replacement built before
+    // this was destroyed has already taken the UART over, so leave it alone then
+    if (interface.is_uart0() && uart0_midi_device == m_device)
     {
-        uart0_midi_device = nullptr;
-        irq_set_enabled(UART0_IRQ, false);
         uart_set_irqs_enabled(uart0, false, false);
+        irq_set_enabled(UART0_IRQ, false);
         irq_remove_handler(UART0_IRQ, on_uart_rx_0);
+        uart0_midi_device = nullptr;
     }
-    if (interface.is_uart1())
+    if (interface.is_uart1() && uart1_midi_device == m_device)
     {
-        uart1_midi_device = nullptr;
-        irq_set_enabled(UART1_IRQ, false);
         uart_set_irqs_enabled(uart1, false, false);
+        irq_set_enabled(UART1_IRQ, false);
         irq_remove_handler(UART1_IRQ, on_uart_rx_1);
+        uart1_midi_device = nullptr;
     }
 }
 void MidiSerial::tick()

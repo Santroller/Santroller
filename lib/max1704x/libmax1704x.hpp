@@ -41,4 +41,6 @@ private:
     uint8_t bufferTx[4];
     uint8_t bufferRx[4];
     alarm_id_t restart_alarm_id = 0;
+    // Set by end(), so a poll still in flight from an alarm or the I2C interrupt doesn't schedule another
+    volatile bool m_stopped = false;
 };

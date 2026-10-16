@@ -34,6 +34,8 @@ SPIMasterInterface::SPIMasterInterface(uint8_t block, spi_cpha_t cpha, spi_cpol_
 
 SPIMasterInterface::~SPIMasterInterface()
 {
+    // A transfer still running would keep writing into the owner's buffers after they're freed
+    transfer_dma_abort();
     if (m_dma_timer >= 0) {
         dma_timer_unclaim(m_dma_timer);
         m_dma_timer = -1;

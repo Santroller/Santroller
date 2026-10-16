@@ -34,9 +34,12 @@ void WorldTourDrum::begin()
 }
 void WorldTourDrum::end()
 {
-    cancel_alarm(restart_alarm_id);
-    mInterface.transfer_dma_abort();
+    // Stop the alarm rescheduling itself before cancelling it, or it could fire in between and
+    // leave a new one that runs after this is freed
     finished = true;
+    cancel_alarm(restart_alarm_id);
+    restart_alarm_id = 0;
+    mInterface.transfer_dma_abort();
     printf("wt end\r\n");
 }
 void WorldTourDrum::process_data()

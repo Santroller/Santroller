@@ -643,6 +643,17 @@ void pio_spi_free(pio_spi_t *spi)
     assert(spi->config.pio_idx == 0 || spi->config.pio_idx == 1);
     assert(spi == &pio_spi[spi->config.pio_idx]);
     pio_spi_stop(spi);
+    // Give the IRQs back so another driver can use them
+    if (spi->config.pio_idx == 0)
+    {
+        irq_remove_handler(PIO0_IRQ_0, pio_irq_0);
+        irq_remove_handler(PIO0_IRQ_1, pio_data_irq_0);
+    }
+    else
+    {
+        irq_remove_handler(PIO1_IRQ_0, pio_irq_1);
+        irq_remove_handler(PIO1_IRQ_1, pio_data_irq_1);
+    }
     pio_sm_unclaim(spi->pio, spi->config.cs_sm);
     pio_sm_unclaim(spi->pio, spi->config.initial_sm);
     pio_sm_unclaim(spi->pio, spi->config.combined_sm);
@@ -670,11 +681,21 @@ void pio_spi_stop(pio_spi_t *spi)
     assert(spi->config.pio_idx == 0 || spi->config.pio_idx == 1);
     assert(spi == &pio_spi[spi->config.pio_idx]);
 
+    // Silence the PIO interrupts first. Their handlers re-arm the state machines and DMA, which would
+    // undo the stop below and keep running on resources pio_spi_free is about to give away
+    pio_set_irq0_source_enabled(spi->pio, pis_interrupt2, false);
+    pio_set_irq1_source_enabled(spi->pio, pis_interrupt0, false);
+    irq_set_enabled(PIO_IRQ_NUM(spi->pio, 0), false);
+    irq_set_enabled(PIO_IRQ_NUM(spi->pio, 1), false);
+
     pio_sm_set_enabled(spi->pio, spi->config.cs_sm, false);
     pio_sm_exec(spi->pio, spi->config.cs_sm, pio_encode_jmp(spi->offset_cs));
     pio_sm_set_consecutive_pindirs(spi->pio, spi->config.cs_sm, spi->config.cipo_pin, 1, false);
 
     stop_loops(spi);
+    // stop_loops turns the data IRQ back on in config mode
+    irq_set_enabled(PIO_IRQ_NUM(spi->pio, 1), false);
+    pio_set_sm_mask_enabled(spi->pio, spi->startstop_mask, false);
     dma_channel_abort(spi->channel_read);
     dma_channel_abort(spi->channel_write);
 }

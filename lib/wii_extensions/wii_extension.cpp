@@ -1,4 +1,5 @@
 #include "wii_extension.hpp"
+#include "hardware/sync.h"
 
 #include <string.h>
 
@@ -392,6 +393,10 @@ void WiiExtension::tick()
         time_us_32() - m_last_turntable_poll_us < m_turntable_poll_interval_us;
     if (lastPoll && now - lastPoll > 500 && !waiting_for_turntable_poll)
     {
+        // Masked so the I2C interrupt can't schedule a poll between process_data cancelling the old
+        // alarm and storing the new one, which would leave an alarm that end() can't cancel
+        uint32_t irq_status = save_and_disable_interrupts();
         process_data(WII_ADDR, false, false, false, false);
+        restore_interrupts(irq_status);
     }
 }

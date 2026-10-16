@@ -16,13 +16,18 @@ void MPR121::tick()
 
 void MPR121::begin()
 {
+    m_stopped = false;
     interface.dmaInit(MPR121_I2CADDR_DEFAULT, this);
     start();
 }
 void MPR121::end()
 {
-    cancel_alarm(restart_alarm_id);
+    // Stop polls scheduling more before cancelling the pending one, or one finishing in between
+    // would leave an alarm that fires after this is freed
+    m_stopped = true;
     interface.dmaDeinit(MPR121_I2CADDR_DEFAULT);
+    cancel_alarm(restart_alarm_id);
+    restart_alarm_id = 0;
 }
 
 void MPR121::configure(uint8_t touchpad_count, uint8_t gpio_inputs, uint8_t gpio_outputs, uint8_t pull_ups, uint8_t pull_downs)
@@ -149,6 +154,10 @@ void MPR121::after_poll()
 
 void MPR121::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
+    if (m_stopped)
+    {
+        return;
+    }
     cancel_alarm(restart_alarm_id);
     if (timeout || abort_detected)
     {

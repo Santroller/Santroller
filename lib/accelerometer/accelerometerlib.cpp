@@ -1,4 +1,5 @@
 #include "accelerometerlib.hpp"
+#include "hardware/sync.h"
 #include "stdio.h"
 #include "utils.h"
 #include "hardware/gpio.h"
@@ -25,6 +26,7 @@ static alarm_id_t schedule_poll(Accelerometer *inst)
 void Accelerometer::begin()
 {
     printf("accel begin\r\n");
+    m_stopped = false;
     interface.dmaInit(ADXL345_ADDRESS, this);
     interface.dmaInit(ADXL345_ADDRESS_2, this);
     interface.dmaInit(MPU6050_ADDRESS, this);
@@ -43,16 +45,24 @@ void Accelerometer::begin()
 void Accelerometer::end()
 {
     printf("accel end\r\n");
-    cancel_alarm(restart_alarm_id);
+    // Stop polls scheduling more before cancelling the pending one, or one finishing in between
+    // would leave an alarm that fires after this is freed
+    m_stopped = true;
     interface.dmaDeinit(ADXL345_ADDRESS);
     interface.dmaDeinit(ADXL345_ADDRESS_2);
     interface.dmaDeinit(MPU6050_ADDRESS);
     interface.dmaDeinit(MPU6050_ADDRESS_2);
     interface.dmaDeinit(LIS3DH_ADDRESS);
     interface.dmaDeinit(LIS3DH_ADDRESS_2);
+    cancel_alarm(restart_alarm_id);
+    restart_alarm_id = 0;
 }
 void Accelerometer::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
+    if (m_stopped)
+    {
+        return;
+    }
     // printf("process_data %02x %d %d %d %d %d\r\n", addr, status, running, timeout, abort_detected, stop_detected);
     
     // If we have started init, ignore i2c data from the other accelerometers
@@ -331,6 +341,10 @@ void Accelerometer::tick()
     interface.tick();
     if (lastPoll && to_ms_since_boot(get_absolute_time()) - lastPoll > 500)
     {
+        // Masked so the I2C interrupt can't schedule a poll between process_data cancelling the old
+        // alarm and storing the new one, which would leave an alarm that end() can't cancel
+        uint32_t irq_status = save_and_disable_interrupts();
         process_data(address, false, false, false, false);
+        restore_interrupts(irq_status);
     }
 }

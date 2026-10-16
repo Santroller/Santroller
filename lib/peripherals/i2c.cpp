@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "hardware/dma.h"
 #include "hardware/irq.h"
+#include "hardware/sync.h"
 #include "hardware/clocks.h"
 #include "secondary_pico.hpp"
 static void i2c_dma_next_queued(
@@ -43,6 +44,8 @@ static inline i2c_dma_slot_t *alloc_slot(i2c_dma_t *i2c_dma, uint8_t addr)
         free_slot->in_use = true;
         free_slot->addr = addr;
         free_slot->dmaInterface = nullptr;
+        free_slot->owner = nullptr;
+        free_slot->queuedBy = nullptr;
         free_slot->hasWaitingTransfer = false;
         memset((void *)&free_slot->waitingTransfer, 0, sizeof(free_slot->waitingTransfer));
         return free_slot;
@@ -54,6 +57,7 @@ inline void process_dma(i2c_dma_t *i2c_dma)
 {
     i2c_dma->processing = true;
     cancel_alarm(i2c_dma->timeout_alarm_id);
+    i2c_dma->timeout_alarm_id = 0;
     if (i2c_dma->running)
     {
         i2c_dma->running = false;
@@ -200,7 +204,12 @@ static int i2c_dma_init_intern(i2c_dma_t *i2c_dma)
     {
         if (i2c_dma->i2c == get_secondary_pico_slave_i2c() || (uint)i2c_dma->sda_gpio == get_secondary_pico_slave_sda() || (uint)i2c_dma->scl_gpio == get_secondary_pico_slave_scl())
         {
-            return PICO_OK;
+            // The bus belongs to the secondary pico link. Count the device so deinit stays balanced,
+            // but leave it without DMA channels so nothing is ever sent on it
+            i2c_dma->tx_chan = -1;
+            i2c_dma->rx_chan = -1;
+            i2c_dma->device_count = 1;
+            return PICO_ERROR_GENERIC;
         }
     }
 
@@ -220,6 +229,22 @@ static int i2c_dma_init_intern(i2c_dma_t *i2c_dma)
     i2c_dma->tx_chan = dma_claim_unused_channel(false);
     i2c_dma->rx_chan = dma_claim_unused_channel(false);
     i2c_dma->device_count = 1;
+    if (i2c_dma->tx_chan < 0 || i2c_dma->rx_chan < 0)
+    {
+        // Out of channels. Keep the device counted, transfers just won't run without both channels
+        printf("i2c: no free DMA channels\r\n");
+        if (i2c_dma->tx_chan >= 0)
+        {
+            dma_channel_unclaim(i2c_dma->tx_chan);
+        }
+        if (i2c_dma->rx_chan >= 0)
+        {
+            dma_channel_unclaim(i2c_dma->rx_chan);
+        }
+        i2c_dma->tx_chan = -1;
+        i2c_dma->rx_chan = -1;
+        return PICO_ERROR_GENERIC;
+    }
 
     return PICO_OK;
 }
@@ -258,6 +283,7 @@ static void i2c_dma_rx_channel_configure(
 int64_t timeout_handler(__unused alarm_id_t id, void *user_data)
 {
     i2c_dma_t *i2c_dma = (i2c_dma_t *)user_data;
+    i2c_dma->timeout_alarm_id = 0;
     i2c_dma->timeout = true;
     process_dma(i2c_dma);
     return 0;
@@ -266,7 +292,7 @@ static void i2c_dma_next_queued(
     i2c_dma_t *i2c_dma)
 {
     i2c_dma->queuing = true;
-    if (i2c_dma->running || i2c_dma->processing)
+    if (i2c_dma->running || i2c_dma->processing || i2c_dma->tx_chan < 0 || i2c_dma->rx_chan < 0)
     {
         return;
     }
@@ -285,6 +311,7 @@ static void i2c_dma_next_queued(
             i2c_dma->running = true;
             next_slot = idx;
             transfer = &i2c_dma->slots[idx].waitingTransfer;
+            i2c_dma->runningFor = i2c_dma->slots[idx].queuedBy;
             i2c_dma->slots[idx].hasWaitingTransfer = false;
             break;
         }
@@ -381,17 +408,35 @@ void I2CMasterInterface::dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface)
         i2c_dma->irq_num = I2C1_IRQ;
         i2c_dma->irq_handler = i2c1_dma_irq_handler;
     }
-    i2c_dma_slot_t *slot = alloc_slot(i2c_dma, addr);
-    if (slot)
+    // device_count counts slots, so a deinit only gives back what an init took. An address that
+    // already has a slot just gets a new owner
+    i2c_dma_slot_t *slot = find_slot(i2c_dma, addr);
+    const bool new_slot = !slot;
+    if (!slot)
     {
-        slot->dmaInterface = dmaInterface;
+        slot = alloc_slot(i2c_dma, addr);
     }
-    i2c_dma->baudrate = m_clock;
-    i2c_dma->sda_gpio = m_sda;
-    i2c_dma->scl_gpio = m_scl;
-    i2c_dma->timeout = false;
-    i2c_dma->abort_detected = false;
-    i2c_dma->stop_detected = false;
+    if (!slot)
+    {
+        printf("i2c: no free slot for %02x\r\n", addr);
+        return;
+    }
+    slot->dmaInterface = dmaInterface;
+    slot->owner = this;
+    if (!new_slot)
+    {
+        return;
+    }
+    if (!i2c_dma->device_count)
+    {
+        // Only while the bus is idle, these are live state while it is running transfers
+        i2c_dma->baudrate = m_clock;
+        i2c_dma->sda_gpio = m_sda;
+        i2c_dma->scl_gpio = m_scl;
+        i2c_dma->timeout = false;
+        i2c_dma->abort_detected = false;
+        i2c_dma->stop_detected = false;
+    }
     i2c_dma_init_intern(i2c_dma);
 }
 I2CMasterInterface::I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, uint32_t clock) : m_sda(sda), m_scl(scl), m_clock(clock)
@@ -426,6 +471,43 @@ I2CMasterInterface::~I2CMasterInterface()
 {
 }
 
+// A transfer still running for a slot keeps its DMA writing into the device's buffers, which are freed
+// once the device's end() returns. Let it finish, or stop it if it doesn't finish promptly
+#define I2C_DEINIT_WAIT_US 5000
+static void i2c_dma_drain(i2c_dma_t *i2c_dma, const void *master)
+{
+    const uint32_t start = time_us_32();
+    while (i2c_dma->running && i2c_dma->runningFor == master && time_us_32() - start < I2C_DEINIT_WAIT_US)
+    {
+        tight_loop_contents();
+    }
+    uint32_t irq_status = save_and_disable_interrupts();
+    if (i2c_dma->running && i2c_dma->runningFor == master)
+    {
+        printf("i2c: stopping a transfer that didn't finish\r\n");
+        cancel_alarm(i2c_dma->timeout_alarm_id);
+        i2c_dma->timeout_alarm_id = 0;
+        dma_channel_abort(i2c_dma->tx_chan);
+        dma_channel_abort(i2c_dma->rx_chan);
+        i2c_hw_t *hw = i2c_get_hw(i2c_dma->i2c);
+        hw->enable |= I2C_IC_ENABLE_ABORT_BITS;
+        const uint32_t abort_start = time_us_32();
+        while ((hw->enable & I2C_IC_ENABLE_ABORT_BITS) && time_us_32() - abort_start < 1000)
+        {
+            tight_loop_contents();
+        }
+        // Drop the abort and stop it raised, they belong to the transfer being thrown away
+        (void)hw->clr_intr;
+        i2c_dma->running = false;
+        i2c_dma->stop_detected = false;
+        i2c_dma->abort_detected = false;
+        i2c_dma->timeout = false;
+        i2c_dma->currentSlot = -1;
+        i2c_dma->runningFor = nullptr;
+    }
+    restore_interrupts(irq_status);
+}
+
 void I2CMasterInterface::dmaDeinit(uint8_t addr)
 {
     if (!i2c_dma)
@@ -433,34 +515,58 @@ void I2CMasterInterface::dmaDeinit(uint8_t addr)
         return;
     }
     i2c_dma_slot_t *slot = find_slot(i2c_dma, addr);
-    if (slot)
+    if (!slot)
     {
-        slot->dmaInterface = nullptr;
-        slot->in_use = false;
-        slot->hasWaitingTransfer = false;
-        memset((void *)&slot->waitingTransfer, 0, sizeof(slot->waitingTransfer));
+        return;
     }
-    i2c_dma->device_count--;
-    if (i2c_dma->device_count == 0)
+    // A transfer this queued still points at its buffers, drop it
+    if (slot->queuedBy == this)
+    {
+        slot->hasWaitingTransfer = false;
+    }
+    const bool owner = slot->owner == this;
+    if (owner)
+    {
+        // Stop this slot's completion reaching the device, and anything more being queued for it
+        slot->dmaInterface = nullptr;
+        slot->hasWaitingTransfer = false;
+    }
+    i2c_dma_drain(i2c_dma, this);
+    if (!owner)
+    {
+        // A replacement device has taken the address over, the slot is its now
+        return;
+    }
+    slot->in_use = false;
+    memset((void *)&slot->waitingTransfer, 0, sizeof(slot->waitingTransfer));
+    if (i2c_dma->device_count)
+    {
+        i2c_dma->device_count--;
+    }
+    if (i2c_dma->device_count)
+    {
+        // Another device may have queued a transfer while this one was draining
+        i2c_dma_next_queued(i2c_dma);
+    }
+    else
     {
         irq_set_enabled(i2c_dma->irq_num, false);
 
         cancel_alarm(i2c_dma->timeout_alarm_id);
-        if (i2c_dma->abort_detected || !i2c_dma->stop_detected)
+        i2c_dma->timeout_alarm_id = 0;
+        // Both channels are claimed together, so free both whatever the last transfer used
+        if (i2c_dma->tx_chan >= 0)
         {
             dma_channel_abort(i2c_dma->tx_chan);
-            if (i2c_dma->reading)
-            {
-                dma_channel_abort(i2c_dma->rx_chan);
-            }
+            dma_channel_unclaim(i2c_dma->tx_chan);
         }
-
-        // Free the DMA channels.
-        dma_channel_unclaim(i2c_dma->tx_chan);
-        if (i2c_dma->reading)
+        if (i2c_dma->rx_chan >= 0)
         {
+            dma_channel_abort(i2c_dma->rx_chan);
             dma_channel_unclaim(i2c_dma->rx_chan);
         }
+        i2c_dma->tx_chan = -1;
+        i2c_dma->rx_chan = -1;
         i2c_dma->stop_detected = false;
         i2c_dma->abort_detected = false;
         i2c_dma->running = false;
@@ -500,6 +606,7 @@ void I2CMasterInterface::dmaWriteRead(uint8_t addr,
     slot->waitingTransfer.rbuf_len = rbuf_len;
     slot->waitingTransfer.wbuf = wbuf;
     slot->waitingTransfer.rbuf = rbuf;
+    slot->queuedBy = this;
     slot->hasWaitingTransfer = true;
     i2c_dma_next_queued(i2c_dma);
 }

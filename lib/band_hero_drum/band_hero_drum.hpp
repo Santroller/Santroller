@@ -35,7 +35,9 @@ private:
     bh_status_e status = BH_DRUM_CHECK_STATUS;
     uint8_t bufferTx[32];
     uint8_t bufferRx[32];
-    alarm_id_t restart_alarm_id;
+    alarm_id_t restart_alarm_id = 0;
+    // Set by end(), so a poll still in flight from an alarm or the I2C interrupt doesn't schedule another
+    volatile bool m_stopped = false;
     int failCount = 0;
     uint8_t numPackets;
     uint32_t lastPoll = 0;

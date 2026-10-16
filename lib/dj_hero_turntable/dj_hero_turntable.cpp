@@ -1,4 +1,5 @@
 #include "dj_hero_turntable.hpp"
+#include "hardware/sync.h"
 #include <stdio.h>
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
@@ -16,23 +17,28 @@ void DJHeroTurntable::tick()
     interface.tick();
     if (lastPoll && to_ms_since_boot(get_absolute_time()) - lastPoll > 500)
     {
+        // Masked so the I2C interrupt can't schedule a poll between this cancelling the old alarm and
+        // storing the new one, which would leave an alarm that end() can't cancel
+        uint32_t irq_status = save_and_disable_interrupts();
         process_data(address, false, false, false, false);
+        restore_interrupts(irq_status);
     }
 }
 void DJHeroTurntable::begin()
 {
+    m_stopped = false;
     interface.dmaInit(address, this);
     status = DJH_CHECK_STATUS;
     process_data(0, false, false, false, false);
 }
 void DJHeroTurntable::end()
 {
-    if (restart_alarm_id)
-    {
-        cancel_alarm(restart_alarm_id);
-        restart_alarm_id = 0;
-    }
+    // Stop polls scheduling more before cancelling the pending one, or one finishing in between
+    // would leave an alarm that fires after this is freed
+    m_stopped = true;
     interface.dmaDeinit(address);
+    cancel_alarm(restart_alarm_id);
+    restart_alarm_id = 0;
     connected = false;
     clear();
 }
@@ -47,6 +53,10 @@ void DJHeroTurntable::schedule(uint32_t delay_us)
 }
 void DJHeroTurntable::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
+    if (m_stopped)
+    {
+        return;
+    }
     lastPoll = to_ms_since_boot(get_absolute_time());
     if (restart_alarm_id)
     {

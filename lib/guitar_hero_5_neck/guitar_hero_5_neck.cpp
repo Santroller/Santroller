@@ -1,4 +1,5 @@
 #include "guitar_hero_5_neck.hpp"
+#include "hardware/sync.h"
 #include "stdio.h"
 #include "utils.h"
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
@@ -16,13 +17,18 @@ void GuitarHero5Neck::tick()
     interface.tick();
     if (lastPoll && !restart_alarm_id && to_ms_since_boot(get_absolute_time()) - lastPoll > 1000)
     {
+        // Masked so the I2C interrupt can't schedule a poll between this cancelling the old alarm and
+        // storing the new one, which would leave an alarm that end() can't cancel
+        uint32_t irq_status = save_and_disable_interrupts();
         process_data(0, false, false, false, false);
+        restore_interrupts(irq_status);
     }
 }
 
 void GuitarHero5Neck::begin()
 {
     printf("GuitarHero5Neck begin\n");
+    m_stopped = false;
     interface.dmaInit(GH5NECK_ADDR, this);
     failCount = 0;
     connected = false;
@@ -34,12 +40,12 @@ void GuitarHero5Neck::begin()
 void GuitarHero5Neck::end()
 {
     printf("GuitarHero5Neck end\n");
-    if (restart_alarm_id)
-    {
-        cancel_alarm(restart_alarm_id);
-        restart_alarm_id = 0;
-    }
+    // Stop polls scheduling more before cancelling the pending one, or one finishing in between
+    // would leave an alarm that fires after this is freed
+    m_stopped = true;
     interface.dmaDeinit(GH5NECK_ADDR);
+    cancel_alarm(restart_alarm_id);
+    restart_alarm_id = 0;
     connected = false;
     clear_buttons();
 }
@@ -52,6 +58,10 @@ void GuitarHero5Neck::clear_buttons()
 
 void GuitarHero5Neck::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
+    if (m_stopped)
+    {
+        return;
+    }
     lastPoll = to_ms_since_boot(get_absolute_time());
     if (restart_alarm_id)
     {

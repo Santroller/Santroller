@@ -35,6 +35,10 @@ typedef struct
     uint8_t addr;
     bool in_use;
     I2CDMAInterface *dmaInterface;
+    // The I2CMasterInterface that registered the slot, and the one that queued waitingTransfer. They
+    // differ when a replacement device takes over an address before the old device is torn down
+    const void *owner;
+    const void *volatile queuedBy;
     volatile i2c_dma_transfer_t waitingTransfer;
     volatile bool hasWaitingTransfer;
 } i2c_dma_slot_t;
@@ -63,6 +67,8 @@ typedef struct i2c_dma_s
     volatile bool queuing;
     volatile bool processing;
     alarm_id_t timeout_alarm_id;
+    // The I2CMasterInterface whose transfer is running, its buffers are in use until it finishes
+    const void *volatile runningFor;
 
     uint16_t data_cmds[I2C_MAX_TRANSFER_SIZE];
     i2c_dma_slot_t slots[I2C_MAX_DEVICES];

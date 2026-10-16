@@ -135,13 +135,15 @@ void WS2812::end()
     if (m_dma_channel == UINT_MAX)
         return;
 
+    // Stop the DMA IRQ from scheduling a new reset alarm before cancelling the pending one, otherwise
+    // a transfer completing in between leaves an alarm that restarts DMA on a released channel
+    dma_channel_set_irq0_enabled(m_dma_channel, false);
+    s_dma_owners[m_dma_channel] = nullptr;
     if (m_reset_delay_alarm_id)
     {
         cancel_alarm(m_reset_delay_alarm_id);
         m_reset_delay_alarm_id = 0;
     }
-    dma_channel_set_irq0_enabled(m_dma_channel, false);
-    s_dma_owners[m_dma_channel] = nullptr;
     pio_remove_program_and_unclaim_sm(&ws2812_program, ws2812Pio, ws2812Sm, ws2812Offset);
     dma_channel_cleanup(m_dma_channel);
     dma_channel_unclaim(m_dma_channel);

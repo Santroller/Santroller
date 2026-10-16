@@ -48,6 +48,7 @@ void VTechGuitarIOExpander::set_led(uint8_t i, uint8_t val)
 }
 void VTechGuitarIOExpander::begin()
 {
+    m_stopped = false;
 
     status = INIT_SOFT_RESET;
     connected = false;
@@ -62,10 +63,18 @@ VTechGuitarIOExpander::VTechGuitarIOExpander(uint8_t block, int8_t sck, int8_t m
 }
 void VTechGuitarIOExpander::end()
 {
+    // Stop the alarm rescheduling itself before cancelling it, or it could fire in between and
+    // leave a new one that runs after this is freed
+    m_stopped = true;
     cancel_alarm(timeout_alarm_id);
+    timeout_alarm_id = 0;
 };
 void VTechGuitarIOExpander::process_data(bool ack, bool timeout)
 {
+    if (m_stopped)
+    {
+        return;
+    }
     uint8_t resp = 0;
     if (!attention)
     {

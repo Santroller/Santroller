@@ -15,14 +15,19 @@ void Max1704X::tick()
 }
 void Max1704X::begin()
 {
+    m_stopped = false;
     interface.dmaInit(MAX710X_I2C_ADDRESS, this);
     status = MAX710X_DETECT;
     process_data(MAX710X_I2C_ADDRESS, false, false, false, false);
 }
 void Max1704X::end()
 {
-    cancel_alarm(restart_alarm_id);
+    // Stop polls scheduling more before cancelling the pending one, or one finishing in between
+    // would leave an alarm that fires after this is freed
+    m_stopped = true;
     interface.dmaDeinit(MAX710X_I2C_ADDRESS);
+    cancel_alarm(restart_alarm_id);
+    restart_alarm_id = 0;
 }
 void Max1704X::schedule(uint32_t ms)
 {
@@ -30,6 +35,10 @@ void Max1704X::schedule(uint32_t ms)
 }
 void Max1704X::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
+    if (m_stopped)
+    {
+        return;
+    }
     cancel_alarm(restart_alarm_id);
     if (timeout || abort_detected)
     {

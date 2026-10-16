@@ -33,6 +33,9 @@ static constexpr uint32_t USB_RESET_RECOVERY_MS = 10;
 
 static uint8_t usb_host_id;
 static bool m_initialized = false;
+// The device the running host belongs to. A replacement on the same pins adopts the host rather than
+// restarting it, so only the current owner may tear it down (eg not the old device's late destructor)
+static const USBHostHardwareDevice *s_host_owner = nullptr;
 static int8_t m_last_first_pin = -1;
 static bool m_last_dp_first = false;
 static volatile uint32_t m_devices_changed = 0;
@@ -241,9 +244,12 @@ bool USBHostHardwareDevice::matches_reload_config(const proto_Device &config) co
 USBHostHardwareDevice::~USBHostHardwareDevice()
 {
     printf("USBHostHardwareDevice destructor\r\n");
-    if (m_initialized)
+    // Don't deinit the host here. A reload destroys the old device after end(false) and the replacement
+    // adopts the running host, so restarting it would disconnect everything plugged into it. Removing
+    // the device from the config goes through end(true) instead
+    if (s_host_owner == this)
     {
-        end(true);
+        s_host_owner = nullptr;
     }
 }
 void USBHostHardwareDevice::begin()
@@ -258,9 +264,11 @@ void USBHostHardwareDevice::begin()
         if (m_last_dp_first == m_device.dmFirst && m_last_first_pin == m_device.firstPin)
         {
             printf("usbhost init already done\r\n");
+            s_host_owner = this;
             return;
         }
         // pins changed, need to deinit
+        s_host_owner = this;
         end(true);
     }
 
@@ -304,6 +312,7 @@ void USBHostHardwareDevice::begin()
         return;
     }
     m_initialized = true;
+    s_host_owner = this;
     // pio-usb takes ownership of this and destroys it in hcd_deinit
     alarm_pool_t *sof_alarm_pool = alarm_pool_create_with_unused_hardware_alarm(1);
     // SOF is sent from this pool's timer IRQ. At the default priority the native USB device IRQ can't be
@@ -340,7 +349,7 @@ void usbh_close(uint8_t dev_addr);
 
 void USBHostHardwareDevice::end(bool full)
 {
-    if (full)
+    if (full && s_host_owner == this)
     {
         if (gamesir_reset_stage == GameSirResetStage::ResetAsserted)
         {
@@ -365,6 +374,9 @@ void USBHostHardwareDevice::end(bool full)
             }
         }
         tusb_deinit(TUH_OPT_RHPORT);
+        // The host is down now, so the next begin() has to bring it back up even on the same pins
+        m_initialized = false;
+        s_host_owner = nullptr;
         // we are part way through a reload so we don't need to trigger a second one
         m_devices_changed = 0;
     }

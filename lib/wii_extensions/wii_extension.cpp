@@ -17,6 +17,15 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     return 0;
 }
 
+// Only ever one poll pending. process_data runs from the alarm, the I2C interrupt and tick(), so
+// arming a new one without cancelling the old would leave an alarm end() can't cancel, which then
+// fires after this is freed
+void WiiExtension::schedule(uint64_t delay_us)
+{
+    cancel_alarm(restart_alarm_id);
+    restart_alarm_id = add_alarm_in_us(delay_us, restart_handler, this, true);
+}
+
 bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
 {
     uint8_t orCheck = 0x00;  // Check if data is zeroed (bad connection)
@@ -54,7 +63,7 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
         {
             status = WII_INIT_FINISH_ENC;
             mType = WiiExtType::WiiNoExtension;
-            restart_alarm_id = add_alarm_in_ms(500, restart_handler, this, true);
+            schedule(500 * 1000);
             return;
         }
     }
@@ -198,7 +207,7 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
             break;
         }
         // add 200us delay between commands otherwise the extension is overwhelmed
-        restart_alarm_id = add_alarm_in_us(200, restart_handler, this, true);
+        schedule(200);
         return;
     }
     switch (status)
@@ -288,8 +297,7 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
             const uint32_t elapsed = now - m_last_turntable_poll_us;
             if (m_has_turntable_poll && elapsed < m_turntable_poll_interval_us)
             {
-                restart_alarm_id = add_alarm_in_us(
-                    m_turntable_poll_interval_us - elapsed, restart_handler, this, true);
+                schedule(m_turntable_poll_interval_us - elapsed);
                 return;
             }
             m_last_turntable_poll_us = now;

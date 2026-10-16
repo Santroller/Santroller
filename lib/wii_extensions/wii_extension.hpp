@@ -62,6 +62,7 @@ private:
     bool m_has_turntable_poll = false;
     MidiDevice *m_device;
     alarm_id_t restart_alarm_id = 0;
+    void schedule(uint64_t delay_us);
     int failCount = 0;
 
     // Cleared by end(), so the alarm and I2C interrupts stop scheduling polls of a device being freed

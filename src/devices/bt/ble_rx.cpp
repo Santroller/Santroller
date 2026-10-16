@@ -1059,6 +1059,9 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 gap_stop_scan();
                 btstack_run_loop_remove_timer(&s_scan_timer);
                 s_ble_scanning = false;
+                // stopping discovery resyncs the background reconnect, which would take the controller's only
+                // LE connect slot and make the gap_connect below fail, so mark the direct connect pending first
+                s_direct_connect_pending = true;
                 bt_discovery_on_device_found();
 
                 devices_found = 1;
@@ -1068,12 +1071,18 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 scan_devices[0].is_midi = is_midi;
 
                 printf("Connecting to BLE device %s (type %d)...\r\n", bd_addr_to_str(address), addr_type);
-                s_direct_connect_pending = true;
+                ble_set_connection_scan(BLE_DIRECT_SCAN_INTERVAL, BLE_DIRECT_SCAN_WINDOW);
+                uint8_t status = gap_connect(address, addr_type);
+                if (status != ERROR_CODE_SUCCESS)
+                {
+                    printf("BLE direct connect failed to start (status 0x%02x)\r\n", status);
+                    s_direct_connect_pending = false;
+                    ble_sync_reconnect();
+                    break;
+                }
                 btstack_run_loop_set_timer(&s_direct_connect_timer, 10000);
                 btstack_run_loop_set_timer_handler(&s_direct_connect_timer, ble_direct_connect_timeout);
                 btstack_run_loop_add_timer(&s_direct_connect_timer);
-                ble_set_connection_scan(BLE_DIRECT_SCAN_INTERVAL, BLE_DIRECT_SCAN_WINDOW);
-                gap_connect(address, addr_type);
             }
             break;
         }

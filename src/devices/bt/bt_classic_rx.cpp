@@ -949,8 +949,8 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 // Parse HID descriptor if available in storage (SDP populated this during hid_host_connect)
                 const uint8_t *desc = hid_descriptor_storage_get_descriptor_data(cid);
                 uint16_t desc_len = hid_descriptor_storage_get_descriptor_len(cid);
-                memcpy(slot->desc_copy, desc, desc_len < sizeof(slot->desc_copy) ? desc_len : sizeof(slot->desc_copy));
-                slot->desc_len = desc_len;
+                slot->desc_len = desc_len < sizeof(slot->desc_copy) ? desc_len : sizeof(slot->desc_copy);
+                memcpy(slot->desc_copy, desc, slot->desc_len);
 
                 const char *dev_name = "";
                 index = getDeviceIndexForAddress(connected_addr);

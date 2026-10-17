@@ -332,7 +332,7 @@ static int mt76_send_ms_command(struct mt76_dev *dev, uint8_t cmd, const void *d
 
 static int mt76_send_wlan_frame(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
 {
-    uint8_t frame[512];
+    static uint8_t frame[512];
     struct mt76_txwi txwi = {0};
 
     if (sizeof(txwi) + len > sizeof(frame)) {

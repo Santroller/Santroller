@@ -59,8 +59,8 @@ UARTInterface::UARTInterface(uint8_t block, int8_t tx, int8_t rx, uint32_t clock
 {
     // Receive only (eg MIDI in) or transmit only is fine, so only give up when neither pin is set.
     // Without a baud rate or a real block there is nothing to set up either
-    const bool tx_valid = tx >= 0 && tx < NUM_BANK0_GPIOS;
-    const bool rx_valid = rx >= 0 && rx < NUM_BANK0_GPIOS;
+    const bool tx_valid = tx >= 0 && tx < (int)NUM_BANK0_GPIOS;
+    const bool rx_valid = rx >= 0 && rx < (int)NUM_BANK0_GPIOS;
     if ((!tx_valid && !rx_valid) || block >= NUM_UARTS || clock == 0)
     {
         return;

@@ -11,7 +11,7 @@ void DMXDevice::begin()
     prev_led_state = new uint32_t[m_device.channelCount];
     memset(led_state, 0, sizeof(uint32_t) * m_device.channelCount);
     memset(prev_led_state, 0, sizeof(uint32_t) * m_device.channelCount);
-    m_started = m_device.pin >= 0 && m_device.pin < NUM_BANK0_GPIOS && m_dmx.begin(m_device.pin) == DmxOutput::SUCCESS;
+    m_started = m_device.pin >= 0 && m_device.pin < (int)NUM_BANK0_GPIOS && m_dmx.begin(m_device.pin) == DmxOutput::SUCCESS;
 }
 void DMXDevice::end(bool full)
 {

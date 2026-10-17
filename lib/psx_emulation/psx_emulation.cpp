@@ -195,7 +195,7 @@ PSXEmulation::PSXEmulation(int8_t sck, int8_t cmd, int8_t dat, uint8_t attPin, u
     const int8_t pins[] = {this->sck, this->cmd, this->dat, this->attPin, this->ackPin};
     for (int8_t pin : pins)
     {
-        if (pin < 0 || pin >= NUM_BANK0_GPIOS)
+        if (pin < 0 || pin >= (int)NUM_BANK0_GPIOS)
         {
             m_valid = false;
         }

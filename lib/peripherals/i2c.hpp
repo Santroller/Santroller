@@ -82,14 +82,15 @@ public:
     void dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface);
     void dmaDeinit(uint8_t addr);
     void tick();
-    void dmaWriteRead(
+    // Returns false if the transfer was not queued, in which case process_data will not be called for it
+    bool dmaWriteRead(
         uint8_t addr,
         const uint8_t *wbuf,
         size_t wbuf_len,
         uint8_t *rbuf,
         size_t rbuf_len);
     // For transfers larger than I2C_MAX_TRANSFER_SIZE: cmds must hold wbuf_len + rbuf_len entries
-    void dmaWriteRead(
+    bool dmaWriteRead(
         uint8_t addr,
         const uint8_t *wbuf,
         size_t wbuf_len,

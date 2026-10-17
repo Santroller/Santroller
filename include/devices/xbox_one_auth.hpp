@@ -21,6 +21,8 @@ private:
 
     XboxOneAuth m_chip;
     proto_XboxOneAuthDevice m_device;
+    // ~1KB, too big to build on the stack each response
+    XGIPProtocol m_reply;
     bool m_registered = false;
     uint8_t m_req_command = 0;
     uint8_t m_req_sequence = 0;

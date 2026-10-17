@@ -205,8 +205,8 @@ void WiiExtensionEmulation::release(SubType idle_type)
 
 WiiExtensionEmulation::WiiExtensionEmulation(uint8_t block, int8_t sda, int8_t scl, int8_t detect) : m_block(block), m_sda(sda), m_scl(scl), m_detect(detect), m_context(nullptr)
 {
-    m_valid = m_sda >= 0 && m_sda < NUM_BANK0_GPIOS && m_scl >= 0 && m_scl < NUM_BANK0_GPIOS;
-    if (m_detect >= NUM_BANK0_GPIOS)
+    m_valid = m_sda >= 0 && m_sda < (int)NUM_BANK0_GPIOS && m_scl >= 0 && m_scl < (int)NUM_BANK0_GPIOS;
+    if (m_detect >= (int)NUM_BANK0_GPIOS)
     {
         m_detect = -1;
     }

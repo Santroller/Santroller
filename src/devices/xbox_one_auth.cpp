@@ -58,11 +58,11 @@ void XboxOneAuthDevice::update(bool full_poll, bool send_events)
     if (m_chip.has_response())
     {
         m_chip.clear_response();
-        XGIPProtocol reply;
         uint16_t len = m_chip.response_length();
-        reply.setAttributes(m_req_command, m_req_sequence, 1, len > gip_max_chunk, m_req_ack);
-        reply.setData(m_chip.response(), len);
-        auth_broker.forward_auth_response(ModeXboxOne, &reply);
+        m_reply.reset();
+        m_reply.setAttributes(m_req_command, m_req_sequence, 1, len > gip_max_chunk, m_req_ack);
+        m_reply.setData(m_chip.response(), len);
+        auth_broker.forward_auth_response(ModeXboxOne, &m_reply);
     }
 }
 

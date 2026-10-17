@@ -157,7 +157,10 @@ bool load_device_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    proto_Device proto_device = proto_Device_init_default;
+    // ~500 bytes, too big for the stack. Safe as static as this is never re-entered, and devices
+    // keep their own copy of their config
+    static proto_Device proto_device;
+    proto_device = proto_Device_init_default;
     proto_device.cb_device.funcs.decode = load_device_dev;
     proto_device.cb_device.arg = arg ? *arg : nullptr;
     pb_decode_ex(stream, proto_Device_fields, &proto_device, PB_DECODE_NOINIT);

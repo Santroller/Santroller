@@ -575,16 +575,16 @@ void I2CMasterInterface::dmaDeinit(uint8_t addr)
         i2c_dma->currentSlot = -1;
     }
 }
-void I2CMasterInterface::dmaWriteRead(uint8_t addr,
+bool I2CMasterInterface::dmaWriteRead(uint8_t addr,
                                       const uint8_t *wbuf,
                                       size_t wbuf_len,
                                       uint8_t *rbuf,
                                       size_t rbuf_len)
 {
-    dmaWriteRead(addr, wbuf, wbuf_len, rbuf, rbuf_len, nullptr);
+    return dmaWriteRead(addr, wbuf, wbuf_len, rbuf, rbuf_len, nullptr);
 }
 
-void I2CMasterInterface::dmaWriteRead(uint8_t addr,
+bool I2CMasterInterface::dmaWriteRead(uint8_t addr,
                                       const uint8_t *wbuf,
                                       size_t wbuf_len,
                                       uint8_t *rbuf,
@@ -593,12 +593,12 @@ void I2CMasterInterface::dmaWriteRead(uint8_t addr,
 {
     if (!i2c_dma || (!cmds && wbuf_len + rbuf_len > I2C_MAX_TRANSFER_SIZE))
     {
-        return;
+        return false;
     }
     i2c_dma_slot_t *slot = find_slot(i2c_dma, addr);
     if (!slot)
     {
-        return;
+        return false;
     }
     slot->waitingTransfer.cmds = cmds;
     slot->waitingTransfer.addr = addr;
@@ -609,4 +609,5 @@ void I2CMasterInterface::dmaWriteRead(uint8_t addr,
     slot->queuedBy = this;
     slot->hasWaitingTransfer = true;
     i2c_dma_next_queued(i2c_dma);
+    return true;
 }

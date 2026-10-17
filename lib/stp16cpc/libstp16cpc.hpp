@@ -12,5 +12,7 @@ private:
     int8_t m_le;
     uint8_t m_count;
     uint8_t m_bytes;
+    // False until every pin is set, so a freshly added device doesn't touch GPIO -1
+    bool m_valid;
 
 };

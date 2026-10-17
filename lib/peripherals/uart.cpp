@@ -1,6 +1,7 @@
 #include "uart.hpp"
 
 #include "hardware/gpio.h"
+#include "hardware/sync.h"
 #include <pico/time.h>
 #include <stdint.h>
 #include <string.h>
@@ -56,19 +57,26 @@ static void on_uart_rx_1()
 }
 UARTInterface::UARTInterface(uint8_t block, int8_t tx, int8_t rx, uint32_t clock)
 {
-    // Receive only (eg MIDI in) or transmit only is fine, so only give up when neither pin is set
-    if (tx == -1 && rx == -1)
+    // Receive only (eg MIDI in) or transmit only is fine, so only give up when neither pin is set.
+    // Without a baud rate or a real block there is nothing to set up either
+    const bool tx_valid = tx >= 0 && tx < NUM_BANK0_GPIOS;
+    const bool rx_valid = rx >= 0 && rx < NUM_BANK0_GPIOS;
+    if ((!tx_valid && !rx_valid) || block >= NUM_UARTS || clock == 0)
     {
         return;
     }
     printf("uart: %d %d %d %d\r\n", tx, rx, block, clock);
     uart = _hardwareBlocks[block];
+    // Another device on this block (eg the one this replaces, still running during a reload) may have
+    // its RX interrupt live. Don't let that run while the block is reset and half configured
+    uint32_t irq_status = save_and_disable_interrupts();
     uart_init(uart, clock);
-    if (tx != -1)
+    restore_interrupts(irq_status);
+    if (tx_valid)
     {
         gpio_set_function(tx, GPIO_FUNC_UART);
     }
-    if (rx != -1)
+    if (rx_valid)
     {
         gpio_set_function(rx, GPIO_FUNC_UART);
     }
@@ -78,8 +86,13 @@ UARTInterface::~UARTInterface()
 {
 }
 
+// Without tx or rx the constructor leaves uart null, so everything below is a no-op then
 void UARTInterface::set_format(uint data_bits, uint stop_bits, uart_parity_t parity)
 {
+    if (!uart)
+    {
+        return;
+    }
     uart_set_format(uart, data_bits, stop_bits, parity);
 }
 void UARTInterface::reset_transfer()
@@ -108,6 +121,11 @@ long UARTInterface::last_read_time()
 
 bool UARTInterface::transfer_done()
 {
+    // Nothing will ever arrive, so don't leave a caller waiting on it
+    if (!uart)
+    {
+        return true;
+    }
     if (uart == uart0)
     {
         return current_0 == irq_size_0;
@@ -170,6 +188,10 @@ void UARTInterface::disable_interrupts()
 
 bool UARTInterface::send(uint8_t *data, uint8_t size)
 {
+    if (!uart)
+    {
+        return false;
+    }
     // if (!uart_is_writable(uart))
     // {
     //     return false;
@@ -180,6 +202,10 @@ bool UARTInterface::send(uint8_t *data, uint8_t size)
 
 bool UARTInterface::read_uart(uint8_t header, uint8_t size, uint8_t *dest)
 {
+    if (!uart)
+    {
+        return false;
+    }
     if (!uart_is_readable(uart))
     {
         return false;
@@ -197,11 +223,19 @@ bool UARTInterface::read_uart(uint8_t header, uint8_t size, uint8_t *dest)
 
 bool UARTInterface::readable()
 {
+    if (!uart)
+    {
+        return false;
+    }
     return uart_is_readable_within_us(uart, 1000);
 }
 
 bool UARTInterface::read_uart(uint8_t size, uint8_t *dest)
 {
+    if (!uart)
+    {
+        return false;
+    }
     if (uart_is_readable_within_us(uart, 1000000))
     {
         uart_read_blocking(uart, dest, size);

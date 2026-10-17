@@ -31,7 +31,7 @@ class WiiExtensionEmulation
 {
 public:
     // detect is the extension detect pin, or -1 if it is hardwired high
-    WiiExtensionEmulation(uint8_t block, uint8_t sda, uint8_t scl, int8_t detect);
+    WiiExtensionEmulation(uint8_t block, int8_t sda, int8_t scl, int8_t detect);
     ~WiiExtensionEmulation();
     void begin(SubType type);
     // Profile instances hold the extension while they exist. Once the last one lets go
@@ -51,9 +51,11 @@ private:
     void start(SubType type);
     WiiExtType m_type = WiiExtType::WiiNoExtension;
     uint8_t m_block;
-    uint8_t m_sda;
-    uint8_t m_scl;
+    int8_t m_sda;
+    int8_t m_scl;
     int8_t m_detect;
+    // False until SDA and SCL are set, so a freshly added device doesn't touch GPIO -1
+    bool m_valid = false;
     bool m_reconnecting = false;
     SubType m_reconnect_type;
     uint32_t m_reconnect_at_ms = 0;

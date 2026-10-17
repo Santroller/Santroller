@@ -3,6 +3,8 @@
 #include "emulation/usb/hid_device.h"
 #include "managers/battery_manager.hpp"
 #include "hardware/adc.h"
+#include "hardware/structs/io_bank0.h"
+#include "hardware/structs/pads_bank0.h"
 #include "utils.h"
 #include <pico/cyw43_arch.h>
 
@@ -32,6 +34,10 @@ bool AdcBatteryDevice::read_mv(uint32_t &mv)
         // the chip off the bus while it is used as an ADC, and the driver takes the pin back at
         // the start of its next transfer. Without bluetooth this lock does nothing.
         BtStackLock lock;
+        // Put the pad back afterwards. Left in ADC mode its digital input stays off, so anything else
+        // reading the pin (eg a button input) sees it low, and is set up again, high, on every reload
+        const uint32_t pad = pads_bank0_hw->io[m_device.pin];
+        const uint32_t ctrl = io_bank0_hw->io[m_device.pin].ctrl;
         adc_gpio_init(m_device.pin);
         adc_select_input(m_device.pin - ADC_FIRST_PIN);
         // the first readings after switching inputs can be low
@@ -40,6 +46,8 @@ bool AdcBatteryDevice::read_mv(uint32_t &mv)
         {
             total += adc_read();
         }
+        io_bank0_hw->io[m_device.pin].ctrl = ctrl;
+        pads_bank0_hw->io[m_device.pin] = pad;
     }
     uint32_t raw = total / SAMPLE_COUNT;
     // 12 bit reading of 0 to 3.3V, scaled back up through the divider

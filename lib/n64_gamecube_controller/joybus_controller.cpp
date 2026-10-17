@@ -26,6 +26,11 @@ bool JoybusController::begin()
     {
         return true;
     }
+    // An unset pin (-1) arrives here as 255
+    if (m_pin >= NUM_BANK0_GPIOS)
+    {
+        return false;
+    }
     if (!pio_claim_free_sm_and_add_program(&controller_program, &m_pio, &m_sm, &m_offset))
     {
         m_pio = nullptr;

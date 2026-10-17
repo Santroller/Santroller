@@ -46,6 +46,10 @@ void SNESpad::begin() {
     if (started) {
         return;
     }
+    // Unset pins (-1) arrive here as 255, so a freshly added device stays stopped
+    if (clockPin >= NUM_BANK0_GPIOS || latchPin >= NUM_BANK0_GPIOS || dataPin >= NUM_BANK0_GPIOS) {
+        return;
+    }
     started = true;
     initGpio();
     if (!pio_claim_free_sm_and_add_program(&snes_pad_program, &pio, &sm, &offset)) {

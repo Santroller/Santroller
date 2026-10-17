@@ -184,8 +184,10 @@ ConfigStorage::WriteResult ConfigStorage::write_chunk(const uint8_t *buffer, uin
             EEPROM.writeCache, footer.dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
     m_have_previous_footer = false;
-    // The tool has written a real config, flash can follow the cache again
-    m_preserve_flash = false;
+    // An upload isn't saved until the tool says so. Until then a cycle or toggle changing state
+    // must not commit the cache, or it would save the upload with it
+    m_preserve_flash = memcmp(EEPROM.writeCache, reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START),
+                              EEPROM_SIZE_BYTES) != 0;
     return WriteResult::Done;
 }
 

@@ -17,6 +17,10 @@ void PSXEmulation::begin(SubType type)
 #if PSX_SPI_DEBUG_LOGGING
     printf("PSXEmulation begin\r\n");
 #endif
+    if (!m_valid)
+    {
+        return;
+    }
     if (m_reconnecting)
     {
         // already mid-swap, just reconnect as the latest subtype
@@ -64,7 +68,7 @@ bool PSXEmulation::is_communicating() const
 
 void PSXEmulation::listen()
 {
-    if (spi || m_reconnecting || m_listening)
+    if (!m_valid || spi || m_reconnecting || m_listening)
     {
         return;
     }
@@ -187,6 +191,19 @@ void PSXEmulation::tick()
 
 PSXEmulation::PSXEmulation(int8_t sck, int8_t cmd, int8_t dat, uint8_t attPin, uint8_t ackPin) : sck(sck), cmd(cmd), dat(dat), attPin(attPin), ackPin(ackPin)
 {
+    m_valid = true;
+    const int8_t pins[] = {this->sck, this->cmd, this->dat, this->attPin, this->ackPin};
+    for (int8_t pin : pins)
+    {
+        if (pin < 0 || pin >= NUM_BANK0_GPIOS)
+        {
+            m_valid = false;
+        }
+    }
+    if (!m_valid)
+    {
+        printf("psx emulation pins invalid, aborting\r\n");
+    }
 #if PSX_SPI_DEBUG_LOGGING
     printf("PSXEmulation %d %d %d %d %d\r\n", sck, cmd, dat, attPin, ackPin);
 #endif

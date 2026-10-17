@@ -7,6 +7,13 @@
 ProtarNeck::ProtarNeck(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t attPin) : interface(block, SPI_CPHA_1, SPI_CPOL_0, sck, mosi, miso, false, clock), m_attPin(attPin)
 {
     printf("protar neck init!\r\n");
+    // Unset pins (-1) arrive as 255 for ATT
+    m_pins_valid = attPin < NUM_BANK0_GPIOS && sck >= 0 && mosi >= 0 && miso >= 0;
+    if (!m_pins_valid)
+    {
+        printf("protar neck pins invalid, aborting\r\n");
+        return;
+    }
     gpio_init(attPin);
     gpio_set_dir(attPin, true);
     gpio_set_pulls(attPin, false, false);
@@ -80,6 +87,10 @@ bool ProtarNeck::read_button(ProGuitarNeckButtonType buttonType)
 }
 void ProtarNeck::tick()
 {
+    if (!m_pins_valid)
+    {
+        return;
+    }
     if (m_state == State::IDLE)
     {
         if (micros() - last > 500)

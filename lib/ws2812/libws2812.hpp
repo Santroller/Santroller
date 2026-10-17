@@ -18,7 +18,7 @@ private:
     PIO ws2812Pio;
     uint ws2812Sm;
     uint ws2812Offset;
-    uint32_t* led_state;
+    uint32_t* led_state = nullptr;
     uint8_t m_count;
     uint m_dma_channel = UINT_MAX;
     alarm_id_t m_reset_delay_alarm_id = 0;

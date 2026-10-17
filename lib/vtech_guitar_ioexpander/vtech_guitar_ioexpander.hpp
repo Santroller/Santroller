@@ -52,6 +52,8 @@ class VTechGuitarIOExpander {
    private:
     SPIMasterInterface mInterface;
     uint8_t mCsPin;
+    // False until every pin is set, so a freshly added device doesn't touch GPIO -1
+    bool m_valid;
     int missing;
     bool connected;
     bool attention = false;

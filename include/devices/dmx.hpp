@@ -16,4 +16,6 @@ public:
 private:
     DmxOutput m_dmx;
     proto_DMXDevice m_device;
+    // False when the pin is unset or the output couldn't get a state machine or DMA channel
+    bool m_started = false;
 };

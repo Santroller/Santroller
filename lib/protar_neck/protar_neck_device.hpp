@@ -48,6 +48,8 @@ private:
     void signal_attention();
     SPIMasterInterface interface;
     uint8_t m_attPin;
+    // False until every pin is set, so a freshly added device doesn't touch GPIO -1
+    bool m_pins_valid;
     bool valid = false;
     uint32_t last = 0;
     uint32_t lastInput = 0;

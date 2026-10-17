@@ -21,4 +21,6 @@ private:
     bool sixteenChannel;
     // CD4051 style parts take a while to settle after switching channels
     bool slow;
+    // False until every pin is set (and the input is an ADC pin), so a freshly added device doesn't touch GPIO -1
+    bool m_valid;
 };

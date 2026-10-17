@@ -59,6 +59,11 @@ bool JoybusEmulation::begin()
     {
         return true;
     }
+    // An unset pin (-1) arrives here as 255
+    if (m_pin >= NUM_BANK0_GPIOS)
+    {
+        return false;
+    }
     // The PS2 emulation owns PIO1's interrupts outright, so prefer the other blocks
     static const uint8_t pio_order[] = {0, 2, 1};
     for (uint8_t idx : pio_order)

@@ -100,6 +100,10 @@ static void i2c_slave_handler1(i2c_inst_t *i2c, i2c_slave_event_t event)
 void WiiExtensionEmulation::begin(SubType type)
 {
     printf("WiiExtensionEmulation begin %d %d %d\r\n", m_sda, m_scl, m_block);
+    if (!m_valid)
+    {
+        return;
+    }
     if (m_reconnecting)
     {
         // already mid-swap, just reconnect as the latest subtype
@@ -199,8 +203,19 @@ void WiiExtensionEmulation::release(SubType idle_type)
     }
 }
 
-WiiExtensionEmulation::WiiExtensionEmulation(uint8_t block, uint8_t sda, uint8_t scl, int8_t detect) : m_block(block), m_sda(sda), m_scl(scl), m_detect(detect), m_context(nullptr)
+WiiExtensionEmulation::WiiExtensionEmulation(uint8_t block, int8_t sda, int8_t scl, int8_t detect) : m_block(block), m_sda(sda), m_scl(scl), m_detect(detect), m_context(nullptr)
 {
+    m_valid = m_sda >= 0 && m_sda < NUM_BANK0_GPIOS && m_scl >= 0 && m_scl < NUM_BANK0_GPIOS;
+    if (m_detect >= NUM_BANK0_GPIOS)
+    {
+        m_detect = -1;
+    }
+    if (!m_valid)
+    {
+        printf("wii emulation i2c invalid, aborting\r\n");
+        m_detect = -1;
+        return;
+    }
     if (m_detect >= 0)
     {
         // no extension until begin()

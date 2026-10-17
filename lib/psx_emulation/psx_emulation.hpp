@@ -53,6 +53,8 @@ public:
 
 private:
     void start(SubType type, bool console_present);
+    // False until every pin is set, so a freshly added device doesn't touch GPIO -1
+    bool m_valid = false;
     uint8_t m_users = 0;
     bool m_release_pending = false;
     uint32_t m_release_at_ms = 0;

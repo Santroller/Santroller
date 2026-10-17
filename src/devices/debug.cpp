@@ -9,7 +9,15 @@ DebugDevice::DebugDevice(proto_DebugDevice device, uint16_t id) : Device(id), m_
 {
     bi_decl(bi_2pins_with_func(device.uart.tx, device.uart.rx, GPIO_FUNC_UART));
     uart_inst = uart_get_instance(device.uart.block);
-    stdio_uart_init_full(uart_inst, device.uart.baudrate, device.uart.tx, device.uart.rx);
+    // A freshly added device has no pins or baud rate. Initialising stdio then would reset this UART
+    // under whatever else is using it, and divide by the zero baud rate
+    const bool tx_valid = device.uart.tx >= 0 && device.uart.tx < NUM_BANK0_GPIOS;
+    const bool rx_valid = device.uart.rx >= 0 && device.uart.rx < NUM_BANK0_GPIOS;
+    if ((tx_valid || rx_valid) && device.uart.block < NUM_UARTS && device.uart.baudrate > 0)
+    {
+        stdio_uart_init_full(uart_inst, device.uart.baudrate, tx_valid ? device.uart.tx : -1,
+                             rx_valid ? device.uart.rx : -1);
+    }
     m_lastConnected = true;
 }
 

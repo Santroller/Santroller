@@ -536,6 +536,13 @@ void PSXController::begin()
     PS2_PRINT("[PS2] begin sck=%d mosi=%d miso=%d att=%u ack=%u clock=%u block=%u\r\n",
               m_sckPin, m_mosiPin, m_misoPin, m_attPin, m_ackPin, m_clock, m_block);
 
+    // A freshly added device has every pin unset (-1, which ATT and ACK hold as 255). Stay unbegun,
+    // so tick() never attaches the bus either
+    if (m_attPin >= NUM_BANK0_GPIOS || m_ackPin >= NUM_BANK0_GPIOS || m_sckPin < 0 || m_mosiPin < 0 ||
+        m_misoPin < 0)
+    {
+        return;
+    }
     gpio_init(m_attPin);
     gpio_set_dir(m_attPin, true);
     gpio_put(m_attPin, true);

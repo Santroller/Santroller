@@ -49,6 +49,13 @@ SPIMasterInterface::SPIMasterInterface(uint8_t block, spi_cpha_t cpha, spi_cpol_
     printf("spi: %d %d %d %d %d\r\n", sck, mosi, miso, block, clock);
     // A byte takes 8 clocks, allow plenty of slack on top
     m_byte_timeout_us = (8000000 / (clock ? clock : 1)) * 4 + 100;
+    m_valid = sck != -1 || mosi != -1 || miso != -1;
+    // A freshly added device has no pins. Resetting the block then would only break whatever else
+    // is using it, and every transfer is skipped anyway
+    if (!m_valid)
+    {
+        return;
+    }
     // Another device on this block (eg the one this replaces, still running during a reload) may be
     // polling it from an alarm. Don't let that run while the block is reset and half configured
     uint32_t irq_status = save_and_disable_interrupts();
@@ -67,11 +74,8 @@ SPIMasterInterface::SPIMasterInterface(uint8_t block, spi_cpha_t cpha, spi_cpol_
         gpio_set_function(miso, GPIO_FUNC_SPI);
         gpio_set_pulls(miso, true, false);
     }
-    m_valid = sck != -1 || mosi != -1 || miso != -1;
-    if (m_valid) {
-        m_dma_tx = dma_claim_unused_channel(false);
-        m_dma_rx = dma_claim_unused_channel(false);
-    }
+    m_dma_tx = dma_claim_unused_channel(false);
+    m_dma_rx = dma_claim_unused_channel(false);
 }
 
 SPIMasterInterface::~SPIMasterInterface()

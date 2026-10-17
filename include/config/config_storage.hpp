@@ -36,7 +36,8 @@ public:
     // Run from an empty config held in the cache only. Flash keeps whatever it had (eg a config this
     // firmware couldn't load) until the tool writes a real one or saves, see preserving_flash
     bool initialize_empty();
-    // Set by initialize_empty: nothing but an upload or an explicit save may commit the cache to flash
+    // Set by initialize_empty, and by an upload that differs from flash: nothing but an explicit save
+    // (or an upload matching flash) may commit the cache to flash
     bool preserving_flash() const { return m_preserve_flash; }
     void stop_preserving_flash() { m_preserve_flash = false; }
     bool read_flash(ConfigImage &image, bool cached) const;

@@ -11,18 +11,22 @@ void DMXDevice::begin()
     prev_led_state = new uint32_t[m_device.channelCount];
     memset(led_state, 0, sizeof(uint32_t) * m_device.channelCount);
     memset(prev_led_state, 0, sizeof(uint32_t) * m_device.channelCount);
-    m_dmx.begin(m_device.pin);
+    m_started = m_device.pin >= 0 && m_device.pin < NUM_BANK0_GPIOS && m_dmx.begin(m_device.pin) == DmxOutput::SUCCESS;
 }
 void DMXDevice::end(bool full)
 {
-    m_dmx.end();
+    if (m_started)
+    {
+        m_dmx.end();
+        m_started = false;
+    }
     delete[] led_state;
     delete[] prev_led_state;
 }
 
 void DMXDevice::update(bool full_poll, bool send_events)
 {
-    if (m_dmx.busy()) {
+    if (!m_started || m_dmx.busy()) {
         return;
     }
     m_dmx.write((uint8_t*)led_state, m_device.channelCount);

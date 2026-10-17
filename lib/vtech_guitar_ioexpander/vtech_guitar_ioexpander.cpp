@@ -48,6 +48,11 @@ void VTechGuitarIOExpander::set_led(uint8_t i, uint8_t val)
 }
 void VTechGuitarIOExpander::begin()
 {
+    if (!m_valid)
+    {
+        m_stopped = true;
+        return;
+    }
     m_stopped = false;
 
     status = INIT_SOFT_RESET;
@@ -58,6 +63,13 @@ void VTechGuitarIOExpander::begin()
 VTechGuitarIOExpander::VTechGuitarIOExpander(uint8_t block, int8_t sck, int8_t mosi, int8_t miso, uint32_t clock, uint8_t csPin) : mInterface(block, SPI_CPHA_0, SPI_CPOL_0, sck, mosi, miso, true, clock), mCsPin(csPin)
 {
     printf("vtech expander init!\r\n");
+    // Unset pins (-1) arrive as 255 for CS
+    m_valid = csPin < NUM_BANK0_GPIOS && sck >= 0 && mosi >= 0 && miso >= 0;
+    if (!m_valid)
+    {
+        printf("vtech expander pins invalid, aborting\r\n");
+        return;
+    }
     gpio_init(csPin);
     gpio_set_dir(csPin, true);
 }

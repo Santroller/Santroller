@@ -19,6 +19,11 @@ void SnesEmulation::begin()
     {
         return;
     }
+    // Unset pins (-1) arrive here as 255. Stay unlistening, which also keeps acquire() from starting
+    if (m_clock_pin >= NUM_BANK0_GPIOS || m_latch_pin >= NUM_BANK0_GPIOS || m_data_pin >= NUM_BANK0_GPIOS)
+    {
+        return;
+    }
     gpio_init(m_clock_pin);
     gpio_init(m_latch_pin);
     gpio_init(m_data_pin);

@@ -5,6 +5,11 @@
 #include <cstdlib>
 void WS2812::putLeds(uint32_t *leds, uint8_t count)
 {
+    // Not started, see begin()
+    if (!led_state)
+    {
+        return;
+    }
     for (size_t i = 0; i < count; i++)
     {
         uint8_t r = leds[i] & 0xff;
@@ -106,9 +111,23 @@ WS2812::WS2812(uint8_t pin, uint8_t count, WS2812Type type) : m_pin(pin), hasW(t
 void WS2812::begin()
 {
     printf("ws2812 begin %d!\r\n", m_count);
-    pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_program, &ws2812Pio, &ws2812Sm, &ws2812Offset, m_pin, 1, true);
+    // An unset pin (-1) arrives here as 255, and the claim fails for it too. Either way stay stopped,
+    // which end() and putLeds() check for
+    if (m_pin >= NUM_BANK0_GPIOS ||
+        !pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_program, &ws2812Pio, &ws2812Sm, &ws2812Offset, m_pin, 1, true))
+    {
+        printf("ws2812 pin invalid or no free PIO state machine\r\n");
+        return;
+    }
+    int dma = dma_claim_unused_channel(false);
+    if (dma < 0)
+    {
+        printf("ws2812 no free DMA channel\r\n");
+        pio_remove_program_and_unclaim_sm(&ws2812_program, ws2812Pio, ws2812Sm, ws2812Offset);
+        return;
+    }
     ws2812_program_init(ws2812Pio, ws2812Sm, ws2812Offset, m_pin, 800000, hasW);
-    m_dma_channel = dma_claim_unused_channel(true);
+    m_dma_channel = dma;
     dma_channel_config c = dma_channel_get_default_config(m_dma_channel);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_32);
     channel_config_set_dreq(&c, pio_get_dreq(ws2812Pio, ws2812Sm, true));

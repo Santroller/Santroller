@@ -136,6 +136,13 @@ bool ConfigStorage::write_info(const uint8_t *buffer, uint16_t bufsize)
     {
         return false;
     }
+    // A commit still waiting would otherwise fire partway through the upload, writing the new footer over
+    // the old data and leaving flash unreadable if the upload is never saved (eg bluetooth dropping out).
+    // The cache is still a valid image until the footer below changes, so save it now
+    if (!m_upload_active)
+    {
+        EEPROM.flush();
+    }
     // Restarting an upload still replaces the config from before the first attempt
     if (!m_have_previous_footer)
     {

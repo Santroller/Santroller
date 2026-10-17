@@ -649,6 +649,34 @@ TEST_F(ConfigStorageTest, AuxOverAnUploadWithNothingSavedLeavesFlashAlone)
     EXPECT_EQ(fake_flash::erase_count, 0u);
 }
 
+TEST_F(ConfigStorageTest, ACommitWaitingWhenAnUploadStartsCantSaveHalfOfIt)
+{
+    // eg a toggle saving its state just before the tool starts writing, then the bluetooth link dropping
+    const auto old_main = pattern(300, 42);
+    boot_with_flash_image(old_main, {});
+    AuxWrite aux{pattern(20, 43)};
+    ASSERT_TRUE(storage.update_auxiliary(write_aux, &aux));
+    ASSERT_NE(EEPROM.should_commit_at, 0u);
+
+    const auto data = pattern(1000, 44);
+    const auto info = info_report_for(data, {});
+    ASSERT_TRUE(storage.write_info(info.data(), uint16_t(info.size())));
+    const auto reports = data_reports(data);
+    for (size_t i = 0; i < reports.size() / 2; i++)
+    {
+        ASSERT_EQ(storage.write_chunk(reports[i].data(), REPORT_SIZE, uint32_t(i * REPORT_SIZE)), WriteResult::InProgress);
+    }
+    run_pending_commit();
+    storage.abort_write();
+
+    // The commit went out before the upload touched the cache, so flash has the old config and its aux
+    ConfigImage image;
+    ASSERT_TRUE(storage.read_flash(image, false));
+    EXPECT_EQ(image_bytes(image), concat(old_main, aux.bytes));
+    ASSERT_TRUE(storage.read_flash(image, true));
+    EXPECT_EQ(image_bytes(image), concat(old_main, aux.bytes));
+}
+
 TEST_F(ConfigStorageTest, AWholeCommitWaitingWinsOverAnAuxOnlyOne)
 {
     // A save already waiting has everything an aux-only commit would write, and more

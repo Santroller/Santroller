@@ -34,6 +34,13 @@ public:
     restart_enumeration();
   }
 
+  // Back to how it is at boot, inference included
+  void reboot()
+  {
+    m_console_inference_enabled = true;
+    reset();
+  }
+
   // For a device stack restart (eg a config reload). The host hasn't changed, so knowing it is windows
   // is kept: otherwise we'd come back up in ModeHid just to be detected as windows and swap to xinput
   // again, and windows caches the OS descriptors so it may not even read them a second time.

@@ -7,7 +7,7 @@ static constexpr uint32_t LATER = 1000 + 5001;
 TEST(UsbDetection, ConfigChangesDisableInferenceUntilRebootButOrdinaryReloadsDoNot)
 {
     auto &detection = UsbDetectionState::instance();
-    detection.reset();
+    detection.reboot();
     detection.mark_device_descriptor_read(1000);
     EXPECT_TRUE(detection.should_infer_console(LATER));
 

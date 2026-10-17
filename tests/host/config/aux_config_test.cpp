@@ -231,6 +231,8 @@ TEST_F(AuxConfigTest, SavedStateSurvivesAnAuxUpdateAndAReboot)
 
     clear_state();
     EEPROM.start();
+    // pairings are only read by the first load after a boot
+    ConfigLoader::reset_bluetooth_loaded();
     ConfigImage image;
     ASSERT_TRUE(storage.read_flash(image, true));
     ASSERT_TRUE(ConfigLoader::apply(image, ModeHid));

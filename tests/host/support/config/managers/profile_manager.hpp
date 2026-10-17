@@ -23,4 +23,6 @@ public:
     void set_usb_reload_identity(uint8_t, ConsoleMode, SubType, bool) {}
     void finish_usb_instance_initialization(uint8_t) {}
     bool changed_types() const { return fake_loader::state.changed_types; }
+    void update_xinput_receiver() {}
+    size_t usb_gamepad_count() const { return 0; }
 };

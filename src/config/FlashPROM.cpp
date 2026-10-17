@@ -156,17 +156,25 @@ void FlashPROM::tick()
 {
 	if (should_commit_at != 0 && to_ms_since_boot(get_absolute_time()) >= should_commit_at)
 	{
-		should_commit_at = 0;
-		CommitWriter writer = m_writer;
-		m_writer = nullptr;
-		if (writer)
-		{
-			writer(m_writer_context);
-		}
-		else
-		{
-			commit_now();
-		}
+		flush();
+	}
+}
+void FlashPROM::flush()
+{
+	if (should_commit_at == 0)
+	{
+		return;
+	}
+	should_commit_at = 0;
+	CommitWriter writer = m_writer;
+	m_writer = nullptr;
+	if (writer)
+	{
+		writer(m_writer_context);
+	}
+	else
+	{
+		commit_now();
 	}
 }
 void FlashPROM::reset()

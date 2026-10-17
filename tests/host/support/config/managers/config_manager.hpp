@@ -28,5 +28,7 @@ public:
         fake_loader::state.device_name_set = name != nullptr;
         fake_loader::state.device_name = name ? name : "";
     }
+    bool is_rpcs3_detected() const { return false; }
+    void clear_rpcs3_detected() {}
     void sync_requested_mode_to_current() { fake_loader::state.calls.push_back("sync_requested_mode_to_current"); }
 };

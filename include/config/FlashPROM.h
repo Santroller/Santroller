@@ -37,6 +37,8 @@ public:
 	static void write_range(uint32_t offset, const uint8_t *data, uint32_t size);
 	void reset();
 	void tick();
+	// Run a commit that is waiting now instead of after EEPROM_WRITE_WAIT
+	void flush();
 	void commit_now();
 
 	alignas(uint32_t) static uint8_t writeCache[EEPROM_SIZE_BYTES];

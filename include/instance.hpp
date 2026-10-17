@@ -19,6 +19,8 @@ public:
     virtual void initialize() = 0;
     virtual void deinitialize() {}
     virtual bool is_bluetooth() const { return false; }
+    // What a MIDI instrument played on its last process, for MIDI out jacks to send as well
+    virtual const MidiState *midi_output_state() const { return nullptr; }
     virtual void process(bool full_poll, bool send_events) = 0;
     SubType subtype;
     ConsoleMode mode;

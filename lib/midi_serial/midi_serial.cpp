@@ -36,6 +36,11 @@ static void on_uart_rx_1()
 
 MidiSerial::MidiSerial(MidiDevice *midiDevice, uint8_t block, int8_t tx, int8_t rx, uint32_t clock) : interface(block, tx, rx, clock), m_device(midiDevice)
 {
+    // Sending only, so leave the RX interrupt to whatever else might be on this block
+    if (rx < 0)
+    {
+        return;
+    }
     if (interface.is_uart0())
     {
         uart0_midi_device = midiDevice;

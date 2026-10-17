@@ -24,23 +24,13 @@ void UsbMidiDevice::initialize()
 
 void UsbMidiDevice::process(bool full_poll, bool send_events)
 {
+    m_state.clear_all();
     if (tud_suspended())
     {
         process_suspended(full_poll, send_events);
         return;
     }
-    if (!tud_ready())
-    {
-        for (const auto &profile : profiles)
-        {
-            for (const auto &led : profile->leds)
-            {
-                led->update(full_poll, send_events);
-            }
-        }
-        return;
-    }
-    m_state.clear_all();
+    // Played even without a USB host, as a MIDI out jack sends it too
     for (const auto &profile : profiles)
     {
         profile->reset_drum_state();
@@ -55,6 +45,10 @@ void UsbMidiDevice::process(bool full_poll, bool send_events)
             led->update(full_poll, send_events);
         }
         m_state.merge(profile->midi_state);
+    }
+    if (!tud_ready())
+    {
+        return;
     }
     m_output.collect(m_state, time_us_64());
     send_pending();

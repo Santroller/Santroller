@@ -10,6 +10,9 @@ class UARTInterface {
     bool read_uart(uint8_t header, uint8_t size, uint8_t *dest);
     bool read_uart(uint8_t size, uint8_t *dest);
     bool send(uint8_t* data, uint8_t size);
+    // Room in the TX FIFO for another byte, so put() won't block
+    bool writable();
+    void put(uint8_t data);
     void set_format(uint data_bits, uint stop_bits, uart_parity_t parity);
     bool readable();
     void setup_interrupts(uint8_t* dest,uint8_t start_char, size_t maxlen);

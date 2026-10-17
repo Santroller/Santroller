@@ -5,8 +5,8 @@
 #define USB_MIDI_EP_SIZE 64
 
 // A USB MIDI instrument: an Audio Control interface, then a MIDI Streaming interface with one cable
-// each way. The profiles' MIDI mappings go out of the IN endpoint, and whatever the host sends is
-// accepted and ignored.
+// each way. The profiles' MIDI mappings go out of the IN endpoint (and any MIDI out jacks), and
+// whatever the host sends is accepted and ignored.
 class UsbMidiDevice : public UsbDevice
 {
 public:
@@ -21,6 +21,7 @@ public:
     bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
     bool control_transfer(uint8_t stage, tusb_control_request_t const *request);
     uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
+    const MidiState *midi_output_state() const override { return &m_state; }
 
 private:
     void send_pending();

@@ -55,6 +55,16 @@
 #include "hci.h"
 #include "devices/bt/bluetooth_stack.hpp"
 #include "secondary_pico.hpp"
+
+// std::terminate's default handler prints the demangled type of whatever was thrown, which links in
+// libstdc++'s demangler (~35KB of flash). Exceptions are off, so just stop
+namespace __gnu_cxx
+{
+void __verbose_terminate_handler()
+{
+    panic("terminate");
+}
+}
 class HidConsoleBridge
 {
 public:

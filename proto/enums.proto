@@ -381,3 +381,8 @@ enum CrkdDrumCalibrationType {
   HoldTick=4;
   RawValue=5;
 }
+
+enum MidiSerialDirection {
+  MidiSerialIn = 1;
+  MidiSerialOut = 2;
+}

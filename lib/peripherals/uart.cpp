@@ -200,6 +200,19 @@ bool UARTInterface::send(uint8_t *data, uint8_t size)
     return true;
 }
 
+bool UARTInterface::writable()
+{
+    return uart && uart_is_writable(uart);
+}
+
+void UARTInterface::put(uint8_t data)
+{
+    if (uart)
+    {
+        uart_putc_raw(uart, data);
+    }
+}
+
 bool UARTInterface::read_uart(uint8_t header, uint8_t size, uint8_t *dest)
 {
     if (!uart)

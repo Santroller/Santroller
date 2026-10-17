@@ -86,6 +86,9 @@ message BandHeroDrumDevice { required I2CDevice i2c = 1; }
 message SerialMidiDevice {
   required UARTDevice uart = 1;
   optional uint32 noteHoldTime = 2;
+  // In reads the RX pin as an input device, Out sends the MIDI profile's output on the TX pin.
+  // Unset is In, which is what every config before this field was
+  optional MidiSerialDirection direction = 3;
 }
 message CrkdNeckDevice { required UARTDevice uart = 1; }
 message CrkdDrumDevice { required UARTDevice uart = 1; }

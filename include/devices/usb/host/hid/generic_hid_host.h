@@ -15,6 +15,7 @@ public:
     uint16_t tick_analog(proto_Output& type);
 
 private:
+    void read_current_state();
     uint8_t m_ep_in = 0;
     uint8_t m_ep_out = 0;
     uint8_t m_ep_in_size;

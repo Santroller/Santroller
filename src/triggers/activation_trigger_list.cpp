@@ -28,9 +28,22 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
     {
         return false;
     }
+    // A held button is only seen once its device sends a report, which can be after a profile
+    // further down claimed the device. Reading it anyway lets the startup trigger latch and reload,
+    // and the reload then picks the profiles in order again
+    bool reads_claimed = false;
+    if (!claim_devices)
+    {
+        for (auto &trigger : triggers)
+        {
+            reads_claimed |= trigger->awaiting_startup_input();
+        }
+    }
     bool matched = true;
+    bool claimable = true;
     for (auto &trigger : triggers)
     {
+        trigger->set_reads_claimed(reads_claimed);
         if (!trigger->validate(false, full_poll, send_events))
         {
             matched = false;
@@ -39,6 +52,11 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
                 break;
             }
         }
+        if (trigger->matched_claimed())
+        {
+            claimable = false;
+        }
+        trigger->set_reads_claimed(false);
     }
     for (auto &trigger2 : triggers)
     {
@@ -59,7 +77,7 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
         {
             m_last_val = matched;
         }
-        return matched;
+        return matched && claimable;
     }
     for (auto &trigger : triggers)
     {

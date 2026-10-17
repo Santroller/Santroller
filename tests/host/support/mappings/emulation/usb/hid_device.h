@@ -7,9 +7,10 @@ class HIDConfigDevice
 {
 public:
     static inline std::vector<proto_Event> sent_events;
-    static void send_event(proto_Event event, bool force)
+    static bool send_event(proto_Event event, bool force)
     {
         (void)force;
         sent_events.push_back(event);
+        return true;
     }
 };

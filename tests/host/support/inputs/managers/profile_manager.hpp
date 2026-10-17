@@ -19,6 +19,15 @@ public:
         auto it = instances.find(profile_id);
         return it == instances.end() ? std::vector<std::shared_ptr<Instance>>{} : it->second;
     }
+    template <typename Func>
+    void for_each_profile(Func func) const
+    {
+        for (const auto &profile : profiles)
+        {
+            func(profile->profile_id, profile);
+        }
+    }
     // Set by tests
     std::map<uint32_t, std::vector<std::shared_ptr<Instance>>> instances;
+    std::vector<std::shared_ptr<Profile>> profiles;
 };

@@ -542,3 +542,67 @@ TEST_F(SlotTriggerTest, HeldOnTheSlotReadsTheDevice)
     EXPECT_TRUE(list->validate(true, false, false));
     EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::USB, 1), guitar);
 }
+
+namespace
+{
+// The guitar was claimed by a profile further down, as its first report (with the button held)
+// arrived after the profiles were picked
+class ClaimedSlotTriggerTest : public SlotTriggerTest
+{
+protected:
+    std::shared_ptr<Profile> later = make_profile();
+    std::shared_ptr<TestDevice> guitar;
+    std::unique_ptr<ActivationTriggerList> later_list;
+
+    void SetUp() override
+    {
+        SlotTriggerTest::SetUp();
+        profile->profile_id = 10;
+        later->profile_id = 1;
+        ProfileManager::instance().profiles = {profile, later};
+        boot();
+        guitar = plug_in_guitar(10);
+        later_list = std::make_unique<ActivationTriggerList>();
+        later_list->triggers.emplace_back(new UsbTypeActivationTrigger(GuitarHeroGuitar, later, 0, 1, 0));
+        ASSERT_TRUE(later_list->validate(true, false, false));
+    }
+};
+} // namespace
+
+TEST_F(ClaimedSlotTriggerTest, HeldOnADeviceAnotherProfileClaimedReloads)
+{
+    auto list = load_list(profile);
+    EXPECT_FALSE(list->validate(false, false, false));
+    EXPECT_EQ(fake_config::reload_count, 0);
+
+    clock_ms::advance(500);
+    held.push_back(guitar.get());
+    // Still can't claim it, but the reload lets the profiles pick again in order
+    EXPECT_FALSE(list->validate(false, false, false));
+    EXPECT_EQ(fake_config::reload_count, 1);
+    EXPECT_EQ(later->get_claimed_device(DeviceSlotKind::USB, 1), guitar);
+
+    // Reloaded: the guitar is free again, and the latch picks this profile
+    DeviceManager::instance().add_assignable_device(guitar);
+    auto reloaded_profile = make_profile();
+    reloaded_profile->profile_id = 10;
+    ProfileManager::instance().profiles = {reloaded_profile};
+    EXPECT_TRUE(load_list(reloaded_profile)->validate(true, false, false));
+    EXPECT_EQ(reloaded_profile->get_claimed_device(DeviceSlotKind::USB, 1), guitar);
+}
+
+TEST_F(ClaimedSlotTriggerTest, PressedAfterStartupDoesNotReadTheClaimedDevice)
+{
+    auto list = load_list(profile);
+    clock_ms::advance(2500);
+    held.push_back(guitar.get());
+    EXPECT_FALSE(list->validate(false, false, false));
+    EXPECT_EQ(fake_config::reload_count, 0);
+}
+
+TEST_F(ClaimedSlotTriggerTest, ListsWithoutAStartupInputDontReadClaimedDevices)
+{
+    auto list = std::make_unique<ActivationTriggerList>();
+    list->triggers.emplace_back(new UsbTypeActivationTrigger(GuitarHeroGuitar, profile, 0, 1, 0));
+    EXPECT_FALSE(list->validate(false, false, false));
+}

@@ -100,6 +100,11 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
     return latched || (m_any_time && val);
 }
 
+bool InputActivationTrigger::awaiting_startup_input() const
+{
+    return !m_any_time && mode_recently_changed();
+}
+
 StartupTriggerKey InputActivationTrigger::startup_key() const
 {
     return {m_profile->profile_id, m_list_id, m_id, m_input->linked_device_serial()};

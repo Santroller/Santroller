@@ -15,6 +15,7 @@ public:
     void reset();
     int assignedDevices() { return 0; }
     bool reads_input() const override { return true; }
+    bool awaiting_startup_input() const override;
 
 protected:
     proto_InputActivationTrigger m_activation_trigger;

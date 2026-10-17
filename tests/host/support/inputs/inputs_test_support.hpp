@@ -213,10 +213,12 @@ protected:
         UsbHostPresence::instance().reset(0);
         DeviceManager::instance().clear_assignable_devices();
         ProfileManager::instance().instances.clear();
+        ProfileManager::instance().profiles.clear();
     }
     void TearDown() override
     {
         DeviceManager::instance().clear_assignable_devices();
         ProfileManager::instance().instances.clear();
+        ProfileManager::instance().profiles.clear();
     }
 };

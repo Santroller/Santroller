@@ -131,11 +131,50 @@ bool GenericHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferre
     return true;
 }
 
+// Gamepads often only send a report when something changes, so a button held since the device was
+// plugged in wouldn't be seen until something else moved (eg for "Hold Button at Startup"). Ask for
+// the current state of each input report instead, devices that don't support it stall the request
+void GenericHost::read_current_state()
+{
+    if (!m_info)
+    {
+        return;
+    }
+    for (HID_ReportItem_t *item = m_info->FirstReportItem; item; item = item->Next)
+    {
+        if (item->ItemType != HID_REPORT_ITEM_In)
+        {
+            continue;
+        }
+        bool requested = false;
+        for (HID_ReportItem_t *earlier = m_info->FirstReportItem; earlier != item; earlier = earlier->Next)
+        {
+            if (earlier->ItemType == HID_REPORT_ITEM_In && earlier->ReportID == item->ReportID)
+            {
+                requested = true;
+                break;
+            }
+        }
+        if (requested)
+        {
+            continue;
+        }
+        // The interrupt transfer hasn't started yet, so its buffer is free
+        bool ok = true;
+        uint32_t len = get_report(item->ReportID, HID_REPORT_TYPE_INPUT, m_ep_in_buf, m_ep_in_xfer_len, &ok);
+        if (ok && len)
+        {
+            fill_generic_report(m_info, m_ep_in_buf, &m_data);
+        }
+    }
+}
+
 bool GenericHost::set_config()
 {
     UsbHostInterface::set_config();
     if (m_ep_in)
     {
+        read_current_state();
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_xfer_len);
     }
     return true;

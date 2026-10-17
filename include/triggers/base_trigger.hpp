@@ -20,9 +20,17 @@ public:
     virtual bool forcedConsoleMode(ConsoleMode& mode) const { return false; }
     virtual bool xinputOnWindows(bool &enabled) const { return false; }
     virtual bool ps4OrPs5Mode(bool &enabled) const { return false; }
+    // A "Hold Button at Startup" that can still match, so the list should look at its devices even
+    // when another profile has claimed them (they may have claimed it before the button was reported)
+    virtual bool awaiting_startup_input() const { return false; }
+    void set_reads_claimed(bool reads_claimed) { m_reads_claimed = reads_claimed; }
+    // Matched with a device another profile has claimed, so the list can't claim it until a reload
+    bool matched_claimed() const { return m_matched_claimed; }
 
 protected:
     Profile *m_profile;
+    bool m_reads_claimed = false;
+    bool m_matched_claimed = false;
     bool m_initialised = false;
     bool m_last_val = false;
     uint16_t m_last_analog_val = 0;

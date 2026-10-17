@@ -63,6 +63,13 @@ void WiiExtensionDecoder::update_data(const uint8_t *data, uint8_t len, MidiDevi
         }
     }
 
+    // I2C only reads the TaTaCon's button byte (byte 5), but a wiimote reports the whole extension
+    // block, so move the button byte to where read_button expects it
+    if (mType == WiiExtType::WiiTaikoNoTatsujinController && copy_len >= 6)
+    {
+        mBuffer[0] = mBuffer[5];
+    }
+
     // wiibrew: bytes 0 and 1 are 0 0 SX / 0 0 SY, byte 4 is vel<1> 1 1 B- 1 B+ 1 vel<0> and byte 5 ends in 1 1.
     // A corrupted read that slips past verifyData would otherwise turn into a note on some random channel.
     if (mType == WiiExtType::WiiGuitarHeroDrums)

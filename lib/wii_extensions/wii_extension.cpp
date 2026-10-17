@@ -190,7 +190,10 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
         case WII_INPUTS_READ:
         {
             status = WII_INPUTS_WRITE_PTR;
-            if (verifyData(bufferRx, wiiBytes))
+            // The TaTaCon only reads back its button byte, which is active low with the unused
+            // bits set, so 0xFF is the valid idle state rather than a bad init
+            bool valid = mType == WiiExtType::WiiTaikoNoTatsujinController ? bufferRx[0] != 0x00 : verifyData(bufferRx, wiiBytes);
+            if (valid)
             {
                 update_data(bufferRx, wiiBytes, m_device);
                 // Update the led if it changes

@@ -129,6 +129,16 @@ public:
         }
     }
     size_t usb_instance_count() const;
+    // Gamepads profiles are emulating over USB, not counting auxiliary interfaces (eg xinput security)
+    size_t usb_gamepad_count() const { return m_current_subtypes.size(); }
+    // Identifies the USB layout for windows, which keys driver bindings on the serial. 0 for a single HID
+    // gamepad (or nothing), which keeps the plain serial
+    uint32_t usb_layout_hash() const;
+    // Windows with several XInput gamepads gets them as the slots of a 360 wireless receiver, as Steam's xbox
+    // driver only takes one wired controller per USB device. Decided once a config has loaded, so the
+    // descriptors can't change partway through an enumeration
+    void update_xinput_receiver();
+    bool xinput_receiver() const { return m_xinput_receiver; }
     std::shared_ptr<UsbDevice> get_usb_instance(uint8_t id);
     void set_usb_instance(uint8_t id, std::shared_ptr<UsbDevice> instance);
     template <typename Func>
@@ -145,7 +155,8 @@ public:
             last = instance.get();
         }
     }
-    // Whether any profile on USB wants to jump to PS3 mode when RPCS3 probes it
+    // Whether any profile on USB wants to jump to PS3 mode when RPCS3 probes it. RPCS3's passthrough only
+    // takes a single controller, so never with several gamepads on USB
     bool ps3_on_rpcs3() const;
     std::shared_ptr<UsbDevice> get_usb_instance_by_epin(uint8_t ep);
     void set_usb_instance_by_epin(uint8_t ep, std::shared_ptr<UsbDevice> instance);
@@ -171,6 +182,8 @@ private:
     std::vector<SubType> m_current_subtypes;
     bool m_subtypes_changed = false;
     bool m_was_legacy_adapter = false;
+    bool m_xinput_receiver = false;
+    bool m_was_xinput_receiver = false;
     std::unordered_map<uint32_t, std::vector<std::shared_ptr<Instance>>> m_profile_to_instance;
     // The inactive profile load_tool_profile last tried to build, even if that failed
     std::optional<uint32_t> m_tool_profile_id;

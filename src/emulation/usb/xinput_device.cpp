@@ -122,14 +122,21 @@ uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16
     if (itf_desc->bInterfaceSubClass == 0x5D &&
         (itf_desc->bInterfaceProtocol == 0x01 ||
          itf_desc->bInterfaceProtocol == 0x03 ||
-         itf_desc->bInterfaceProtocol == 0x02))
+         itf_desc->bInterfaceProtocol == 0x02 ||
+         itf_desc->bInterfaceProtocol == 0x81))
     {
+        const bool wireless = itf_desc->bInterfaceProtocol == 0x81;
         // Xinput reserved endpoint
         //-------------- Xinput Descriptor --------------//
         p_desc = tu_desc_next(p_desc);
         XBOX_ID_DESCRIPTOR *x_desc =
             (XBOX_ID_DESCRIPTOR *)p_desc;
-        TU_VERIFY(XINPUT_DESC_TYPE_RESERVED == x_desc->bDescriptorType, 0);
+        TU_VERIFY((wireless ? XINPUT_DESC_TYPE_WIRELESS_CAPABILITIES : XINPUT_DESC_TYPE_RESERVED) == x_desc->bDescriptorType, 0);
+        m_wireless = wireless;
+        // A genuine receiver reports a controller linking without being asked
+        m_send_presence = wireless;
+        m_send_link = false;
+        m_send_caps = false;
         drv_len += x_desc->bLength;
         p_desc = tu_desc_next(p_desc);
         TU_VERIFY(usbd_open_edpt_pair(TUD_OPT_RHPORT, p_desc, itf_desc->bNumEndpoints,
@@ -205,6 +212,8 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
     }
     if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
+    if (m_wireless && send_wireless_reply())
+        return;
     // Build at most one report per frame (the host polls every frame), even when an unchanged
     // report isn't sent. Otherwise the mappings would run every loop instead of once per poll,
     // which time based logic like the cymbal glitch fix isn't written for.
@@ -258,15 +267,171 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
         return;
     }
 
-    if (usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, sizeof(XInputGamepad_Data_t), false))
+    memcpy(&m_last_report, epin_buf, sizeof(XInputGamepad_Data_t));
+    uint16_t len = sizeof(XInputGamepad_Data_t);
+    if (m_wireless)
     {
-        memcpy(&m_last_report, epin_buf, sizeof(XInputGamepad_Data_t));
-        m_has_last_report = true;
+        // A receiver wraps the wired report, after its id and size, as 00 01 00 f0 00 13 <report>
+        memmove(epin_buf + 6, epin_buf + 2, sizeof(XInputGamepad_Data_t) - 2);
+        static const uint8_t header[] = {0x00, 0x01, 0x00, 0xf0, 0x00, 0x13};
+        memcpy(epin_buf, header, sizeof(header));
+        len = XINPUT_WIRELESS_PACKET_SIZE;
+        memset(epin_buf + 6 + sizeof(XInputGamepad_Data_t) - 2, 0, len - (6 + sizeof(XInputGamepad_Data_t) - 2));
     }
-    else
+    // m_last_report already holds this report, so it only counts as sent if the transfer started
+    m_has_last_report = usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, len, false);
+    if (!m_has_last_report)
     {
         usbd_edpt_release(TUD_OPT_RHPORT, m_epin);
     }
+}
+
+void XInputGamepadDevice::handle_led(uint8_t led)
+{
+    if (led < sizeof(xbox_players))
+    {
+        uint8_t player = xbox_players[led];
+        if (player || led == 0x00)
+        {
+            set_player_led(player);
+        }
+    }
+}
+
+void XInputGamepadDevice::handle_rumble(uint8_t left, uint8_t right)
+{
+    if (subtype == DjHeroTurntable && left == right)
+    {
+        set_euphoria_led(left);
+    }
+    else if (subtype_supports_stagekit(subtype))
+    {
+        process_stagekit_command(right, left);
+    }
+    else
+    {
+        set_rumble(left, right);
+    }
+}
+
+// Commands xusb22 sends a receiver slot, from a capture of a genuine receiver
+void XInputGamepadDevice::process_wireless_command(const uint8_t *buf, uint32_t len)
+{
+    if (len < 4)
+    {
+        return;
+    }
+    if (buf[0] == 0x08 && buf[2] == 0x0f && buf[3] == 0xc0)
+    {
+        // is anything linked to this slot
+        m_send_presence = true;
+    }
+    else if (buf[0] == 0x00 && buf[1] == 0x00 && buf[2] == 0x00 && buf[3] == 0x40)
+    {
+        // who is linked
+        m_send_link = true;
+    }
+    else if (buf[0] == 0x00 && buf[1] == 0x00 && buf[2] == 0x02 && buf[3] == 0x80)
+    {
+        m_send_caps = true;
+    }
+    else if (buf[0] == 0x00 && buf[1] == 0x00 && buf[2] == 0x08 && (buf[3] & 0xf0) == 0x40)
+    {
+        // same codes as the wired LED command
+        handle_led(buf[3] & 0x0f);
+    }
+    else if (buf[0] == 0x00 && buf[1] == 0x01 && buf[2] == 0x0f && buf[3] == 0xc0 && len >= 7)
+    {
+        handle_rumble(buf[5], buf[6]);
+    }
+}
+
+bool XInputGamepadDevice::send_wireless_reply()
+{
+    if (!m_send_presence && !m_send_link && !m_send_caps)
+    {
+        return false;
+    }
+    memset(epin_buf, 0, XINPUT_WIRELESS_PACKET_SIZE);
+    uint16_t len = XINPUT_WIRELESS_PACKET_SIZE;
+    if (m_send_presence)
+    {
+        // gamepad linked, no headset
+        epin_buf[0] = 0x08;
+        epin_buf[1] = 0x80;
+        len = 2;
+    }
+    else if (m_send_link)
+    {
+        uint8_t receiver[7];
+        receiver_id(receiver);
+        const uint32_t serial = controller_serial(interface_id);
+        // The bytes between the serial and the subtype are what a genuine controller sent
+        const uint8_t link[] = {0x00, 0x0f, 0x00, 0xf0, 0xf0, 0xcc,
+                                receiver[0], receiver[1], receiver[2], receiver[3],
+                                (uint8_t)serial, (uint8_t)(serial >> 8), (uint8_t)(serial >> 16), (uint8_t)(serial >> 24),
+                                0x00, 0x00, 0x13, 0xe3, 0x20, 0x1d, 0x30, 0x03, 0x44, 0x30, 0x51,
+                                get_xinput_subtype(subtype), 0xff, 0xff, 0xff};
+        static_assert(sizeof(link) == XINPUT_WIRELESS_PACKET_SIZE);
+        memcpy(epin_buf, link, sizeof(link));
+    }
+    else
+    {
+        const auto caps = input_capabilities();
+        const uint8_t header[] = {0x00, 0x05, 0x00, 0xf0, 0x00, 0x12};
+        memcpy(epin_buf, header, sizeof(header));
+        // buttons through the right stick, as in the wired report
+        memcpy(epin_buf + sizeof(header), &caps.buttons, 12);
+        epin_buf[18] = 0xff; // left motor
+        epin_buf[19] = 0xff; // right motor
+        memcpy(epin_buf + 20, &caps.flags, sizeof(caps.flags));
+    }
+    if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
+    {
+        return true;
+    }
+    if (!usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, len, false))
+    {
+        usbd_edpt_release(TUD_OPT_RHPORT, m_epin);
+        return true;
+    }
+    if (m_send_presence)
+    {
+        m_send_presence = false;
+    }
+    else if (m_send_link)
+    {
+        m_send_link = false;
+    }
+    else
+    {
+        m_send_caps = false;
+    }
+    // a new report has to go out after these, even if the inputs haven't changed
+    m_has_last_report = false;
+    return true;
+}
+
+uint32_t XInputGamepadDevice::controller_serial(uint8_t itf)
+{
+    pico_unique_board_id_t id;
+    pico_get_unique_board_id(&id);
+    // FNV-1a
+    uint32_t hash = 2166136261u;
+    for (const auto byte : id.id)
+    {
+        hash = (hash ^ byte) * 16777619u;
+    }
+    return (hash ^ itf) * 16777619u;
+}
+
+void XInputGamepadDevice::receiver_id(uint8_t id[7])
+{
+    // board specific, with the tail a genuine receiver sent
+    const uint32_t serial = controller_serial(0xff);
+    const uint8_t receiver[7] = {(uint8_t)serial, (uint8_t)(serial >> 8), (uint8_t)(serial >> 16), (uint8_t)(serial >> 24),
+                                 0x08, 0x0d, 0x13};
+    memcpy(id, receiver, sizeof(receiver));
 }
 
 bool XInputGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
@@ -276,35 +441,23 @@ bool XInputGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, 
         return true;
     }
 
+    if (XFER_RESULT_SUCCESS == result && m_wireless)
+    {
+        process_wireless_command(epout_buf, xferred_bytes);
+        TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x20, false));
+        return true;
+    }
     if (XFER_RESULT_SUCCESS == result)
     {
         XInputLEDReport_t const *ledReport = (XInputLEDReport_t const *)epout_buf;
         XInputRumbleReport_t const *rumbleReport = (XInputRumbleReport_t const *)epout_buf;
         if (ledReport->rid == XBOX_LED_ID)
         {
-            if (ledReport->led < sizeof(xbox_players))
-            {
-                uint8_t player = xbox_players[ledReport->led];
-                if (player || ledReport->led == 0x00)
-                {
-                    set_player_led(player);
-                }
-            }
+            handle_led(ledReport->led);
         }
         else if (rumbleReport->rid == XBOX_RUMBLE_ID)
         {
-            if (subtype == DjHeroTurntable && rumbleReport->leftRumble == rumbleReport->rightRumble)
-            {
-                set_euphoria_led(rumbleReport->leftRumble);
-            }
-            else if (subtype_supports_stagekit(subtype))
-            {
-                process_stagekit_command(rumbleReport->rightRumble, rumbleReport->leftRumble);
-            }
-            else
-            {
-                set_rumble(rumbleReport->leftRumble, rumbleReport->rightRumble);
-            }
+            handle_rumble(rumbleReport->leftRumble, rumbleReport->rightRumble);
         }
         TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, 0x20, false));
     }
@@ -340,48 +493,7 @@ bool XInputGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t
                     if (stage == CONTROL_STAGE_SETUP)
                     {
                         printf("caps\r\n");
-                        XInputInputCapabilities_t XInputInputCapabilities = {
-                            rid : 0x00,
-                            rsize : sizeof(XInputInputCapabilities_t),
-                            buttons : 0xf73f,
-                            leftTrigger : 0xff,
-                            rightTrigger : 0xff,
-                            leftThumbX : USB_VID,
-                            leftThumbY : USB_PID,
-                            rightThumbX : (uint16_t)(USB_VERSION_BCD(subtype, 0, 0)),
-                            rightThumbY : 0xffc0,
-                            reserved : {0x00, 0x00, 0x00, 0x00},
-                            flags : XINPUT_FLAGS_FORCE_FEEDBACK
-                        };
-                        switch (subtype)
-                        {
-                        case LiveGuitar:
-                            XInputInputCapabilities.flags = XINPUT_FLAGS_NO_NAV;
-                            break;
-                        case ProGuitarMustang:
-                            XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
-                            XInputInputCapabilities.leftThumbX = HARMONIX_VID;
-                            XInputInputCapabilities.leftThumbY = XBOX_360_MUSTANG_PID;
-                            break;
-                        case ProGuitarSquier:
-                            XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
-                            XInputInputCapabilities.leftThumbX = HARMONIX_VID;
-                            XInputInputCapabilities.leftThumbY = XBOX_360_SQUIER_PID;
-                            break;
-                        case GuitarHeroDrums:
-                            XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
-                            break;
-                        case RockBandDrums:
-                            // kick 2 and the pad flag, like the MPA
-                            XInputInputCapabilities.buttons = 0xf7ff;
-                            break;
-                        case DjHeroTurntable:
-                            XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
-                            break;
-                        default:
-                            break;
-                        }
-                        XInputInputCapabilities.rightThumbX = USB_VERSION_BCD(subtype, 0, 0);
+                        XInputInputCapabilities_t XInputInputCapabilities = input_capabilities();
                         tud_control_xfer(TUD_OPT_RHPORT, request, (void *)&XInputInputCapabilities, sizeof(XInputInputCapabilities_t));
                     }
                     return true;
@@ -390,6 +502,53 @@ bool XInputGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t
         }
     }
     return false;
+}
+
+XInputInputCapabilities_t XInputGamepadDevice::input_capabilities() const
+{
+        XInputInputCapabilities_t XInputInputCapabilities = {
+            rid : 0x00,
+            rsize : sizeof(XInputInputCapabilities_t),
+            buttons : 0xf73f,
+            leftTrigger : 0xff,
+            rightTrigger : 0xff,
+            leftThumbX : USB_VID,
+            leftThumbY : USB_PID,
+            rightThumbX : (uint16_t)(USB_VERSION_BCD(subtype, 0, 0)),
+            rightThumbY : 0xffc0,
+            reserved : {0x00, 0x00, 0x00, 0x00},
+            flags : XINPUT_FLAGS_FORCE_FEEDBACK
+        };
+        switch (subtype)
+        {
+        case LiveGuitar:
+            XInputInputCapabilities.flags = XINPUT_FLAGS_NO_NAV;
+            break;
+        case ProGuitarMustang:
+            XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
+            XInputInputCapabilities.leftThumbX = HARMONIX_VID;
+            XInputInputCapabilities.leftThumbY = XBOX_360_MUSTANG_PID;
+            break;
+        case ProGuitarSquier:
+            XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
+            XInputInputCapabilities.leftThumbX = HARMONIX_VID;
+            XInputInputCapabilities.leftThumbY = XBOX_360_SQUIER_PID;
+            break;
+        case GuitarHeroDrums:
+            XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
+            break;
+        case RockBandDrums:
+            // kick 2 and the pad flag, like the MPA
+            XInputInputCapabilities.buttons = 0xf7ff;
+            break;
+        case DjHeroTurntable:
+            XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
+            break;
+        default:
+            break;
+        }
+        XInputInputCapabilities.rightThumbX = USB_VERSION_BCD(subtype, 0, 0);
+        return XInputInputCapabilities;
 }
 
 size_t XInputGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -401,6 +560,11 @@ size_t XInputGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t 
         SubCompatibleID : {0},
         Reserved2 : {0}
     };
+    if (ProfileManager::instance().xinput_receiver())
+    {
+        // xusb22's receiver slot driver
+        memcpy(section.CompatibleID, "XUSB20", sizeof("XUSB20"));
+    }
     assert(sizeof(section) <= remaining);
     memcpy(dest, &section, sizeof(section));
     return sizeof(section);
@@ -410,6 +574,13 @@ size_t XInputGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
     lastIntfInput = 0;
     last_caps_query_time = 0;
+    if (ProfileManager::instance().xinput_receiver())
+    {
+        uint8_t desc[] = {TUD_XINPUT_WIRELESS_CONTROLLER_DESCRIPTOR(interface_id, m_epin, m_epout)};
+        assert(sizeof(desc) <= remaining);
+        memcpy(dest, desc, sizeof(desc));
+        return sizeof(desc);
+    }
     uint8_t desc[] = {TUD_XINPUT_GAMEPAD_DESCRIPTOR(interface_id, m_epin, m_epout, get_xinput_subtype(subtype))};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));

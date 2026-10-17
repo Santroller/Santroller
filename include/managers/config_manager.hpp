@@ -108,7 +108,14 @@ public:
         m_requested_mode = ModePs3;
         m_mode_from_profile = true;
     }
-    
+    // Back to the detected host's mode, any profile that forces one puts it back on the next load
+    void clear_rpcs3_detected()
+    {
+        m_rpcs3_detected = false;
+        m_mode_from_profile = false;
+        m_requested_mode = m_detected_mode;
+    }
+
     bool has_seen_assignment(uint32_t mask) const { return m_seen_masks & mask; }
     void mark_seen_assignment(uint32_t mask) { m_seen_masks |= mask; }
     void clear_seen_masks()

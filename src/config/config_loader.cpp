@@ -187,6 +187,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     }
     }
     device_mgr.remove_disconnected_root_devices();
+    profile_mgr.update_xinput_receiver();
     // the HID descriptor gains or loses its battery report, so the host has to see it again
     if (BatteryManager::instance().present_changed())
     {
@@ -198,5 +199,12 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     }
     profile_mgr.finish_config_reload();
     config_mgr.sync_requested_mode_to_current();
+    // RPCS3 was detected with one profile active, but more are now. Its passthrough only takes a single
+    // controller, so leave PS3 mode. The mode no longer matching makes the main loop load again.
+    if (config_mgr.is_rpcs3_detected() && profile_mgr.usb_gamepad_count() > 1)
+    {
+        printf("rpcs3 mode dropped, %zu gamepads\r\n", profile_mgr.usb_gamepad_count());
+        config_mgr.clear_rpcs3_detected();
+    }
     return ret;
 }

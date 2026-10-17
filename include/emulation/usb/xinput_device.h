@@ -11,6 +11,8 @@
 #ifndef CFG_TUD_XINPUT_EPSIZE
 #define CFG_TUD_XINPUT_EPSIZE 64
 #endif
+// Every packet a receiver slot sends on its IN endpoint, except the 2 byte presence reply
+#define XINPUT_WIRELESS_PACKET_SIZE 29
 class XInputSecurityDevice : public UsbDevice
 {
 public:
@@ -48,6 +50,10 @@ public:
     CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
 
     static void reset();
+    // A fixed serial for the pad on this interface, stable across reloads and reboots like a real controller's
+    static uint32_t controller_serial(uint8_t itf);
+    // What a genuine receiver answers its vendor id request (c0 01 wValue 1) with
+    static void receiver_id(uint8_t id[7]);
     static uint8_t xinputInterfaces[4];
     static uint8_t lastIntfInput;
     static uint32_t last_caps_query_time;
@@ -56,6 +62,16 @@ public:
     static bool mounted_since_init;
 
 private:
+    // Receiver slot replies, sent on the IN endpoint ahead of the next input report
+    bool send_wireless_reply();
+    void handle_led(uint8_t led);
+    void handle_rumble(uint8_t left, uint8_t right);
+    void process_wireless_command(const uint8_t *buf, uint32_t len);
+    bool m_wireless = false;
+    bool m_send_presence = false;
+    bool m_send_link = false;
+    bool m_send_caps = false;
+    XInputInputCapabilities_t input_capabilities() const;
     XInputGamepad_Data_t m_initial_report;
     XInputGamepad_Data_t m_last_report;
     bool m_has_last_report = false;

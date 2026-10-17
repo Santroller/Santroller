@@ -167,6 +167,13 @@ bool mode_recently_changed()
 
 // Config chunks arrive back to back, so a gap this long means the tool isn't going to finish
 static constexpr uint32_t CONFIG_WRITE_STALL_MS = 2000;
+// tud_deinit drops the pull-up and resets USBCTRL, so dcd_init's warm restart detach doesn't apply to a
+// reinit. Stay detached long enough for the host to see the port go empty (hubs poll their status endpoint
+// every ~256ms), otherwise Windows can process the new device's arrival before the old one's removal and
+// end up with the previous set of gamepads
+static constexpr uint32_t USB_REINIT_DETACH_MS = 300;
+static bool reattach_pending = false;
+static uint32_t reattach_at = 0;
 
 // Kept out of reload_config, so the event isn't on the stack while the config loads
 static void __noinline send_reload_event()
@@ -247,7 +254,6 @@ void send_debug(uint8_t *data, size_t len)
 
 static void initialize_device_stack()
 {
-    HIDConfigDevice::restart_keepalive();
     UsbDetectionState::instance().restart_enumeration();
     const tusb_rhport_init_t rh_init = {
         .role = TUSB_ROLE_DEVICE,
@@ -259,9 +265,27 @@ static void initialize_device_stack()
 void reinitialize_device_stack()
 {
     ProfileManager::instance().deinitialize_device_bluetooth();
+    // The tool can't reach us while detached. Done now rather than on reattach, so its return grace
+    // starts while it still counts as open, and a reload landing mid-detach doesn't wipe it
+    if (!reattach_pending)
+    {
+        HIDConfigDevice::restart_keepalive();
+    }
     tud_deinit(TUD_OPT_RHPORT);
     ProfileManager::instance().finish_config_reload();
-    initialize_device_stack();
+    reattach_pending = true;
+    reattach_at = millis() + USB_REINIT_DETACH_MS;
+}
+
+// Reports are gated on tud_ready(), so everything else keeps running while detached as it would before
+// a host enumerates us
+static void reattach_device_stack()
+{
+    if (reattach_pending && static_cast<int32_t>(millis() - reattach_at) >= 0)
+    {
+        reattach_pending = false;
+        initialize_device_stack();
+    }
 }
 
 // Picks the profiles again when a USB host comes or goes
@@ -346,11 +370,13 @@ int main()
         secondary_pico_coprocessor_loop();
     }
     printf("init1 %d\r\n", ConfigManager::instance().get_current_mode());
+    HIDConfigDevice::restart_keepalive();
     initialize_device_stack();
     ConfigManager::instance().finish_reinit(millis());
 
     while (1)
     {
+        reattach_device_stack();
         tud_task(); // tinyusb device task
         tuh_task();
         update_usb_host_presence();

@@ -115,7 +115,25 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
   return descriptor_buffer;
 }
 
-static char serial[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2];
+// Room for the board id, and a layout suffix ("-" and 8 hex digits)
+static char serial[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 10];
+
+// Windows keys devices on the serial, both for Steam's cache (which kept showing the previous set of gamepads
+// after a reload added or removed one) and for each interface's driver binding (so switching a gamepad between
+// XInput and HID kept the old driver on it). A layout gets its own serial instead. A single HID gamepad keeps
+// the plain board id, as that's what every board enumerates as before it knows the host is windows.
+static void update_serial()
+{
+  // Only fits 15 of the id's 16 digits, kept that way so existing serials don't change
+  pico_get_unique_board_id_string(serial, PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2);
+  const uint32_t hash = ProfileManager::instance().usb_layout_hash();
+  if (!hash)
+  {
+    return;
+  }
+  const size_t len = strlen(serial);
+  snprintf(serial + len, sizeof(serial) - len, "-%08lx", static_cast<unsigned long>(hash));
+}
 // array of pointer to string descriptors
 char const *string_desc_arr[STRID_COUNT] =
     {
@@ -154,7 +172,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     break;
 
   case STRID_SERIAL:
-    pico_get_unique_board_id_string(serial, sizeof(serial));
+    update_serial();
 
   default:
     if (index == 0xEE)
@@ -275,6 +293,10 @@ void tud_reset(uint8_t rhport)
   XInputGamepadDevice::reset();
 }
 
+// xusb22 reads the serial at device level (wIndex 0) right after each pad's caps and vibration reads, so
+// the pad asking is the last one those went to
+static uint8_t s_last_xinput_itf = 0;
+
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
   if (ConfigManager::instance().get_requested_mode() == ModePdLoader &&
@@ -333,12 +355,24 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
           }
           return true;
         }
+        if (request->bRequest == HID_REQ_CONTROL_GET_REPORT && request->wIndex == 0x0000 && request->wValue == 0x0001 &&
+            ProfileManager::instance().xinput_receiver())
+        {
+          // receiver id, read when xusb22 starts a receiver
+          if (stage == CONTROL_STAGE_SETUP)
+          {
+            static uint8_t id[7];
+            XInputGamepadDevice::receiver_id(id);
+            tud_control_xfer(rhport, request, id, sizeof(id));
+          }
+          return true;
+        }
         if (request->bRequest == HID_REQ_CONTROL_GET_REPORT && request->wIndex == 0x0000 && request->wValue == SERIAL_NUMBER_WVALUE)
         {
           // xinput serial read
           if (stage == CONTROL_STAGE_SETUP)
           {
-            uint32_t serial = to_us_since_boot(get_absolute_time());
+            uint32_t serial = XInputGamepadDevice::controller_serial(s_last_xinput_itf);
             tud_control_xfer(rhport, request, &serial, sizeof(serial));
           }
           return true;
@@ -396,6 +430,16 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     if (has_xinput && wIndex == 0x00 && request->wValue == VIBRATION_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
     {
       wIndex = XInputGamepadDevice::xinputInterfaces[0];
+    }
+    if (request->bRequest == HID_REQ_CONTROL_GET_REPORT)
+    {
+      for (const auto itf : XInputGamepadDevice::xinputInterfaces)
+      {
+        if (itf != 0xFF && itf == wIndex)
+        {
+          s_last_xinput_itf = wIndex;
+        }
+      }
     }
     auto dev = ProfileManager::instance().get_usb_instance(wIndex);
     if (!dev)

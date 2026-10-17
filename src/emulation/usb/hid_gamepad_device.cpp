@@ -303,7 +303,8 @@ uint16_t HIDGamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
   {
   case ReportId::ReportIdPs3F2:
     // RPCS3 sends this when probing the controller
-    if (std::any_of(profiles.begin(), profiles.end(), [](const auto &profile) { return profile->ps3_on_rpcs3; }))
+    if (ProfileManager::instance().usb_gamepad_count() <= 1 &&
+        std::any_of(profiles.begin(), profiles.end(), [](const auto &profile) { return profile->ps3_on_rpcs3; }))
     {
       ConfigManager::instance().rpcs3_detected();
     }

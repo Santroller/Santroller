@@ -9,6 +9,7 @@
 #include "emulation/usb/xone_device.h"
 #include "managers/battery_manager.hpp"
 #include "emulation/bt/bt_gamepad.h"
+#include "emulation/usb/usb_descriptors.h"
 #include <algorithm>
 
 namespace
@@ -60,7 +61,8 @@ bool ProfileManager::changed_types()
     {
         return false;
     }
-    return m_subtypes_changed || m_current_subtypes.size() < m_last_subtypes.size();
+    return m_subtypes_changed || m_current_subtypes.size() < m_last_subtypes.size() ||
+           m_xinput_receiver != m_was_xinput_receiver;
 }
 void ProfileManager::add_profile(uint32_t profile_id, std::shared_ptr<Profile> profile)
 {
@@ -401,6 +403,7 @@ void ProfileManager::prepare_for_config_reload()
     m_last_subtypes = m_current_subtypes;
     m_current_subtypes.clear();
     m_subtypes_changed = false;
+    m_was_xinput_receiver = m_xinput_receiver;
     auto xone = get_emulated_device(ModeXboxOne);
     m_was_legacy_adapter = xone && std::static_pointer_cast<XboxOneGamepadDevice>(xone)->is_legacy_adapter();
     std::copy(std::begin(m_usb_instances), std::end(m_usb_instances), std::begin(m_previous_usb_instances));
@@ -452,6 +455,53 @@ void ProfileManager::set_usb_reload_identity(uint8_t id, ConsoleMode mode, SubTy
     {
         m_usb_reload_identities[id] = {mode, subtype, auxiliary, true, UsbDevice::allocation_state(), {}};
     }
+}
+
+void ProfileManager::update_xinput_receiver()
+{
+    size_t pads = 0;
+    for (const auto &identity : m_usb_reload_identities)
+    {
+        if (identity.valid && !identity.auxiliary && identity.mode == ModeXbox360)
+        {
+            pads++;
+        }
+    }
+    // A 360 console never reads the strings or OS descriptors, so this stays wired there
+    m_xinput_receiver = pads > 1 && UsbDetectionState::instance().host_is_windows();
+}
+
+uint32_t ProfileManager::usb_layout_hash() const
+{
+    // XInput and HID gamepads share the VID/PID and interface numbers, so the mode has to be part of it too
+    bool has_xinput = false;
+    for (const auto &identity : m_usb_reload_identities)
+    {
+        if (identity.valid && !identity.auxiliary && identity.mode == ModeXbox360)
+        {
+            has_xinput = true;
+        }
+    }
+    if (m_current_subtypes.size() < 2 && !has_xinput)
+    {
+        return 0;
+    }
+    // FNV-1a
+    uint32_t hash = 2166136261u;
+    for (const auto subtype : m_current_subtypes)
+    {
+        hash = (hash ^ static_cast<uint8_t>(subtype)) * 16777619u;
+    }
+    for (const auto &identity : m_usb_reload_identities)
+    {
+        if (identity.valid && !identity.auxiliary)
+        {
+            hash = (hash ^ static_cast<uint8_t>(identity.mode)) * 16777619u;
+        }
+    }
+    // the receiver slots bind a different driver (XUSB20) to the same interfaces
+    hash = (hash ^ static_cast<uint8_t>(m_xinput_receiver)) * 16777619u;
+    return hash;
 }
 
 void ProfileManager::finish_usb_instance_initialization(uint8_t id)
@@ -575,6 +625,8 @@ void ProfileManager::clear_all()
     m_last_subtypes.clear();
     m_current_subtypes.clear();
     m_subtypes_changed = false;
+    m_xinput_receiver = false;
+    m_was_xinput_receiver = false;
     m_was_legacy_adapter = false;
     m_emulated_devices.clear();
     std::fill(std::begin(m_usb_instances), std::end(m_usb_instances), nullptr);
@@ -619,6 +671,10 @@ size_t ProfileManager::instance_count() const
 
 bool ProfileManager::ps3_on_rpcs3() const
 {
+    if (usb_gamepad_count() > 1)
+    {
+        return false;
+    }
     for (const auto &instance : m_usb_instances)
     {
         if (!instance)

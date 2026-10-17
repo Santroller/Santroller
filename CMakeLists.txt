@@ -130,7 +130,10 @@ list(PREPEND PICO_BOARD_HEADER_DIRS ${CMAKE_SOURCE_DIR}/boards)
 set(PICO_BOARD_HEADER_DIRS ${PICO_BOARD_HEADER_DIRS} CACHE STRING "PICO board header directories" FORCE)
 set(PFB_WITH_IMAGE_ENCRYPTION OFF)
 set(PFB_WITH_SHA256_HASHING OFF)
-set(PFB_RESERVED_FILESYSTEM_SIZE_KB 8)
+# The config lives in the last 32KB of flash (EEPROM_SIZE_BYTES). Reserving it keeps firmware updates out
+# of it. Changing this moves the download slot, which the bootloader has compiled in, so the app reports
+# that a UF2 update is needed until the bootloader matches (pfb_bootloader_layout_matches)
+set(PFB_RESERVED_FILESYSTEM_SIZE_KB 32)
 set(PFB_WITH_BOOTLOADER_LOGS OFF)
 
 if(DEFINED SANTROLLER_SHARED_GENERATED_DIR)
@@ -372,6 +375,7 @@ add_executable(
   src/devices/bt/ble_rx.cpp
   src/devices/bt/bt_classic_rx.cpp
   src/devices/bt/bluetooth_stack.cpp
+  src/devices/bt/btstack_ram_flash_bank.cpp
   src/devices/bt/usb_dongle_transport.cpp
   src/devices/usb/host/bt_dongle_host.cpp
   src/devices/bt/bt_host.cpp
@@ -521,6 +525,9 @@ target_include_directories(${TARGET} PUBLIC
 
 # endif()
 pico_set_program_name(${TARGET} "Santroller")
+# BTstack's flash bank would sit inside the config, see btstack_ram_flash_bank.cpp
+target_link_options(${TARGET} PRIVATE -Wl,--wrap=pico_flash_bank_instance)
+target_compile_definitions(${TARGET} PRIVATE PFB_RESERVED_FILESYSTEM_SIZE_KB=${PFB_RESERVED_FILESYSTEM_SIZE_KB})
 pico_set_program_version(${TARGET} ${GIT_REPO_VERSION})
 target_link_libraries(
   ${TARGET}

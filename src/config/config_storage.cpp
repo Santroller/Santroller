@@ -5,6 +5,9 @@
 #include "config.pb.h"
 #include "tusb.h"
 #include <algorithm>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <pb_decode.h>
 
 namespace
@@ -184,10 +187,8 @@ ConfigStorage::WriteResult ConfigStorage::write_chunk(const uint8_t *buffer, uin
             EEPROM.writeCache, footer.dataSize);
     memset(EEPROM.writeCache, 0, EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer.dataSize);
     m_have_previous_footer = false;
-    // An upload isn't saved until the tool says so. Until then a cycle or toggle changing state
-    // must not commit the cache, or it would save the upload with it
-    m_preserve_flash = memcmp(EEPROM.writeCache, reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START),
-                              EEPROM_SIZE_BYTES) != 0;
+    // The tool has written a real config, flash can follow the cache again
+    m_preserve_flash = false;
     return WriteResult::Done;
 }
 
@@ -248,7 +249,60 @@ bool ConfigStorage::update_auxiliary(AuxiliaryWriter writer, void *context, bool
     // Pairings changing on an empty fallback config mustn't write it over the config flash still has
     if (commit && !m_preserve_flash)
     {
-        EEPROM.commit();
+        // Committing the cache would also save an upload nobody saved. Then only the aux block goes,
+        // onto the config flash has
+        ConfigImage saved;
+        const bool cache_is_saved = read_flash(saved, false) && saved.main_size == main_size &&
+                                    memcmp(saved.data, EEPROM.writeCache + EEPROM_SIZE_BYTES -
+                                                           sizeof(ConfigFooter) - footer->dataSize,
+                                           main_size) == 0;
+        if (cache_is_saved)
+        {
+            EEPROM.commit();
+        }
+        else
+        {
+            EEPROM.commit(&ConfigStorage::commit_auxiliary, const_cast<ConfigStorage *>(this));
+        }
     }
     return true;
+}
+
+void ConfigStorage::commit_auxiliary() const
+{
+    // Nothing is saved to put the aux block onto, it's saved along with the config when that is
+    ConfigImage saved;
+    ConfigImage cached;
+    if (m_upload_active || !read_flash(saved, false) || !read_flash(cached, true))
+    {
+        return;
+    }
+    const uint32_t data_size = saved.main_size + cached.aux_size;
+    if (data_size > MAX_DATA_SIZE)
+    {
+        return;
+    }
+    // Data sits against the footer, so only the sectors from wherever the old or new data starts to the
+    // end change. Build them all before erasing anything, as the main config is read out of flash
+    const uint32_t used = std::max(saved.data_size, data_size) + sizeof(ConfigFooter);
+    const uint32_t span = (used + FLASH_SECTOR_SIZE - 1) / FLASH_SECTOR_SIZE * FLASH_SECTOR_SIZE;
+    uint8_t *image = static_cast<uint8_t *>(malloc(span));
+    if (!image)
+    {
+        printf("no memory to save the aux config\r\n");
+        return;
+    }
+    const ConfigFooter *old_footer = footer_at(reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START) + EEPROM_SIZE_BYTES);
+    uint8_t *data = image + span - sizeof(ConfigFooter) - data_size;
+    memset(image, 0, span - sizeof(ConfigFooter) - data_size);
+    memcpy(data, saved.data, saved.main_size);
+    memcpy(data + saved.main_size, cached.data + cached.main_size, cached.aux_size);
+    ConfigFooter footer = *old_footer;
+    footer.dataSize = data_size;
+    footer.mainSize = saved.main_size;
+    footer.auxSize = cached.aux_size;
+    footer.dataCrc = CRC32::calculate(data, data_size);
+    memcpy(image + span - sizeof(ConfigFooter), &footer, sizeof(footer));
+    FlashPROM::write_range(EEPROM_SIZE_BYTES - span, image, span);
+    free(image);
 }

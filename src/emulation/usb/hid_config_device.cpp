@@ -645,6 +645,14 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
     }
     case ReportId::ReportIdUpdateFirmware:
     {
+      // An update written with this firmware's layout would be swapped in by the bootloader from where its
+      // own layout puts the download slot. Only a UF2 (bootloader included) can update it safely
+      if (!pfb_bootloader_layout_matches())
+      {
+        printf("Bootloader layout doesn't match, refusing an OTA update\r\n");
+        fw_update_active = false;
+        break;
+      }
       proto_FirmwareUpdate decoded;
       if (!decode_firmware_update(buffer, bufsize, &decoded))
       {

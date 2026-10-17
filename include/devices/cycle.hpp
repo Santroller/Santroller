@@ -14,6 +14,11 @@ public:
     bool using_pin(uint8_t pin);
     void cycle(bool forward);
     uint32_t get_value() {return m_current_value;}
+    // Whether the forward / backward input was down when last seen. Kept here, as stepping can switch
+    // profiles and rebuild the inputs while the button is still held, and the rebuilt input mustn't
+    // take that for a new press
+    bool input_held(bool forward) const { return forward ? m_forward_held : m_backward_held; }
+    void set_input_held(bool forward, bool held) { (forward ? m_forward_held : m_backward_held) = held; }
     void save_reload_state(DeviceReloadState& state) const override;
 private:
     proto_CycleDevice m_device;
@@ -21,4 +26,6 @@ private:
     uint32_t m_current_value;
     uint32_t m_current_index;
     uint32_t m_last = 0;
+    bool m_forward_held = false;
+    bool m_backward_held = false;
 };

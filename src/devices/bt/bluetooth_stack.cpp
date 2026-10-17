@@ -2,6 +2,8 @@
 #include "devices/bt/bluetooth_status.hpp"
 
 #include <pico/cyw43_arch.h>
+#include "hardware/gpio.h"
+#include "hardware/structs/pads_bank0.h"
 #include <pico/async_context_poll.h>
 #include "pico/btstack_run_loop_async_context.h"
 
@@ -15,6 +17,7 @@
 #include "devices/bt/ble_rx.hpp"
 #include "devices/bt/bt_tlv_storage.hpp"
 #include "devices/bt/usb_dongle_transport.hpp"
+#include "devices/bt/usb_dongle.hpp"
 #include "classic/btstack_link_key_db_tlv.h"
 #include "ble/le_device_db_tlv.h"
 extern "C"
@@ -50,6 +53,35 @@ BtStackLock::~BtStackLock()
     if (m_context)
     {
         async_context_release_lock(m_context);
+    }
+}
+
+static const uint8_t s_cyw43_pins[] = {CYW43_DEFAULT_PIN_WL_REG_ON, CYW43_DEFAULT_PIN_WL_DATA_OUT,
+                                        CYW43_DEFAULT_PIN_WL_CS, CYW43_DEFAULT_PIN_WL_CLOCK};
+
+bool BluetoothStack::is_cyw43_pin(uint8_t pin)
+{
+    for (uint8_t cyw43_pin : s_cyw43_pins)
+    {
+        if (pin == cyw43_pin)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+// The CYW43 driver's deinit frees its PIO and DMA but leaves the pins as it set them up: power and
+// chip select driven high, the clock on the PIO with a pull-down and a stronger drive. Put them back
+// to how they come out of reset
+static void release_cyw43_pins()
+{
+    for (uint8_t pin : s_cyw43_pins)
+    {
+        gpio_set_function(pin, GPIO_FUNC_NULL);
+        gpio_set_dir(pin, GPIO_IN);
+        gpio_put(pin, false);
+        pads_bank0_hw->io[pin] = PADS_BANK0_GPIO0_RESET;
     }
 }
 
@@ -92,12 +124,18 @@ bool BluetoothStack::begin()
     {
         printf("BT: CYW43 initialization failed (%d)\r\n", cyw43_err);
     }
+    if (!use_cyw43)
+    {
+        release_cyw43_pins();
+        m_cyw43_pins_released = true;
+    }
 #endif
     if (!use_cyw43)
     {
         // Use the USB adapter when the CYW43 HCI transport is unavailable. BTstack gets its own
         // context, polled from the main loop like TinyUSB, so the two never run at the same time.
-        printf("BT: using a USB bluetooth adapter\r\n");
+        printf(usb_dongle_present() ? "BT: using a USB bluetooth adapter\r\n"
+                                    : "BT: no CYW43, waiting for a USB bluetooth adapter\r\n");
         if (!async_context_poll_init_with_defaults(&s_poll_context))
         {
             printf("BT: couldn't create the bluetooth context\r\n");
@@ -193,6 +231,11 @@ void BluetoothStack::release_wiimote()
         m_wiimote_report = nullptr;
         btstack_classic_set_accept_incoming(true);
     }
+}
+
+bool BluetoothStack::controller_available() const
+{
+    return m_initialized && (!m_usb_dongle || usb_dongle_present());
 }
 
 bool BluetoothStack::initialized() const

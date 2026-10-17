@@ -17,6 +17,8 @@ CycleDevice::CycleDevice(const DeviceReloadState* state, proto_CycleDevice devic
     }
     if (state) {
         m_last = state->debounce_time;
+        m_forward_held = state->cycle_forward_held;
+        m_backward_held = state->cycle_backward_held;
     }
 }
 
@@ -24,6 +26,8 @@ void CycleDevice::save_reload_state(DeviceReloadState& state) const
 {
     state.valid = true;
     state.debounce_time = m_last;
+    state.cycle_forward_held = m_forward_held;
+    state.cycle_backward_held = m_backward_held;
 }
 
 void CycleDevice::begin()

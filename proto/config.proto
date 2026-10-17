@@ -304,6 +304,9 @@ message ConfigInfo {
   // Send firmware uploads as output reports, with a ReportIdUpdateFirmware feature report after each
   // 4096 byte block to wait for it and check it arrived. Only set over bluetooth.
   optional bool streamedFirmwareUpload = 8;
+  // The bootloader has a different flash layout to this firmware, so updates can't go over OTA (the device
+  // refuses them) until it is reflashed from a UF2. needsUf2Update is set too.
+  optional bool bootloaderOutdated = 9;
 }
 
 message GetActiveProfiles {

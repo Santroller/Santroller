@@ -34,6 +34,9 @@ struct DeviceReloadState
     bool seen_midi_channels[18] = {};
     uint32_t last_value = 0;
     uint32_t debounce_time = 0;
+    // Whether a cycling device's forward / backward inputs were down
+    bool cycle_forward_held = false;
+    bool cycle_backward_held = false;
     bool toggle_value = false;
     WiiExtType wii_extension = WiiExtType::WiiNoExtension;
     PS2ControllerType ps2_controller = PS2ControllerType::PS2ControllerTypeUnknown;

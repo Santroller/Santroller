@@ -29,6 +29,7 @@ public:
 private:
     void start_discovery();
     void update_timeout();
+    void set_up_cyw43_pin_users_again();
     proto_BluetoothDevice m_device;
     SyncButton m_sync;
     bool m_timed_out = false;

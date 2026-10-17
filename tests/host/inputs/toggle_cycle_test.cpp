@@ -274,6 +274,43 @@ TEST_F(CycleTest, HoldingStepsOnce)
     }
 }
 
+TEST_F(CycleTest, HoldingThroughAReloadStepsOnce)
+{
+    // Stepping can switch profiles, which rebuilds the inputs while the button is still down. The
+    // rebuilt input mustn't take the button it finds held for a new press, or a state is skipped
+    forward->set(true);
+    EXPECT_EQ(cycle.tick_analog(), 20);
+    clock_ms::advance(150);
+    CycleInput rebuilt;
+    TestInput *held = nullptr;
+    rebuilt.load(proto_CycleInput_init_default, device, test_input(held, pin_id(7)), nullptr);
+    held->set(true);
+    EXPECT_EQ(rebuilt.tick_analog(), 20);
+    // Releasing and pressing again still steps
+    held->set(false);
+    rebuilt.tick_analog();
+    held->set(true);
+    EXPECT_EQ(rebuilt.tick_analog(), 30);
+}
+
+TEST_F(CycleTest, HoldingThroughADeviceReloadStepsOnce)
+{
+    // Same, when a full reload also rebuilds the cycling device from its saved state
+    forward->set(true);
+    EXPECT_EQ(cycle.tick_analog(), 20);
+    clock_ms::advance(150);
+    DeviceReloadState saved;
+    device->save_reload_state(saved);
+    auto reloaded = cycle_device(5, 1, {10, 20, 30}, &saved);
+    reloaded->begin();
+    clock_ms::advance(150);
+    CycleInput rebuilt;
+    TestInput *held = nullptr;
+    rebuilt.load(proto_CycleInput_init_default, reloaded, test_input(held, pin_id(7)), nullptr);
+    held->set(true);
+    EXPECT_EQ(rebuilt.tick_analog(), 20);
+}
+
 TEST_F(CycleTest, BounceWithin100MsIsIgnored)
 {
     forward->set(true);

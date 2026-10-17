@@ -34,6 +34,21 @@ public:
     bool is_powered() const { return m_powered; }
     // True when the CYW43 HCI transport is unavailable and a USB adapter on the host port is used.
     bool uses_usb_dongle() const { return m_usb_dongle; }
+    // Whether there is a controller to use: the CYW43, or a USB adapter that is actually plugged in.
+    // The stack runs without an adapter, waiting for one, but nothing can be done over it until then
+    bool controller_available() const;
+    // The pins a Pico W's CYW43 is wired to. Only claimed while the CYW43 is in use: on a board without
+    // one the probe gives them back, so they're free for anything else
+    static bool is_cyw43_pin(uint8_t pin);
+    bool using_cyw43_pin(uint8_t pin) const { return m_initialized && !m_usb_dongle && is_cyw43_pin(pin); }
+    // True once, after a failed CYW43 probe handed its pins back. Devices set up before the probe had
+    // those pins changed under them
+    bool take_cyw43_pins_released()
+    {
+        bool released = m_cyw43_pins_released;
+        m_cyw43_pins_released = false;
+        return released;
+    }
     // The controller's BD_ADDR (most significant byte first), once the stack is up and
     // running. Returns false if bluetooth isn't enabled or isn't ready yet.
     bool local_address(uint8_t addr[6]) const;
@@ -49,6 +64,7 @@ private:
     bool m_initialized = false;
     bool m_powered = false;
     bool m_usb_dongle = false;
+    bool m_cyw43_pins_released = false;
     bool m_restarting = false;
     void *m_wiimote_report = nullptr;
     uint16_t m_device_id = 0;

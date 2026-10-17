@@ -67,23 +67,22 @@ void flash_write_end()
 
 alignas(uint32_t) uint8_t FlashPROM::writeCache[EEPROM_SIZE_BYTES];
 
-int64_t writeToFlash(alarm_id_t id, void *flashCache)
+void FlashPROM::write_range(uint32_t offset, const uint8_t *data, uint32_t size)
 {
-	const uint8_t *flash_base = reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START);
-	const uint8_t *cache_base = reinterpret_cast<const uint8_t *>(flashCache);
+	const uint8_t *flash_base = reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START) + offset;
 
-	// Quick check: if the entire flash already matches the cache, nothing to do.
-	if (memcmp(flash_base, cache_base, EEPROM_SIZE_BYTES) == 0)
+	// Quick check: if the whole range already matches, nothing to do.
+	if (memcmp(flash_base, data, size) == 0)
 	{
-		return 0;
+		return;
 	}
 
 	flash_write_begin();
 
-	for (uint32_t sector_offset = 0; sector_offset < EEPROM_SIZE_BYTES; sector_offset += FLASH_SECTOR_SIZE)
+	for (uint32_t sector_offset = 0; sector_offset < size; sector_offset += FLASH_SECTOR_SIZE)
 	{
 		const uint8_t *flash_sec = flash_base + sector_offset;
-		const uint8_t *cache_sec = cache_base + sector_offset;
+		const uint8_t *cache_sec = data + sector_offset;
 
 		// Skip sectors that are already identical to the cache
 		if (memcmp(flash_sec, cache_sec, FLASH_SECTOR_SIZE) == 0)
@@ -92,7 +91,7 @@ int64_t writeToFlash(alarm_id_t id, void *flashCache)
 		}
 
 		// Erase this modified sector
-		uint32_t flash_offset = (intptr_t)EEPROM_ADDRESS_START - (intptr_t)XIP_BASE + sector_offset;
+		uint32_t flash_offset = (intptr_t)EEPROM_ADDRESS_START - (intptr_t)XIP_BASE + offset + sector_offset;
 		auto status = save_and_disable_interrupts();
 		flash_range_erase(flash_offset, FLASH_SECTOR_SIZE);
 		restore_interrupts(status);
@@ -127,8 +126,6 @@ int64_t writeToFlash(alarm_id_t id, void *flashCache)
 	}
 
 	flash_write_end();
-
-	return 0;
 }
 
 void FlashPROM::start()
@@ -137,21 +134,39 @@ void FlashPROM::start()
 	memcpy(writeCache, reinterpret_cast<uint8_t *>(EEPROM_ADDRESS_START), EEPROM_SIZE_BYTES);
 }
 
-void FlashPROM::commit()
+void FlashPROM::commit(CommitWriter writer, void *context)
 {
+	if (!writer)
+	{
+		m_writer = nullptr;
+	}
+	else if (should_commit_at == 0 || m_writer)
+	{
+		m_writer = writer;
+		m_writer_context = context;
+	}
 	should_commit_at = to_ms_since_boot(get_absolute_time()) + EEPROM_WRITE_WAIT;
 }
 
 void FlashPROM::commit_now()
 {
-	writeToFlash(0, writeCache);
+	write_range(0, writeCache, EEPROM_SIZE_BYTES);
 }
 void FlashPROM::tick()
 {
 	if (should_commit_at != 0 && to_ms_since_boot(get_absolute_time()) >= should_commit_at)
 	{
-		commit_now();
 		should_commit_at = 0;
+		CommitWriter writer = m_writer;
+		m_writer = nullptr;
+		if (writer)
+		{
+			writer(m_writer_context);
+		}
+		else
+		{
+			commit_now();
+		}
 	}
 }
 void FlashPROM::reset()

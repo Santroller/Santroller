@@ -1,4 +1,5 @@
 #include "config/config.hpp"
+#include <pico_fota_bootloader/core.h>
 #include <cstring>
 #include "xbox_dongle_firmware.h"
 #include "devices/bt/bt_tlv_storage.hpp"
@@ -978,13 +979,19 @@ uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload)
     info.magic = metadata.magic;
     info.mainSize = metadata.main_size;
     info.auxSize = metadata.aux_size;
+    bool needs_uf2 = false;
 #if defined(ENABLE_XBOX_WIRELESS) && ENABLE_XBOX_WIRELESS
     bool missing = (xbox_get_static_firmware_header() == NULL);
     info.has_missingStaticFirmware = true;
     info.missingStaticFirmware = missing;
-    info.has_needsUf2Update = true;
-    info.needsUf2Update = missing;
+    needs_uf2 |= missing;
 #endif
+    const bool bootloader_outdated = !pfb_bootloader_layout_matches();
+    info.has_bootloaderOutdated = true;
+    info.bootloaderOutdated = bootloader_outdated;
+    needs_uf2 |= bootloader_outdated;
+    info.has_needsUf2Update = true;
+    info.needsUf2Update = needs_uf2;
     if (streamed_upload)
     {
         info.has_streamedFirmwareUpload = true;

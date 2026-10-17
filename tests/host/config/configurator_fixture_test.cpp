@@ -58,6 +58,8 @@ protected:
         DeviceFactory::clear_cycle_states();
         DeviceFactory::clear_toggle_states();
         DeviceFactory::clear_bluetooth_pairing_states();
+        // A load in an earlier test would otherwise keep the pairings in memory over the fixture's
+        ConfigLoader::reset_bluetooth_loaded();
     }
 
     // Send the fixture as the tool does: the info report, then the data, each zero padded to 63 bytes

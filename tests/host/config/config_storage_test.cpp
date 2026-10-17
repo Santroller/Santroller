@@ -584,7 +584,7 @@ bool write_aux(uint8_t *buffer, uint32_t capacity, uint32_t &written, void *cont
 TEST_F(ConfigStorageTest, UpdatingTheAuxBlockKeepsTheMainConfigAndCommits)
 {
     const auto main = pattern(400, 70);
-    ASSERT_EQ(upload(storage, main, pattern(30, 71)), WriteResult::Done);
+    boot_with_flash_image(main, pattern(30, 71));
     AuxWrite aux{pattern(55, 72)};
     ASSERT_TRUE(storage.update_auxiliary(write_aux, &aux));
     // The new block is built in the free space in front of the stored config, so it can't be bigger
@@ -600,6 +600,69 @@ TEST_F(ConfigStorageTest, UpdatingTheAuxBlockKeepsTheMainConfigAndCommits)
     run_pending_commit();
     ASSERT_TRUE(storage.read_flash(image, false));
     EXPECT_EQ(image_bytes(image), concat(main, aux.bytes));
+}
+
+// Where a cycle is, or a new pairing, is the device's own state, and is saved as it changes. An upload is
+// only saved when the tool says so, so saving that state mustn't save an upload along with it
+class AuxOverAnUnsavedUpload : public ConfigStorageTest, public ::testing::WithParamInterface<size_t>
+{
+};
+
+TEST_P(AuxOverAnUnsavedUpload, OnlyTheAuxBlockReachesFlash)
+{
+    const auto saved_main = pattern(5000, 92);
+    boot_with_flash_image(saved_main, pattern(300, 93));
+    const auto uploaded_main = pattern(7000, 94);
+    ASSERT_EQ(upload(storage, uploaded_main, pattern(10, 95)), WriteResult::Done);
+
+    // Bigger and smaller than the saved block, so the saved config has to move both ways
+    AuxWrite aux{pattern(GetParam(), 96)};
+    ASSERT_TRUE(storage.update_auxiliary(write_aux, &aux));
+    EXPECT_NE(EEPROM.should_commit_at, 0u);
+    run_pending_commit();
+
+    ConfigImage image;
+    ASSERT_TRUE(storage.read_flash(image, false));
+    EXPECT_EQ(image.main_size, saved_main.size());
+    EXPECT_EQ(image_bytes(image), concat(saved_main, aux.bytes));
+    // and the device carries on with the upload
+    ASSERT_TRUE(storage.read_flash(image, true));
+    EXPECT_EQ(image_bytes(image), concat(uploaded_main, aux.bytes));
+
+    // Saving it later still saves the upload with the latest aux block
+    EEPROM.commit_now();
+    ASSERT_TRUE(storage.read_flash(image, false));
+    EXPECT_EQ(image_bytes(image), concat(uploaded_main, aux.bytes));
+}
+
+INSTANTIATE_TEST_SUITE_P(AuxSizes, AuxOverAnUnsavedUpload, ::testing::Values(size_t(40), size_t(6000)));
+
+TEST_F(ConfigStorageTest, AuxOverAnUploadWithNothingSavedLeavesFlashAlone)
+{
+    // There's no saved config to put the aux block onto, it's saved with the config when that is
+    ASSERT_EQ(upload(storage, pattern(400, 97), pattern(30, 98)), WriteResult::Done);
+    AuxWrite aux{pattern(55, 99)};
+    ASSERT_TRUE(storage.update_auxiliary(write_aux, &aux));
+    run_pending_commit();
+    ConfigImage image;
+    EXPECT_FALSE(storage.read_flash(image, false));
+    EXPECT_EQ(fake_flash::erase_count, 0u);
+}
+
+TEST_F(ConfigStorageTest, AWholeCommitWaitingWinsOverAnAuxOnlyOne)
+{
+    // A save already waiting has everything an aux-only commit would write, and more
+    const auto saved_main = pattern(300, 100);
+    boot_with_flash_image(saved_main, pattern(20, 101));
+    const auto uploaded_main = pattern(500, 102);
+    ASSERT_EQ(upload(storage, uploaded_main, {}), WriteResult::Done);
+    EEPROM.commit();
+    AuxWrite aux{pattern(25, 103)};
+    ASSERT_TRUE(storage.update_auxiliary(write_aux, &aux));
+    run_pending_commit();
+    ConfigImage image;
+    ASSERT_TRUE(storage.read_flash(image, false));
+    EXPECT_EQ(image_bytes(image), concat(uploaded_main, aux.bytes));
 }
 
 TEST_F(ConfigStorageTest, AnAuxUpdateCanLeaveFlashAlone)

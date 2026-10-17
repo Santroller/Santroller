@@ -6,6 +6,7 @@
 #include "managers/config_manager.hpp"
 #include "managers/inactivity_manager.hpp"
 #include "managers/profile_manager.hpp"
+#include "managers/device_manager.hpp"
 #include "devices/bt/bt_classic_rx.hpp"
 #include "devices/bt/ble_rx.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
@@ -14,6 +15,32 @@
 BluetoothDevice::BluetoothDevice(proto_BluetoothDevice device, uint16_t id) : Device(id), m_device(device), m_sync(device.has_syncPin ? device.syncPin : -1)
 {
 }
+// No CYW43, so its pins are free again, but the probe drove them. A device set up before the probe on any
+// of them has to set up again, which a full reload does (the stack stays up, so the probe isn't repeated)
+void BluetoothDevice::set_up_cyw43_pin_users_again()
+{
+    if (!BluetoothStack::instance().take_cyw43_pins_released())
+    {
+        return;
+    }
+    bool clash = false;
+    DeviceManager::instance().for_each_active_device([&](const std::shared_ptr<Device> &device) {
+        for (uint8_t pin = 0; pin < NUM_BANK0_GPIOS; pin++)
+        {
+            if (device.get() != this && BluetoothStack::is_cyw43_pin(pin) && device->using_pin(pin))
+            {
+                clash = true;
+            }
+        }
+    });
+    if (clash)
+    {
+        printf("bt: devices use the CYW43 pins, setting them up again\r\n");
+        ConfigManager::instance().set_full_reload(true);
+        reload();
+    }
+}
+
 void BluetoothDevice::begin()
 {
     m_sync.begin();
@@ -25,13 +52,18 @@ void BluetoothDevice::begin()
         {
             BluetoothStack::instance().power_on();
         }
+        // Something else (eg a bluetooth profile) may have started the stack first
+        set_up_cyw43_pin_users_again();
+        ConfigManager::instance().set_bluetooth_available(BluetoothStack::instance().controller_available());
         return;
     }
     printf("bt device init\r\n");
     if (BluetoothStack::instance().begin())
     {
+        set_up_cyw43_pin_users_again();
         BluetoothStack::instance().power_on();
-        ConfigManager::instance().set_bluetooth_available(true);
+        // Without a CYW43 this waits for a USB adapter, see update()
+        ConfigManager::instance().set_bluetooth_available(BluetoothStack::instance().controller_available());
         printf("bt device init success\r\n");
     }
     else
@@ -70,6 +102,16 @@ BluetoothDevice::~BluetoothDevice()
 
 void BluetoothDevice::update(bool full_poll, bool send_events)
 {
+    // A USB adapter was plugged in or pulled out. Profiles only make their bluetooth instances when
+    // they load, so reload for them to pick it up (or drop it)
+    bool available = BluetoothStack::instance().controller_available();
+    if (available != ConfigManager::instance().has_bluetooth())
+    {
+        printf("bt controller %s\r\n", available ? "available" : "gone");
+        ConfigManager::instance().set_bluetooth_available(available);
+        reload();
+        full_poll = true;
+    }
     // full polls only happen when a tool loads or the profile changes, so host connections and
     // disconnections are sent as they happen too
     bool host_connected = bluetooth_host_connected();
@@ -136,7 +178,7 @@ void BluetoothDevice::update_timeout()
 
 bool BluetoothDevice::using_pin(uint8_t pin)
 {
-    return pin == 23 || pin == 24 || pin == 25 || pin == 29 || m_sync.using_pin(pin);
+    return BluetoothStack::instance().using_cyw43_pin(pin) || m_sync.using_pin(pin);
 }
 
 #include "bluetooth.h"

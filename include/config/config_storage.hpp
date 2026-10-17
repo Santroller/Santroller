@@ -36,8 +36,7 @@ public:
     // Run from an empty config held in the cache only. Flash keeps whatever it had (eg a config this
     // firmware couldn't load) until the tool writes a real one or saves, see preserving_flash
     bool initialize_empty();
-    // Set by initialize_empty, and by an upload that differs from flash: nothing but an explicit save
-    // (or an upload matching flash) may commit the cache to flash
+    // Set by initialize_empty: nothing but an upload or an explicit save may commit the cache to flash
     bool preserving_flash() const { return m_preserve_flash; }
     void stop_preserving_flash() { m_preserve_flash = false; }
     bool read_flash(ConfigImage &image, bool cached) const;
@@ -50,9 +49,14 @@ public:
     bool upload_active() const { return m_upload_active; }
     // Throw away an upload that failed or was never finished, putting back the config it was replacing
     void abort_write();
-    // Rewrite the aux block from writer, committing it to flash unless commit is false
+    // Rewrite the aux block from writer, committing it to flash unless commit is false. If the cache
+    // holds an upload that hasn't been saved, only the aux block is committed, onto the config flash
+    // already has: the upload stays unsaved
     bool update_auxiliary(AuxiliaryWriter writer, void *context = nullptr, bool commit = true) const;
 private:
+    // Write flash's saved config back with the cache's aux block, see update_auxiliary
+    void commit_auxiliary() const;
+    static void commit_auxiliary(void *storage) { static_cast<const ConfigStorage *>(storage)->commit_auxiliary(); }
     bool m_should_commit = false;
     bool m_preserve_flash = false;
     // Set while write_info's upload is waiting for its data

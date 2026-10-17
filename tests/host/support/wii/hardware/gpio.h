@@ -6,6 +6,8 @@ enum gpio_function
 {
     GPIO_FUNC_I2C = 3,
 };
+// RP2040's count, the real one comes from hardware/platform_defs.h
+#define NUM_BANK0_GPIOS 30
 #define GPIO_OUT 1
 #define GPIO_IN 0
 void gpio_init(unsigned int gpio);

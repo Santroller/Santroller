@@ -14,6 +14,9 @@ void CycleInput::load(proto_CycleInput config, std::shared_ptr<CycleDevice> devi
     m_input_reverse = std::move(input_reverse);
     m_device = device;
     m_last_toggled = 0;
+    // Carry on from what the device last saw, see CycleDevice::input_held
+    m_last_state = device->input_held(true);
+    m_last_state_reverse = device->input_held(false);
 }
 void CycleInput::setup()
 {
@@ -39,6 +42,7 @@ uint16_t CycleInput::tick_analog()
             m_device->cycle(true);
         }
         m_last_state = m_input->tick_digital();
+        m_device->set_input_held(true, m_last_state);
     }
     if (m_input_reverse)
     {
@@ -47,6 +51,7 @@ uint16_t CycleInput::tick_analog()
             m_device->cycle(false);
         }
         m_last_state_reverse = m_input_reverse->tick_digital();
+        m_device->set_input_held(false, m_last_state_reverse);
     }
     return m_device->get_value();
 }

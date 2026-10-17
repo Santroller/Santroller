@@ -219,8 +219,10 @@ TEST_F(AuxConfigTest, EncodingFailsWhenItDoesNotFit)
 
 TEST_F(AuxConfigTest, SavedStateSurvivesAnAuxUpdateAndAReboot)
 {
-    // update_aux_cycle and friends: change the state, rewrite the aux block, commit
+    // update_aux_cycle and friends: change the state, rewrite the aux block, commit. The config was saved,
+    // an upload that wasn't is covered by the storage tests
     ASSERT_EQ(upload(storage, encode_config({}), {}), ConfigStorage::WriteResult::Done);
+    EEPROM.commit_now();
     DeviceFactory::set_cycle_state(12, 3);
     DeviceFactory::set_toggle_state(13, true);
     DeviceFactory::set_bluetooth_pairing_state(0, MAC, "Pad", false);

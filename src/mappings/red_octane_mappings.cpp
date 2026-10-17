@@ -573,7 +573,8 @@ void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibrated_value >> 8;
+        // whammy rests at 0x80 and goes up to 0xFF
+        report->whammy = 0x80 + (m_calibrated_value >> 9);
         break;
     case GuitarHeroGuitar_Tilt:
         report->tilt = tilt;
@@ -1285,7 +1286,8 @@ void LiveGuitarAxisMapping::update_ps3(uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghlAxis)
     {
     case GuitarHeroLiveGuitar_Whammy:
-        report->whammy = m_calibrated_value >> 8;
+        // whammy rests at 0x80 and goes up to 0xFF
+        report->whammy = 0x80 + (m_calibrated_value >> 9);
         break;
     case GuitarHeroLiveGuitar_Tilt:
         report->tilt = m_calibrated_value >> 8;

@@ -132,9 +132,12 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
             if (pressure != m_last_sent_pressure || calcVal != m_last_sent_value || full_poll)
             {
                 proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, pressure, calcVal ? (uint32_t)65535 : (uint32_t)0}}};
-                HIDConfigDevice::send_event(event, false);
-                m_last_sent_pressure = pressure;
-                m_last_sent_value = calcVal;
+                // only mark as sent once it is queued, so a full queue retries next tick instead of losing a release
+                if (HIDConfigDevice::send_event(event, false))
+                {
+                    m_last_sent_pressure = pressure;
+                    m_last_sent_value = calcVal;
+                }
             }
         }
         else
@@ -142,14 +145,18 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
             if (calcVal != m_last_sent_value || full_poll)
             {
                 proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, calcVal, calcVal}}};
-                HIDConfigDevice::send_event(event, false);
-                m_last_sent_value = calcVal;
+                if (HIDConfigDevice::send_event(event, false))
+                {
+                    m_last_sent_value = calcVal;
+                }
             }
             if (m_input->has_independent_analog_value() && (pressure != m_last_sent_pressure || full_poll))
             {
                 proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, pressure, calcVal ? (uint32_t)65535 : (uint32_t)0}}};
-                HIDConfigDevice::send_event(event, false);
-                m_last_sent_pressure = pressure;
+                if (HIDConfigDevice::send_event(event, false))
+                {
+                    m_last_sent_pressure = pressure;
+                }
             }
         }
     }
@@ -283,10 +290,12 @@ void AxisMapping::update(bool full_poll, bool send_events)
         }
         if (event_value != m_last_sent_value || val != m_last_sent_calibrated_value || full_poll)
         {
-            m_last_sent_value = event_value;
-            m_last_sent_calibrated_value = val;
             proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, event_value, val}}};
-            HIDConfigDevice::send_event(event, false);
+            if (HIDConfigDevice::send_event(event, false))
+            {
+                m_last_sent_value = event_value;
+                m_last_sent_calibrated_value = val;
+            }
         }
         return;
     }
@@ -430,9 +439,11 @@ void AxisMapping::update(bool full_poll, bool send_events)
 
     if (send_events && (uncalibrated != m_last_sent_value || m_calibrated_value != m_last_sent_calibrated_value || full_poll))
     {
-        m_last_sent_value = uncalibrated;
-        m_last_sent_calibrated_value = m_calibrated_value;
         proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, uncalibrated, m_calibrated_value}}};
-        HIDConfigDevice::send_event(event, false);
+        if (HIDConfigDevice::send_event(event, false))
+        {
+            m_last_sent_value = uncalibrated;
+            m_last_sent_calibrated_value = m_calibrated_value;
+        }
     }
 }

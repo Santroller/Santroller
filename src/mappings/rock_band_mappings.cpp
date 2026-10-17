@@ -1996,8 +1996,10 @@ void ProKeysKeyMapping::update(bool full_poll, bool send_events)
         if (send_events && (any_pressed != m_last_sent_pressed || full_poll))
         {
             proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, any_pressed, any_pressed}}};
-            HIDConfigDevice::send_event(event, false);
-            m_last_sent_pressed = any_pressed;
+            if (HIDConfigDevice::send_event(event, false))
+            {
+                m_last_sent_pressed = any_pressed;
+            }
         }
     }
     else
@@ -2052,8 +2054,10 @@ void ProKeysKeyMapping::update(bool full_poll, bool send_events)
         if (send_events && (m_single_pressed != m_last_sent_pressed || full_poll))
         {
             proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, m_single_pressed, m_single_pressed}}};
-            HIDConfigDevice::send_event(event, false);
-            m_last_sent_pressed = m_single_pressed;
+            if (HIDConfigDevice::send_event(event, false))
+            {
+                m_last_sent_pressed = m_single_pressed;
+            }
         }
     }
 }

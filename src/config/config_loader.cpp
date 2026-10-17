@@ -123,6 +123,8 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     }
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
     InactivityManager::instance().configure(config.has_inactivity ? &config.inactivity : nullptr);
+    ConfigManager::instance().set_device_name(config.has_deviceName ? config.deviceName : nullptr);
+    profile_mgr.refresh_bt_config_name();
     if (config.has_peripheralBoot)
     {
         i2c_inst_t *i2c_block = config.peripheralBoot.i2c.block == 1 ? i2c1 : i2c0;

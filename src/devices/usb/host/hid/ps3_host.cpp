@@ -329,6 +329,24 @@ bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
                 printf("Switch arcade: invalid input transfer (result %u, length %lu)\n",
                        static_cast<unsigned>(result), static_cast<unsigned long>(xferred_bytes));
         }
+        if (m_subtype == RockBandGuitar && result == XFER_RESULT_SUCCESS)
+        {
+            // rb whammy goes from 0x00 to 0xFF, but resets to 0x7F after a second or two of no movement,
+            // so if it jumps to 0x7F after sitting still, keep reporting the last real value instead
+            auto *data = reinterpret_cast<PS3RockBandGuitar_Data_t *>(m_ep_in_buf);
+            const uint8_t raw = data->whammy;
+            const uint32_t now = millis();
+            if (raw != m_rb_whammy_raw)
+            {
+                if (raw != 0x7F || (now - m_rb_whammy_changed) < 750)
+                {
+                    m_rb_whammy_value = raw;
+                }
+                m_rb_whammy_raw = raw;
+                m_rb_whammy_changed = now;
+            }
+            data->whammy = m_rb_whammy_value;
+        }
         if ((m_subtype == ProKeys || m_subtype == ProGuitarMustang || m_subtype == ProGuitarSquier) &&
             (millis() - m_last_pro_instrument_poke) >= 8000)
         {
@@ -752,7 +770,12 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             switch (type.mapping.ghAxis)
             {
             case GuitarHeroGuitar_Whammy:
-                return data->whammy << 8;
+                // whammy rests at 0x7F/0x80 and goes up to 0xFF, so rescale 0x80-0xFF to the full range
+                if (data->whammy <= 0x80)
+                {
+                    return 0;
+                }
+                return ((data->whammy - 0x80) * 0xFFFFu) / 0x7F;
             case GuitarHeroGuitar_Tilt:
                 // tilt is inverted on the PS3, so we need to invert it here 
                 if (data->tilt < 0x180)
@@ -776,7 +799,12 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             switch (type.mapping.ghlAxis)
             {
             case GuitarHeroLiveGuitar_Whammy:
-                return data->whammy << 8;
+                // whammy rests at 0x7F/0x80 and goes up to 0xFF, so rescale 0x80-0xFF to the full range
+                if (data->whammy <= 0x80)
+                {
+                    return 0;
+                }
+                return ((data->whammy - 0x80) * 0xFFFFu) / 0x7F;
             case GuitarHeroLiveGuitar_Tilt:
                 return data->tilt << 8;
             default:

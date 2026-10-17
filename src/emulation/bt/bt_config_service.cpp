@@ -451,7 +451,7 @@ void bt_config_service_disconnected()
     clear_prepared_write();
 }
 
-void bt_config_service_process(bool full_poll, bool send_events)
+void bt_config_service_handle_requests()
 {
     if (!s_registered)
     {
@@ -525,7 +525,15 @@ void bt_config_service_process(bool full_poll, bool send_events)
             }
         }
     }
+}
 
+void bt_config_service_process(bool full_poll, bool send_events)
+{
+    if (!s_registered)
+    {
+        return;
+    }
+    bt_config_service_handle_requests();
     hid_config_bt_process(full_poll, send_events);
 }
 

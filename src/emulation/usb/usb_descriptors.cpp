@@ -121,7 +121,7 @@ char const *string_desc_arr[STRID_COUNT] =
     {
         (const char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
         "sanjay900",                // 1: Manufacturer
-        "Santroller",               // 2: Product
+        "Santroller",               // 2: Product, unless the device is named
         serial,                     // 3: Serials will use unique ID if possible
         "MSFT100\x20"};
 
@@ -163,7 +163,11 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
       index = STRID_MSFT;
     }
 
-    if ((index < sizeof(string_desc_arr) / sizeof(string_desc_arr[0])))
+    if (index == STRID_PRODUCT && ConfigManager::instance().get_device_name())
+    {
+      str = ConfigManager::instance().get_device_name();
+    }
+    else if ((index < sizeof(string_desc_arr) / sizeof(string_desc_arr[0])))
     {
       str = string_desc_arr[index];
     }

@@ -5,6 +5,11 @@
 // HID service over BLE. ATT requests are queued from the bluetooth stack and handed to
 // HIDConfigDevice from the main loop, with the ATT response held back until they are handled.
 
+// The Web Bluetooth config service (bt_config.gatt, 53414E54-524F-4C4C-4552-000000000000), little endian. It's
+// advertised so the configurator, and other Santrollers, can recognise us whatever the device is named
+static const uint8_t santroller_config_service_uuid_le[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x52, 0x45,
+                                                              0x4C, 0x4C, 0x4F, 0x52, 0x54, 0x4E, 0x41, 0x53};
+
 // Registers the service with the ATT server. Call with the bluetooth stack lock held, after att_server_init.
 // hid_start / hid_end is the config HID service in the current GATT database, the Web Bluetooth service is found by UUID
 void bt_config_service_init(uint16_t hid_start, uint16_t hid_end);
@@ -14,6 +19,9 @@ void bt_config_service_deinit();
 const uint8_t *bt_config_only_profile(uint16_t *hid_start, uint16_t *hid_end);
 // Services queued requests, call from the main loop
 void bt_config_service_process(bool full_poll, bool send_events);
+// Only hands queued reads and writes to HIDConfigDevice, for while the rest of the device is held off
+// (a config upload), as each write's ATT response waits on it
+void bt_config_service_handle_requests();
 // Call from the bluetooth stack when the connection drops
 void bt_config_service_disconnected();
 

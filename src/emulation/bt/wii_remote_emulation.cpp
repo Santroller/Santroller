@@ -37,27 +37,34 @@ void WiiRemoteEmulationDeviceInstance::deinitialize()
     }
 }
 
+void WiiRemoteEmulationDeviceInstance::set_up_extension(uint8_t detected_format)
+{
+    m_extension_subtype = subtype;
+    m_extension_type = subtype == Gamepad ? WIIMOTE_EXTENSION_CLASSIC :
+                       subtype == GuitarHeroGuitar ? WIIMOTE_EXTENSION_GUITAR :
+                       subtype == GuitarHeroDrums ? WIIMOTE_EXTENSION_DRUMS :
+                       subtype == DjHeroTurntable ? WIIMOTE_EXTENSION_TURNTABLE :
+                       subtype == Taiko ? WIIMOTE_EXTENSION_TAIKO :
+                       WIIMOTE_EXTENSION_CLASSIC;
+    m_extension_format = wii_extension_format_for_subtype(subtype, detected_format);
+    initialize_wii_extension_report(subtype, m_extension_format, m_extension_initial_report, &m_extension_size,
+                                    &m_buttons_low_idx, &m_buttons_high_idx);
+    memcpy(m_extension_report, m_extension_initial_report, sizeof(m_extension_report));
+}
+
 void WiiRemoteEmulationDeviceInstance::initialize()
 {
     if (m_initialized)
     {
         return;
     }
+    set_up_extension(1);
     for (auto &report : m_report_buffers)
     {
         report.mode = CLASSIC_CONTROLLER;
         report.extension_format = 1;
-        report.extension_type = subtype == Gamepad ? WIIMOTE_EXTENSION_CLASSIC :
-                                  subtype == GuitarHeroGuitar ? WIIMOTE_EXTENSION_GUITAR :
-                                  subtype == GuitarHeroDrums ? WIIMOTE_EXTENSION_DRUMS :
-                                  subtype == DjHeroTurntable ? WIIMOTE_EXTENSION_TURNTABLE :
-                                  subtype == Taiko ? WIIMOTE_EXTENSION_TAIKO :
-                                  WIIMOTE_EXTENSION_CLASSIC;
+        report.extension_type = m_extension_type;
     }
-    m_extension_format = wii_extension_format_for_subtype(subtype, 1);
-    initialize_wii_extension_report(subtype, m_extension_format, m_extension_initial_report, &m_extension_size,
-                                    &m_buttons_low_idx, &m_buttons_high_idx);
-    memcpy(m_extension_report, m_extension_initial_report, sizeof(m_extension_report));
     m_active_buffer = 0;
 
     DeviceFactory::BluetoothPairingStateData pairing_state;
@@ -83,7 +90,11 @@ void WiiRemoteEmulationDeviceInstance::process(bool full_poll, bool send_events)
     WiimoteReport &next = m_report_buffers[next_index];
 
     uint8_t extension_format = wii_extension_format_for_subtype(subtype, current.extension_format);
-    if (m_extension_format != extension_format)
+    if (m_extension_subtype != subtype)
+    {
+        set_up_extension(current.extension_format);
+    }
+    else if (m_extension_format != extension_format)
     {
         m_extension_format = extension_format;
         initialize_wii_extension_report(subtype, m_extension_format, m_extension_initial_report, &m_extension_size,
@@ -95,7 +106,7 @@ void WiiRemoteEmulationDeviceInstance::process(bool full_poll, bool send_events)
 
     // Carry forward the fields the BT stack owns/writes, so they aren't lost on swap.
     next.mode = current.mode;
-    next.extension_type = current.extension_type;
+    next.extension_type = m_extension_type;
     next.extension_format = current.extension_format;
     next.euphoria_led = current.euphoria_led;
     next.player_led = current.player_led;

@@ -24,8 +24,12 @@ public:
     void deinitialize() override;
     bool is_bluetooth() const override { return true; }
     void process(bool full_poll, bool send_events) override;
+    // Picks up a new name (eg the device name changed) without restarting, so a connected host stays connected
+    void refresh_name();
 
 private:
+    bool update_name();
+    void apply_name();
     void process_keyboard_mouse(bool full_poll, bool send_events);
     KeyboardMouseReports m_reports;
     bool m_config_only = false;

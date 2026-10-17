@@ -2,6 +2,7 @@
 // Builds configs with nanopb's encoder, so tests can describe a config as plain structs
 #include <cstring>
 #include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 #include <pb_encode.h>
@@ -32,6 +33,7 @@ struct ConfigSpec
     std::optional<proto_InactivityConfig> inactivity;
     std::optional<proto_PeripheralBootConfig> peripheral_boot;
     std::optional<bool> sync_calibrations;
+    std::optional<std::string> device_name;
 };
 
 struct AuxSpec
@@ -171,6 +173,11 @@ inline std::vector<uint8_t> encode_config(const ConfigSpec &spec)
     {
         config.has_inactivity = true;
         config.inactivity = *spec.inactivity;
+    }
+    if (spec.device_name)
+    {
+        config.has_deviceName = true;
+        strncpy(config.deviceName, spec.device_name->c_str(), sizeof(config.deviceName) - 1);
     }
     if (spec.peripheral_boot)
     {

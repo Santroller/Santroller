@@ -8,6 +8,7 @@
 #include "triggers/activation_trigger.hpp"
 #include "emulation/usb/xone_device.h"
 #include "managers/battery_manager.hpp"
+#include "emulation/bt/bt_gamepad.h"
 #include <algorithm>
 
 namespace
@@ -322,6 +323,16 @@ void ProfileManager::update(bool full_poll, bool send_events)
 void ProfileManager::update_bt_config_instance(bool full_poll, bool send_events)
 {
     auto &config_mgr = ConfigManager::instance();
+    // The profiles have had their first chance at them since the reload, so a gamepad or wii remote from before it
+    // that wasn't reused goes, even when bluetooth is now off
+    if (!config_mgr.has_seen_assignment(ProfileAssignMask_AssignBluetoothGamepad))
+    {
+        release_previous_bt_gamepad_instance();
+    }
+    if (!config_mgr.has_seen_assignment(ProfileAssignMask_AssignBluetoothWiimote))
+    {
+        release_previous_wiimote_instance();
+    }
     bool wanted = config_mgr.has_bluetooth() &&
                   !config_mgr.has_seen_assignment(ProfileAssignMask_AssignBluetoothGamepad) &&
                   !config_mgr.has_seen_assignment(ProfileAssignMask_AssignBluetoothWiimote);
@@ -335,6 +346,35 @@ void ProfileManager::update_bt_config_instance(bool full_poll, bool send_events)
         m_bt_config_instance = InstanceFactory::create_bt_config_instance();
     }
     m_bt_config_instance->process(full_poll, send_events);
+}
+
+std::shared_ptr<Instance> ProfileManager::reuse_bt_gamepad_instance(SubType subtype)
+{
+    // When it isn't reused it's destroyed on the way out, before the caller starts a new one
+    auto previous = std::move(m_previous_bt_gamepad_instance);
+    if (previous && previous->subtype == subtype)
+    {
+        printf("bt reuse sub=%d\r\n", subtype);
+        return previous;
+    }
+    return nullptr;
+}
+
+std::shared_ptr<Instance> ProfileManager::reuse_wiimote_instance()
+{
+    if (m_previous_wiimote_instance)
+    {
+        printf("wiimote reuse\r\n");
+    }
+    return std::move(m_previous_wiimote_instance);
+}
+
+void ProfileManager::refresh_bt_config_name()
+{
+    if (m_bt_config_instance)
+    {
+        std::static_pointer_cast<BTGamepadDevice>(m_bt_config_instance)->refresh_name();
+    }
 }
 
 void ProfileManager::stop_bt_config_instance()
@@ -384,6 +424,8 @@ void ProfileManager::prepare_for_config_reload()
             free_vector(instance->profiles);
         }
     }
+    m_previous_bt_gamepad_instance = std::move(m_bt_gamepad_instance);
+    m_previous_wiimote_instance = std::move(m_wiimote_instance);
     free_vector(m_instances);
     free_vector(m_active_instances);
     release_profile_contents(m_profiles);
@@ -520,6 +562,10 @@ void ProfileManager::update_profile_components(uint32_t profile_id, size_t insta
 void ProfileManager::clear_all()
 {
     stop_bt_config_instance();
+    m_bt_gamepad_instance.reset();
+    m_previous_bt_gamepad_instance.reset();
+    m_wiimote_instance.reset();
+    m_previous_wiimote_instance.reset();
     m_instances.clear();
     m_active_instances.clear();
     release_profile_contents(m_profiles);

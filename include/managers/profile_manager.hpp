@@ -100,6 +100,20 @@ public:
     void deinitialize_device_bluetooth();
     // Stops the config only bluetooth peripheral, so a bluetooth instance can take over the stack
     void stop_bt_config_instance();
+    // The config only bluetooth peripheral outlives reloads, so it's told when the device name changes
+    void refresh_bt_config_name();
+    // The bluetooth gamepad from before the reload, if the new config wants one with the same GATT database and
+    // report map (ie the same subtype). Reusing it keeps a connected host (or the configurator) connected through
+    // the reload. Otherwise it's dropped, so it disconnects before a new one takes the stack.
+    std::shared_ptr<Instance> reuse_bt_gamepad_instance(SubType subtype);
+    void set_bt_gamepad_instance(std::shared_ptr<Instance> instance) { m_bt_gamepad_instance = instance; }
+    // The emulated wii remote from before the reload. Unlike the gamepad it's reused whatever the subtype, as
+    // that only changes the extension plugged into it.
+    std::shared_ptr<Instance> reuse_wiimote_instance();
+    void set_wiimote_instance(std::shared_ptr<Instance> instance) { m_wiimote_instance = instance; }
+    // For something else taking the bluetooth stack
+    void release_previous_bt_gamepad_instance() { m_previous_bt_gamepad_instance.reset(); }
+    void release_previous_wiimote_instance() { m_previous_wiimote_instance.reset(); }
     
     void add_instance(std::shared_ptr<Instance> instance);
     size_t instance_count() const;
@@ -163,6 +177,11 @@ private:
     
     std::vector<std::shared_ptr<Instance>> m_instances;
     std::shared_ptr<Instance> m_bt_config_instance;
+    std::shared_ptr<Instance> m_bt_gamepad_instance;
+    // Held from prepare_for_config_reload until the new config reuses it or something else needs the stack
+    std::shared_ptr<Instance> m_previous_bt_gamepad_instance;
+    std::shared_ptr<Instance> m_wiimote_instance;
+    std::shared_ptr<Instance> m_previous_wiimote_instance;
     std::shared_ptr<UsbDevice> m_usb_instances[32];
     std::shared_ptr<UsbDevice> m_usb_instances_by_epin[16];
     std::shared_ptr<UsbDevice> m_usb_instances_by_epout[16];

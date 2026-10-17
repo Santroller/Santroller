@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <string.h>
 #include <vector>
 #include "config.pb.h"
 
@@ -57,6 +58,13 @@ public:
     bool working_stalled(uint32_t now, uint32_t timeout_ms) const { return m_working && now - m_last_work > timeout_ms; }
     bool has_loaded_any() const { return m_loaded_any; }
     void set_loaded_any(bool loaded) { m_loaded_any = loaded; }
+    // What the whole device is called (Config.deviceName), or nullptr when it isn't named
+    const char *get_device_name() const { return m_device_name[0] ? m_device_name : nullptr; }
+    void set_device_name(const char *name)
+    {
+        strncpy(m_device_name, name ? name : "", sizeof(m_device_name) - 1);
+        m_device_name[sizeof(m_device_name) - 1] = '\0';
+    }
     bool has_bluetooth() const { return m_has_bluetooth; }
     void set_bluetooth_available(bool available) { m_has_bluetooth = available; }
     bool is_reloading() const { return m_reloading; }
@@ -138,6 +146,8 @@ private:
         , m_time_since_mode(0)
         , m_seen_masks(0)
     {}
+
+    char m_device_name[sizeof(proto_Config::deviceName)] = {};
     
     ~ConfigManager() = default;
     ConfigManager(const ConfigManager&) = delete;

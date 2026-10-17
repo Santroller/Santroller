@@ -291,6 +291,9 @@ message Config {
   optional bool syncCalibrations = 5;
   optional PeripheralBootConfig peripheralBoot = 6;
   optional InactivityConfig inactivity = 7;
+  // What the whole device is called over USB (its product string), rather than one profile.
+  // Unset or empty keeps "Santroller"
+  optional string deviceName = 8;
 }
 
 message ConfigInfo {

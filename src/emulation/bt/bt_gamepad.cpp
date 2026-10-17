@@ -49,11 +49,14 @@ static void get_report_callback(hci_con_handle_t con_hdl, hid_report_type_t repo
 #define APPEARANCE_GAMEPAD 0x03C4
 // Appearance HID - Generic (Category 15)
 #define APPEARANCE_GENERIC_HID 0x03C0
-// What hosts list us as: the name of the profile using bluetooth, or SantrollerBT when there isn't one
+// What hosts list us as: the name of the profile using bluetooth, otherwise the device name, or SantrollerBT when
+// there isn't one
 static char s_name[sizeof(Profile::name)] = "SantrollerBT";
 // gap_advertisements_set_data and gap_scan_response_set_data keep the pointers, so these must outlive advertising
 static uint8_t s_adv_data[LE_ADVERTISING_DATA_SIZE];
 static uint8_t s_scan_response[LE_ADVERTISING_DATA_SIZE];
+// What set_advertisement last advertised as, so the name can be changed without restarting
+static uint16_t s_appearance = APPEARANCE_GENERIC_HID;
 
 static uint8_t add_ad_field(uint8_t *dest, uint8_t pos, uint8_t type, const void *data, uint8_t len)
 {
@@ -63,10 +66,12 @@ static uint8_t add_ad_field(uint8_t *dest, uint8_t pos, uint8_t type, const void
     return pos + len;
 }
 
-// Advertises as discoverable HID with the given appearance. The name goes in the advertisement if it fits, otherwise
-// a shortened one does and the full name goes in the scan response, which hosts ask for before listing us.
+// Advertises as discoverable HID with the given appearance, plus the config service so the configurator can find us
+// whatever we're named. Browsers only filter on the advertisement, not the scan response, and that leaves no room for
+// the name, so it goes in the scan response, which hosts ask for before listing us (ble_rx waits for it too).
 static void set_advertisement(uint16_t appearance)
 {
+    s_appearance = appearance;
     static const uint8_t flags = 0x06; // general discoverable, BR/EDR not supported
     static const uint8_t uuids[] = {ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE & 0xff, ORG_BLUETOOTH_SERVICE_HUMAN_INTERFACE_DEVICE >> 8};
     const uint8_t appearance_le[] = {(uint8_t)(appearance & 0xff), (uint8_t)(appearance >> 8)};
@@ -74,20 +79,13 @@ static void set_advertisement(uint16_t appearance)
     adv_len = add_ad_field(s_adv_data, adv_len, BLUETOOTH_DATA_TYPE_FLAGS, &flags, sizeof(flags));
     adv_len = add_ad_field(s_adv_data, adv_len, BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_16_BIT_SERVICE_CLASS_UUIDS, uuids, sizeof(uuids));
     adv_len = add_ad_field(s_adv_data, adv_len, BLUETOOTH_DATA_TYPE_APPEARANCE, appearance_le, sizeof(appearance_le));
+    adv_len = add_ad_field(s_adv_data, adv_len, BLUETOOTH_DATA_TYPE_COMPLETE_LIST_OF_128_BIT_SERVICE_CLASS_UUIDS,
+                           santroller_config_service_uuid_le, sizeof(santroller_config_service_uuid_le));
 
     uint8_t name_len = strlen(s_name);
-    uint8_t name_room = sizeof(s_adv_data) - adv_len - 2;
-    uint8_t scan_len = 0;
-    if (name_len <= name_room)
-    {
-        adv_len = add_ad_field(s_adv_data, adv_len, BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME, s_name, name_len);
-    }
-    else
-    {
-        adv_len = add_ad_field(s_adv_data, adv_len, BLUETOOTH_DATA_TYPE_SHORTENED_LOCAL_NAME, s_name, name_room);
-        uint8_t full_len = btstack_min(name_len, sizeof(s_scan_response) - 2);
-        scan_len = add_ad_field(s_scan_response, scan_len, BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME, s_name, full_len);
-    }
+    uint8_t name_room = sizeof(s_scan_response) - 2;
+    uint8_t scan_len = add_ad_field(s_scan_response, 0, name_len <= name_room ? BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME : BLUETOOTH_DATA_TYPE_SHORTENED_LOCAL_NAME,
+                                    s_name, btstack_min(name_len, name_room));
     gap_advertisements_set_data(adv_len, s_adv_data);
     gap_scan_response_set_data(scan_len, s_scan_response);
 }
@@ -191,11 +189,59 @@ void BTGamepadDevice::deinitialize()
     printf("btgamepaddevice deinit\r\n");
 }
 
+// Sets s_name for this instance, returning true if it changed
+bool BTGamepadDevice::update_name()
+{
+    const char *name = nullptr;
+    if (!m_config_only && !profiles.empty() && profiles[0]->name[0])
+    {
+        name = profiles[0]->name;
+    }
+    else
+    {
+        name = ConfigManager::instance().get_device_name();
+    }
+    if (!name)
+    {
+        name = "SantrollerBT";
+    }
+    if (strncmp(s_name, name, sizeof(s_name) - 1) == 0)
+    {
+        return false;
+    }
+    strncpy(s_name, name, sizeof(s_name) - 1);
+    s_name[sizeof(s_name) - 1] = '\0';
+    return true;
+}
+
+void BTGamepadDevice::refresh_name()
+{
+    BtStackLock lock;
+    if (m_initialized)
+    {
+        apply_name();
+    }
+}
+
+void BTGamepadDevice::apply_name()
+{
+    if (!update_name())
+    {
+        return;
+    }
+    // The GAP name is read from s_name, so only the advertisement needs redoing. A connected host keeps the name it
+    // has until it reads it again.
+    set_advertisement(s_appearance);
+    printf("BT: now advertising as %s\r\n", s_name);
+}
+
 void BTGamepadDevice::initialize()
 {
     BtStackLock lock;
     if (m_initialized)
     {
+        // Kept across a reload (ProfileManager::reuse_bt_gamepad_instance), the profile's name may have changed
+        apply_name();
         return;
     }
     if (!ConfigManager::instance().has_bluetooth())
@@ -229,13 +275,7 @@ void BTGamepadDevice::initialize()
     {
         db = bt_keyboard_profile(&config_start, &config_end);
     }
-    const char *name = "SantrollerBT";
-    if (!m_config_only && !profiles.empty() && profiles[0]->name[0])
-    {
-        name = profiles[0]->name;
-    }
-    strncpy(s_name, name, sizeof(s_name) - 1);
-    s_name[sizeof(s_name) - 1] = '\0';
+    update_name();
     att_server_init(db, att_read_callback, NULL);
     att_server_register_packet_handler(packet_handler);
     bt_gatt_changes_init();

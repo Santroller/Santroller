@@ -13,6 +13,7 @@ public:
         return manager;
     }
     void prepare_for_config_reload() { fake_loader::state.calls.push_back("prepare_for_config_reload"); }
+    void refresh_bt_config_name() {}
     void finish_config_reload() { fake_loader::state.calls.push_back("finish_config_reload"); }
     bool has_active_instances() const { return fake_loader::state.has_active_instances; }
     uint8_t usb_instance_count() const { return uint8_t(fake_loader::state.usb_instances_added); }

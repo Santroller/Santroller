@@ -49,6 +49,7 @@
 
 #include "emulation/usb/usb_descriptors.h"
 #include "emulation/usb/usb_host_presence.hpp"
+#include "emulation/bt/bt_config_service.h"
 #include <pico_fota_bootloader/core.h>
 #include "ring_buffer.h"
 #include "hci.h"
@@ -210,7 +211,11 @@ void hid_task(void)
         {
             printf("config write stalled, abandoning it\r\n");
             abort_config_write();
+            return;
         }
+        // Over bluetooth the upload's chunks are only queued by the stack, and the tool won't send
+        // the next one until the last is handled
+        bt_config_service_handle_requests();
         return;
     }
     flush_pending_aux();

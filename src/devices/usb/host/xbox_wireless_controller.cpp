@@ -282,7 +282,9 @@ void XboxWirelessController::set_rumble(uint8_t left, uint8_t right)
         return;
     }
     GipRumble_t rumble = {};
-    rumble.flags = 0x0C;
+    // Motor bitmap ([MS-GIPUSB] Table 56): right / left vibration (0x01 / 0x02) carry the levels,
+    // right / left impulse (0x04 / 0x08) are left at 0
+    rumble.flags = 0x0F;
     rumble.leftMotor = (uint16_t)left * 100 / 255;
     rumble.rightMotor = (uint16_t)right * 100 / 255;
     rumble.duration = (left || right) ? 0xFF : 0;

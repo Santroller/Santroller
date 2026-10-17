@@ -75,6 +75,9 @@ private:
     bool m_valid_switch_arcade_report = false;
     uint32_t m_last_ghl_poke = 0;
     uint32_t m_last_pro_instrument_poke = 0;
+    uint32_t m_rb_whammy_changed = 0;
+    uint8_t m_rb_whammy_raw = 0;
+    uint8_t m_rb_whammy_value = 0;
     uint8_t m_rumble_left = 0;
     uint8_t m_rumble_right = 0;
     uint8_t m_player = 0;

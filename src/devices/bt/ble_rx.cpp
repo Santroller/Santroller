@@ -27,6 +27,7 @@
 #include "config/device_factory.hpp"
 #include "devices/bluetooth.hpp"
 #include "protocols/ble_midi.hpp"
+#include "emulation/bt/bt_config_service.h"
 
 // ---------------------------------------------------------------------------
 // Per-Connection State
@@ -185,6 +186,10 @@ static uint8_t devices_found = 0;
 static bool s_ble_scanning = false;
 static bool s_whitelist_active = false;
 static bool s_direct_connect_pending = false;
+// A Santroller advertises the config service, and puts its name in the scan response, so its advertisement is
+// held off until the scan response names it
+static bool s_awaiting_scan_response = false;
+static bd_addr_t s_awaiting_scan_response_addr;
 // background reconnect state, see ble_sync_reconnect / ble_tick
 static uint32_t s_fast_reconnect_until = 0;
 static bool s_whitelist_fast = false;
@@ -360,6 +365,7 @@ void ble_start_scan()
         gap_connect_cancel();
     }
     s_ble_scanning = true;
+    s_awaiting_scan_response = false;
     gap_set_scan_parameters(1, 48, 48);
     gap_start_scan();
     btstack_run_loop_set_timer(&s_scan_timer, 5000);
@@ -982,6 +988,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
             bool is_hid = false;
             bool is_midi = false;
+            bool is_santroller = false;
             uint16_t appearance = 0;
             char dev_name[100] = {};
 
@@ -1022,6 +1029,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                             is_hid = true;
                             is_midi = true;
                         }
+                        if (memcmp(data + i, santroller_config_service_uuid_le, 16) == 0)
+                        {
+                            is_santroller = true;
+                        }
                     }
                     break;
                 case BLUETOOTH_DATA_TYPE_APPEARANCE:
@@ -1055,9 +1066,27 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
             // A Santroller with no profile using bluetooth still advertises HID, so the configurator can
             // reach it over WebHID, but as a generic HID device rather than a gamepad. It has no controller
-            // reports, and pairing to it would record it as a gamepad, so leave it alone.
-            if (is_hid && appearance == 0x03C0 /* Generic HID */ && strncmp(dev_name, "Santroller", 10) == 0)
+            // reports, and pairing to it would record it as a gamepad, so leave it alone. It advertises the config
+            // service while like this, as it can be named anything (older firmware only had the name to go by).
+            if (is_hid && appearance == 0x03C0 /* Generic HID */ && (is_santroller || strncmp(dev_name, "Santroller", 10) == 0))
             {
+                is_hid = false;
+            }
+
+            // Only active scans get a scan response, which only a scannable advertisement (ADV_IND / ADV_SCAN_IND) has
+            uint8_t event_type = gap_event_advertising_report_get_advertising_event_type(packet);
+            if (event_type == 4 /* SCAN_RSP */)
+            {
+                if (s_awaiting_scan_response && bd_addr_cmp(address, s_awaiting_scan_response_addr) == 0)
+                {
+                    s_awaiting_scan_response = false;
+                    is_hid = true;
+                }
+            }
+            else if (is_hid && is_santroller && !dev_name[0] && (event_type == 0 || event_type == 2))
+            {
+                s_awaiting_scan_response = true;
+                bd_addr_copy(s_awaiting_scan_response_addr, address);
                 is_hid = false;
             }
 

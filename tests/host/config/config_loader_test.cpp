@@ -157,6 +157,19 @@ TEST_F(ConfigLoaderTest, AnEmptyImageLoadsAsAnEmptyConfig)
     EXPECT_FALSE(fake_loader::state.inactivity_had_config);
 }
 
+TEST_F(ConfigLoaderTest, TheDeviceNameIsPassedOnOnlyWhenSet)
+{
+    ConfigSpec spec;
+    spec.device_name = "My Guitar";
+    ASSERT_TRUE(store_and_apply(encode_config(spec), {}));
+    EXPECT_TRUE(fake_loader::state.device_name_set);
+    EXPECT_EQ(fake_loader::state.device_name, "My Guitar");
+
+    fake_loader::reset();
+    ASSERT_TRUE(store_and_apply(encode_config(ConfigSpec{}), {}));
+    EXPECT_FALSE(fake_loader::state.device_name_set);
+}
+
 TEST_F(ConfigLoaderTest, TheMainSectionStopsWhereTheAuxSectionStarts)
 {
     // AuxConfigBlock.toggleStates is field 2, the same as Config.devices: decoding past main_size would

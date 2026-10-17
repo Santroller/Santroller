@@ -311,6 +311,24 @@ enum PinDetectType {
     DetectAnalog=2;
 }
 
+// The kind of device an input detect reads, which picks the input type it reports
+enum InputDetectKind {
+    DetectWii=1;
+    DetectPS2=2;
+    DetectSNES=3;
+    DetectJoybus=4;
+    DetectUsb=5;
+    DetectBluetooth=6;
+    DetectMidi=7;
+}
+
+// What a MIDI input detect found
+enum InputDetectMidiType {
+    DetectMidiNote=1;
+    DetectMidiControlChange=2;
+    DetectMidiPitchBend=3;
+}
+
 enum RgbPatternType {
     PatternRainbow=1;
     PatternFade=2;

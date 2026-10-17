@@ -65,6 +65,8 @@ public:
     bool read_pro_guitar_button(proto_ProGuitarMidiButtonType button);
     uint16_t read_pro_guitar_axis(proto_ProGuitarAxisType axis);
     bool has_midi_channel(uint8_t channel) { return m_midi.has_midi_channel(channel); }
+    // Everything parsed from what this device received
+    const MidiInput &midi_state() const { return m_midi; }
     bool has_any_midi_channel() const
     {
         for (int i = 0; i < 18; i++)

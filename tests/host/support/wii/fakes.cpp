@@ -102,16 +102,17 @@ I2CMasterInterface::~I2CMasterInterface() {}
 void I2CMasterInterface::dmaInit(uint8_t, I2CDMAInterface *) {}
 void I2CMasterInterface::dmaDeinit(uint8_t) {}
 void I2CMasterInterface::tick() {}
-void I2CMasterInterface::dmaWriteRead(uint8_t addr, const uint8_t *wbuf, size_t wbuf_len, uint8_t *rbuf,
+bool I2CMasterInterface::dmaWriteRead(uint8_t addr, const uint8_t *wbuf, size_t wbuf_len, uint8_t *rbuf,
                                       size_t rbuf_len)
 {
     fake_i2c_master::transfers.push_back(
         {addr, std::vector<uint8_t>(wbuf, wbuf + wbuf_len), rbuf, rbuf_len});
+    return true;
 }
-void I2CMasterInterface::dmaWriteRead(uint8_t addr, const uint8_t *wbuf, size_t wbuf_len, uint8_t *rbuf,
+bool I2CMasterInterface::dmaWriteRead(uint8_t addr, const uint8_t *wbuf, size_t wbuf_len, uint8_t *rbuf,
                                       size_t rbuf_len, uint16_t *)
 {
-    dmaWriteRead(addr, wbuf, wbuf_len, rbuf, rbuf_len);
+    return dmaWriteRead(addr, wbuf, wbuf_len, rbuf, rbuf_len);
 }
 
 namespace fake_midi

@@ -190,8 +190,11 @@ message STP16CPCDevice {
   required int32 count = 4;
 }
 message MatrixDevice {
+  // Pin masks for GPIO 0-31, with GPIO 32-63 in the *High fields
   required uint32 outPins = 1;
   required uint32 inPins = 2;
+  optional uint32 outPinsHigh = 3;
+  optional uint32 inPinsHigh = 4;
 }
 
 message SwitchNetworkButton {

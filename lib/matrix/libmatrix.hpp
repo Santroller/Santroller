@@ -5,10 +5,10 @@
 class Matrix
 {
 public:
-    Matrix(uint32_t pins, uint32_t outPins);
-    bool read(uint32_t outPins, uint8_t in_pin);
+    Matrix(uint64_t pins, uint64_t outPins);
+    bool read(uint8_t out_pin, uint8_t in_pin);
 
 private:
-    uint32_t m_pins;
-    uint32_t m_outPins;
+    uint64_t m_pins;
+    uint64_t m_outPins;
 };

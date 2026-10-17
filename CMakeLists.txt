@@ -357,6 +357,7 @@ add_executable(
   src/profiles/profile.cpp
   src/config/device_factory.cpp
   src/config/input_factory.cpp
+  src/config/input_detector.cpp
   src/config/mapping_factory.cpp
   src/config/trigger_factory.cpp
   src/config/led_factory.cpp

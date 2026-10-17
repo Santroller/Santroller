@@ -2,6 +2,7 @@ syntax = "proto2";
 package proto;
 import "enums.proto";
 import "input_enums.proto";
+import "input.proto";
 
 message SetProfileCommand {
   required uint32 profileId = 1;
@@ -12,7 +13,22 @@ message DetectPinCommand {
   required PinDetectType detectType = 1;
 }
 
-message DetectMidiCommand {
+// Watch a device (a wii extension, usb host controller etc) for an input being pressed or moved
+message DetectInputCommand {
+  required InputDetectKind kind = 1;
+  // The slot or device id, as the input stores it
+  required int32 deviceid = 2;
+  // Also look for axes being moved, not just buttons being pressed
+  required bool axes = 3;
+  // USB and bluetooth: the Output fields to try, as Output oneof tags, each tried from 1 to its max
+  optional uint32 buttonOutput = 4;
+  optional uint32 buttonOutputMax = 5;
+  optional uint32 axisOutput = 6;
+  optional uint32 axisOutputMax = 7;
+  // USB and bluetooth: also look for keyboard keys being pressed
+  optional bool keys = 8;
+  // MIDI: where the device comes from, as the MIDI input stores it
+  optional MidiInputSourceType midiSourceType = 9;
 }
 
 message RebootCommand {
@@ -53,5 +69,6 @@ message Command {
         SaveCommand save = 7;
         UnpairBluetoothCommand unpairBluetooth = 8;
         TestLedCommand testLed = 9;
+        DetectInputCommand detectInput = 10;
     }
 }

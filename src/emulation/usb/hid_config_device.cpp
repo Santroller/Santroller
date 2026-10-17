@@ -24,9 +24,11 @@
 #include "hardware/adc.h"
 #include "devices/secondary_pico.hpp"
 #include "secondary_pico.hpp"
+#include "config/input_detector.hpp"
 #include "math.h"
 #include <pico_fota_bootloader/core.h>
 #include <algorithm>
+#include <string.h>
 
 static const char version[] = GIT_HASH;
 // 0 when it was built without the git history
@@ -136,9 +138,35 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
       switch (m_detect_type)
       {
       case DetectDigital:
+      {
+        uint32_t now = millis();
         for (uint8_t i = 0; i < NUM_BANK0_GPIOS; i++)
         {
-          if (m_valid_pins & (1 << i) && gpio_get(i) != last_digital_vals[i])
+          uint64_t bit = 1ull << i;
+          if (!(m_valid_pins & bit) || (m_detect_noisy & bit))
+          {
+            continue;
+          }
+          if (gpio_get(i) == last_digital_vals[i])
+          {
+            m_detect_changed &= ~bit;
+            continue;
+          }
+          if (!(m_detect_changed & bit))
+          {
+            // Changes close together are bounce from one press, so only count ones further apart
+            if (now - m_detect_changed_at[i] >= DETECT_BOUNCE_MS && ++m_detect_transitions[i] > DETECT_NOISY_TRANSITIONS)
+            {
+              // Keeps flicking without being held (a misfiring tilt switch, say), so it would win every detect
+              printf("ignoring noisy pin: %d\r\n", i);
+              m_detect_noisy |= bit;
+            }
+            m_detect_changed |= bit;
+            m_detect_changed_at[i] = now;
+            continue;
+          }
+          // Only take a pin once it has been held, so brief misfires don't get picked up
+          if (now - m_detect_changed_at[i] >= DETECT_HOLD_MS)
           {
             printf("detected digital: %d %d %d\r\n", i, gpio_get(i), last_digital_vals[i]);
             detect_done = 0;
@@ -150,10 +178,11 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
           }
         }
         break;
+      }
       case DetectAnalog:
         for (uint8_t i = 0; i < NUM_ADC_CHANNELS; i++)
         {
-          if (m_valid_pins & (1 << i))
+          if (m_valid_pins & (1ull << i))
           {
             adc_select_input(i);
             if (abs(last_adc_vals[i] - adc_read()) > 100)
@@ -183,7 +212,7 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
         case DetectDigital:
           for (uint8_t i = 0; i < NUM_BANK0_GPIOS; i++)
           {
-            if (m_valid_pins & (1 << i))
+            if (m_valid_pins & (1ull << i))
             {
               gpio_init(i);
               gpio_set_dir(i, false);
@@ -194,7 +223,7 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
         case DetectAnalog:
           for (uint8_t i = 0; i < NUM_ADC_CHANNELS; i++)
           {
-            if (m_valid_pins & (1 << i))
+            if (m_valid_pins & (1ull << i))
             {
               adc_gpio_init(i + ADC_BASE_PIN);
               gpio_set_pulls(i + ADC_BASE_PIN, false, false);
@@ -220,6 +249,17 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
         ProfileManager::instance().update_all_profile_devices(profile_just_changed, true);
       }
       ProfileManager::instance().update_profile_components(selected_profile, selected_instance, profile_just_changed, true);
+      if (profile_just_changed)
+      {
+        m_input_detector.end();
+      }
+      proto_Event evt = proto_Event_init_zero;
+      evt.which_event = proto_Event_inputDetection_tag;
+      if (m_input_detector.poll(selected.second, evt.event.inputDetection))
+      {
+        printf("detected input: %d %ld\r\n", evt.event.inputDetection.axis, evt.event.inputDetection.value);
+        send_event(evt, true);
+      }
     }
   }
   process_events();
@@ -408,6 +448,13 @@ void HIDConfigDevice::handle_command(proto_Command command)
     }
     break;
   }
+  case proto_Command_detectInput_tag:
+  {
+    // only detect for 10 seconds, like pins
+    printf("detect input: %d %ld\r\n", command.command.detectInput.kind, command.command.detectInput.deviceid);
+    m_input_detector.begin(command.command.detectInput, millis() + 10000);
+    break;
+  }
   case proto_Command_detectPin_tag:
   {
     // only detect for 10 seconds
@@ -415,6 +462,10 @@ void HIDConfigDevice::handle_command(proto_Command command)
     printf("detect: %d\r\n", command.command.detectPin.detectType);
     detect_done = millis() + 10000;
     m_valid_pins = 0;
+    m_detect_changed = 0;
+    m_detect_noisy = 0;
+    memset(m_detect_changed_at, 0, sizeof(m_detect_changed_at));
+    memset(m_detect_transitions, 0, sizeof(m_detect_transitions));
     m_detect_type = command.command.detectPin.detectType;
     switch (command.command.detectPin.detectType)
     {
@@ -434,7 +485,7 @@ void HIDConfigDevice::handle_command(proto_Command command)
           } });
         if (!found)
         {
-          m_valid_pins |= 1 << i;
+          m_valid_pins |= 1ull << i;
           gpio_init(i);
           gpio_set_dir(i, false);
           gpio_set_pulls(i, true, false);
@@ -455,7 +506,7 @@ void HIDConfigDevice::handle_command(proto_Command command)
           } });
         if (!found)
         {
-          m_valid_pins |= 1 << i;
+          m_valid_pins |= 1ull << i;
           adc_gpio_init(i + ADC_BASE_PIN);
           gpio_set_pulls(i + ADC_BASE_PIN, true, false);
           adc_select_input(i);

@@ -158,6 +158,35 @@ public:
         return midiPitchWheel[channel];
     }
 
+    // For input detection: the note on events newer than sequence, oldest first, moving sequence up to each
+    uint16_t midi_note_event_sequence() const { return midiNoteEventSequence; }
+    bool next_midi_note_event(uint16_t &sequence, uint8_t &channel, uint8_t &note) const
+    {
+        for (size_t index = 0; index < midiNoteEventCount; index++)
+        {
+            const MidiNoteEvent &event = midiNoteEvents[(midiNoteEventHead + index) % MIDI_NOTE_EVENT_CAPACITY];
+            if (static_cast<int16_t>(event.sequence - sequence) > 0)
+            {
+                sequence = event.sequence;
+                channel = event.channel;
+                note = event.note;
+                return true;
+            }
+        }
+        return false;
+    }
+    // The newest control change or pitch bend, with the value it had before. For pitch bends, number is unused
+    struct MidiChange
+    {
+        uint16_t sequence;
+        uint8_t channel;
+        uint8_t number;
+        uint16_t previous;
+        uint16_t value;
+    };
+    const MidiChange &last_control_change() const { return lastControlChange; }
+    const MidiChange &last_pitch_bend() const { return lastPitchBend; }
+
     // Channels 0 - 15, then the Pro Guitar pseudo channels
     bool has_midi_channel(uint8_t channel) const { return seenChannels[channel]; }
     // Returns false if the channel had already been seen
@@ -237,6 +266,8 @@ private:
     uint8_t midiNoteEventCount = 0;
     uint16_t midiNoteEventSequence = 0;
     uint16_t midiPitchWheel[16];
+    MidiChange lastControlChange = {};
+    MidiChange lastPitchBend = {};
     uint8_t *midiControlChanges[16] = {};
     uint8_t *midiNoteVelocity[16] = {};
     uint8_t midiFrets[6];
@@ -453,11 +484,16 @@ private:
             {
                 midiControlChanges[channel] = new uint8_t[128]();
             }
+            lastControlChange = {static_cast<uint16_t>(lastControlChange.sequence + 1), channel, data[1], midiControlChanges[channel][data[1]], data[2]};
             midiControlChanges[channel][data[1]] = data[2];
             break;
         case MIDI_CIN_PITCH_BEND_CHANGE:
-            midiPitchWheel[channel] = ((uint16_t)data[2] << 7) | data[1];
+        {
+            uint16_t value = ((uint16_t)data[2] << 7) | data[1];
+            lastPitchBend = {static_cast<uint16_t>(lastPitchBend.sequence + 1), channel, 0, midiPitchWheel[channel], value};
+            midiPitchWheel[channel] = value;
             break;
+        }
         case MIDI_CIN_POLY_KEYPRESS:
             break;
         case MIDI_CIN_PROGRAM_CHANGE:

@@ -7,6 +7,7 @@
 #include "emulation/usb/usb_descriptors.h"
 #include "device.hpp"
 #include "events.pb.h"
+#include "config/input_detector.hpp"
 
 #include "tusb.h"
 
@@ -115,7 +116,7 @@ private:
   uint32_t selected_profile = 0;
   uint32_t selected_instance = 0;
   uint8_t current_pos = 1;
-  uint32_t m_valid_pins;
+  uint64_t m_valid_pins;
   bool tool_seen = false;
   // Until this, the tool is still treated as open after the device stack restarted under it
   uint32_t tool_return_deadline = 0;
@@ -127,6 +128,13 @@ private:
   bool fw_update_active = false;
   uint16_t last_adc_vals[NUM_ADC_CHANNELS];
   bool last_digital_vals[NUM_BANK0_GPIOS];
+  // Digital pin detection: pins currently away from their idle level, when they last left it,
+  // how often they've done so, and pins dropped for flicking too often
+  uint64_t m_detect_changed;
+  uint64_t m_detect_noisy;
+  uint32_t m_detect_changed_at[NUM_BANK0_GPIOS];
+  uint8_t m_detect_transitions[NUM_BANK0_GPIOS];
+  InputDetector m_input_detector;
   uint8_t fw_update_tmp[4096];
   proto_FirmwareUpdate update_state;
   std::shared_ptr<class SecondaryPicoDevice> m_target_secondary_pico = nullptr;

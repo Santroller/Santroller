@@ -12,9 +12,10 @@ public:
     void end(bool full);
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
-    bool read_pin(uint8_t pin, uint32_t outPins);
+    bool read_pin(uint8_t pin, uint8_t out_pin);
 
 private:
     Matrix m_matrix;
-    proto_MatrixDevice m_device;
+    uint64_t m_in_pins;
+    uint64_t m_out_pins;
 };

@@ -65,8 +65,17 @@ message PinDetectionEvent {
     required int32 pin = 1;
 }
 
-message MidiDetectionEvent {
-    required int32 note = 1;
+// The input a DetectInputCommand found: an axis or button enum value of the detected kind,
+// or for USB and bluetooth a value of the axis or button Output field the command gave
+message InputDetectionEvent {
+    required bool axis = 1;
+    // For a keyboard key, its HID keycode, and for MIDI the note or control change number
+    required int32 value = 2;
+    // USB and bluetooth: a keyboard key was pressed
+    optional bool key = 3;
+    // MIDI: what was found, and on which channel (1 - 16)
+    optional InputDetectMidiType midiType = 4;
+    optional uint32 midiChannel = 5;
 }
 
 message DeviceHotplugEvent {
@@ -137,11 +146,12 @@ message LoadedEvent {
 }
 
 message Event {
+    // Was MidiDetectionEvent midi, which nothing sent
+    reserved 4;
     oneof event{
         ButtonEvent button = 1;   
         AxisEvent axis = 2;
         PinDetectionEvent pin = 3;
-        MidiDetectionEvent midi = 4;
         UsbDeviceHotplugEvent usb = 5;
         WiiDeviceHotplugEvent wii = 6;
         PS2DeviceHotplugEvent ps2 = 7;
@@ -160,6 +170,7 @@ message Event {
         SNESDeviceHotplugEvent snes = 20;
         JoybusDeviceHotplugEvent joybus = 21;
         LoadedEvent loaded = 22;
+        InputDetectionEvent inputDetection = 23;
     };
 }
 

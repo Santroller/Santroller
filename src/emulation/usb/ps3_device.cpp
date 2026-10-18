@@ -348,6 +348,18 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
             reportPg->pressure_dpadLeft = reportPg->dpadLeft ? 0xFF : 0x00;
             reportPg->pressure_dpadRight = reportPg->dpadRight ? 0xFF : 0x00;
         }
+        if (subtype == GuitarHeroGuitar)
+        {
+            // Real guitars report fret pressure as 0 or 0xFF, with three frets sharing a dpad direction's byte.
+            // Holding both buttons on a shared byte reads as 0.
+            PS3GuitarHeroGuitar_Data_t *reportGh = (PS3GuitarHeroGuitar_Data_t *)epin_buf;
+            reportGh->pressure_dpadRight_yellow = (reportGh->y ^ reportGh->dpadRight) ? 0xFF : 0x00;
+            reportGh->pressure_dpadLeft = reportGh->dpadLeft ? 0xFF : 0x00;
+            reportGh->pressure_dpadUp_green = (reportGh->a ^ reportGh->dpadUp) ? 0xFF : 0x00;
+            reportGh->pressure_dpadDown_orange = (reportGh->leftShoulder ^ reportGh->dpadDown) ? 0xFF : 0x00;
+            reportGh->pressure_blue = reportGh->x ? 0xFF : 0x00;
+            reportGh->pressure_red = reportGh->b ? 0xFF : 0x00;
+        }
         report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
         if (subtype == GuitarHeroGuitar)
         {

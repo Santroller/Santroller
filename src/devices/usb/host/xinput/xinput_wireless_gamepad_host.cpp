@@ -604,7 +604,19 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
             if (linkReport->always_0xCC == 0xCC)
             {
                 const uint8_t raw_subtype = linkReport->subtype & ~0x80;
-                m_hardware_id = hardware_id_from_serial(linkReport->deviceID);
+                const auto hardware_id = hardware_id_from_serial(linkReport->deviceID);
+                // The receiver hands slots to whichever controller links first, so while a dropped slot is held a
+                // different controller can link to it, e.g. when two drop together and come back in the other
+                // order. Taking that as a relink would leave the slot with the old controller's subtype and profile
+                if (m_found && ((hardware_id && m_hardware_id && hardware_id != m_hardware_id) || raw_subtype != m_raw_subtype))
+                {
+                    // rare, and worth seeing when a slot changes hands
+                    printf("w %lu %u SWAP sub %02x->%02x\r\n", static_cast<unsigned long>(millis()), m_interface,
+                           m_raw_subtype, raw_subtype);
+                    disconnect_controller();
+                }
+                m_hardware_id = hardware_id;
+                m_raw_subtype = raw_subtype;
                 m_request_caps_on_input = raw_subtype == XINPUT_GUITAR_ALTERNATE || raw_subtype == XINPUT_PRO_GUITAR ||
                                            raw_subtype == XINPUT_DRUMS;
                 bool newly_connected = !m_found;

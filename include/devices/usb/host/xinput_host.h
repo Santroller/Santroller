@@ -172,8 +172,9 @@ private:
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[64];
     uint8_t m_report_buf[64];
     bool m_found = false;
-    // the serial in the linked controller's link report
+    // the serial and subtype in the linked controller's link report, to tell a relink from another controller
     std::optional<uint64_t> m_hardware_id;
+    uint8_t m_raw_subtype = 0;
     bool m_request_caps_on_input = false;
     uint8_t m_last_player_led = 0;
     // Set while the data link is down but the slot is still held

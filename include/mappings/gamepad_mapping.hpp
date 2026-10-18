@@ -72,6 +72,11 @@ public:
     ~RockBandGuitarGamepadAxisMapping();
     RockBandGuitarGamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_xboxone(uint8_t *report);
+    void update_xinput(uint8_t *report);
+    void update_ogxbox(uint8_t *report);
+    void update_hid(uint8_t *report);
+private:
+    bool is_stick() const;
 };
 
 class GamepadButtonMapping : public ButtonMapping

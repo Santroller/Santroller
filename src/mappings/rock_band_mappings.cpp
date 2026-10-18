@@ -586,6 +586,19 @@ void RockBandGuitarAxisMapping::update_xboxone(uint8_t *buf)
         break;
     }
 }
+bool RockBandGuitarGamepadAxisMapping::is_stick() const
+{
+    switch (m_mapping.mapping.mapping.gamepadAxis)
+    {
+    case Gamepad_LeftStickX:
+    case Gamepad_LeftStickY:
+    case Gamepad_RightStickX:
+    case Gamepad_RightStickY:
+        return true;
+    default:
+        return false;
+    }
+}
 RockBandGuitarGamepadAxisMapping::~RockBandGuitarGamepadAxisMapping() {}
 
 RockBandGuitarGamepadAxisMapping::RockBandGuitarGamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile)
@@ -620,6 +633,29 @@ void RockBandGuitarGamepadAxisMapping::update_xboxone(uint8_t *buf)
         break;
     default:
         break;
+    }
+}
+
+
+void RockBandGuitarGamepadAxisMapping::update_hid(uint8_t *buf)
+{
+    if (!is_stick())
+    {
+        GamepadAxisMapping::update_hid(buf);
+    }
+}
+void RockBandGuitarGamepadAxisMapping::update_xinput(uint8_t *buf)
+{
+    if (!is_stick())
+    {
+        GamepadAxisMapping::update_xinput(buf);
+    }
+}
+void RockBandGuitarGamepadAxisMapping::update_ogxbox(uint8_t *buf)
+{
+    if (!is_stick())
+    {
+        GamepadAxisMapping::update_ogxbox(buf);
     }
 }
 

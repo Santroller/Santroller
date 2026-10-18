@@ -145,17 +145,17 @@ TEST_F(Guitar, GHPS3Whammy)
     EXPECT_EQ(report->whammy, 0xFF);
 }
 
-TEST_F(Guitar, GHPS3TiltPeaksAtTheAccelerometerCentre)
+TEST_F(Guitar, GHPS3TiltFallsFromTheAccelerometerRest)
 {
-    // PS3 guitars report tilt on the 10 bit accelerometer, which sits around 0x180 level and
-    // reaches 0x200 tilted up
+    // PS3 guitars report tilt on the 10 bit accelerometer (accelX), which rests around 0x200 level
+    // and falls to 0x180 pointed up
     Report<PS3GuitarHeroGuitar_Data_t> report;
     at<GuitarHeroGuitarAxisMapping>(gh_axis(GuitarHeroGuitar_Tilt), UINT16_MAX)->update_ps3(report.buf());
-    EXPECT_EQ(report->tilt, 0x200);
+    EXPECT_EQ(report->tilt, 0x180);
     Report<PS3GuitarHeroGuitar_Data_t> level;
     at<GuitarHeroGuitarAxisMapping>(gh_axis(GuitarHeroGuitar_Tilt), 32768)->update_ps3(level.buf());
-    EXPECT_NEAR(level->tilt, 0x180, 1);
-    EXPECT_LT(level->tilt, report->tilt);
+    EXPECT_NEAR(level->tilt, 0x200, 1);
+    EXPECT_GT(level->tilt, report->tilt);
 }
 
 TEST_F(Guitar, GHPS2WhammyCountsDownFrom7F)

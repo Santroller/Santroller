@@ -101,6 +101,8 @@ public:
     virtual bool is_joybus_device() const { return false; }
     virtual bool has_midi_channel(uint8_t channel);
     virtual bool is_assignable() const { return false; }
+    // For a device that runs others (a secondary pico), whether device_id is one of them
+    virtual bool owns_sub_device(uint32_t device_id) const { (void)device_id; return false; }
     virtual bool using_pin(uint8_t pin) = 0;
     virtual uint32_t source_id() const { return m_id; }
     virtual void rescan(bool first);

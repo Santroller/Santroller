@@ -7,16 +7,38 @@
 #include <pb_decode.h>
 #include <pb_encode.h>
 
+// Each slot's input, already encoded
 static bool encode_inputs_callback(pb_ostream_t *stream, const pb_field_t *field, void * const *arg)
 {
-    const auto *inputs = static_cast<const std::vector<proto_Input> *>(*arg);
+    const auto *inputs = static_cast<const std::vector<SecondaryPicoInputSlot> *>(*arg);
     if (!inputs) return true;
 
     for (const auto &input : *inputs)
     {
         if (!pb_encode_tag_for_field(stream, field))
             return false;
-        if (!pb_encode_submessage(stream, proto_Input_fields, &input))
+        if (!pb_encode_string(stream, input.encoded.data(), input.encoded.size()))
+            return false;
+    }
+    return true;
+}
+
+// The sub-devices, passed on as they were in the config
+static bool encode_sub_devices_callback(pb_ostream_t *stream, const pb_field_t *field, void * const *arg)
+{
+    const auto *devices = static_cast<const SecondaryPicoSubDevices *>(*arg);
+    if (!devices) return true;
+
+    pb_istream_t in = pb_istream_from_buffer(devices->encoded.data(), devices->encoded.size());
+    while (in.bytes_left)
+    {
+        uint32_t len = 0;
+        if (!pb_decode_varint32(&in, &len) || len > in.bytes_left)
+            return false;
+        const uint8_t *data = devices->encoded.data() + (devices->encoded.size() - in.bytes_left);
+        if (!pb_encode_tag_for_field(stream, field) || !pb_encode_string(stream, data, len))
+            return false;
+        if (!pb_read(&in, nullptr, len))
             return false;
     }
     return true;
@@ -33,11 +55,74 @@ SecondaryPicoDevice::SecondaryPicoDevice(proto_PeripheralDevice device, uint16_t
       m_device(device),
       address(device.address > 0 ? device.address : SECONDARY_PICO_BASE_ADDR)
 {
+    // load_device_dev collected these while this device's config was decoded
+    if (device.devices.arg)
+    {
+        m_sub_devices = *static_cast<const SecondaryPicoSubDevices *>(device.devices.arg);
+    }
+    m_device.devices = {};
+    m_device.inputs = {};
 }
 
-void SecondaryPicoDevice::add_input(const proto_Input &input)
+bool SecondaryPicoDevice::owns_sub_device(uint32_t device_id) const
 {
-    m_inputs.push_back(input);
+    for (auto id : m_sub_devices.ids)
+    {
+        if (id == device_id)
+            return true;
+    }
+    return false;
+}
+
+uint32_t SecondaryPicoDevice::register_input(const proto_Input &input)
+{
+    size_t size = 0;
+    if (!pb_get_encoded_size(&size, proto_Input_fields, &input) || size == 0)
+        return 0;
+    std::vector<uint8_t> encoded(size);
+    pb_ostream_t stream = pb_ostream_from_buffer(encoded.data(), encoded.size());
+    if (!pb_encode(&stream, proto_Input_fields, &input))
+        return 0;
+
+    size_t free_slot = m_inputs.size();
+    for (size_t i = 0; i < m_inputs.size(); i++)
+    {
+        if (m_inputs[i].users && m_inputs[i].encoded == encoded)
+        {
+            m_inputs[i].users++;
+            return SECONDARY_PICO_INPUT_ID_BASE + i;
+        }
+        if (!m_inputs[i].users && free_slot == m_inputs.size())
+        {
+            free_slot = i;
+        }
+    }
+    if (free_slot == m_inputs.size())
+    {
+        m_inputs.emplace_back();
+    }
+    m_inputs[free_slot].encoded = std::move(encoded);
+    m_inputs[free_slot].users = 1;
+    m_config_dirty = true;
+    return SECONDARY_PICO_INPUT_ID_BASE + free_slot;
+}
+
+void SecondaryPicoDevice::unregister_input(uint32_t id)
+{
+    if (id < SECONDARY_PICO_INPUT_ID_BASE || id - SECONDARY_PICO_INPUT_ID_BASE >= m_inputs.size())
+        return;
+    SecondaryPicoInputSlot &slot = m_inputs[id - SECONDARY_PICO_INPUT_ID_BASE];
+    if (!slot.users || --slot.users)
+        return;
+    slot.encoded.clear();
+    // Empty slots at the end don't need to be sent at all
+    while (!m_inputs.empty() && !m_inputs.back().users)
+    {
+        m_inputs.pop_back();
+    }
+    m_digital_inputs.erase(id);
+    m_analog_inputs.erase(id);
+    m_config_dirty = true;
 }
 
 // A slave that stops answering is reported disconnected after this long
@@ -83,7 +168,8 @@ void SecondaryPicoDevice::end(bool full)
     m_host_ota = false;
     m_digital_inputs.clear();
     m_analog_inputs.clear();
-    m_inputs.clear();
+    m_sub_device_status.clear();
+    // m_inputs is kept, the inputs registered it when the profile was built and won't again
     interface.dmaDeinit(address);
     m_transfer = Transfer::None;
     m_transfer_pending = false;
@@ -186,6 +272,7 @@ void SecondaryPicoDevice::transfer_failed(Transfer transfer)
         // Only changes are sent, so anything held now would never be released
         m_digital_inputs.clear();
         m_analog_inputs.clear();
+        sub_devices_lost();
         // Whatever comes back may have rebooted, so check its version and send its config again
         m_version_checked = false;
         proto_Event event = proto_Event_init_zero;
@@ -302,12 +389,49 @@ void SecondaryPicoDevice::version_received()
     m_config_dirty = true;
 }
 
+// The device a hotplug event is about, and whether its latest one is kept to send again on a full poll
+static bool hotplug_device(const proto_Event &event, uint32_t &id, bool &keep)
+{
+    keep = true;
+    switch (event.which_event)
+    {
+    case proto_Event_device_tag:
+        id = event.event.device.id;
+        return true;
+    case proto_Event_wii_tag:
+        id = event.event.wii.id;
+        return true;
+    case proto_Event_ps2_tag:
+        id = event.event.ps2.id;
+        return true;
+    case proto_Event_snes_tag:
+        id = event.event.snes.id;
+        return true;
+    case proto_Event_joybus_tag:
+        id = event.event.joybus.id;
+        return true;
+    case proto_Event_usb_tag:
+        // one per USB device rather than one for the host, so just passed on
+        keep = false;
+        id = event.event.usb.id;
+        return true;
+    case proto_Event_bt_tag:
+        keep = false;
+        id = event.event.bt.id;
+        return true;
+    default:
+        return false;
+    }
+}
+
 void SecondaryPicoDevice::decode_events()
 {
     pb_istream_t stream = pb_istream_from_buffer(rx_buf, sizeof(rx_buf));
     proto_Event event = proto_Event_init_default;
     while (stream.bytes_left > 0 && pb_decode_delimited(&stream, proto_Event_fields, &event))
     {
+        uint32_t device_id = 0;
+        bool keep = false;
         if (event.which_event == proto_Event_button_tag)
         {
             uint32_t id = event.event.button.id;
@@ -318,8 +442,45 @@ void SecondaryPicoDevice::decode_events()
             uint32_t id = event.event.axis.id;
             m_analog_inputs[id] = static_cast<uint16_t>(event.event.axis.state);
         }
+        else if (hotplug_device(event, device_id, keep) && owns_sub_device(device_id))
+        {
+            // A device on the secondary pico connecting, or what is plugged into it changing. Passed
+            // on to the tool as if it came from a device here
+            if (keep)
+            {
+                m_sub_device_status[(static_cast<uint32_t>(event.which_event) << 16) | device_id] = event;
+            }
+            HIDConfigDevice::send_event(event, true);
+        }
         event = proto_Event_init_default;
     }
+}
+
+void SecondaryPicoDevice::send_sub_device_status()
+{
+    for (auto id : m_sub_devices.ids)
+    {
+        // Nothing heard from it yet, so it isn't connected as far as the tool is concerned
+        if (!m_sub_device_status.count((static_cast<uint32_t>(proto_Event_device_tag) << 16) | id))
+        {
+            proto_Event event = proto_Event_init_zero;
+            event.which_event = proto_Event_device_tag;
+            event.event.device.id = id;
+            event.event.device.connected = false;
+            HIDConfigDevice::send_event(event, true);
+        }
+    }
+    for (const auto &it : m_sub_device_status)
+    {
+        HIDConfigDevice::send_event(it.second, true);
+    }
+}
+
+void SecondaryPicoDevice::sub_devices_lost()
+{
+    // Whatever was plugged into them is gone with them
+    m_sub_device_status.clear();
+    send_sub_device_status();
 }
 
 void SecondaryPicoDevice::send_config()
@@ -330,6 +491,9 @@ void SecondaryPicoDevice::send_config()
     periph.inputs.funcs.encode = &encode_inputs_callback;
     const void *arg = &m_inputs;
     periph.inputs.arg = const_cast<void*>(arg);
+    periph.devices.funcs.encode = &encode_sub_devices_callback;
+    const void *devices_arg = &m_sub_devices;
+    periph.devices.arg = const_cast<void*>(devices_arg);
 
     pb_ostream_t stream = pb_ostream_from_buffer(m_config_buf + 1, sizeof(m_config_buf) - 1);
     if (!pb_encode_delimited(&stream, proto_PeripheralDevice_fields, &periph))
@@ -383,7 +547,10 @@ void SecondaryPicoDevice::ota_step()
 void SecondaryPicoDevice::update(bool full_poll, bool send_events)
 {
     if (full_poll)
+    {
         m_config_dirty = true;
+        send_sub_device_status();
+    }
 
     if (m_transfer_pending)
     {

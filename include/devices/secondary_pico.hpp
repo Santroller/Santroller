@@ -22,8 +22,26 @@
 #define SECONDARY_PICO_OTA_CHUNK_SIZE 256
 // How many bytes are read for each GET_EVENTS, the secondary pico only sends what fits in this
 #define SECONDARY_PICO_EVENTS_SIZE    256
+// Inputs set up on the secondary pico report their events with their index from here
+#define SECONDARY_PICO_INPUT_ID_BASE  0x100
 // Largest single transfer: the config write
 #define SECONDARY_PICO_MAX_TRANSFER   SECONDARY_PICO_CONFIG_SIZE
+
+// The devices configured to run on a secondary pico, collected while its config is decoded (see
+// load_device_dev) so they can be passed on to it as they are
+struct SecondaryPicoSubDevices
+{
+    // Each device's encoded proto_Device, length prefixed
+    std::vector<uint8_t> encoded;
+    std::vector<uint32_t> ids;
+};
+
+// An input set up on a secondary pico, encoded as it is sent, and how many inputs here use it
+struct SecondaryPicoInputSlot
+{
+    std::vector<uint8_t> encoded;
+    uint16_t users = 0;
+};
 
 class SecondaryPicoDevice : public Device, public I2CDMAInterface
 {
@@ -40,7 +58,12 @@ public:
 
     bool read_digital_pin(uint32_t input_id);
     uint16_t read_analog_pin(uint32_t input_id);
-    void add_input(const proto_Input &input);
+    // Sets the input up on the secondary pico, returning the id its events come back with (0 if it
+    // can't be). Inputs that are the same share one, and each register needs an unregister_input
+    uint32_t register_input(const proto_Input &input);
+    void unregister_input(uint32_t id);
+    // Whether this is one of the devices running on the secondary pico
+    bool owns_sub_device(uint32_t device_id) const override;
 
     // Configurator driven OTA. These block until the transfer is done, as the host waits on each
     // report before sending the next, and pause polling until send_ota_finish
@@ -80,6 +103,8 @@ private:
     void ota_step();
     void version_received();
     void decode_events();
+    void send_sub_device_status();
+    void sub_devices_lost();
     void send_ota_event(bool connected, bool updating, uint32_t progress, bool rebooting);
 
     I2CMasterInterface interface;
@@ -87,7 +112,12 @@ private:
     uint8_t address;
     bool m_connected = false;
 
-    std::vector<proto_Input> m_inputs;
+    // What the inputs registered, by slot. An empty slot (nothing registered it any more) is sent as
+    // an empty input so the slots after it keep their ids
+    std::vector<SecondaryPicoInputSlot> m_inputs;
+    SecondaryPicoSubDevices m_sub_devices;
+    // The latest hotplug event of each kind from each sub-device, by event tag << 16 | device id
+    std::unordered_map<uint32_t, proto_Event> m_sub_device_status;
     std::unordered_map<uint32_t, bool> m_digital_inputs;
     std::unordered_map<uint32_t, uint16_t> m_analog_inputs;
 

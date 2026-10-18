@@ -145,8 +145,36 @@ bool load_cycle_state(pb_istream_t *stream, const pb_field_t *field, void **arg)
     DeviceFactory::add_last_cycle_state(state);
     return ret;
 }
+// The devices a secondary pico runs, collected while its config is decoded. Never re-entered, as
+// sub-devices can't be secondary picos themselves
+static SecondaryPicoSubDevices peripheral_sub_devices;
+static bool load_peripheral_sub_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto *devices = static_cast<SecondaryPicoSubDevices *>(*arg);
+    const uint8_t *start = static_cast<const uint8_t *>(stream->state);
+    size_t len = stream->bytes_left;
+    // Its id, so inputs on it are sent to the secondary pico. Nothing nested is decoded
+    static proto_Device sub_device;
+    sub_device = proto_Device_init_zero;
+    pb_istream_t id_stream = *stream;
+    if (!pb_decode(&id_stream, proto_Device_fields, &sub_device))
+        return false;
+    uint8_t prefix[5];
+    pb_ostream_t prefix_stream = pb_ostream_from_buffer(prefix, sizeof(prefix));
+    pb_encode_varint(&prefix_stream, len);
+    devices->encoded.insert(devices->encoded.end(), prefix, prefix + prefix_stream.bytes_written);
+    devices->encoded.insert(devices->encoded.end(), start, start + len);
+    devices->ids.push_back(sub_device.deviceid);
+    return pb_read(stream, nullptr, len);
+}
 bool load_device_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
+    if (field->tag == proto_Device_peripheral_tag)
+    {
+        proto_PeripheralDevice *msg = (proto_PeripheralDevice *)field->pData;
+        msg->devices.funcs.decode = load_peripheral_sub_device;
+        msg->devices.arg = &peripheral_sub_devices;
+    }
     if (field->tag == proto_Device_cycle_tag)
     {
         proto_CycleDevice *msg = (proto_CycleDevice *)field->pData;
@@ -161,6 +189,8 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     // keep their own copy of their config
     static proto_Device proto_device;
     proto_device = proto_Device_init_default;
+    peripheral_sub_devices.encoded.clear();
+    peripheral_sub_devices.ids.clear();
     proto_device.cb_device.funcs.decode = load_device_dev;
     proto_device.cb_device.arg = arg ? *arg : nullptr;
     pb_decode_ex(stream, proto_Device_fields, &proto_device, PB_DECODE_NOINIT);

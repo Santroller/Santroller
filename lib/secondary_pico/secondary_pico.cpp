@@ -20,6 +20,9 @@
 #include "config/input_factory.hpp"
 #include "devices/base.hpp"
 #include "input/input.hpp"
+#include "profiles/profile.hpp"
+#include "mappings/base_mapping.hpp"
+#include "leds/led_mappings.hpp"
 
 #define SECONDARY_PICO_BASE_ADDR 0x75
 
@@ -34,9 +37,9 @@
 #define SECONDARY_PICO_EVENTS_SIZE    256
 
 #define EVENT_QUEUE_MAX 32
-// Inputs configured on the secondary pico report with their index from here, so they can't be
-// mistaken for the raw pins, which report with their GPIO number
-#define CONFIGURED_INPUT_ID_BASE 0x100
+// Inputs configured on the secondary pico report with their index from here, keep in sync with
+// include/devices/secondary_pico.hpp
+#define SECONDARY_PICO_INPUT_ID_BASE  0x100
 
 static proto_Event g_event_queue[EVENT_QUEUE_MAX];
 static uint8_t g_event_head = 0;
@@ -67,6 +70,8 @@ static size_t g_pending_config_len = 0;
 static volatile bool g_config_pending = false;
 
 static std::vector<std::shared_ptr<Device>> g_secondary_sub_devices;
+// Holds the sub-devices by their ids, so inputs on them are built against them like on the master
+static std::shared_ptr<Profile> g_secondary_profile;
 static std::vector<std::unique_ptr<Input>> g_secondary_inputs;
 static std::unordered_map<uint32_t, bool> g_last_input_buttons;
 static std::unordered_map<uint32_t, uint16_t> g_last_input_axes;
@@ -170,12 +175,14 @@ static bool decode_sub_device_callback(pb_istream_t *stream, const pb_field_t *f
     {
         return false;
     }
-    uint16_t dev_id = static_cast<uint16_t>(g_secondary_sub_devices.size() + 1);
+    // Its id from the master's config, which the inputs on it refer to it by
+    uint16_t dev_id = static_cast<uint16_t>(dev.deviceid);
     auto sub_dev = DeviceFactory::create_device(dev, dev_id, nullptr);
     if (sub_dev)
     {
         sub_dev->begin();
         g_secondary_sub_devices.push_back(sub_dev);
+        g_secondary_profile->devices.emplace(dev_id, sub_dev);
     }
     return true;
 }
@@ -187,11 +194,15 @@ static bool decode_sub_input_callback(pb_istream_t *stream, const pb_field_t *fi
     {
         return false;
     }
-    auto input = InputFactory::create_input(in, nullptr);
-    if (input)
+    // The master knows inputs by their index, so one that can't be used still takes its slot
+    if (in.which_input == proto_Input_gpio_tag && in.input.gpio.pin >= 0 &&
+        ((uint)in.input.gpio.pin == g_slave_sda || (uint)in.input.gpio.pin == g_slave_scl || (uint)in.input.gpio.pin == g_slave_id_pin))
     {
-        g_secondary_inputs.push_back(std::move(input));
+        // setting it up would take the pin away from the link to the master
+        g_secondary_inputs.push_back(nullptr);
+        return true;
     }
+    g_secondary_inputs.push_back(InputFactory::create_input(in, g_secondary_profile));
     return true;
 }
 
@@ -204,8 +215,10 @@ static void secondary_pico_handle_config_command(const uint8_t *rx_buf, size_t r
             dev->end(true);
         }
     }
-    g_secondary_sub_devices.clear();
+    // inputs first, they hold on to the devices
     g_secondary_inputs.clear();
+    g_secondary_sub_devices.clear();
+    g_secondary_profile = std::make_shared<Profile>();
     g_last_input_buttons.clear();
     g_last_input_axes.clear();
 
@@ -326,9 +339,6 @@ void secondary_pico_slave_init(i2c_inst_t *i2c_block, uint sda_pin, uint scl_pin
 
 void secondary_pico_coprocessor_loop()
 {
-    uint32_t last_digital = sio_hw->gpio_in;
-    uint16_t last_adc[4] = {0};
-
     adc_init();
 
     while (1)
@@ -339,52 +349,7 @@ void secondary_pico_coprocessor_loop()
             secondary_pico_handle_config_command(g_pending_config_buf, g_pending_config_len);
         }
 
-        // 1. Direct GPIO pin fallback polling
-        uint32_t current_digital = sio_hw->gpio_in;
-        uint32_t diff = current_digital ^ last_digital;
-        if (diff)
-        {
-            for (uint8_t pin = 0; pin < 30; pin++)
-            {
-                if (pin == g_slave_sda || pin == g_slave_scl || pin == g_slave_id_pin)
-                    continue;
-
-                if (diff & (1u << pin))
-                {
-                    bool state = (current_digital & (1u << pin)) != 0;
-                    proto_Event event = proto_Event_init_zero;
-                    event.which_event = proto_Event_button_tag;
-                    event.event.button.id = pin;
-                    event.event.button.state = state;
-                    secondary_pico_enqueue_event(&event);
-                }
-            }
-            last_digital = current_digital;
-        }
-
-        // 2. Direct ADC channel fallback polling
-        for (uint8_t adc_channel = 0; adc_channel < 4; adc_channel++)
-        {
-            uint8_t gpio_pin = 26 + adc_channel;
-            if (gpio_pin == g_slave_sda || gpio_pin == g_slave_scl || gpio_pin == g_slave_id_pin)
-                continue;
-
-            adc_select_input(adc_channel);
-            uint16_t raw = adc_read();
-            uint16_t val16 = (raw << 4) | (raw >> 8);
-            if (abs((int)val16 - (int)last_adc[adc_channel]) > 256)
-            {
-                last_adc[adc_channel] = val16;
-                proto_Event event = proto_Event_init_zero;
-                event.which_event = proto_Event_axis_tag;
-                // the master looks analog inputs up by their GPIO, like digital ones
-                event.event.axis.id = gpio_pin;
-                event.event.axis.state = val16;
-                secondary_pico_enqueue_event(&event);
-            }
-        }
-
-        // 3. Update active sub-devices
+        // 1. Update active sub-devices
         for (auto &dev : g_secondary_sub_devices)
         {
             if (dev)
@@ -393,13 +358,13 @@ void secondary_pico_coprocessor_loop()
             }
         }
 
-        // 4. Tick inputs configured on coprocessor
+        // 2. Tick inputs configured on coprocessor
         for (size_t i = 0; i < g_secondary_inputs.size(); i++)
         {
             auto &input = g_secondary_inputs[i];
             if (!input) continue;
 
-            uint32_t input_id = static_cast<uint32_t>(CONFIGURED_INPUT_ID_BASE + i);
+            uint32_t input_id = static_cast<uint32_t>(SECONDARY_PICO_INPUT_ID_BASE + i);
             if (input->has_independent_analog_value())
             {
                 uint16_t current_val = input->tick_analog();

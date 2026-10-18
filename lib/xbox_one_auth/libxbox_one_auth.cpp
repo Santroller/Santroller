@@ -10,6 +10,8 @@
 #define FRAME_TIMEOUT_MS 250
 #define POLL_INTERVAL_MS 2
 #define MAX_STEPS 16
+// How long to wait before looking for a missing chip again
+#define MISSING_RETRY_MS 1000
 
 static uint16_t chip_crc(const uint8_t *data, uint16_t length)
 {
@@ -33,12 +35,21 @@ void XboxOneAuth::begin()
     m_transfer_pending = false;
     m_transfer_done = false;
     interface.dmaInit(XBOX_ONE_AUTH_I2C_ADDRESS, this);
-    m_attempts = 0;
+    m_missing_reported = false;
     if (m_reset_pin >= 0)
     {
         // Emulate open drain: drive low, release to the pull-up for high
         gpio_init(m_reset_pin);
         gpio_pull_up(m_reset_pin);
+    }
+    restart();
+}
+
+void XboxOneAuth::restart()
+{
+    m_attempts = 0;
+    if (m_reset_pin >= 0)
+    {
         gpio_put(m_reset_pin, 0);
         gpio_set_dir(m_reset_pin, GPIO_OUT);
         m_state = State::ResetLow;
@@ -48,6 +59,17 @@ void XboxOneAuth::begin()
     {
         m_state = State::Probe;
     }
+}
+
+void XboxOneAuth::missing()
+{
+    if (!m_missing_reported)
+    {
+        m_missing_reported = true;
+        printf("xone auth chip missing\r\n");
+    }
+    m_state = State::Missing;
+    wait(MISSING_RETRY_MS);
 }
 
 void XboxOneAuth::end()
@@ -87,7 +109,17 @@ void XboxOneAuth::send(uint8_t command, const uint8_t *payload, uint16_t length)
     m_buffer[5 + length] = crc & 0xff;
     m_transfer_pending = true;
     m_transfer_done = false;
-    interface.dmaWriteRead(XBOX_ONE_AUTH_I2C_ADDRESS, m_buffer, length + 6, nullptr, 0, m_cmds);
+    transfer_queued(interface.dmaWriteRead(XBOX_ONE_AUTH_I2C_ADDRESS, m_buffer, length + 6, nullptr, 0, m_cmds));
+}
+
+void XboxOneAuth::transfer_queued(bool queued)
+{
+    // A transfer that wasn't queued never completes, so fail it straight away
+    if (!queued)
+    {
+        m_transfer_ok = false;
+        m_transfer_done = true;
+    }
 }
 
 void XboxOneAuth::read_register(uint8_t reg, uint8_t *data, uint16_t length)
@@ -95,7 +127,7 @@ void XboxOneAuth::read_register(uint8_t reg, uint8_t *data, uint16_t length)
     m_reg = reg;
     m_transfer_pending = true;
     m_transfer_done = false;
-    interface.dmaWriteRead(XBOX_ONE_AUTH_I2C_ADDRESS, &m_reg, 1, data, length, m_cmds);
+    transfer_queued(interface.dmaWriteRead(XBOX_ONE_AUTH_I2C_ADDRESS, &m_reg, 1, data, length, m_cmds));
 }
 
 bool XboxOneAuth::request(const uint8_t *data, uint16_t len)
@@ -195,15 +227,13 @@ void XboxOneAuth::transfer_done(bool ok)
         }
         else
         {
-            m_state = State::Missing;
-            printf("xone auth chip missing\r\n");
+            missing();
         }
         return;
     case State::Startup:
         if (!ok)
         {
-            m_state = State::Missing;
-            printf("xone auth chip missing\r\n");
+            missing();
             return;
         }
         m_state = State::StartupStatus;
@@ -306,6 +336,10 @@ void XboxOneAuth::tick()
     }
     switch (m_state)
     {
+    case State::Missing:
+        // Look for it again, it may just have been slow to start
+        restart();
+        break;
     case State::ResetLow:
         gpio_set_dir(m_reset_pin, GPIO_IN);
         m_state = State::ResetRelease;

@@ -79,7 +79,9 @@ void CrazyGuitarNeck::process_data(uint8_t addr, bool running, bool timeout, boo
             connected = false;
             clear_buttons();
         }
-        alarm_id_t id = add_alarm_in_ms(CLONE_STARTUP_MS, restart_handler, this, true);
+        // A one-off NAK shouldn't stall a connected neck, only wait for a start up once it's gone
+        alarm_id_t id = connected ? add_alarm_in_us(CLONE_POLL_INTERVAL_US, restart_handler, this, true)
+                                  : add_alarm_in_ms(CLONE_STARTUP_MS, restart_handler, this, true);
         restart_alarm_id = (id > 0) ? id : 0;
         return;
     }

@@ -371,7 +371,10 @@ static void i2c_dma_next_queued(
     }
     i2c_dma_tx_channel_configure(
         i2c_dma->i2c, i2c_dma->tx_chan, data_cmds, wbuf_len + rbuf_len);
-    i2c_dma->timeout_alarm_id = add_alarm_in_ms(I2C_TRANSFER_TIMEOUT_MS, timeout_handler, i2c_dma, true);
+    const uint32_t baudrate = i2c_dma->baudrate ? i2c_dma->baudrate : 100000;
+    const uint64_t byte_us = (9ull * 1000000ull + baudrate - 1) / baudrate + I2C_TRANSFER_STRETCH_US_PER_BYTE;
+    const uint64_t timeout_us = 2 * byte_us * (wbuf_len + rbuf_len) + I2C_TRANSFER_TIMEOUT_MARGIN_US;
+    i2c_dma->timeout_alarm_id = add_alarm_in_us(timeout_us, timeout_handler, i2c_dma, true);
 }
 
 void I2CMasterInterface::tick()
@@ -592,6 +595,12 @@ bool I2CMasterInterface::dmaWriteRead(uint8_t addr,
                                       uint16_t *cmds)
 {
     if (!i2c_dma || (!cmds && wbuf_len + rbuf_len > I2C_MAX_TRANSFER_SIZE))
+    {
+        return false;
+    }
+    // Without DMA channels (the bus is the secondary pico link, or there were none free) nothing queued
+    // would ever run
+    if (i2c_dma->tx_chan < 0 || i2c_dma->rx_chan < 0)
     {
         return false;
     }

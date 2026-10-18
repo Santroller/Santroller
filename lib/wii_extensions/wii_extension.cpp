@@ -22,8 +22,45 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 // fires after this is freed
 void WiiExtension::schedule(uint64_t delay_us)
 {
-    cancel_alarm(restart_alarm_id);
-    restart_alarm_id = add_alarm_in_us(delay_us, restart_handler, this, true);
+    if (restart_alarm_id)
+    {
+        cancel_alarm(restart_alarm_id);
+    }
+    alarm_id_t id = add_alarm_in_us(delay_us, restart_handler, this, true);
+    restart_alarm_id = (id > 0) ? id : 0;
+}
+
+// Reads continue from the pointer, so a read that has to be done again needs its pointer written again
+void WiiExtension::rewind_read()
+{
+    switch (status)
+    {
+    case WII_INIT_READ_ID_READ:
+        status = WII_INIT_READ_ID_WRITE_PTR;
+        break;
+    case WII_INIT_CLASSIC_READ_ID_READ:
+        status = WII_INIT_CLASSIC_READ_ID_WRITE_PTR;
+        break;
+    case WII_INIT_READ_DATA_READ:
+        status = WII_INIT_READ_DATA_WRITE_PTR;
+        break;
+    case WII_INIT_ENC_READ_ID_READ:
+        status = WII_INIT_ENC_READ_ID_WRITE_PTR;
+        break;
+    case WII_INPUTS_READ:
+        status = WII_INPUTS_WRITE_PTR;
+        break;
+    default:
+        break;
+    }
+}
+
+// Start again from the beginning of init, with nothing reported until the extension is found again
+void WiiExtension::restart_init()
+{
+    status = WII_INIT_FINISH_ENC;
+    packetIssueCount = 0;
+    reset();
 }
 
 bool WiiExtension::verifyData(const uint8_t *dataIn, uint8_t dataSize)
@@ -52,6 +89,11 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
         return;
     }
     lastPoll = to_ms_since_boot(get_absolute_time());
+    if (restart_alarm_id)
+    {
+        cancel_alarm(restart_alarm_id);
+        restart_alarm_id = 0;
+    }
     if (timeout || abort_detected)
     {
         if (status != WII_INIT_FINISH_ENC)
@@ -61,11 +103,15 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
         // during high load, there might be the occassional drop, so allow a few failures
         if (failCount > 10 || status == WII_INIT_FINISH_ENC)
         {
-            status = WII_INIT_FINISH_ENC;
-            mType = WiiExtType::WiiNoExtension;
+            failCount = 0;
+            restart_init();
             schedule(500 * 1000);
             return;
         }
+        // Try the step again, with the same gap as any other command
+        rewind_read();
+        schedule(200);
+        return;
     }
     if (stop_detected && !abort_detected)
     {
@@ -85,6 +131,7 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
             if (verifyData(bufferRx, WII_ID_LEN))
             {
                 mType = static_cast<WiiExtType>(bufferRx[0] << 8 | bufferRx[5]);
+                packetIssueCount = 0;
                 wiiPointer = 0;
                 wiiBytes = 6;
                 hiRes = false;
@@ -110,6 +157,18 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
                     wiiPointer = 5;
                     wiiBytes = 1;
                 }
+            }
+            else if (++packetIssueCount > 10)
+            {
+                // Not ready yet, give it a while and start again
+                restart_init();
+                schedule(500 * 1000);
+                return;
+            }
+            else
+            {
+                // The pointer has moved on, so write it again before reading the ID again
+                status = WII_INIT_READ_ID_WRITE_PTR;
             }
             break;
         case WII_INIT_DRAWSOME:
@@ -193,8 +252,19 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
             // The TaTaCon only reads back its button byte, which is active low with the unused
             // bits set, so 0xFF is the valid idle state rather than a bad init
             bool valid = mType == WiiExtType::WiiTaikoNoTatsujinController ? bufferRx[0] != 0x00 : verifyData(bufferRx, wiiBytes);
+            if (!valid && ++packetIssueCount > WII_MAX_INVALID_PACKETS)
+            {
+                // It still answers but has stopped sending data (e.g. it browned out and lost its
+                // init), so set it up again rather than holding the last inputs forever. The type is
+                // kept, so one that comes straight back doesn't cause a reload, while one that is
+                // gone fails its ID read and is reset from there
+                status = WII_INIT_FINISH_ENC;
+                packetIssueCount = 0;
+                break;
+            }
             if (valid)
             {
+                packetIssueCount = 0;
                 update_data(bufferRx, wiiBytes, m_device);
                 // Update the led if it changes
                 if (mType == WiiExtType::WiiDjHeroTurntable && ledUpdated)
@@ -385,6 +455,7 @@ void WiiExtension::end()
     started = false;
     mInterface.dmaDeinit(WII_ADDR);
     cancel_alarm(restart_alarm_id);
+    restart_alarm_id = 0;
 }
 
 void WiiExtension::setEuphoriaLed(bool state)
@@ -402,11 +473,13 @@ void WiiExtension::tick()
         status == WII_INPUTS_WRITE_PTR &&
         m_has_turntable_poll &&
         time_us_32() - m_last_turntable_poll_us < m_turntable_poll_interval_us;
-    if (lastPoll && now - lastPoll > 500 && !waiting_for_turntable_poll)
+    if (lastPoll && !restart_alarm_id && now - lastPoll > 500 && !waiting_for_turntable_poll)
     {
         // Masked so the I2C interrupt can't schedule a poll between process_data cancelling the old
         // alarm and storing the new one, which would leave an alarm that end() can't cancel
         uint32_t irq_status = save_and_disable_interrupts();
+        // A transfer never came back, do the step again
+        rewind_read();
         process_data(WII_ADDR, false, false, false, false);
         restore_interrupts(irq_status);
     }

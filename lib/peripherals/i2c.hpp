@@ -6,9 +6,11 @@
 
 #define I2C_MAX_ADDR 127
 #define I2C_MAX_TRANSFER_SIZE 32
-// A transfer timeout of 1000ms will allow a 10000 bit transfer to complete
-// successfully without timeouts at baudrates as low as 10000 baud.
-#define I2C_TRANSFER_TIMEOUT_MS 10000
+// Transfers time out at twice how long they should take, so a device holding the bus only stalls the
+// others on it briefly. Each byte is 9 clocks, plus however long the device stretches the clock for
+// (the GH5 peripherals take up to 85us a byte), and the margin covers starting up and interrupt latency
+#define I2C_TRANSFER_STRETCH_US_PER_BYTE 200
+#define I2C_TRANSFER_TIMEOUT_MARGIN_US 20000
 #define I2C_TAKE_MUTEX_TIMEOUT_MS 10000
 
 class I2CDMAInterface

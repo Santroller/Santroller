@@ -3,16 +3,11 @@
 #include "i2c.hpp"
 #define DJLEFT_ADDR 0x0E
 #define DJRIGHT_ADDR 0x0D
-#define DJ_BUTTONS_PTR 0x10
+#define DJ_BUTTONS_PTR 0x12
 #define DJH_DEFAULT_POLL_INTERVAL_MS 5
 // Readings are movement since the last read, so polling too often shrinks them towards nothing
 #define DJH_MIN_POLL_INTERVAL_MS 1
 
-typedef enum
-{
-    DJH_CHECK_STATUS,
-    DJH_READ_DATA
-} djh_status_e;
 class DJHeroTurntable : public I2CDMAInterface
 {
 public:
@@ -39,7 +34,6 @@ private:
     uint8_t address;
     uint32_t pollIntervalUs;
     bool connected = false;
-    djh_status_e status = DJH_CHECK_STATUS;
     uint8_t bufferTx[32];
     uint8_t bufferRx[32];
     alarm_id_t restart_alarm_id = 0;

@@ -62,6 +62,7 @@ void SecondaryPicoDevice::begin()
     m_analog_inputs.clear();
     m_version_checked = false;
     m_ota_in_progress = false;
+    m_auto_ota_attempts = 0;
     m_ota_offset = 0;
     m_host_ota = false;
     m_last_failed = false;
@@ -182,6 +183,9 @@ void SecondaryPicoDevice::transfer_failed(Transfer transfer)
     if (m_connected && (millis() - m_last_recv > disconnect_timeout_ms))
     {
         m_connected = false;
+        // Only changes are sent, so anything held now would never be released
+        m_digital_inputs.clear();
+        m_analog_inputs.clear();
         // Whatever comes back may have rebooted, so check its version and send its config again
         m_version_checked = false;
         proto_Event event = proto_Event_init_zero;
@@ -252,12 +256,28 @@ void SecondaryPicoDevice::version_received()
 {
     m_version_checked = true;
     static const char main_ver[] = GIT_HASH;
-    if (memcmp(m_version_rx_buf, main_ver, std::min<size_t>(8, strlen(main_ver))) != 0)
+    bool mismatch = memcmp(m_version_rx_buf, main_ver, std::min<size_t>(8, strlen(main_ver))) != 0;
+    if (!mismatch)
+    {
+        m_auto_ota_attempts = 0;
+    }
+    else if (m_auto_ota_attempts >= max_auto_ota_attempts)
+    {
+        // Updating it isn't sticking (it rejected the image, or never reports this version), so
+        // stop retrying rather than keeping its inputs frozen behind an endless update
+        if (m_auto_ota_attempts == max_auto_ota_attempts)
+        {
+            m_auto_ota_attempts++;
+            printf("Secondary Pico still mismatched after %u updates, giving up\n", (unsigned)max_auto_ota_attempts);
+        }
+    }
+    else
     {
         printf("Secondary Pico version mismatch! Starting auto-OTA...\n");
         uint32_t raw_fw_size = firmware_size();
         if (raw_fw_size > 0 && raw_fw_size < 0x200000)
         {
+            m_auto_ota_attempts++;
             m_ota_total_size = ((raw_fw_size + SECONDARY_PICO_OTA_CHUNK_SIZE - 1) / SECONDARY_PICO_OTA_CHUNK_SIZE) * SECONDARY_PICO_OTA_CHUNK_SIZE;
             m_ota_offset = 0;
             m_ota_stage = OtaStage::Begin;
@@ -267,7 +287,7 @@ void SecondaryPicoDevice::version_received()
             return;
         }
     }
-    else if (m_rebooting)
+    if (m_rebooting)
     {
         m_rebooting = false;
         proto_Event evt = proto_Event_init_zero;
@@ -320,6 +340,9 @@ void SecondaryPicoDevice::send_config()
     }
     // Cleared before it is sent so a full poll during the transfer queues another
     m_config_dirty = false;
+    // A new config resets what the secondary pico last sent, so it only reports what is held from here
+    m_digital_inputs.clear();
+    m_analog_inputs.clear();
     if (!start_transfer(Transfer::Config, m_config_buf, stream.bytes_written + 1, nullptr, 0))
         m_config_dirty = true;
 }

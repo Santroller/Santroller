@@ -165,6 +165,9 @@ TEST_F(ExtensionReader, RejectsAnAllFFId)
     // wiibrew: FF FF FF FF FF FF is what an extension that wasn't initialised properly returns
     identify({0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF});
     EXPECT_NE(ext.mType, WiiGuitarHeroGuitar);
+    // the read moved the pointer on, so it has to point at the ID again first
+    expect_write({0xFA}, "point at the ID again");
+    complete();
     expect_read(6, "the ID is read again");
 }
 

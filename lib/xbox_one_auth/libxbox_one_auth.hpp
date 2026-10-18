@@ -48,7 +48,10 @@ private:
     };
     void send(uint8_t command, const uint8_t *payload, uint16_t length);
     void read_register(uint8_t reg, uint8_t *data, uint16_t length);
+    void transfer_queued(bool queued);
     void transfer_done(bool ok);
+    void restart();
+    void missing();
     void process_frame();
     void fail();
     void wait(uint32_t ms);
@@ -64,6 +67,7 @@ private:
     uint32_t m_wait_start = 0;
     uint32_t m_timeout_ms = 0;
     uint8_t m_attempts = 0;
+    bool m_missing_reported = false;
     uint8_t m_steps = 0;
     uint8_t m_counter = 0;
     uint8_t m_phase = 3;

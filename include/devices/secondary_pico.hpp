@@ -20,6 +20,8 @@
 
 #define SECONDARY_PICO_CONFIG_SIZE    512
 #define SECONDARY_PICO_OTA_CHUNK_SIZE 256
+// How many bytes are read for each GET_EVENTS, the secondary pico only sends what fits in this
+#define SECONDARY_PICO_EVENTS_SIZE    256
 // Largest single transfer: the config write
 #define SECONDARY_PICO_MAX_TRANSFER   SECONDARY_PICO_CONFIG_SIZE
 
@@ -96,7 +98,7 @@ private:
     uint8_t m_ota_chunk_buf[5 + SECONDARY_PICO_OTA_CHUNK_SIZE];
     uint8_t m_ota_cmd_buf[5];
     uint8_t tx_buf[8];
-    uint8_t rx_buf[256];
+    uint8_t rx_buf[SECONDARY_PICO_EVENTS_SIZE];
     uint8_t m_version_cmd_buf[1] = {SLAVE_CMD_GET_VERSION};
     uint8_t m_version_rx_buf[16] = {0};
 
@@ -112,6 +114,9 @@ private:
     uint32_t m_last_recv = 0;
     bool m_version_checked = false;
     bool m_ota_in_progress = false;
+    // Automatic updates started since begin(), so one that never takes doesn't loop forever
+    static constexpr uint8_t max_auto_ota_attempts = 3;
+    uint8_t m_auto_ota_attempts = 0;
     OtaStage m_ota_stage = OtaStage::Begin;
     bool m_rebooting = false;
     uint32_t m_ota_offset = 0;

@@ -113,4 +113,5 @@ private:
     // Set by end(), so a poll still in flight from an alarm or the I2C interrupt doesn't schedule another
     volatile bool m_stopped = false;
     int failCount = 0;
+    uint32_t lastPoll = 0;
 };

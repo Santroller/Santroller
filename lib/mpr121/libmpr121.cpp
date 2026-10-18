@@ -1,5 +1,10 @@
 #include "libmpr121.hpp"
 #include "stdio.h"
+#include "hardware/sync.h"
+#include "utils.h"
+#define MPR121_POLL_US 500
+// How long to wait before starting again when it isn't answering
+#define MPR121_RETRY_US 500000
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
     MPR121 *inst = (MPR121 *)user_data;
@@ -12,12 +17,23 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 void MPR121::tick()
 {
     interface.tick();
+    if (lastPoll && !restart_alarm_id && to_ms_since_boot(get_absolute_time()) - lastPoll > 1000)
+    {
+        // A transfer never came back, start again from a reset. Masked so the I2C interrupt can't
+        // schedule a poll between this cancelling the old alarm and storing the new one
+        uint32_t irq_status = save_and_disable_interrupts();
+        lastPoll = to_ms_since_boot(get_absolute_time());
+        start();
+        restore_interrupts(irq_status);
+    }
 }
 
 void MPR121::begin()
 {
     m_stopped = false;
     interface.dmaInit(MPR121_I2CADDR_DEFAULT, this);
+    failCount = 0;
+    lastPoll = to_ms_since_boot(get_absolute_time());
     start();
 }
 void MPR121::end()
@@ -28,6 +44,9 @@ void MPR121::end()
     interface.dmaDeinit(MPR121_I2CADDR_DEFAULT);
     cancel_alarm(restart_alarm_id);
     restart_alarm_id = 0;
+    status = MPR121_RESET;
+    inputs = 0;
+    gpio = 0;
 }
 
 void MPR121::configure(uint8_t touchpad_count, uint8_t gpio_inputs, uint8_t gpio_outputs, uint8_t pull_ups, uint8_t pull_downs)
@@ -119,17 +138,25 @@ void MPR121::build_init()
 
 void MPR121::start()
 {
-    cancel_alarm(restart_alarm_id);
+    if (restart_alarm_id)
+    {
+        cancel_alarm(restart_alarm_id);
+        restart_alarm_id = 0;
+    }
     restartRequested = false;
     status = MPR121_RESET;
     bufferTx[0] = MPR121_SOFTRESET;
     bufferTx[1] = 0x63;
-    interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0);
+    if (!interface.dmaWriteRead(MPR121_I2CADDR_DEFAULT, bufferTx, 2, nullptr, 0))
+    {
+        schedule(MPR121_RETRY_US);
+    }
 }
 
 void MPR121::schedule(uint32_t us)
 {
-    restart_alarm_id = add_alarm_in_us(us, restart_handler, this, true);
+    alarm_id_t id = add_alarm_in_us(us, restart_handler, this, true);
+    restart_alarm_id = (id > 0) ? id : 0;
 }
 
 void MPR121::after_poll()
@@ -149,7 +176,7 @@ void MPR121::after_poll()
         return;
     }
     status = MPR121_POLL_TOUCH;
-    schedule(500);
+    schedule(MPR121_POLL_US);
 }
 
 void MPR121::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
@@ -158,13 +185,31 @@ void MPR121::process_data(uint8_t addr, bool running, bool timeout, bool abort_d
     {
         return;
     }
-    cancel_alarm(restart_alarm_id);
+    lastPoll = to_ms_since_boot(get_absolute_time());
+    if (restart_alarm_id)
+    {
+        cancel_alarm(restart_alarm_id);
+        restart_alarm_id = 0;
+    }
     if (timeout || abort_detected)
     {
-        // start from scratch once it shows up again
         failCount++;
+        // A reset makes it take a new baseline, so a pad held through one would read as released.
+        // Retry a dropped poll as it is, and only start from scratch once it has gone
+        if (is_connected() && failCount <= 10)
+        {
+            if (status == MPR121_WRITE_GPIO)
+            {
+                outputsDirty = true;
+            }
+            status = MPR121_POLL_TOUCH;
+            schedule(MPR121_POLL_US);
+            return;
+        }
         status = MPR121_RESET;
-        restart_alarm_id = add_alarm_in_ms(500, restart_handler, this, true);
+        inputs = 0;
+        gpio = 0;
+        schedule(MPR121_RETRY_US);
         return;
     }
     if (!stop_detected)
@@ -195,7 +240,7 @@ void MPR121::process_data(uint8_t addr, bool running, bool timeout, bool abort_d
         if (bufferRx[0] != 0x24)
         {
             status = MPR121_RESET;
-            schedule(500000);
+            schedule(MPR121_RETRY_US);
             return;
         }
         build_init();
@@ -213,7 +258,7 @@ void MPR121::process_data(uint8_t addr, bool running, bool timeout, bool abort_d
         }
         outputsDirty = false;
         status = MPR121_POLL_TOUCH;
-        schedule(500);
+        schedule(MPR121_POLL_US);
         return;
     case MPR121_POLL_TOUCH:
         inputs = (bufferRx[0] | bufferRx[1] << 8) & 0x0FFF;
@@ -232,7 +277,7 @@ void MPR121::process_data(uint8_t addr, bool running, bool timeout, bool abort_d
         return;
     case MPR121_WRITE_GPIO:
         status = MPR121_POLL_TOUCH;
-        schedule(500);
+        schedule(MPR121_POLL_US);
         return;
     }
 }

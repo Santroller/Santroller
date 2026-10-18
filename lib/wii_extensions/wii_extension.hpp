@@ -26,6 +26,8 @@
 #define WII_TURNTABLE_DEFAULT_POLL_INTERVAL_MS 5
 // The table velocities are movement since the last read, so polling too often shrinks them towards nothing
 #define WII_TURNTABLE_MIN_POLL_INTERVAL_MS 1
+// How many invalid packets in a row before the extension is set up again
+#define WII_MAX_INVALID_PACKETS 100
 
 class WiiExtension: public I2CDMAInterface, public WiiExtensionDecoder
 {
@@ -49,11 +51,12 @@ private:
     bool nextEuphoriaLedState = false;
     bool ledUpdated = false;
     bool hadDrum = false;
-    uint8_t packetIssueCount;
-    uint8_t mBufferIndex;
-    long lastTick;
+    // Invalid IDs or packets in a row
+    uint8_t packetIssueCount = 0;
+    uint8_t mBufferIndex = 0;
+    long lastTick = 0;
     uint32_t lastPoll = 0;
-    uint8_t wiiBytes;
+    uint8_t wiiBytes = 6;
     uint8_t wiiPointer = 0;
     uint8_t m_block = 0;
     // in us, so the interval is steady rather than jittering by up to a ms
@@ -63,6 +66,8 @@ private:
     MidiDevice *m_device;
     alarm_id_t restart_alarm_id = 0;
     void schedule(uint64_t delay_us);
+    void rewind_read();
+    void restart_init();
     int failCount = 0;
 
     // Cleared by end(), so the alarm and I2C interrupts stop scheduling polls of a device being freed

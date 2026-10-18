@@ -76,7 +76,9 @@ void GuitarHero5Neck::process_data(uint8_t addr, bool running, bool timeout, boo
             connected = false;
             clear_buttons();
         }
-        alarm_id_t id = add_alarm_in_ms(500, restart_handler, this, true);
+        // A one-off NAK shouldn't stall a connected neck for half a second, only back off once it's gone
+        alarm_id_t id = connected ? add_alarm_in_us(GH5_POLL_INTERVAL_US, restart_handler, this, true)
+                                  : add_alarm_in_ms(500, restart_handler, this, true);
         restart_alarm_id = (id > 0) ? id : 0;
         return;
     }
@@ -100,6 +102,8 @@ void GuitarHero5Neck::process_data(uint8_t addr, bool running, bool timeout, boo
         return;
     }
 
+    // The protocol has a "new data" status at 0x11 to check first, but the neck firmware always reports
+    // it as set, so read the buttons and slider straight from 0x12
     bufferTx[0] = GH5NECK_BUTTONS_PTR;
     interface.dmaWriteRead(GH5NECK_ADDR, bufferTx, 1, bufferRx, 4);
 }

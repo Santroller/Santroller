@@ -83,15 +83,18 @@ public:
     {
         return status != ACCEL_INIT;
     }
-    uint16_t lis3dhAdc[3];
-    int32_t accel[3];
+    uint16_t lis3dhAdc[3] = {};
+    int32_t accel[3] = {};
     void process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
 
 private:
+    void schedule_us(uint32_t delay_us);
+    void probe_later();
+    void probe_round_done();
+    void clear();
     I2CMasterInterface interface;
-    AccelerometerType type;
-    uint8_t address;
-    uint8_t reg;
+    AccelerometerType type = AccelerometerType::None;
+    uint8_t address = 0;
     int currentPoll = 0;
     int failCount = 0;
     alarm_id_t restart_alarm_id = 0;
@@ -100,18 +103,14 @@ private:
     accel_status_e status = ACCEL_INIT;
     uint8_t bufferTx[32];
     uint8_t bufferRx[32];
-    uint8_t idResponseLis1;
-    uint8_t idResponseLis2;
-    uint8_t idResponseAdxl1;
-    uint8_t idResponseAdxl2;
-    uint8_t idResponseMpu1;
-    uint8_t idResponseMpu2;
+    uint8_t idResponseLis1 = 0;
+    uint8_t idResponseLis2 = 0;
+    uint8_t idResponseAdxl1 = 0;
+    uint8_t idResponseAdxl2 = 0;
+    uint8_t idResponseMpu1 = 0;
+    uint8_t idResponseMpu2 = 0;
     uint8_t pollReg = 0;
     uint32_t lastPoll = 0;
-    bool seen_response_lis3dh_1 = true;
-    bool seen_response_lis3dh_2 = true;
-    bool seen_response_adxl345_1 = true;
-    bool seen_response_adxl345_2 = true;
-    bool seen_response_mpu6050_1 = true;
-    bool seen_response_mpu6050_2 = true;
+    // Probes sent to each possible address that haven't answered yet
+    uint8_t probesPending = 0;
 };

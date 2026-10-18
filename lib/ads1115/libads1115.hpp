@@ -96,18 +96,21 @@ public:
     {
         return status != ADS1115_INIT;
     }
-    uint16_t inputs[4];
+    uint16_t inputs[4] = {};
     void process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
     void begin();
     void end();
 
 private:
+    void schedule_us(uint32_t delay_us);
+    void probe_later();
+    void disconnected();
     I2CMasterInterface interface;
     uint8_t alert;
     uint8_t current = 0;
-    uint16_t config;
+    uint16_t config = ADS1115_REG_RESET_VAL;
     ads1115_status_e status = ADS1115_INIT;
-    uint8_t address;
+    uint8_t address = 0;
     alarm_id_t restart_alarm_id = 0;
     // Set by end(), so a poll still in flight from an alarm or the I2C interrupt doesn't schedule another
     volatile bool m_stopped = false;
@@ -116,7 +119,8 @@ private:
     uint8_t bufferRx[32];
     uint8_t bufferTxInit[4];
     uint8_t bufferRxInit[4];
-    bool seen[4];
+    // Probes sent to each possible address that haven't answered yet
+    uint8_t probesPending = 0;
     volatile bool m_ready = false;
     uint32_t lastPoll = 0;
     // uint8_t config[2];

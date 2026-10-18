@@ -30,8 +30,13 @@
 #define SLAVE_CMD_OTA_BEGIN           0x80
 #define SLAVE_CMD_OTA_CHUNK           0x81
 #define SLAVE_CMD_OTA_FINISH          0x82
+// How many bytes the master reads for each GET_EVENTS, keep in sync with include/devices/secondary_pico.hpp
+#define SECONDARY_PICO_EVENTS_SIZE    256
 
 #define EVENT_QUEUE_MAX 32
+// Inputs configured on the secondary pico report with their index from here, so they can't be
+// mistaken for the raw pins, which report with their GPIO number
+#define CONFIGURED_INPUT_ID_BASE 0x100
 
 static proto_Event g_event_queue[EVENT_QUEUE_MAX];
 static uint8_t g_event_head = 0;
@@ -51,6 +56,11 @@ static size_t g_rx_len = 0;
 static uint8_t g_tx_buf[512];
 static size_t g_tx_len = 0;
 static size_t g_tx_ptr = 0;
+// The command a read is for. The master writes it and then reads with a repeated start, which the
+// SDK reports as the end of the write (I2C_SLAVE_FINISH), so g_rx_buf is already cleared by the time
+// the read request comes in
+static uint8_t g_read_cmd = 0;
+static bool g_reading = false;
 
 static uint8_t g_pending_config_buf[512];
 static size_t g_pending_config_len = 0;
@@ -96,23 +106,26 @@ bool secondary_pico_enqueue_event(const proto_Event *event)
     return true;
 }
 
-static bool secondary_pico_dequeue_event(proto_Event *event)
-{
-    if (g_event_head == g_event_tail)
-        return false; // Queue empty
-    *event = g_event_queue[g_event_tail];
-    g_event_tail = (g_event_tail + 1) % EVENT_QUEUE_MAX;
-    return true;
-}
-
 size_t secondary_pico_handle_get_events(uint8_t *tx_buf, size_t max_len)
 {
+    // Anything past what the master reads would be lost
+    if (max_len > SECONDARY_PICO_EVENTS_SIZE)
+        max_len = SECONDARY_PICO_EVENTS_SIZE;
     pb_ostream_t stream = pb_ostream_from_buffer(tx_buf, max_len);
-    proto_Event event;
-    while (secondary_pico_dequeue_event(&event))
+    while (g_event_head != g_event_tail)
     {
-        if (!pb_encode_delimited(&stream, proto_Event_fields, &event))
+        // Only take an event off the queue once it's known to fit, the rest go in the next read
+        const proto_Event *event = &g_event_queue[g_event_tail];
+        size_t size = 0;
+        if (!pb_get_encoded_size(&size, proto_Event_fields, event))
             break;
+        pb_ostream_t sizing = PB_OSTREAM_SIZING;
+        pb_encode_varint(&sizing, size);
+        if (stream.bytes_written + sizing.bytes_written + size > max_len)
+            break;
+        if (!pb_encode_delimited(&stream, proto_Event_fields, event))
+            break;
+        g_event_tail = (g_event_tail + 1) % EVENT_QUEUE_MAX;
     }
     return stream.bytes_written;
 }
@@ -222,13 +235,17 @@ static void i2c_slave_handler(i2c_inst_t *i2c, i2c_slave_event_t event)
         break;
 
     case I2C_SLAVE_REQUEST:
-        if (g_tx_len == 0)
+        if (!g_reading)
         {
-            if (g_rx_len > 0 && g_rx_buf[0] == SLAVE_CMD_GET_EVENTS)
+            g_reading = true;
+            // in case the write and the read did come in as one transfer
+            uint8_t cmd = g_rx_len > 0 ? g_rx_buf[0] : g_read_cmd;
+            g_tx_len = 0;
+            if (cmd == SLAVE_CMD_GET_EVENTS)
             {
                 g_tx_len = secondary_pico_handle_get_events(g_tx_buf, sizeof(g_tx_buf));
             }
-            else if (g_rx_len > 0 && g_rx_buf[0] == SLAVE_CMD_GET_VERSION)
+            else if (cmd == SLAVE_CMD_GET_VERSION)
             {
                 static const char version_hash[] = GIT_HASH;
                 size_t len = strlen(version_hash);
@@ -249,6 +266,16 @@ static void i2c_slave_handler(i2c_inst_t *i2c, i2c_slave_event_t event)
         break;
 
     case I2C_SLAVE_FINISH:
+        if (g_reading)
+        {
+            // a read only answers the command written just before it
+            g_read_cmd = 0;
+        }
+        else if (g_rx_len > 0)
+        {
+            g_read_cmd = g_rx_buf[0];
+        }
+        g_reading = false;
         if (g_rx_len > 0)
         {
             if (g_rx_buf[0] & 0x80)
@@ -350,7 +377,8 @@ void secondary_pico_coprocessor_loop()
                 last_adc[adc_channel] = val16;
                 proto_Event event = proto_Event_init_zero;
                 event.which_event = proto_Event_axis_tag;
-                event.event.axis.id = adc_channel;
+                // the master looks analog inputs up by their GPIO, like digital ones
+                event.event.axis.id = gpio_pin;
                 event.event.axis.state = val16;
                 secondary_pico_enqueue_event(&event);
             }
@@ -371,7 +399,7 @@ void secondary_pico_coprocessor_loop()
             auto &input = g_secondary_inputs[i];
             if (!input) continue;
 
-            uint32_t input_id = static_cast<uint32_t>(i + 1);
+            uint32_t input_id = static_cast<uint32_t>(CONFIGURED_INPUT_ID_BASE + i);
             if (input->has_independent_analog_value())
             {
                 uint16_t current_val = input->tick_analog();

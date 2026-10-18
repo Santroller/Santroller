@@ -8,30 +8,80 @@
 // bit 3 (0b01000): Blue
 // bit 4 (0b10000): Orange
 
+// World Tour bars are analog, so each segment is a range on the PS3 8-bit scale (resting at
+// 0x80). The guitars sit around the GH5 "top frets" base values from PlasticBand's General Notes
+// (G 0x15, GR 0x30, R 0x4D, RY 0x66, Y 0x9A, YB 0xAF, B 0xC9, BO 0xE6, O 0xFF), so each
+// boundary is the midpoint between neighbouring ones. PlasticBand's ordered-by-value table ends
+// YB at 0xAF, its own centre, which turned real YB readings into B.
+// Segments are in bar order, G at 0 and O at 9, with rest in the middle.
+static constexpr uint8_t ghwt_slider_none = 4;
+static constexpr uint8_t ghwt_slider_frets[] = {
+    0b00001, // G
+    0b00011, // GR
+    0b00010, // R
+    0b00110, // RY
+    0,       // None
+    0b00100, // Y
+    0b01100, // YB
+    0b01000, // B
+    0b11000, // BO
+    0b10000, // O
+};
+
+inline uint8_t ghwt_slider_segment(uint8_t slider)
+{
+    // first value of each segment after G
+    static constexpr uint8_t starts[] = {0x23, 0x3F, 0x5A, 0x73, 0x8D, 0xA5, 0xBC, 0xD8, 0xF3};
+    uint8_t seg = 0;
+    while (seg < sizeof(starts) && slider >= starts[seg])
+        seg++;
+    return seg;
+}
+
 inline uint8_t decode_ghwt_slider(uint8_t slider)
 {
-    // PlasticBand World Tour ranges (PS3 8-bit scale resting at 0x80):
-    // G:     0x00 - 0x2F
-    // GR:    0x30 - 0x3F
-    // R:     0x40 - 0x5F
-    // RY:    0x60 - 0x6F
-    // None:  0x70 - 0x8F
-    // Y:     0x90 - 0x9F
-    // YB:    0xA0 - 0xBF
-    // B:     0xC0 - 0xCF
-    // BO:    0xD0 - 0xEF
-    // O:     0xF0 - 0xFF
-    if (slider <= 0x2F) return 0b00001;      // G
-    if (slider <= 0x3F) return 0b00011;      // GR
-    if (slider <= 0x5F) return 0b00010;      // R
-    if (slider <= 0x6F) return 0b00110;      // RY
-    if (slider <= 0x8F) return 0;            // None
-    if (slider <= 0x9F) return 0b00100;      // Y
-    if (slider <= 0xAF) return 0b01100;      // YB
-    if (slider <= 0xCF) return 0b01000;      // B
-    if (slider <= 0xEF) return 0b11000;      // BO
-    return 0b10000;                          // O (0xF0 - 0xFF)
+    return ghwt_slider_frets[ghwt_slider_segment(slider)];
 }
+
+// The value sweeps through the segments in between whenever a finger lands or lifts (pressing
+// orange briefly reads as B, letting go of green as R), each for a single report (~8ms on a 360
+// receiver). A new segment has to hold for hold_ms before it counts, so the next report gets a
+// chance to contradict it. Guitars only report on change, so this is timed rather than counting
+// reports. Rest is taken immediately, so releases aren't delayed.
+struct WtSliderFilter
+{
+    static constexpr uint32_t hold_ms = 12;
+    static constexpr uint8_t none = ghwt_slider_none;
+    uint8_t stable = none;
+    uint8_t pending = none;
+    uint32_t pending_since = 0;
+
+    void reset()
+    {
+        stable = none;
+        pending = none;
+    }
+
+    uint8_t update(uint8_t slider, uint32_t now)
+    {
+        uint8_t seg = ghwt_slider_segment(slider);
+        if (seg == none)
+        {
+            stable = none;
+            pending = none;
+        }
+        else if (seg != pending)
+        {
+            pending = seg;
+            pending_since = now;
+        }
+        else if (seg != stable && now - pending_since >= hold_ms)
+        {
+            stable = seg;
+        }
+        return ghwt_slider_frets[stable];
+    }
+};
 
 inline uint8_t decode_gh5_slider(uint8_t slider)
 {

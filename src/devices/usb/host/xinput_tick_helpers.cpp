@@ -1,6 +1,7 @@
 #include "devices/usb/host/xinput_tick_helpers.h"
 #include "protocols/pro_keys.hpp"
 #include "devices/usb/host/gh_slider_helpers.h"
+#include "utils.h"
 
 uint16_t xinput_rb_drum_velocity(int16_t velocity)
 {
@@ -54,7 +55,7 @@ uint16_t xinput_gh_drum_axis(const uint8_t *ep_in_buf, GuitarHeroDrumsAxisType a
     }
 }
 
-bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_Output &type, bool is_wt, bool rb2)
+bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_Output &type, bool is_wt, bool rb2, WtSliderFilter *wt_filter)
 {
     if (type.which_mapping == proto_Output_gamepadButton_tag)
     {
@@ -126,7 +127,13 @@ bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_O
             auto data = (XInputGuitarHeroGuitar_Data_t *)ep_in_buf;
             // WT reports analog ranges in the high byte, GH5 reports n * -257 so the low byte is exact
             uint16_t slider = (uint16_t)data->slider;
-            uint8_t frets = is_wt ? decode_ghwt_slider((slider >> 8) ^ 0x80) : decode_gh5_slider((slider ^ 0x80) & 0xFF);
+            uint8_t frets;
+            if (!is_wt)
+                frets = decode_gh5_slider((slider ^ 0x80) & 0xFF);
+            else if (wt_filter)
+                frets = wt_filter->update((slider >> 8) ^ 0x80, millis());
+            else
+                frets = decode_ghwt_slider((slider >> 8) ^ 0x80);
             switch (type.mapping.ghButton)
             {
             case GuitarHeroGuitar_Green:
@@ -500,9 +507,9 @@ uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtype, prot
 }
 
 uint16_t xinput_tick_button_pressure_impl(const uint8_t *ep_in_buf, SubType subtype,
-                                          proto_Output &type, bool is_wt, bool rb2)
+                                          proto_Output &type, bool is_wt, bool rb2, WtSliderFilter *wt_filter)
 {
-    if (!xinput_tick_digital_impl(ep_in_buf, subtype, type, is_wt, rb2))
+    if (!xinput_tick_digital_impl(ep_in_buf, subtype, type, is_wt, rb2, wt_filter))
         return 0;
 
     if (subtype == ProKeys &&

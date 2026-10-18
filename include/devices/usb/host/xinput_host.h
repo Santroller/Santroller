@@ -1,6 +1,7 @@
 #pragma once
 #include "devices/usb/host/host.hpp"
 #include "protocols/xinput.hpp"
+#include "devices/usb/host/gh_slider_helpers.h"
 #include <atomic>
 
 class XInputGamepadHost : public UsbHostInterface
@@ -46,6 +47,7 @@ private:
     xfer_result_t m_out_result = XFER_RESULT_SUCCESS;
     bool m_euphoria = false;
     bool m_wt = false;
+    WtSliderFilter m_wt_filter;
     // RB2+ drum kit, from the capabilities
     bool m_rb2 = false;
 };
@@ -176,6 +178,7 @@ private:
     static constexpr uint32_t link_loss_grace_ms = 3000;
     bool m_led_set = false;
     bool m_wt = false;
+    WtSliderFilter m_wt_filter;
     // RB2+ drum kit, from the capabilities. Only RB2+ kits are wireless, so assume one until
     // the capabilities arrive
     bool m_rb2 = true;

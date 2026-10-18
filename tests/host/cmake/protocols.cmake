@@ -9,6 +9,8 @@ add_executable(protocols_tests
 )
 target_include_directories(protocols_tests PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/support
+  # the fake clock, for the World Tour slider filter's millis()
+  ${CMAKE_CURRENT_SOURCE_DIR}/support/mappings
   # xbox_one.hpp pulls in xgip_protocol.h
   ${SANTROLLER_ROOT}/lib/xgip_protocol
 )

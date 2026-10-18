@@ -73,7 +73,7 @@ bool XInputGamepadHost::set_config()
     {
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
-    XInputInputCapabilities_t caps;
+    XInputInputCapabilities_t caps = {};
     XInputVibrationCapabilities_t caps_vibr;
     uint32_t serial;
 
@@ -152,6 +152,11 @@ bool XInputGamepadHost::set_config()
     {
         m_wt = true;
     }
+    if (m_subtype == GuitarHeroGuitar)
+    {
+        printf("XInput GH guitar: wt=%u caps lx=%04x rx=%04x vid=%04x pid=%04x\r\n",
+               m_wt, caps.leftThumbX, caps.rightThumbX, m_vid, m_pid);
+    }
     // request vibration caps since some devices expect it
     send_ctrl_xfer(setup_vibration_caps, &caps_vibr, nullptr);
     return true;
@@ -221,7 +226,7 @@ void XInputGamepadHost::update(bool full_poll, bool send_events)
 
 bool XInputGamepadHost::tick_digital(proto_Output &type)
 {
-    return xinput_tick_digital_impl(m_ep_in_buf, m_subtype, type, m_wt, m_rb2);
+    return xinput_tick_digital_impl(m_ep_in_buf, m_subtype, type, m_wt, m_rb2, &m_wt_filter);
 }
 uint16_t XInputGamepadHost::tick_analog(proto_Output &type)
 {
@@ -229,7 +234,7 @@ uint16_t XInputGamepadHost::tick_analog(proto_Output &type)
 }
 uint16_t XInputGamepadHost::tick_button_pressure(proto_Output &type)
 {
-    return xinput_tick_button_pressure_impl(m_ep_in_buf, m_subtype, type, m_wt, m_rb2);
+    return xinput_tick_button_pressure_impl(m_ep_in_buf, m_subtype, type, m_wt, m_rb2, &m_wt_filter);
 }
 
 void XInputGamepadHost::set_rumble(uint8_t left, uint8_t right)

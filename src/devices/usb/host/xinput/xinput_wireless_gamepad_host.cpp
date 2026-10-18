@@ -620,6 +620,7 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                     m_link_up_ms = millis();
                     set_linked(true);
                     m_wt = false;
+                    m_wt_filter.reset();
                     m_rb2 = true;
                     m_led_set = false;
                     m_input_count = 0;
@@ -652,6 +653,11 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                 {
                     m_wt = true;
                 }
+                if (m_subtype == GuitarHeroGuitar)
+                {
+                    printf("w %u GH guitar: wt=%u caps lx=%04x rx=%04x\r\n",
+                           m_interface, m_wt, caps->leftStickX, caps->rightStickX);
+                }
                 // Rock Band and Guitar Hero kits share a subtype, only RB kits have a pad flag
                 if (m_subtype == RockBandDrums || m_subtype == GuitarHeroDrums)
                 {
@@ -681,7 +687,7 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
 
 bool XInputWirelessGamepadHost::tick_digital(proto_Output &type)
 {
-    return xinput_tick_digital_impl(m_report_buf, m_subtype, type, m_wt, m_rb2);
+    return xinput_tick_digital_impl(m_report_buf, m_subtype, type, m_wt, m_rb2, &m_wt_filter);
 }
 uint16_t XInputWirelessGamepadHost::tick_analog(proto_Output &type)
 {
@@ -689,7 +695,7 @@ uint16_t XInputWirelessGamepadHost::tick_analog(proto_Output &type)
 }
 uint16_t XInputWirelessGamepadHost::tick_button_pressure(proto_Output &type)
 {
-    return xinput_tick_button_pressure_impl(m_report_buf, m_subtype, type, m_wt, m_rb2);
+    return xinput_tick_button_pressure_impl(m_report_buf, m_subtype, type, m_wt, m_rb2, &m_wt_filter);
 }
 
 void XInputWirelessGamepadHost::set_rumble(uint8_t left, uint8_t right)

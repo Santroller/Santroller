@@ -297,6 +297,7 @@ add_executable(
   src/devices/usb/host/hid/stepmania_host.cpp
   src/devices/usb/host/hid/streamdeck_host.cpp
   src/devices/usb/host/hid/switch_host.cpp
+  src/devices/usb/host/gamecube_adapter_host.cpp
   src/devices/usb/host/hid/steam_host.cpp
   src/devices/usb/host/hid/steam_triton_host.cpp
   src/devices/usb/host/xinput_tick_helpers.cpp

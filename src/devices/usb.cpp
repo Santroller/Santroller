@@ -23,6 +23,7 @@
 #include <vector>
 #include "utils.h"
 #include "devices/usb/host/bt_dongle_host.h"
+#include "devices/usb/host/gamecube_adapter_host.h"
 
 static constexpr uint16_t GAMESIR_VID = 0x3537;
 static constexpr uint16_t GAMESIR_G7_PRO_HID_PID = 0x1022;
@@ -688,6 +689,8 @@ static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<
     XboxWirelessHost::open,
     PDLoaderHost::open,
     BtDongleHost::open,
+    // before HidHost, whose generic matcher would otherwise take them
+    GameCubeAdapterHost::open,
     HidHost::open,
     MidiHost::open};
 

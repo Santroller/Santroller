@@ -24,6 +24,7 @@ public:
     bool has_euphoria_led() const override { return m_subtype == DjHeroTurntable; }
     bool has_stagekit_led() const override { return subtype_supports_stagekit(m_subtype); }
     void set_stagekit_led(uint8_t param, uint8_t command) override;
+    std::optional<uint64_t> hardware_id() const override { return m_hardware_id ? m_hardware_id : UsbHostInterface::hardware_id(); }
 
 private:
     bool send_rumble_report();
@@ -50,6 +51,8 @@ private:
     WtSliderFilter m_wt_filter;
     // RB2+ drum kit, from the capabilities
     bool m_rb2 = false;
+    // from the serial read in set_config
+    std::optional<uint64_t> m_hardware_id;
 };
 class XInputAudioHost : public UsbHostInterface
 {
@@ -122,6 +125,8 @@ public:
     void set_player_led(uint8_t player) override;
     bool has_rumble() const override { return true; }
     bool has_player_led() const override { return true; }
+    // not the receiver's iSerialNumber, which every slot shares
+    std::optional<uint64_t> hardware_id() const override { return m_found ? m_hardware_id : std::nullopt; }
 
 private:
     bool send_out(const char *reason, const uint8_t *packet, uint8_t len);
@@ -167,6 +172,8 @@ private:
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[64];
     uint8_t m_report_buf[64];
     bool m_found = false;
+    // the serial in the linked controller's link report
+    std::optional<uint64_t> m_hardware_id;
     bool m_request_caps_on_input = false;
     uint8_t m_last_player_led = 0;
     // Set while the data link is down but the slot is still held

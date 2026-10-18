@@ -135,6 +135,8 @@ public:
                static_cast<uint32_t>(m_addr[5]);
     }
 
+    std::optional<uint64_t> hardware_id() const override { return hardware_id_from_mac(m_addr); }
+
     // BT address + transport info set by the Classic/BLE rx code before calling on_connected()
     bt_addr_t m_addr = {};
     bt_addr_type_t m_addr_type = 0; // 0 = public

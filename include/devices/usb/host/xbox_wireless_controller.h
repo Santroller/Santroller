@@ -22,6 +22,8 @@ public:
     void set_player_led(uint8_t player) override;
     bool has_rumble() const override { return true; }
     bool has_player_led() const override { return true; }
+    // not the adapter's iSerialNumber, which every controller on it shares
+    std::optional<uint64_t> hardware_id() const override { return hardware_id_from_mac(m_controller.mac_addr); }
     
     uint8_t get_controller_index() const { return m_controller_idx; }
     

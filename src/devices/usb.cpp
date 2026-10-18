@@ -520,11 +520,61 @@ void process_product_string(tuh_xfer_t *xfer)
         }
     }
 }
+// Read before the name, since that read is asynchronous and holds the control endpoint
+static void read_serial_string(UsbHostDevice &device, uint8_t dev_addr)
+{
+    if (device.serial_string_read)
+    {
+        return;
+    }
+    device.serial_string_read = true;
+    tusb_desc_device_t desc;
+    if (!tuh_descriptor_get_device_local(dev_addr, &desc) || !desc.iSerialNumber)
+    {
+        return;
+    }
+    CFG_TUSB_MEM_ALIGN uint16_t str[64] = {};
+    if (tuh_descriptor_get_serial_string_sync(dev_addr, 0x0409, str, sizeof(str)) != XFER_RESULT_SUCCESS)
+    {
+        return;
+    }
+    // the first word is the descriptor's length and type
+    const size_t chars = tu_min16((str[0] & 0xff) / 2, TU_ARRAY_SIZE(str));
+    if (chars < 2)
+    {
+        return;
+    }
+    // FNV-1a
+    uint32_t hash = 2166136261u;
+    for (size_t i = 1; i < chars; i++)
+    {
+        hash = (hash ^ (str[i] & 0xff)) * 16777619u;
+        hash = (hash ^ (str[i] >> 8)) * 16777619u;
+    }
+    device.serial_string_hash = hash;
+}
+
+std::optional<uint64_t> UsbHostInterface::hardware_id() const
+{
+    auto &device = host_devices[m_dev_addr];
+    if (!device || !device->serial_string_hash)
+    {
+        return std::nullopt;
+    }
+    // Above the MAC and reported serial ranges. The interface tells apart the ports of an adapter with more
+    // than one
+    return (2ull << 48) | (static_cast<uint64_t>(m_interface) << 32) | *device->serial_string_hash;
+}
+
 bool UsbHostInterface::set_config()
 {
     still_connected = true;
 
     tuh_vid_pid_get(m_dev_addr, &m_vid, &m_pid);
+    if (host_devices[m_dev_addr])
+    {
+        read_serial_string(*host_devices[m_dev_addr], m_dev_addr);
+    }
     request_name();
     usbh_driver_set_config_complete(m_dev_addr, m_interface);
     if (!m_delayed_init)

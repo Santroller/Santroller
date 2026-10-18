@@ -36,8 +36,12 @@ public:
     bool has_rumble() const override { return true; }
     bool has_player_led() const override { return true; }
     bool has_lightbar() const override { return true; }
+    std::optional<uint64_t> hardware_id() const override { return m_hardware_id ? m_hardware_id : UsbHostInterface::hardware_id(); }
 
 private:
+    void read_pairing_mac();
+    // the MAC from the pairing info report, the same one the controller uses over bluetooth
+    std::optional<uint64_t> m_hardware_id;
     bool send_ps5_output();
     ps5_output_report m_output_report = {};
     bool m_output_dirty = true;

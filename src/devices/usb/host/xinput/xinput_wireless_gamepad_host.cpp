@@ -256,6 +256,7 @@ void XInputWirelessGamepadHost::disconnect_controller()
     m_name[(sizeof(xinput_wireless_gamepad_slot_name) - 1) * 2] = '1' + (m_ep_out / 2);
     set_subtype(SubType_Unknown);
     m_found = false;
+    m_hardware_id.reset();
     memset(m_report_buf, 0, sizeof(m_report_buf));
     m_out_queue_count = 0;
     m_out_submit_failures = 0;
@@ -603,6 +604,7 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
             if (linkReport->always_0xCC == 0xCC)
             {
                 const uint8_t raw_subtype = linkReport->subtype & ~0x80;
+                m_hardware_id = hardware_id_from_serial(linkReport->deviceID);
                 m_request_caps_on_input = raw_subtype == XINPUT_GUITAR_ALTERNATE || raw_subtype == XINPUT_PRO_GUITAR ||
                                            raw_subtype == XINPUT_DRUMS;
                 bool newly_connected = !m_found;

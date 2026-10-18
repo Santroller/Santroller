@@ -122,6 +122,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
     {
         USB_FreeReportInfo(info);
         auto intf = std::make_shared<Ps5Host>(dev_addr, itf_desc->bInterfaceNumber, list->m_id);
+        intf->read_pairing_mac();
         bool auth_only = vid == 0x2b81 && pid == 0x0101;
         intf->m_third_party = isThirdParty;
         if (isThirdParty)
@@ -223,6 +224,19 @@ bool Ps5Host::get_intr_report(void *buffer, uint8_t len)
     memcpy(buffer, m_ep_in_buf, TU_MIN(len, m_ep_in_size));
     received_packet = false;
     return true;
+}
+
+void Ps5Host::read_pairing_mac()
+{
+    // pairing info: report id, then the controller's MAC least significant byte first
+    uint8_t info[20] = {};
+    if (get_report(0x09, HID_REPORT_TYPE_FEATURE, info, sizeof(info), nullptr) < 7)
+    {
+        return;
+    }
+    // reversed to the order bluetooth addresses are kept in, so the controller gets the same id either way
+    const uint8_t mac[6] = {info[6], info[5], info[4], info[3], info[2], info[1]};
+    m_hardware_id = hardware_id_from_mac(mac);
 }
 
 bool Ps5Host::set_config()

@@ -50,13 +50,17 @@ public:
     CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XINPUT_RX_BUFSIZE];
 
     static void reset();
-    // A fixed serial for the pad on this interface, stable across reloads and reboots like a real controller's
+    // The serial for the pad on this interface. It follows the controller claimed for the pad when that has an
+    // id of its own, and is otherwise fixed to the board and interface, stable across reloads and reboots
     static uint32_t controller_serial(uint8_t itf);
     // What a genuine receiver answers its vendor id request (c0 01 wValue 1) with
     static void receiver_id(uint8_t id[7]);
     static uint8_t xinputInterfaces[4];
     static uint8_t lastIntfInput;
     static uint32_t last_caps_query_time;
+    // serial reads at wIndex 0 rotate through the pads like the caps reads, on their own index
+    static uint8_t lastIntfSerial;
+    static uint32_t last_serial_query_time;
     static volatile uint32_t report_generation;
     // Cleared when the device stack starts, set once the host configures us
     static bool mounted_since_init;

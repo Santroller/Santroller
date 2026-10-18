@@ -26,6 +26,11 @@ public:
     void set_player_led(uint8_t player) override;
     bool has_rumble() const override { return true; }
     bool has_player_led() const override { return true; }
+    std::optional<uint64_t> hardware_id() const override
+    {
+        auto id = hardware_id_from_mac(m_gip_device.address);
+        return id ? id : UsbHostInterface::hardware_id();
+    }
     
     gip_device_t m_gip_device;  // Shared GIP device state (public for callbacks)
     gip_report_queue_t* m_report_queue;  // Shared report queue (public for callbacks)

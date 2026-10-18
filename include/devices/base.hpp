@@ -1,5 +1,7 @@
 #pragma once
 #include <stdint.h>
+#include <optional>
+#include "devices/hardware_id.hpp"
 #include "config.pb.h"
 #include "commands.pb.h"
 #include <stdio.h>
@@ -105,6 +107,9 @@ public:
     virtual bool owns_sub_device(uint32_t device_id) const { (void)device_id; return false; }
     virtual bool using_pin(uint8_t pin) = 0;
     virtual uint32_t source_id() const { return m_id; }
+    // Something that identifies this physical controller (a MAC address, or a serial it reports), so an
+    // emulated pad driven by it can keep the same serial whichever slot or interface it ends up on
+    virtual std::optional<uint64_t> hardware_id() const { return std::nullopt; }
     virtual void rescan(bool first);
     virtual void handle_command(proto_Command command) {};
     virtual void save_reload_state(DeviceReloadState &state) const { state.valid = true; }

@@ -73,9 +73,7 @@ uint8_t const *tud_descriptor_device_cb(void)
   UsbDetectionState::instance().mark_device_descriptor_read(millis());
   memcpy(descriptor_buffer, &desc_device_init, sizeof(desc_device_init));
   ProfileManager::instance().for_each_usb_instance([](const auto &instance)
-  {
-    instance->device_descriptor((tusb_desc_device_t *)descriptor_buffer);
-  });
+                                                   { instance->device_descriptor((tusb_desc_device_t *)descriptor_buffer); });
   return descriptor_buffer;
 }
 
@@ -100,10 +98,9 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
   size_t current = sizeof(tusb_desc_configuration_t);
   size_t interfaces = 0;
   ProfileManager::instance().for_each_usb_instance([&current, &interfaces](const auto &instance)
-  {
+                                                   {
     current += instance->config_descriptor(descriptor_buffer + current, sizeof(descriptor_buffer) - current);
-    interfaces += instance->interface_count();
-  });
+    interfaces += instance->interface_count(); });
   config->bDescriptorType = TUSB_DESC_CONFIGURATION;
   config->bLength = sizeof(tusb_desc_configuration_t);
   config->wTotalLength = current;
@@ -152,7 +149,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
   (void)langid;
   // printf("desc %02x %02x\r\n", index, langid);
-  auto& detection = UsbDetectionState::instance();
+  auto &detection = UsbDetectionState::instance();
   if (detection.seen_windows_xb1())
   {
     detection.mark_windows_string_seen();
@@ -192,12 +189,11 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     else
     {
       ProfileManager::instance().for_each_usb_instance([index, &str](const auto &instance)
-      {
+                                                       {
         if (!str && instance->device_name(index, _desc_str_tmp))
         {
           str = _desc_str_tmp;
-        }
-      });
+        } });
     }
     if (!str)
     {
@@ -281,6 +277,9 @@ uint16_t tud_open(uint8_t rhport, tusb_desc_interface_t const *itf_desc,
   return ProfileManager::instance().get_usb_instance(itf_desc->bInterfaceNumber)->open(itf_desc, max_len);
 }
 
+// The pad the last GET_REPORT went to, which vibration caps reads at wIndex 0 follow
+static uint8_t s_last_xinput_itf = 0;
+
 void tud_init(void)
 {
   XInputGamepadDevice::mounted_since_init = false;
@@ -291,11 +290,8 @@ void tud_reset(uint8_t rhport)
   // printf("reset\r\n");
   UsbDevice::reset_ep();
   XInputGamepadDevice::reset();
+  s_last_xinput_itf = 0;
 }
-
-// xusb22 reads the serial at device level (wIndex 0) right after each pad's caps and vibration reads, so
-// the pad asking is the last one those went to
-static uint8_t s_last_xinput_itf = 0;
 
 bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request)
 {
@@ -308,8 +304,8 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     if (stage == CONTROL_STAGE_SETUP)
     {
       return tud_control_xfer(rhport, request,
-          const_cast<uint8_t *>(PDLoaderDevice::ms_os_20_descriptor()),
-          PDLoaderDevice::ms_os_20_descriptor_length());
+                              const_cast<uint8_t *>(PDLoaderDevice::ms_os_20_descriptor()),
+                              PDLoaderDevice::ms_os_20_descriptor_length());
     }
     return true;
   }
@@ -340,14 +336,13 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
             size_t current = sizeof(DevCompatIDHeader);
             size_t count = 0;
             ProfileManager::instance().for_each_usb_instance([&current, &count](const auto &instance)
-            {
+                                                             {
               size_t size = instance->compatible_section_descriptor(descriptor_buffer + current, sizeof(descriptor_buffer) - current);
               current += size;
               if (size)
               {
                 count++;
-              }
-            });
+              } });
             UsbDetectionState::instance().mark_windows_xb1_seen();
             compatible_descriptor->TotalSections = count;
             compatible_descriptor->TotalLength = current;
@@ -369,11 +364,27 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         }
         if (request->bRequest == HID_REQ_CONTROL_GET_REPORT && request->wIndex == 0x0000 && request->wValue == SERIAL_NUMBER_WVALUE)
         {
-          // xinput serial read
+          // xinput serial read, once per pad, so hand them out in turn like the caps reads
           if (stage == CONTROL_STAGE_SETUP)
           {
-            uint32_t serial = XInputGamepadDevice::controller_serial(s_last_xinput_itf);
+            uint32_t now = to_ms_since_boot(get_absolute_time());
+            if (now - XInputGamepadDevice::last_serial_query_time > 500 ||
+                XInputGamepadDevice::lastIntfSerial >= TU_ARRAY_SIZE(XInputGamepadDevice::xinputInterfaces) ||
+                XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntfSerial] == 0xFF)
+            {
+              XInputGamepadDevice::lastIntfSerial = 0;
+            }
+            XInputGamepadDevice::last_serial_query_time = now;
+            uint8_t itf = XInputGamepadDevice::xinputInterfaces[XInputGamepadDevice::lastIntfSerial];
+            uint32_t serial = XInputGamepadDevice::controller_serial(itf);
+
+            printf("controller_serial: itf=%u serial=%08x\n", itf, serial);
             tud_control_xfer(rhport, request, &serial, sizeof(serial));
+          }
+          // served, on to the next pad for the next read
+          else if (stage == CONTROL_STAGE_ACK)
+          {
+            XInputGamepadDevice::lastIntfSerial++;
           }
           return true;
         }
@@ -429,7 +440,9 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
     }
     if (has_xinput && wIndex == 0x00 && request->wValue == VIBRATION_CAPABILITIES_WVALUE && request->bRequest == HID_REQ_CONTROL_GET_REPORT)
     {
-      wIndex = XInputGamepadDevice::xinputInterfaces[0];
+      // vibration caps follow a pad's caps read, so send them to that pad. Interface 0 is never xinput (it is
+      // the security interface), so 0 here means no caps read has happened yet
+      wIndex = s_last_xinput_itf ? s_last_xinput_itf : XInputGamepadDevice::xinputInterfaces[0];
     }
     if (request->bRequest == HID_REQ_CONTROL_GET_REPORT)
     {
@@ -475,7 +488,8 @@ volatile uint32_t UsbDevice::suspend_generation = 0;
 
 void UsbDevice::disconnect_bluetooth_controllers()
 {
-  auto disconnect = [](const std::shared_ptr<Device> &device) {
+  auto disconnect = [](const std::shared_ptr<Device> &device)
+  {
     if (device && device->is_bluetooth_host_interface())
     {
       std::static_pointer_cast<BluetoothHostInterface>(device)->disconnect();

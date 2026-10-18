@@ -43,6 +43,8 @@ void XInputGamepadDevice::reset()
     memset(xinputInterfaces, 0xFF, sizeof(xinputInterfaces));
     lastIntfInput = 0;
     last_caps_query_time = 0;
+    lastIntfSerial = 0;
+    last_serial_query_time = 0;
     ++report_generation;
 }
 XInputGamepadDevice::XInputGamepadDevice()
@@ -412,6 +414,35 @@ bool XInputGamepadDevice::send_wireless_reply()
     return true;
 }
 
+// The first controller claimed by the profiles behind the pad on itf that identifies itself
+static std::optional<uint64_t> pad_hardware_id(uint8_t itf)
+{
+    auto instance = ProfileManager::instance().get_usb_instance(itf);
+    if (!instance)
+    {
+        return std::nullopt;
+    }
+    for (const auto &profile : instance->profiles)
+    {
+        if (!profile)
+        {
+            continue;
+        }
+        for (const auto &[slot, device] : profile->claimed_devices)
+        {
+            if (!device)
+            {
+                continue;
+            }
+            if (auto id = device->hardware_id())
+            {
+                return id;
+            }
+        }
+    }
+    return std::nullopt;
+}
+
 uint32_t XInputGamepadDevice::controller_serial(uint8_t itf)
 {
     pico_unique_board_id_t id;
@@ -421,6 +452,34 @@ uint32_t XInputGamepadDevice::controller_serial(uint8_t itf)
     for (const auto byte : id.id)
     {
         hash = (hash ^ byte) * 16777619u;
+    }
+    // Follow the controller driving this pad, so the console sees the same controller whichever pad it is
+    // on. 0xff is the receiver, which has no controller
+    auto hardware_id = itf == 0xff ? std::nullopt : pad_hardware_id(itf);
+    if (hardware_id)
+    {
+        // One controller can drive more than one pad. Only the first gets its serial, the console would
+        // treat the rest as the same pad
+        for (const auto other : xinputInterfaces)
+        {
+            if (other == 0xFF || other == itf)
+            {
+                break;
+            }
+            if (pad_hardware_id(other) == hardware_id)
+            {
+                hardware_id.reset();
+                break;
+            }
+        }
+    }
+    if (hardware_id)
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            hash = (hash ^ static_cast<uint8_t>(*hardware_id >> (i * 8))) * 16777619u;
+        }
+        return hash;
     }
     return (hash ^ itf) * 16777619u;
 }
@@ -574,6 +633,8 @@ size_t XInputGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
     lastIntfInput = 0;
     last_caps_query_time = 0;
+    lastIntfSerial = 0;
+    last_serial_query_time = 0;
     if (ProfileManager::instance().xinput_receiver())
     {
         uint8_t desc[] = {TUD_XINPUT_WIRELESS_CONTROLLER_DESCRIPTOR(interface_id, m_epin, m_epout)};
@@ -796,5 +857,7 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
 uint8_t XInputGamepadDevice::xinputInterfaces[4] = {0xFF, 0xFF, 0xFF, 0xFF};
 uint8_t XInputGamepadDevice::lastIntfInput = 0;
 uint32_t XInputGamepadDevice::last_caps_query_time = 0;
+uint8_t XInputGamepadDevice::lastIntfSerial = 0;
+uint32_t XInputGamepadDevice::last_serial_query_time = 0;
 bool XInputGamepadDevice::mounted_since_init = false;
 volatile uint32_t XInputGamepadDevice::report_generation = 0;

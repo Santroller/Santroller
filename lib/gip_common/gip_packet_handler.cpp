@@ -159,6 +159,11 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device)
         return true;
 
     case GIP_ARRIVAL:
+        // The arrival packet starts with the device's address
+        if (xgip->getDataLength() >= sizeof(device->address))
+        {
+            memcpy(device->address, xgip->getData(), sizeof(device->address));
+        }
         if (interface->on_arrival)
         {
             interface->on_arrival(context);

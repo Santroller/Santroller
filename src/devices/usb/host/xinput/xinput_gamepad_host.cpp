@@ -110,8 +110,12 @@ bool XInputGamepadHost::set_config()
         wIndex : m_interface,
         wLength : sizeof(serial)
     };
-    // request serial, some controllers might expect this
-    send_ctrl_xfer(setup_serial, &serial, nullptr);
+    // request serial, some controllers might expect this. It also identifies the controller for the serial of
+    // the pad it drives
+    if (send_ctrl_xfer(setup_serial, &serial, nullptr) == sizeof(serial))
+    {
+        m_hardware_id = hardware_id_from_serial(serial);
+    }
     // request input capabilities, lets us differenciate controllers
     if (send_ctrl_xfer(setup_input_caps, &caps, nullptr) != 0)
     {

@@ -6,7 +6,9 @@
 #include <string.h>
 #include <array>
 #include <memory>
+#include <optional>
 #include <vector>
+#include "devices/hardware_id.hpp"
 #include "tusb_config.h"
 #include "tusb.h"
 #include "device.pb.h"
@@ -27,6 +29,7 @@ public:
     virtual void set_player_led(uint8_t player) { (void)player; }
     virtual bool has_rumble() const { return false; }
     virtual bool has_player_led() const { return false; }
+    virtual std::optional<uint64_t> hardware_id() const { return std::nullopt; }
 
     uint8_t dev_addr() const { return m_dev_addr; }
     uint8_t interface() const { return m_interface; }

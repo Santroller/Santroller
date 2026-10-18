@@ -88,6 +88,8 @@ public:
     SubType subtype() const { return m_subtype; }
     void set_subtype(SubType type) { m_subtype = type; }
     uint32_t source_id() const { return (static_cast<uint32_t>(m_id) << 16) | (static_cast<uint32_t>(m_dev_addr) << 8) | m_interface; }
+    // The device's iSerialNumber, if it has one. Interfaces that know something better override this
+    std::optional<uint64_t> hardware_id() const override;
 
 protected:
     uint8_t m_dev_addr;
@@ -165,6 +167,9 @@ public:
     std::array<std::shared_ptr<UsbHostInterface>,16> host_devices_by_endpoint_out;
     // the device's first keyboard interface, which any later ones (e.g. an NKRO interface) report through
     std::weak_ptr<KeyboardHost> keyboard;
+    // a hash of the iSerialNumber string, read once by the first interface to be configured
+    std::optional<uint32_t> serial_string_hash;
+    bool serial_string_read = false;
 
 protected:
     uint8_t m_dev_addr;

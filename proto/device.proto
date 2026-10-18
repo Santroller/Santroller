@@ -32,7 +32,19 @@ message PeripheralDevice {
   repeated Input inputs = 4;
 }
 
-message AccelerometerDevice { required I2CDevice i2c = 1; }
+// The filters run on every new sample from the accelerometer, before any mapping sees it, so they
+// can use all three axes and see samples arriving faster than the inputs are polled. Each one is
+// off unless it is set, and they run in this order.
+message AccelerometerDevice {
+  required I2CDevice i2c = 1;
+  // Drop samples whose total acceleration is more than this far from gravity (in g), as movement
+  // like a strum bar hit dominates them instead of tilt. The last good sample is held meanwhile.
+  optional float gateTolerance = 2;
+  // Median of the last this many samples (3 - 9), so short spikes are dropped instead of smoothed in
+  optional uint32 medianSamples = 3;
+  // 2nd order Butterworth low pass, in Hz
+  optional float lowPassCutoff = 4;
+}
 
 message Max1704xDevice { required I2CDevice i2c = 1; }
 

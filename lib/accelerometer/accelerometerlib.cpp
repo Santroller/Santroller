@@ -2,6 +2,8 @@
 #include "hardware/sync.h"
 #include "stdio.h"
 #include <string.h>
+#include <math.h>
+#include <algorithm>
 #include "utils.h"
 #include "hardware/gpio.h"
 #include "emulation/usb/hid_device.h"
@@ -22,6 +24,21 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 #define ACCEL_POLL_US 500
 // How long to wait before probing again when no accelerometer answered
 #define ACCEL_PROBE_RETRY_MS 500
+// Every supported accelerometer is set up so 1g reads as roughly this
+#define ACCEL_1G 16384.0f
+// Stop gating after this long, so a chip that reads a different scale, or constant shaking,
+// can't freeze the output
+#define ACCEL_GATE_MAX_US 250000
+// A gap this long between samples (a dropped transfer, or re-probing) starts the filters again
+#define ACCEL_FILTER_RESTART_US 100000
+
+Accelerometer::Accelerometer(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock, float gate_tolerance, uint8_t median_samples, float low_pass_cutoff)
+    : interface(block, sda, scl, clock),
+      gateTolerance(gate_tolerance > 0 ? gate_tolerance : 0),
+      medianSamples(median_samples > 1 ? std::min(median_samples, MEDIAN_MAX) : 0),
+      lowPassCutoff(low_pass_cutoff > 0 ? low_pass_cutoff : 0)
+{
+}
 
 void Accelerometer::schedule_us(uint32_t delay_us)
 {
@@ -33,6 +50,112 @@ void Accelerometer::clear()
 {
     memset(accel, 0, sizeof(accel));
     memset(lis3dhAdc, 0, sizeof(lis3dhAdc));
+    filterReset = true;
+}
+
+void Accelerometer::push_sample(int32_t x, int32_t y, int32_t z)
+{
+    uint8_t next = (sampleHead + 1) % SAMPLE_RING_SIZE;
+    if (next == sampleTail)
+    {
+        // tick() fell behind, drop this sample rather than touch the tail it owns
+        return;
+    }
+    Sample &sample = sampleRing[sampleHead];
+    sample.accel[0] = x;
+    sample.accel[1] = y;
+    sample.accel[2] = z;
+    sample.time_us = time_us_32();
+    __dmb();
+    sampleHead = next;
+}
+
+void Accelerometer::filter_sample(const Sample &sample)
+{
+    float out[3] = {(float)sample.accel[0], (float)sample.accel[1], (float)sample.accel[2]};
+    uint32_t dt = sample.time_us - lastSampleUs;
+    if (!filterStarted || dt > ACCEL_FILTER_RESTART_US)
+    {
+        filterStarted = true;
+        lastSampleUs = sample.time_us;
+        samplePeriod = 0;
+        gated = false;
+        medianPos = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < MEDIAN_MAX; j++)
+            {
+                medianRing[i][j] = sample.accel[i];
+            }
+            lowPassIc1[i] = 0;
+            lowPassIc2[i] = out[i];
+            accel[i] = sample.accel[i];
+        }
+        return;
+    }
+    lastSampleUs = sample.time_us;
+    // samples are timestamped when the poll that found them finishes, so smooth out that jitter
+    samplePeriod = samplePeriod ? samplePeriod + (dt - samplePeriod) * 0.05f : dt;
+    if (gateTolerance)
+    {
+        float mag = sqrtf(out[0] * out[0] + out[1] * out[1] + out[2] * out[2]);
+        if (fabsf(mag - ACCEL_1G) > gateTolerance * ACCEL_1G)
+        {
+            if (!gated)
+            {
+                gated = true;
+                gatedSinceUs = sample.time_us;
+            }
+            if (sample.time_us - gatedSinceUs < ACCEL_GATE_MAX_US)
+            {
+                return;
+            }
+        }
+        else
+        {
+            gated = false;
+        }
+    }
+    if (medianSamples)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            medianRing[i][medianPos] = sample.accel[i];
+            int32_t sorted[MEDIAN_MAX];
+            memcpy(sorted, medianRing[i], medianSamples * sizeof(int32_t));
+            std::nth_element(sorted, sorted + medianSamples / 2, sorted + medianSamples);
+            out[i] = sorted[medianSamples / 2];
+        }
+        medianPos = (medianPos + 1) % medianSamples;
+    }
+    if (lowPassCutoff)
+    {
+        // Topology preserving state variable filter (Zavalishin), which keeps its accuracy at cutoffs
+        // far below the sample rate, where a float biquad loses it
+        if (fabsf(samplePeriod - lowPassPeriod) > lowPassPeriod * 0.01f)
+        {
+            lowPassPeriod = samplePeriod;
+            float w = (float)M_PI * lowPassCutoff * samplePeriod / 1000000.0f;
+            float g = tanf(std::min(w, 0.45f * (float)M_PI));
+            float k = (float)M_SQRT2;
+            lowPassA1 = 1.0f / (1.0f + g * (g + k));
+            lowPassA2 = g * lowPassA1;
+            lowPassA3 = g * lowPassA2;
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            float v3 = out[i] - lowPassIc2[i];
+            float v1 = lowPassA1 * lowPassIc1[i] + lowPassA2 * v3;
+            float v2 = lowPassIc2[i] + lowPassA2 * lowPassIc1[i] + lowPassA3 * v3;
+            lowPassIc1[i] = 2 * v1 - lowPassIc1[i];
+            lowPassIc2[i] = 2 * v2 - lowPassIc2[i];
+            out[i] = v2;
+        }
+    }
+    for (int i = 0; i < 3; i++)
+    {
+        accel[i] = lrintf(out[i]);
+    }
 }
 
 void Accelerometer::begin()
@@ -123,29 +246,35 @@ void Accelerometer::process_data(uint8_t addr, bool running, bool timeout, bool 
         failCount = 0;
         switch (status)
         {
+        // Polls read the data ready flag along with the data, as they run faster than the
+        // accelerometer samples, and the filters should only see each sample once
         case MPU_6050_POLL:
-            accel[0] = bufferRx[0] << 8 | bufferRx[1];
-            accel[1] = bufferRx[2] << 8 | bufferRx[3];
-            accel[2] = bufferRx[4] << 8 | bufferRx[5];
+            if (bufferRx[0] & MPU6050_INT_DATA_RDY)
+            {
+                push_sample((int16_t)(bufferRx[1] << 8 | bufferRx[2]), (int16_t)(bufferRx[3] << 8 | bufferRx[4]), (int16_t)(bufferRx[5] << 8 | bufferRx[6]));
+            }
             schedule_us(ACCEL_POLL_US);
             break;
         case LIS_FAMILY_POLL:
-            accel[0] = bufferRx[1] << 8 | bufferRx[0];
-            accel[1] = bufferRx[3] << 8 | bufferRx[2];
-            accel[2] = bufferRx[5] << 8 | bufferRx[4];
+            if (bufferRx[0] & LIS3DH_STATUS_ZYXDA)
+            {
+                push_sample((int16_t)(bufferRx[2] << 8 | bufferRx[1]), (int16_t)(bufferRx[4] << 8 | bufferRx[3]), (int16_t)(bufferRx[6] << 8 | bufferRx[5]));
+            }
             schedule_us(ACCEL_POLL_US);
             break;
         case ADXL_POLL:
-            // ADXL345 needs to be scaled
-            accel[0] = (bufferRx[1] << 8 | bufferRx[0]) * 64;
-            accel[1] = (bufferRx[3] << 8 | bufferRx[2]) * 64;
-            accel[2] = (bufferRx[5] << 8 | bufferRx[4]) * 64;
+            // ADXL345 needs to be scaled. The data format register sits between the flags and the data.
+            if (bufferRx[0] & ADXL345_INT_SOURCE_DATA_READY)
+            {
+                push_sample((int16_t)(bufferRx[3] << 8 | bufferRx[2]) * 64, (int16_t)(bufferRx[5] << 8 | bufferRx[4]) * 64, (int16_t)(bufferRx[7] << 8 | bufferRx[6]) * 64);
+            }
             schedule_us(ACCEL_POLL_US);
             break;
         case LIS3DH_POLL:
-            accel[0] = bufferRx[1] << 8 | bufferRx[0];
-            accel[1] = bufferRx[3] << 8 | bufferRx[2];
-            accel[2] = bufferRx[5] << 8 | bufferRx[4];
+            if (bufferRx[0] & LIS3DH_STATUS_ZYXDA)
+            {
+                push_sample((int16_t)(bufferRx[2] << 8 | bufferRx[1]), (int16_t)(bufferRx[4] << 8 | bufferRx[3]), (int16_t)(bufferRx[6] << 8 | bufferRx[5]));
+            }
             status = LIS3DH_POLL_AUX;
             pollReg = LIS3DH_REG_OUTADC1_L;
             schedule_us(100);
@@ -155,7 +284,7 @@ void Accelerometer::process_data(uint8_t addr, bool running, bool timeout, bool 
             lis3dhAdc[1] = bufferRx[3] << 8 | bufferRx[2];
             lis3dhAdc[2] = bufferRx[5] << 8 | bufferRx[4];
             status = LIS3DH_POLL;
-            pollReg = LIS3DH_REG_OUT;
+            pollReg = LIS3DH_REG_STATUS_AI;
             schedule_us(ACCEL_POLL_US);
             break;
         case ACCEL_INIT:
@@ -282,28 +411,49 @@ void Accelerometer::process_data(uint8_t addr, bool running, bool timeout, bool 
             interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
             break;
         case MPU_6050_ACCEL_CONFIG:
+            // a known 1kHz sample rate, so the data ready flag tracks real accelerometer samples
+            status = MPU_6050_CONFIG;
+            bufferTx[0] = MPU6050_REG_CONFIG;
+            bufferTx[1] = MPU6050_CONFIG_DLPF_184HZ;
+            interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
+            break;
+        case MPU_6050_CONFIG:
+            // the data ready flag in INT_STATUS is only raised while its interrupt is enabled
+            status = MPU_6050_INT_ENABLE;
+            bufferTx[0] = MPU6050_REG_INT_ENABLE;
+            bufferTx[1] = MPU6050_INT_DATA_RDY;
+            interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
+            break;
+        case MPU_6050_INT_ENABLE:
             status = MPU_6050_POLL;
-            pollReg = MPU6050_REG_ACCEL_OUT;
+            pollReg = MPU6050_REG_INT_STATUS;
             schedule_us(ACCEL_POLL_US);
             break;
         case ADXL_DATAFORMAT:
+            // 200Hz is as fast as the ADXL345 should go on a 100kHz bus
+            status = ADXL_BW_RATE;
+            bufferTx[0] = ADXL345_BW_RATE;
+            bufferTx[1] = ADXL345_BW_RATE_200HZ;
+            interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
+            break;
+        case ADXL_BW_RATE:
             status = ADXL_POLL;
-            pollReg = ADXL345_DATAX0;
+            pollReg = ADXL345_INT_SOURCE;
             schedule_us(ACCEL_POLL_US);
             break;
         case LIS3DH_TEMPCFG_INIT:
             status = LIS3DH_POLL;
-            pollReg = LIS3DH_REG_OUT;
+            pollReg = LIS3DH_REG_STATUS_AI;
             schedule_us(ACCEL_POLL_US);
             break;
         case LIS3DSH_CTRL1_INIT:
             status = LIS_FAMILY_POLL;
-            pollReg = LIS3DH_REG_OUT;
+            pollReg = LIS3DH_REG_STATUS_AI;
             schedule_us(ACCEL_POLL_US);
             break;
         case SC7A20_CTRL4_INIT:
             status = LIS_FAMILY_POLL;
-            pollReg = LIS3DH_REG_OUT;
+            pollReg = LIS3DH_REG_STATUS_AI;
             schedule_us(ACCEL_POLL_US);
             break;
         }
@@ -311,12 +461,18 @@ void Accelerometer::process_data(uint8_t addr, bool running, bool timeout, bool 
     }
     switch (status)
     {
+    case LIS3DH_POLL_AUX:
+        interface.dmaWriteRead(address, &pollReg, 1, bufferRx, 6);
+        break;
     case LIS3DH_POLL:
     case LIS_FAMILY_POLL:
-    case LIS3DH_POLL_AUX:
     case MPU_6050_POLL:
+        // status, then the outputs
+        interface.dmaWriteRead(address, &pollReg, 1, bufferRx, 7);
+        break;
     case ADXL_POLL:
-        interface.dmaWriteRead(address, &pollReg, 1, bufferRx, 6);
+        // interrupt source, data format, then the outputs
+        interface.dmaWriteRead(address, &pollReg, 1, bufferRx, 8);
         break;
     case ACCEL_INIT:
         // Probe every address, the answers (or NAKs) count probesPending back down
@@ -363,6 +519,18 @@ void Accelerometer::probe_round_done()
 void Accelerometer::tick()
 {
     interface.tick();
+    if (filterReset)
+    {
+        filterReset = false;
+        filterStarted = false;
+        sampleTail = sampleHead;
+    }
+    while (sampleTail != sampleHead)
+    {
+        __dmb();
+        filter_sample(sampleRing[sampleTail]);
+        sampleTail = (sampleTail + 1) % SAMPLE_RING_SIZE;
+    }
     if (lastPoll && !restart_alarm_id && to_ms_since_boot(get_absolute_time()) - lastPoll > 1000)
     {
         // Masked so the I2C interrupt can't schedule a poll between process_data cancelling the old

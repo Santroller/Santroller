@@ -3,7 +3,14 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
-AccelerometerDevice::AccelerometerDevice(proto_AccelerometerDevice device, uint16_t id) : Device(id), m_accelerometer(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock), m_device(device)
+#include <algorithm>
+AccelerometerDevice::AccelerometerDevice(proto_AccelerometerDevice device, uint16_t id)
+    : Device(id),
+      m_accelerometer(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock,
+                      device.has_gateTolerance ? device.gateTolerance : 0,
+                      device.has_medianSamples ? std::min<uint32_t>(device.medianSamples, Accelerometer::MEDIAN_MAX) : 0,
+                      device.has_lowPassCutoff ? device.lowPassCutoff : 0),
+      m_device(device)
 {
 }
 void AccelerometerDevice::begin()

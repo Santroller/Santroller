@@ -782,7 +782,7 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
                 {
                     return 0xFFFF;
                 }
-                if (data->tilt > 0x280)
+                if (data->tilt >= 0x280)
                 {
                     return 0;
                 }

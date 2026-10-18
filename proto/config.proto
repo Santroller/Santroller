@@ -310,6 +310,9 @@ message ConfigInfo {
   // The bootloader has a different flash layout to this firmware, so updates can't go over OTA (the device
   // refuses them) until it is reflashed from a UF2. needsUf2Update is set too.
   optional bool bootloaderOutdated = 9;
+  // Another configurator has the device open over the other transport (USB or bluetooth). Until it
+  // closes, this one can't read the config or change anything.
+  optional bool inUseByOtherTool = 10;
 }
 
 message GetActiveProfiles {

@@ -565,10 +565,8 @@ void GuitarHeroGuitarAxisMapping::update_ps3(uint8_t *buf)
     {
         return;
     }
-    // tilt is flipped
-    int tilt = 65535 - m_calibrated_value;
-    // tilt centers at 512 but isnt actually full range
-    tilt = 512 - (tilt >> 8);
+    // tilt is accelX, which rests at 0x200 and only spans 0x180 (pointed up) to 0x280 (pointed down)
+    int tilt = 0x180 + ((65535 - m_calibrated_value) >> 8);
     PS3GuitarHeroGuitar_Data_t *report = (PS3GuitarHeroGuitar_Data_t *)buf;
     switch (m_mapping.mapping.mapping.ghAxis)
     {

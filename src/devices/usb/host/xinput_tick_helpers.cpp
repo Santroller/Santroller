@@ -124,8 +124,9 @@ bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_O
         if (type.which_mapping == proto_Output_ghButton_tag)
         {
             auto data = (XInputGuitarHeroGuitar_Data_t *)ep_in_buf;
-            uint8_t slider = (((uint16_t)data->slider + 0x80) >> 8) ^ 0x80;
-            uint8_t frets = is_wt ? decode_ghwt_slider(slider) : decode_gh5_slider(slider);
+            // WT reports analog ranges in the high byte, GH5 reports n * -257 so the low byte is exact
+            uint16_t slider = (uint16_t)data->slider;
+            uint8_t frets = is_wt ? decode_ghwt_slider((slider >> 8) ^ 0x80) : decode_gh5_slider((slider ^ 0x80) & 0xFF);
             switch (type.mapping.ghButton)
             {
             case GuitarHeroGuitar_Green:

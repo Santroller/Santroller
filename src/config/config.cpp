@@ -973,7 +973,7 @@ bool load_empty()
     return true;
 }
 
-uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload)
+uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload, bool in_use_by_other_tool)
 {
     ConfigMetadata metadata = config_storage.read_metadata(cached);
     proto_ConfigInfo info proto_ConfigInfo_init_zero;
@@ -999,6 +999,11 @@ uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload)
     {
         info.has_streamedFirmwareUpload = true;
         info.streamedFirmwareUpload = true;
+    }
+    if (in_use_by_other_tool)
+    {
+        info.has_inUseByOtherTool = true;
+        info.inUseByOtherTool = true;
     }
     pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 64);
     if (!pb_encode(&outputStream, proto_ConfigInfo_fields, &info))

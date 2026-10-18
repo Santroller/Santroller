@@ -542,8 +542,51 @@ void HIDConfigDevice::switch_transport(ConfigTransport transport)
   m_transport = transport;
 }
 
+bool HIDConfigDevice::in_use_elsewhere(ConfigTransport transport) const
+{
+  if (transport == m_transport)
+  {
+    return false;
+  }
+  // Both tools share the read and write position in the config, and each uploads its own copy of it,
+  // so one would scramble the other's reads and undo its changes. The tool already open keeps the
+  // device until it closes: its keepalive lapses (or it doesn't return after a reload) and it isn't
+  // partway through an upload
+  return ConfigManager::instance().is_working() || tool_may_be_open();
+}
+
+uint16_t HIDConfigDevice::handle_get_report_in_use(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
+{
+  if (report_type != HID_REPORT_TYPE_FEATURE)
+  {
+    return 0;
+  }
+  switch (report_id)
+  {
+  // enough for the tool to say what the device is and why it can't open it
+  case ReportId::ReportIdGetVersion:
+  case ReportId::ReportIdGetType:
+  case ReportId::ReportIdGetActiveProfiles:
+    return handle_get_report(report_id, report_type, buffer, reqlen);
+  case ReportId::ReportIdConfigInfo:
+  case ReportId::ReportIdConfigInfoSaved:
+    // without touching where the open tool is up to
+    buffer[0] = report_id;
+    return copy_config_info(buffer + 1, report_id == ReportId::ReportIdConfigInfo, false, true) + 1;
+  default:
+    // no data, the same as reading past the end of the config
+    buffer[0] = report_id;
+    return 1;
+  }
+}
+
 bool HIDConfigDevice::set_report_from(ConfigTransport transport, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
+  if (in_use_elsewhere(transport))
+  {
+    // Keepalives included, or the open tool would never be seen to close
+    return false;
+  }
   switch_transport(transport);
   return handle_set_report(report_id, report_type, buffer, bufsize);
 }
@@ -555,6 +598,10 @@ uint16_t HIDConfigDevice::get_report(uint8_t report_id, hid_report_type_t report
 
 uint16_t HIDConfigDevice::get_report_from(ConfigTransport transport, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
 {
+  if (in_use_elsewhere(transport))
+  {
+    return handle_get_report_in_use(report_id, report_type, buffer, reqlen);
+  }
   switch_transport(transport);
   return handle_get_report(report_id, report_type, buffer, reqlen);
 }

@@ -106,6 +106,28 @@ TEST_F(DeviceTriggerTest, Ps2ControllerType)
     EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::PS2, 0), pad);
 }
 
+TEST_F(DeviceTriggerTest, SnesControllerType)
+{
+    SNESControllerTypeActivationTrigger trigger(SNESControllerNES, profile, 1, 0, 0);
+    auto pad = plug_in(10);
+    pad->snes_type = SNESControllerSNES;
+    EXPECT_FALSE(trigger.validate(false, false, false));
+    pad->snes_type = SNESControllerNES;
+    EXPECT_TRUE(trigger.validate(true, false, false));
+    EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::SNES, 0), pad);
+}
+
+TEST_F(DeviceTriggerTest, JoybusControllerType)
+{
+    JoybusControllerTypeActivationTrigger trigger(JoybusControllerN64, profile, 1, 0, 0);
+    auto pad = plug_in(10);
+    pad->joybus_type = JoybusControllerGameCube;
+    EXPECT_FALSE(trigger.validate(false, false, false));
+    pad->joybus_type = JoybusControllerN64;
+    EXPECT_TRUE(trigger.validate(true, false, false));
+    EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::Joybus, 0), pad);
+}
+
 TEST_F(DeviceTriggerTest, UsbTypeHoldsTheDeviceOnlyUntilReset)
 {
     // While checking, a USB match is held as a temporary claim (so inputs can preview it), which

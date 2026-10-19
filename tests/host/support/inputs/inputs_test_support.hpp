@@ -120,6 +120,8 @@ public:
     explicit TestDevice(uint16_t id) : Device(id) { still_connected = true; }
     WiiExtType wii_type = WiiNoExtension;
     PS2ControllerType ps2_type = PS2ControllerTypeUnknown;
+    SNESControllerType snes_type = SNESControllerNone;
+    JoybusControllerType joybus_type = JoybusControllerNone;
     SubType usb_type = SubType(0);
     SubType bt_type = SubType(0);
     // vid / pid, 0 for none
@@ -135,6 +137,8 @@ public:
     bool using_pin(uint8_t) override { return false; }
     bool is_wii_extension(WiiExtType type) override { return wii_type != WiiNoExtension && type == wii_type; }
     bool is_ps2_device(PS2ControllerType type) override { return ps2_type != PS2ControllerTypeUnknown && type == ps2_type; }
+    bool is_snes_type(SNESControllerType type) override { return snes_type != SNESControllerNone && type == snes_type; }
+    bool is_joybus_type(JoybusControllerType type) override { return joybus_type != JoybusControllerNone && type == joybus_type; }
     bool is_usb_type(SubType type) override { return usb_type && type == usb_type; }
     bool is_bluetooth_type(SubType type) override { return bt_type && type == bt_type; }
     bool is_usb_device(proto_SpecificUsbDevice type) override { return vid && type.vid == vid && type.pid == pid; }

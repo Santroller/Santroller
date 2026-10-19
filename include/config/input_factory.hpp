@@ -30,6 +30,8 @@ public:
             else if constexpr (std::is_same_v<T, BluetoothHostInterface>) return DeviceSlotKind::Bluetooth;
             else if constexpr (std::is_same_v<T, WiiDevice>) return DeviceSlotKind::WiiExtension;
             else if constexpr (std::is_same_v<T, MidiDevice>) return DeviceSlotKind::MIDI;
+            else if constexpr (std::is_same_v<T, SNESDevice>) return DeviceSlotKind::SNES;
+            else if constexpr (std::is_same_v<T, JoybusDevice>) return DeviceSlotKind::Joybus;
             else return DeviceSlotKind::None;
         }();
 

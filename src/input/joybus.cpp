@@ -1,6 +1,6 @@
 #include "input/joybus.hpp"
 
-JoybusAxisInput::JoybusAxisInput(proto_JoybusAxisInput input, std::shared_ptr<JoybusDevice> device, Profile *profile) : m_input(input), m_device(device)
+JoybusAxisInput::JoybusAxisInput(proto_JoybusAxisInput input, std::shared_ptr<JoybusDevice> device, Profile *profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
 bool JoybusAxisInput::tick_digital()
@@ -14,7 +14,7 @@ uint16_t JoybusAxisInput::tick_analog()
 void JoybusAxisInput::setup()
 {
 }
-JoybusButtonInput::JoybusButtonInput(proto_JoybusButtonInput input, std::shared_ptr<JoybusDevice> device, Profile *profile) : m_input(input), m_device(device)
+JoybusButtonInput::JoybusButtonInput(proto_JoybusButtonInput input, std::shared_ptr<JoybusDevice> device, Profile *profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
 bool JoybusButtonInput::tick_digital()

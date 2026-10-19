@@ -132,7 +132,7 @@ struct ConfigDecodeContext
     bool changed = false;
     // Building an inactive profile for the config tool: load everything, but never activate it
     bool preview = false;
-    std::array<uint16_t, 5> slot_counts{};
+    std::array<uint16_t, 7> slot_counts{};
     // deviceSlotIdVersion 2: slot ids come from the whole profile, scanned before it is loaded
     bool profile_wide_slot_ids = false;
     ProfileSlotIds slot_ids;
@@ -545,6 +545,12 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
             break;
         case proto_ProfileAssignmentInfo_ps2Cnt_tag:
             kind = DeviceSlotKind::PS2;
+            break;
+        case proto_ProfileAssignmentInfo_snesCnt_tag:
+            kind = DeviceSlotKind::SNES;
+            break;
+        case proto_ProfileAssignmentInfo_joybusCnt_tag:
+            kind = DeviceSlotKind::Joybus;
             break;
         case proto_ProfileAssignmentInfo_usbType_tag:
         case proto_ProfileAssignmentInfo_usbDevice_tag:

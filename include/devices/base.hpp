@@ -94,6 +94,8 @@ public:
     virtual bool is_bluetooth_device(proto_SpecificBluetoothDevice type);
     virtual bool is_bluetooth_type(SubType type);
     virtual bool is_ps2_device(PS2ControllerType type);
+    virtual bool is_snes_type(SNESControllerType type) { return false; }
+    virtual bool is_joybus_type(JoybusControllerType type) { return false; }
     virtual bool is_wii_device() const { return false; }
     virtual bool is_midi_device() const { return false; }
     virtual bool is_usb_host_interface() const { return false; }

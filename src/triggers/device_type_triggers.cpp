@@ -159,6 +159,80 @@ void PS2ControllerTypeActivationTrigger::reset()
     clear_profile_temp_devices(m_profile);
 }
 
+SNESControllerTypeActivationTrigger::SNESControllerTypeActivationTrigger(proto_SNESControllerType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_type(type)
+{
+}
+
+bool SNESControllerTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+{
+    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
+                                        { return device->is_snes_type(m_type); });
+    bool matched = device != nullptr;
+    if (send_events && (matched != m_last_val || full_poll))
+    {
+        m_last_val = matched;
+        send_activation_event(m_id, m_list_id, m_last_analog_val, m_last_val);
+    }
+    else
+    {
+        m_last_val = matched;
+    }
+    if (device)
+    {
+        if (claim_device)
+        {
+            claim_profile_device(m_profile, DeviceSlotKind::SNES, m_slot_id, device);
+        }
+        else
+        {
+            claim_profile_temp_device(m_profile, DeviceSlotKind::SNES, m_slot_id, device);
+        }
+        return true;
+    }
+    return false;
+}
+void SNESControllerTypeActivationTrigger::reset()
+{
+    clear_profile_temp_devices(m_profile);
+}
+
+JoybusControllerTypeActivationTrigger::JoybusControllerTypeActivationTrigger(proto_JoybusControllerType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_type(type)
+{
+}
+
+bool JoybusControllerTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+{
+    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
+                                        { return device->is_joybus_type(m_type); });
+    bool matched = device != nullptr;
+    if (send_events && (matched != m_last_val || full_poll))
+    {
+        m_last_val = matched;
+        send_activation_event(m_id, m_list_id, m_last_analog_val, m_last_val);
+    }
+    else
+    {
+        m_last_val = matched;
+    }
+    if (device)
+    {
+        if (claim_device)
+        {
+            claim_profile_device(m_profile, DeviceSlotKind::Joybus, m_slot_id, device);
+        }
+        else
+        {
+            claim_profile_temp_device(m_profile, DeviceSlotKind::Joybus, m_slot_id, device);
+        }
+        return true;
+    }
+    return false;
+}
+void JoybusControllerTypeActivationTrigger::reset()
+{
+    clear_profile_temp_devices(m_profile);
+}
+
 UsbTypeActivationTrigger::UsbTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_type(type)
 {
 }

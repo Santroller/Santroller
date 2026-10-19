@@ -19,6 +19,10 @@ inline std::pair<DeviceSlotKind, uint16_t> slot_kind_and_type(const proto_Profil
         return {DeviceSlotKind::WiiExtension, static_cast<uint16_t>(info.assignment.wiiExt)};
     case proto_ProfileAssignmentInfo_ps2Cnt_tag:
         return {DeviceSlotKind::PS2, static_cast<uint16_t>(info.assignment.ps2Cnt)};
+    case proto_ProfileAssignmentInfo_snesCnt_tag:
+        return {DeviceSlotKind::SNES, static_cast<uint16_t>(info.assignment.snesCnt)};
+    case proto_ProfileAssignmentInfo_joybusCnt_tag:
+        return {DeviceSlotKind::Joybus, static_cast<uint16_t>(info.assignment.joybusCnt)};
     case proto_ProfileAssignmentInfo_usbType_tag:
         return {DeviceSlotKind::USB, static_cast<uint16_t>(info.assignment.usbType)};
     case proto_ProfileAssignmentInfo_usbDevice_tag:

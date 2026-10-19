@@ -16,6 +16,9 @@ public:
     uint16_t read_axis(proto_JoybusAxisType type);
     bool read_button(proto_JoybusButtonType type);
     bool is_joybus_device() const override { return true; }
+    bool is_assignable() const override { return true; }
+    bool is_joybus_type(JoybusControllerType type) override;
+    void rescan(bool first) override;
     bool using_pin(uint8_t pin);
     bool matches_reload_config(const proto_Device &config) const override;
     void set_rumble(uint8_t left, uint8_t right) override;

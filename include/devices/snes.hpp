@@ -16,6 +16,9 @@ public:
     uint16_t read_axis(proto_SNESAxisType type);
     bool read_button(proto_SNESButtonType type);
     bool is_snes_device() const override { return true; }
+    bool is_assignable() const override { return true; }
+    bool is_snes_type(SNESControllerType type) override;
+    void rescan(bool first) override;
     bool using_pin(uint8_t pin);
     bool matches_reload_config(const proto_Device &config) const override;
     SNESControllerType controller_type() const;

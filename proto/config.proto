@@ -213,6 +213,8 @@ message ProfileAssignmentInfo {
     // A Pro Guitar seen over MIDI, ProGuitarMustang or ProGuitarSquier
     SubType midiProGuitar = 21;
     LocalInputsAssignment localInputs = 22;
+    SNESControllerType snesCnt = 23;
+    JoybusControllerType joybusCnt = 24;
   }
   reserved 12;
 }

@@ -25,6 +25,8 @@ enum class DeviceSlotKind : uint8_t
     USB,
     Bluetooth,
     MIDI,
+    SNES,
+    Joybus,
     None = 0xff
 };
 

@@ -28,6 +28,32 @@ protected:
     proto_PS2ControllerType m_type;
 };
 
+class SNESControllerTypeActivationTrigger : public ActivationTrigger
+{
+public:
+    SNESControllerTypeActivationTrigger(proto_SNESControllerType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
+    ~SNESControllerTypeActivationTrigger() {}
+    bool validate(bool claim_device, bool full_poll, bool send_events);
+    int assignedDevices() { return 0; }
+    void reset() override;
+
+protected:
+    proto_SNESControllerType m_type;
+};
+
+class JoybusControllerTypeActivationTrigger : public ActivationTrigger
+{
+public:
+    JoybusControllerTypeActivationTrigger(proto_JoybusControllerType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
+    ~JoybusControllerTypeActivationTrigger() {}
+    bool validate(bool claim_device, bool full_poll, bool send_events);
+    int assignedDevices() { return 0; }
+    void reset() override;
+
+protected:
+    proto_JoybusControllerType m_type;
+};
+
 class UsbTypeActivationTrigger : public ActivationTrigger
 {
 public:

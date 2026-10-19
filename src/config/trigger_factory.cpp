@@ -63,6 +63,24 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             list_id
         );
         
+    case proto_ProfileAssignmentInfo_snesCnt_tag:
+        return std::make_unique<SNESControllerTypeActivationTrigger>(
+            proto_assignment.assignment.snesCnt,
+            profile,
+            trigger_id,
+            slot_id,
+            list_id
+        );
+
+    case proto_ProfileAssignmentInfo_joybusCnt_tag:
+        return std::make_unique<JoybusControllerTypeActivationTrigger>(
+            proto_assignment.assignment.joybusCnt,
+            profile,
+            trigger_id,
+            slot_id,
+            list_id
+        );
+
     case proto_ProfileAssignmentInfo_usbType_tag:
         return std::make_unique<UsbTypeActivationTrigger>(
             proto_assignment.assignment.usbType,

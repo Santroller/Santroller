@@ -581,6 +581,40 @@ TEST_F(SlotTriggerTest, HeldOnAPS2SlotReadsTheDevice)
     EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::PS2, 1), controller);
 }
 
+TEST_F(SlotTriggerTest, HeldOnASNESSlotReadsTheDevice)
+{
+    boot();
+    auto pad = std::make_shared<TestDevice>(10);
+    pad->snes_type = SNESControllerSNES;
+    DeviceManager::instance().add_assignable_device(pad);
+    held.push_back(pad.get());
+    auto list = std::make_unique<ActivationTriggerList>();
+    list->triggers.emplace_back(new InputActivationTrigger(
+        false, plain_trigger(), std::make_unique<SlotInput>(profile.get(), 1, &held, DeviceSlotKind::SNES), profile, 0, 0));
+    list->triggers.emplace_back(new SNESControllerTypeActivationTrigger(SNESControllerSNES, profile, 1, 1, 0));
+    list->order_triggers();
+    EXPECT_TRUE(list->validate(false, false, false));
+    EXPECT_TRUE(list->validate(true, false, false));
+    EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::SNES, 1), pad);
+}
+
+TEST_F(SlotTriggerTest, HeldOnAJoybusSlotReadsTheDevice)
+{
+    boot();
+    auto pad = std::make_shared<TestDevice>(10);
+    pad->joybus_type = JoybusControllerGameCube;
+    DeviceManager::instance().add_assignable_device(pad);
+    held.push_back(pad.get());
+    auto list = std::make_unique<ActivationTriggerList>();
+    list->triggers.emplace_back(new InputActivationTrigger(
+        false, plain_trigger(), std::make_unique<SlotInput>(profile.get(), 1, &held, DeviceSlotKind::Joybus), profile, 0, 0));
+    list->triggers.emplace_back(new JoybusControllerTypeActivationTrigger(JoybusControllerGameCube, profile, 1, 1, 0));
+    list->order_triggers();
+    EXPECT_TRUE(list->validate(false, false, false));
+    EXPECT_TRUE(list->validate(true, false, false));
+    EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::Joybus, 1), pad);
+}
+
 namespace
 {
 // The guitar was claimed by a profile further down, as its first report (with the button held)

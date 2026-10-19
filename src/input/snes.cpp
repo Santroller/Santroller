@@ -1,6 +1,6 @@
 #include "input/snes.hpp"
 
-SNESAxisInput::SNESAxisInput(proto_SNESAxisInput input, std::shared_ptr<SNESDevice> device, Profile *profile) : m_input(input), m_device(device)
+SNESAxisInput::SNESAxisInput(proto_SNESAxisInput input, std::shared_ptr<SNESDevice> device, Profile *profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
 bool SNESAxisInput::tick_digital()
@@ -14,7 +14,7 @@ uint16_t SNESAxisInput::tick_analog()
 void SNESAxisInput::setup()
 {
 }
-SNESButtonInput::SNESButtonInput(proto_SNESButtonInput input, std::shared_ptr<SNESDevice> device, Profile *profile) : m_input(input), m_device(device)
+SNESButtonInput::SNESButtonInput(proto_SNESButtonInput input, std::shared_ptr<SNESDevice> device, Profile *profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
 bool SNESButtonInput::tick_digital()

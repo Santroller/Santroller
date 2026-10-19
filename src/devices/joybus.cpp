@@ -1,6 +1,11 @@
 #include "devices/joybus.hpp"
 #include "events.pb.h"
 #include "emulation/usb/hid_device.h"
+#include "managers/device_manager.hpp"
+#include "managers/config_manager.hpp"
+#include "main.hpp"
+#include "config/config.hpp"
+#include "utils.h"
 #include <cstring>
 
 JoybusDevice::JoybusDevice(proto_JoybusDevice device, uint16_t id)
@@ -46,10 +51,30 @@ void JoybusDevice::update(bool full_poll, bool send_events)
     auto type = controller_type();
     if (type != m_last_type || full_poll)
     {
+        bool changed = type != m_last_type;
         m_last_type = type;
         proto_Event event = {which_event : proto_Event_joybus_tag, event : {joybus : {m_id, type}}};
         HIDConfigDevice::send_event(event, true);
+        if (changed)
+        {
+            // Profiles pick controllers by type, so pick again now this one changed
+            ConfigManager::instance().mark_mode_change_time(millis());
+            reload();
+        }
     }
+}
+
+void JoybusDevice::rescan(bool first)
+{
+    if (first)
+    {
+        DeviceManager::instance().add_assignable_device(DeviceManager::instance().get_root_device(m_id));
+    }
+}
+
+bool JoybusDevice::is_joybus_type(JoybusControllerType type)
+{
+    return m_last_type != JoybusControllerNone && m_last_type == type;
 }
 
 bool JoybusDevice::using_pin(uint8_t pin)

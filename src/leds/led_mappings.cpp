@@ -329,8 +329,9 @@ void PatternLedMapping::update(bool full_poll, bool send_events)
     {
         return;
     }
-    // Paused while the host has the LEDs
-    if (millis() < m_next_poll || overridden())
+    // Paused while the host has the LEDs. A profile the tool is only testing leaves its pattern off, as it
+    // would fight the active profile's LEDs
+    if (m_profile->preview || millis() < m_next_poll || overridden())
     {
         return;
     }

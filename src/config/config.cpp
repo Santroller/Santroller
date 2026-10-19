@@ -200,11 +200,14 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     auto previous_device = device_mgr.get_root_device(device_id);
 
     // Console links must survive even full reloads when their wiring is unchanged. So must the USB
-    // host, since restarting it disconnects everything plugged into it.
+    // host, since restarting it disconnects everything plugged into it. SNES and joybus pads are
+    // kept too: rebuilding them forgets the controller type, and finding it again reloads.
     const bool keep_on_full_reload = proto_device.which_device == proto_Device_psxEmulation_tag ||
                                      proto_device.which_device == proto_Device_wiiEmulation_tag ||
                                      proto_device.which_device == proto_Device_joybusEmulation_tag ||
                                      proto_device.which_device == proto_Device_snesEmulation_tag ||
+                                     proto_device.which_device == proto_Device_snes_tag ||
+                                     proto_device.which_device == proto_Device_joybus_tag ||
                                      proto_device.which_device == proto_Device_usbHost_tag;
     if (previous_device && (keep_on_full_reload || !config_mgr.is_full_reload()) &&
         previous_device->matches_reload_config(proto_device))
@@ -845,6 +848,7 @@ static std::shared_ptr<Profile> decode_profile(pb_istream_t stream, ConfigDecode
     proto_profile.leds.arg = &context;
     pb_decode_ex(&stream, proto_Profile_fields, &proto_profile, PB_DECODE_NOINIT);
     profile->triggers_only = !context.matched && !context.preview;
+    profile->preview = context.preview;
     // Need to update capabilities again now the leds have been loaded
     if (context.matched)
     {

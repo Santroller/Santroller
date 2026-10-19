@@ -404,7 +404,8 @@ void StaticLedMapping::update(bool full_poll, bool send_events)
     {
         return;
     }
-    if (!overridden())
+    // Always on LEDs are often profile indicators, so a profile the tool is only testing leaves them off
+    if (!m_profile->preview && !overridden())
     {
         m_device->set_val(UINT16_MAX);
     }

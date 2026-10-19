@@ -64,6 +64,8 @@ public:
     uint32_t profile_id;
     // Inactive profiles only load their opts and triggers; the config tool loads the rest on demand
     bool triggers_only = false;
+    // Loaded only so the config tool can test it, while another profile is the active one
+    bool preview = false;
     std::vector<std::unique_ptr<Mapping>> mappings;
     std::vector<std::unique_ptr<ActivationTriggerList>> triggers;
     std::vector<std::unique_ptr<LedMapping>> leds;

@@ -468,7 +468,9 @@ void ProfileManager::update_xinput_receiver()
         }
     }
     // A 360 console never reads the strings or OS descriptors, so this stays wired there
-    m_xinput_receiver = pads > 1 && UsbDetectionState::instance().host_is_windows();
+    // Steam does not like having the config interface on the same USB device as wired XInput gamepads
+    // But wireless is fine, so we just always use wireless receivers for XInput gamepads.
+    m_xinput_receiver = UsbDetectionState::instance().host_is_windows();
 }
 
 uint32_t ProfileManager::usb_layout_hash() const

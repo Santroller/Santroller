@@ -58,6 +58,13 @@ message TestLedCommand {
   optional uint32 durationMs = 2;
   optional uint32 profileId = 3;
 }
+// Change a cycling input's state from the host. With state, jumps straight to that index in its
+// values, otherwise steps it like its forward input (or with forward false, its backward input)
+message SetCycleCommand {
+  required uint32 id = 1;
+  optional uint32 state = 2;
+  optional bool forward = 3;
+}
 message Command {
     oneof command {
         SetProfileCommand setProfile = 1;
@@ -70,5 +77,6 @@ message Command {
         UnpairBluetoothCommand unpairBluetooth = 8;
         TestLedCommand testLed = 9;
         DetectInputCommand detectInput = 10;
+        SetCycleCommand setCycle = 11;
     }
 }

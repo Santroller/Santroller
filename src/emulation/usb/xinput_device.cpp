@@ -455,33 +455,30 @@ uint32_t XInputGamepadDevice::controller_serial(uint8_t itf)
     }
     // Follow the controller driving this pad, so the console sees the same controller whichever pad it is
     // on. 0xff is the receiver, which has no controller
-    auto hardware_id = itf == 0xff ? std::nullopt : pad_hardware_id(itf);
-    if (hardware_id)
+    const auto hardware_id = itf == 0xff ? std::nullopt : pad_hardware_id(itf);
+    if (!hardware_id)
     {
-        // One controller can drive more than one pad. Only the first gets its serial, the console would
-        // treat the rest as the same pad
-        for (const auto other : xinputInterfaces)
+        return (hash ^ itf) * 16777619u;
+    }
+    // One controller can drive more than one pad. Only the first gets its serial, the console would
+    // treat the rest as the same pad
+    for (const auto other : xinputInterfaces)
+    {
+        if (other == 0xFF || other == itf)
         {
-            if (other == 0xFF || other == itf)
-            {
-                break;
-            }
-            if (pad_hardware_id(other) == hardware_id)
-            {
-                hardware_id.reset();
-                break;
-            }
+            break;
+        }
+        if (pad_hardware_id(other) == hardware_id)
+        {
+            return (hash ^ itf) * 16777619u;
         }
     }
-    if (hardware_id)
+    const uint64_t id_value = *hardware_id;
+    for (int i = 0; i < 8; i++)
     {
-        for (int i = 0; i < 8; i++)
-        {
-            hash = (hash ^ static_cast<uint8_t>(*hardware_id >> (i * 8))) * 16777619u;
-        }
-        return hash;
+        hash = (hash ^ static_cast<uint8_t>(id_value >> (i * 8))) * 16777619u;
     }
-    return (hash ^ itf) * 16777619u;
+    return hash;
 }
 
 void XInputGamepadDevice::receiver_id(uint8_t id[7])

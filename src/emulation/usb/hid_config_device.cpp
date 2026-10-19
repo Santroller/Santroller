@@ -29,6 +29,7 @@
 #include <pico_fota_bootloader/core.h>
 #include <algorithm>
 #include <string.h>
+#include <vector>
 
 static const char version[] = GIT_HASH;
 // 0 when it was built without the git history
@@ -38,6 +39,10 @@ static constexpr uint16_t firmware_upload_report_size = 63;
 static constexpr uint32_t firmware_write_alignment = 256;
 static constexpr uint32_t firmware_write_block_size = 4096;
 static bool decode_firmware_update(const uint8_t *buffer, uint16_t bufsize, proto_FirmwareUpdate *update);
+// Cycle changes from the host. They arrive in the USB / bluetooth callbacks, but stepping sends an event
+// (which runs tud_task) and saves the aux config, so they wait for process() on the main loop. Shared, as
+// either transport's config device may receive them
+static std::vector<proto_Command> pending_cycle_commands;
 uint8_t const desc_hid_report_config[] =
     {
 
@@ -70,6 +75,20 @@ void HIDConfigDevice::initialize()
 }
 void HIDConfigDevice::process(bool full_poll, bool send_events)
 {
+  // Before the tool checks below: a hotkey tool only sends commands, never keepalives
+  if (!pending_cycle_commands.empty())
+  {
+    auto commands = std::move(pending_cycle_commands);
+    pending_cycle_commands.clear();
+    for (const auto &command : commands)
+    {
+      auto device = DeviceManager::instance().get_root_device(command.command.setCycle.id);
+      if (device)
+      {
+        device->handle_command(command);
+      }
+    }
+  }
   if (clearedIn && clearedOut)
   {
     ConfigManager::instance().host_detected(ModeSwitch);
@@ -447,6 +466,15 @@ void HIDConfigDevice::handle_command(proto_Command command)
       }
     }
     break;
+  }
+  case proto_Command_setCycle_tag:
+  {
+    // A handful is plenty between two loops, more is a host spamming it
+    if (pending_cycle_commands.size() < 8)
+    {
+      pending_cycle_commands.push_back(command);
+    }
+    return;
   }
   case proto_Command_detectInput_tag:
   {

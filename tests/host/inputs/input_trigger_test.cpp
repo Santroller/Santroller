@@ -83,24 +83,25 @@ private:
     int m_assigned;
 };
 
-// A button on whichever device fills a USB slot, like USBButtonInput
+// A button on whichever device fills a slot, like USBButtonInput or WiiButtonInput
 class SlotInput : public Input
 {
 public:
-    SlotInput(Profile *profile, uint16_t slot, const std::vector<Device *> *held) : m_profile(profile), m_slot(slot), m_held(held) {}
+    SlotInput(Profile *profile, uint16_t slot, const std::vector<Device *> *held, DeviceSlotKind kind = DeviceSlotKind::USB) : m_profile(profile), m_slot(slot), m_held(held), m_kind(kind) {}
     bool tick_digital() override
     {
         return m_device && std::find(m_held->begin(), m_held->end(), m_device.get()) != m_held->end();
     }
     uint16_t tick_analog() override { return tick_digital() ? UINT16_MAX : 0; }
     void setup() override {}
-    void link_device(bool claim) override { m_device = m_profile->get_claimed_device(DeviceSlotKind::USB, m_slot, !claim); }
+    void link_device(bool claim) override { m_device = m_profile->get_claimed_device(m_kind, m_slot, !claim); }
     uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
 
 private:
     Profile *m_profile;
     uint16_t m_slot;
     const std::vector<Device *> *m_held;
+    DeviceSlotKind m_kind;
     std::shared_ptr<Device> m_device;
 };
 
@@ -541,6 +542,43 @@ TEST_F(SlotTriggerTest, HeldOnTheSlotReadsTheDevice)
     clock_ms::advance(600);
     EXPECT_TRUE(list->validate(true, false, false));
     EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::USB, 1), guitar);
+}
+
+// Wii extensions and PS2 controllers fill their slots the same way, so an input on the slot reads
+// the device the list's trigger found before it is claimed
+TEST_F(SlotTriggerTest, HeldOnAWiiExtensionSlotReadsTheDevice)
+{
+    boot();
+    auto guitar = std::make_shared<TestDevice>(10);
+    guitar->wii_type = WiiGuitarHeroGuitar;
+    DeviceManager::instance().add_assignable_device(guitar);
+    held.push_back(guitar.get());
+    auto list = std::make_unique<ActivationTriggerList>();
+    list->triggers.emplace_back(new InputActivationTrigger(
+        false, plain_trigger(), std::make_unique<SlotInput>(profile.get(), 1, &held, DeviceSlotKind::WiiExtension), profile, 0, 0));
+    list->triggers.emplace_back(new WiiExtTypeActivationTrigger(WiiGuitarHeroGuitar, profile, 1, 1, 0));
+    list->order_triggers();
+    EXPECT_TRUE(list->validate(false, false, false));
+    EXPECT_TRUE(profile->temp_claimed_devices.empty());
+    EXPECT_TRUE(list->validate(true, false, false));
+    EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::WiiExtension, 1), guitar);
+}
+
+TEST_F(SlotTriggerTest, HeldOnAPS2SlotReadsTheDevice)
+{
+    boot();
+    auto controller = std::make_shared<TestDevice>(10);
+    controller->ps2_type = PS2ControllerTypeGuitar;
+    DeviceManager::instance().add_assignable_device(controller);
+    held.push_back(controller.get());
+    auto list = std::make_unique<ActivationTriggerList>();
+    list->triggers.emplace_back(new InputActivationTrigger(
+        false, plain_trigger(), std::make_unique<SlotInput>(profile.get(), 1, &held, DeviceSlotKind::PS2), profile, 0, 0));
+    list->triggers.emplace_back(new PS2ControllerTypeActivationTrigger(PS2ControllerTypeGuitar, profile, 1, 1, 0));
+    list->order_triggers();
+    EXPECT_TRUE(list->validate(false, false, false));
+    EXPECT_TRUE(list->validate(true, false, false));
+    EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::PS2, 1), controller);
 }
 
 namespace

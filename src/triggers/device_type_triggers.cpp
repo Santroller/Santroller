@@ -109,9 +109,17 @@ bool WiiExtTypeActivationTrigger::validate(bool claim_device, bool full_poll, bo
         {
             claim_profile_device(m_profile, DeviceSlotKind::WiiExtension, m_slot_id, device);
         }
+        else
+        {
+            claim_profile_temp_device(m_profile, DeviceSlotKind::WiiExtension, m_slot_id, device);
+        }
         return true;
     }
     return false;
+}
+void WiiExtTypeActivationTrigger::reset()
+{
+    clear_profile_temp_devices(m_profile);
 }
 
 PS2ControllerTypeActivationTrigger::PS2ControllerTypeActivationTrigger(proto_PS2ControllerType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_type(type)
@@ -138,9 +146,17 @@ bool PS2ControllerTypeActivationTrigger::validate(bool claim_device, bool full_p
         {
             claim_profile_device(m_profile, DeviceSlotKind::PS2, m_slot_id, device);
         }
+        else
+        {
+            claim_profile_temp_device(m_profile, DeviceSlotKind::PS2, m_slot_id, device);
+        }
         return true;
     }
     return false;
+}
+void PS2ControllerTypeActivationTrigger::reset()
+{
+    clear_profile_temp_devices(m_profile);
 }
 
 UsbTypeActivationTrigger::UsbTypeActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_type(type)

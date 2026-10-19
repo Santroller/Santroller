@@ -9,6 +9,7 @@ public:
     ~WiiExtTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
+    void reset() override;
 
 protected:
     proto_WiiExtType m_type;
@@ -21,6 +22,7 @@ public:
     ~PS2ControllerTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
+    void reset() override;
 
 protected:
     proto_PS2ControllerType m_type;

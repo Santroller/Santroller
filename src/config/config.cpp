@@ -1,4 +1,7 @@
 #include "config/config.hpp"
+#if PICO_RP2040
+#include "hardware/structs/ssi.h"
+#endif
 #include <pico_fota_bootloader/core.h>
 #include <cstring>
 #include "xbox_dongle_firmware.h"
@@ -1033,6 +1036,14 @@ uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload, bo
     info.has_bootloaderOutdated = true;
     info.bootloaderOutdated = bootloader_outdated;
     needs_uf2 |= bootloader_outdated;
+#if PICO_RP2040
+    // Older compat builds booted with generic_03h. Any flash operation runs the boot stage again
+    // afterwards, so the SSI shows which one it is at any point
+    const bool slow_boot_stage = (ssi_hw->spi_ctrlr0 >> SSI_SPI_CTRLR0_XIP_CMD_LSB) == 0x03;
+    info.has_slowBootStage = true;
+    info.slowBootStage = slow_boot_stage;
+    needs_uf2 |= slow_boot_stage;
+#endif
     info.has_needsUf2Update = true;
     info.needsUf2Update = needs_uf2;
     if (streamed_upload)

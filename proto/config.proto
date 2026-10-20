@@ -315,6 +315,10 @@ message ConfigInfo {
   // Another configurator has the device open over the other transport (USB or bluetooth). Until it
   // closes, this one can't read the config or change anything.
   optional bool inUseByOtherTool = 10;
+  // The bootloader's boot stage reads flash with the slow 03h command, which costs a lot of CPU time.
+  // Updates still go over OTA, but they don't replace the bootloader, so only a UF2 fixes it.
+  // needsUf2Update is set too.
+  optional bool slowBootStage = 11;
 }
 
 message GetActiveProfiles {

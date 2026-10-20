@@ -11,7 +11,7 @@ static const uint8_t lis3dh_init = LIS3DH_REG_WHOAMI;
 static const uint8_t adxl345_init = ADXL345_REG_DEVID;
 static const uint8_t mpu6050_init = MPU6050_REG_WHO_AM_I;
 
-static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
+static int64_t __not_in_flash_func(restart_handler)(__unused alarm_id_t id, void *user_data)
 {
     Accelerometer *inst = (Accelerometer *)user_data;
     if (inst)
@@ -21,7 +21,9 @@ static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
     return 0;
 }
 
-#define ACCEL_POLL_US 500
+// Fast enough to catch every sample from the 400Hz LIS parts and the 200Hz ADXL345 (the MPU-6050's 1kHz
+// is decimated). Each poll costs an alarm and an I2C interrupt, so polling faster just eats core 0
+#define ACCEL_POLL_US 2000
 // How long to wait before probing again when no accelerometer answered
 #define ACCEL_PROBE_RETRY_MS 500
 // Every supported accelerometer is set up so 1g reads as roughly this
@@ -40,7 +42,7 @@ Accelerometer::Accelerometer(uint8_t block, uint8_t sda, uint8_t scl, uint32_t c
 {
 }
 
-void Accelerometer::schedule_us(uint32_t delay_us)
+void __not_in_flash_func(Accelerometer::schedule_us)(uint32_t delay_us)
 {
     alarm_id_t id = add_alarm_in_us(delay_us, restart_handler, this, true);
     restart_alarm_id = (id > 0) ? id : 0;
@@ -53,7 +55,7 @@ void Accelerometer::clear()
     filterReset = true;
 }
 
-void Accelerometer::push_sample(int32_t x, int32_t y, int32_t z)
+void __not_in_flash_func(Accelerometer::push_sample)(int32_t x, int32_t y, int32_t z)
 {
     uint8_t next = (sampleHead + 1) % SAMPLE_RING_SIZE;
     if (next == sampleTail)
@@ -193,7 +195,7 @@ void Accelerometer::end()
     type = AccelerometerType::None;
     clear();
 }
-void Accelerometer::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
+void __not_in_flash_func(Accelerometer::process_data)(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     if (m_stopped)
     {

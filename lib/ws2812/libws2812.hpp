@@ -10,6 +10,7 @@ public:
     void begin();
     void end();
     void putLeds(uint32_t *leds, uint8_t count);
+    void tick();
 
 private:
     uint8_t m_pin;
@@ -22,6 +23,13 @@ private:
     uint8_t m_count;
     uint m_dma_channel = UINT_MAX;
     alarm_id_t m_reset_delay_alarm_id = 0;
+    // A frame is being sent, or the strip is still latching it
+    volatile bool m_busy = false;
+    // The LEDs changed while a frame was out, so send another once it latches
+    volatile bool m_dirty = false;
+    uint32_t m_last_frame_us = 0;
+
+    void send_frame();
 
     static WS2812* s_dma_owners[NUM_DMA_CHANNELS];
     static int64_t reset_delay_complete(alarm_id_t id, void* user_data);

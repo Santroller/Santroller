@@ -3,6 +3,11 @@
 #include "hardware/dma.h"
 #include "pico/time.h"
 #include <cstdlib>
+#include "hardware/sync.h"
+
+// Resend the frame this often even when nothing changed, so a strip that lost power (or was plugged
+// in late) doesn't stay dark until the next change
+#define WS2812_REFRESH_US 100000
 void WS2812::putLeds(uint32_t *leds, uint8_t count)
 {
     // Not started, see begin()
@@ -68,19 +73,62 @@ void WS2812::putLeds(uint32_t *leds, uint8_t count)
                        ((uint32_t)(z) << 8) |
                        ((uint32_t)(w));
     }
+    // A frame already going out may have sent some LEDs before they changed, so it gets resent
+    // once it latches rather than now
+    uint32_t irq_status = save_and_disable_interrupts();
+    if (m_busy)
+    {
+        m_dirty = true;
+    }
+    else
+    {
+        send_frame();
+    }
+    restore_interrupts(irq_status);
+}
+
+// Only called with interrupts disabled, or from the reset alarm
+void __not_in_flash_func(WS2812::send_frame)()
+{
+    m_busy = true;
+    m_dirty = false;
+    m_last_frame_us = time_us_32();
+    dma_channel_set_read_addr(m_dma_channel, led_state, true);
+}
+
+void WS2812::tick()
+{
+    if (!led_state || m_busy || time_us_32() - m_last_frame_us < WS2812_REFRESH_US)
+    {
+        return;
+    }
+    uint32_t irq_status = save_and_disable_interrupts();
+    if (!m_busy)
+    {
+        send_frame();
+    }
+    restore_interrupts(irq_status);
 }
 
 WS2812* WS2812::s_dma_owners[NUM_DMA_CHANNELS] = {};
 
-int64_t WS2812::reset_delay_complete(__unused alarm_id_t id, void *user_data)
+int64_t __not_in_flash_func(WS2812::reset_delay_complete)(__unused alarm_id_t id, void *user_data)
 {
     auto* instance = static_cast<WS2812*>(user_data);
-    dma_channel_set_read_addr(instance->m_dma_channel, instance->led_state, true);
     instance->m_reset_delay_alarm_id = 0;
+    // The strip has latched the last frame
+    if (instance->m_dirty)
+    {
+        instance->send_frame();
+    }
+    else
+    {
+        instance->m_busy = false;
+    }
     return 0;
 }
 
-void __isr WS2812::dma_complete_handler()
+void __isr __not_in_flash_func(WS2812::dma_complete_handler)()
 {
     uint32_t owned_channels = 0;
     for (uint channel = 0; channel < NUM_DMA_CHANNELS; channel++)
@@ -136,7 +184,10 @@ void WS2812::begin()
     led_state = new uint32_t[m_count];
     memset(led_state, 0, sizeof(uint32_t) * m_count);
     s_dma_owners[m_dma_channel] = this;
-    putLeds(led_state, m_count);
+    // Sends the first (all off) frame below, so the first change waits for it to latch
+    m_busy = true;
+    m_dirty = false;
+    m_last_frame_us = time_us_32();
     dma_channel_configure(
         m_dma_channel,             // Channel to be configured
         &c,                        // The configuration we just created

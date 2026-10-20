@@ -19,7 +19,7 @@ static uint8_t start_char_0 = 0;
 static uint8_t start_char_1 = 0;
 static volatile bool running_0 = false;
 static volatile bool running_1 = false;
-static void on_uart_rx_0()
+static void __not_in_flash_func(on_uart_rx_0)()
 {
     while (uart_is_readable(uart0) && current_0 < irq_size_0 && running_0)
     {
@@ -37,7 +37,7 @@ static void on_uart_rx_0()
         current_0 = 0;
     }
 }
-static void on_uart_rx_1()
+static void __not_in_flash_func(on_uart_rx_1)()
 {
     while (uart_is_readable(uart1) && current_1 < irq_size_1 && running_1)
     {

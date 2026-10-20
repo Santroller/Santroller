@@ -31,6 +31,7 @@ void WS2812Device::update(bool full_poll, bool send_events)
         m_ws2812.putLeds(led_state, m_device.count);
         memcpy(prev_led_state, led_state, sizeof(uint32_t) * m_device.count);
     }
+    m_ws2812.tick();
 }
 
 bool WS2812Device::using_pin(uint8_t pin)

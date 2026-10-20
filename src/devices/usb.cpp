@@ -56,6 +56,61 @@ static bool gamesir_hub_retry_used = false;
 static std::array<bool, 127> gamesir_reset_attempted = {};
 std::array<std::shared_ptr<UsbHostDevice>, 127> host_devices;
 
+// SOF is sent from a hardware alarm with its own handler in RAM, rather than an alarm pool. The pool's
+// IRQ handler runs from flash, and is usually evicted from the cache by the time the next frame comes
+// around, so SOF went out late by however long it took to read back in. The 360 wireless receiver seems
+// to drop controllers when SOF is late.
+static constexpr uint32_t SOF_INTERVAL_US = 1000;
+static int s_sof_alarm = -1;
+static uint32_t s_sof_target;
+
+static void __not_in_flash_func(sof_alarm_irq)(void)
+{
+    hw_clear_bits(&timer_hw->intr, 1u << s_sof_alarm);
+    // Scheduled from the last target rather than now, so the interval doesn't drift
+    s_sof_target += SOF_INTERVAL_US;
+    uint32_t now = timer_hw->timerawl;
+    // Interrupts were off for longer than a frame (eg a flash erase, where core 1 sends SOF instead).
+    // An alarm set in the past wouldn't fire until the timer wraps, and catching up would burst SOFs,
+    // so start again from now
+    if (static_cast<int32_t>(s_sof_target - now) < 2)
+    {
+        s_sof_target = now + SOF_INTERVAL_US;
+    }
+    timer_hw->alarm[s_sof_alarm] = s_sof_target;
+    pio_usb_host_frame();
+}
+
+static void sof_alarm_start(void)
+{
+    s_sof_alarm = hardware_alarm_claim_unused(true);
+    uint irq = hardware_alarm_get_irq_num(s_sof_alarm);
+    irq_set_exclusive_handler(irq, sof_alarm_irq);
+    // At the default priority the native USB device IRQ can't be preempted by it and SOF goes out late
+    irq_set_priority(irq, PICO_HIGHEST_IRQ_PRIORITY);
+    hw_set_bits(&timer_hw->inte, 1u << s_sof_alarm);
+    irq_set_enabled(irq, true);
+    s_sof_target = timer_hw->timerawl + SOF_INTERVAL_US;
+    timer_hw->alarm[s_sof_alarm] = s_sof_target;
+}
+
+static void sof_alarm_stop(void)
+{
+    if (s_sof_alarm < 0)
+    {
+        return;
+    }
+    uint irq = hardware_alarm_get_irq_num(s_sof_alarm);
+    irq_set_enabled(irq, false);
+    hw_clear_bits(&timer_hw->inte, 1u << s_sof_alarm);
+    // Writing a 1 to armed disarms it
+    timer_hw->armed = 1u << s_sof_alarm;
+    hw_clear_bits(&timer_hw->intr, 1u << s_sof_alarm);
+    irq_remove_handler(irq, sof_alarm_irq);
+    hardware_alarm_unclaim(s_sof_alarm);
+    s_sof_alarm = -1;
+}
+
 static std::vector<std::shared_ptr<UsbHostInterface>> usb_assignable_interfaces;
 static std::vector<std::shared_ptr<UsbHostInterface>> usb_enumerating_interfaces;
 static std::vector<UsbHostInterface *> usb_pending_promotions;
@@ -314,12 +369,6 @@ void USBHostHardwareDevice::begin()
     }
     m_initialized = true;
     s_host_owner = this;
-    // pio-usb takes ownership of this and destroys it in hcd_deinit
-    alarm_pool_t *sof_alarm_pool = alarm_pool_create_with_unused_hardware_alarm(1);
-    // SOF is sent from this pool's timer IRQ. At the default priority the native USB device IRQ can't be
-    // preempted by it and SOF goes out late, which seems to make the 360 wireless receiver drop controllers
-    irq_set_priority(hardware_alarm_get_irq_num(alarm_pool_hardware_alarm_num(sof_alarm_pool)),
-                     PICO_HIGHEST_IRQ_PRIORITY);
     pio_usb_configuration_t host_config = {
         pin_dp : (uint8_t)(m_device.firstPin + m_device.dmFirst),
         pio_tx_num : 0,
@@ -328,10 +377,11 @@ void USBHostHardwareDevice::begin()
         pio_rx_num : 0,
         sm_rx : (uint8_t)rx_sm,
         sm_eop : (uint8_t)eop_sm,
-        alarm_pool : sof_alarm_pool,
+        alarm_pool : nullptr,
         debug_pin_rx : -1,
         debug_pin_eop : -1,
-        skip_alarm_pool : false,
+        // SOF comes from sof_alarm_irq instead
+        skip_alarm_pool : true,
         pinout : m_device.dmFirst ? PIO_USB_PINOUT_DMDP : PIO_USB_PINOUT_DPDM
     };
     const tusb_rhport_init_t rh_init = {
@@ -345,6 +395,7 @@ void USBHostHardwareDevice::begin()
     pio_sm_unclaim(pio0, rx_sm);
     pio_sm_unclaim(pio0, eop_sm);
     tusb_init(TUH_OPT_RHPORT, &rh_init);
+    sof_alarm_start();
 }
 void usbh_close(uint8_t dev_addr);
 
@@ -374,6 +425,8 @@ void USBHostHardwareDevice::end(bool full)
                 usbh_close(dev_addr);
             }
         }
+        // Before the bus goes away, so a frame can't run on it partway through
+        sof_alarm_stop();
         tusb_deinit(TUH_OPT_RHPORT);
         // The host is down now, so the next begin() has to bring it back up even on the same pins
         m_initialized = false;

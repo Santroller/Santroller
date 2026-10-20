@@ -5,7 +5,7 @@
 #include <string.h>
 #include "hardware/irq.h"
 
-static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
+static int64_t __not_in_flash_func(restart_handler)(__unused alarm_id_t id, void *user_data)
 {
     ADS1115 *inst = (ADS1115 *)user_data;
     if (inst)
@@ -20,7 +20,7 @@ static ADS1115 *ready_handlers[NUM_BANK0_GPIOS] = {};
 // add 200us delay between commands otherwise the ADS1115 is overwhelmed
 #define ADS1115_RETRY_US 200
 
-void ADS1115::schedule_us(uint32_t delay_us)
+void __not_in_flash_func(ADS1115::schedule_us)(uint32_t delay_us)
 {
     alarm_id_t id = add_alarm_in_us(delay_us, restart_handler, this, true);
     restart_alarm_id = (id > 0) ? id : 0;
@@ -40,7 +40,7 @@ void ADS1115::disconnected()
     memset(inputs, 0, sizeof(inputs));
 }
 
-void ADS1115::process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
+void __not_in_flash_func(ADS1115::process_data)(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected)
 {
     if (m_stopped)
     {
@@ -184,7 +184,7 @@ void ADS1115::process_data(uint8_t addr, bool running, bool timeout, bool abort_
     }
 }
 // A raw handler, so it doesn't replace the shared GPIO callback other drivers (like PSX) use
-static void alert_irq_handler()
+static void __not_in_flash_func(alert_irq_handler)()
 {
     for (uint gpio = 0; gpio < NUM_BANK0_GPIOS; gpio++)
     {
@@ -195,7 +195,7 @@ static void alert_irq_handler()
         }
     }
 }
-void ADS1115::ready()
+void __not_in_flash_func(ADS1115::ready)()
 {
     if (status == ADS1115_CONFIG_WAIT || status == ADS1115_POLL_WAIT)
     {

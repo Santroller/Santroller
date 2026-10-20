@@ -13,7 +13,7 @@
 static void i2c_dma_next_queued(
     i2c_dma_t *i2c_dma);
 
-static inline i2c_dma_slot_t *find_slot(i2c_dma_t *i2c_dma, uint8_t addr)
+static i2c_dma_slot_t *__not_in_flash_func(find_slot)(i2c_dma_t *i2c_dma, uint8_t addr)
 {
     for (size_t i = 0; i < I2C_MAX_DEVICES; i++)
     {
@@ -53,7 +53,9 @@ static inline i2c_dma_slot_t *alloc_slot(i2c_dma_t *i2c_dma, uint8_t addr)
     return nullptr;
 }
 
-inline void process_dma(i2c_dma_t *i2c_dma)
+// Everything a transfer completing runs is kept in RAM, as these interrupts are frequent and would
+// otherwise mostly run from cold flash
+static void __not_in_flash_func(process_dma)(i2c_dma_t *i2c_dma)
 {
     i2c_dma->processing = true;
     cancel_alarm(i2c_dma->timeout_alarm_id);
@@ -86,7 +88,7 @@ inline void process_dma(i2c_dma_t *i2c_dma)
 }
 
 static i2c_dma_t i2c_dma_list[2] = {0};
-static void i2c_dma_irq_handler(i2c_dma_t *i2c_dma)
+static void __not_in_flash_func(i2c_dma_irq_handler)(i2c_dma_t *i2c_dma)
 {
     const uint32_t status = i2c_get_hw(i2c_dma->i2c)->intr_stat;
 
@@ -110,7 +112,7 @@ static void i2c_dma_irq_handler(i2c_dma_t *i2c_dma)
     }
 }
 
-static void i2c0_dma_irq_handler(void)
+static void __not_in_flash_func(i2c0_dma_irq_handler)(void)
 {
     i2c_dma_irq_handler(&i2c_dma_list[0]);
 }
@@ -121,7 +123,7 @@ static void i2c_dma_pin_open_drain(uint gpio)
     gpio_set_dir(gpio, GPIO_IN);
     gpio_put(gpio, 0);
 }
-static void i2c1_dma_irq_handler(void)
+static void __not_in_flash_func(i2c1_dma_irq_handler)(void)
 {
     i2c_dma_irq_handler(&i2c_dma_list[1]);
 }
@@ -249,14 +251,14 @@ static int i2c_dma_init_intern(i2c_dma_t *i2c_dma)
     return PICO_OK;
 }
 
-static void i2c_dma_set_target_addr(i2c_inst_t *i2c, uint8_t addr)
+static void __not_in_flash_func(i2c_dma_set_target_addr)(i2c_inst_t *i2c, uint8_t addr)
 {
     i2c_get_hw(i2c)->enable = 0;
     i2c_get_hw(i2c)->tar = addr;
     i2c_get_hw(i2c)->enable = 1;
 }
 
-static void i2c_dma_tx_channel_configure(
+static void __not_in_flash_func(i2c_dma_tx_channel_configure)(
     i2c_inst_t *i2c, int tx_channel, const uint16_t *tx_buf, size_t len)
 {
     dma_channel_config tx_config = dma_channel_get_default_config(tx_channel);
@@ -268,7 +270,7 @@ static void i2c_dma_tx_channel_configure(
         tx_channel, &tx_config, &i2c_get_hw(i2c)->data_cmd, tx_buf, len, true);
 }
 
-static void i2c_dma_rx_channel_configure(
+static void __not_in_flash_func(i2c_dma_rx_channel_configure)(
     i2c_inst_t *i2c, int rx_channel, uint8_t *rx_buf, size_t len)
 {
     dma_channel_config rx_config = dma_channel_get_default_config(rx_channel);
@@ -280,7 +282,7 @@ static void i2c_dma_rx_channel_configure(
         rx_channel, &rx_config, rx_buf, &i2c_get_hw(i2c)->data_cmd, len, true);
 }
 
-int64_t timeout_handler(__unused alarm_id_t id, void *user_data)
+int64_t __not_in_flash_func(timeout_handler)(__unused alarm_id_t id, void *user_data)
 {
     i2c_dma_t *i2c_dma = (i2c_dma_t *)user_data;
     i2c_dma->timeout_alarm_id = 0;
@@ -288,7 +290,7 @@ int64_t timeout_handler(__unused alarm_id_t id, void *user_data)
     process_dma(i2c_dma);
     return 0;
 }
-static void i2c_dma_next_queued(
+static void __not_in_flash_func(i2c_dma_next_queued)(
     i2c_dma_t *i2c_dma)
 {
     i2c_dma->queuing = true;
@@ -578,7 +580,7 @@ void I2CMasterInterface::dmaDeinit(uint8_t addr)
         i2c_dma->currentSlot = -1;
     }
 }
-bool I2CMasterInterface::dmaWriteRead(uint8_t addr,
+bool __not_in_flash_func(I2CMasterInterface::dmaWriteRead)(uint8_t addr,
                                       const uint8_t *wbuf,
                                       size_t wbuf_len,
                                       uint8_t *rbuf,
@@ -587,7 +589,7 @@ bool I2CMasterInterface::dmaWriteRead(uint8_t addr,
     return dmaWriteRead(addr, wbuf, wbuf_len, rbuf, rbuf_len, nullptr);
 }
 
-bool I2CMasterInterface::dmaWriteRead(uint8_t addr,
+bool __not_in_flash_func(I2CMasterInterface::dmaWriteRead)(uint8_t addr,
                                       const uint8_t *wbuf,
                                       size_t wbuf_len,
                                       uint8_t *rbuf,

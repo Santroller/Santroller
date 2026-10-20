@@ -20,7 +20,7 @@ bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
     bool matched = false;
     if (m_config.has_consoleType)
     {
-        switch (m_profile->mode)
+        switch (ConfigManager::instance().get_requested_mode())
         {
         case ModeGuitarHeroArcade:
         case ModeSpice2x:

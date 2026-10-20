@@ -60,7 +60,6 @@ public:
         return select_to_dpad_left && (subtype == GuitarHeroGuitar || subtype == RockBandGuitar);
     }
     bool per_kind_slot_ids = false;
-    ConsoleMode mode;
     uint32_t profile_id;
     // Inactive profiles only load their opts and triggers; the config tool loads the rest on demand
     bool triggers_only = false;

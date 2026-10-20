@@ -20,7 +20,6 @@ void ConfigManager::latch_startup_trigger(const StartupTriggerKey &key)
     if (!is_startup_trigger_latched(key))
         m_latched_startup_triggers.push_back(key);
 }
-
 void ConfigManager::host_detected(ConsoleMode mode)
 {
     // Already known, and a profile picked another mode for it (eg a keyboard can only be HID).

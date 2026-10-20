@@ -226,7 +226,7 @@ TEST_F(DeviceTriggerTest, UsbModeWithoutAConsoleAlwaysMatches)
     UsbModeActivationTrigger trigger(usb_assignment(), profile, 1, 0);
     for (int mode = ModeHid; mode <= ModeKeyboardMania; mode++)
     {
-        profile->mode = ConsoleMode(mode);
+        ConfigManager::instance().request_mode(ConsoleMode(mode));
         EXPECT_TRUE(trigger.validate(false, false, false)) << mode;
     }
     EXPECT_EQ(trigger.assignedDevices(), AssignUsb);
@@ -258,7 +258,7 @@ TEST_F(DeviceTriggerTest, UsbModeForASpecificConsole)
         UsbModeActivationTrigger trigger(config, profile, 1, 0);
         for (int mode = ModeHid; mode <= ModeKeyboardMania; mode++)
         {
-            profile->mode = ConsoleMode(mode);
+            ConfigManager::instance().request_mode(ConsoleMode(mode));
             bool expected = std::find(c.modes.begin(), c.modes.end(), ConsoleMode(mode)) != c.modes.end();
             EXPECT_EQ(trigger.validate(false, false, false), expected) << c.console << " in mode " << mode;
         }
@@ -459,7 +459,7 @@ TEST_F(DeviceTriggerTest, UsbModeNeedsAHost)
     config.has_consoleType = true;
     config.consoleType = ConsolePS3;
     UsbModeActivationTrigger ps3(config, profile, 2, 0);
-    profile->mode = ModePs3;
+    ConfigManager::instance().request_mode(ModePs3);
     EXPECT_TRUE(ps3.validate(false, false, false));
     // Powered on again without one
     UsbHostPresence::instance().reset(30000);

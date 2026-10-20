@@ -194,7 +194,6 @@ inline std::shared_ptr<Profile> make_profile(SubType subtype = SubType_Gamepad)
 {
     auto profile = std::make_shared<Profile>();
     profile->subtype = subtype;
-    profile->mode = ModeHid;
     profile->profile_id = 1;
     return profile;
 }

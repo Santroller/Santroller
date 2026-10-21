@@ -2,6 +2,8 @@
 #include "devices/bt/ble_rx.hpp"
 #include "devices/bt/bt_classic_rx.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
+#include "devices/bt/bluetooth_status.hpp"
+#include "devices/bt/bt_tlv_storage.hpp"
 #include "managers/device_manager.hpp"
 #include "emulation/usb/hid_device.h"
 #include "events.pb.h"
@@ -204,6 +206,33 @@ void bt_forget_pairing(int32_t id)
     // removes the keys we saved for it too
     remove_aux_bluetooth_pairing(id);
     ble_resync_reconnect();
+}
+
+void bt_forget_hosts()
+{
+    printf("BT: forgetting paired hosts\r\n");
+    // Bonds for controllers we paired with as a receiver are left for bt_forget_pairing
+    auto is_host = [](const uint8_t *mac)
+    { return DeviceFactory::find_bluetooth_pairing_id_by_mac(mac) < 0; };
+    BtStackLock lock;
+    if (!BluetoothStack::instance().initialized())
+    {
+        // btstack hasn't loaded the bonds yet, so they're only in the store
+        BtTlvStorage::instance().delete_le_bonds_if(is_host);
+        return;
+    }
+    // it would otherwise stay connected with the keys it has
+    bt_peripheral_disconnect();
+    for (int i = 0; i < le_device_db_max_count(); i++)
+    {
+        int addr_type = BD_ADDR_TYPE_UNKNOWN;
+        bd_addr_t addr;
+        le_device_db_info(i, &addr_type, addr, nullptr);
+        if (addr_type != BD_ADDR_TYPE_UNKNOWN && is_host(addr))
+        {
+            gap_delete_bonding((bd_addr_type_t)addr_type, addr);
+        }
+    }
 }
 
 void bt_host_subtype_changed(BluetoothHostInterface *device)

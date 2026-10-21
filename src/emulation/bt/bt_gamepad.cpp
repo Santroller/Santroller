@@ -181,6 +181,7 @@ void BTGamepadDevice::deinitialize()
     gap_scan_response_set_data(0, nullptr);
     hci_remove_event_handler(&hci_event_callback_registration);
     sm_remove_event_handler(&sm_event_callback_registration);
+    sm_set_request_security(false);
     // clears every registered service handler, so the next init starts clean, possibly with the other database
     bt_config_service_deinit();
     bt_gatt_changes_deinit();
@@ -260,6 +261,9 @@ void BTGamepadDevice::initialize()
     // The SM settings are shared with the BLE central (ble_main). No MITM: with no IO it is Just Works either way, but as
     // a central btstack would then re-pair a Just Works bond instead of re-encrypting it, which bonded devices reject
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_BONDING);
+    // Ask hosts that connect to us to encrypt the link (only applies when we're the peripheral). macOS never pairs on
+    // its own, and a host that forgot us re-pairs instead of hitting the encrypted reports without keys.
+    sm_set_request_security(true);
 
     // setup ATT server. Each mode has its own database (bt.gatt, bt_keyboard.gatt, bt_config.gatt) whose HID
     // service only references the reports in that mode's report map. They're laid out differently, so a
@@ -286,7 +290,8 @@ void BTGamepadDevice::initialize()
     // setup device information service
     device_information_service_server_init();
     device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, 0x1209, 0x2883, 0);
-    char id[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2];
+    // btstack keeps the pointer, so this has to outlive init
+    static char id[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
     pico_get_unique_board_id_string(id, sizeof(id));
     device_information_service_server_set_serial_number(id);
     memset(report_storage, 0, sizeof(report_storage));
@@ -463,6 +468,15 @@ bool bt_gamepad_connected()
 bool bt_peripheral_connected()
 {
     return peripheral_handle != HCI_CON_HANDLE_INVALID;
+}
+
+void bt_peripheral_disconnect()
+{
+    BtStackLock lock;
+    if (peripheral_handle != HCI_CON_HANDLE_INVALID)
+    {
+        gap_disconnect(peripheral_handle);
+    }
 }
 
 bool bt_gamepad_advertising()

@@ -1016,7 +1016,7 @@ bool load_empty()
     return true;
 }
 
-uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload, bool in_use_by_other_tool)
+uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload, uint32_t chunk_size, bool in_use_by_other_tool)
 {
     ConfigMetadata metadata = config_storage.read_metadata(cached);
     proto_ConfigInfo info proto_ConfigInfo_init_zero;
@@ -1046,6 +1046,8 @@ uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload, bo
 #endif
     info.has_needsUf2Update = true;
     info.needsUf2Update = needs_uf2;
+    info.has_configChunkSize = true;
+    info.configChunkSize = chunk_size;
     if (streamed_upload)
     {
         info.has_streamedFirmwareUpload = true;
@@ -1244,9 +1246,9 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     return true;
 }
 
-uint32_t copy_config(uint8_t *buffer, uint32_t start, bool cached)
+uint32_t copy_config(uint8_t *buffer, uint32_t start, bool cached, uint32_t max_size)
 {
-    return config_storage.read_chunk(buffer, start, 63, cached);
+    return config_storage.read_chunk(buffer, start, max_size, cached);
 }
 bool load()
 {

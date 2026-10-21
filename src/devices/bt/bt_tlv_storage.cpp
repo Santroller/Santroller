@@ -206,6 +206,19 @@ void BtTlvStorage::delete_tags_for_mac(const uint8_t mac[6])
     }
 }
 
+void BtTlvStorage::delete_le_bonds_if(const std::function<bool(const uint8_t *mac)> &matches)
+{
+    constexpr uint32_t BTD_PREFIX = ('B' << 24) | ('T' << 16) | ('D' << 8);
+    auto old_size = m_entries.size();
+    m_entries.erase(std::remove_if(m_entries.begin(), m_entries.end(), [&matches](const BluetoothTlvData &entry)
+                                   { return (entry.tag & 0xFFFFFF00) == BTD_PREFIX && entry.length >= 14 && matches(entry.value + 8); }),
+                    m_entries.end());
+    if (m_entries.size() != old_size)
+    {
+        update_aux_tlv();
+    }
+}
+
 void BtTlvStorage::clear()
 {
     m_entries.clear();

@@ -319,6 +319,9 @@ message ConfigInfo {
   // Updates still go over OTA, but they don't replace the bootloader, so only a UF2 fixes it.
   // needsUf2Update is set too.
   optional bool slowBootStage = 11;
+  // How much config each ReportIdConfig read returns, the last one being shorter. Anything after that
+  // in a report is padding. Smaller over bluetooth HID, where reads leave room for a byte of padding.
+  optional uint32 configChunkSize = 12;
 }
 
 message GetActiveProfiles {

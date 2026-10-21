@@ -47,6 +47,11 @@ message SaveCommand {
 message UnpairBluetoothCommand {
   required int32 id = 1;
 }
+// Forget the hosts (PCs, phones etc) this controller has paired with over bluetooth, dropping a connected one.
+// Paired controllers are kept, they're forgotten one at a time with UnpairBluetoothCommand
+message ForgetBluetoothHostsCommand {
+
+}
 message CrkdCalibrationUpdateCommand {
   required uint32 id = 1;
   required CrkdDrumCalibrationType type = 2;
@@ -78,5 +83,6 @@ message Command {
         TestLedCommand testLed = 9;
         DetectInputCommand detectInput = 10;
         SetCycleCommand setCycle = 11;
+        ForgetBluetoothHostsCommand forgetBluetoothHosts = 12;
     }
 }

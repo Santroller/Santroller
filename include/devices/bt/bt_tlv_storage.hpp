@@ -26,6 +26,9 @@ public:
 
     void set_tag_from_config(uint32_t tag, const uint8_t *data, uint32_t data_size);
     void delete_tags_for_mac(const uint8_t mac[6]);
+    // Deletes the LE bonds (le_device_db entries) whose address matches. Only for while btstack isn't
+    // running, as it keeps its own index of them
+    void delete_le_bonds_if(const std::function<bool(const uint8_t *mac)> &matches);
     void clear();
 
     void foreach_entry(const std::function<void(uint32_t tag, const uint8_t *data, uint8_t length)> &callback) const;

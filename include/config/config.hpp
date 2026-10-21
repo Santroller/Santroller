@@ -23,10 +23,10 @@ bool load_empty();
 // Build a profile that isn't currently active so the config tool can poll it
 std::shared_ptr<Profile> load_preview_profile(uint32_t profile_id);
 bool load();
-uint32_t copy_config(uint8_t *buffer, uint32_t start, bool cached);
+uint32_t copy_config(uint8_t *buffer, uint32_t start, bool cached, uint32_t max_size);
 // streamed_upload: tell the configurator to stream firmware uploads (see bt_config_service.cpp)
 // in_use_by_other_tool: another configurator has the device open, see HIDConfigDevice::in_use_elsewhere
-uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload, bool in_use_by_other_tool = false);
+uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload, uint32_t chunk_size, bool in_use_by_other_tool = false);
 bool write_config_info(const uint8_t *buffer, uint16_t bufsize);
 bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start);
 // Commit the cached config to flash, once any upload in progress has finished

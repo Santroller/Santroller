@@ -38,6 +38,12 @@ static const char type[] = PICO_BOARD;
 static constexpr uint16_t firmware_upload_report_size = 63;
 static constexpr uint32_t firmware_write_alignment = 256;
 static constexpr uint32_t firmware_write_block_size = 4096;
+// Config reports are 63 bytes, but a transport can ask for less (bluetooth HID leaves room for padding).
+// Every config report is read with the same reqlen, so ConfigInfo can tell the tool the chunk size too.
+static uint32_t config_chunk_size(uint16_t reqlen)
+{
+  return reqlen > 1 ? std::min<uint32_t>(reqlen - 1, 63) : 0;
+}
 static bool decode_firmware_update(const uint8_t *buffer, uint16_t bufsize, proto_FirmwareUpdate *update);
 // Cycle changes from the host. They arrive in the USB / bluetooth callbacks, but stepping sends an event
 // (which runs tud_task) and saves the aux config, so they wait for process() on the main loop. Shared, as
@@ -425,6 +431,11 @@ void HIDConfigDevice::handle_command(proto_Command command)
     bt_forget_pairing(command.command.unpairBluetooth.id);
     return;
   }
+  case proto_Command_forgetBluetoothHosts_tag:
+  {
+    bt_forget_hosts();
+    return;
+  }
   case proto_Command_scan_tag:
   {
     DeviceManager::instance().for_each_active_device([&command](const auto &device)
@@ -600,7 +611,7 @@ uint16_t HIDConfigDevice::handle_get_report_in_use(uint8_t report_id, hid_report
   case ReportId::ReportIdConfigInfoSaved:
     // without touching where the open tool is up to
     buffer[0] = report_id;
-    return copy_config_info(buffer + 1, report_id == ReportId::ReportIdConfigInfo, false, true) + 1;
+    return copy_config_info(buffer + 1, report_id == ReportId::ReportIdConfigInfo, false, config_chunk_size(reqlen), true) + 1;
   default:
     // no data, the same as reading past the end of the config
     buffer[0] = report_id;
@@ -924,7 +935,7 @@ uint16_t HIDConfigDevice::handle_get_report(uint8_t report_id, hid_report_type_t
   {
     buffer[0] = report_id;
     buffer++;
-    uint32_t ret = copy_config(buffer, start, cached);
+    uint32_t ret = copy_config(buffer, start, cached, config_chunk_size(reqlen));
     start += ret;
     return ret + 1;
   }
@@ -961,20 +972,20 @@ uint16_t HIDConfigDevice::handle_get_report(uint8_t report_id, hid_report_type_t
     }
     if (!pb_encode_delimited(&stream, proto_GetActiveProfiles_fields, &resp))
       return 1;
-    return 64;
+    return std::min<uint16_t>(reqlen, 64);
   }
   case ReportId::ReportIdConfigInfo:
     cached = true;
     buffer[0] = report_id;
     buffer++;
     start = 0;
-    return copy_config_info(buffer, cached, m_transport == ConfigTransport::Bluetooth) + 1;
+    return copy_config_info(buffer, cached, m_transport == ConfigTransport::Bluetooth, config_chunk_size(reqlen)) + 1;
   case ReportId::ReportIdConfigInfoSaved:
     cached = false;
     buffer[0] = report_id;
     buffer++;
     start = 0;
-    return copy_config_info(buffer, cached, m_transport == ConfigTransport::Bluetooth) + 1;
+    return copy_config_info(buffer, cached, m_transport == ConfigTransport::Bluetooth, config_chunk_size(reqlen)) + 1;
   }
   return 0;
 }

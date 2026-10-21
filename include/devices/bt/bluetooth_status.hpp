@@ -10,5 +10,7 @@ bool bluetooth_host_connected();
 bool bt_gamepad_connected();
 // Whether a host is connected to the BLE peripheral, for gamepad output or for config
 bool bt_peripheral_connected();
+// Disconnects the host connected to the BLE peripheral, if there is one
+void bt_peripheral_disconnect();
 // Whether the bluetooth gamepad is advertising, waiting for a host to connect
 bool bt_gamepad_advertising();

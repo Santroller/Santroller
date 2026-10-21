@@ -499,7 +499,12 @@ void bt_config_service_handle_requests()
     if (read_report)
     {
         uint8_t buf[MAX_REPORT_SIZE + 1] = {};
-        uint16_t len = hid_config_bt_get_report(read_report->id, read_report->type, buf, read_report->size + 1);
+        // BlueZ (before 5.88) drops the last byte of numbered feature reports read over HID-over-GATT, and
+        // macOS fails reads longer than the declared size. So reads through the HID service leave a byte
+        // free, and a zero is added for BlueZ to drop. Other hosts pass it on, which the configurator
+        // ignores like USB padding (ConfigInfo says how much of each config chunk is data).
+        bool padded = read_report->service == ServiceHid;
+        uint16_t len = hid_config_bt_get_report(read_report->id, read_report->type, buf, read_report->size + (padded ? 0 : 1));
         config_debug("BT config: read 0x%02x (%s) -> %u bytes: %02x %02x %02x %02x\r\n", read_report->id,
                      read_report->service == ServiceWeb ? "web" : "hid", len, buf[1], buf[2], buf[3], buf[4]);
         BtStackLock lock;
@@ -507,10 +512,8 @@ void bt_config_service_handle_requests()
         // to the declared size breaks the configurator decoding reports like ConfigInfo, which are plain
         // protobuf (an odd number of trailing zeros reads as a truncated field)
         s_read_len = len > 1 ? btstack_min(len - 1, sizeof(s_read_buf)) : 0;
-        // BlueZ (at least up to 5.87) drops the last byte of numbered feature reports read over
-        // HID-over-GATT, so add a zero for it to drop. Other hosts trim it to the declared report
-        // size, or pass it on as a trailing zero, which the configurator ignores like USB padding.
-        if (read_report->service == ServiceHid && len > 1 && s_read_len < sizeof(s_read_buf))
+        // macOS allows up to the largest feature report (63 bytes), whatever this one is declared as
+        if (padded && len > 1 && s_read_len < sizeof(s_read_buf) - 1)
         {
             s_read_len++;
         }

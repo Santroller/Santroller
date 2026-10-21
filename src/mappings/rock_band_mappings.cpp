@@ -577,7 +577,7 @@ void RockBandGuitarAxisMapping::update_xboxone(uint8_t *buf)
         report->whammy = m_calibrated_value >> 8;
         break;
     case RockBandGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->tilt = clamp(abs(int32_t(m_calibrated_value) - 32768) >> 7, 0, UINT8_MAX);
         break;
     case RockBandGuitar_Pickup:
         report->pickup = rb_pickup_xbox_one[pickup_notch()];
@@ -1810,7 +1810,7 @@ void ProGuitarAxisMapping::update_xboxone(uint8_t *buf)
         return;
     }
     XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)buf;
-    report->tilt = m_calibrated_value >> 8;
+    report->tilt = clamp(abs(int32_t(m_calibrated_value) - 32768) >> 7, 0, UINT8_MAX);
 }
 
 static inline void set_keyboard_key(uint8_t &key1, uint8_t &key2, uint8_t &key3, uint8_t *velocities, uint8_t key, uint8_t velocity)

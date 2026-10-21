@@ -821,7 +821,8 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             case RockBandGuitar_Whammy:
                 return data->whammy << 8;
             case RockBandGuitar_Tilt:
-                return data->tilt << 8;
+                // tilt is a digital switch, so it either rests in the middle or is fully tilted
+                return data->tilt ? 0xFFFF : 0x8000;
             case RockBandGuitar_Pickup:
                 return data->pickup << 8;
             default:

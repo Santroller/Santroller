@@ -250,7 +250,9 @@ uint16_t gip_tick_analog(const void *input_data, uint8_t subtype, proto_Output *
             case RockBandGuitar_Whammy:
                 return data->whammy << 8;
             case RockBandGuitar_Tilt:
-                return data->tilt << 8;
+                // RB4 guitars rest at 0x00 when horizontal and go to 0xFF when tilted either way, so
+                // put that above the centre like the other guitars, which rest in the middle
+                return 0x8000 + (data->tilt << 7);
             case RockBandGuitar_Pickup:
                 // The notch is in the top nibble (0x00 - 0x40), convert it to the same
                 // values the other consoles' guitars use so it lands in the right notch

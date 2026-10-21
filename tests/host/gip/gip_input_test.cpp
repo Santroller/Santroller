@@ -312,15 +312,16 @@ TEST_F(GipInput, RiffmasterJoystick)
 }
 
 // Whammy: byte 3, "0x00 when not pressed to 0xFF when fully pressed"; tilt: byte 2, "0x00 when
-// parallel, 0xFF when straight up". As 0 - 65535 axes, like ps3_host / ps4_host (value << 8;
-// lib/gip_common/gip_button_mapping.cpp, gip_tick_analog SubType_RockBandGuitar).
+// parallel, 0xFF when straight up". Whammy spans the 0 - 65535 axis (value << 8), while tilt rests
+// in the middle like every other host guitar and goes up from there, like ps4_host
+// (lib/gip_common/gip_button_mapping.cpp, gip_tick_analog SubType_RockBandGuitar).
 TEST_F(GipInput, RockBandGuitarWhammyAndTiltSpanTheAxis)
 {
     dev.subtype = RockBandGuitar;
     Bytes payload(10, 0);
     report(payload);
     EXPECT_LE(analog(rb_axis(RockBandGuitar_Whammy)), 0x00FF);
-    EXPECT_LE(analog(rb_axis(RockBandGuitar_Tilt)), 0x00FF);
+    EXPECT_EQ(analog(rb_axis(RockBandGuitar_Tilt)), 0x8000);
     payload[2] = 0xFF;
     payload[3] = 0xFF;
     report(payload);

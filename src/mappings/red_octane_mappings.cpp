@@ -670,7 +670,7 @@ void GuitarHeroGuitarAxisMapping::update_xboxone(uint8_t *buf)
         report->whammy = m_calibrated_value >> 8;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = m_calibrated_value >> 8;
+        report->tilt = clamp(abs(int32_t(m_calibrated_value) - 32768) >> 7, 0, UINT8_MAX);
         break;
     default:
         break;

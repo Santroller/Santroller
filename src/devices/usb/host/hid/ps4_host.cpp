@@ -419,7 +419,9 @@ uint16_t ps4_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             case RockBandGuitar_Whammy:
                 return data->whammy << 8;
             case RockBandGuitar_Tilt:
-                return data->tilt << 8;
+                // RB4 guitars rest at 0x00 when horizontal and go to 0xFF when tilted either way, so
+                // put that above the centre like the other guitars, which rest in the middle
+                return 0x8000 + (data->tilt << 7);
             case RockBandGuitar_Pickup:
                 // RB4 guitars report the notch directly (0 - 4), convert it to the same
                 // values the other consoles' guitars use so it lands in the right notch

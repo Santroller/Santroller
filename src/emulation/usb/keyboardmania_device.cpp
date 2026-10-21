@@ -45,8 +45,15 @@ void KeyboardManiaDevice::process(bool full_poll, bool send_events) {
 }
 
 size_t KeyboardManiaDevice::config_descriptor(uint8_t *dest, size_t remaining) {
-    uint8_t const descriptor[] = {TUD_HID_DESCRIPTOR(interface_id, m_strid,
+    uint8_t descriptor[] = {TUD_HID_DESCRIPTOR(interface_id, m_strid,
         HID_ITF_PROTOCOL_NONE, sizeof(keyboardmania_report_descriptor), m_epin, sizeof(m_input), 1)};
+    // Byte for byte the real controller: its interface reuses the (empty) product string, it is HID
+    // 1.10 and it polls every 4ms
+    if (m_native) {
+        descriptor[8] = STRID_PRODUCT;
+        descriptor[11] = 0x10;
+        descriptor[sizeof(descriptor) - 1] = 4;
+    }
     assert(sizeof(descriptor) <= remaining);
     memcpy(dest, descriptor, sizeof(descriptor));
     return sizeof(descriptor);
@@ -71,8 +78,10 @@ void KeyboardManiaDevice::device_descriptor(tusb_desc_device_t *desc) {
     desc->bcdUSB = 0x0110;
     desc->idVendor = KEYBOARDMANIA_VID;
     desc->idProduct = KEYBOARDMANIA_PID;
-    desc->iManufacturer = m_manufacturer_strid;
-    desc->iProduct = m_strid;
+    // The game's driver never configures the device unless these are 1 and 2, like the real controller,
+    // even though it never reads the strings
+    desc->iManufacturer = STRID_MANUFACTURER;
+    desc->iProduct = STRID_PRODUCT;
     desc->iSerialNumber = 0;
 }
 

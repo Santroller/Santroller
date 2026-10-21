@@ -178,7 +178,13 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
       index = STRID_MSFT;
     }
 
-    if (index == STRID_PRODUCT && ConfigManager::instance().get_device_name())
+    // The real KeyboardMania has its name as the manufacturer and an empty product
+    if (ConfigManager::instance().get_requested_mode() == ModeKeyboardMania &&
+        (index == STRID_MANUFACTURER || index == STRID_PRODUCT))
+    {
+      str = index == STRID_MANUFACTURER ? "USB Multipurpose Controller" : "";
+    }
+    else if (index == STRID_PRODUCT && ConfigManager::instance().get_device_name())
     {
       str = ConfigManager::instance().get_device_name();
     }

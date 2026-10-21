@@ -693,6 +693,65 @@ TEST_F(ConfigStorageTest, AWholeCommitWaitingWinsOverAnAuxOnlyOne)
     EXPECT_EQ(image_bytes(image), concat(uploaded_main, aux.bytes));
 }
 
+TEST_F(ConfigStorageTest, ExplicitSaveWithPendingAuxKeepsTheUploadedMainAfterReboot)
+{
+    const auto saved_main = pattern(300, 104);
+    boot_with_flash_image(saved_main, pattern(20, 105));
+    auto uploaded_main = saved_main;
+    // Only a seller field changed; no other setting has to change to make Save persist it.
+    uploaded_main.back() ^= 1;
+    ASSERT_EQ(upload(storage, uploaded_main, pattern(20, 106)), WriteResult::Done);
+    AuxWrite aux{pattern(25, 107)};
+
+    storage.save(write_aux, &aux);
+    EEPROM.start();
+    ConfigImage image;
+    ASSERT_TRUE(storage.read_flash(image, true));
+    EXPECT_EQ(image_bytes(image), concat(uploaded_main, aux.bytes));
+}
+
+TEST_F(ConfigStorageTest, ExplicitSaveWithPendingAuxWorksWithoutAPreviouslySavedConfig)
+{
+    const auto main = pattern(300, 108);
+    ASSERT_EQ(upload(storage, main, {}), WriteResult::Done);
+    AuxWrite aux{pattern(25, 109)};
+    storage.save(write_aux, &aux);
+
+    ConfigImage image;
+    ASSERT_TRUE(storage.read_flash(image, false));
+    EXPECT_EQ(image_bytes(image), concat(main, aux.bytes));
+}
+
+TEST_F(ConfigStorageTest, ExplicitSaveStillPersistsTheUploadIfTheAuxWriterFails)
+{
+    boot_with_flash_image(pattern(300, 110), {});
+    const auto main = pattern(300, 111);
+    const auto uploaded_aux = pattern(20, 112);
+    ASSERT_EQ(upload(storage, main, uploaded_aux), WriteResult::Done);
+    AuxWrite aux{{}, false};
+    storage.save(write_aux, &aux);
+
+    ConfigImage image;
+    ASSERT_TRUE(storage.read_flash(image, false));
+    EXPECT_EQ(image_bytes(image), concat(main, uploaded_aux));
+}
+
+TEST_F(ConfigStorageTest, ExplicitSaveCannotPersistAPartialUpload)
+{
+    const auto main = pattern(300, 113);
+    boot_with_flash_image(main, {});
+    const auto next = pattern(500, 114);
+    const auto info = info_report_for(next, {});
+    ASSERT_TRUE(storage.write_info(info.data(), uint16_t(info.size())));
+    ASSERT_EQ(storage.write_chunk(next.data(), REPORT_SIZE, 0), WriteResult::InProgress);
+    AuxWrite aux{pattern(25, 115)};
+    storage.save(write_aux, &aux);
+
+    ConfigImage image;
+    ASSERT_TRUE(storage.read_flash(image, false));
+    EXPECT_EQ(image_bytes(image), main);
+}
+
 TEST_F(ConfigStorageTest, AnAuxUpdateCanLeaveFlashAlone)
 {
     // Putting the device's pairings back over an upload's copy shouldn't save an upload nobody saved

@@ -122,6 +122,8 @@ static bool save_after_upload = false;
 static bool aux_pending = false;
 // and that rewrite also has to be committed to flash
 static bool aux_commit_pending = false;
+// Unlike an automatic aux update, an explicit Save must also commit the uploaded main config.
+static bool config_commit_pending = false;
 
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
@@ -1130,7 +1132,11 @@ void flush_pending_aux()
     {
         return;
     }
-    if (!config_storage.update_auxiliary(encode_auxiliary, nullptr, aux_commit_pending) && aux_commit_pending &&
+    if (config_commit_pending)
+    {
+        config_storage.save(encode_auxiliary);
+    }
+    else if (!config_storage.update_auxiliary(encode_auxiliary, nullptr, aux_commit_pending) && aux_commit_pending &&
         !config_storage.preserving_flash())
     {
         // Still save what's cached rather than dropping a save that was waiting on this
@@ -1139,6 +1145,7 @@ void flush_pending_aux()
     }
     aux_pending = false;
     aux_commit_pending = false;
+    config_commit_pending = false;
 }
 
 void remove_aux_bluetooth_pairing(int32_t id)
@@ -1185,16 +1192,14 @@ void save_config()
         save_after_upload = true;
         return;
     }
-    // Saving is the user asking for exactly this config, even the empty one a failed load left
-    config_storage.stop_preserving_flash();
     if (aux_pending)
     {
         // The cache still has an upload's copy of the pairings, so commit once they're written back
-        aux_commit_pending = true;
+        config_commit_pending = true;
     }
     else
     {
-        EEPROM.commit_now();
+        config_storage.save();
     }
     config_mgr.set_full_reload(true);
     reload();
@@ -1238,7 +1243,7 @@ bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
     if (save_after_upload)
     {
         save_after_upload = false;
-        aux_commit_pending = true;
+        config_commit_pending = true;
         config_mgr.set_full_reload(true);
     }
     reload();

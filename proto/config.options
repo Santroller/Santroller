@@ -1,5 +1,6 @@
 proto.ProfileOpts.name max_size:32
 proto.Config.deviceName max_size:32
+proto.Config.manufacturerName max_size:32
 proto.Profile.opts type:FT_CALLBACK
 proto.RGBLedDevice.activeLed max_count:255 int_size:IS_8
 proto.STP16CPCLedDevice.activeLed max_count:255 int_size:IS_8

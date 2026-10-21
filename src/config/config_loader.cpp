@@ -124,6 +124,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
     InactivityManager::instance().configure(config.has_inactivity ? &config.inactivity : nullptr);
     ConfigManager::instance().set_device_name(config.has_deviceName ? config.deviceName : nullptr);
+    ConfigManager::instance().set_manufacturer_name(config.has_manufacturerName ? config.manufacturerName : nullptr);
     profile_mgr.refresh_bt_config_name();
     if (config.has_peripheralBoot)
     {

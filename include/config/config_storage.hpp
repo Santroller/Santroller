@@ -53,6 +53,8 @@ public:
     // holds an upload that hasn't been saved, only the aux block is committed, onto the config flash
     // already has: the upload stays unsaved
     bool update_auxiliary(AuxiliaryWriter writer, void *context = nullptr, bool commit = true) const;
+    // An explicit Save commits the whole cached config, not just aux onto the previous saved config.
+    void save(AuxiliaryWriter writer = nullptr, void *context = nullptr);
 private:
     // Write flash's saved config back with the cache's aux block, see update_auxiliary
     void commit_auxiliary() const;

@@ -170,6 +170,51 @@ TEST_F(ConfigLoaderTest, TheDeviceNameIsPassedOnOnlyWhenSet)
     EXPECT_FALSE(fake_loader::state.device_name_set);
 }
 
+TEST_F(ConfigLoaderTest, TheManufacturerNameIsIndependentOfTheDeviceName)
+{
+    ConfigSpec spec;
+    spec.manufacturer_name = "My Workshop";
+    spec.device_name = "My Guitar";
+    ASSERT_TRUE(store_and_apply(encode_config(spec), {}));
+    EXPECT_TRUE(fake_loader::state.manufacturer_name_set);
+    EXPECT_EQ(fake_loader::state.manufacturer_name, "My Workshop");
+    EXPECT_EQ(fake_loader::state.device_name, "My Guitar");
+}
+
+TEST_F(ConfigLoaderTest, AnAbsentManufacturerNameClearsThePreviousNameOnReload)
+{
+    ConfigSpec spec;
+    spec.manufacturer_name = "My Workshop";
+    ASSERT_TRUE(store_and_apply(encode_config(spec), {}));
+    ASSERT_EQ(fake_loader::state.manufacturer_name, "My Workshop");
+
+    ASSERT_TRUE(store_and_apply(encode_config(ConfigSpec{}), {}));
+    EXPECT_FALSE(fake_loader::state.manufacturer_name_set);
+    EXPECT_TRUE(fake_loader::state.manufacturer_name.empty());
+}
+
+TEST_F(ConfigLoaderTest, AnEmptyManufacturerNameIsPassedOnToClearTheOverride)
+{
+    ConfigSpec spec;
+    spec.manufacturer_name = "My Workshop";
+    ASSERT_TRUE(store_and_apply(encode_config(spec), {}));
+
+    spec.manufacturer_name = "";
+    ASSERT_TRUE(store_and_apply(encode_config(spec), {}));
+    EXPECT_TRUE(fake_loader::state.manufacturer_name_set);
+    EXPECT_TRUE(fake_loader::state.manufacturer_name.empty());
+}
+
+TEST_F(ConfigLoaderTest, TheManufacturerNameAllows31BytesAndATerminator)
+{
+    EXPECT_EQ(sizeof(proto_Config::manufacturerName), 32u);
+    ConfigSpec spec;
+    spec.manufacturer_name = std::string(31, 'M');
+    ASSERT_TRUE(store_and_apply(encode_config(spec), {}));
+    EXPECT_EQ(fake_loader::state.manufacturer_name, *spec.manufacturer_name);
+    EXPECT_FALSE(fake_loader::state.device_name_set);
+}
+
 TEST_F(ConfigLoaderTest, TheMainSectionStopsWhereTheAuxSectionStarts)
 {
     // AuxConfigBlock.toggleStates is field 2, the same as Config.devices: decoding past main_size would

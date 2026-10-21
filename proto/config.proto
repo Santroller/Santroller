@@ -256,6 +256,7 @@ message GuiSwitchNetworkDevice {
 message SellerConfig {
   required bytes logo = 1;
   required string name = 2;
+  optional bytes favicon = 3;
 }
 message GuiConfig {
   required int32 deviceid = 1;
@@ -296,6 +297,8 @@ message Config {
   // What the whole device is called over USB (its product string), rather than one profile.
   // Unset or empty keeps "Santroller"
   optional string deviceName = 8;
+  // USB manufacturer string. Unset or empty keeps "sanjay900"
+  optional string manufacturerName = 9;
 }
 
 message ConfigInfo {

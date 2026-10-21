@@ -135,7 +135,7 @@ static void update_serial()
 char const *string_desc_arr[STRID_COUNT] =
     {
         (const char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
-        "sanjay900",                // 1: Manufacturer
+        "sanjay900",                // 1: Manufacturer, unless configured
         "Santroller",               // 2: Product, unless the device is named
         serial,                     // 3: Serials will use unique ID if possible
         "MSFT100\x20"};
@@ -183,6 +183,10 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
         (index == STRID_MANUFACTURER || index == STRID_PRODUCT))
     {
       str = index == STRID_MANUFACTURER ? "USB Multipurpose Controller" : "";
+    }
+    else if (index == STRID_MANUFACTURER && ConfigManager::instance().get_manufacturer_name())
+    {
+      str = ConfigManager::instance().get_manufacturer_name();
     }
     else if (index == STRID_PRODUCT && ConfigManager::instance().get_device_name())
     {

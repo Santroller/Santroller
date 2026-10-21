@@ -53,7 +53,8 @@ bool SwitchNetworkDevice::read_switch(uint8_t pin, uint8_t other_pin)
     gpio_set_dir_out_masked(pin_mask);
     gpio_put_masked(pin_mask, 0);
 
-    sleep_us(1);
+    // Allow resistive switch paths to settle before sampling.
+    sleep_us(100);
     const bool pressed = gpio_get(other_pin) == 0;
 
     gpio_set_dir_in_masked(pin_mask | other_mask);

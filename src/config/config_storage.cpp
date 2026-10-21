@@ -221,6 +221,25 @@ void ConfigStorage::abort_write()
     memset(EEPROM.writeCache, 0, MAX_DATA_SIZE - image.data_size);
 }
 
+void ConfigStorage::save(AuxiliaryWriter writer, void *context)
+{
+    if (m_upload_active)
+    {
+        printf("cannot save a config upload that is still in progress\r\n");
+        return;
+    }
+    m_preserve_flash = false;
+    if (writer)
+    {
+        // If aux can't be encoded, still save the valid cached config the user asked to keep.
+        if (!update_auxiliary(writer, context, false))
+        {
+            printf("couldn't write back the pairings, saving the cached config as is\r\n");
+        }
+    }
+    EEPROM.commit_now();
+}
+
 bool ConfigStorage::update_auxiliary(AuxiliaryWriter writer, void *context, bool commit) const
 {
     // Only re-sign a config that is valid as it stands, never a half finished or failed upload

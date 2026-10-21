@@ -65,6 +65,12 @@ public:
         strncpy(m_device_name, name ? name : "", sizeof(m_device_name) - 1);
         m_device_name[sizeof(m_device_name) - 1] = '\0';
     }
+    const char *get_manufacturer_name() const { return m_manufacturer_name[0] ? m_manufacturer_name : nullptr; }
+    void set_manufacturer_name(const char *name)
+    {
+        strncpy(m_manufacturer_name, name ? name : "", sizeof(m_manufacturer_name) - 1);
+        m_manufacturer_name[sizeof(m_manufacturer_name) - 1] = '\0';
+    }
     bool has_bluetooth() const { return m_has_bluetooth; }
     void set_bluetooth_available(bool available) { m_has_bluetooth = available; }
     bool is_reloading() const { return m_reloading; }
@@ -155,6 +161,7 @@ private:
     {}
 
     char m_device_name[sizeof(proto_Config::deviceName)] = {};
+    char m_manufacturer_name[sizeof(proto_Config::manufacturerName)] = {};
     
     ~ConfigManager() = default;
     ConfigManager(const ConfigManager&) = delete;

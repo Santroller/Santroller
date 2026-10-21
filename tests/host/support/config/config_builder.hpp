@@ -34,6 +34,7 @@ struct ConfigSpec
     std::optional<proto_PeripheralBootConfig> peripheral_boot;
     std::optional<bool> sync_calibrations;
     std::optional<std::string> device_name;
+    std::optional<std::string> manufacturer_name;
 };
 
 struct AuxSpec
@@ -178,6 +179,11 @@ inline std::vector<uint8_t> encode_config(const ConfigSpec &spec)
     {
         config.has_deviceName = true;
         strncpy(config.deviceName, spec.device_name->c_str(), sizeof(config.deviceName) - 1);
+    }
+    if (spec.manufacturer_name)
+    {
+        config.has_manufacturerName = true;
+        strncpy(config.manufacturerName, spec.manufacturer_name->c_str(), sizeof(config.manufacturerName) - 1);
     }
     if (spec.peripheral_boot)
     {

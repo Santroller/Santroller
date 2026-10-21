@@ -52,6 +52,8 @@ struct State
     // nullptr is passed on as "unset", to tell it apart from an empty name
     std::string device_name;
     bool device_name_set = false;
+    std::string manufacturer_name;
+    bool manufacturer_name_set = false;
     int secondary_pico_inits = 0;
     int reinitialize_device_stack_calls = 0;
     int usb_instances_added = 0;

@@ -253,6 +253,12 @@ message GuiSwitchNetworkDevice {
   required uint32 otherPin = 4;
   optional bool showToCustomer = 5;
 }
+// Names a key on a USB host keyboard, by its HID keycode
+message GuiKeyboardKey {
+  required string label = 1;
+  required int32 key = 2;
+  optional bool showToCustomer = 3;
+}
 message SellerConfig {
   required bytes logo = 1;
   required string name = 2;
@@ -267,7 +273,10 @@ message GuiConfig {
     GuiMultiplexerDevice multiplexerLabel = 5;
     GuiMatrixDevice matrixLabel = 6;
     GuiSwitchNetworkDevice switchNetworkLabel = 7;
+    GuiKeyboardKey keyboardKeyLabel = 8;
   }
+  // uids of the profiles a label is shown in, or every profile when empty
+  repeated uint32 profiles = 9;
 }
 
 message PeripheralBootConfig {

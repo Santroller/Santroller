@@ -10,7 +10,7 @@ static uint64_t combine_pins(uint32_t low, bool has_high, uint32_t high)
 
 MatrixDevice::MatrixDevice(proto_MatrixDevice device, uint16_t id)
     : Device(id),
-      m_matrix(combine_pins(device.inPins, device.has_inPinsHigh, device.inPinsHigh), combine_pins(device.outPins, device.has_outPinsHigh, device.outPinsHigh)),
+      m_matrix(combine_pins(device.inPins, device.has_inPinsHigh, device.inPinsHigh), combine_pins(device.outPins, device.has_outPinsHigh, device.outPinsHigh), device.activeLow),
       m_in_pins(combine_pins(device.inPins, device.has_inPinsHigh, device.inPinsHigh)),
       m_out_pins(combine_pins(device.outPins, device.has_outPinsHigh, device.outPinsHigh))
 {

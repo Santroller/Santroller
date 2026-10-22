@@ -9,6 +9,7 @@
 #include "inputs_test_support.hpp"
 #include "triggers/device_type_triggers.hpp"
 #include "triggers/mode_triggers.hpp"
+#include "config/instance_factory.hpp"
 #include "protocols/midi_input.hpp"
 #include <algorithm>
 
@@ -226,7 +227,7 @@ TEST_F(DeviceTriggerTest, UsbModeWithoutAConsoleAlwaysMatches)
     UsbModeActivationTrigger trigger(usb_assignment(), profile, 1, 0);
     for (int mode = ModeHid; mode <= ModeKeyboardMania; mode++)
     {
-        ConfigManager::instance().request_mode(ConsoleMode(mode));
+        ConfigManager::instance().host_detected(ConsoleMode(mode));
         EXPECT_TRUE(trigger.validate(false, false, false)) << mode;
     }
     EXPECT_EQ(trigger.assignedDevices(), AssignUsb);
@@ -258,10 +259,58 @@ TEST_F(DeviceTriggerTest, UsbModeForASpecificConsole)
         UsbModeActivationTrigger trigger(config, profile, 1, 0);
         for (int mode = ModeHid; mode <= ModeKeyboardMania; mode++)
         {
-            ConfigManager::instance().request_mode(ConsoleMode(mode));
+            ConfigManager::instance().host_detected(ConsoleMode(mode));
             bool expected = std::find(c.modes.begin(), c.modes.end(), ConsoleMode(mode)) != c.modes.end();
             EXPECT_EQ(trigger.validate(false, false, false), expected) << c.console << " in mode " << mode;
         }
+    }
+}
+
+TEST_F(DeviceTriggerTest, PlayStationKeyboardKeepsMatchingAfterSwitchingToHid)
+{
+    auto config = usb_assignment();
+    config.has_consoleType = true;
+    config.consoleType = ConsolePS4_PS5;
+    auto keyboard = make_profile(SubType_KeyboardMouse);
+    UsbModeActivationTrigger trigger(config, keyboard, 1, 0);
+    auto pc_config = config;
+    pc_config.consoleType = ConsolePC;
+    UsbModeActivationTrigger pc_trigger(pc_config, keyboard, 2, 0);
+    auto &config_mgr = ConfigManager::instance();
+
+    EXPECT_FALSE(trigger.validate(false, false, false));
+    for (auto host : {ModePs4, ModePs5})
+    {
+        config_mgr.host_detected(host);
+        ASSERT_TRUE(trigger.validate(true, false, false));
+        auto output_mode = InstanceFactory::usb_mode_for_subtype(host, keyboard->subtype);
+        ASSERT_EQ(output_mode, ModeHid);
+        config_mgr.request_mode(output_mode);
+        config_mgr.sync_requested_mode_to_current();
+
+        for (int reload = 0; reload < 3; ++reload)
+        {
+            EXPECT_TRUE(trigger.validate(false, false, false));
+            EXPECT_TRUE(trigger.validate(true, false, false));
+            EXPECT_FALSE(pc_trigger.validate(false, false, false));
+            config_mgr.host_detected(host);
+            EXPECT_EQ(config_mgr.get_requested_mode(), ModeHid);
+            EXPECT_FALSE(config_mgr.should_reinit(0));
+        }
+    }
+}
+
+TEST_F(DeviceTriggerTest, HidOnlySubtypesResolveBeforeCreatingUsbDevices)
+{
+    for (int mode = ModeHid; mode <= ModeKeyboardMania; ++mode)
+    {
+        auto console_mode = ConsoleMode(mode);
+        EXPECT_EQ(InstanceFactory::usb_mode_for_subtype(console_mode, SubType_KeyboardMouse), ModeHid);
+        EXPECT_EQ(InstanceFactory::usb_mode_for_subtype(console_mode, SubType_Midi), ModeHid);
+        EXPECT_EQ(InstanceFactory::usb_mode_for_subtype(console_mode, SubType_KeyboardMania),
+                  console_mode == ModeKeyboardMania ? ModeKeyboardMania : ModeHid);
+        EXPECT_EQ(InstanceFactory::usb_mode_for_subtype(console_mode, RockBandDrums), console_mode);
+        EXPECT_EQ(InstanceFactory::usb_mode_for_subtype(console_mode, Gamepad), console_mode);
     }
 }
 
@@ -459,7 +508,7 @@ TEST_F(DeviceTriggerTest, UsbModeNeedsAHost)
     config.has_consoleType = true;
     config.consoleType = ConsolePS3;
     UsbModeActivationTrigger ps3(config, profile, 2, 0);
-    ConfigManager::instance().request_mode(ModePs3);
+    ConfigManager::instance().host_detected(ModePs3);
     EXPECT_TRUE(ps3.validate(false, false, false));
     // Powered on again without one
     UsbHostPresence::instance().reset(30000);

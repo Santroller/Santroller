@@ -24,6 +24,16 @@ public:
 
     // A PC takes a mix of interface types, so each profile on windows picks xinput or HID for itself
     static bool uses_xinput_on_windows(SubType subtype, bool xinput_on_windows);
+
+    static ConsoleMode usb_mode_for_subtype(ConsoleMode mode, SubType subtype)
+    {
+        if (subtype == SubType_KeyboardMouse || subtype == SubType_Midi ||
+            (subtype == SubType_KeyboardMania && mode != ModeKeyboardMania))
+        {
+            return ModeHid;
+        }
+        return mode;
+    }
     
 private:
     static void setup_instance_from_profile(

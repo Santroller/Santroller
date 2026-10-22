@@ -210,6 +210,8 @@ message MatrixDevice {
   required uint32 inPins = 2;
   optional uint32 outPinsHigh = 3;
   optional uint32 inPinsHigh = 4;
+  // Santroller 1 matrices drive the selected output low and use input pull-ups.
+  optional bool activeLow = 5 [default = false];
 }
 
 message SwitchNetworkButton {

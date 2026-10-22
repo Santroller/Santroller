@@ -129,6 +129,12 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
     }
     else if (assignment_mask & ProfileAssignMask_AssignUsb)
     {
+        const auto resolved_mode = usb_mode_for_subtype(usb_mode, profile->subtype);
+        if (resolved_mode != usb_mode)
+        {
+            usb_mode = resolved_mode;
+            config_mgr.request_mode(usb_mode);
+        }
         if (usb_mode == ModeHid && UsbDetectionState::instance().host_is_windows() &&
             uses_xinput_on_windows(profile->subtype, profile->xinput_on_windows))
         {
@@ -217,17 +223,8 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
 {
     std::shared_ptr<UsbDevice> instance;
 
+    mode = usb_mode_for_subtype(mode, subtype);
     printf("usbd new mode=%d sub=%d\r\n", mode, subtype);
-    // Consoles don't take keyboards or MIDI instruments, so those only work as plain USB devices
-    if ((subtype == SubType_KeyboardMouse || subtype == SubType_Midi) && mode != ModeHid)
-    {
-        config_mgr.request_mode(ModeHid);
-    }
-    // KeyboardMania only exists on the PS2, which it detects from ModeHid itself
-    if (subtype == SubType_KeyboardMania && mode != ModeHid && mode != ModeKeyboardMania)
-    {
-        config_mgr.request_mode(ModeHid);
-    }
     switch (mode)
     {
     case ModeHid:

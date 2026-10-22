@@ -20,7 +20,8 @@ bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
     bool matched = false;
     if (m_config.has_consoleType)
     {
-        switch (ConfigManager::instance().get_requested_mode())
+        // A keyboard still belongs to its detected console after its output switches to HID.
+        switch (ConfigManager::instance().get_detected_mode())
         {
         case ModeGuitarHeroArcade:
         case ModeSpice2x:

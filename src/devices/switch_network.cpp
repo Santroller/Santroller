@@ -47,20 +47,20 @@ bool SwitchNetworkDevice::read_switch(uint8_t pin, uint8_t other_pin)
     for (uint8_t pin = 0; pin < 32; ++pin)
     {
         if (using_pin(pin))
-            gpio_pull_up(pin);
+            gpio_set_pulls(pin, false, false);
     }
 
-    gpio_set_dir_out_masked(pin_mask);
     gpio_put_masked(pin_mask, 0);
+    gpio_pull_up(other_pin);
+    gpio_set_dir_out_masked(pin_mask);
 
-    // Allow resistive switch paths to settle before sampling.
-    sleep_us(100);
+    sleep_us(1);
     const bool pressed = gpio_get(other_pin) == 0;
 
     gpio_set_dir_in_masked(pin_mask | other_mask);
     for (uint8_t pin = 0; pin < 32; ++pin)
     {
-        if ((pin_mask | other_mask) & (1u << pin))
+        if (using_pin(pin))
             gpio_pull_up(pin);
     }
 

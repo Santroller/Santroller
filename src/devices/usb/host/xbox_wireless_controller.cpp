@@ -87,6 +87,10 @@ void XboxWirelessController::send_report_from_host(XGIPProtocol *report)
     uint8_t *packet = m_controller.gip_device.outgoing_xgip->generatePacket();
     m_adapter->send_report_from_host(m_controller_idx + 1, m_controller.mac_addr, packet,
                                      m_controller.gip_device.outgoing_xgip->getPacketLength());
+    // The rest of a fragmented message waits for the controller to acknowledge this one
+    if (m_controller.gip_device.outgoing_xgip->getPacketAck()) {
+        gip_device_set_ack_wait(&m_controller.gip_device, to_ms_since_boot(get_absolute_time()));
+    }
 }
 bool XboxWirelessController::tick_digital(proto_Output &type)
 {

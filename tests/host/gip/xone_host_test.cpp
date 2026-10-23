@@ -289,6 +289,79 @@ TEST_F(XoneHost, ConsoleSecurityMessagesReachTheController)
     EXPECT_EQ(reassembled, message);
 }
 
+// [MS-GIPUSB] 3.1.5.2: the first fragment asks for an ACK, and the rest of the message waits for it
+TEST_F(XoneHost, RelayedSecurityMessageWaitsForTheFirstAck)
+{
+    send_metadata(pb::MICROSOFT_GAMEPAD_METADATA);
+    Bytes message = message_bytes(218, 11);
+    XGIPProtocol from_console;
+    for (auto &f : fragments(GIP_AUTH, 0x07, message))
+        ASSERT_TRUE(from_console.parse(f.data(), f.size()));
+    Bytes done = fragment_complete(GIP_AUTH, 0x07, message.size());
+    ASSERT_TRUE(from_console.parse(done.data(), done.size()));
+    ASSERT_TRUE(auth_broker.forward_auth(ModeXboxOne, &from_console));
+
+    auto sent = without_acks(drain());
+    ASSERT_EQ(sent.size(), 1u);
+    Header first = decode(sent[0]);
+    ASSERT_TRUE(first.flags & FLAG_ACME);
+    from_controller(ack(GIP_AUTH, first.sequence, first.length, message.size() - first.length));
+    EXPECT_GT(without_acks(drain()).size(), 0u);
+}
+
+// A stalled transfer from the controller makes the driver ask for its metadata again; that
+// request must not cut off a security message it is still relaying to the controller
+TEST_F(XoneHost, MetadataRetryDoesNotCutOffARelayedSecurityMessage)
+{
+    send_metadata(pb::MICROSOFT_GAMEPAD_METADATA);
+    Bytes message = message_bytes(218, 11);
+    XGIPProtocol from_console;
+    for (auto &f : fragments(GIP_AUTH, 0x07, message))
+        ASSERT_TRUE(from_console.parse(f.data(), f.size()));
+    Bytes done = fragment_complete(GIP_AUTH, 0x07, message.size());
+    ASSERT_TRUE(from_console.parse(done.data(), done.size()));
+    ASSERT_TRUE(auth_broker.forward_auth(ModeXboxOne, &from_console));
+
+    // The first fragment goes out, and the rest waits for its ACK
+    auto sent = without_acks(drain());
+    ASSERT_EQ(sent.size(), 1u);
+    Header first = decode(sent[0]);
+    Bytes reassembled = payload_of(sent[0]);
+
+    // Meanwhile the controller starts a fragmented message and goes quiet until the retry fires
+    from_controller(fragments(GIP_DEVICE_DESCRIPTOR, 0x02, pb::MICROSOFT_GAMEPAD_METADATA)[0]);
+    bool retried = false;
+    for (int i = 0; i < 1100; i++)
+    {
+        gip_fake_time::advance_ms(1);
+        host->update(false, false);
+        for (auto &t : gip_fake::host_out)
+            if (decode(t.data).type == GIP_DEVICE_DESCRIPTOR && decode(t.data).length == 0)
+                retried = true;
+        gip_fake::host_out.clear();
+    }
+    ASSERT_TRUE(retried);
+
+    from_controller(ack(GIP_AUTH, first.sequence, reassembled.size(), message.size() - reassembled.size()));
+    for (int round = 0; round < 10; round++)
+    {
+        for (auto &p : drain())
+        {
+            Header h = decode(p);
+            if (h.type != GIP_AUTH)
+                continue;
+            if (h.length)
+            {
+                Bytes payload = payload_of(p);
+                reassembled.insert(reassembled.end(), payload.begin(), payload.end());
+            }
+            if (h.flags & FLAG_ACME)
+                from_controller(ack(GIP_AUTH, h.sequence, reassembled.size(), message.size() - reassembled.size()));
+        }
+    }
+    EXPECT_EQ(reassembled, message);
+}
+
 // The controller's reply to a relayed security message goes back to the console
 TEST_F(XoneHost, ControllerSecurityRepliesGoToTheConsole)
 {

@@ -479,6 +479,11 @@ void XboxOneGamepadDevice::send_report_from_controller(XGIPProtocol *report)
     outgoingXGIP.copyAttributes(report);
     uint8_t *packet = outgoingXGIP.generatePacket();
     queue_xbone_report(packet, outgoingXGIP.getPacketLength());
+    // The rest of a fragmented message waits for the console to acknowledge this one
+    if (outgoingXGIP.getPacketAck())
+    {
+        set_ack_wait();
+    }
 }
 bool XboxOneGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)
 {

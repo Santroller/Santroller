@@ -484,6 +484,28 @@ TEST_F(XoneDevice, RelaysConsoleSecurityMessages)
     auth_broker.unregister_handler(ModeXboxOne);
 }
 
+// [MS-GIPUSB] 3.1.5.2: a fragmented reply relayed from the controller waits for the console to
+// acknowledge its first fragment before sending the rest
+TEST_F(XoneDevice, RelayedSecurityReplyWaitsForTheFirstAck)
+{
+    plug(Gamepad);
+    run(600);
+    Bytes reply = message_bytes(218, 9);
+    XGIPProtocol from_controller;
+    for (auto &f : fragments(GIP_AUTH, 0x06, reply))
+        ASSERT_TRUE(from_controller.parse(f.data(), f.size()));
+    Bytes done = fragment_complete(GIP_AUTH, 0x06, reply.size());
+    ASSERT_TRUE(from_controller.parse(done.data(), done.size()));
+    ASSERT_TRUE(auth_broker.forward_auth_response(ModeXboxOne, &from_controller));
+
+    auto sent = of_type(run(500), GIP_AUTH);
+    ASSERT_EQ(sent.size(), 1u);
+    Header first = decode(sent[0]);
+    ASSERT_TRUE(first.flags & FLAG_ACME);
+    from_console(ack(GIP_AUTH, first.sequence, first.length, reply.size() - first.length));
+    EXPECT_GT(of_type(run(500), GIP_AUTH).size(), 0u);
+}
+
 // Other console messages arriving between the fragments of a security message don't break it up
 TEST_F(XoneDevice, MessagesBetweenSecurityFragmentsKeepTheMessage)
 {

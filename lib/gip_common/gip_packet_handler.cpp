@@ -8,6 +8,10 @@
 #include <string.h>
 #include <stdio.h>
 
+// One-off packets are built here rather than in device->outgoing_xgip, which may still be
+// sending a fragmented message relayed from the console
+static XGIPProtocol control_packet;
+
 // Shared default callback implementations
 
 // While emulating (or about to emulate) an Xbox One controller, the console must
@@ -326,12 +330,12 @@ uint16_t gip_parse_console_function_offset(const uint8_t *data, uint16_t len)
 
 void gip_send_power_on_sequence(gip_device_t *device)
 {
-    if (!device || !device->outgoing_xgip || !device->interface || !device->interface->queue_packet)
+    if (!device || !device->interface || !device->interface->queue_packet)
     {
         return;
     }
 
-    XGIPProtocol *xgip = device->outgoing_xgip;
+    XGIPProtocol *xgip = &control_packet;
     void *context = device->user_context;
     auto queue = device->interface->queue_packet;
     // Generate before reading the length: argument evaluation order is unspecified
@@ -390,12 +394,12 @@ void gip_send_power_on_sequence(gip_device_t *device)
 
 void gip_request_device_descriptor(gip_device_t *device)
 {
-    if (!device || !device->outgoing_xgip || !device->interface || !device->interface->queue_packet)
+    if (!device || !device->interface || !device->interface->queue_packet)
     {
         return;
     }
 
-    XGIPProtocol *xgip = device->outgoing_xgip;
+    XGIPProtocol *xgip = &control_packet;
     uint8_t seq = gip_sequence_pool_next(&device->tx_sequence_pools, GIP_DEVICE_DESCRIPTOR);
 
     xgip->reset();
@@ -406,12 +410,12 @@ void gip_request_device_descriptor(gip_device_t *device)
 
 void gip_send_auth_complete(gip_device_t *device)
 {
-    if (!device || device->auth_complete_sent || !device->outgoing_xgip || !device->interface || !device->interface->queue_packet)
+    if (!device || device->auth_complete_sent || !device->interface || !device->interface->queue_packet)
     {
         return;
     }
 
-    XGIPProtocol *xgip = device->outgoing_xgip;
+    XGIPProtocol *xgip = &control_packet;
 
     // Auth complete packet (0x06 command with 0x02 subcommand)
     static const uint8_t auth_complete[] = {0x01, 0x00};
@@ -429,13 +433,13 @@ void gip_send_auth_complete(gip_device_t *device)
 
 void gip_send_ghl_poke(gip_device_t *device)
 {
-    if (!device || !device->outgoing_xgip || !device->interface || !device->interface->queue_packet)
+    if (!device || !device->interface || !device->interface->queue_packet)
     {
         return;
     }
 
     static const uint8_t ghl_poke[] = {0x02, 0x08, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00};
-    XGIPProtocol *xgip = device->outgoing_xgip;
+    XGIPProtocol *xgip = &control_packet;
     uint8_t seq = gip_sequence_pool_next(&device->tx_sequence_pools, GHL_HID_OUTPUT);
 
     xgip->reset();

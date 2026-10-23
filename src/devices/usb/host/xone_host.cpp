@@ -105,6 +105,11 @@ void XboxOneHost::send_report_from_host(XGIPProtocol *report)
     }
     uint8_t *packet = m_gip_device.outgoing_xgip->generatePacket();
     gip_report_queue_push(m_report_queue, packet, m_gip_device.outgoing_xgip->getPacketLength());
+    // The rest of a fragmented message waits for the controller to acknowledge this one
+    if (m_gip_device.outgoing_xgip->getPacketAck())
+    {
+        gip_device_set_ack_wait(&m_gip_device, to_ms_since_boot(get_absolute_time()));
+    }
 }
 
 void XboxOneHost::send_power_on_sequence()

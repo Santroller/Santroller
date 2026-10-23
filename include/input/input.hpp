@@ -55,6 +55,8 @@ public:
         return false;
     }
     virtual uint64_t hardware_id() const { return 0; }
+    // For a keyboard passthrough, whether a key is held on the keyboard the input reads from
+    virtual bool key_pressed(uint8_t keycode) { (void)keycode; return false; }
     virtual void link_device(bool claim_devices) {}
     // The Device::m_serial of what link_device() picked out of the profile's slots, or 0 for none
     virtual uint32_t linked_device_serial() const { return 0; }

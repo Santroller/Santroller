@@ -339,6 +339,9 @@ message Output {
     uint32 midiPitchBend = 38;
     DrumManiaButtonType dmButton = 39;
     KeyboardManiaButtonType kbmButton = 40;
+    // Every key held on the USB keyboard the input reads from, apart from keys other mappings read from it.
+    // Always true
+    bool keyboardPassthrough = 41;
   }
 }
 

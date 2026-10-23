@@ -37,6 +37,8 @@ class Profile
 public:
     virtual ~Profile();
     void resolve_shortcuts();
+    // Leaves the keys other mappings read out of the keyboard passthroughs reading the same keyboard
+    void resolve_keyboard_passthrough();
     // Drop mappings and LEDs, leaving just what is needed to notice the profile activating
     void release_to_triggers();
     void reset_drum_state();

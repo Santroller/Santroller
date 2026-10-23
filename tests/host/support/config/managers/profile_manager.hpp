@@ -24,5 +24,6 @@ public:
     void finish_usb_instance_initialization(uint8_t) {}
     bool changed_types() const { return fake_loader::state.changed_types; }
     void update_xinput_receiver() {}
+    void update_xbox_one_identity() {}
     size_t usb_gamepad_count() const { return 0; }
 };

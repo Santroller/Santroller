@@ -52,6 +52,11 @@ public:
     }
     bool is_usb_device(proto_SpecificUsbDevice type)
     {
+        // A chatpad shares its controller's VID / PID, so the keyboard and the controller are told apart by type
+        if (type.has_subtype && (type.subtype == SubType_KeyboardMouse) != (m_subtype == SubType_KeyboardMouse))
+        {
+            return false;
+        }
         return m_vid == type.vid && m_pid == type.pid;
     }
     bool is_usb_type(SubType type)
@@ -105,6 +110,19 @@ protected:
     bool send_intr_xfer(uint8_t endpoint, const void *buffer, uint8_t len);
     MidiStaticBuffers<64, 0, 64, 1> m_midi_buffers;
 };
+
+// For a keyboard passthrough input, which reads as held while any key is
+inline bool any_key_pressed(UsbHostInterface &device)
+{
+    for (uint16_t key = 0x04; key <= 0xE7; key++)
+    {
+        if (device.key_pressed(key))
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
 void usb_host_add_assignable_interface(std::shared_ptr<UsbHostInterface> device);
 void usb_host_add_enumerating_interface(std::shared_ptr<UsbHostInterface> device);

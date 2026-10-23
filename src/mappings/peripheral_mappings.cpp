@@ -165,6 +165,26 @@ void KeyboardButtonMapping::update_xboxone(uint8_t *buf)
 {
 }
 
+KeyboardPassthroughMapping::KeyboardPassthroughMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+{
+}
+
+void KeyboardPassthroughMapping::update_hid(uint8_t *buf)
+{
+    if (is_suppressed())
+    {
+        return;
+    }
+    // From past the HID error codes to the last modifier
+    for (uint16_t key = 0x04; key <= 0xE7; key++)
+    {
+        if (!(m_masked_keys[key >> 5] & (1u << (key & 31))) && m_input->key_pressed(key))
+        {
+            m_profile->keyboard_state.set_key(key);
+        }
+    }
+}
+
 MouseAxisMapping::MouseAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, false)
 {
 }

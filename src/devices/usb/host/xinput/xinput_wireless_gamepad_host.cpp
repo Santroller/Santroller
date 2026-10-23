@@ -154,6 +154,7 @@ void XInputWirelessGamepadHost::update(bool full_poll, bool send_events)
     m_last_update_us = now_us;
     process_events();
     UsbHostInterface::update(full_poll, send_events);
+    send_chatpad_command();
     flush_out_queue();
     wireless_trace_dump_tick();
     const uint32_t now = millis();
@@ -262,9 +263,25 @@ void XInputWirelessGamepadHost::disconnect_controller()
     m_out_submit_failures = 0;
     m_request_caps_on_input = false;
     m_led_set = false;
+    if (m_chatpad)
+    {
+        m_chatpad->lost();
+    }
     process_delayed_init();
     // the slot is still there, just empty again
     send_hotplug_event(true);
+}
+
+void XInputWirelessGamepadHost::send_chatpad_command()
+{
+    uint8_t report[12];
+    // Leave room in the queue for rumble and LEDs
+    if (!m_chatpad || !m_found || m_link_lost || m_out_queue_count + 1 >= out_queue_capacity ||
+        !m_chatpad->next_report(report))
+    {
+        return;
+    }
+    send_out("chat", report, sizeof(report));
 }
 
 bool XInputWirelessGamepadHost::send_out(const char *reason, const uint8_t *packet, uint8_t len)
@@ -390,6 +407,13 @@ std::shared_ptr<UsbHostInterface> XInputWirelessGamepadHost::open(std::shared_pt
         list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
     }
     usb_host_add_enumerating_interface(intf);
+    // The slot's voice interface comes next, which isn't used, so the chatpad goes there
+    uint8_t chatpad_itf = desc_itf->bInterfaceNumber + 1;
+    if (chatpad_itf < list->host_devices_by_itf.size() && !list->host_devices_by_itf[chatpad_itf])
+    {
+        intf->m_chatpad = std::make_shared<XInputWirelessChatpadHost>(dev_addr, chatpad_itf, list->m_id, intf);
+        list->host_devices_by_itf[chatpad_itf] = intf->m_chatpad;
+    }
 
     *out_len = TUD_XINPUT_WIRELESS_CONTROLLER_DESC_LEN;
     return intf;
@@ -573,6 +597,13 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
             // rather than printing, since the console output alone can stall the loop
             m_empty_count++;
         }
+        else if (header->type == 0x02)
+        {
+            if (m_found && m_chatpad)
+            {
+                m_chatpad->handle_packet(buf, len);
+            }
+        }
         else if (header->type != 0x0f && header->type != 0x05)
         {
             trace_wireless_report(m_dev_addr, m_interface, m_ep_in, m_found,
@@ -650,6 +681,10 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                     process_delayed_init();
                     set_player_led(m_last_player_led);
                     send_hotplug_event(true);
+                    if (m_chatpad)
+                    {
+                        m_chatpad->controller_linked();
+                    }
                 }
                 else if (!m_led_set)
                 {

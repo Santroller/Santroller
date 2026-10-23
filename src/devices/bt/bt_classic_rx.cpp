@@ -195,6 +195,8 @@ static bool s_inquiry_active = false;
 // hence the gaps in between.
 #define CLASSIC_PAGE_TIMEOUT 0x2000
 #define SWITCH_PAGE_RETRY_MS 4000
+// 5s, instead of the default 20s
+#define CLASSIC_LINK_SUPERVISION_TIMEOUT 0x1F40
 // Right after a link drops (including our own stack restarting) the controller is the one
 // paging, so leave the radio listening for a while before paging it ourselves
 #define SWITCH_PAGE_HOLD_OFF_MS 10000
@@ -525,6 +527,9 @@ static void hid_host_setup(void)
     hci_set_master_slave_policy(HCI_ROLE_SLAVE);
     gap_ssp_set_io_capability(SSP_IO_CAPABILITY_DISPLAY_YES_NO);
     gap_set_page_timeout(CLASSIC_PAGE_TIMEOUT);
+    // Controllers turned off just stop transmitting, so this is how long it takes to notice.
+    // Only applies where we're master, see the role switch for Switch controllers.
+    gap_set_link_supervision_timeout(CLASSIC_LINK_SUPERVISION_TIMEOUT);
 
     hid_host_set_accept_incoming(true);
 
@@ -927,6 +932,13 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
         }
 
+        case HCI_EVENT_ROLE_CHANGE:
+            hci_event_role_change_get_bd_addr(packet, event_addr);
+            printf("Classic BT: role change for %s, status 0x%02x, now %s\r\n", bd_addr_to_str(event_addr),
+                   hci_event_role_change_get_status(packet),
+                   hci_event_role_change_get_role(packet) == HCI_ROLE_MASTER ? "master" : "slave");
+            break;
+
         case HCI_EVENT_DISCONNECTION_COMPLETE:
         {
             bd_addr_t link_addr;
@@ -1067,6 +1079,18 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
                 bd_addr_t connected_addr = {};
                 hid_subevent_connection_opened_get_bd_addr(packet, connected_addr);
+
+                // A Switch controller that reconnected by itself leaves us as slave, where we can't
+                // set the supervision timeout and it takes 20s to notice it turning off. Like a
+                // Switch console, take over as master, now that HID is up and it can't upset that.
+                if (is_stored_switch_controller(connected_addr))
+                {
+                    hci_connection_t *conn = hci_connection_for_bd_addr_and_type(connected_addr, BD_ADDR_TYPE_ACL);
+                    if (conn && conn->role == HCI_ROLE_SLAVE)
+                    {
+                        gap_request_role(connected_addr, HCI_ROLE_MASTER);
+                    }
+                }
 
                 // Move VID/PID from the pending map to a real host object
                 PendingConnection *pending = pending_connection_by_cid(cid);

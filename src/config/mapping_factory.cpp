@@ -170,6 +170,9 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
     case proto_Output_keycode_tag:
     case proto_Output_consumerKey_tag:
         return std::make_unique<KeyboardButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
+
+    case proto_Output_keyboardPassthrough_tag:
+        return std::make_unique<KeyboardPassthroughMapping>(proto_mapping, std::move(input), mapping_id, profile);
         
     case proto_Output_proKeySingle_tag:
     case proto_Output_proKeyMultiple_tag:

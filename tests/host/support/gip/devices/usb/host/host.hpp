@@ -30,6 +30,7 @@ public:
     virtual bool has_rumble() const { return false; }
     virtual bool has_player_led() const { return false; }
     virtual std::optional<uint64_t> hardware_id() const { return std::nullopt; }
+    virtual bool is_xbox_one_pad() const { return false; }
 
     uint8_t dev_addr() const { return m_dev_addr; }
     uint8_t interface() const { return m_interface; }

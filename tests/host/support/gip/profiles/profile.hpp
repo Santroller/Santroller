@@ -39,6 +39,7 @@ class Profile
 {
 public:
     SubType subtype = Gamepad;
+    bool xbox_one_auth_held = false;
     std::vector<std::shared_ptr<FakeXboxOneMapping>> mappings;
     std::vector<std::shared_ptr<FakeLed>> leds;
 };

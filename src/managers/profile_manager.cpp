@@ -68,6 +68,7 @@ void ProfileManager::add_profile(uint32_t profile_id, std::shared_ptr<Profile> p
     if (profile)
     {
         profile->resolve_shortcuts();
+        profile->resolve_keyboard_passthrough();
     }
     m_profiles[profile_id].push_back(profile);
 }
@@ -144,6 +145,7 @@ std::shared_ptr<Profile> ProfileManager::load_tool_profile(uint32_t profile_id, 
     }
     printf("tool loaded inactive p=%u\r\n", profile_id);
     profile->resolve_shortcuts();
+    profile->resolve_keyboard_passthrough();
     m_profiles[profile_id] = {profile};
     return profile;
 }

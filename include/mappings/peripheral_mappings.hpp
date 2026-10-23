@@ -52,6 +52,22 @@ public:
     void update_xboxone(uint8_t *report);
 };
 
+// Sends every key held on a USB keyboard, apart from the keys other mappings read from it (see
+// Profile::resolve_keyboard_passthrough), so those can be remapped
+class KeyboardPassthroughMapping : public ButtonMapping
+{
+public:
+    ~KeyboardPassthroughMapping() {}
+    KeyboardPassthroughMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    void update_hid(uint8_t *report);
+    KeyboardPassthroughMapping *as_keyboard_passthrough() override { return this; }
+    void clear_masked_keys() { memset(m_masked_keys, 0, sizeof(m_masked_keys)); }
+    void mask_key(uint8_t keycode) { m_masked_keys[keycode >> 5] |= 1u << (keycode & 31); }
+
+private:
+    uint32_t m_masked_keys[8] = {};
+};
+
 class MouseAxisMapping : public AxisMapping
 {
 public:

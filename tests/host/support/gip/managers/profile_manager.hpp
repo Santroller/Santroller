@@ -15,4 +15,5 @@ public:
     }
     void map_usb_instance_epin(uint8_t epin, uint8_t interface_id) { (void)epin, (void)interface_id; }
     void map_usb_instance_epout(uint8_t epout, uint8_t interface_id) { (void)epout, (void)interface_id; }
+    void commit_xbox_one_auth_holder() {}
 };

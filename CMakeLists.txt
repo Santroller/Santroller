@@ -307,6 +307,7 @@ add_executable(
   src/devices/usb/host/xinput/xinput_wireless_audio_host.cpp
   src/devices/usb/host/xinput/xinput_big_button_host.cpp
   src/devices/usb/host/xinput/xinput_plugin_module_host.cpp
+  src/devices/usb/host/xinput/xinput_chatpad_host.cpp
   src/devices/usb/host/xinput/xinput_security_host.cpp
   src/emulation/ps2_emulation.cpp
   src/emulation/joybus_emulation.cpp

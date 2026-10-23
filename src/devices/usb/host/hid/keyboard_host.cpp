@@ -176,6 +176,10 @@ bool KeyboardHost::tick_digital(proto_Output& type)
     {
         return consumer_pressed(type.mapping.consumerKey);
     }
+    if (type.which_mapping == proto_Output_keyboardPassthrough_tag)
+    {
+        return any_key_pressed(*this);
+    }
     return type.which_mapping == proto_Output_keycode_tag && key_pressed(type.mapping.keycode);
 }
 uint16_t KeyboardHost::tick_analog(proto_Output& type)

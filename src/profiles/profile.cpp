@@ -1,5 +1,6 @@
 #include "profiles/profile.hpp"
 #include "mappings/base_mapping.hpp"
+#include "mappings/peripheral_mappings.hpp"
 #include "leds/leds.hpp"
 
 #include "input/shortcut.hpp"
@@ -37,6 +38,34 @@ void Profile::release_to_triggers()
     leds.clear();
     leds.shrink_to_fit();
     triggers_only = true;
+}
+
+void Profile::resolve_keyboard_passthrough()
+{
+    for (auto &mapping : mappings)
+    {
+        auto *passthrough = mapping ? mapping->as_keyboard_passthrough() : nullptr;
+        if (!passthrough || !mapping->get_input())
+        {
+            continue;
+        }
+        passthrough->clear_masked_keys();
+        // Inputs reading the same keyboard have the same input type and slot at the top of their hardware id,
+        // then the output, which for a key is the keycode
+        uint64_t keyboard = mapping->get_input()->hardware_id() >> 32;
+        for (auto &other : mappings)
+        {
+            if (!other || other.get() == mapping.get() || !other->get_input())
+            {
+                continue;
+            }
+            uint64_t id = other->get_input()->hardware_id();
+            if ((id >> 32) == keyboard && ((id >> 16) & 0xFFFF) == proto_Output_keycode_tag)
+            {
+                passthrough->mask_key(static_cast<uint8_t>(id));
+            }
+        }
+    }
 }
 
 void Profile::resolve_shortcuts()

@@ -38,6 +38,7 @@ public:
     uint16_t tick_analog();
     bool tick_pro_key_range(uint32_t &active_keys, uint8_t *velocities, uint8_t key_count) override;
     bool has_independent_analog_value() const override { return true; }
+    bool key_pressed(uint8_t keycode) override { return m_device && m_device->key_pressed(keycode); }
     uint64_t hardware_id() const override
     {
         return (static_cast<uint64_t>(InputHw_USBButton) << 56) |

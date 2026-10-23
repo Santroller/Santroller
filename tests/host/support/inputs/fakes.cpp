@@ -6,6 +6,7 @@
 #include "managers/device_manager.hpp"
 #include "leds/led_mappings.hpp"
 #include "fake_devices.hpp"
+#include "usb/auth_broker.h"
 
 void reload()
 {
@@ -65,3 +66,18 @@ bool DeviceManager::is_snes_communicating() const
     return fake_devices::snes_communicating;
 }
 
+
+// Same as src/usb/auth_broker.cpp, for the Xbox One auth trigger. Nothing registers a handler, so it never
+// matches
+AuthBroker auth_broker;
+
+bool AuthBroker::has_handler(ConsoleMode mode) const
+{
+    return handlers.find(mode) != handlers.end();
+}
+
+bool AuthBroker::is_console_authenticated(ConsoleMode mode) const
+{
+    auto it = console_authenticated.find(mode);
+    return it != console_authenticated.end() && it->second;
+}

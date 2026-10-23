@@ -65,16 +65,82 @@ public:
     bool tick_digital(proto_Output &type) { return false; }
     uint16_t tick_analog(proto_Output &type) { return 0; }
 };
-class XInputModuleHost : public UsbHostInterface
+// An Xbox 360 chatpad, which shows up as a keyboard of its own. Wired controllers pass its reports on through
+// their text input interface and the wireless receiver through the controller's slot, and it only keeps sending
+// them while it is sent a keep-alive every second. The protocol is from xboxdrv's chatpad.cpp and
+// wireless_chatpad.cpp
+class XInputChatpadHost : public UsbHostInterface
+{
+public:
+    XInputChatpadHost(uint8_t dev_addr, uint8_t interface, uint16_t id, std::weak_ptr<UsbHostInterface> controller);
+    void update(bool full_poll, bool send_events) override;
+    void disconnect() override;
+    bool tick_digital(proto_Output &type) override;
+    uint16_t tick_analog(proto_Output &type) override;
+    bool key_pressed(uint8_t keycode) override;
+    std::optional<uint64_t> hardware_id() const override;
+    // Lets go of every key and hides the chatpad again, e.g. when its controller goes away
+    void lost();
+
+protected:
+    // Commands go out as the wValue of a vendor request on the wired interface, or in an out report through the
+    // receiver
+    static constexpr uint8_t chatpad_enable = 0x1B;
+    // Starts over from the enable command after delay_ms, with keepalives_first keep-alives before it
+    void restart(uint32_t delay_ms, uint8_t keepalives_first);
+    // The command that's due, if any
+    std::optional<uint8_t> next_command();
+    // 00 modifiers key1 key2
+    void handle_keys(const uint8_t *buf, uint32_t len);
+    // Only standard controllers take a chatpad
+    bool controller_takes_chatpad() const;
+    std::weak_ptr<UsbHostInterface> m_controller;
+    bool m_found = false;
+
+private:
+    // Every controller has somewhere a chatpad could report from, so it only shows up once a key is pressed
+    volatile bool m_pending_found = false;
+    // HID keycodes, the same as a USB keyboard's
+    volatile uint32_t m_keys[8] = {};
+    bool m_running = false;
+    uint32_t m_next_command_ms = 0;
+    uint8_t m_keepalives_first = 0;
+    bool m_enabled = false;
+    bool m_keepalive_toggle = false;
+};
+// The wired controller's text input interface
+class XInputModuleHost : public XInputChatpadHost
 {
 public:
     ~XInputModuleHost() {}
-    XInputModuleHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id) {}
-    bool set_config() { return true; }
-    bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) { return true; }
+    using XInputChatpadHost::XInputChatpadHost;
+    bool set_config() override;
+    bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) override;
+    void update(bool full_poll, bool send_events) override;
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
-    bool tick_digital(proto_Output &type) { return false; }
-    uint16_t tick_analog(proto_Output &type) { return 0; }
+
+private:
+    void send_command(uint8_t request_type, uint8_t request, uint16_t value, uint16_t index, uint8_t *data, uint16_t len);
+    uint8_t m_ep_in = 0;
+    uint16_t m_ep_in_size = 0;
+    uint16_t m_bcd_device = 0;
+    bool m_configured = false;
+    bool m_initialised = false;
+    bool m_reading = false;
+    CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[32];
+    CFG_TUSB_MEM_ALIGN uint8_t m_ctrl_buf[2];
+};
+// A chatpad on a controller linked to one of the wireless receiver's slots, which sends it the slot's reports
+class XInputWirelessChatpadHost : public XInputChatpadHost
+{
+public:
+    using XInputChatpadHost::XInputChatpadHost;
+    bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) override { return true; }
+    // the receiver's plug-in module packets
+    void handle_packet(const uint8_t *buf, uint32_t len);
+    void controller_linked();
+    // The out report for the command that's due, if any
+    bool next_report(uint8_t report[12]);
 };
 class XInputSecurityHost : public UsbHostInterface
 {
@@ -171,6 +237,9 @@ private:
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_in_buf[64];
     CFG_TUSB_MEM_ALIGN uint8_t m_ep_out_buf[64];
     uint8_t m_report_buf[64];
+    // also in the device's interface list, under the slot's voice interface which nothing else uses
+    std::shared_ptr<XInputWirelessChatpadHost> m_chatpad;
+    void send_chatpad_command();
     bool m_found = false;
     // the serial in the linked controller's link report, which tells a relink from another controller
     uint32_t m_link_serial = 0;

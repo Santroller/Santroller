@@ -71,6 +71,7 @@ struct MappingConfig
 };
 
 class ButtonMapping;
+class KeyboardPassthroughMapping;
 
 class Mapping
 {
@@ -115,6 +116,7 @@ public:
     // Whether this mapping is currently held as a button, used to wake a suspended host
     virtual bool wake_pressed() const { return false; }
     virtual ButtonMapping *as_button_mapping() { return nullptr; }
+    virtual KeyboardPassthroughMapping *as_keyboard_passthrough() { return nullptr; }
     void update_digital(bool full_poll);
     uint16_t sample_ui_event();
     uint16_t calibrate(float val, float max, float min, float deadzone, float center, bool trigger);

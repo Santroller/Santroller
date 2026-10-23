@@ -43,6 +43,13 @@ void InstanceFactory::setup_instance_from_profile(
     instance->update_capabilities();
 }
 
+// The Xbox One device works out what it announces as itself once every profile has loaded (see
+// XboxOneGamepadDevice::update_identity), so it is reused whichever profile happened to create it
+static SubType reload_subtype(ConsoleMode mode, SubType subtype)
+{
+    return mode == ModeXboxOne ? SubType_Gamepad : subtype;
+}
+
 bool InstanceFactory::uses_xinput_on_windows(SubType subtype, bool xinput_on_windows)
 {
     // There is no xinput keyboard, MIDI device or KeyboardMania
@@ -178,7 +185,7 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
                 return nullptr;
             }
         }
-        auto reused = profile_mgr.reuse_usb_instance(profile_mgr.usb_instance_count(), usb_mode, profile->subtype, false);
+        auto reused = profile_mgr.reuse_usb_instance(profile_mgr.usb_instance_count(), usb_mode, reload_subtype(usb_mode, profile->subtype), false);
         if (reused)
         {
             if (!profile_mgr.get_emulated_device(usb_mode))
@@ -316,7 +323,7 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
         {
             profile_mgr.set_usb_instance(instance->interface_id + i, instance);
         }
-        profile_mgr.set_usb_reload_identity(instance->interface_id, mode, subtype, false);
+        profile_mgr.set_usb_reload_identity(instance->interface_id, mode, reload_subtype(mode, subtype), false);
     }
 
     return instance;

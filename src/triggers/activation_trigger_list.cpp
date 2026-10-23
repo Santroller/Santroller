@@ -28,6 +28,54 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
     {
         return false;
     }
+    ActivationTrigger *auth = nullptr;
+    for (auto &trigger : triggers)
+    {
+        if (trigger->holds_xbox_one_auth())
+        {
+            auth = trigger.get();
+        }
+    }
+    bool auth_matched = auth && auth->validate(false, full_poll, send_events);
+    bool claimable = true;
+    bool held = false;
+    bool matched = validate_triggers(claim_devices, full_poll, send_events, false, claimable);
+    // The controllers can be swapped out while Xbox One auth holds the list up, as the console won't ask again
+    if (!matched && auth_matched)
+    {
+        matched = validate_triggers(claim_devices, full_poll, send_events, true, claimable);
+        held = matched;
+    }
+    if (!claim_devices)
+    {
+        if (send_events && (matched != m_last_val || full_poll))
+        {
+            send_activation_list_event(list_id, matched);
+        }
+        m_last_val = matched;
+        return matched && claimable;
+    }
+    if (matched)
+    {
+        m_claimed = true;
+        m_held = held;
+        // Makes this the rule that stays matched once the controller authenticating for it is unplugged
+        if (auth)
+        {
+            auth->validate(true, full_poll, send_events);
+        }
+    }
+    return matched;
+}
+
+// held skips the controllers, and checks the rest of the list. claimable is cleared when a controller
+// it matched is claimed by another profile
+bool ActivationTriggerList::validate_triggers(bool claim_devices, bool full_poll, bool send_events, bool held, bool &claimable)
+{
+    auto skipped = [held](const std::unique_ptr<ActivationTrigger> &trigger)
+    {
+        return trigger->holds_xbox_one_auth() || (held && trigger->claims_device());
+    };
     // A held button is only seen once its device sends a report, which can be after a profile
     // further down claimed the device. Reading it anyway lets the startup trigger latch and reload,
     // and the reload then picks the profiles in order again
@@ -40,9 +88,13 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
         }
     }
     bool matched = true;
-    bool claimable = true;
+    claimable = true;
     for (auto &trigger : triggers)
     {
+        if (skipped(trigger))
+        {
+            continue;
+        }
         trigger->set_reads_claimed(reads_claimed);
         if (!trigger->validate(false, full_poll, send_events))
         {
@@ -62,32 +114,18 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
     {
         trigger2->reset();
     }
-    if (claim_devices && !matched)
+    if (!claim_devices || !matched)
     {
-        return false;
-    }
-    if (!claim_devices)
-    {
-        if (send_events && (matched != m_last_val || full_poll))
-        {
-            m_last_val = matched;
-            send_activation_list_event(list_id, matched);
-        }
-        else
-        {
-            m_last_val = matched;
-        }
-        return matched && claimable;
+        return matched;
     }
     for (auto &trigger : triggers)
     {
-        if (!trigger->validate(true, full_poll, send_events))
+        if (!skipped(trigger) && !trigger->validate(true, full_poll, send_events))
         {
             printf("trigger was not valid, this shouldnt happen!\r\n");
             return false;
         }
     }
-    m_claimed = true;
     return true;
 }
 

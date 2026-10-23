@@ -24,6 +24,7 @@ public:
     void register_auth_handler(std::shared_ptr<XboxOneHost> self);
     void set_rumble(uint8_t left, uint8_t right) override;
     void set_player_led(uint8_t player) override;
+    bool is_xbox_one_pad() const override { return m_subtype == SubType_Gamepad; }
     bool has_rumble() const override { return true; }
     bool has_player_led() const override { return true; }
     std::optional<uint64_t> hardware_id() const override

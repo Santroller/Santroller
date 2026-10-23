@@ -1,6 +1,7 @@
 #pragma once
 #include "triggers/base_trigger.hpp"
 #include "config.pb.h"
+#include <memory>
 
 class UsbModeActivationTrigger : public ActivationTrigger
 {
@@ -75,4 +76,21 @@ public:
 
 private:
     proto_SNESAssignment m_config;
+};
+
+class InputActivationTrigger;
+class Input;
+
+class XboxOneAuthActivationTrigger : public ActivationTrigger
+{
+public:
+    XboxOneAuthActivationTrigger(proto_XboxOneAuthAssignment config, std::unique_ptr<Input> input, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
+    ~XboxOneAuthActivationTrigger();
+    bool validate(bool claim_device, bool full_poll, bool send_events);
+    void reset();
+    int assignedDevices() { return 0; }
+    bool holds_xbox_one_auth() const { return true; }
+
+private:
+    std::unique_ptr<InputActivationTrigger> m_trigger;
 };

@@ -90,6 +90,15 @@ bool AuthBroker::is_auth_completed(ConsoleMode mode) const {
     return it != auth_completed.end() && it->second;
 }
 
+void AuthBroker::set_console_authenticated(ConsoleMode mode, bool authenticated) {
+    console_authenticated[mode] = authenticated;
+}
+
+bool AuthBroker::is_console_authenticated(ConsoleMode mode) const {
+    auto it = console_authenticated.find(mode);
+    return it != console_authenticated.end() && it->second;
+}
+
 bool AuthBroker::has_response_handler(ConsoleMode mode) const {
     return response_handlers.find(mode) != response_handlers.end();
 }

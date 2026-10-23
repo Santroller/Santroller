@@ -12,6 +12,7 @@
 #include "emulation/usb/hid_device.h"
 #include "emulation/bt/bt_config_service.h"
 #include "devices/bt/bt_host.hpp"
+#include "devices/bt/bluetooth_stack.hpp"
 #include "emulation/usb/ps3_device.h"
 #include "emulation/usb/ps4_device.h"
 #include "devices/crkd_drum.hpp"
@@ -292,6 +293,9 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
 
 void HIDConfigDevice::process_events()
 {
+  // Keeps BTstack callbacks from queueing (and sending) events between the busy check and
+  // the transfer below, which made TinyUSB assert on a busy endpoint and lost the events
+  BtStackLock lock;
   // safety net in case event_count was ever pushed past the array's capacity
   if (list.event_count > TU_ARRAY_SIZE(list.event))
   {
@@ -334,9 +338,11 @@ void HIDConfigDevice::process_events()
           return;
         }
       }
-      else
+      else if (!usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, 64, false))
       {
-        usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, 64, false);
+        // not sent, keep them for the next try
+        list.event_count = total_count;
+        return;
       }
       encoded = true;
       break;
@@ -1062,11 +1068,16 @@ bool HIDConfigDevice::send_event(proto_Event event, bool now)
   // flush queue if event is important. Bounded by tool_closed(): if the host stops
   // reading (tool closed, USB suspended) this gives up after the keepalive timeout
   // instead of spinning forever, and the event is still queued below if there is room.
-  while (dev->list.event_count && now && !tool_closed())
+  // Not from an interrupt though (BTstack callbacks run in one on the Pico W), as that
+  // would run tud_task() there; the main loop sends what gets queued.
+  while (dev->list.event_count && now && !tool_closed() && !__get_current_exception())
   {
     dev->process_events();
     tud_task();
   }
+  // BTstack callbacks queue events too, from an interrupt that could otherwise land
+  // in the middle of the main loop changing the queue
+  BtStackLock lock;
   // Check if the event is an axis event and update the existing event in the list if it exists.
   if (event.which_event == proto_Event_axis_tag) {
     for (size_t i = 0; i < dev->list.event_count; i++)

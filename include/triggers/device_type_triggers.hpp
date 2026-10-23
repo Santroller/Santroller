@@ -9,6 +9,7 @@ public:
     ~WiiExtTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
+    bool claims_device() const override { return true; }
     void reset() override;
 
 protected:
@@ -22,6 +23,7 @@ public:
     ~PS2ControllerTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
+    bool claims_device() const override { return true; }
     void reset() override;
 
 protected:
@@ -35,6 +37,7 @@ public:
     ~SNESControllerTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
+    bool claims_device() const override { return true; }
     void reset() override;
 
 protected:
@@ -48,6 +51,7 @@ public:
     ~JoybusControllerTypeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return 0; }
+    bool claims_device() const override { return true; }
     void reset() override;
 
 protected:
@@ -62,6 +66,7 @@ public:
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset() override;
     int assignedDevices() { return 0; }
+    bool claims_device() const override { return true; }
 
 protected:
     proto_SubType m_type;
@@ -75,6 +80,7 @@ public:
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset() override;
     int assignedDevices() { return 0; }
+    bool claims_device() const override { return true; }
 
 protected:
     proto_SpecificUsbDevice m_device;
@@ -88,6 +94,7 @@ public:
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset() override;
     int assignedDevices() { return 0; }
+    bool claims_device() const override { return true; }
 
 protected:
     proto_SubType m_type;
@@ -101,6 +108,7 @@ public:
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset() override;
     int assignedDevices() { return 0; }
+    bool claims_device() const override { return true; }
 
 protected:
     proto_SpecificBluetoothDevice m_device;
@@ -114,6 +122,7 @@ public:
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset() override;
     int assignedDevices() { return 0; }
+    bool claims_device() const override { return true; }
 
 protected:
     uint32_t m_channel;
@@ -128,6 +137,7 @@ public:
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset() override;
     int assignedDevices() { return 0; }
+    bool claims_device() const override { return true; }
 
 protected:
     uint8_t m_channel;

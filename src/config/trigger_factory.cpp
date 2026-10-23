@@ -174,6 +174,16 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             list_id
         );
 
+    case proto_ProfileAssignmentInfo_xboxOneAuth_tag:
+        return std::make_unique<XboxOneAuthActivationTrigger>(
+            proto_assignment.assignment.xboxOneAuth,
+            std::move(input),
+            profile,
+            trigger_id,
+            slot_id,
+            list_id
+        );
+
     case proto_ProfileAssignmentInfo_bluetooth_tag:
         return std::make_unique<BluetoothModeActivationTrigger>(
             proto_assignment.assignment.bluetooth,

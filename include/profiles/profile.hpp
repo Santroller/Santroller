@@ -65,6 +65,8 @@ public:
     bool triggers_only = false;
     // Loaded only so the config tool can test it, while another profile is the active one
     bool preview = false;
+    // Activated by a list holding Xbox One auth rather than by its devices, so there's nothing to report yet
+    bool xbox_one_auth_held = false;
     std::vector<std::unique_ptr<Mapping>> mappings;
     std::vector<std::unique_ptr<ActivationTriggerList>> triggers;
     std::vector<std::unique_ptr<LedMapping>> leds;

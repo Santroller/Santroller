@@ -44,9 +44,10 @@ public:
     void send_report_from_controller(XGIPProtocol* report);
     uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
     void set_ack_wait();
-    bool is_legacy_adapter() const { return m_is_legacy_adapter || profiles.size() > 1; }
-    void set_legacy_adapter(bool enable) { m_is_legacy_adapter = enable; }
-    bool m_is_legacy_adapter = false;
+    bool is_legacy_adapter() const { return m_is_legacy_adapter; }
+    // Works out what to announce as from the profiles a config has loaded. Returns true when the console
+    // has to enumerate the device again to see it
+    bool update_identity();
     uint8_t m_epin;
     uint8_t m_epout;
 
@@ -54,6 +55,14 @@ public:
     CFG_TUSB_MEM_ALIGN uint8_t epout_buf[CFG_TUD_XONE_RX_BUFSIZE];
 
 private:
+    bool m_is_legacy_adapter = false;
+    bool m_identity_set = false;
+    SubType m_native_subtype = SubType_Gamepad;
+    // Cleared while the identity is kept for want of something to authenticate, and the profile that would
+    // report is a different type, so its inputs aren't sent in the wrong format
+    bool m_player_matches_identity = true;
+    // The profiles that report, leaving out ones only held up by Xbox One auth
+    size_t players(Profile **out, size_t max) const;
     uint8_t last_report[CFG_TUD_XONE_RX_BUFSIZE] = {};
     uint8_t last_report_counter;
     uint32_t keep_alive_timer;

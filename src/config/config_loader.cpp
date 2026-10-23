@@ -189,6 +189,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     }
     device_mgr.remove_disconnected_root_devices();
     profile_mgr.update_xinput_receiver();
+    profile_mgr.update_xbox_one_identity();
     // the HID descriptor gains or loses its battery report, so the host has to see it again
     if (BatteryManager::instance().present_changed())
     {

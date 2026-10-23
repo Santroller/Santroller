@@ -1,5 +1,6 @@
 #include "tusb_option.h"
 #include <memory>
+#include <iterator>
 #include "managers/profile_manager.hpp"
 
 //--------------------------------------------------------------------+
@@ -247,6 +248,7 @@ uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint1
     xboneDriverState = XboxOneDriverState::EMU_READY_ANNOUNCE;
     auth_completed = false;
     auth_broker.set_auth_completed(ModeXboxOne, false);
+    auth_broker.set_console_authenticated(ModeXboxOne, false);
     waiting_ack = false;
     xbox_one_powered_on = false;
     auth_handler_connected = auth_broker.has_handler(ModeXboxOne);
@@ -396,6 +398,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             case GIP_STATE_RESET:
                 auth_completed = false;
                 auth_broker.set_auth_completed(ModeXboxOne, false);
+                auth_broker.set_console_authenticated(ModeXboxOne, false);
                 xboneDriverState = XboxOneDriverState::EMU_READY_ANNOUNCE;
                 incomingXGIP.reset();
                 incomingChunkXGIP.reset();
@@ -446,6 +449,8 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 xboneDriverState = XboxOneDriverState::EMU_AUTH_DONE;
                 auth_completed = true;
                 auth_broker.set_auth_completed(ModeXboxOne, true);
+                auth_broker.set_console_authenticated(ModeXboxOne, true);
+                ProfileManager::instance().commit_xbox_one_auth_holder();
             }
 
             // Forward auth packet to registered host device via broker
@@ -454,9 +459,11 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         }
         else if (command == GIP_LEGACY_REQUEST_DEVICE_INFO)
         {
-            for (size_t i = 0; i < profiles.size() && i < MAX_LEGACY_PLAYERS; i++)
+            Profile *legacy_players[MAX_LEGACY_PLAYERS];
+            size_t count = players(legacy_players, MAX_LEGACY_PLAYERS);
+            for (size_t i = 0; i < count; i++)
             {
-                GipLegacyWirelessDeviceType dev_type = get_legacy_wireless_device_type(profiles[i]->subtype);
+                GipLegacyWirelessDeviceType dev_type = get_legacy_wireless_device_type(legacy_players[i]->subtype);
                 legacy_connected[i] = true;
                 legacy_device_types[i] = dev_type;
                 send_legacy_device_info(i, dev_type);
@@ -573,6 +580,51 @@ void XboxOneGamepadDevice::process_auth_device_connection(uint32_t now)
     printf("Xbox One auth device connected; scheduling USB re-enumeration\r\n");
     config_mgr.request_device_stack_reinit();
     config_mgr.schedule_reinit(now);
+}
+
+size_t XboxOneGamepadDevice::players(Profile **out, size_t max) const
+{
+    size_t count = 0;
+    for (const auto &profile : profiles)
+    {
+        if (count < max && !profile->xbox_one_auth_held)
+        {
+            out[count++] = profile.get();
+        }
+    }
+    return count;
+}
+
+bool XboxOneGamepadDevice::update_identity()
+{
+    // One more than a legacy adapter needs, to tell when there's more than one player
+    Profile *reporting[2];
+    size_t count = players(reporting, std::size(reporting));
+    bool instruments_only = true;
+    for (size_t i = 0; i < count; i++)
+    {
+        instruments_only &= is_guitar_subtype(reporting[i]->subtype) || is_drum_subtype(reporting[i]->subtype);
+    }
+    // The legacy adapter only has guitars and drums, but it can swap between them without authenticating again,
+    // so it stays one while those come and go
+    bool legacy = count > 1 || (instruments_only && m_identity_set && m_is_legacy_adapter);
+    SubType native = count ? reporting[0]->subtype : profiles.empty() ? subtype : profiles.front()->subtype;
+    bool changed = m_identity_set && (legacy != m_is_legacy_adapter || (!legacy && native != m_native_subtype));
+    m_player_matches_identity = true;
+    // The console would ask to authenticate again, and nothing could answer it
+    if (changed && auth_broker.is_console_authenticated(ModeXboxOne) && !auth_broker.has_handler(ModeXboxOne))
+    {
+        printf("xb1 keeping legacy=%d sub=%d, nothing to authenticate (wanted legacy=%d sub=%d)\r\n", m_is_legacy_adapter, m_native_subtype, legacy, native);
+        m_player_matches_identity = m_is_legacy_adapter ? instruments_only : (count == 0 || native == m_native_subtype);
+        legacy = m_is_legacy_adapter;
+        native = m_native_subtype;
+        changed = false;
+    }
+    m_identity_set = true;
+    m_is_legacy_adapter = legacy;
+    m_native_subtype = native;
+    subtype = native;
+    return changed;
 }
 
 void XboxOneGamepadDevice::initialize()
@@ -743,13 +795,14 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
 
     if (is_legacy_adapter())
     {
-        m_is_legacy_adapter = true;
+        Profile *legacy_players[MAX_LEGACY_PLAYERS];
+        size_t count = players(legacy_players, MAX_LEGACY_PLAYERS);
         for (size_t i = 0; i < MAX_LEGACY_PLAYERS; i++)
         {
-            bool should_be_connected = (i < profiles.size());
+            bool should_be_connected = (i < count);
             if (should_be_connected)
             {
-                auto dev_type = get_legacy_wireless_device_type(profiles[i]->subtype);
+                auto dev_type = get_legacy_wireless_device_type(legacy_players[i]->subtype);
                 if (!legacy_connected[i])
                 {
                     legacy_connected[i] = true;
@@ -792,12 +845,21 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
     memset(epin_buf, 0, input_report_length);
     xboneReportSize = input_report_length;
 
+    Profile *player;
+    bool has_player = players(&player, 1);
     for (const auto &profile : profiles)
     {
-        for (const auto &mapping : profile->mappings)
+        // A profile held up by auth would otherwise write its idle inputs over the one that reports
+        if (!has_player || profile.get() == player)
         {
-            mapping->update(full_poll, send_events);
-            mapping->update_xboxone(epin_buf);
+            for (const auto &mapping : profile->mappings)
+            {
+                mapping->update(full_poll, send_events);
+                if (m_player_matches_identity)
+                {
+                    mapping->update_xboxone(epin_buf);
+                }
+            }
         }
         for (const auto &led : profile->leds)
         {
@@ -993,11 +1055,18 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
         return;
     }
 
-    size_t num_profiles = profiles.size();
-    if (num_profiles > MAX_LEGACY_PLAYERS)
+    for (const auto &profile : profiles)
     {
-        num_profiles = MAX_LEGACY_PLAYERS;
+        if (profile->xbox_one_auth_held)
+        {
+            for (const auto &led : profile->leds)
+            {
+                led->update(full_poll, send_events);
+            }
+        }
     }
+    Profile *legacy_players[MAX_LEGACY_PLAYERS];
+    size_t num_profiles = players(legacy_players, MAX_LEGACY_PLAYERS);
     if (num_profiles == 0)
     {
         return;
@@ -1009,7 +1078,7 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
     for (size_t p = 0; p < num_profiles; p++)
     {
         size_t i = (legacy_poll_start_player + p) % num_profiles;
-        const auto &profile = profiles[i];
+        Profile *profile = legacy_players[i];
         bool is_drums = is_drum_subtype(profile->subtype);
         bool is_gamepad = get_legacy_wireless_device_type(profile->subtype) == GipLegacyWirelessDeviceType::Gamepad;
 
@@ -1019,7 +1088,10 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
         for (const auto &mapping : profile->mappings)
         {
             mapping->update(full_poll, send_events);
-            mapping->update_xboxone(profile_buf);
+            if (m_player_matches_identity)
+            {
+                mapping->update_xboxone(profile_buf);
+            }
         }
         for (const auto &led : profile->leds)
         {

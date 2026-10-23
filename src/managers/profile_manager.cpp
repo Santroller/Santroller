@@ -55,11 +55,10 @@ bool ProfileManager::changed_types()
             return true;
         }
     }
-    auto dev = get_emulated_device(ModeXboxOne);
-    if (m_was_legacy_adapter && dev &&
-        std::static_pointer_cast<XboxOneGamepadDevice>(dev)->is_legacy_adapter())
+    // The Xbox One device was reused and has all the profiles, so only what it announces as matters
+    if (get_emulated_device(ModeXboxOne))
     {
-        return false;
+        return m_xbox_one_identity_changed;
     }
     return m_subtypes_changed || m_current_subtypes.size() < m_last_subtypes.size() ||
            m_xinput_receiver != m_was_xinput_receiver;
@@ -404,8 +403,8 @@ void ProfileManager::prepare_for_config_reload()
     m_current_subtypes.clear();
     m_subtypes_changed = false;
     m_was_xinput_receiver = m_xinput_receiver;
-    auto xone = get_emulated_device(ModeXboxOne);
-    m_was_legacy_adapter = xone && std::static_pointer_cast<XboxOneGamepadDevice>(xone)->is_legacy_adapter();
+    m_xbox_one_identity_changed = false;
+    m_xbox_one_auth_pending.reset();
     std::copy(std::begin(m_usb_instances), std::end(m_usb_instances), std::begin(m_previous_usb_instances));
     std::copy(std::begin(m_usb_instances_by_epin), std::end(m_usb_instances_by_epin), std::begin(m_previous_usb_instances_by_epin));
     std::copy(std::begin(m_usb_instances_by_epout), std::end(m_usb_instances_by_epout), std::begin(m_previous_usb_instances_by_epout));
@@ -471,6 +470,12 @@ void ProfileManager::update_xinput_receiver()
     // Steam does not like having the config interface on the same USB device as wired XInput gamepads
     // But wireless is fine, so we just always use wireless receivers for XInput gamepads.
     m_xinput_receiver = UsbDetectionState::instance().host_is_windows();
+}
+
+void ProfileManager::update_xbox_one_identity()
+{
+    auto dev = get_emulated_device(ModeXboxOne);
+    m_xbox_one_identity_changed = dev && std::static_pointer_cast<XboxOneGamepadDevice>(dev)->update_identity();
 }
 
 uint32_t ProfileManager::usb_layout_hash() const
@@ -629,7 +634,9 @@ void ProfileManager::clear_all()
     m_subtypes_changed = false;
     m_xinput_receiver = false;
     m_was_xinput_receiver = false;
-    m_was_legacy_adapter = false;
+    m_xbox_one_auth_holder.reset();
+    m_xbox_one_auth_pending.reset();
+    m_xbox_one_identity_changed = false;
     m_emulated_devices.clear();
     std::fill(std::begin(m_usb_instances), std::end(m_usb_instances), nullptr);
     std::fill(std::begin(m_usb_instances_by_epin), std::end(m_usb_instances_by_epin), nullptr);

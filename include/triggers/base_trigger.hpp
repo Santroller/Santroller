@@ -23,6 +23,10 @@ public:
     // A "Hold Button at Startup" that can still match, so the list should look at its devices even
     // when another profile has claimed them (they may have claimed it before the button was reported)
     virtual bool awaiting_startup_input() const { return false; }
+    // Matches by holding Xbox One auth rather than by a device, see XboxOneAuthActivationTrigger
+    virtual bool holds_xbox_one_auth() const { return false; }
+    // Matches a controller plugged into this device, which Xbox One auth can stand in for
+    virtual bool claims_device() const { return false; }
     void set_reads_claimed(bool reads_claimed) { m_reads_claimed = reads_claimed; }
     // Matched with a device another profile has claimed, so the list can't claim it until a reload
     bool matched_claimed() const { return m_matched_claimed; }

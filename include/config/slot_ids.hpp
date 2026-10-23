@@ -39,6 +39,8 @@ inline std::pair<DeviceSlotKind, uint16_t> slot_kind_and_type(const proto_Profil
         return {DeviceSlotKind::MIDI, SLOT_UNTYPED};
     case proto_ProfileAssignmentInfo_midiProGuitar_tag:
         return {DeviceSlotKind::MIDI, static_cast<uint16_t>(info.assignment.midiProGuitar)};
+    case proto_ProfileAssignmentInfo_xboxOneAuth_tag:
+        return {DeviceSlotKind::USB, static_cast<uint16_t>(SubType_Gamepad)};
     default:
         return {DeviceSlotKind::None, SLOT_UNTYPED};
     }

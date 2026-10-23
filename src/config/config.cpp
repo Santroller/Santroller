@@ -512,6 +512,11 @@ bool load_assignment_dev(pb_istream_t *stream, const pb_field_t *field, void **a
         info->assignment.inputAnyTime.input.cb_input.funcs.decode = load_input_dev;
         info->assignment.inputAnyTime.input.cb_input.arg = *arg;
     }
+    if (field->tag == proto_ProfileAssignmentInfo_xboxOneAuth_tag)
+    {
+        info->assignment.xboxOneAuth.trigger.input.cb_input.funcs.decode = load_input_dev;
+        info->assignment.xboxOneAuth.trigger.input.cb_input.arg = *arg;
+    }
     return true;
 }
 bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -533,6 +538,11 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
     else if (proto_assignment.which_assignment == proto_ProfileAssignmentInfo_inputAnyTime_tag)
     {
         input = make_input(proto_assignment.assignment.inputAnyTime.input, *context, stream);
+    }
+    else if (proto_assignment.which_assignment == proto_ProfileAssignmentInfo_xboxOneAuth_tag &&
+             proto_assignment.assignment.xboxOneAuth.has_trigger)
+    {
+        input = make_input(proto_assignment.assignment.xboxOneAuth.trigger.input, *context, stream);
     }
 
     auto slot_id = static_cast<uint32_t>(list->triggers.size());
@@ -562,6 +572,7 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
             break;
         case proto_ProfileAssignmentInfo_usbType_tag:
         case proto_ProfileAssignmentInfo_usbDevice_tag:
+        case proto_ProfileAssignmentInfo_xboxOneAuth_tag:
             kind = DeviceSlotKind::USB;
             break;
         case proto_ProfileAssignmentInfo_bluetoothType_tag:
@@ -665,6 +676,8 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
         {
             profile->supports_ps4 = ps4_mode;
         }
+
+        profile->xbox_one_auth_held = list->held();
 
         printf("profile %d active mode=%d\r\n", profile->profile_id, usb_mode);
 

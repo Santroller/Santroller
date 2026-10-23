@@ -99,8 +99,16 @@ public:
     void set_auth_completed(ConsoleMode mode, bool completed);
     bool is_auth_completed(ConsoleMode mode) const;
 
+    /**
+     * Whether the console itself finished authenticating, unlike auth_completed this isn't set when
+     * the host never started auth (eg a PC). Cleared when the console asks again.
+     */
+    void set_console_authenticated(ConsoleMode mode, bool authenticated);
+    bool is_console_authenticated(ConsoleMode mode) const;
+
 private:
     std::map<ConsoleMode, bool> auth_completed;
+    std::map<ConsoleMode, bool> console_authenticated;
     std::map<ConsoleMode, AuthHandler> handlers;
     std::map<ConsoleMode, std::shared_ptr<UsbHostInterface>> auth_devices;
     std::map<ConsoleMode, AuthHandler> response_handlers;

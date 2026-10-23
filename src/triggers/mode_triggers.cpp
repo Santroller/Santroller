@@ -9,6 +9,10 @@
 #include "config/config.hpp"
 #include "emulation/usb/hid_device.h"
 #include "emulation/usb/usb_host_presence.hpp"
+#include "managers/profile_manager.hpp"
+#include "profiles/profile.hpp"
+#include "triggers/input_trigger.hpp"
+#include "usb/auth_broker.h"
 
 UsbModeActivationTrigger::UsbModeActivationTrigger(proto_UsbDeviceAssignment config, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_config(config)
 {
@@ -238,4 +242,77 @@ bool SNESEmulationActivationTrigger::validate(bool claim_device, bool full_poll,
         HIDConfigDevice::send_event(event, true);
     }
     return true;
+}
+
+XboxOneAuthActivationTrigger::XboxOneAuthActivationTrigger(proto_XboxOneAuthAssignment config, std::unique_ptr<Input> input, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id)
+{
+    if (input)
+    {
+        m_trigger = std::make_unique<InputActivationTrigger>(true, config.trigger, std::move(input), profile, id, list_id);
+    }
+}
+
+XboxOneAuthActivationTrigger::~XboxOneAuthActivationTrigger() = default;
+
+void XboxOneAuthActivationTrigger::reset()
+{
+    m_profile->temp_claimed_devices.erase({DeviceSlotKind::USB, m_slot_id});
+    if (m_trigger)
+    {
+        m_trigger->reset();
+    }
+}
+
+bool XboxOneAuthActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
+{
+    auto &profile_mgr = ProfileManager::instance();
+    // Anywhere else an Xbox One controller is just a controller
+    bool xbox_one = ConfigManager::instance().get_requested_mode() == ModeXboxOne;
+    std::shared_ptr<Device> pad;
+    if (xbox_one)
+    {
+        auto is_pad = [](const auto &device)
+        { return device && device->still_connected && device->is_xbox_one_pad(); };
+        pad = m_profile->get_claimed_device(DeviceSlotKind::USB, m_slot_id);
+        if (!is_pad(pad))
+        {
+            pad = DeviceManager::instance().find_assignable_device_if(is_pad);
+        }
+        if (pad)
+        {
+            // So the trigger can read it, eg a button held while plugging it in
+            m_profile->temp_claimed_devices[{DeviceSlotKind::USB, m_slot_id}] = pad;
+        }
+    }
+    // Always checked, so the config tool sees the input
+    bool triggered = !m_trigger || m_trigger->validate(false, full_poll, send_events);
+    bool matched = false;
+    if (xbox_one && triggered && (pad || auth_broker.has_handler(ModeXboxOne)))
+    {
+        matched = true;
+        if (claim_device)
+        {
+            if (pad && m_profile->get_claimed_device(DeviceSlotKind::USB, m_slot_id) != pad &&
+                DeviceManager::instance().claim_assignable_device_if([&pad](const auto &device)
+                                                                     { return device == pad; }))
+            {
+                m_profile->claimed_devices[{DeviceSlotKind::USB, m_slot_id}] = pad;
+            }
+            profile_mgr.set_xbox_one_auth_pending(m_profile->profile_id, m_list_id);
+        }
+    }
+    else if (xbox_one)
+    {
+        // Still matching once the controller that authenticated is unplugged, as the console won't ask
+        // again until it enumerates the device again
+        matched = auth_broker.is_console_authenticated(ModeXboxOne) &&
+                  profile_mgr.is_xbox_one_auth_holder(m_profile->profile_id, m_list_id);
+    }
+    if (!m_trigger && send_events && (matched != m_last_val || full_poll))
+    {
+        proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, matched}}};
+        HIDConfigDevice::send_event(event, true);
+    }
+    m_last_val = matched;
+    return matched;
 }

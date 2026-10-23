@@ -188,6 +188,70 @@ static btstack_timer_source_t s_classic_reconnect_timer;
 static bool s_classic_reconnect_timer_active = false;
 static bool s_inquiry_active = false;
 
+// Paging stored Switch controllers so they can reconnect
+#define MAX_SWITCH_PAGE_TARGETS 8
+// 5.12s instead of BTstack's 15s. Switch controllers page scan every 2.56s (R2), and both
+// page trains have to fit. They also page us at times, which we can't hear while paging,
+// hence the gaps in between.
+#define CLASSIC_PAGE_TIMEOUT 0x2000
+#define SWITCH_PAGE_RETRY_MS 4000
+// Right after a link drops (including our own stack restarting) the controller is the one
+// paging, so leave the radio listening for a while before paging it ourselves
+#define SWITCH_PAGE_HOLD_OFF_MS 10000
+static size_t s_switch_page_idx = 0;
+static uint32_t s_page_hold_off_until = 0;
+
+#define SWITCH_PAGE_AFTER_DROP_MS 200
+
+static void btc_hold_off_paging(void)
+{
+    s_page_hold_off_until = btstack_run_loop_get_time_ms() + SWITCH_PAGE_HOLD_OFF_MS;
+}
+
+// Links to stored Switch controllers, to spot one dropping before HID opened.
+// A Switch controller reconnecting by itself opens the HID control channel, then closes it
+// again while opening the interrupt channel and drops the link (BlueZ sees the same).
+// Paging it straight afterwards does work.
+struct SwitchLink
+{
+    hci_con_handle_t handle = HCI_CON_HANDLE_INVALID;
+    bd_addr_t addr = {};
+};
+static SwitchLink s_switch_links[MAX_BT_CLASSIC_CONNECTIONS];
+
+static void track_switch_link(hci_con_handle_t handle, const bd_addr_t addr)
+{
+    for (auto &link : s_switch_links)
+    {
+        if (link.handle == HCI_CON_HANDLE_INVALID || link.handle == handle)
+        {
+            link.handle = handle;
+            memcpy(link.addr, addr, sizeof(bd_addr_t));
+            return;
+        }
+    }
+}
+
+// Returns true and the address if the handle was a Switch controller link that never got HID
+static bool untrack_switch_link(hci_con_handle_t handle, bd_addr_t addr)
+{
+    for (auto &link : s_switch_links)
+    {
+        if (link.handle != handle)
+            continue;
+        link.handle = HCI_CON_HANDLE_INVALID;
+        for (const auto &s : s_bt_slots)
+        {
+            // HID was up, it's a normal disconnect
+            if (s.in_use && bd_addr_cmp(s.addr, link.addr) == 0)
+                return false;
+        }
+        memcpy(addr, link.addr, sizeof(bd_addr_t));
+        return true;
+    }
+    return false;
+}
+
 // Forward declaration needed by connect_to_discovered_device()
 static void handle_sdp_client_query_result(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
 
@@ -195,12 +259,14 @@ static bool is_already_connected_or_pending(const bd_addr_t addr)
 {
     for (const auto &s : s_bt_slots)
     {
-        if (s.in_use && s.host && bd_addr_cmp(s.host->m_addr, addr) == 0)
+        // the host is only created by btc_tick(), the slot has the address from the start
+        if (s.in_use && bd_addr_cmp(s.addr, addr) == 0)
             return true;
     }
     for (const auto &s : s_pending_connections)
     {
-        if (bd_addr_cmp(s.addr, addr) == 0)
+        // freed entries (cid 0) keep their address
+        if (s.cid != 0 && bd_addr_cmp(s.addr, addr) == 0)
             return true;
     }
     if (s_pnp_sdp.in_progress && bd_addr_cmp(s_pnp_sdp.addr, addr) == 0)
@@ -229,19 +295,54 @@ static void btc_schedule_reconnect(uint32_t delay_ms)
     s_classic_reconnect_timer_active = true;
 }
 
+static bool has_pending_connection(void)
+{
+    for (const auto &s : s_pending_connections)
+        if (s.cid != 0)
+            return true;
+    return false;
+}
+
+static bool is_stored_switch_controller(const bd_addr_t addr)
+{
+    DeviceFactory::BluetoothPairingStateData state = {};
+    return DeviceFactory::find_bluetooth_pairing_state_by_mac(addr, state) && !state.ble &&
+           state.controller_type == BtControllerType_BtControllerTypeSwitch;
+}
+
+// Opens the HID channels to a stored Switch controller, paging it if there's no link yet.
+// Skips SDP: a reconnecting Switch controller hung up partway through the query, BlueZ
+// opens HID straight away instead, and BtSwitchHost doesn't need the descriptor.
+static bool connect_stored_switch_controller(const bd_addr_t addr)
+{
+    uint16_t cid = 0;
+    uint8_t status = hid_host_connect_without_sdp(const_cast<uint8_t *>(addr), &cid);
+    if (status != ERROR_CODE_SUCCESS)
+    {
+        printf("Classic BT: connecting to Switch controller %s failed to start, status 0x%02x\r\n", bd_addr_to_str(addr), status);
+        return false;
+    }
+    printf("Classic BT: connecting to Switch controller %s, cid=0x%04x\r\n", bd_addr_to_str(addr), cid);
+    PendingConnection *pending = pending_connection_alloc(cid);
+    if (pending)
+        memcpy(pending->addr, addr, sizeof(bd_addr_t));
+    return true;
+}
+
 static void btc_sync_reconnect(void)
 {
-    // This used to page every stored classic device that wasn't connected. Every
-    // controller we support reconnects to us by itself (only a Wii Remote paired with 1+2
-    // needs paging, and that goes through the config tool's sync), and paging an absent
-    // device kept the radio busy ~90% of the time, starving the controllers that are
-    // connected. All that's left is making sure stored link keys are in BTstack so
-    // devices can authenticate when they reconnect.
+    // Most controllers reconnect to us by themselves (a Wii Remote paired with 1+2 goes
+    // through the config tool's sync), so they only need their stored link keys in
+    // BTstack to authenticate when they do.
+    // Switch controllers try to, but drop the link partway through opening HID, with
+    // BlueZ too. Being paged by the host works, so those get paged here one at a time.
     if (s_classic_reconnect_timer_active)
     {
         btstack_run_loop_remove_timer(&s_classic_reconnect_timer);
         s_classic_reconnect_timer_active = false;
     }
+    bd_addr_t switch_targets[MAX_SWITCH_PAGE_TARGETS];
+    size_t switch_target_count = 0;
     DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state)
                                                    {
         // Skip Wii remote emulation ID (when Pico acts as a Wiimote to a console)
@@ -256,7 +357,34 @@ static void btc_sync_reconnect(void)
                                            const_cast<uint8_t *>(state.link_key),
                                            COMBINATION_KEY);
             printf("Classic BT: Seeded stored link key into BTstack for %s\r\n", bd_addr_to_str(const_cast<uint8_t *>(state.mac)));
+        }
+        if (state.controller_type == BtControllerType_BtControllerTypeSwitch &&
+            switch_target_count < MAX_SWITCH_PAGE_TARGETS &&
+            !is_already_connected_or_pending(state.mac))
+        {
+            memcpy(switch_targets[switch_target_count++], state.mac, sizeof(bd_addr_t));
         } });
+    if (!switch_target_count)
+        return;
+
+    // Only one page at a time, and none while pairing or setting up another connection.
+    // A finished connection attempt reschedules this.
+    if (s_inquiry_active || s_pnp_sdp.in_progress || has_pending_connection())
+    {
+        btc_schedule_reconnect(SWITCH_PAGE_RETRY_MS);
+        return;
+    }
+    int32_t hold_off = (int32_t)(s_page_hold_off_until - btstack_run_loop_get_time_ms());
+    if (hold_off > 0)
+    {
+        btc_schedule_reconnect(hold_off);
+        return;
+    }
+
+    if (s_switch_page_idx >= switch_target_count)
+        s_switch_page_idx = 0;
+    if (!connect_stored_switch_controller(switch_targets[s_switch_page_idx++]))
+        btc_schedule_reconnect(SWITCH_PAGE_RETRY_MS);
 }
 
 static void classic_reconnect_timer_handler(btstack_timer_source_t *ts)
@@ -274,6 +402,9 @@ static void connect_to_discovered_device(const bd_addr_t addr, const char *name)
     }
 
     printf("Connecting to classic device %s (%s)...\r\n", name ? name : "", bd_addr_to_str(addr));
+    // It was found by discovery, so it's in pairing mode and has forgotten any key it had with
+    // us. Offering the old one fails authentication and makes pairing take a second attempt.
+    gap_drop_link_key_for_bd_addr(const_cast<uint8_t *>(addr));
 
     if (!s_pnp_sdp.in_progress)
     {
@@ -323,6 +454,12 @@ static int getDeviceIndexForAddress(bd_addr_t addr)
     return -1;
 }
 
+// Switch controllers share Nintendo's VID, so check the PID too
+static bool is_wii_vid_pid(uint16_t vid, uint16_t pid)
+{
+    return vid == NINTENDO_VID && (pid == WII_REMOTE_PID || pid == WII_U_PRO_PID);
+}
+
 static bool is_wii_device(const bd_addr_t addr)
 {
     int index = getDeviceIndexForAddress(const_cast<uint8_t *>(addr));
@@ -330,13 +467,13 @@ static bool is_wii_device(const bd_addr_t addr)
     {
         return true;
     }
-    if (s_pnp_sdp.in_progress && bd_addr_cmp(s_pnp_sdp.addr, addr) == 0 && s_pnp_sdp.vid == 0x057E)
+    if (s_pnp_sdp.in_progress && bd_addr_cmp(s_pnp_sdp.addr, addr) == 0 && is_wii_vid_pid(s_pnp_sdp.vid, s_pnp_sdp.pid))
     {
         return true;
     }
     for (const auto &pair : s_pending_connections)
     {
-        if (bd_addr_cmp(pair.addr, addr) == 0 && pair.vid == 0x057E)
+        if (pair.cid != 0 && bd_addr_cmp(pair.addr, addr) == 0 && is_wii_vid_pid(pair.vid, pair.pid))
         {
             return true;
         }
@@ -344,7 +481,9 @@ static bool is_wii_device(const bd_addr_t addr)
     DeviceFactory::BluetoothPairingStateData paired_state = {};
     if (DeviceFactory::find_bluetooth_pairing_state_by_mac(addr, paired_state) && !paired_state.ble)
     {
-        if (paired_state.vid == 0x057E || strstr(paired_state.name, "RVL") != nullptr)
+        if (is_wii_vid_pid(paired_state.vid, paired_state.pid) ||
+            paired_state.controller_type == BtControllerType_BtControllerTypeWii ||
+            strstr(paired_state.name, "RVL") != nullptr)
         {
             return true;
         }
@@ -385,6 +524,7 @@ static void hid_host_setup(void)
     // instead of streaming. Connections we make ourselves (pairing) still make us master.
     hci_set_master_slave_policy(HCI_ROLE_SLAVE);
     gap_ssp_set_io_capability(SSP_IO_CAPABILITY_DISPLAY_YES_NO);
+    gap_set_page_timeout(CLASSIC_PAGE_TIMEOUT);
 
     hid_host_set_accept_incoming(true);
 
@@ -634,6 +774,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             if (st == HCI_STATE_WORKING)
             {
                 gap_connectable_control(1);
+                btc_hold_off_paging();
                 btc_sync_reconnect();
             }
             break;
@@ -774,10 +915,29 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     printf("Requesting security LEVEL_2 for Wii device %s\r\n", bd_addr_to_str(event_addr));
                     gap_request_security_level(handle, LEVEL_2);
                 }
+                if (is_stored_switch_controller(event_addr))
+                {
+                    track_switch_link(handle, event_addr);
+                }
             }
             else if (status != ERROR_CODE_PAGE_TIMEOUT)
             {
                 printf("Classic ACL connection failed: %s, status=0x%02x\r\n", bd_addr_to_str(event_addr), status);
+            }
+            break;
+        }
+
+        case HCI_EVENT_DISCONNECTION_COMPLETE:
+        {
+            bd_addr_t link_addr;
+            if (untrack_switch_link(hci_event_disconnection_complete_get_connection_handle(packet), link_addr) &&
+                !is_already_connected_or_pending(link_addr))
+            {
+                // The link dropped without HID coming up, which is how a Switch controller
+                // reconnecting by itself ends. Right after that it answers pages, so page it now.
+                printf("Classic BT: Switch controller %s dropped before HID opened, paging it\r\n", bd_addr_to_str(link_addr));
+                s_page_hold_off_until = btstack_run_loop_get_time_ms();
+                btc_schedule_reconnect(SWITCH_PAGE_AFTER_DROP_MS);
             }
             break;
         }
@@ -900,7 +1060,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     PendingConnection *pending = pending_connection_by_cid(cid);
                     if (pending)
                         pending->cid = 0;
-                    btc_schedule_reconnect(2000);
+                    btc_schedule_reconnect(SWITCH_PAGE_RETRY_MS);
                     return;
                 }
                 printf("HID Host connected, cid=0x%04x\r\n", cid);
@@ -1091,6 +1251,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 if (pending)
                     pending->cid = 0;
                 printf("HID Host disconnected, cid=0x%04x\r\n", cid);
+                btc_hold_off_paging();
                 btc_schedule_reconnect(1000);
                 break;
             }

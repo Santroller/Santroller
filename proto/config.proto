@@ -192,6 +192,16 @@ message SNESAssignment {
 message LocalInputsAssignment {
 
 }
+// Lets a rule match without its controllers on an Xbox One, while trigger is active and an Xbox One controller on
+// the USB host can authenticate for it. That controller is claimed into a USB gamepad slot, so trigger can read it
+// (eg a button held while plugging it in), and isn't used by other profiles. Once the console has authenticated, the
+// rule stays matched after the controller is unplugged until the console asks again, so the rule's instrument can
+// take its place.
+message XboxOneAuthAssignment {
+  // Any Xbox One controller authenticates for the rule without one
+  optional InputActivationTrigger trigger = 2;
+  reserved 1;
+}
 
 message ProfileAssignmentInfo {
   oneof assignment {
@@ -215,6 +225,7 @@ message ProfileAssignmentInfo {
     LocalInputsAssignment localInputs = 22;
     SNESControllerType snesCnt = 23;
     JoybusControllerType joybusCnt = 24;
+    XboxOneAuthAssignment xboxOneAuth = 25;
   }
   reserved 12;
 }

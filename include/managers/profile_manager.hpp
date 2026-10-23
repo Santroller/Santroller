@@ -139,6 +139,16 @@ public:
     // descriptors can't change partway through an enumeration
     void update_xinput_receiver();
     bool xinput_receiver() const { return m_xinput_receiver; }
+    // The rule an Xbox One controller is authenticating for, which becomes the holder once the console has
+    // finished, and stays matched after the controller is unplugged
+    void set_xbox_one_auth_pending(uint32_t profile_id, uint32_t list_id) { m_xbox_one_auth_pending = {profile_id, list_id}; }
+    void commit_xbox_one_auth_holder() { m_xbox_one_auth_holder = m_xbox_one_auth_pending; }
+    bool is_xbox_one_auth_holder(uint32_t profile_id, uint32_t list_id) const
+    {
+        return m_xbox_one_auth_holder && *m_xbox_one_auth_holder == std::make_pair(profile_id, list_id);
+    }
+    // Works out what the Xbox One device announces itself as, once a config has loaded all its profiles
+    void update_xbox_one_identity();
     std::shared_ptr<UsbDevice> get_usb_instance(uint8_t id);
     void set_usb_instance(uint8_t id, std::shared_ptr<UsbDevice> instance);
     template <typename Func>
@@ -181,7 +191,9 @@ private:
     std::vector<SubType> m_last_subtypes;
     std::vector<SubType> m_current_subtypes;
     bool m_subtypes_changed = false;
-    bool m_was_legacy_adapter = false;
+    std::optional<std::pair<uint32_t, uint32_t>> m_xbox_one_auth_holder;
+    std::optional<std::pair<uint32_t, uint32_t>> m_xbox_one_auth_pending;
+    bool m_xbox_one_identity_changed = false;
     bool m_xinput_receiver = false;
     bool m_was_xinput_receiver = false;
     std::unordered_map<uint32_t, std::vector<std::shared_ptr<Instance>>> m_profile_to_instance;

@@ -20,8 +20,12 @@ public:
     bool forcedConsoleMode(ConsoleMode& mode) const;
     bool xinputOnWindows(bool &enabled) const;
     bool ps4OrPs5Mode(bool &enabled) const;
+    // Matched without its controllers, as Xbox One auth held it up
+    bool held() const { return m_held; }
     bool claimed() const { return m_claimed; }
 private:
+    bool validate_triggers(bool claim_devices, bool full_poll, bool send_events, bool held, bool &claimable);
     bool m_claimed = false;
+    bool m_held = false;
     bool m_last_val = false;
 };

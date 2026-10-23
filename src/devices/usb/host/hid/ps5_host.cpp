@@ -1,5 +1,6 @@
 #include "tusb_option.h"
 #include "protocols/rb_pickup.hpp"
+#include "protocols/rock_band_drums.hpp"
 #include "devices/usb/host/hid/ps5_host.h"
 #include "usb/auth_broker.h"
 #include "class/hid/hid.h"
@@ -303,6 +304,19 @@ bool ps5_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
     bool right = dpad & RIGHT;
     if (type.which_mapping == proto_Output_gamepadButton_tag)
     {
+        if (subtype == RockBandDrums)
+        {
+            switch (type.mapping.gamepadButton)
+            {
+            case Gamepad_A:
+            case Gamepad_B:
+            case Gamepad_X:
+            case Gamepad_Y:
+                return rb4_drums_face_button((PS5RockBandDrums_Data_t *)buf, type.mapping.gamepadButton);
+            default:
+                break;
+            }
+        }
         auto data = (PS5Gamepad_Data_t *)buf;
         switch (type.mapping.gamepadButton)
         {
@@ -377,6 +391,23 @@ bool ps5_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
             }
         }
         return false;
+    case RockBandDrums:
+        if (type.which_mapping == proto_Output_rbDrumButton_tag)
+        {
+            auto data = (PS5RockBandDrums_Data_t *)buf;
+            switch (type.mapping.rbDrumButton)
+            {
+            case RockBandDrums_Kick1Pedal:
+                return data->kick1;
+            case RockBandDrums_Kick2Pedal:
+                return data->kick2;
+            default:
+                return false;
+            }
+        }
+        if (type.which_mapping == proto_Output_rbDrumAxis_tag)
+            return rb4_drums_velocity((PS5RockBandDrums_Data_t *)buf, type.mapping.rbDrumAxis) != 0;
+        return false;
     case LiveGuitar:
         if (type.which_mapping == proto_Output_ghlButton_tag)
         {
@@ -436,6 +467,10 @@ uint16_t ps5_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
     }
     switch (subtype)
     {
+    case RockBandDrums:
+        if (type.which_mapping == proto_Output_rbDrumAxis_tag)
+            return rb4_drums_velocity((PS5RockBandDrums_Data_t *)buf, type.mapping.rbDrumAxis) << 8;
+        break;
     case LiveGuitar:
         if (type.which_mapping == proto_Output_ghlAxis_tag)
         {

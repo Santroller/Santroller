@@ -406,6 +406,35 @@ TEST_F(GipInput, DrumVelocityNibbles)
     EXPECT_GT(analog(drum_axis(RockBandDrums_YellowPad)), s);
 }
 
+// Every hit also presses its colour's face button (byte 0: 0x10 A green, 0x20 B red, 0x40 X blue,
+// 0x80 Y yellow), so the face button only counts as navigation while that colour has no velocity
+TEST_F(GipInput, DrumHitsAreNotFaceButtons)
+{
+    load_metadata(pb::MADCATZ_DRUMS_METADATA);
+    ASSERT_EQ(dev.subtype, RockBandDrums);
+    Bytes payload(6, 0);
+    payload[0] = 0x10; // A with no velocity: the face button on its own
+    report(payload);
+    EXPECT_TRUE(digital(gamepad_button(Gamepad_A)));
+    EXPECT_FALSE(digital(drum_axis(RockBandDrums_GreenPad)));
+
+    payload[3] = 0x07; // green pad hit
+    report(payload);
+    EXPECT_FALSE(digital(gamepad_button(Gamepad_A)));
+    EXPECT_TRUE(digital(drum_axis(RockBandDrums_GreenPad)));
+
+    payload[3] = 0;
+    payload[5] = 0x70; // green cymbal hit
+    report(payload);
+    EXPECT_FALSE(digital(gamepad_button(Gamepad_A)));
+    EXPECT_TRUE(digital(drum_axis(RockBandDrums_GreenCymbal)));
+
+    payload[0] = 0x10 | 0x20; // red held as navigation while green cymbal is hit
+    report(payload);
+    EXPECT_TRUE(digital(gamepad_button(Gamepad_B)));
+    EXPECT_FALSE(digital(gamepad_button(Gamepad_A)));
+}
+
 // --- Guitar Hero Live guitar (PS3-style message 0x21) ---
 
 namespace

@@ -13,4 +13,7 @@ public:
         sent_events.push_back(event);
         return true;
     }
+    // Whether the config tool looks open, which defers modes being forced on the device
+    static inline bool tool_open = false;
+    static bool tool_may_be_open() { return tool_open; }
 };

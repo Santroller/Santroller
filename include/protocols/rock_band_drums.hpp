@@ -137,3 +137,48 @@ inline uint16_t rb_drum_hit(const RockBandDrumHits &hits, RockBandDrumsAxisType 
         return 0;
     }
 }
+
+// RB4 kits (Xbox One, PS4 and PS5) press the matching face button on every hit as well, but give
+// each pad and cymbal its own velocity, so a face button is only navigation while its colour has
+// no velocity. Their reports all use the same field names, so this takes any of them.
+template <typename Report>
+inline bool rb4_drums_face_button(const Report *report, GamepadButtonType button)
+{
+    switch (button)
+    {
+    case Gamepad_A:
+        return report->a && !report->greenVelocity && !report->greenCymbalVelocity;
+    case Gamepad_B:
+        return report->b && !report->redVelocity;
+    case Gamepad_X:
+        return report->x && !report->blueVelocity && !report->blueCymbalVelocity;
+    case Gamepad_Y:
+        return report->y && !report->yellowVelocity && !report->yellowCymbalVelocity;
+    default:
+        return false;
+    }
+}
+
+template <typename Report>
+inline uint8_t rb4_drums_velocity(const Report *report, RockBandDrumsAxisType axis)
+{
+    switch (axis)
+    {
+    case RockBandDrums_RedPad:
+        return report->redVelocity;
+    case RockBandDrums_YellowPad:
+        return report->yellowVelocity;
+    case RockBandDrums_BluePad:
+        return report->blueVelocity;
+    case RockBandDrums_GreenPad:
+        return report->greenVelocity;
+    case RockBandDrums_YellowCymbal:
+        return report->yellowCymbalVelocity;
+    case RockBandDrums_BlueCymbal:
+        return report->blueCymbalVelocity;
+    case RockBandDrums_GreenCymbal:
+        return report->greenCymbalVelocity;
+    default:
+        return 0;
+    }
+}

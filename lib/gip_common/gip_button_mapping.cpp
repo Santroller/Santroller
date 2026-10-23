@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "device.pb.h"
 #include "protocols/rb_pickup.hpp"
+#include "protocols/rock_band_drums.hpp"
 
 bool gip_tick_digital(const void *input_data, uint8_t subtype, bool capture, proto_Output *type)
 {
@@ -60,6 +61,21 @@ bool gip_tick_digital(const void *input_data, uint8_t subtype, bool capture, pro
                 return (dpad & (1 << 3)) != 0;
             default:
                 return false;
+            }
+        }
+
+        if (subtype == SubType_RockBandDrums)
+        {
+            switch (type->mapping.gamepadButton)
+            {
+            case Gamepad_A:
+            case Gamepad_B:
+            case Gamepad_X:
+            case Gamepad_Y:
+                return rb4_drums_face_button((const XboxOneRockBandDrums_Data_t *)input_data,
+                                             type->mapping.gamepadButton);
+            default:
+                break;
             }
         }
 
@@ -152,6 +168,8 @@ bool gip_tick_digital(const void *input_data, uint8_t subtype, bool capture, pro
                 return false;
             }
         }
+        if (type->which_mapping == proto_Output_rbDrumAxis_tag)
+            return rb4_drums_velocity((const XboxOneRockBandDrums_Data_t *)input_data, type->mapping.rbDrumAxis) != 0;
         return false;
         
     case SubType_LiveGuitar:

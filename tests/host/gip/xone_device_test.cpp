@@ -8,6 +8,7 @@
 #include "gip_fakes.hpp"
 #include "gip_packet_handler.h"
 #include "gip_test_support.hpp"
+#include "managers/config_manager.hpp"
 #include "pico/time.h"
 #include "plasticband_metadata.hpp"
 #include "usb/auth_broker.h"
@@ -483,6 +484,29 @@ TEST_F(XoneDevice, RelaysConsoleSecurityMessages)
     auth_broker.unregister_handler(ModeXboxOne);
 }
 
+// Other console messages arriving between the fragments of a security message don't break it up
+TEST_F(XoneDevice, MessagesBetweenSecurityFragmentsKeepTheMessage)
+{
+    std::vector<Bytes> relayed;
+    auth_broker.register_handler(ModeXboxOne, [&](XGIPProtocol *p) {
+        relayed.emplace_back(p->getData(), p->getData() + p->getDataLength());
+    });
+    plug(Gamepad);
+    Bytes message = message_bytes(218, 3);
+    auto frags = fragments(GIP_AUTH, 0x05, message);
+    ASSERT_GE(frags.size(), 2u);
+    for (size_t i = 0; i < frags.size(); i++)
+    {
+        from_console(frags[i]);
+        if (i == 0)
+            from_console(packet(GIP_CMD_LED_ON, FLAG_SYSTEM, next_seq(), {0x00, 0x01, 0x14}));
+    }
+    from_console(fragment_complete(GIP_AUTH, 0x05, message.size()));
+    ASSERT_EQ(relayed.size(), 1u);
+    EXPECT_EQ(relayed[0], message);
+    auth_broker.unregister_handler(ModeXboxOne);
+}
+
 // [MS-GIPUSB] 3.1.5.5.5 Set Device State RESET: input stops and the device goes back to sending
 // Hello (only that something is sent is checked here; see SendsHello)
 TEST_F(XoneDevice, ResetGoesBackToHello)
@@ -523,6 +547,68 @@ TEST_F(XoneDevice, InputWaitsForTheConsoleToFinishAuth)
     ASSERT_EQ(relayed.size(), 1u);
     EXPECT_EQ(relayed[0], (Bytes{0x01, 0x00}));
     EXPECT_FALSE(of_type(run(10), GIP_INPUT_REPORT).empty());
+    auth_broker.unregister_handler(ModeXboxOne);
+}
+
+// A host that never starts auth (eg a PC) still gets input once it has had time to start
+TEST_F(XoneDevice, InputStartsIfTheHostNeverStartsAuth)
+{
+    auth_broker.register_handler(ModeXboxOne, [](XGIPProtocol *) {});
+    plug(Gamepad);
+    run(600);
+    start();
+    mapping->bytes = {0x10};
+    EXPECT_TRUE(of_type(run(4000), GIP_INPUT_REPORT).empty());
+    EXPECT_FALSE(of_type(run(2000), GIP_INPUT_REPORT).empty());
+    EXPECT_TRUE(auth_broker.is_auth_completed(ModeXboxOne));
+    auth_broker.unregister_handler(ModeXboxOne);
+}
+
+// Once the console has started auth, the controller gets as long as it takes to answer
+TEST_F(XoneDevice, AuthInProgressDoesNotTimeOut)
+{
+    auth_broker.register_handler(ModeXboxOne, [](XGIPProtocol *) {});
+    plug(Gamepad);
+    run(600);
+    start();
+    mapping->bytes = {0x10};
+    from_console(packet(GIP_AUTH, FLAG_SYSTEM, next_seq(), {0x01, 0x02}));
+    EXPECT_TRUE(of_type(run(10000), GIP_INPUT_REPORT).empty());
+    EXPECT_FALSE(auth_broker.is_auth_completed(ModeXboxOne));
+    auth_broker.unregister_handler(ModeXboxOne);
+}
+
+// START before the controller is ready skips auth, so the console's challenge goes nowhere. When
+// the controller then shows up, the device has to re-enumerate so the console authenticates again
+TEST_F(XoneDevice, LateAuthHandlerReenumeratesIfAuthWasSkipped)
+{
+    ConfigManager::instance().set_current_mode(ModeXboxOne);
+    ConfigManager::instance().request_mode(ModeXboxOne);
+    plug(Gamepad);
+    run(600);
+    start();
+    EXPECT_FALSE(ConfigManager::instance().should_reinitialize_device_stack());
+    auth_broker.register_handler(ModeXboxOne, [](XGIPProtocol *) {});
+    run(10);
+    EXPECT_TRUE(ConfigManager::instance().should_reinitialize_device_stack());
+    auth_broker.unregister_handler(ModeXboxOne);
+}
+
+// A controller reconnecting after the console finished auth must not knock the device off the console
+TEST_F(XoneDevice, LateAuthHandlerAfterConsoleAuthDoesNotReenumerate)
+{
+    ConfigManager::instance().set_current_mode(ModeXboxOne);
+    ConfigManager::instance().request_mode(ModeXboxOne);
+    auth_broker.register_handler(ModeXboxOne, [](XGIPProtocol *) {});
+    plug(Gamepad);
+    run(600);
+    start();
+    from_console(packet(GIP_AUTH, FLAG_SYSTEM, next_seq(), {0x01, 0x00}));
+    auth_broker.unregister_handler(ModeXboxOne);
+    run(10);
+    auth_broker.register_handler(ModeXboxOne, [](XGIPProtocol *) {});
+    run(10);
+    EXPECT_FALSE(ConfigManager::instance().should_reinitialize_device_stack());
     auth_broker.unregister_handler(ModeXboxOne);
 }
 

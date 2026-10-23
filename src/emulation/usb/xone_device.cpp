@@ -253,6 +253,7 @@ uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint1
     report_queue_head = 0;
     report_queue_count = 0;
     incomingXGIP.reset();
+    incomingChunkXGIP.reset();
     outgoingXGIP.reset();
     timer_wait_for_announce = to_ms_since_boot(get_absolute_time());
     return drv_len;
@@ -266,20 +267,22 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
     // Output report
     if (XFER_RESULT_SUCCESS == result)
     {
+        // The console can send other messages between the fragments of one it's still sending
+        XGIPProtocol &in = (epout_buf[1] & 0x80) ? incomingChunkXGIP : incomingXGIP;
         // Parse incoming packet and verify its valid
-        bool parsed = incomingXGIP.parse(epout_buf, xferred_bytes);
+        bool parsed = in.parse(epout_buf, xferred_bytes);
 
-        uint8_t command = incomingXGIP.getCommand();
+        uint8_t command = in.getCommand();
         // Setup an ack before we change anything about the incoming packet
-        if (parsed && incomingXGIP.ackRequired() == true)
+        if (parsed && in.ackRequired() == true)
         {
-            uint8_t *ack = incomingXGIP.generateAckPacket();
-            queue_xbone_report(ack, incomingXGIP.getPacketLength());
+            uint8_t *ack = in.generateAckPacket();
+            queue_xbone_report(ack, in.getPacketLength());
         }
         // A chunked packet is only fully reassembled once we've received its
         // end-of-chunk marker; intermediate fragments parse successfully but
         // must not be dispatched as a complete command yet.
-        bool complete = parsed && (!incomingXGIP.getChunked() || incomingXGIP.endOfChunk());
+        bool complete = parsed && (!in.getChunked() || in.endOfChunk());
         if (!complete)
         {
             TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE, false));
@@ -363,7 +366,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             }
             // setup descriptor packet
             outgoingXGIP.reset(); // reset if anything was in there
-            outgoingXGIP.setAttributes(GIP_DEVICE_DESCRIPTOR, incomingXGIP.getSequence(), 1, 1, 0);
+            outgoingXGIP.setAttributes(GIP_DEVICE_DESCRIPTOR, in.getSequence(), 1, 1, 0);
             outgoingXGIP.setData(xboxOneDescriptor, len);
             xboneDriverState = XboxOneDriverState::EMU_SEND_DESCRIPTOR;
             uint8_t *packet = outgoingXGIP.generatePacket();
@@ -372,13 +375,15 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         else if (command == GIP_SET_STATE)
         {
             // TODO: handle other states
-            switch (incomingXGIP.getData()[0])
+            switch (in.getData()[0])
             {
             case GIP_STATE_START:
             {
                 if (auth_broker.has_handler(ModeXboxOne))
                 {
                     xboneDriverState = XboxOneDriverState::EMU_SETUP_AUTH;
+                    auth_setup_time = to_ms_since_boot(get_absolute_time());
+                    auth_packet_seen = false;
                 }
                 else
                 {
@@ -393,6 +398,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                 auth_broker.set_auth_completed(ModeXboxOne, false);
                 xboneDriverState = XboxOneDriverState::EMU_READY_ANNOUNCE;
                 incomingXGIP.reset();
+                incomingChunkXGIP.reset();
                 outgoingXGIP.reset();
                 report_queue_head = 0;
                 report_queue_count = 0;
@@ -403,20 +409,20 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             default:
                 break;
             }
-            // printf("state: %d\r\n", incomingXGIP.getData()[0]);
+            // printf("state: %d\r\n", in.getData()[0]);
         }
         else if (command == GIP_CMD_LED_ON)
         {
             // Set all player LEDs to on
-            report_led_mode = incomingXGIP.getData()[1];       // 1 - turn LEDs on
-            report_led_brightness = incomingXGIP.getData()[2]; // 2 - brightness (ignored for now)
+            report_led_mode = in.getData()[1];       // 1 - turn LEDs on
+            report_led_brightness = in.getData()[2]; // 2 - brightness (ignored for now)
             set_player_led(report_led_mode ? 1 : 0);
         }
         else if (command == GIP_CMD_RUMBLE)
         {
-            if (incomingXGIP.getDataLength() >= sizeof(GipRumble_t))
+            if (in.getDataLength() >= sizeof(GipRumble_t))
             {
-                const GipRumble_t *rumble = (const GipRumble_t *)incomingXGIP.getData();
+                const GipRumble_t *rumble = (const GipRumble_t *)in.getData();
                 uint8_t left = 0;
                 uint8_t right = 0;
                 // Motor bitmap: 0x02 left vibration, 0x01 right vibration ([MS-GIPUSB] Table 56)
@@ -433,7 +439,8 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         }
         else if ((command == GIP_AUTH || command == GIP_FINAL_AUTH))
         {
-            if (incomingXGIP.getDataLength() == 2 && memcmp(incomingXGIP.getData(), authReady, sizeof(authReady)) == 0)
+            auth_packet_seen = true;
+            if (in.getDataLength() == 2 && memcmp(in.getData(), authReady, sizeof(authReady)) == 0)
             {
                 printf("auth done\r\n");
                 xboneDriverState = XboxOneDriverState::EMU_AUTH_DONE;
@@ -442,8 +449,8 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             }
 
             // Forward auth packet to registered host device via broker
-            auth_broker.forward_auth(ModeXboxOne, &incomingXGIP);
-            incomingXGIP.reset();
+            auth_broker.forward_auth(ModeXboxOne, &in);
+            in.reset();
         }
         else if (command == GIP_LEGACY_REQUEST_DEVICE_INFO)
         {
@@ -544,7 +551,9 @@ void XboxOneGamepadDevice::process_auth_device_connection(uint32_t now)
     }
 
     auth_handler_connected = true;
-    if (auth_completed)
+    // Only the console's auth-complete counts here: auth_completed is also set when START arrived
+    // before any handler, and then the console's auth went nowhere and has to be restarted
+    if (auth_broker.is_auth_completed(ModeXboxOne))
     {
         return;
     }
@@ -705,6 +714,13 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
     case EMU_SEND_DESCRIPTOR:
         break;
     case EMU_SETUP_AUTH:
+        if (!auth_packet_seen && (now - auth_setup_time) > AUTH_START_TIMEOUT)
+        {
+            printf("Xbox One host never started auth, skipping\r\n");
+            xboneDriverState = XboxOneDriverState::EMU_AUTH_DONE;
+            auth_completed = true;
+            auth_broker.set_auth_completed(ModeXboxOne, true);
+        }
         break;
     case EMU_AUTH_DONE:
     case EMU_NOT_READY:

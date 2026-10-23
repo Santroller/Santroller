@@ -302,3 +302,28 @@ TEST_F(XoneHost, ControllerSecurityRepliesGoToTheConsole)
     ASSERT_EQ(to_console.size(), 1u);
     EXPECT_EQ(to_console[0], reply);
 }
+
+// A controller keeps sending input and status while it answers the console, so those must not
+// break up a fragmented security reply that is still being reassembled
+TEST_F(XoneHost, InputDuringAFragmentedSecurityReplyKeepsTheReply)
+{
+    std::vector<Bytes> to_console;
+    auth_broker.register_response_handler(ModeXboxOne, [&](XGIPProtocol *p) {
+        to_console.emplace_back(p->getData(), p->getData() + p->getDataLength());
+    });
+    send_metadata(pb::MICROSOFT_GAMEPAD_METADATA);
+    Bytes reply = message_bytes(218, 5);
+    auto frags = fragments(GIP_AUTH, 0x04, reply);
+    ASSERT_GE(frags.size(), 3u);
+    for (size_t i = 0; i < frags.size(); i++)
+    {
+        from_controller(frags[i]);
+        if (i == 0)
+            from_controller(packet(GIP_INPUT_REPORT, 0, 0x10, Bytes(14, 0x00)));
+        if (i == 1)
+            from_controller(packet(GIP_STATUS, FLAG_SYSTEM, 0x11, {0x80, 0x00, 0x00, 0x00}));
+    }
+    from_controller(fragment_complete(GIP_AUTH, 0x04, reply.size()));
+    ASSERT_EQ(to_console.size(), 1u);
+    EXPECT_EQ(to_console[0], reply);
+}

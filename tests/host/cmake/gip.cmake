@@ -12,6 +12,7 @@ add_executable(gip_tests
   ${SANTROLLER_ROOT}/lib/gip_common/gip_button_mapping.cpp
   ${SANTROLLER_ROOT}/lib/gip_common/gip_report_queue.cpp
   ${SANTROLLER_ROOT}/src/usb/auth_broker.cpp
+  ${SANTROLLER_ROOT}/src/managers/config_manager.cpp
   ${SANTROLLER_ROOT}/src/devices/usb/host/xone_host.cpp
   ${SANTROLLER_ROOT}/src/emulation/usb/xone_device.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/support/gip/fakes.cpp

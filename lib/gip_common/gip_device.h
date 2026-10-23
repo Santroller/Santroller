@@ -18,6 +18,7 @@ typedef struct XGIPProtocol XGIPProtocol;
 // GIP device state
 typedef struct gip_device_t {
     XGIPProtocol *incoming_xgip;  // For parsing incoming packets
+    XGIPProtocol *incoming_chunk_xgip; // Reassembles fragmented messages, so packets arriving between fragments can't disturb them
     XGIPProtocol *outgoing_xgip;  // For generating outgoing packets
     uint8_t raw_input[64];        // Raw GIP input data (XboxOneGamepad_Data_t, etc.)
     SubType subtype;              // Device subtype

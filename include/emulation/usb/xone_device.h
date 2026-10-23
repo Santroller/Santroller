@@ -69,12 +69,18 @@ private:
     uint32_t timer_wait_for_announce;
     bool xbox_one_powered_on = false;
     bool auth_handler_connected = false;
+    // Hosts that never authenticate (eg a PC) would otherwise leave us in EMU_SETUP_AUTH forever
+    static constexpr uint32_t AUTH_START_TIMEOUT = 5000;
+    uint32_t auth_setup_time = 0;
+    bool auth_packet_seen = false;
     uint8_t report_led_mode;
     uint8_t report_led_brightness;
     uint16_t input_report_length = 0;
 
     XGIPProtocol outgoingXGIP;
     XGIPProtocol incomingXGIP;
+    // Reassembles fragmented messages, so packets arriving between fragments can't disturb them
+    XGIPProtocol incomingChunkXGIP;
     // Check report queue every 35 milliseconds
     uint32_t m_last_report_queue = 0;
 

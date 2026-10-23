@@ -36,6 +36,7 @@ void gip_device_init(gip_device_t *device)
     memset(device, 0, sizeof(*device));
     gip_sequence_pool_init(&device->tx_sequence_pools);
     device->incoming_xgip = new XGIPProtocol();
+    device->incoming_chunk_xgip = new XGIPProtocol();
     device->outgoing_xgip = new XGIPProtocol();
 }
 
@@ -46,6 +47,11 @@ void gip_device_cleanup(gip_device_t *device)
     if (device->incoming_xgip) {
         delete device->incoming_xgip;
         device->incoming_xgip = nullptr;
+    }
+
+    if (device->incoming_chunk_xgip) {
+        delete device->incoming_chunk_xgip;
+        device->incoming_chunk_xgip = nullptr;
     }
     
     if (device->outgoing_xgip) {
@@ -59,7 +65,7 @@ bool gip_device_process_incoming(
     const uint8_t *data,
     uint16_t len)
 {
-    if (!device || !device->incoming_xgip || !device->interface) {
+    if (!device || !device->incoming_xgip || !device->incoming_chunk_xgip || !device->interface) {
         return false;
     }
 
@@ -71,8 +77,12 @@ bool gip_device_process_incoming(
             break;
         }
 
+        // Controllers keep sending input and status while a fragmented message (eg a security
+        // reply) is in flight, so fragments get their own parser
+        XGIPProtocol *xgip = (data[1] & 0x80) ? device->incoming_chunk_xgip : device->incoming_xgip;
+
         // Feed data to incoming XGIP protocol parser
-        if (!device->incoming_xgip->parse(data, len)) {
+        if (!xgip->parse(data, len)) {
 #if GIP_TRACE_ENABLED
             printf("gip_device_process_incoming: PARSE FAILED, cmd=0x%02X, len=%d. Hex:", data[0], len);
             for (int i = 0; i < len && i < 32; i++) {
@@ -83,7 +93,7 @@ bool gip_device_process_incoming(
             break;
         }
 
-        uint16_t wire_len = device->incoming_xgip->getParsedWireLength();
+        uint16_t wire_len = xgip->getParsedWireLength();
         if (wire_len == 0 || wire_len > len) {
 #if GIP_TRACE_ENABLED
             printf("gip_device_process_incoming: INVALID wire_len=%d, remaining len=%d\n", wire_len, len);
@@ -92,17 +102,17 @@ bool gip_device_process_incoming(
         }
 
 #if GIP_TRACE_ENABLED
-        if (device->incoming_xgip->getCommand() != GIP_INPUT_REPORT) {
+        if (xgip->getCommand() != GIP_INPUT_REPORT) {
             printf("gip_device_process_incoming: parsed cmd=0x%02X, wire_len=%d, chunked=%d, endOfChunk=%d, ackRequired=%d\n",
-                   device->incoming_xgip->getCommand(), wire_len, device->incoming_xgip->getChunked(),
-                   device->incoming_xgip->endOfChunk(), device->incoming_xgip->ackRequired());
+                   xgip->getCommand(), wire_len, xgip->getChunked(),
+                   xgip->endOfChunk(), xgip->ackRequired());
         }
 #endif
 
         // Immediately dispatch ACK if requested by incoming packet
-        if (device->incoming_xgip->ackRequired()) {
-            uint8_t *ack_data = device->incoming_xgip->generateAckPacket();
-            uint16_t ack_len = device->incoming_xgip->getPacketLength();
+        if (xgip->ackRequired()) {
+            uint8_t *ack_data = xgip->generateAckPacket();
+            uint16_t ack_len = xgip->getPacketLength();
             if (device->interface->send_ack) {
                 device->interface->send_ack(device->user_context, ack_data, ack_len);
             } else if (device->interface->queue_packet) {
@@ -110,8 +120,8 @@ bool gip_device_process_incoming(
             }
         }
 
-        if (device->incoming_xgip->getChunked()) {
-            if (!device->incoming_xgip->endOfChunk()) {
+        if (xgip->getChunked()) {
+            if (!xgip->endOfChunk()) {
                 // Mid-transfer chunk fragment; accumulate and wait for the terminating chunk.
                 // Timestamps are (re)established on the next gip_device_update() tick.
                 device->incoming_chunk_pending = true;
@@ -130,17 +140,17 @@ bool gip_device_process_incoming(
 
         // Store input report data directly in raw_input buffer
         if (device->subtype == LiveGuitar) {
-            if (device->incoming_xgip->getCommand() == GIP_HID_REPORT) {
-                const uint8_t *input_data = device->incoming_xgip->getData();
-                uint16_t input_len = device->incoming_xgip->getDataLength();
+            if (xgip->getCommand() == GIP_HID_REPORT) {
+                const uint8_t *input_data = xgip->getData();
+                uint16_t input_len = xgip->getDataLength();
                 if (input_len <= sizeof(device->raw_input)) {
                     memcpy(device->raw_input, input_data, input_len);
                 }
             }
         }
-        else if (device->incoming_xgip->getCommand() == GIP_INPUT_REPORT) {
-            const uint8_t *input_data = device->incoming_xgip->getData();
-            uint16_t input_len = device->incoming_xgip->getDataLength();
+        else if (xgip->getCommand() == GIP_INPUT_REPORT) {
+            const uint8_t *input_data = xgip->getData();
+            uint16_t input_len = xgip->getDataLength();
             if (input_len <= sizeof(device->raw_input)) {
                 memcpy(device->raw_input, input_data, input_len);
                 device->capture = gip_read_capture(device, input_data, input_len);
@@ -158,9 +168,9 @@ bool gip_device_process_incoming(
             }
 #endif
         }
-        else if (device->incoming_xgip->getCommand() == GIP_VIRTUAL_KEYCODE) {
-            const uint8_t *vk_data = device->incoming_xgip->getData();
-            uint16_t vk_len = device->incoming_xgip->getDataLength();
+        else if (xgip->getCommand() == GIP_VIRTUAL_KEYCODE) {
+            const uint8_t *vk_data = xgip->getData();
+            uint16_t vk_len = xgip->getDataLength();
 #if GIP_TRACE_ENABLED
             printf("GIP: VIRTUAL_KEYCODE received [len=%d]:", vk_len);
             for (int i = 0; i < vk_len; i++) printf(" %02X", vk_data[i]);
@@ -177,9 +187,9 @@ bool gip_device_process_incoming(
             }
         }
 #if GIP_TRACE_ENABLED
-        else if (device->incoming_xgip->getCommand() == GIP_KEEPALIVE) {
-            const uint8_t *st_data = device->incoming_xgip->getData();
-            uint16_t st_len = device->incoming_xgip->getDataLength();
+        else if (xgip->getCommand() == GIP_KEEPALIVE) {
+            const uint8_t *st_data = xgip->getData();
+            uint16_t st_len = xgip->getDataLength();
             printf("GIP Status/Keepalive 0x03 [len=%d]:", st_len);
             for (int i = 0; i < st_len; i++) printf(" %02X", st_data[i]);
             printf("\n");
@@ -187,7 +197,7 @@ bool gip_device_process_incoming(
 #endif
 
         // Process packet using device interface
-        gip_process_packet(device->incoming_xgip, device);
+        gip_process_packet(xgip, device);
 
         data += wire_len;
         len -= wire_len;
@@ -281,16 +291,16 @@ void gip_device_update(
             device->incoming_chunk_last_data_at = 0;
             device->incoming_chunk_last_ack_at = 0;
             device->incoming_chunk_heartbeat_acks = 0;
-            if (device->incoming_xgip) {
-                device->incoming_xgip->reset();
+            if (device->incoming_chunk_xgip) {
+                device->incoming_chunk_xgip->reset();
             }
             gip_request_device_descriptor(device);
         }
         else if (device->incoming_chunk_heartbeat_acks < GIP_RELIABLE_MESSAGE_MAX_HEARTBEAT_ACKS &&
                  (current_time - device->incoming_chunk_last_ack_at) >= GIP_RELIABLE_MESSAGE_ACK_INTERVAL_MS)
         {
-            uint8_t *ack_data = device->incoming_xgip->generateAckPacket();
-            uint16_t ack_len = device->incoming_xgip->getPacketLength();
+            uint8_t *ack_data = device->incoming_chunk_xgip->generateAckPacket();
+            uint16_t ack_len = device->incoming_chunk_xgip->getPacketLength();
             queue_packet(context, ack_data, ack_len);
             device->incoming_chunk_last_ack_at = current_time;
             device->incoming_chunk_heartbeat_acks++;

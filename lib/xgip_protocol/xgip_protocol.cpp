@@ -227,8 +227,8 @@ void XGIPProtocol::setAttributes(uint8_t cmd, uint8_t seq, uint8_t internal, uin
 
 bool XGIPProtocol::setData(const uint8_t *buffer, uint16_t len)
 {
-    if (len > 0x3000)
-    { // arbitrary but this should cover us if something bad happens
+    if (len > sizeof(data))
+    {
         return false;
     }
     memcpy(data, buffer, len);

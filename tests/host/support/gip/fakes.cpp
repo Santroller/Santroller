@@ -39,6 +39,7 @@ void gip_fake::reset()
     ConfigManager::instance().set_current_mode(ModeHid);
     ConfigManager::instance().request_mode(ModeHid);
     ConfigManager::instance().clear_reinit();
+    ConfigManager::instance().finish_reinit(0);
     gip_fake_time::now_us = 0;
 }
 

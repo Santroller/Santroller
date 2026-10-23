@@ -1183,7 +1183,12 @@ uint16_t PSXController::read_axis(PS2AxisType axisType)
         switch (axisType)
         {
         case PS2AxisGuitarWhammy:
-            return (0x80 - lastInputs[8]) << 9;
+            // whammy rests at 0x7F/0x80 and goes down to 0x00; 0x80 << 9 overflows uint16_t, so scale instead of shifting
+            if (lastInputs[8] >= 0x80)
+            {
+                return 0;
+            }
+            return ((0x80 - lastInputs[8]) * 0xFFFFu) / 0x80;
         default:
             return 0;
         }

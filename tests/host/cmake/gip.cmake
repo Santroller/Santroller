@@ -1,7 +1,8 @@
 # Xbox One GIP: the packet framing / fragmentation in lib/xgip_protocol, the shared host side
 # controller handling in lib/gip_common, and both of their users, the USB host driver for
 # Xbox One controllers (src/devices/usb/host/xone_host.cpp) and the emulated Xbox One device
-# (src/emulation/usb/xone_device.cpp). Those two are compiled against the fakes in support/gip,
+# (src/emulation/usb/xone_device.cpp), with the chatpad the host driver passes things plugged into the
+# controller on to (src/devices/usb/host/xone_chatpad_host.cpp). Those are compiled against the fakes in support/gip,
 # which record the USB transfers so a test can play the console or the controller.
 file(GLOB SANTROLLER_GIP_TESTS CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/gip/*_test.cpp)
 add_executable(gip_tests
@@ -14,6 +15,8 @@ add_executable(gip_tests
   ${SANTROLLER_ROOT}/src/usb/auth_broker.cpp
   ${SANTROLLER_ROOT}/src/managers/config_manager.cpp
   ${SANTROLLER_ROOT}/src/devices/usb/host/xone_host.cpp
+  ${SANTROLLER_ROOT}/src/devices/usb/host/xone_chatpad_host.cpp
+  ${SANTROLLER_ROOT}/src/devices/usb/host/chatpad_host.cpp
   ${SANTROLLER_ROOT}/src/emulation/usb/xone_device.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/support/gip/fakes.cpp
 )

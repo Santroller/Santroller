@@ -31,6 +31,9 @@ public:
     virtual bool has_player_led() const { return false; }
     virtual std::optional<uint64_t> hardware_id() const { return std::nullopt; }
     virtual bool is_xbox_one_pad() const { return false; }
+    virtual bool key_pressed(uint8_t keycode) { (void)keycode; return false; }
+    // Recorded in gip_fake::hotplug_events
+    void send_hotplug_event(bool connected);
 
     uint8_t dev_addr() const { return m_dev_addr; }
     uint8_t interface() const { return m_interface; }
@@ -43,6 +46,8 @@ protected:
     uint16_t m_id;
     SubType m_subtype = SubType_Gamepad;
     bool m_delayed_init = false;
+    bool m_has_name = false;
+    char m_name[128] = {0};
     bool send_intr_xfer(uint8_t endpoint, const void *buffer, uint8_t len);
 };
 
@@ -73,3 +78,17 @@ protected:
 void usb_host_add_assignable_interface(std::shared_ptr<UsbHostInterface> device);
 void usb_host_add_enumerating_interface(std::shared_ptr<UsbHostInterface> device);
 void usb_host_remove_enumerating_interface(UsbHostInterface *device);
+void usb_host_remove_assignable_interface(UsbHostInterface *device);
+
+// Same as the firmware's
+inline bool any_key_pressed(UsbHostInterface &device)
+{
+    for (uint16_t key = 0x04; key <= 0xE7; key++)
+    {
+        if (device.key_pressed(key))
+        {
+            return true;
+        }
+    }
+    return false;
+}

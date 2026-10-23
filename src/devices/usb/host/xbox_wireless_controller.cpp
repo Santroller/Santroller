@@ -25,13 +25,15 @@ static void wireless_on_arrival_wrapper(void *context);
 static void wireless_queue_packet_wrapper(void *context, const uint8_t *data, uint16_t len);
 static void wireless_send_ack_wrapper(void *context, const uint8_t *data, uint16_t len);
 static void wireless_on_disconnect_wrapper(void *context);
+static uint16_t wireless_process_secondary_wrapper(void *context, const uint8_t *data, uint16_t len);
 
 static const gip_device_interface_t wireless_gip_interface = {
     .on_device_descriptor = wireless_on_device_descriptor_wrapper,
     .on_arrival = wireless_on_arrival_wrapper,
     .queue_packet = wireless_queue_packet_wrapper,
     .send_ack = wireless_send_ack_wrapper,
-    .on_disconnect = wireless_on_disconnect_wrapper
+    .on_disconnect = wireless_on_disconnect_wrapper,
+    .process_secondary = wireless_process_secondary_wrapper
 };
 
 XboxWirelessController::XboxWirelessController(XboxWirelessHost* adapter, uint8_t controller_idx, uint8_t dev_addr, uint16_t id)
@@ -133,6 +135,45 @@ void XboxWirelessController::update(bool full_poll, bool send_events)
                                                      controller->m_controller.mac_addr, data, len);
     };
     gip_device_update(&controller->gip_device, now, XGIP_ACK_WAIT_TIMEOUT, queue_lambda, this);
+    if (m_chatpad)
+    {
+        m_chatpad->check_presence();
+    }
+}
+
+uint16_t XboxWirelessController::process_secondary(const uint8_t *data, uint16_t len)
+{
+    if (!m_chatpad)
+    {
+        m_chatpad = std::make_shared<XboxOneChatpadHost>(m_dev_addr, XBOX_WIRELESS_CHATPAD_INTERFACE(m_controller_idx), m_id, m_adapter->get_controller_interface(m_controller_idx), [](UsbHostInterface &controller, const uint8_t *data, uint16_t len, bool ack)
+                                                         {
+                                                             auto &wireless = static_cast<XboxWirelessController &>(controller);
+                                                             if (ack)
+                                                             {
+                                                                 wireless.send_ack_packet(data, len);
+                                                             }
+                                                             else
+                                                             {
+                                                                 wireless.send_gip_packet(data, len);
+                                                             } });
+    }
+    return m_chatpad->process(data, len);
+}
+
+void XboxWirelessController::remove_chatpad()
+{
+    if (m_chatpad)
+    {
+        m_chatpad->lost();
+        DeviceManager::instance().remove_device(m_chatpad.get());
+        m_chatpad.reset();
+    }
+}
+
+static uint16_t wireless_process_secondary_wrapper(void *context, const uint8_t *data, uint16_t len)
+{
+    XboxWirelessController *ctrl = (XboxWirelessController *)context;
+    return ctrl ? ctrl->process_secondary(data, len) : 0;
 }
 
 bool XboxWirelessController::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)

@@ -55,6 +55,8 @@ public:
     void incrementSequence();                                                                            // Add 1 to sequence
     void setSequence(uint8_t seq);                                                                       // Set sequence directly
     void setCommand(uint8_t cmd) { header.command = cmd; }
+    // A device plugged into the controller (the header's expansion index), 0 for the controller itself
+    void setClient(uint8_t client) { header.client = client; }
     bool setData(const uint8_t *data, uint16_t len);                                                     // Set data (buf and length)
     uint8_t *generatePacket();                                                                           // Generate output packet (chunk will generate on-going packet)
     uint8_t *generateAckPacket();                                                                        // Generate an ack for the last received packet

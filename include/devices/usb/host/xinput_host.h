@@ -2,6 +2,8 @@
 #include "devices/usb/host/host.hpp"
 #include "protocols/xinput.hpp"
 #include "devices/usb/host/gh_slider_helpers.h"
+#include "protocols/xbox360_chatpad.hpp"
+#include "devices/usb/host/chatpad_host.h"
 #include <atomic>
 
 class XInputGamepadHost : public UsbHostInterface
@@ -69,20 +71,14 @@ public:
 // their text input interface and the wireless receiver through the controller's slot, and it only keeps sending
 // them while it is sent a keep-alive every second. The protocol is from xboxdrv's chatpad.cpp and
 // wireless_chatpad.cpp
-class XInputChatpadHost : public UsbHostInterface
+class XInputChatpadHost : public ChatpadHost
 {
 public:
     XInputChatpadHost(uint8_t dev_addr, uint8_t interface, uint16_t id, std::weak_ptr<UsbHostInterface> controller);
-    void update(bool full_poll, bool send_events) override;
-    void disconnect() override;
-    bool tick_digital(proto_Output &type) override;
-    uint16_t tick_analog(proto_Output &type) override;
-    bool key_pressed(uint8_t keycode) override;
-    std::optional<uint64_t> hardware_id() const override;
-    // Lets go of every key and hides the chatpad again, e.g. when its controller goes away
-    void lost();
+    bool key_pressed(uint8_t keycode) override { return m_decoder.key_pressed(keycode); }
 
 protected:
+    void reset_keys() override;
     // Commands go out as the wValue of a vendor request on the wired interface, or in an out report through the
     // receiver
     static constexpr uint8_t chatpad_enable = 0x1B;
@@ -91,17 +87,18 @@ protected:
     // The command that's due, if any
     std::optional<uint8_t> next_command();
     // 00 modifiers key1 key2
-    void handle_keys(const uint8_t *buf, uint32_t len);
-    // Only standard controllers take a chatpad
-    bool controller_takes_chatpad() const;
-    std::weak_ptr<UsbHostInterface> m_controller;
-    bool m_found = false;
+    void handle_keys(const uint8_t *buf, uint32_t len)
+    {
+        if (m_decoder.handle_report(buf, len))
+        {
+            // Every controller has somewhere a chatpad could report from, so it only shows up once a key is pressed
+            found();
+        }
+    }
 
 private:
-    // Every controller has somewhere a chatpad could report from, so it only shows up once a key is pressed
-    volatile bool m_pending_found = false;
-    // HID keycodes, the same as a USB keyboard's
-    volatile uint32_t m_keys[8] = {};
+    Xbox360ChatpadDecoder m_decoder;
+    uint8_t m_leds_sent = 0;
     bool m_running = false;
     uint32_t m_next_command_ms = 0;
     uint8_t m_keepalives_first = 0;

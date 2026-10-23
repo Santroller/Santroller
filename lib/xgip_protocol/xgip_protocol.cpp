@@ -379,13 +379,14 @@ uint8_t *XGIPProtocol::generatePacket()
 
 uint8_t *XGIPProtocol::generateAckPacket()
 { // Generate output packet
+    // Both carry the client id, for devices plugged into the controller
     packet[0] = 0x01;
-    packet[1] = 0x20;
+    packet[1] = 0x20 | header.client;
     packet[2] = header.sequence;
     packet[3] = 0x09;
     packet[4] = 0x00;
     packet[5] = header.command;
-    packet[6] = 0x20;
+    packet[6] = 0x20 | header.client;
 
     // For chunked transfers, ACK reports the offset+len of this specific chunk fragment (matching xone / GIP spec)
     uint16_t dataReceived = (header.chunked == 1) ? lastChunkLength : actualDataReceived;

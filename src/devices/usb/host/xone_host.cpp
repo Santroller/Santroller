@@ -26,6 +26,7 @@ static void xone_on_device_descriptor_wrapper(void *context, SubType subtype);
 static void xone_on_arrival_wrapper(void *context);
 static void xone_queue_packet_wrapper(void *context, const uint8_t *data, uint16_t len);
 static void xone_send_ack_wrapper(void *context, const uint8_t *data, uint16_t len);
+static uint16_t xone_process_secondary_wrapper(void *context, const uint8_t *data, uint16_t len);
 
 #define GIP_TRACE_ENABLED 0
 #define GIP_TRACE_HEXDUMP 0
@@ -58,7 +59,8 @@ static const gip_device_interface_t xone_gip_interface = {
     .on_device_descriptor = xone_on_device_descriptor_wrapper,
     .on_arrival = xone_on_arrival_wrapper,
     .queue_packet = xone_queue_packet_wrapper,
-    .send_ack = xone_send_ack_wrapper};
+    .send_ack = xone_send_ack_wrapper,
+    .process_secondary = xone_process_secondary_wrapper};
 
 XboxOneHost::XboxOneHost(uint8_t dev_addr, uint8_t interface, uint16_t id) : UsbHostInterface(dev_addr, interface, id)
 {
@@ -187,6 +189,27 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
     {
         usb_host_add_enumerating_interface(intf);
     }
+    // Interfaces are numbered from 0, so the top of the list is free
+    for (size_t itf = list->host_devices_by_itf.size() - 1; itf > 0; itf--)
+    {
+        if (list->host_devices_by_itf[itf])
+        {
+            continue;
+        }
+        intf->m_chatpad = std::make_shared<XboxOneChatpadHost>(dev_addr, itf, list->m_id, intf, [](UsbHostInterface &controller, const uint8_t *data, uint16_t len, bool ack)
+                                                               {
+                                                                   auto &host = static_cast<XboxOneHost &>(controller);
+                                                                   if (ack)
+                                                                   {
+                                                                       gip_report_queue_push_front(host.m_report_queue, data, len);
+                                                                   }
+                                                                   else
+                                                                   {
+                                                                       gip_report_queue_push(host.m_report_queue, data, len);
+                                                                   } });
+        list->host_devices_by_itf[itf] = intf->m_chatpad;
+        break;
+    }
     *out_len = size;
     return intf;
 }
@@ -251,6 +274,13 @@ static void xone_queue_packet_wrapper(void *context, const uint8_t *data, uint16
     }
 }
 
+// Something plugged into the controller, which only a chatpad is looked for in
+static uint16_t xone_process_secondary_wrapper(void *context, const uint8_t *data, uint16_t len)
+{
+    XboxOneHost *host = (XboxOneHost *)context;
+    return host && host->m_chatpad ? host->m_chatpad->process(data, len) : 0;
+}
+
 // Send ACK callback
 static void xone_send_ack_wrapper(void *context, const uint8_t *data, uint16_t len)
 {
@@ -306,6 +336,10 @@ void XboxOneHost::update(bool full_poll, bool send_events)
 
     // Update GIP device - handles ACK timeout and outgoing packets
     gip_device_update_with_queue(&m_gip_device, now, XGIP_ACK_WAIT_TIMEOUT, m_report_queue);
+    if (m_chatpad)
+    {
+        m_chatpad->check_presence();
+    }
 }
 
 bool XboxOneHost::tick_digital(proto_Output &type)

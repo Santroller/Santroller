@@ -400,3 +400,119 @@ TEST_F(XoneHost, InputDuringAFragmentedSecurityReplyKeepsTheReply)
     ASSERT_EQ(to_console.size(), 1u);
     EXPECT_EQ(to_console[0], reply);
 }
+
+namespace
+{
+// A device plugged into the controller has its own client id in the header ([MS-GIPUSB] Table 14, Expansion
+// Index)
+constexpr uint8_t CHATPAD = 0x01;
+
+// Enough metadata to name a chatpad: what xone's chatpad driver binds to, among its preferred types
+// ([MS-GIPUSB] 2.2.2.4.7), padded out so it arrives in fragments
+Bytes chatpad_metadata(const char *type = "Windows.Xbox.Input.Chatpad")
+{
+    Bytes md = message_bytes(70);
+    md.insert(md.end(), type, type + strlen(type));
+    return md;
+}
+
+class XoneChatpad : public XoneHost
+{
+protected:
+    // The chatpad plugs in and says what it is, as xone sees it: Hello, Metadata Request, then the metadata.
+    // Returns what the host sent from the Hello on
+    std::vector<Bytes> plug_in(const Bytes &metadata)
+    {
+        from_controller(packet(GIP_ANNOUNCE, FLAG_SYSTEM | CHATPAD, 0x01, pb::MADCATZ_STRATOCASTER_HELLO));
+        auto sent = drain();
+        auto frags = fragments(GIP_DEVICE_DESCRIPTOR, 0x02, metadata, FLAG_SYSTEM | CHATPAD);
+        frags.push_back(fragment_complete(GIP_DEVICE_DESCRIPTOR, 0x02, metadata.size(), FLAG_SYSTEM | CHATPAD));
+        for (auto &f : frags)
+        {
+            from_controller(f);
+            for (auto &p : drain())
+                sent.push_back(p);
+        }
+        return sent;
+    }
+    // A boot keyboard report, in the HID report message ([MS-GIPUSB] 2.2.2.4.7: "MessageType 0xB (System flag
+    // set)")
+    void keys(uint8_t modifiers, uint8_t key)
+    {
+        from_controller(packet(0x0B, FLAG_SYSTEM | CHATPAD, 0x03, {modifiers, 0x00, key, 0, 0, 0, 0, 0}));
+    }
+    bool assignable(UsbHostInterface *device)
+    {
+        for (auto &d : gip_fake::assignable)
+            if (d.get() == device)
+                return true;
+        return false;
+    }
+};
+} // namespace
+
+// xone's gip_handle_pkt_announce answers with gip_request_identification, and once the metadata names a chatpad its
+// driver turns it on with gip_set_power_mode(GIP_PWR_ON), all with the chatpad's client id
+TEST_F(XoneChatpad, IsIdentifiedAndTurnedOn)
+{
+    auto sent = plug_in(chatpad_metadata());
+    ASSERT_FALSE(sent.empty());
+    EXPECT_EQ(sent[0], (Bytes{GIP_DEVICE_DESCRIPTOR, FLAG_SYSTEM | CHATPAD, 0x01, 0x00}));
+    auto power = without_acks(sent);
+    ASSERT_EQ(power.size(), 2u);
+    EXPECT_EQ(power[1], (Bytes{GIP_SET_STATE, FLAG_SYSTEM | CHATPAD, 0x02, 0x01, 0x00}));
+    // and its fragments are acked as the chatpad's
+    bool acked = false;
+    for (auto &p : sent)
+        if (p[0] == GIP_ACK_RESPONSE)
+        {
+            EXPECT_EQ(p[1], FLAG_SYSTEM | CHATPAD);
+            EXPECT_EQ(p[6], FLAG_SYSTEM | CHATPAD);
+            acked = true;
+        }
+    EXPECT_TRUE(acked);
+}
+
+TEST_F(XoneChatpad, ShowsUpAsAKeyboardOnceIdentified)
+{
+    plug_in(chatpad_metadata());
+    host->update(false, false);
+    ASSERT_TRUE(host->m_chatpad);
+    EXPECT_TRUE(assignable(host->m_chatpad.get()));
+    EXPECT_EQ(host->m_chatpad->subtype(), KeyboardMouse);
+    // the controller is still its own device
+    EXPECT_EQ(host->subtype(), Gamepad);
+}
+
+TEST_F(XoneChatpad, ReadsItsKeys)
+{
+    plug_in(chatpad_metadata());
+    keys(0x02, 0x04); // left shift, A
+    EXPECT_TRUE(host->m_chatpad->key_pressed(0x04));
+    EXPECT_TRUE(host->m_chatpad->key_pressed(0xE1));
+    EXPECT_FALSE(host->m_chatpad->key_pressed(0x05));
+    keys(0x00, 0x00);
+    EXPECT_FALSE(host->m_chatpad->key_pressed(0x04));
+}
+
+// Anything else plugged in (e.g. a headset adapter) is left alone, and nothing it sends reaches the controller
+TEST_F(XoneChatpad, OtherDevicesAreIgnored)
+{
+    auto sent = without_acks(plug_in(chatpad_metadata("Windows.Xbox.Input.Headset")));
+    ASSERT_EQ(sent.size(), 1u);
+    host->update(false, false);
+    EXPECT_FALSE(assignable(host->m_chatpad.get()));
+    EXPECT_EQ(host->subtype(), Gamepad);
+}
+
+// GIP_STATUS without GIP_STATUS_CONNECTED (xone gip_handle_pkt_status)
+TEST_F(XoneChatpad, GoesAwayWhenUnplugged)
+{
+    plug_in(chatpad_metadata());
+    host->update(false, false);
+    keys(0x00, 0x04);
+    from_controller(packet(GIP_KEEPALIVE, FLAG_SYSTEM | CHATPAD, 0x04, {0x00}));
+    host->update(false, false);
+    EXPECT_FALSE(assignable(host->m_chatpad.get()));
+    EXPECT_FALSE(host->m_chatpad->key_pressed(0x04));
+}

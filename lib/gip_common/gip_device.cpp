@@ -77,6 +77,17 @@ bool gip_device_process_incoming(
             break;
         }
 
+        // Devices plugged into the controller have their own client id, and their own handler
+        if ((data[1] & 0x0F) && device->interface->process_secondary) {
+            uint16_t used = device->interface->process_secondary(device->user_context, data, len);
+            if (used == 0 || used > len) {
+                break;
+            }
+            data += used;
+            len -= used;
+            processed_any = true;
+            continue;
+        }
         // Controllers keep sending input and status while a fragmented message (eg a security
         // reply) is in flight, so fragments get their own parser
         XGIPProtocol *xgip = (data[1] & 0x80) ? device->incoming_chunk_xgip : device->incoming_xgip;

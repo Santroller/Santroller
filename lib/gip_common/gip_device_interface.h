@@ -27,6 +27,10 @@ typedef struct gip_device_interface {
 
     // Called when device reports disconnection (e.g. via GIP_STATUS keepalive)
     void (*on_disconnect)(void *user_context);
+
+    // Called with packets from a device plugged into the controller (a non-zero client id), e.g. a chatpad.
+    // Returns how many bytes the packet took up, or 0 to drop the rest
+    uint16_t (*process_secondary)(void *user_context, const uint8_t *data, uint16_t len);
 } gip_device_interface_t;
 
 #ifdef __cplusplus

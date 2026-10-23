@@ -118,6 +118,7 @@ XboxWirelessHost::~XboxWirelessHost()
     {
         if (controller)
         {
+            controller->remove_chatpad();
             usb_host_remove_assignable_interface(controller.get());
             DeviceManager::instance().remove_device(controller.get());
         }
@@ -269,6 +270,7 @@ void XboxWirelessHost::remove_controller_interface(uint8_t controller_idx)
 
     printf("XboxWirelessHost: Removing virtual interface for controller %d\r\n", controller_idx);
 
+    controller_intf->remove_chatpad();
     usb_host_remove_assignable_interface(controller_intf.get());
     DeviceManager::instance().remove_device(controller_intf.get());
     controller_intf->send_hotplug_event(false);

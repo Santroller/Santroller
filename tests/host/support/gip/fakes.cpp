@@ -25,6 +25,7 @@ void gip_fake::reset()
     enumerating.clear();
     assignable.clear();
     delayed_init_calls = 0;
+    hotplug_events.clear();
     for (auto &dev : host_devices)
     {
         if (dev)
@@ -67,6 +68,17 @@ void usb_host_add_enumerating_interface(std::shared_ptr<UsbHostInterface> device
 void usb_host_remove_enumerating_interface(UsbHostInterface *device)
 {
     std::erase(gip_fake::enumerating, device);
+}
+
+void usb_host_remove_assignable_interface(UsbHostInterface *device)
+{
+    std::erase_if(gip_fake::assignable, [device](const auto &candidate)
+                  { return candidate.get() == device; });
+}
+
+void UsbHostInterface::send_hotplug_event(bool connected)
+{
+    gip_fake::hotplug_events.emplace_back(this, connected);
 }
 
 void process_delayed_init()

@@ -31,6 +31,7 @@ inline int host_in_arms = 0;
 inline std::vector<UsbHostInterface *> enumerating;
 inline std::vector<std::shared_ptr<UsbHostInterface>> assignable;
 inline int delayed_init_calls = 0;
+inline std::vector<std::pair<UsbHostInterface *, bool>> hotplug_events;
 
 void reset();
 } // namespace gip_fake

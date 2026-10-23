@@ -1,10 +1,12 @@
 #pragma once
 #include "devices/usb/host/host.hpp"
 #include "devices/usb/host/xbox/xbox_adapter.h"
+#include "devices/usb/host/xone_chatpad_host.h"
 
 class XboxWirelessHost;
 
 #define XBOX_WIRELESS_CONTROLLER_INTERFACE(idx) (0x80 | (idx))
+#define XBOX_WIRELESS_CHATPAD_INTERFACE(idx) (0xC0 | (idx))
 
 class XboxWirelessController : public UsbHostInterface
 {
@@ -36,6 +38,10 @@ public:
     int send_ack_packet(const uint8_t *data, uint16_t len);
     
     void on_device_descriptor(SubType subtype);
+    // Something plugged into the controller, which only a chatpad is looked for in
+    uint16_t process_secondary(const uint8_t *data, uint16_t len);
+    // Hides the chatpad, when the controller goes away
+    void remove_chatpad();
     void on_auth(const uint8_t *data, uint16_t len);
     void on_disconnect();
     
@@ -46,4 +52,5 @@ private:
     void send_feedback_packet(uint8_t command, bool system, const uint8_t *data, uint16_t len);
     XboxWirelessHost* m_adapter;
     bool m_auth_registered = false;
+    std::shared_ptr<XboxOneChatpadHost> m_chatpad;
 };

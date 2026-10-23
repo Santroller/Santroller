@@ -308,6 +308,8 @@ add_executable(
   src/devices/usb/host/xinput/xinput_big_button_host.cpp
   src/devices/usb/host/xinput/xinput_plugin_module_host.cpp
   src/devices/usb/host/xinput/xinput_chatpad_host.cpp
+  src/devices/usb/host/chatpad_host.cpp
+  src/devices/usb/host/xone_chatpad_host.cpp
   src/devices/usb/host/xinput/xinput_security_host.cpp
   src/emulation/ps2_emulation.cpp
   src/emulation/joybus_emulation.cpp

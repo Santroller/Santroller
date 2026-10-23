@@ -1,6 +1,7 @@
 #pragma once
 #include "devices/usb/host/host.hpp"
 #include "protocols/xbox_one.hpp"
+#include "devices/usb/host/xone_chatpad_host.h"
 
 extern "C" {
 #include "gip_device.h"
@@ -35,6 +36,8 @@ public:
     
     gip_device_t m_gip_device;  // Shared GIP device state (public for callbacks)
     gip_report_queue_t* m_report_queue;  // Shared report queue (public for callbacks)
+    // Also in the device's interface list, under an interface number the controller doesn't use
+    std::shared_ptr<XboxOneChatpadHost> m_chatpad;
     
 private:
     void send_feedback_packet(uint8_t command, bool system, const uint8_t *data, uint16_t len);

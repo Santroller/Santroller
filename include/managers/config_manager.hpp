@@ -108,19 +108,10 @@ public:
     // RPCS3 probed us, so profiles with ps3_on_rpcs3 run in PS3 mode. Kept across reloads, as the
     // profile picks the mode again on each load, like one that forces it
     bool is_rpcs3_detected() const { return m_rpcs3_detected; }
-    void rpcs3_detected()
-    {
-        m_rpcs3_detected = true;
-        m_requested_mode = ModePs3;
-        m_mode_from_profile = true;
-    }
+    // Switching modes would drop the tool's connection, so with it open PS3 mode is deferred like a forced mode
+    void rpcs3_detected();
     // Back to the detected host's mode, any profile that forces one puts it back on the next load
-    void clear_rpcs3_detected()
-    {
-        m_rpcs3_detected = false;
-        m_mode_from_profile = false;
-        m_requested_mode = m_detected_mode;
-    }
+    void clear_rpcs3_detected();
 
     bool has_seen_assignment(uint32_t mask) const { return m_seen_masks & mask; }
     void mark_seen_assignment(uint32_t mask) { m_seen_masks |= mask; }

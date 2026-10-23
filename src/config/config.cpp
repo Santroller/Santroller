@@ -653,11 +653,19 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
         }
         else if (profile->ps3_on_rpcs3 && config_mgr.is_rpcs3_detected())
         {
-            // Not held off for the tool, someone who left it open is trying to play in RPCS3
-            printf("rpcs3 mode (was %d)\r\n", config_mgr.get_requested_mode());
-            config_mgr.request_mode(ModePs3);
-            config_mgr.set_mode_from_profile(true);
-            usb_mode = ModePs3;
+            if (HIDConfigDevice::tool_may_be_open())
+            {
+                // Same as a forced mode, apply it once the tool disconnects
+                printf("rpcs3 mode deferred, tool is open\r\n");
+                config_mgr.defer_forced_mode(ModePs3);
+            }
+            else
+            {
+                printf("rpcs3 mode (was %d)\r\n", config_mgr.get_requested_mode());
+                config_mgr.request_mode(ModePs3);
+                config_mgr.set_mode_from_profile(true);
+                usb_mode = ModePs3;
+            }
         }
 
         bool xinput_win;

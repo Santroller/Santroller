@@ -1,4 +1,5 @@
 #include "managers/config_manager.hpp"
+#include "emulation/usb/hid_device.h"
 
 bool ConfigManager::mode_recently_changed(uint32_t now, uint32_t window_ms) const
 {
@@ -72,4 +73,29 @@ void ConfigManager::clear_all()
     m_rpcs3_detected = false;
     m_detected_mode = ModeHid;
     m_latched_startup_triggers.clear();
+}
+
+void ConfigManager::rpcs3_detected()
+{
+    m_rpcs3_detected = true;
+    if (HIDConfigDevice::tool_may_be_open())
+    {
+        defer_forced_mode(ModePs3);
+        return;
+    }
+    m_requested_mode = ModePs3;
+    m_mode_from_profile = true;
+}
+
+void ConfigManager::clear_rpcs3_detected()
+{
+    m_rpcs3_detected = false;
+    if (m_forced_mode_deferred && m_deferred_mode == ModePs3)
+    {
+        // Never applied, so there is no mode to go back from
+        m_forced_mode_deferred = false;
+        return;
+    }
+    m_mode_from_profile = false;
+    m_requested_mode = m_detected_mode;
 }

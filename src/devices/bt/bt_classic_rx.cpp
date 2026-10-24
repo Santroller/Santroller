@@ -670,11 +670,12 @@ static bool upgrade_to_ps4(uint16_t cid, std::shared_ptr<BluetoothHostInterface>
     uint16_t vid = old_host->m_vid ? old_host->m_vid : SONY_VID;
     uint16_t pid = old_host->m_pid ? old_host->m_pid : SONY_DS4_PID_1;
     bool is_inst = (vid == MADCATZ_VID && (pid == PS4_STRAT_PID || pid == PS4_MADCATZ_DRUM_PID)) ||
-                   (vid == PDP_VID && pid == PS4_JAG_PID);
+                   (vid == PDP_VID && (pid == PS4_JAG_PID || pid == PS4_PDP_DRUM_PID));
     SubType sub = SubType_Gamepad;
     if (is_inst)
     {
-        sub = (vid == MADCATZ_VID && pid == PS4_MADCATZ_DRUM_PID) ? RockBandDrums : RockBandGuitar;
+        sub = ((vid == MADCATZ_VID && pid == PS4_MADCATZ_DRUM_PID) || (vid == PDP_VID && pid == PS4_PDP_DRUM_PID))
+              ? RockBandDrums : RockBandGuitar;
     }
     else if (old_host->subtype() != SubType_Gamepad && old_host->subtype() != SubType_Unknown)
     {

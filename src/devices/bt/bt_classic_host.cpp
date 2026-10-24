@@ -28,9 +28,10 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
     }
     // DS4 instruments
     else if ((vid == MADCATZ_VID && (pid == PS4_STRAT_PID || pid == PS4_MADCATZ_DRUM_PID)) ||
-             (vid == PDP_VID && pid == PS4_JAG_PID))
+             (vid == PDP_VID && (pid == PS4_JAG_PID || pid == PS4_PDP_DRUM_PID)))
     {
-        SubType sub = (vid == MADCATZ_VID && pid == PS4_MADCATZ_DRUM_PID) ? RockBandDrums : RockBandGuitar;
+        SubType sub = ((vid == MADCATZ_VID && pid == PS4_MADCATZ_DRUM_PID) || (vid == PDP_VID && pid == PS4_PDP_DRUM_PID))
+                       ? RockBandDrums : RockBandGuitar;
         if (info) USB_FreeReportInfo(info);
         host = std::make_shared<BtDs4Host>(device_id, sub,
                                            true, false, false, false, false,

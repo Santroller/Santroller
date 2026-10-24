@@ -1000,7 +1000,9 @@ static int mt76_write_beacon(struct mt76_dev *dev, bool pair) {
         0x01, 0x10, pair ? 1 : 0, 0xa5, 0x30, 0x99, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00,
     };
-    
+    // Advertised channel the controller associates on after pairing
+    ms_ie[14] = dev->current_channel ? dev->current_channel->index : 1;
+
     int mgmt_len = sizeof(hdr) + sizeof(beacon);
     txwi.len_ctl = mgmt_len + sizeof(ms_ie);
     
@@ -1029,7 +1031,10 @@ int mt76_set_pairing(struct mt76_dev *dev, bool enable) {
     int err;
     
     printf("MT76: %s pairing mode\n", enable ? "Enabling" : "Disabling");
-    
+
+    // Promiscuous RX while pairing (matches xone)
+    mt76_write_register(dev, MT_RX_FILTR_CFG, enable ? 0x014f13 : 0x017f17);
+
     // Write beacon frame
     err = mt76_write_beacon(dev, enable);
     if (err) {

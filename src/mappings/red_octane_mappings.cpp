@@ -99,10 +99,10 @@ void GuitarHeroGuitarButtonMapping::update_switch(uint8_t *buf)
         report->b |= m_last_value;
         break;
     case GuitarHeroGuitar_Yellow:
-        report->y |= m_last_value;
+        report->x |= m_last_value;
         break;
     case GuitarHeroGuitar_Blue:
-        report->x |= m_last_value;
+        report->y |= m_last_value;
         break;
     case GuitarHeroGuitar_Pedal:
         report->rightShoulder |= m_last_value;
@@ -525,14 +525,16 @@ void GuitarHeroGuitarAxisMapping::update_switch(uint8_t *buf)
     {
         return;
     }
-    SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)buf;
+    SwitchInputReport *report = (SwitchInputReport *)buf;
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibrated_value > 60000;
+        // whammy rests at center and pushes down to the minimum
+        report->rightStickX = SWITCH_STICK_CENTER - m_calibrated_value * SWITCH_STICK_TRAVEL / UINT16_MAX;
         break;
     case GuitarHeroGuitar_Tilt:
-        report->tilt = m_calibrated_value > 60000;
+        // TODO: swap this when we can
+        report->dpadLeft = m_calibrated_value > 60000;
         break;
     default:
         break;

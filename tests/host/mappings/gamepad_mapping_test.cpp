@@ -598,6 +598,11 @@ TEST_F(GamepadButton, SelectCanBeDpadLeftOnGuitars)
     pressed(Gamepad_Back)->update_xboxone(xb1.buf());
     EXPECT_FALSE(xb1->back);
     EXPECT_TRUE(xb1->dpadLeft);
+
+    Report<SwitchInputReport> nx;
+    pressed(Gamepad_Back)->update_switch(nx.buf());
+    EXPECT_FALSE(nx->back);
+    EXPECT_TRUE(nx->dpadLeft);
 }
 
 TEST_F(GamepadButton, PS5CaptureIsTheTouchpad)

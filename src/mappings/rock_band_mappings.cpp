@@ -29,8 +29,8 @@ void RockBandGuitarButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 }
 void RockBandGuitarButtonMapping::update_switch(uint8_t *buf)
 {
-    SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)buf;
-    switch (m_mapping.mapping.mapping.ghButton)
+    SwitchInputReport *report = (SwitchInputReport *)buf;
+    switch (m_mapping.mapping.mapping.rbButton)
     {
     case RockBandGuitar_Green:
         report->a |= m_last_value;
@@ -39,10 +39,10 @@ void RockBandGuitarButtonMapping::update_switch(uint8_t *buf)
         report->b |= m_last_value;
         break;
     case RockBandGuitar_Yellow:
-        report->y |= m_last_value;
+        report->x |= m_last_value;
         break;
     case RockBandGuitar_Blue:
-        report->x |= m_last_value;
+        report->y |= m_last_value;
         break;
     case RockBandGuitar_Orange:
         report->leftShoulder |= m_last_value;
@@ -57,10 +57,10 @@ void RockBandGuitarButtonMapping::update_switch(uint8_t *buf)
         report->b |= m_last_value;
         break;
     case RockBandGuitar_SoloYellow:
-        report->y |= m_last_value;
+        report->x |= m_last_value;
         break;
     case RockBandGuitar_SoloBlue:
-        report->x |= m_last_value;
+        report->y |= m_last_value;
         break;
     case RockBandGuitar_SoloOrange:
         report->leftShoulder |= m_last_value;
@@ -76,7 +76,7 @@ void RockBandGuitarButtonMapping::update_ps2(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_ps3(uint8_t *buf)
 {
     PS3RockBandGuitar_Data_t *report = (PS3RockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.rbButton)
     {
     case RockBandGuitar_Green:
         report->a |= m_last_value;
@@ -122,7 +122,7 @@ void RockBandGuitarButtonMapping::update_ps3(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_ps4(uint8_t *buf)
 {
     PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.rbButton)
     {
     case RockBandGuitar_Green:
         report->a |= m_last_value;
@@ -168,7 +168,7 @@ void RockBandGuitarButtonMapping::update_ps4(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_ps5(uint8_t *buf)
 {
     PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.rbButton)
     {
     case RockBandGuitar_Green:
         report->a |= m_last_value;
@@ -214,7 +214,7 @@ void RockBandGuitarButtonMapping::update_ps5(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_xinput(uint8_t *buf)
 {
     XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.rbButton)
     {
     case RockBandGuitar_Green:
         report->a |= m_last_value;
@@ -259,7 +259,7 @@ void RockBandGuitarButtonMapping::update_xinput(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_ogxbox(uint8_t *buf)
 {
     OGXboxRockBandGuitar_Data_t *report = (OGXboxRockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.rbButton)
     {
     case RockBandGuitar_Green:
         report->a |= m_last_value;
@@ -304,7 +304,7 @@ void RockBandGuitarButtonMapping::update_ogxbox(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_xboxone(uint8_t *buf)
 {
     XboxOneRockBandGuitar_Data_t *report = (XboxOneRockBandGuitar_Data_t *)buf;
-    switch (m_mapping.mapping.mapping.ghButton)
+    switch (m_mapping.mapping.mapping.rbButton)
     {
     case RockBandGuitar_Green:
         report->a |= m_last_value;
@@ -417,14 +417,16 @@ void RockBandGuitarAxisMapping::update_switch(uint8_t *buf)
     {
         return;
     }
-    SwitchFestivalProGuitarLayer_Data_t *report = (SwitchFestivalProGuitarLayer_Data_t *)buf;
+    SwitchInputReport *report = (SwitchInputReport *)buf;
     switch (m_mapping.mapping.mapping.rbAxis)
     {
     case RockBandGuitar_Whammy:
-        report->whammy = m_calibrated_value > 60000;
+        // whammy rests at center and pushes down to the minimum
+        report->rightStickX = SWITCH_STICK_CENTER - m_calibrated_value * SWITCH_STICK_TRAVEL / UINT16_MAX;
         break;
     case RockBandGuitar_Tilt:
-        report->tilt = m_calibrated_value > 60000;
+        // TODO: swap this when we can
+        report->dpadLeft = m_calibrated_value > 60000;
         break;
     default:
         break;

@@ -10,7 +10,11 @@ class AccelerometerInput: public Input {
     bool tick_digital();
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
-    bool valid() const override { return m_device != nullptr && m_device->valid(); }
+    bool valid() const override
+    {
+        bool gyro = m_input.type >= GyroscopeX && m_input.type <= GyroscopeZ;
+        return m_device != nullptr && m_device->valid() && (!gyro || m_device->m_accelerometer.has_gyro());
+    }
    private:
     void setup();
     uint8_t m_channel;

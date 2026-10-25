@@ -4,6 +4,7 @@
 #include "btstack.h"
 #include "btstack_config.h"
 #include "utils.h"
+#include "protocols/motion.hpp"
 
 void reload();
 
@@ -180,7 +181,8 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
             m_has_ext = false;
             m_decoder.reset();
             m_subtype = SubType_Gamepad;
-            send_report_mode(0x30);
+            // buttons and acceleration
+            send_report_mode(0x31);
             if (!m_ready)
             {
                 set_ready(true);
@@ -251,7 +253,8 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
             else
             {
                 m_subtype = m_decoder.get_subtype();
-                send_report_mode(0x32);
+                // buttons, acceleration and 16 extension bytes
+                send_report_mode(0x35);
             }
             if (!m_ready)
             {
@@ -295,6 +298,33 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
             m_wii_buttons[0] = data[1];
             m_wii_buttons[1] = data[2];
         }
+        if (len >= 6)
+        {
+            read_accel(data);
+        }
+        break;
+    }
+
+    case 0x35:
+    {
+        if (!m_led_sent)
+        {
+            m_led_sent = true;
+            send_player_led(0x10);
+        }
+        if (len >= 3)
+        {
+            m_wii_buttons[0] = data[1];
+            m_wii_buttons[1] = data[2];
+        }
+        if (len >= 6)
+        {
+            read_accel(data);
+        }
+        if (len >= 14)
+        {
+            m_decoder.update_data(data + 6, 8, this);
+        }
         break;
     }
 
@@ -336,6 +366,15 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
     default:
         break;
     }
+}
+
+void BtWiiHost::read_accel(const uint8_t *data)
+{
+    // the top 8 bits follow the buttons, and the low bits hide in the button bytes (only one for y and z)
+    m_wii_accel[0] = (data[3] << 2) | ((data[1] >> 5) & 0x03);
+    m_wii_accel[1] = (data[4] << 2) | ((data[2] >> 4) & 0x02);
+    m_wii_accel[2] = (data[5] << 2) | ((data[2] >> 5) & 0x02);
+    m_has_accel = true;
 }
 
 void BtWiiHost::retry_extension_init()
@@ -434,6 +473,17 @@ bool BtWiiHost::tick_digital(proto_Output &type)
 
 uint16_t BtWiiHost::tick_analog(proto_Output &type)
 {
+    if (type.which_mapping == proto_Output_gamepadAxis_tag && is_motion_axis(type.mapping.gamepadAxis))
+    {
+        if (!m_has_accel)
+        {
+            return MOTION_ZERO;
+        }
+        // nominal calibration, like SDL. There is no gyro without a MotionPlus
+        float accel[3], gyro[3] = {0, 0, 0};
+        wiimote_accel_decode(m_wii_accel, accel);
+        return motion_host_axis(type.mapping.gamepadAxis, accel, gyro);
+    }
     if (m_is_pro && m_report_buf[0] == 0x34)
     {
         const uint8_t *d = m_report_buf + 3;

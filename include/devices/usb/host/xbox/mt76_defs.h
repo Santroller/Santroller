@@ -55,7 +55,8 @@ enum ieee80211_min_mpdu_spacing {
 #endif
 
 /* USB Endpoints */
-#define MT_EP_OUT      0x08
+#define MT_EP_OUT      0x08  // In-band MCU commands
+#define MT_EP_OUT_WLAN 0x04  // First data queue (AC_BE), which xone uses for 802.11 frames
 #define MT_EP_IN_WLAN  0x84  // Wireless data
 #define MT_EP_IN_CMD   0x85  // Command responses and events
 

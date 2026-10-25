@@ -4,6 +4,7 @@
 #include "devices/usb.hpp"
 #include "devices/usb/host/host.hpp"
 #include "profiles/profile.hpp"
+#include "protocols/motion.hpp"
 #include <memory>
 class USBAxisInput : public Input
 {
@@ -21,7 +22,12 @@ public:
         }
         m_device = device && device->is_usb_host_interface() ? std::static_pointer_cast<UsbHostInterface>(device) : nullptr;
     };
-    bool valid() const override { return m_device != nullptr && m_device->valid(); }
+    bool valid() const override
+    {
+        // hosts without motion leave Gamepad_Accel / Gamepad_Gyro at the output's resting pose
+        bool motion = m_input.axis.which_mapping == proto_Output_gamepadAxis_tag && is_motion_axis(m_input.axis.mapping.gamepadAxis);
+        return m_device != nullptr && m_device->valid() && (!motion || m_device->has_motion());
+    }
     uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
 
 private:

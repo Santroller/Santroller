@@ -77,7 +77,7 @@ SwitchGamepadDevice::SwitchGamepadDevice()
             .rightStickY = SWITCH_PRO_JOYSTICK_CENTER,
         },
         .rumbleReport = 0,
-        .imuData = {0x00},
+        .imuData = {},
         .padding = {0x00}};
 
     m_initial_report = switchReport;
@@ -147,12 +147,16 @@ void SwitchGamepadDevice::process(bool full_poll, bool send_events)
     {
         switchReport.inputs = m_initial_report.inputs;
         switchReport.inputs.batteryLevel = BatteryManager::instance().switch_level();
+        MotionState motion;
+        // a Switch has no guitars, so a guitar's tilt is the Pro controller turning
+        motion.tilt_as_motion = true;
         for (const auto &profile : profiles)
         {
             for (const auto &mapping : profile->mappings)
             {
                 mapping->update(full_poll, send_events);
                 mapping->update_switch((uint8_t *)&switchReport.inputs);
+                mapping->update_motion(motion);
             }
             for (const auto &led : profile->leds)
             {
@@ -161,12 +165,18 @@ void SwitchGamepadDevice::process(bool full_poll, bool send_events)
         }
         if ((now - last_report_timer) >= SWITCH_PRO_KEEPALIVE_TIMER)
         {
-            switchReport.timestamp = last_report_counter;
-            void *inputReport = &switchReport;
-            uint16_t report_size = sizeof(switchReport);
-            if (ready() && sendReport(0, inputReport, report_size))
+            SwitchProGamepad_Data_t inputReport = switchReport;
+            inputReport.timestamp = last_report_counter;
+            // A real controller sends no motion until the host turns its IMU on. Each report carries
+            // the last three samples, and the older two are the ones the previous report sent.
+            inputReport.imuData[0] = isIMUEnabled ? switch_imu_encode(motion) : SwitchImuSample{};
+            inputReport.imuData[1] = switchReport.imuData[0];
+            inputReport.imuData[2] = switchReport.imuData[1];
+            uint16_t report_size = sizeof(inputReport);
+            if (ready() && sendReport(0, &inputReport, report_size))
             {
-                memcpy(last_report, inputReport, report_size);
+                memcpy(switchReport.imuData, inputReport.imuData, sizeof(switchReport.imuData));
+                memcpy(last_report, &inputReport, report_size);
                 reportSent = true;
                 last_report_timer = now;
             }

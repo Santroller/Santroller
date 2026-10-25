@@ -24,19 +24,19 @@ void BleSteamTritonHost::disable_lizard_mode()
             return;
         // SDL sends the whole 63 byte message, fall back to just the setting if the MTU is too small
         uint8_t msg[TRITON_FEATURE_REPORT_LEN - 1] = {};
-        memcpy(msg, TRITON_DISABLE_LIZARD_MSG, sizeof(TRITON_DISABLE_LIZARD_MSG));
+        memcpy(msg, TRITON_SETTINGS_MSG, sizeof(TRITON_SETTINGS_MSG));
         if (gatt_client_write_value_of_characteristic_without_response(
                 m_con_handle, m_report_char_handle, sizeof(msg), msg) != ERROR_CODE_SUCCESS)
         {
             gatt_client_write_value_of_characteristic_without_response(
-                m_con_handle, m_report_char_handle, sizeof(TRITON_DISABLE_LIZARD_MSG),
-                (uint8_t *)TRITON_DISABLE_LIZARD_MSG);
+                m_con_handle, m_report_char_handle, sizeof(TRITON_SETTINGS_MSG),
+                (uint8_t *)TRITON_SETTINGS_MSG);
         }
     }
     else if (m_cid)
     {
         hids_host_send_write_report(m_cid, TRITON_FEATURE_REPORT_ID, HID_REPORT_TYPE_FEATURE,
-                                    TRITON_DISABLE_LIZARD_MSG, sizeof(TRITON_DISABLE_LIZARD_MSG));
+                                    TRITON_SETTINGS_MSG, sizeof(TRITON_SETTINGS_MSG));
     }
 }
 

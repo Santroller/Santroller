@@ -7,6 +7,7 @@
 #include "config.pb.h"
 #include "wiimote.h"
 #include "mappings/analog_filter.hpp"
+#include "protocols/motion.hpp"
 
 struct MappingConfig
 {
@@ -113,6 +114,9 @@ public:
     virtual void update_keyboardmania(uint8_t *report) { (void)report; }
     virtual void update_ogxbox(uint8_t *report) { (void)report; }
     virtual void update_xboxone(uint8_t *report) { (void)report; }
+    // Motion goes to a shared MotionState instead of a report, as every console with motion gets it
+    // from the same mappings. The device turns it into its own format afterwards.
+    virtual void update_motion(MotionState &motion) { (void)motion; }
     // Whether this mapping is currently held as a button, used to wake a suspended host
     virtual bool wake_pressed() const { return false; }
     virtual ButtonMapping *as_button_mapping() { return nullptr; }

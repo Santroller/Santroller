@@ -248,15 +248,34 @@ TEST_F(GamepadAxis, PS3TriggerDigitalInputPressesL2EvenAtRest)
     EXPECT_TRUE(report->l2);
 }
 
-// The PS3 motion axes are 10 bit and rest at 0x200 (see PS3Dpad_Data_t in protocols/ps3.hpp
-// and PS3_ACCEL_CENTER)
-TEST_F(GamepadAxis, PS3AccelIsTenBit)
+// Motion axes go to a MotionState rather than a report, in the standard scale around the axis centre
+TEST_F(GamepadAxis, MotionAxesWriteTheMotionState)
+{
+    MotionState motion;
+    axis(Gamepad_AccelX, MOTION_ZERO + 4096)->update_motion(motion);
+    axis(Gamepad_GyroY, MOTION_ZERO - 1000)->update_motion(motion);
+    EXPECT_EQ(motion.axes[MotionAccelX], 4096);
+    EXPECT_EQ(motion.axes[MotionGyroY], -1000);
+    EXPECT_TRUE(motion.has(MotionAccelX));
+    EXPECT_TRUE(motion.has(MotionGyroY));
+    // the rest still lie flat and still
+    EXPECT_FALSE(motion.has(MotionAccelY));
+    EXPECT_EQ(motion.axes[MotionAccelY], (int32_t)MOTION_ACCEL_PER_G);
+}
+
+TEST_F(GamepadAxis, MotionAxesStayOutOfThePS3Report)
 {
     Report<PS3Dpad_Data_t> report;
+    report->accelX = PS3_ACCEL_CENTER;
     axis(Gamepad_AccelX, UINT16_MAX)->update_ps3(report.buf());
-    axis(Gamepad_Gyro, 0)->update_ps3(report.buf());
-    EXPECT_EQ(report->accelX, 0x3FF);
-    EXPECT_EQ(report->gyro, 0);
+    EXPECT_EQ(report->accelX, PS3_ACCEL_CENTER);
+}
+
+TEST_F(GamepadAxis, OtherAxesLeaveMotionAlone)
+{
+    MotionState motion;
+    axis(Gamepad_LeftStickX, UINT16_MAX)->update_motion(motion);
+    EXPECT_EQ(motion.set, 0);
 }
 
 TEST_F(GamepadAxis, PS4SticksAndTriggers)
@@ -754,22 +773,12 @@ TEST_F(GamepadButton, WiimoteCoreButtons)
     EXPECT_FALSE(buttons.a);
 }
 
-TEST_F(GamepadAxis, DualShockAccelIsTenBitBigEndian)
+TEST_F(GamepadAxis, DualShockMotionGoesToTheMotionState)
 {
-    // the DS3 sends its motion axes big endian, like the device's own PS3_ACCEL_CENTER default
-    Report<PS3Gamepad_Data_t> report;
-    axis<PS3GamepadAxisMapping>(Gamepad_AccelY, UINT16_MAX)->update_ps3(report.buf());
-    axis<PS3GamepadAxisMapping>(Gamepad_Gyro, 0x8000)->update_ps3(report.buf());
-    EXPECT_EQ(report->accelY, __builtin_bswap16(0x3FF));
-    EXPECT_EQ(report->gyro, __builtin_bswap16(0x200));
-}
-
-TEST_F(GamepadAxis, PS3AccelAtRestKeepsTheDefault)
-{
-    Report<PS3Dpad_Data_t> report;
-    report->accelZ = PS3_ACCEL_CENTER;
-    axis(Gamepad_AccelZ, UINT16_MAX / 2)->update_ps3(report.buf());
-    EXPECT_EQ(report->accelZ, PS3_ACCEL_CENTER);
+    MotionState motion;
+    axis<PS3GamepadAxisMapping>(Gamepad_AccelY, MOTION_ZERO)->update_motion(motion);
+    EXPECT_TRUE(motion.has(MotionAccelY));
+    EXPECT_EQ(motion.axes[MotionAccelY], 0);
 }
 
 // GameCube, N64, SNES and NES: the expected bytes are what goes out on the wire, MSB first

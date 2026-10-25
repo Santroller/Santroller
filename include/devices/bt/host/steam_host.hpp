@@ -19,6 +19,7 @@ public:
 
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
+    bool has_motion() const override { return m_state.has_imu; }
 
     uint16_t m_char_handle = 0;
     uint16_t m_con_handle = 0;

@@ -102,7 +102,7 @@ extern "C" void xbox_adapter_process_gip_data(struct mt76_dev *dev, uint8_t wcid
 }
 
 XboxWirelessHost::XboxWirelessHost(uint8_t dev_addr, uint8_t interface, uint16_t id)
-    : UsbHostInterface(dev_addr, interface, id), m_adapter_initialized(false), m_firmware_loaded(false), m_firmware_loading(false), m_radio_initialized(false), m_pairing_initialized(false), m_last_update_time(0), m_init_start_time(0)
+    : UsbHostInterface(dev_addr, interface, id), m_adapter_initialized(false), m_firmware_loading(false), m_last_update_time(0), m_init_start_time(0)
 {
     m_delayed_init = true;
     m_controller_interfaces.fill(nullptr);
@@ -294,6 +294,10 @@ void XboxWirelessHost::disconnect_controller(uint8_t controller_idx)
 
 bool XboxWirelessHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
+    if (result != XFER_RESULT_SUCCESS)
+    {
+        printf("XboxWirelessHost: EP 0x%02X transfer result %d\r\n", ep_addr, result);
+    }
     if (ep_addr == MT_EP_IN_CMD)
     {
         if (xferred_bytes > 0)
@@ -389,7 +393,7 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
     {
         return;
     }
-    if (!m_firmware_loaded && (now - m_init_start_time) > 500)
+    if (m_init_stage == InitStage::LoadFirmware && (now - m_init_start_time) > 500)
     {
         const XboxStaticFirmwareHeader *header = xbox_get_static_firmware_header();
         if (!header)
@@ -428,7 +432,8 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
             if (begin_result == 0)
             {
                 printf("XboxWirelessHost: Firmware already loaded, warm reset complete\r\n");
-                m_firmware_loaded = true;
+                m_init_stage = InitStage::WaitBoot;
+                m_init_wait_until = now + MT76_FIRMWARE_RESET_DELAY_MS + MT76_BOOT_DELAY_MS;
                 return;
             }
             if (begin_result < 0)
@@ -454,8 +459,27 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
 
         printf("XboxWirelessHost: Firmware loaded successfully\r\n");
         m_firmware_loading = false;
-        m_firmware_loaded = true;
+        m_init_stage = InitStage::StartFirmware;
+        return;
+    }
 
+    if (m_init_stage != InitStage::Ready && m_init_stage != InitStage::LoadFirmware &&
+        (int32_t)(now - m_init_wait_until) < 0)
+    {
+        return;
+    }
+
+    switch (m_init_stage)
+    {
+    case InitStage::LoadFirmware:
+    case InitStage::Ready:
+        break;
+    case InitStage::StartFirmware:
+        mt76_start_firmware(&m_mt76_dev);
+        m_init_stage = InitStage::WaitIvb;
+        m_init_wait_until = now + MT76_IVB_DELAY_MS;
+        return;
+    case InitStage::WaitIvb:
         if (mt76_finish_firmware(&m_mt76_dev) == 0)
         {
             printf("XboxWirelessHost: IVB loaded successfully\r\n");
@@ -464,40 +488,63 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
         {
             printf("XboxWirelessHost: IVB load failed\r\n");
         }
-    }
-
-    if (m_firmware_loaded && !m_radio_initialized && (now - m_init_start_time) > 2000)
-    {
+        m_init_stage = InitStage::WaitBoot;
+        m_init_wait_until = now + MT76_BOOT_DELAY_MS;
+        return;
+    case InitStage::WaitBoot:
         printf("XboxWirelessHost: Initializing radio\r\n");
-
-        if (mt76_init_radio(&m_mt76_dev) == 0)
-        {
-            printf("XboxWirelessHost: Radio initialized successfully\r\n");
-            m_radio_initialized = true;
-
-            if (mt76_init_channels(&m_mt76_dev) == 0)
-            {
-                printf("XboxWirelessHost: Channels initialized\r\n");
-            }
-        }
-        else
+        if (mt76_init_radio(&m_mt76_dev) != 0)
         {
             printf("XboxWirelessHost: Radio init failed\r\n");
+            m_init_wait_until = now + MT76_BOOT_DELAY_MS;
+            return;
         }
-    }
-
-    if (m_radio_initialized && !m_pairing_initialized && (now - m_init_start_time) > 3000)
-    {
+        printf("XboxWirelessHost: Radio initialized successfully\r\n");
+        mt76_begin_channels(&m_mt76_dev);
+        m_channel_eval_index = 0;
+        m_init_stage = InitStage::EvaluateChannels;
+        return;
+    case InitStage::EvaluateChannels:
+        if (mt76_evaluate_channel(&m_mt76_dev, m_channel_eval_index) != 0)
+        {
+            printf("XboxWirelessHost: Channel evaluation failed\r\n");
+            m_init_stage = InitStage::ChannelSettle;
+            return;
+        }
+        if (++m_channel_eval_index < MT76_NUM_CHANNELS)
+        {
+            return;
+        }
+        if (mt76_channels_radio_off(&m_mt76_dev) != 0)
+        {
+            m_init_stage = InitStage::ChannelSettle;
+            return;
+        }
+        m_init_stage = InitStage::RadioOff;
+        m_init_wait_until = now + MT76_RADIO_OFF_DELAY_MS;
+        return;
+    case InitStage::RadioOff:
+        if (mt76_channels_radio_on(&m_mt76_dev) == 0)
+        {
+            printf("XboxWirelessHost: Channels initialized\r\n");
+        }
+        // Mandatory delay after a channel change before the beacon goes out (matches xone)
+        m_init_stage = InitStage::ChannelSettle;
+        m_init_wait_until = now + MT76_CHANNEL_SETTLE_DELAY_MS;
+        return;
+    case InitStage::ChannelSettle:
         printf("XboxWirelessHost: Disabling pairing mode\r\n");
-
         if (mt76_set_pairing(&m_mt76_dev, false) == 0)
         {
             printf("XboxWirelessHost: Pairing mode disabled\r\n");
-            m_pairing_initialized = true;
+            m_init_stage = InitStage::Ready;
+            // Windows opens pairing after init so already-paired controllers reconnect (matches xone)
+            wireless_enable_pairing(&m_mt76_dev);
         }
+        return;
     }
 
-    if (m_pairing_initialized)
+    if (m_init_stage == InitStage::Ready)
     {
         wireless_task(&m_mt76_dev);
     }

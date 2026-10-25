@@ -1,3 +1,4 @@
+#include "protocols/motion.hpp"
 #include "config/input_detector.hpp"
 #include "config/input_factory.hpp"
 #include "devices/wii.hpp"
@@ -173,6 +174,11 @@ bool InputDetector::read(bool axis, uint8_t value, uint16_t &out)
     {
         proto_Output output;
         if (!make_output(axis ? m_command.axisOutput : m_command.buttonOutput, value, output))
+        {
+            return false;
+        }
+        // motion moves whenever the controller does, so it would win over whatever was meant
+        if (output.which_mapping == proto_Output_gamepadAxis_tag && is_motion_axis(output.mapping.gamepadAxis))
         {
             return false;
         }

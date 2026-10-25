@@ -216,22 +216,43 @@ TEST_F(Guitar, GHWiiWhammyIsFiveBit)
     EXPECT_EQ(report->whammy, 0x10);
 }
 
-// The Switch guitar layer only has one bit each for whammy and tilt, set past the same > 60000
+// A guitar on a Switch is a Pro controller: whammy is the right stick, from its centre at rest down to
+// its minimum, and tilt turns the controller
 // threshold as the other one bit triggers / tilts
-TEST_F(Guitar, GHSwitchWhammyAndTiltPressNearFull)
+TEST_F(Guitar, GHSwitchWhammyPushesTheRightStickDown)
 {
-    Report<SwitchFestivalProGuitarLayer_Data_t> report;
-    at<GuitarHeroGuitarAxisMapping>(gh_axis(GuitarHeroGuitar_Whammy), 0xFE00)->update_switch(report.buf());
-    at<GuitarHeroGuitarAxisMapping>(gh_axis(GuitarHeroGuitar_Tilt), 0xFE00)->update_switch(report.buf());
-    EXPECT_TRUE(report->whammy);
-    EXPECT_TRUE(report->tilt);
+    Report<SwitchInputReport> full;
+    at<GuitarHeroGuitarAxisMapping>(gh_axis(GuitarHeroGuitar_Whammy), UINT16_MAX)->update_switch(full.buf());
+    EXPECT_EQ(full->rightStickX, SWITCH_STICK_CENTER - SWITCH_STICK_TRAVEL);
+    Report<SwitchInputReport> half;
+    at<GuitarHeroGuitarAxisMapping>(gh_axis(GuitarHeroGuitar_Whammy), 0x8000)->update_switch(half.buf());
+    EXPECT_NEAR(half->rightStickX, SWITCH_STICK_CENTER - SWITCH_STICK_TRAVEL / 2, 1);
 }
 
-TEST_F(Guitar, GHSwitchWhammyBarelyPressedIsOff)
+TEST_F(Guitar, GHSwitchTiltTurnsTheController)
 {
-    Report<SwitchFestivalProGuitarLayer_Data_t> report;
-    at<GuitarHeroGuitarAxisMapping>(gh_axis(GuitarHeroGuitar_Whammy), 0x0100)->update_switch(report.buf());
-    EXPECT_FALSE(report->whammy);
+    Report<SwitchInputReport> report;
+    auto tilt = at<GuitarHeroGuitarAxisMapping>(gh_axis(GuitarHeroGuitar_Tilt), UINT16_MAX);
+    tilt->update_switch(report.buf());
+    EXPECT_FALSE(report->dpadLeft);
+    MotionState motion;
+    motion.tilt_as_motion = true;
+    tilt->update_motion(motion);
+    // full tilt stands it on its side
+    EXPECT_EQ(motion.axes[MotionAccelX], 4096);
+    EXPECT_NEAR(motion.axes[MotionAccelY], 0, 1);
+}
+
+TEST_F(Guitar, TiltOnlyBecomesMotionWhereTheOutputAsks)
+{
+    // other consoles have a tilt value of their own
+    MotionState motion;
+    at<GuitarHeroGuitarAxisMapping>(gh_axis(GuitarHeroGuitar_Tilt), UINT16_MAX)->update_motion(motion);
+    at<RockBandGuitarAxisMapping>(rb_axis(RockBandGuitar_Tilt), UINT16_MAX)->update_motion(motion);
+    EXPECT_EQ(motion.set, 0);
+    motion.tilt_as_motion = true;
+    at<RockBandGuitarAxisMapping>(rb_axis(RockBandGuitar_Tilt), UINT16_MAX)->update_motion(motion);
+    EXPECT_EQ(motion.axes[MotionAccelX], 4096);
 }
 
 TEST_F(Guitar, GHPS2ButtonsAlwaysHoldDpadLeft)

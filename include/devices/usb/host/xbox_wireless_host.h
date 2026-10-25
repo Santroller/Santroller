@@ -61,12 +61,25 @@ private:
     
     uint16_t m_adapter_pid = 0;
     
+    // Init runs one step per update() so the main loop keeps servicing USB and the console
+    enum class InitStage : uint8_t
+    {
+        LoadFirmware,
+        StartFirmware,
+        WaitIvb,
+        WaitBoot,
+        EvaluateChannels,
+        RadioOff,
+        ChannelSettle,
+        Ready,
+    };
+
     bool m_about_to_flash = false;
     bool m_adapter_initialized;
-    bool m_firmware_loaded;
     bool m_firmware_loading;
-    bool m_radio_initialized;
-    bool m_pairing_initialized;
+    InitStage m_init_stage = InitStage::LoadFirmware;
+    uint32_t m_init_wait_until = 0;
+    uint8_t m_channel_eval_index = 0;
     
     uint32_t m_last_update_time;
     uint32_t m_init_start_time;

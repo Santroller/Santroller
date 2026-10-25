@@ -21,6 +21,7 @@ public:
 
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
+    bool has_motion() const override { return m_state.has_imu; }
 
     // Direct GATT only
     uint16_t m_con_handle = 0;

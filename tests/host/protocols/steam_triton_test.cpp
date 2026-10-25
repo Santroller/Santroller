@@ -163,10 +163,42 @@ TEST(SteamTriton, BlePayloadHasNoReportId)
     EXPECT_FALSE(steam_triton_parse_state(tooShort.data(), tooShort.size(), s));
 }
 
-TEST(SteamTriton, DisableLizardMessage)
+TEST(SteamTriton, SettingsMessage)
 {
-    // ID_SET_SETTINGS_VALUES, one 3 byte setting: SETTING_LIZARD_MODE = LIZARD_MODE_OFF
-    const uint8_t expected[] = {0x87, 0x03, 0x09, 0x00, 0x00};
-    ASSERT_EQ(sizeof(TRITON_DISABLE_LIZARD_MSG), sizeof(expected));
-    EXPECT_EQ(memcmp(TRITON_DISABLE_LIZARD_MSG, expected, sizeof(expected)), 0);
+    // ID_SET_SETTINGS_VALUES, two 3 byte settings: SETTING_LIZARD_MODE = LIZARD_MODE_OFF and
+    // SETTING_IMU_MODE = SEND_RAW_ACCEL | SEND_RAW_GYRO
+    const uint8_t expected[] = {0x87, 0x06, 0x09, 0x00, 0x00, 0x30, 0x18, 0x00};
+    ASSERT_EQ(sizeof(TRITON_SETTINGS_MSG), sizeof(expected));
+    EXPECT_EQ(memcmp(TRITON_SETTINGS_MSG, expected, sizeof(expected)), 0);
 }
+
+namespace
+{
+// SDL_hidapi_steam_triton.c: motion closes every state report, ±2 g and ±2000 °/s, read as
+// x = x, y = z, z = -y for both
+TEST(SteamTriton, ParsesMotion)
+{
+    for (uint8_t id : {TRITON_REPORT_STATE, TRITON_REPORT_STATE_BLE, TRITON_REPORT_STATE_TIMESTAMP})
+    {
+        Bytes r = state_report(id, 0, 0, 0, 0, 0, 0, 0);
+        // lying flat, turning at 100 °/s around the controller's own z
+        put16(r, 1 + 33 + 4, 16384);
+        put16(r, 1 + 39 + 4, 1638);
+        SteamTritonState s;
+        ASSERT_TRUE(steam_triton_parse_report(r.data(), r.size(), s)) << int(id);
+        EXPECT_TRUE(s.has_imu);
+        EXPECT_EQ(axis(s, Gamepad_AccelY), motion_accel_axis(1));
+        EXPECT_EQ(axis(s, Gamepad_AccelX), MOTION_ZERO);
+        EXPECT_NEAR(axis(s, Gamepad_GyroY), motion_gyro_axis(100), 1);
+    }
+}
+
+TEST(SteamTriton, NoMotionUntilTheIMUSendsSome)
+{
+    SteamTritonState s;
+    Bytes r = state_report(TRITON_REPORT_STATE, 0, 0, 0, 0, 0, 0, 0);
+    ASSERT_TRUE(steam_triton_parse_report(r.data(), r.size(), s));
+    EXPECT_FALSE(s.has_imu);
+    EXPECT_EQ(axis(s, Gamepad_AccelY), MOTION_ZERO);
+}
+} // namespace

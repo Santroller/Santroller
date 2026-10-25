@@ -1,4 +1,5 @@
 #pragma once
+#include "protocols/motion.hpp"
 #include "input/input.hpp"
 #include "input.pb.h"
 #include "devices/bt/bt_host.hpp"
@@ -53,7 +54,12 @@ public:
     bool tick_digital();
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
-    bool valid() const override { return m_device != nullptr && m_device->valid(); }
+    bool valid() const override
+    {
+        // hosts without motion leave Gamepad_Accel / Gamepad_Gyro at the output's resting pose
+        bool motion = m_input.axis.which_mapping == proto_Output_gamepadAxis_tag && is_motion_axis(m_input.axis.mapping.gamepadAxis);
+        return m_device != nullptr && m_device->valid() && (!motion || m_device->has_motion());
+    }
     uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
     void link_device(bool claim_devices) override
     {

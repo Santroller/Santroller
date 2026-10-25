@@ -120,13 +120,35 @@ void SwitchHost::send_handshake_step()
         }
         break;
     }
-    case 2:
+    default:
     {
-        // Set standard report mode 0x30 via output report 0x01
-        memcpy(m_ep_out_buf, SWITCH_SET_FULL_REPORT_MODE, sizeof(SWITCH_SET_FULL_REPORT_MODE));
+        // Then subcommands: full 0x30 reports, turn the IMU on and read its calibration
+        if (m_handshake_step >= SWITCH_HANDSHAKE_STEPS)
+        {
+            break;
+        }
+        // a Switch 2 controller's IMU is turned on through its command interface instead, see Switch2CommandHost
+        if (m_is_switch2 && m_handshake_step > 2)
+        {
+            m_handshake_step = SWITCH_HANDSHAKE_STEPS;
+            break;
+        }
+        static const struct
+        {
+            const uint8_t *data;
+            uint8_t len;
+        } subcommands[] = {
+            {SWITCH_SET_FULL_REPORT_MODE, sizeof(SWITCH_SET_FULL_REPORT_MODE)},
+            {SWITCH_ENABLE_IMU, sizeof(SWITCH_ENABLE_IMU)},
+            {SWITCH_READ_IMU_FACTORY_CALIBRATION, sizeof(SWITCH_READ_IMU_FACTORY_CALIBRATION)},
+            {SWITCH_READ_IMU_USER_CALIBRATION, sizeof(SWITCH_READ_IMU_USER_CALIBRATION)},
+        };
+        static_assert(sizeof(subcommands) / sizeof(subcommands[0]) == SWITCH_HANDSHAKE_STEPS - 2);
+        const auto &subcommand = subcommands[m_handshake_step - 2];
+        memcpy(m_ep_out_buf, subcommand.data, subcommand.len);
         if (usbh_edpt_claim(m_dev_addr, m_ep_out))
         {
-            if (usbh_edpt_xfer(m_dev_addr, m_ep_out, m_ep_out_buf, sizeof(SWITCH_SET_FULL_REPORT_MODE)))
+            if (usbh_edpt_xfer(m_dev_addr, m_ep_out, m_ep_out_buf, subcommand.len))
             {
                 m_handshake_step++;
             }
@@ -137,8 +159,6 @@ void SwitchHost::send_handshake_step()
         }
         break;
     }
-    default:
-        break;
     }
 }
 
@@ -151,15 +171,20 @@ bool SwitchHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred
     }
     if (ep_addr & 0x80)
     {
-        if (m_is_switch2 && result == XFER_RESULT_SUCCESS && xferred_bytes > 0)
+        if (m_is_switch2 && result == XFER_RESULT_SUCCESS && xferred_bytes > 1)
         {
-            switch2_parse_report(m_ep_in_buf, xferred_bytes, m_switch2_state);
+            // the same report as over BLE after its report ID
+            switch2_parse_report(m_ep_in_buf + 1, xferred_bytes - 1, m_switch2_state);
+        }
+        else if (result == XFER_RESULT_SUCCESS && xferred_bytes > 0)
+        {
+            m_imu.parse(m_ep_in_buf, xferred_bytes);
         }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     else
     {
-        if (m_handshake_step < 3)
+        if (m_handshake_step < SWITCH_HANDSHAKE_STEPS)
         {
             send_handshake_step();
         }
@@ -181,7 +206,7 @@ void SwitchHost::update(bool full_poll, bool send_events)
         }
         m_pending_output = SwitchOutputKind::None;
     }
-    if (!m_ep_out || m_handshake_step < 3 || m_pending_output != SwitchOutputKind::None ||
+    if (!m_ep_out || m_handshake_step < SWITCH_HANDSHAKE_STEPS || m_pending_output != SwitchOutputKind::None ||
         usbh_edpt_busy(m_dev_addr, m_ep_out))
         return;
 
@@ -290,8 +315,18 @@ bool switch_tick_digital(const uint8_t *buf, proto_Output &type)
     return false;
 }
 
-uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type)
+uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type, const SwitchImuState *imu)
 {
+    if (type.which_mapping == proto_Output_gamepadAxis_tag && is_motion_axis(type.mapping.gamepadAxis))
+    {
+        if (!imu || !imu->has_sample)
+        {
+            return MOTION_ZERO;
+        }
+        float accel[3], gyro[3];
+        switch_imu_decode(imu->sample, imu->calibration, accel, gyro);
+        return motion_host_axis(type.mapping.gamepadAxis, accel, gyro);
+    }
     if (buf[0] == SWITCH_PRO_CON_FULL_REPORT_ID || buf[0] == 0x21)
     {
         auto *data = (const SwitchProGamepad_Data_t *)buf;
@@ -353,11 +388,11 @@ uint16_t SwitchHost::tick_analog(proto_Output& type)
     {
         if (m_ep_in_buf[0] == SWITCH_PRO_CON_FULL_REPORT_ID || m_ep_in_buf[0] == 0x21 || m_ep_in_buf[0] == 0x3F)
         {
-            return switch_tick_analog(m_ep_in_buf, type);
+            return switch_tick_analog(m_ep_in_buf, type, nullptr);
         }
         return switch2_tick_analog(m_switch2_state, type);
     }
-    return switch_tick_analog(m_ep_in_buf, type);
+    return switch_tick_analog(m_ep_in_buf, type, &m_imu);
 }
 
 void SwitchHost::set_rumble(uint8_t left, uint8_t right)

@@ -8,22 +8,29 @@ namespace
 {
 using Bytes = std::vector<uint8_t>;
 
-// Buttons at 4..7, then left and right sticks as Nintendo's packed 12 bit pairs:
-// x = b0 | (b1 & 0x0F) << 8, y = (b1 >> 4) | b2 << 4
+// The BLE layout (USB adds a report ID in front), as SDL_hidapi_switch2.c and
+// github.com/trevlars/switch2-controllers-linux read it: buttons at 4..7, then from 10 the left and
+// right sticks as Nintendo's packed 12 bit pairs: x = b0 | (b1 & 0x0F) << 8, y = (b1 >> 4) | b2 << 4
 Bytes report(uint32_t buttons, uint16_t lx, uint16_t ly, uint16_t rx, uint16_t ry)
 {
-    Bytes r(14, 0);
+    Bytes r(16, 0);
     r[4] = buttons & 0xFF;
     r[5] = (buttons >> 8) & 0xFF;
     r[6] = (buttons >> 16) & 0xFF;
     r[7] = (buttons >> 24) & 0xFF;
-    r[8] = lx & 0xFF;
-    r[9] = ((lx >> 8) & 0x0F) | ((ly & 0x0F) << 4);
-    r[10] = ly >> 4;
-    r[11] = rx & 0xFF;
-    r[12] = ((rx >> 8) & 0x0F) | ((ry & 0x0F) << 4);
-    r[13] = ry >> 4;
+    r[10] = lx & 0xFF;
+    r[11] = ((lx >> 8) & 0x0F) | ((ly & 0x0F) << 4);
+    r[12] = ly >> 4;
+    r[13] = rx & 0xFF;
+    r[14] = ((rx >> 8) & 0x0F) | ((ry & 0x0F) << 4);
+    r[15] = ry >> 4;
     return r;
+}
+
+void put16(Bytes &r, size_t at, int16_t v)
+{
+    r[at] = (uint16_t)v & 0xFF;
+    r[at + 1] = (uint16_t)v >> 8;
 }
 
 Switch2ControllerState parse(const Bytes &r)
@@ -73,7 +80,7 @@ TEST(Switch2, RejectsShortReports)
     Switch2ControllerState s;
     s.a = true;
     Bytes r = report(0xFFFFFFFF, 0, 0, 0, 0);
-    EXPECT_FALSE(switch2_parse_report(r.data(), 13, s));
+    EXPECT_FALSE(switch2_parse_report(r.data(), 15, s));
     EXPECT_FALSE(switch2_parse_report(r.data(), 0, s));
     EXPECT_TRUE(s.a);
     EXPECT_EQ(s.left_stick_x, 2048);
@@ -164,7 +171,8 @@ TEST(Switch2, TickHelpersIgnoreOtherMappings)
     proto_Output a = non_gamepad_mapping(Gamepad_LeftTrigger);
     EXPECT_FALSE(switch2_tick_digital(s, b));
     EXPECT_EQ(switch2_tick_analog(s, a), 0);
-    EXPECT_EQ(axis(s, Gamepad_Gyro), 0);
+    // no motion yet, so it reads as none
+    EXPECT_EQ(axis(s, Gamepad_GyroY), MOTION_ZERO);
 }
 
 TEST(Switch2, StateMapsToTheMatchingGamepadButton)
@@ -198,4 +206,60 @@ TEST(Switch2, StateMapsToTheMatchingGamepadButton)
         for (int b = Gamepad_A; b <= Gamepad_DpadRight; b++)
             EXPECT_EQ(pressed(s, (GamepadButtonType)b), b == c.button) << "button " << b;
     }
+}
+
+// Acceleration then gyro from 0x30, at 4096 per g and a 34.8 rad/s full scale, read like SDL as
+// x = x, y = z, z = -y
+TEST(Switch2, ParsesMotion)
+{
+    Bytes r = report(0, 2048, 2048, 2048, 2048);
+    r.resize(0x3F, 0);
+    put16(r, 0x34, 4096);
+    put16(r, 0x3A, 1000);
+    Switch2ControllerState s;
+    ASSERT_TRUE(switch2_parse_report(r.data(), r.size(), s));
+    EXPECT_TRUE(s.has_imu);
+    EXPECT_EQ(axis(s, Gamepad_AccelY), motion_accel_axis(1.0f));
+    EXPECT_EQ(axis(s, Gamepad_AccelZ), MOTION_ZERO);
+    float dps = 1000 * 34.8f / 32767 * 180 / (float)M_PI;
+    EXPECT_NEAR(axis(s, Gamepad_GyroY), motion_gyro_axis(dps), 1);
+
+    // the bias read from flash is taken off
+    s.gyro_bias[2] = 1000 * 34.8f / 32767;
+    EXPECT_NEAR(axis(s, Gamepad_GyroY), MOTION_ZERO, 1);
+}
+
+TEST(Switch2, ShortReportsHaveNoMotion)
+{
+    Switch2ControllerState s;
+    Bytes r = report(0, 2048, 2048, 2048, 2048);
+    ASSERT_TRUE(switch2_parse_report(r.data(), r.size(), s));
+    EXPECT_FALSE(s.has_imu);
+    EXPECT_EQ(axis(s, Gamepad_AccelY), MOTION_ZERO);
+}
+
+TEST(Switch2, ReadsTheGyroBiasFromFlash)
+{
+    uint8_t reply[SWITCH2_FLASH_REPLY_LEN] = {};
+    const float bias[3] = {0.01f, -0.02f, 0.03f};
+    memcpy(reply + 0x10 + 4, bias, sizeof(bias));
+    float out[3];
+    ASSERT_TRUE(switch2_parse_gyro_calibration(reply, sizeof(reply), out));
+    EXPECT_FLOAT_EQ(out[1], -0.02f);
+    // erased flash
+    memset(reply + 0x10, 0xFF, SWITCH2_FLASH_READ_LEN);
+    EXPECT_FALSE(switch2_parse_gyro_calibration(reply, sizeof(reply), out));
+}
+
+TEST(Switch2, InitCommandsStateTheirLength)
+{
+    // byte 5 is the length after the 8 byte header, which SDL sends as the whole command
+    for (const Switch2Command &command : SWITCH2_USB_INIT)
+    {
+        EXPECT_EQ(command.len, command.data[5] + 8);
+        EXPECT_EQ(command.data[1], 0x91);
+    }
+    // the gyro calibration block, little endian
+    EXPECT_EQ(SWITCH2_READ_GYRO_CALIBRATION[12] | (SWITCH2_READ_GYRO_CALIBRATION[13] << 8) | (SWITCH2_READ_GYRO_CALIBRATION[14] << 16),
+              SWITCH2_FLASH_GYRO_CALIBRATION);
 }

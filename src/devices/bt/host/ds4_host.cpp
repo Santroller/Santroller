@@ -9,9 +9,9 @@
 // The USB host headers pull in TinyUSB, whose HID enums clash with btstack's, so the
 // shared tick functions from the USB hosts are declared here instead.
 bool ps4_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, uint32_t *last_ghl_poke);
-uint16_t ps4_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+uint16_t ps4_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, const PSImuCalibration *imu);
 bool ps4_parse_capabilities(const uint8_t *data, uint16_t len, uint16_t vid, uint16_t pid,
-                            SubType &subtype, bool &sensors, bool &lightbar, bool &vibration, bool &touchpad);
+                            SubType &subtype, bool &sensors, bool &lightbar, bool &vibration, bool &touchpad, PSImuCalibration &imu);
 
 // ============================================================================
 // BtDs4Host
@@ -104,7 +104,7 @@ void BtDs4Host::handle_feature_report(const uint8_t *data, uint16_t len)
         bool light = m_lightbar_supported;
         bool vib = m_vibration_supported;
         bool touch = m_touchpad_supported;
-        if (ps4_parse_capabilities(data, len, m_vid, m_pid, sub, sens, light, vib, touch))
+        if (ps4_parse_capabilities(data, len, m_vid, m_pid, sub, sens, light, vib, touch, m_imu_calibration))
         {
             m_subtype = sub;
             m_sensors_supported = sens;
@@ -211,5 +211,7 @@ bool BtDs4Host::tick_digital(proto_Output &type)
 
 uint16_t BtDs4Host::tick_analog(proto_Output &type)
 {
-    return ps4_tick_analog(m_report_buf, m_subtype, m_third_party, type);
+    // First party controllers over bluetooth use the nominal scale, as their calibration is only read
+    // to switch them to full reports
+    return ps4_tick_analog(m_report_buf, m_subtype, m_third_party, type, m_sensors_supported ? &m_imu_calibration : nullptr);
 }

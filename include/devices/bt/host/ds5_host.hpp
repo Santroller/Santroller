@@ -46,6 +46,7 @@ public:
     void set_lightbar(uint8_t r, uint8_t g, uint8_t b) override;
     void set_player_led(uint8_t player) override;
     bool has_rumble() const override { return m_vibration_supported; }
+    bool has_motion() const override { return m_sensors_supported; }
     bool has_lightbar() const override { return m_lightbar_supported; }
     bool has_player_led() const override { return m_lightbar_supported; }
 
@@ -68,4 +69,5 @@ private:
     bool m_lightbar_supported;
     bool m_vibration_supported;
     bool m_touchpad_supported;
+    PSImuCalibration m_imu_calibration;
 };

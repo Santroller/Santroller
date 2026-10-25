@@ -21,6 +21,10 @@ class UsbHostInterface;
 #define PS5_FEATURE_TOUCH_PAD 1 << 6
 #define PS5_FEATURE_AUDIO_JACK 1 << 7
 
+// Motion calibration, as a DualSense reports it
+#define PS5_CALIBRATION_REPORT_ID 0x05
+#define PS5_CALIBRATION_REPORT_SIZE 41
+
 #define PS5_FEATURE_WIRELESS 1 << 0
 #define PS5_FEATURE_BATTERY 1 << 2
 #define PS5_FEATURE_VENDOR_INT 1 << 6
@@ -33,6 +37,8 @@ static const int ps5_colors[4][3] = {
     {0x20, 0x00, 0x20}  /* Pink */
 };
 
+// Bytes 10 - 17 are the motion scale, as gyro and accel numerator / denominator pairs: 2000/32768 °/s
+// and 4/32768 g per count (PS5_IMU_GYRO_PER_DPS and PS5_IMU_ACCEL_PER_G)
 uint8_t ps5_feature_config[] = {
     0x03, 0x21, 0x28, 0x03, 0x91, 0x00 /*type*/, 0x2C, 0x56,
     0x01, 0x00, 0xD0, 0x07, 0x00, 0x80, 0x04, 0x00,
@@ -84,12 +90,14 @@ void PS5GamepadDevice::process(bool full_poll, bool send_events)
     if (!ready() || !got_feature)
         return;
     memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
+    MotionState motion;
     for (const auto &profile : profiles)
     {
         for (const auto &mapping : profile->mappings)
         {
             mapping->update(full_poll, send_events);
             mapping->update_ps5(epin_buf);
+            mapping->update_motion(motion);
         }
         for (const auto &led : profile->leds)
         {
@@ -97,6 +105,12 @@ void PS5GamepadDevice::process(bool full_poll, bool send_events)
         }
     }
     PS5Dpad_Data_t *gamepad = (PS5Dpad_Data_t *)epin_buf;
+    if (subtype == Gamepad)
+    {
+        // in the scale feature report 0x03 states
+        gamepad->imu = ps_imu_encode(motion, PS5_IMU_GYRO_PER_DPS, PS5_IMU_ACCEL_PER_G);
+        gamepad->sensorTimestamp = (uint16_t)time_us_32();
+    }
     if (!m_sent_first_report)
     {
         m_sent_first_report = true;
@@ -183,7 +197,7 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         {
         case Gamepad:
             buffer[5] = PS5_GAMEPAD;
-            buffer[4] = PS5_FEATURE_LIGHTBAR | PS5_FEATURE_VIBRATION | PS5_FEATURE_TOUCH_PAD;
+            buffer[4] = PS5_FEATURE_MOTION | PS5_FEATURE_LIGHTBAR | PS5_FEATURE_VIBRATION | PS5_FEATURE_TOUCH_PAD;
             break;
         case GuitarHeroGuitar:
         case LiveGuitar:
@@ -215,6 +229,17 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         }
         got_feature = true;
         return sizeof(ps5_feature_config);
+    case PS5_CALIBRATION_REPORT_ID:
+        // SDL reads motion through this calibration even from third party controllers, ignoring the
+        // scale in report 0x03, so state the same scale here
+        if (subtype != Gamepad)
+        {
+            return 0;
+        }
+        memset(buffer, 0, PS5_CALIBRATION_REPORT_SIZE);
+        buffer[0] = PS5_CALIBRATION_REPORT_ID;
+        ps_imu_write_calibration(buffer, false, PS5_IMU_GYRO_PER_DPS, PS5_IMU_ACCEL_PER_G);
+        return PS5_CALIBRATION_REPORT_SIZE;
     case ReportId::ReportIdPs5GetResponse:
     case ReportId::ReportIdPs5GetAuthStatus:
         if (host_device)

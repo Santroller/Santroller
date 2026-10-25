@@ -32,10 +32,15 @@ enum GamepadAxisType {
   Gamepad_LeftTrigger = 5;
   Gamepad_RightTrigger = 6;
 
+  // Motion uses a fixed scale with 32767 as zero, see include/protocols/motion.hpp. The axes are
+  // SDL's: X right, Y up and Z towards the player. Gyro is the rate of turn around each axis.
   Gamepad_AccelX = 7;
   Gamepad_AccelY = 8;
   Gamepad_AccelZ = 9;
-  Gamepad_Gyro = 10;
+  // Yaw, the only gyro a Sixaxis has
+  Gamepad_GyroY = 10;
+  Gamepad_GyroX = 11;
+  Gamepad_GyroZ = 12;
 }
 enum ProjectDivaAxisType {
   ProjectDiva_Slider = 7;
@@ -563,6 +568,13 @@ enum AccelerometerInputType {
   AccelerometerAdc1 = 4;
   AccelerometerAdc2 = 5;
   AccelerometerAdc3 = 6;
+  // The standard motion scale, for the Gamepad_Accel / Gamepad_Gyro outputs. Gyro needs an MPU-6050
+  AccelerometerMotionX = 7;
+  AccelerometerMotionY = 8;
+  AccelerometerMotionZ = 9;
+  GyroscopeX = 10;
+  GyroscopeY = 11;
+  GyroscopeZ = 12;
 }
 enum ProGuitarNeckButtonType {
   ProGuitarNeckGreen = 1;

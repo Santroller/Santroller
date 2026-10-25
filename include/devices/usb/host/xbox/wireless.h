@@ -18,6 +18,9 @@ void wireless_process_packet(struct mt76_dev *dev, const uint8_t *data, uint16_t
 // Handle controller association request
 void wireless_handle_association(struct mt76_dev *dev, const uint8_t *addr);
 
+// Open pairing for the usual timeout, as Windows does after init so paired controllers reconnect
+void wireless_enable_pairing(struct mt76_dev *dev);
+
 // Queue disassociation event for a client WCID
 void wireless_queue_disassociation(struct mt76_dev *dev, uint8_t wcid);
 

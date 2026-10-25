@@ -117,8 +117,9 @@ TEST(Ps5Layout, InputReportOffsets)
     EXPECT_EQ(offsetof(PS5Dpad_Data_t, leftStickX), 1u);
     EXPECT_EQ(offsetof(PS5Dpad_Data_t, leftTrigger), 5u);
     EXPECT_EQ(offsetof(PS5Dpad_Data_t, rightTrigger), 6u);
-    EXPECT_EQ(offsetof(PS5Dpad_Data_t, gyroscope), 16u);
-    EXPECT_EQ(offsetof(PS5Dpad_Data_t, accelerometer), 22u);
+    EXPECT_EQ(offsetof(PS5Dpad_Data_t, imu.gyro), 16u);
+    EXPECT_EQ(offsetof(PS5Dpad_Data_t, imu.accel), 22u);
+    EXPECT_EQ(offsetof(PS5Dpad_Data_t, sensorTimestamp), 28u);
     EXPECT_EQ(sizeof(TouchpadData), 8u);
 }
 

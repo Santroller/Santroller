@@ -19,6 +19,7 @@ public:
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
+    void update_motion(MotionState &motion);
 };
 
 class PS3GamepadAxisMapping : public GamepadAxisMapping

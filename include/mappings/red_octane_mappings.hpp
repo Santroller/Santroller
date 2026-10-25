@@ -34,9 +34,11 @@ public:
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
+    void update_motion(MotionState &motion);
     static const uint8_t gh5_slider_mapping[32];
 
 private:
+    TiltMotion m_tilt_motion;
     bool m_gh5;
     bool m_supports_slider = false;
 };

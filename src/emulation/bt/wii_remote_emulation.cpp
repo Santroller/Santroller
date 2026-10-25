@@ -117,6 +117,9 @@ void WiiRemoteEmulationDeviceInstance::process(bool full_poll, bool send_events)
 
     memset(&next.wiimote, 0, sizeof(next.wiimote));
     memcpy(m_extension_report, m_extension_initial_report, sizeof(m_extension_report));
+    MotionState motion;
+    // Wii guitar games read tilt from the remote's accelerometer, as the remote sits in the guitar
+    motion.tilt_as_motion = true;
     for (const auto &profile : profiles)
     {
         for (const auto &mapping : profile->mappings)
@@ -124,6 +127,7 @@ void WiiRemoteEmulationDeviceInstance::process(bool full_poll, bool send_events)
             mapping->update(full_poll, send_events);
             // mapping->update_wiimote_core(&next.wiimote);
             mapping->update_wii(m_extension_format, m_extension_report);
+            mapping->update_motion(motion);
         }
         for (const auto &led : profile->leds)
         {
@@ -131,6 +135,15 @@ void WiiRemoteEmulationDeviceInstance::process(bool full_poll, bool send_events)
         }
     }
     finalize_wii_extension_report(subtype, m_extension_report, m_buttons_low_idx, m_buttons_high_idx);
+    next.has_accel = motion.has(MotionAccelX) || motion.has(MotionAccelY) || motion.has(MotionAccelZ);
+    if (next.has_accel)
+    {
+        uint16_t accel[3];
+        wiimote_accel_encode(motion, accel);
+        next.wiimote.accel_x = accel[0];
+        next.wiimote.accel_y = accel[1];
+        next.wiimote.accel_z = accel[2];
+    }
     next.extension_size = m_extension_size;
     memcpy(next.extension_data, m_extension_report, m_extension_size);
 

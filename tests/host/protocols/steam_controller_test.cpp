@@ -167,7 +167,8 @@ TEST(SteamController, TickHelpersIgnoreOtherMappings)
     proto_Output a = non_gamepad_mapping(Gamepad_LeftTrigger);
     EXPECT_FALSE(steam_tick_digital(s, b));
     EXPECT_EQ(steam_tick_analog(s, a), 0);
-    EXPECT_EQ(axis(s, Gamepad_AccelX), 0);
+    // no motion yet, so it reads as none
+    EXPECT_EQ(axis(s, Gamepad_AccelX), MOTION_ZERO);
 }
 
 TEST(SteamController, ParsesWiredReport)

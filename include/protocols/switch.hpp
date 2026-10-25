@@ -1,6 +1,9 @@
 #pragma once
 #include <stdint.h>
+#include <stddef.h>
+#include <string.h>
 #include "emulation/usb/usb_devices.h"
+#include "protocols/motion.hpp"
 
 #define SWITCH_PRO_CON_FULL_REPORT_ID 0x30
 #define SWITCH_PRO_CON_SIMPLE_REPORT_ID 0x3F
@@ -23,6 +26,25 @@ inline uint16_t switch_stick(uint32_t value)
 static const uint8_t SWITCH_SET_FULL_REPORT_MODE[] = {SWITCH_PRO_CON_SUBCMD_REPORT_ID, 0x00,
                                                       0x00, 0x01, 0x40, 0x40, 0x00, 0x01, 0x40, 0x40,
                                                       0x03, 0x30};
+
+// Subcommand 0x40 turns the IMU on, so full reports carry motion
+static const uint8_t SWITCH_ENABLE_IMU[] = {SWITCH_PRO_CON_SUBCMD_REPORT_ID, 0x01,
+                                            0x00, 0x01, 0x40, 0x40, 0x00, 0x01, 0x40, 0x40,
+                                            0x40, 0x01};
+
+// Subcommand 0x10 reads SPI flash: a little endian address, then the length. These read the factory
+// motion calibration at 0x6020, and the user calibration at 0x8026 (a 0xA1B2 magic, then the same layout).
+#define SWITCH_SUBCMD_SPI_READ 0x10
+#define SWITCH_SPI_IMU_FACTORY 0x6020
+#define SWITCH_SPI_IMU_USER 0x8026
+#define SWITCH_SPI_IMU_USER_MAGIC 0xA1B2
+#define SWITCH_IMU_CALIBRATION_LEN 24
+static const uint8_t SWITCH_READ_IMU_FACTORY_CALIBRATION[] = {SWITCH_PRO_CON_SUBCMD_REPORT_ID, 0x02,
+                                                              0x00, 0x01, 0x40, 0x40, 0x00, 0x01, 0x40, 0x40,
+                                                              SWITCH_SUBCMD_SPI_READ, 0x20, 0x60, 0x00, 0x00, SWITCH_IMU_CALIBRATION_LEN};
+static const uint8_t SWITCH_READ_IMU_USER_CALIBRATION[] = {SWITCH_PRO_CON_SUBCMD_REPORT_ID, 0x03,
+                                                           0x00, 0x01, 0x40, 0x40, 0x00, 0x01, 0x40, 0x40,
+                                                           SWITCH_SUBCMD_SPI_READ, 0x26, 0x80, 0x00, 0x00, SWITCH_IMU_CALIBRATION_LEN + 2};
 
 // ---------------------------------------------------------------------------
 // Rumble and player LEDs, shared by the USB and Bluetooth hosts
@@ -94,11 +116,6 @@ struct SwitchOutput
             player_dirty = true;
     }
 };
-typedef struct
-{
-    int16_t accX, accY, accZ;
-    int16_t gyroX, gyroY, gyroZ;
-} __attribute__((packed)) ImuData;
 
 
 typedef struct
@@ -147,9 +164,63 @@ typedef struct
     uint8_t timestamp;
     SwitchInputReport inputs;
     uint8_t rumbleReport;
-    uint8_t imuData[36];
+    // Three samples 5ms apart, the newest first
+    SwitchImuSample imuData[3];
     uint8_t padding[15];
 } __attribute__((packed)) SwitchProGamepad_Data_t;
+
+// Motion from a real controller. Subcommand replies (0x21) carry the reply where full reports have
+// motion, so the last full report's sample is kept, along with the calibration read from SPI flash.
+struct SwitchImuState
+{
+    SwitchImuSample sample = {};
+    // Like SDL, a sample with no acceleration at all means the IMU isn't on yet
+    bool has_sample = false;
+    SwitchImuCalibration calibration;
+    // The factory calibration, as the user calibration only replaces its origins
+    uint8_t calibration_data[SWITCH_IMU_CALIBRATION_LEN] = {};
+    bool has_calibration = false;
+
+    // Called with every input report, report ID included
+    void parse(const uint8_t *buf, uint16_t len)
+    {
+        if (buf[0] == SWITCH_PRO_CON_FULL_REPORT_ID && len >= offsetof(SwitchProGamepad_Data_t, padding))
+        {
+            const SwitchImuSample &newest = ((const SwitchProGamepad_Data_t *)buf)->imuData[0];
+            if (newest.accX || newest.accY || newest.accZ)
+            {
+                sample = newest;
+                has_sample = true;
+            }
+            return;
+        }
+        // 0x21: the inputs, an ack byte, the subcommand, then its reply. A SPI read replies with the
+        // address and length it was asked for, then the data.
+        if (buf[0] != 0x21 || len < 20 || buf[14] != SWITCH_SUBCMD_SPI_READ)
+        {
+            return;
+        }
+        uint32_t address = buf[15] | (buf[16] << 8) | (buf[17] << 16) | ((uint32_t)buf[18] << 24);
+        uint8_t size = buf[19];
+        const uint8_t *data = buf + 20;
+        if (address == SWITCH_SPI_IMU_FACTORY && size >= SWITCH_IMU_CALIBRATION_LEN && len >= 20 + SWITCH_IMU_CALIBRATION_LEN)
+        {
+            memcpy(calibration_data, data, SWITCH_IMU_CALIBRATION_LEN);
+            has_calibration = true;
+            calibration = switch_imu_parse_calibration(calibration_data);
+        }
+        else if (address == SWITCH_SPI_IMU_USER && has_calibration && size >= SWITCH_IMU_CALIBRATION_LEN + 2 &&
+                 len >= 22 + SWITCH_IMU_CALIBRATION_LEN && (data[0] | (data[1] << 8)) == SWITCH_SPI_IMU_USER_MAGIC)
+        {
+            uint8_t combined[SWITCH_IMU_CALIBRATION_LEN];
+            memcpy(combined, calibration_data, sizeof(combined));
+            // accel origins, then gyro origins
+            memcpy(combined, data + 2, 6);
+            memcpy(combined + 12, data + 2 + 12, 6);
+            calibration = switch_imu_parse_calibration(combined);
+        }
+    }
+};
 
 typedef struct
 {
@@ -275,45 +346,6 @@ typedef struct
     uint16_t unused3[4];
 
 } __attribute__((packed)) SwitchGamepad_Data_t;
-
-// Festivals default mappings suck, so its easiest to set up custom mappings for that here
-typedef struct
-{
-    uint8_t y : 1;             // y, triangle, yellow
-    uint8_t rightShoulder : 1; // b, circle, red
-    uint8_t leftShoulder : 1;  // a, cross, green
-    uint8_t x : 1;             // x, square, blue
-
-    uint8_t dpadUp : 1;   // leftShoulder, orange, l1
-    uint8_t dpadDown : 1; // rightShoulder, spPedal, r1
-    uint8_t back : 1;     // back, select
-    uint8_t start : 1;    // start
-
-    uint8_t guide : 1; // ps
-    uint8_t capture :1;
-    uint8_t : 1;
-    uint8_t whammy : 1;
-    uint8_t tilt : 1;
-    uint8_t : 2;
-
-    // To make things easier, we use bitfields here, and then we map to a proper hat later
-    union
-    {
-        struct
-        {
-            uint8_t b : 1;         // dpadUp
-            uint8_t dpadRight : 1; // dpadDown
-            uint8_t a : 1;         // dpadLeft
-            uint8_t dpadLeft : 1;  // dpadRight
-            uint8_t : 4;
-        };
-        uint8_t dpad;
-    };
-
-    uint8_t leftStickX;
-    uint8_t leftStickY;
-    uint8_t slider;
-} __attribute__((packed)) SwitchFestivalProGuitarLayer_Data_t;
 
 typedef struct
 {

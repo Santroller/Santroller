@@ -9,7 +9,7 @@
 // The USB host headers pull in TinyUSB, whose HID enums clash with btstack's, so the
 // shared tick functions from the USB hosts are declared here instead.
 bool switch_tick_digital(const uint8_t *buf, proto_Output &type);
-uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type);
+uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type, const SwitchImuState *imu);
 
 // ============================================================================
 // BtSwitchHost
@@ -18,6 +18,8 @@ uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type);
 void BtSwitchHost::on_connected()
 {
     BluetoothHostInterface::on_connected();
+    m_imu = {};
+    m_imu_init_step = 0;
 }
 
 void BtSwitchHost::send_init_packets()
@@ -48,6 +50,10 @@ void BtSwitchHost::handle_report(const uint8_t *data, uint16_t len)
     {
         m_full_reports = true;
     }
+    if (!m_is_switch2 && len > 0)
+    {
+        m_imu.parse(data, len);
+    }
     if (m_is_switch2 && len > 0)
     {
         switch2_parse_report(data, len, m_switch2_state);
@@ -60,6 +66,31 @@ void BtSwitchHost::update(bool full_poll, bool send_events)
     if (m_is_switch2 || !m_cid || !m_full_reports)
         return;
     uint32_t now = millis();
+    // Once in full report mode, turn the IMU on and read its calibration, one subcommand at a time
+    static const struct
+    {
+        const uint8_t *data;
+        uint8_t len;
+    } imu_subcommands[] = {
+        {SWITCH_ENABLE_IMU, sizeof(SWITCH_ENABLE_IMU)},
+        {SWITCH_READ_IMU_FACTORY_CALIBRATION, sizeof(SWITCH_READ_IMU_FACTORY_CALIBRATION)},
+        {SWITCH_READ_IMU_USER_CALIBRATION, sizeof(SWITCH_READ_IMU_USER_CALIBRATION)},
+    };
+    if (m_imu_init_step < sizeof(imu_subcommands) / sizeof(imu_subcommands[0]))
+    {
+        if (now - m_imu_init_at < SWITCH_SUBCOMMAND_INTERVAL_MS)
+            return;
+        const auto &subcommand = imu_subcommands[m_imu_init_step];
+        uint8_t status;
+        {
+            BtStackLock lock;
+            status = hid_host_send_report(m_cid, subcommand.data[0], subcommand.data + 1, subcommand.len - 1);
+        }
+        m_imu_init_at = now;
+        if (status == ERROR_CODE_SUCCESS)
+            m_imu_init_step++;
+        return;
+    }
     SwitchOutputKind kind;
     uint8_t len = m_output.build(now, m_out_buf, kind);
     if (!len)
@@ -93,11 +124,11 @@ uint16_t BtSwitchHost::tick_analog(proto_Output &type)
     {
         if (m_report_buf[0] == SWITCH_PRO_CON_FULL_REPORT_ID || m_report_buf[0] == 0x21 || m_report_buf[0] == 0x3F)
         {
-            return switch_tick_analog(m_report_buf, type);
+            return switch_tick_analog(m_report_buf, type, nullptr);
         }
         return switch2_tick_analog(m_switch2_state, type);
     }
-    return switch_tick_analog(m_report_buf, type);
+    return switch_tick_analog(m_report_buf, type, &m_imu);
 }
 
 // ============================================================================
@@ -132,7 +163,7 @@ uint16_t BleSwitch2Host::tick_analog(proto_Output &type)
 {
     if (m_report_buf[0] == SWITCH_PRO_CON_FULL_REPORT_ID || m_report_buf[0] == 0x21 || m_report_buf[0] == 0x3F)
     {
-        return switch_tick_analog(m_report_buf, type);
+        return switch_tick_analog(m_report_buf, type, nullptr);
     }
     return switch2_tick_analog(m_state, type);
 }

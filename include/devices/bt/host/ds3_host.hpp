@@ -28,6 +28,7 @@ public:
     uint16_t tick_analog(proto_Output &type) override;
     bool tick_axis_digital(proto_Output &type) override;
     uint16_t tick_button_pressure(proto_Output &type) override;
+    bool has_motion() const override { return true; }
 
 private:
     ps3_output_report m_output_report;

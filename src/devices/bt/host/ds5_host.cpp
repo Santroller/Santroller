@@ -8,7 +8,7 @@
 // The USB host headers pull in TinyUSB, whose HID enums clash with btstack's, so the
 // shared tick functions from the USB hosts are declared here instead.
 bool ps5_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
-uint16_t ps5_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+uint16_t ps5_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, const PSImuCalibration *imu);
 bool ps5_parse_capabilities(const uint8_t *data, uint16_t len,
                             SubType &subtype, bool &sensors, bool &lightbar, bool &vibration, bool &touchpad);
 
@@ -218,5 +218,6 @@ bool BtDs5Host::tick_digital(proto_Output &type)
 
 uint16_t BtDs5Host::tick_analog(proto_Output &type)
 {
-    return ps5_tick_analog(m_report_buf, m_subtype, m_third_party, type);
+    // The calibration is only read to switch the controller to full reports, so this is the nominal scale
+    return ps5_tick_analog(m_report_buf, m_subtype, m_third_party, type, m_sensors_supported ? &m_imu_calibration : nullptr);
 }

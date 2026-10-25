@@ -206,6 +206,8 @@ typedef struct{
   uint8_t rumble;
   uint8_t extension_size;
   uint8_t extension_data[32];
+  // wiimote.accel_x/y/z hold motion from the mappings, instead of the remote lying still
+  uint8_t has_accel;
 }WiimoteReport;
 
 enum MODE_WIIMOTE{

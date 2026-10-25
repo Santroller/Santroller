@@ -26,8 +26,7 @@ static int64_t __not_in_flash_func(restart_handler)(__unused alarm_id_t id, void
 #define ACCEL_POLL_US 2000
 // How long to wait before probing again when no accelerometer answered
 #define ACCEL_PROBE_RETRY_MS 500
-// Every supported accelerometer is set up so 1g reads as roughly this
-#define ACCEL_1G 16384.0f
+#define ACCEL_1G Accelerometer::ONE_G
 // Stop gating after this long, so a chip that reads a different scale, or constant shaking,
 // can't freeze the output
 #define ACCEL_GATE_MAX_US 250000
@@ -51,11 +50,12 @@ void __not_in_flash_func(Accelerometer::schedule_us)(uint32_t delay_us)
 void Accelerometer::clear()
 {
     memset(accel, 0, sizeof(accel));
+    memset(gyro, 0, sizeof(gyro));
     memset(lis3dhAdc, 0, sizeof(lis3dhAdc));
     filterReset = true;
 }
 
-void __not_in_flash_func(Accelerometer::push_sample)(int32_t x, int32_t y, int32_t z)
+void __not_in_flash_func(Accelerometer::push_sample)(int32_t x, int32_t y, int32_t z, int32_t gx, int32_t gy, int32_t gz)
 {
     uint8_t next = (sampleHead + 1) % SAMPLE_RING_SIZE;
     if (next == sampleTail)
@@ -67,6 +67,9 @@ void __not_in_flash_func(Accelerometer::push_sample)(int32_t x, int32_t y, int32
     sample.accel[0] = x;
     sample.accel[1] = y;
     sample.accel[2] = z;
+    sample.gyro[0] = gx;
+    sample.gyro[1] = gy;
+    sample.gyro[2] = gz;
     sample.time_us = time_us_32();
     __dmb();
     sampleHead = next;
@@ -74,6 +77,9 @@ void __not_in_flash_func(Accelerometer::push_sample)(int32_t x, int32_t y, int32
 
 void Accelerometer::filter_sample(const Sample &sample)
 {
+    // the filters are for tilt, which only reads acceleration. Gyro is passed on as it is, even
+    // for samples the gate drops, as a strum bar hit is a shake rather than a turn
+    memcpy(gyro, sample.gyro, sizeof(gyro));
     float out[3] = {(float)sample.accel[0], (float)sample.accel[1], (float)sample.accel[2]};
     uint32_t dt = sample.time_us - lastSampleUs;
     if (!filterStarted || dt > ACCEL_FILTER_RESTART_US)
@@ -251,9 +257,11 @@ void __not_in_flash_func(Accelerometer::process_data)(uint8_t addr, bool running
         // Polls read the data ready flag along with the data, as they run faster than the
         // accelerometer samples, and the filters should only see each sample once
         case MPU_6050_POLL:
+            // acceleration, temperature, then gyro
             if (bufferRx[0] & MPU6050_INT_DATA_RDY)
             {
-                push_sample((int16_t)(bufferRx[1] << 8 | bufferRx[2]), (int16_t)(bufferRx[3] << 8 | bufferRx[4]), (int16_t)(bufferRx[5] << 8 | bufferRx[6]));
+                push_sample((int16_t)(bufferRx[1] << 8 | bufferRx[2]), (int16_t)(bufferRx[3] << 8 | bufferRx[4]), (int16_t)(bufferRx[5] << 8 | bufferRx[6]),
+                            (int16_t)(bufferRx[9] << 8 | bufferRx[10]), (int16_t)(bufferRx[11] << 8 | bufferRx[12]), (int16_t)(bufferRx[13] << 8 | bufferRx[14]));
             }
             schedule_us(ACCEL_POLL_US);
             break;
@@ -413,6 +421,12 @@ void __not_in_flash_func(Accelerometer::process_data)(uint8_t addr, bool running
             interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
             break;
         case MPU_6050_ACCEL_CONFIG:
+            status = MPU_6050_GYRO_CONFIG;
+            bufferTx[0] = MPU6050_REG_GYRO_CONFIG;
+            bufferTx[1] = MPU6050_GYRO_CONFIG_2000DPS;
+            interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
+            break;
+        case MPU_6050_GYRO_CONFIG:
             // a known 1kHz sample rate, so the data ready flag tracks real accelerometer samples
             status = MPU_6050_CONFIG;
             bufferTx[0] = MPU6050_REG_CONFIG;
@@ -468,9 +482,12 @@ void __not_in_flash_func(Accelerometer::process_data)(uint8_t addr, bool running
         break;
     case LIS3DH_POLL:
     case LIS_FAMILY_POLL:
-    case MPU_6050_POLL:
         // status, then the outputs
         interface.dmaWriteRead(address, &pollReg, 1, bufferRx, 7);
+        break;
+    case MPU_6050_POLL:
+        // status, acceleration, temperature and gyro
+        interface.dmaWriteRead(address, &pollReg, 1, bufferRx, 15);
         break;
     case ADXL_POLL:
         // interrupt source, data format, then the outputs

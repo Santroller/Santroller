@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "protocols/motion.hpp"
 
 static const uint8_t ps4_colors[4][3] = {
     {0x00, 0x00, 0x40}, /* Blue */
@@ -57,8 +58,11 @@ typedef struct {
     uint8_t leftTrigger : 8;
     uint8_t rightTrigger : 8;
 
-    uint32_t padding : 24;
-    uint8_t mystery[22];
+    // in 16/3 µs units
+    uint16_t sensorTimestamp;
+    uint8_t sensorTemperature;
+    PSImuSample imu;
+    uint8_t mystery[10];
     uint8_t touchpadData[8];
     uint8_t mystery_2[21];
 } __attribute__((packed)) PS4Dpad_Data_t;
@@ -97,8 +101,11 @@ typedef struct {
     uint8_t leftTrigger : 8;
     uint8_t rightTrigger : 8;
 
-    uint32_t padding : 24;
-    uint8_t mystery[22];
+    // in 16/3 µs units
+    uint16_t sensorTimestamp;
+    uint8_t sensorTemperature;
+    PSImuSample imu;
+    uint8_t mystery[10];
     uint8_t touchpadData[8];
     uint8_t mystery_2[21];
 } __attribute__((packed)) PS4Gamepad_Data_t;

@@ -16,6 +16,30 @@ static bool uses_ps3_gamepad_report(SubType subtype)
     return subtype == Gamepad || subtype == Taiko;
 }
 
+// Writes the motion a mapping set into the four 10 bit Sixaxis values at offset, in report order
+// (three accelerometer values then the gyro). Unset values are left alone, as some instruments keep
+// other things there, such as a guitar's tilt or a PowerGig instrument's mode.
+static void write_ps3_motion(uint8_t *report, size_t offset, const MotionState &motion, bool dualshock3)
+{
+    PS3ImuSample sample = dualshock3 ? ds3_imu_encode(motion) : ps3_third_party_imu_encode(motion);
+    // which axis each accelerometer value comes from, see protocols/motion.hpp
+    static const MotionAxis ds3_order[3] = {MotionAccelX, MotionAccelZ, MotionAccelY};
+    static const MotionAxis third_party_order[3] = {MotionAccelX, MotionAccelY, MotionAccelZ};
+    const MotionAxis *order = dualshock3 ? ds3_order : third_party_order;
+    uint16_t values[4] = {sample.accel[0], sample.accel[1], sample.accel[2], sample.gyro};
+    bool set[4] = {motion.has(order[0]), motion.has(order[1]), motion.has(order[2]), motion.has(MotionGyroY)};
+    for (int i = 0; i < 4; i++)
+    {
+        if (!set[i])
+        {
+            continue;
+        }
+        // a DualShock 3 is big endian
+        uint16_t value = dualshock3 ? __builtin_bswap16(values[i]) : values[i];
+        memcpy(report + offset + i * sizeof(uint16_t), &value, sizeof(value));
+    }
+}
+
 uint8_t ef_byte = 0;
 uint8_t master_bd_addr[6];
 uint8_t f5_state = 0;
@@ -313,6 +337,7 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
     }
     memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     update_stagekit();
+    MotionState motion;
     for (const auto &profile : profiles)
     {
         profile->reset_drum_state();
@@ -320,10 +345,22 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
         {
             mapping->update(full_poll, send_events);
             mapping->update_ps3(epin_buf);
+            mapping->update_motion(motion);
         }
         for (const auto &led : profile->leds)
         {
             led->update(full_poll, send_events);
+        }
+    }
+    if (subtype != PowerGigGuitar && subtype != PowerGigDrum)
+    {
+        if (uses_ps3_gamepad_report(subtype))
+        {
+            write_ps3_motion(epin_buf, offsetof(PS3Gamepad_Data_t, accelX), motion, true);
+        }
+        else
+        {
+            write_ps3_motion(epin_buf, offsetof(PS3Dpad_Data_t, accelX), motion, false);
         }
     }
 

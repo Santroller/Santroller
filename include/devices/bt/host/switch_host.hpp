@@ -62,10 +62,13 @@ public:
     void set_rumble(uint8_t left, uint8_t right) override { m_output.set_rumble(left, right); }
     void set_player_led(uint8_t player) override { m_output.set_player(player); }
     bool has_rumble() const override { return !m_is_switch2; }
+    bool has_motion() const override { return m_is_switch2 ? m_switch2_state.has_imu : m_imu.has_sample; }
     bool has_player_led() const override { return !m_is_switch2; }
 
 private:
     static constexpr uint32_t SWITCH_MODE_RETRY_MS = 500;
+    // between the subcommands sent after the report mode, so each gets its reply before the next
+    static constexpr uint32_t SWITCH_SUBCOMMAND_INTERVAL_MS = 50;
     bool m_is_switch2 = false;
     uint32_t m_mode_sent_at = 0;
     // Set once full reports arrive, so no output goes out ahead of the report mode command
@@ -73,6 +76,9 @@ private:
     SwitchOutput m_output;
     uint8_t m_out_buf[SWITCH_OUTPUT_MAX_LEN] = {};
     Switch2ControllerState m_switch2_state = {};
+    SwitchImuState m_imu;
+    uint8_t m_imu_init_step = 0;
+    uint32_t m_imu_init_at = 0;
 };
 
 // ---------------------------------------------------------------------------
@@ -91,6 +97,7 @@ public:
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
     bool nintendo_face_layout() const override { return true; }
+    bool has_motion() const override { return m_state.has_imu; }
 
 private:
     Switch2ControllerState m_state = {};

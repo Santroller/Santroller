@@ -369,18 +369,7 @@ void GamepadAxisMapping::update_ps3(uint8_t *buf)
     case Gamepad_RightTrigger:
         report->rightTrigger = m_calibrated_value >> 8;
         break;
-    // motion axes are 10 bit, resting at PS3_ACCEL_CENTER
-    case Gamepad_AccelX:
-        report->accelX = m_calibrated_value >> 6;
-        break;
-    case Gamepad_AccelY:
-        report->accelY = m_calibrated_value >> 6;
-        break;
-    case Gamepad_AccelZ:
-        report->accelZ = m_calibrated_value >> 6;
-        break;
-    case Gamepad_Gyro:
-        report->gyro = m_calibrated_value >> 6;
+    default:
         break;
     }
 }
@@ -542,6 +531,37 @@ void GamepadAxisMapping::update_xboxone(uint8_t *buf)
         break;
     }
 }
+void GamepadAxisMapping::update_motion(MotionState &motion)
+{
+    if (!m_input->valid())
+    {
+        return;
+    }
+    switch (m_mapping.mapping.mapping.gamepadAxis)
+    {
+    case Gamepad_AccelX:
+        motion.write(MotionAccelX, motion_from_axis(m_calibrated_value));
+        break;
+    case Gamepad_AccelY:
+        motion.write(MotionAccelY, motion_from_axis(m_calibrated_value));
+        break;
+    case Gamepad_AccelZ:
+        motion.write(MotionAccelZ, motion_from_axis(m_calibrated_value));
+        break;
+    case Gamepad_GyroX:
+        motion.write(MotionGyroX, motion_from_axis(m_calibrated_value));
+        break;
+    case Gamepad_GyroY:
+        motion.write(MotionGyroY, motion_from_axis(m_calibrated_value));
+        break;
+    case Gamepad_GyroZ:
+        motion.write(MotionGyroZ, motion_from_axis(m_calibrated_value));
+        break;
+    default:
+        break;
+    }
+}
+
 PS3GamepadAxisMapping::PS3GamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile)
 {
 }
@@ -584,18 +604,7 @@ void PS3GamepadAxisMapping::update_ps3(uint8_t *buf)
     case Gamepad_RightTrigger:
         report->rightTrigger = m_calibrated_value >> 8;
         break;
-    // motion axes are 10 bit, resting at PS3_ACCEL_CENTER, and big endian like a real DS3
-    case Gamepad_AccelX:
-        report->accelX = __builtin_bswap16(m_calibrated_value >> 6);
-        break;
-    case Gamepad_AccelY:
-        report->accelY = __builtin_bswap16(m_calibrated_value >> 6);
-        break;
-    case Gamepad_AccelZ:
-        report->accelZ = __builtin_bswap16(m_calibrated_value >> 6);
-        break;
-    case Gamepad_Gyro:
-        report->gyro = __builtin_bswap16(m_calibrated_value >> 6);
+    default:
         break;
     }
     return;

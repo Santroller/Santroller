@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "input.pb.h"
+#include "protocols/motion.hpp"
 
 // ---------------------------------------------------------------------------
 // Steam Controller Commands & Registers
@@ -20,6 +21,8 @@
 #define STEAM_REG_RPAD_MARGIN          0x18
 #define STEAM_REG_LED                  0x2D
 #define STEAM_REG_GYRO_MODE            0x30
+// SDL's SETTING_GYRO_MODE_SEND_RAW_ACCEL | SETTING_GYRO_MODE_SEND_RAW_GYRO
+#define STEAM_GYRO_MODE_RAW            0x18
 
 // Command buffers to clear digital mappings and disable lizard mode
 static const uint8_t STEAM_CMD_CLEAR_MAPPINGS_BUF[] = {
@@ -28,7 +31,7 @@ static const uint8_t STEAM_CMD_CLEAR_MAPPINGS_BUF[] = {
 
 static const uint8_t STEAM_CMD_DISABLE_LIZARD_BUF[] = {
     0xC0, STEAM_CMD_WRITE_REGISTER, 0x0F,
-    STEAM_REG_GYRO_MODE,   0x00, 0x00, // Disable gyro
+    STEAM_REG_GYRO_MODE,   STEAM_GYRO_MODE_RAW, 0x00, // Raw accel and gyro
     STEAM_REG_LPAD_MODE,   0x07, 0x00, // Disable trackpad cursor emulation
     STEAM_REG_RPAD_MODE,   0x07, 0x00, // Disable mouse emulation
     STEAM_REG_RPAD_MARGIN, 0x00, 0x00, // Margin 0
@@ -57,6 +60,9 @@ struct SteamControllerState {
     int16_t  pad_y = 0;
     uint8_t  trigger_l = 0;
     uint8_t  trigger_r = 0;
+    int16_t  accel[3] = {};
+    int16_t  gyro[3] = {};
+    bool     has_imu = false;
 };
 
 // Button bits in 32-bit state:
@@ -119,7 +125,16 @@ static inline uint16_t steam_tick_analog(const SteamControllerState &s, proto_Ou
         case Gamepad_RightStickY:  return (uint16_t)s.pad_y ^ 0x8000;
         case Gamepad_LeftTrigger:  return (uint16_t)s.trigger_l * 0x101;
         case Gamepad_RightTrigger: return (uint16_t)s.trigger_r * 0x101;
-        default:                   return 0;
+        default:
+            if (is_motion_axis(type.mapping.gamepadAxis))
+            {
+                if (!s.has_imu)
+                    return MOTION_ZERO;
+                float accel[3], gyro[3];
+                steam_imu_decode(s.accel, s.gyro, accel, gyro);
+                return motion_host_axis(type.mapping.gamepadAxis, accel, gyro);
+            }
+            return 0;
         }
     }
     return 0;
@@ -176,6 +191,26 @@ static inline bool steam_parse_ble_report(const uint8_t *report, uint16_t len, S
             out.pad_x = (int16_t)(report[idx] | (report[idx + 1] << 8));
             out.pad_y = (int16_t)(report[idx + 2] | (report[idx + 3] << 8));
         }
+        idx += 4;
+    }
+    if (flags & 0x0400) // ACCEL
+    {
+        if (idx + 6 <= len)
+        {
+            for (int i = 0; i < 3; i++)
+                out.accel[i] = (int16_t)(report[idx + i * 2] | (report[idx + i * 2 + 1] << 8));
+            out.has_imu = true;
+        }
+        idx += 6;
+    }
+    if (flags & 0x0800) // GYRO
+    {
+        if (idx + 6 <= len)
+        {
+            for (int i = 0; i < 3; i++)
+                out.gyro[i] = (int16_t)(report[idx + i * 2] | (report[idx + i * 2 + 1] << 8));
+        }
+        idx += 6;
     }
     return true;
 }
@@ -198,6 +233,16 @@ static inline bool steam_parse_usb_report(const uint8_t *buf, uint16_t len, Stea
         out.stick_y = (int16_t)(buf[18] | (buf[19] << 8));
         out.pad_x = (int16_t)(buf[20] | (buf[21] << 8));
         out.pad_y = (int16_t)(buf[22] | (buf[23] << 8));
+        // then the 16 bit triggers, acceleration and gyro
+        if (len >= 40)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                out.accel[i] = (int16_t)(buf[28 + i * 2] | (buf[29 + i * 2] << 8));
+                out.gyro[i] = (int16_t)(buf[34 + i * 2] | (buf[35 + i * 2] << 8));
+            }
+            out.has_imu = out.accel[0] || out.accel[1] || out.accel[2];
+        }
         return true;
     }
 

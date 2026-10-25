@@ -1,3 +1,4 @@
+#include "protocols/motion.hpp"
 #include "tusb_option.h"
 #include "devices/usb/host/hid/ps3_host.h"
 #include "class/hid/hid.h"
@@ -735,6 +736,13 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
             case Gamepad_RightStickY:
                 return (UINT8_MAX - data->rightStickY) * 0x101u;
             default:
+                if (is_motion_axis(type.mapping.gamepadAxis))
+                {
+                    float accel[3], gyro[3];
+                    PS3ImuSample sample = {{__builtin_bswap16(data->accelX), __builtin_bswap16(data->accelY), __builtin_bswap16(data->accelZ)}, __builtin_bswap16(data->gyro)};
+                    ds3_imu_decode(sample, accel, gyro);
+                    return motion_host_axis(type.mapping.gamepadAxis, accel, gyro);
+                }
                 return 0;
             }
         }
@@ -758,6 +766,14 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
         case Gamepad_RightStickY:
             return (UINT8_MAX - data->rightStickY) * 0x101u;
         default:
+            if (is_motion_axis(type.mapping.gamepadAxis))
+            {
+                // in report order, which the struct names X, Z, Y
+                float accel[3], gyro[3];
+                PS3ImuSample sample = {{data->accelX, data->accelZ, data->accelY}, data->gyro};
+                ps3_third_party_imu_decode(sample, accel, gyro);
+                return motion_host_axis(type.mapping.gamepadAxis, accel, gyro);
+            }
             return 0;
         }
     }

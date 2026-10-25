@@ -118,7 +118,7 @@ void SteamHost::configure_controller()
     memset(m_ep_out_buf, 0, sizeof(m_ep_out_buf));
     m_ep_out_buf[0] = STEAM_CMD_WRITE_REGISTER; // 0x87
     m_ep_out_buf[1] = 0x0F;                     // 15 bytes of settings (5 * 3 bytes)
-    m_ep_out_buf[2] = STEAM_REG_GYRO_MODE;   m_ep_out_buf[3] = 0x00; m_ep_out_buf[4] = 0x00;
+    m_ep_out_buf[2] = STEAM_REG_GYRO_MODE;   m_ep_out_buf[3] = STEAM_GYRO_MODE_RAW; m_ep_out_buf[4] = 0x00;
     m_ep_out_buf[5] = STEAM_REG_LPAD_MODE;   m_ep_out_buf[6] = 0x07; m_ep_out_buf[7] = 0x00;
     m_ep_out_buf[8] = STEAM_REG_RPAD_MODE;   m_ep_out_buf[9] = 0x07; m_ep_out_buf[10] = 0x00;
     m_ep_out_buf[11] = STEAM_REG_RPAD_MARGIN; m_ep_out_buf[12] = 0x00; m_ep_out_buf[13] = 0x00;

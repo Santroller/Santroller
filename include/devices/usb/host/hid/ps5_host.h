@@ -5,7 +5,8 @@
 
 // Shared tick implementations — callable from both USB and BT hosts
 bool ps5_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
-uint16_t ps5_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type);
+// imu is null for controllers without motion
+uint16_t ps5_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, const PSImuCalibration *imu);
 bool ps5_parse_capabilities(const uint8_t *data, uint16_t len,
                             SubType &subtype, bool &sensors, bool &lightbar, bool &vibration, bool &touchpad);
 
@@ -34,11 +35,14 @@ public:
     void set_player_led(uint8_t player) override;
     void set_lightbar(uint8_t r, uint8_t g, uint8_t b) override;
     bool has_rumble() const override { return true; }
+    bool has_motion() const override { return m_sensors_supported; }
     bool has_player_led() const override { return true; }
     bool has_lightbar() const override { return true; }
     std::optional<uint64_t> hardware_id() const override { return m_hardware_id ? m_hardware_id : UsbHostInterface::hardware_id(); }
 
 private:
+    void read_imu_calibration();
+    PSImuCalibration m_imu_calibration;
     void read_pairing_mac();
     // the MAC from the pairing info report, the same one the controller uses over bluetooth
     std::optional<uint64_t> m_hardware_id;

@@ -46,6 +46,9 @@
 #define MPU6050_CONFIG_DLPF_184HZ 0x01
 #define MPU6050_REG_WHO_AM_I 0x75
 #define MPU6050_REG_ACCEL_CONFIG 0x1C
+#define MPU6050_REG_GYRO_CONFIG 0x1B
+// ±2000 °/s, 16.4 counts per °/s
+#define MPU6050_GYRO_CONFIG_2000DPS 0x18
 #define MPU6050_REG_PWR_MGMT_1 0x6B
 #define MPU6050_ID 0x68
 #define MPU6050_ID2 0x98 // Common register-compatible clone
@@ -76,6 +79,7 @@ typedef enum
     ADXL_DATAFORMAT,
     ADXL_BW_RATE,
     MPU_6050_ACCEL_CONFIG,
+    MPU_6050_GYRO_CONFIG,
     MPU_6050_CONFIG,
     MPU_6050_INT_ENABLE,
     MPU_6050_PWR_MGMT_1_READ,
@@ -103,20 +107,27 @@ public:
     uint16_t lis3dhAdc[3] = {};
     // The filtered acceleration, updated by tick()
     int32_t accel[3] = {};
+    // Rate of turn at 16.4 counts per °/s, unfiltered, from accelerometers that have a gyro
+    int32_t gyro[3] = {};
+    bool has_gyro() const { return type == AccelerometerType::MPU6050; }
     void process_data(uint8_t addr, bool running, bool timeout, bool abort_detected, bool stop_detected);
 
     static constexpr uint8_t MEDIAN_MAX = 9;
+    // Every supported accelerometer is set up so 1g reads as roughly this
+    static constexpr float ONE_G = 16384.0f;
+    static constexpr float GYRO_PER_DPS = 16.4f;
 
 private:
     struct Sample
     {
         int32_t accel[3];
+        int32_t gyro[3];
         uint32_t time_us;
     };
     // New samples go through a ring from the I2C interrupt to tick(), so the filters run outside
     // the interrupt but still see every sample
     static constexpr uint8_t SAMPLE_RING_SIZE = 16;
-    void push_sample(int32_t x, int32_t y, int32_t z);
+    void push_sample(int32_t x, int32_t y, int32_t z, int32_t gx = 0, int32_t gy = 0, int32_t gz = 0);
     void filter_sample(const Sample &sample);
     void schedule_us(uint32_t delay_us);
     void probe_later();

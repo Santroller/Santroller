@@ -553,6 +553,11 @@ static void input_update_wiimote(){
         case CLASSIC_CONTROLLER:
             struct wiimote_buttons wiimote_report = input_report->wiimote;
             memcpy(&wiimote.usr, &wiimote_report, 14);
+            if(input_report->has_accel){
+                wiimote.usr.accel_x = input_report->wiimote.accel_x;
+                wiimote.usr.accel_y = input_report->wiimote.accel_y;
+                wiimote.usr.accel_z = input_report->wiimote.accel_z;
+            }
             break;
         default:
             break;

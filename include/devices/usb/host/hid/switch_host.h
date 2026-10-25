@@ -6,7 +6,11 @@
 #include "protocols/switch2.hpp"
 
 bool switch_tick_digital(const uint8_t *buf, proto_Output &type);
-uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type);
+// imu is null for controllers whose motion isn't read
+uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type, const SwitchImuState *imu);
+
+// 80 02, 80 04, then the subcommands in send_handshake_step
+#define SWITCH_HANDSHAKE_STEPS 6
 
 class SwitchHost : public HidHost
 {
@@ -28,6 +32,8 @@ public:
     void set_rumble(uint8_t left, uint8_t right) override;
     void set_player_led(uint8_t player) override;
     bool has_rumble() const override { return true; }
+    bool has_motion() const override { return m_is_switch2 ? m_switch2_state.has_imu : m_imu.has_sample; }
+    void set_switch2_gyro_bias(const float bias[3]) override { memcpy(m_switch2_state.gyro_bias, bias, sizeof(m_switch2_state.gyro_bias)); }
     bool has_player_led() const override { return true; }
 
 private:
@@ -40,6 +46,7 @@ private:
 
     bool m_is_switch2 = false;
     Switch2ControllerState m_switch2_state = {};
+    SwitchImuState m_imu;
     uint8_t m_ep_in = 0;
     uint8_t m_ep_out = 0;
     uint8_t m_ep_in_size = 0;

@@ -232,7 +232,8 @@ static bool ble_is_mac_connected(const bd_addr_t mac)
 {
     for (const auto &ctx : s_context_pool)
     {
-        if (ctx.in_use && bd_addr_cmp(ctx.addr, mac) == 0)
+        // a disconnected context lingers until ble_tick frees it, and mustn't keep its controller off the whitelist
+        if (ctx.in_use && !ctx.pending_destroy && bd_addr_cmp(ctx.addr, mac) == 0)
         {
             return true;
         }
@@ -1137,6 +1138,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 {
                     hids_host_disconnect(ctx->hids_cid);
                 }
+                // The whitelist can reconnect it before ble_tick frees this context, and the new connection may
+                // be given the same handle, so stop this one matching it
+                ctx->con_handle = HCI_CON_HANDLE_INVALID;
+                ctx->hids_cid = 0;
                 ctx->pending_destroy = true;
                 ble_sync_reconnect();
             }
@@ -1182,6 +1187,11 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 bd_addr_type_t peer_addr_type = (bd_addr_type_t)gap_subevent_le_connection_complete_get_peer_address_type(packet);
 
                 auto ctx = ble_context_alloc();
+                if (!ctx)
+                {
+                    gap_disconnect(handle);
+                    break;
+                }
                 ctx->con_handle = handle;
                 bd_addr_copy(ctx->addr, peer_addr);
                 ctx->addr_type = peer_addr_type;

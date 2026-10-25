@@ -42,6 +42,7 @@ public:
     void set_rumble(uint8_t left, uint8_t right) override;
     void set_player_led(uint8_t player) override;
     bool has_rumble() const override { return true; }
+    bool has_motion() const override { return !m_is_pro && m_has_accel; }
     bool has_player_led() const override { return true; }
     void update(bool full_poll, bool send_events) override;
 
@@ -65,6 +66,10 @@ private:
     uint8_t m_player = 0;
     bool m_rumble = false;
     uint8_t m_wii_buttons[2] = {};
+    // The remote's own accelerometer, 10 bit, from report modes 0x31 and 0x35
+    uint16_t m_wii_accel[3] = {};
+    bool m_has_accel = false;
+    void read_accel(const uint8_t *data);
     uint8_t m_fsm_state = 0;
     bool m_has_ext = false;
     bool m_led_sent = false;

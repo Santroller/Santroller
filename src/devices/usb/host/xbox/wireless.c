@@ -7,8 +7,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#define PAIRING_TIMEOUT_MS 30000
-#define PAIRING_RESPONSE_GRACE_MS 200
+#define PAIRING_TIMEOUT_MS 60000
+#define PAIRING_SCAN_INTERVAL_MS 2000
+#define PAIRING_RETRY_MS 1000
 
 static void wireless_handle_client_lost(struct mt76_dev *dev, const uint8_t *data, uint16_t len);
 static void wireless_handle_client_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, uint8_t wcid, const uint8_t *addr);
@@ -98,16 +99,87 @@ static void wireless_request_pairing(struct mt76_dev *dev, bool enable)
     dev->pending_pairing = enable ? 1 : 0;
 }
 
+// Recent traffic means we're on the right channel, so hold the pairing scan there
+static void wireless_refresh_pairing_scan(struct mt76_dev *dev)
+{
+    if (dev->pairing_active)
+    {
+        dev->last_wlan_rx = to_ms_since_boot(get_absolute_time());
+    }
+}
+
+static uint8_t wireless_current_channel_idx(struct mt76_dev *dev)
+{
+    for (uint8_t i = 0; i < MT76_NUM_CHANNELS; i++)
+    {
+        if (dev->current_channel == &dev->channels[i])
+        {
+            return i;
+        }
+    }
+    return 0;
+}
+
+static void wireless_pairing_scan(struct mt76_dev *dev, uint32_t now)
+{
+    // Switching channels mid-handshake strands a connecting controller on the old one
+    for (int i = 0; i < MT76_MAX_CLIENTS; i++)
+    {
+        if (dev->clients[i].used)
+        {
+            return;
+        }
+    }
+
+    if (now - dev->last_wlan_rx < PAIRING_SCAN_INTERVAL_MS)
+    {
+        return;
+    }
+
+    uint8_t next_idx = (dev->pairing_scan_idx + 1) % MT76_NUM_CHANNELS;
+    struct mt76_channel *chan = &dev->channels[next_idx];
+    chan->scan = chan->primary;
+    mt76_switch_channel(dev, chan);
+    // The beacon advertises the channel the controller should associate on
+    mt76_write_beacon(dev, true);
+    dev->pairing_scan_idx = next_idx;
+    dev->last_wlan_rx = now;
+}
+
+// Answer straight from the RX path rather than waiting for wireless_task, as Windows replies within ~50us
+static void wireless_send_pair_response_now(struct mt76_dev *dev, const uint8_t *addr)
+{
+    if (dev->pairing_state != MT76_PAIRING_ACTIVE || dev->pairing_response_sent)
+    {
+        return;
+    }
+    if (mt76_send_pair_response_async(dev, addr) < 0)
+    {
+        // wireless_task sends it the slow way instead
+        return;
+    }
+    printf("Pairing request from %02X:%02X:%02X:%02X:%02X:%02X, answered from the RX path\n",
+           addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+    // wireless_task closes pairing next, before the controller associates (matches xone)
+    dev->pairing_response_sent = true;
+}
+
+void wireless_enable_pairing(struct mt76_dev *dev)
+{
+    wireless_request_pairing(dev, true);
+}
+
 static void wireless_apply_pairing(struct mt76_dev *dev, bool enable)
 {
     bool was_pairing_active = dev->pairing_active;
-    enum mt76_pairing_state was_pairing_state = dev->pairing_state;
     dev->pairing_active = enable;
 
     if (mt76_set_pairing(dev, enable) < 0)
     {
+        // Settle back to the state we were in so the request can be retried after a pause
         dev->pairing_active = was_pairing_active;
-        dev->pairing_state = was_pairing_state;
+        dev->pairing_state = was_pairing_active ? MT76_PAIRING_ACTIVE : MT76_PAIRING_DISABLED;
+        dev->pairing_retry_at = to_ms_since_boot(get_absolute_time()) + PAIRING_RETRY_MS;
         printf("Failed to %s pairing mode\n", enable ? "enable" : "disable");
         return;
     }
@@ -128,8 +200,9 @@ static void wireless_apply_pairing(struct mt76_dev *dev, bool enable)
     {
         dev->pairing_state = MT76_PAIRING_ACTIVE;
         dev->pairing_start_time = to_ms_since_boot(get_absolute_time());
+        dev->last_wlan_rx = dev->pairing_start_time;
+        dev->pairing_scan_idx = wireless_current_channel_idx(dev);
         dev->pairing_response_sent = false;
-        dev->pairing_disable_at = 0;
     }
     else
     {
@@ -140,7 +213,8 @@ static void wireless_apply_pairing(struct mt76_dev *dev, bool enable)
 void wireless_task(struct mt76_dev *dev)
 {
     struct mt76_wireless_event event;
-    if (wireless_dequeue_event(dev, &event))
+    // Drain everything queued: the controller only waits briefly for a pairing response
+    while (wireless_dequeue_event(dev, &event))
     {
         switch (event.type)
         {
@@ -169,18 +243,23 @@ void wireless_task(struct mt76_dev *dev)
         wireless_apply_pairing(dev, enable);
     }
 
-    if (dev->pairing_active)
+    uint32_t pairing_now = to_ms_since_boot(get_absolute_time());
+    if (dev->pairing_active && (int32_t)(pairing_now - dev->pairing_retry_at) >= 0)
     {
-        uint32_t now = to_ms_since_boot(get_absolute_time());
-        if (dev->pairing_response_sent && dev->pairing_disable_at != 0 &&
-            now >= dev->pairing_disable_at)
+        uint32_t now = pairing_now;
+        if (dev->pairing_response_sent)
         {
+            // Close pairing before the controller associates (matches xone); also retries a failed disable
             wireless_request_pairing(dev, false);
         }
         else if (!dev->pairing_response_sent && now - dev->pairing_start_time >= PAIRING_TIMEOUT_MS)
         {
             printf("Pairing timeout - disabling pairing mode\n");
             wireless_request_pairing(dev, false);
+        }
+        else if (!dev->pairing_response_sent)
+        {
+            wireless_pairing_scan(dev, now);
         }
     }
 }
@@ -202,6 +281,7 @@ static void wireless_process_message(struct mt76_dev *dev, const uint8_t *data, 
         {
         case XONE_MT_EVT_BUTTON:
             printf("Pairing button pressed on adapter!\n");
+            wireless_refresh_pairing_scan(dev);
             if (dev->pairing_state == MT76_PAIRING_DISABLED)
             {
                 wireless_request_pairing(dev, true);
@@ -316,8 +396,20 @@ static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, ui
 
     if (ftype == IEEE80211_FTYPE_MGMT)
     {
+        // RX is promiscuous while pairing, so frames meant for nearby networks arrive too
+        if (memcmp(hdr->addr1, dev->mac_address, MT76_MAC_ADDR_LEN) != 0)
+        {
+            return;
+        }
+
         if (stype == IEEE80211_STYPE_ASSOC_REQ)
         {
+            // Promiscuous RX can surface spurious requests from multicast or zero addresses
+            static const uint8_t zero_addr[MT76_MAC_ADDR_LEN] = {0};
+            if ((hdr->addr2[0] & 0x01) || memcmp(hdr->addr2, zero_addr, MT76_MAC_ADDR_LEN) == 0)
+            {
+                return;
+            }
             wireless_queue_association(dev, hdr->addr2);
         }
         else if (stype == IEEE80211_STYPE_DISASSOC)
@@ -332,6 +424,10 @@ static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, ui
         {
             if (payload_len >= 2)
             {
+                if (payload[1] == XONE_MT_CLIENT_PAIR_REQ)
+                {
+                    wireless_send_pair_response_now(dev, hdr->addr2);
+                }
                 wireless_queue_client_command(dev, payload[1], wcid, hdr->addr2);
             }
         }
@@ -345,6 +441,7 @@ static void wireless_process_frame(struct mt76_dev *dev, const uint8_t *data, ui
                 // Skip 802.11 QoS header (26 bytes: 24 base + 2 QoS control)
                 if (payload_len >= 2)
                 {
+                    wireless_refresh_pairing_scan(dev);
                     xbox_adapter_process_gip_data(dev, wcid, payload, payload_len);
                 }
             }
@@ -419,6 +516,7 @@ static void wireless_handle_client_command(struct mt76_dev *dev, const uint8_t *
     switch (cmd)
     {
     case XONE_MT_CLIENT_PAIR_REQ:
+        wireless_refresh_pairing_scan(dev);
         if (dev->pairing_state != MT76_PAIRING_ACTIVE || dev->pairing_response_sent)
         {
             break;
@@ -431,9 +529,9 @@ static void wireless_handle_client_command(struct mt76_dev *dev, const uint8_t *
         {
             break;
         }
-
         dev->pairing_response_sent = true;
-        dev->pairing_disable_at = to_ms_since_boot(get_absolute_time()) + PAIRING_RESPONSE_GRACE_MS;
+        // Close pairing before the controller associates (matches xone)
+        wireless_request_pairing(dev, false);
 
         printf("Pairing response sent, pairing mode will disable\n");
         break;
@@ -519,6 +617,7 @@ static void wireless_handle_client_lost(struct mt76_dev *dev, const uint8_t *dat
 
 void wireless_handle_association(struct mt76_dev *dev, const uint8_t *addr)
 {
+    wireless_refresh_pairing_scan(dev);
     printf("Association request from: %02X:%02X:%02X:%02X:%02X:%02X\n",
            addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
     for (int i = 0; i < MT76_MAX_CLIENTS; i++)

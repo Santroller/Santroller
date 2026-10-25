@@ -11,6 +11,13 @@
 #define MT76_MAX_CLIENTS 8
 #define MT76_EVENT_QUEUE_SIZE 16
 
+// Delays the caller waits out between init steps instead of blocking
+#define MT76_FIRMWARE_RESET_DELAY_MS 500
+#define MT76_IVB_DELAY_MS 500
+#define MT76_BOOT_DELAY_MS 1000
+#define MT76_RADIO_OFF_DELAY_MS 50
+#define MT76_CHANNEL_SETTLE_DELAY_MS 1000
+
 enum mt76_wireless_event_type {
     MT76_EVENT_ASSOCIATION,
     MT76_EVENT_DISASSOCIATION,
@@ -68,7 +75,10 @@ struct mt76_dev {
     bool pairing_response_sent;
     enum mt76_pairing_state pairing_state;
     volatile int8_t pending_pairing;
-    uint32_t pairing_disable_at;
+    uint32_t pairing_retry_at;
+    // Channel hopping while pairing, so a controller last connected on another channel finds us
+    uint32_t last_wlan_rx;
+    uint8_t pairing_scan_idx;
 };
 
 bool mt76_init(struct mt76_dev *dev, uint8_t dev_addr);
@@ -81,14 +91,14 @@ bool mt76_poll(struct mt76_dev *dev, uint32_t offset, uint32_t mask, uint32_t va
 int mt76_begin_firmware_compressed(struct mt76_dev *dev, const uint8_t *compressed_data,
                                    uint32_t compressed_len, uint32_t decompressed_len);
 int mt76_step_firmware_compressed(struct mt76_dev *dev);
-int mt76_load_firmware_compressed(struct mt76_dev *dev, const uint8_t *compressed_data,
-                                  uint32_t compressed_len, uint32_t decompressed_len);
 int mt76_load_ivb(struct mt76_dev *dev);
 int mt76_reset_firmware(struct mt76_dev *dev);
+int mt76_start_firmware(struct mt76_dev *dev);
 int mt76_finish_firmware(struct mt76_dev *dev);
 
 int mt76_send_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, enum mt76_mcu_cmd cmd);
 int mt76_send_wlan(struct mt76_dev *dev, const uint8_t *data, uint16_t len);
+int mt76_send_wlan_async(struct mt76_dev *dev, const uint8_t *data, uint16_t len);
 
 int mt76_read_efuse(struct mt76_dev *dev, uint16_t addr, void *data, int len);
 
@@ -109,20 +119,24 @@ int mt76_init_radio(struct mt76_dev *dev);
 // Channel management functions
 int mt76_switch_channel(struct mt76_dev *dev, struct mt76_channel *chan);
 int mt76_get_channel_power(struct mt76_dev *dev, struct mt76_channel *chan);
-int mt76_evaluate_channels(struct mt76_dev *dev);
 int mt76_set_channel_candidates(struct mt76_dev *dev);
-int mt76_init_channels(struct mt76_dev *dev);
+void mt76_begin_channels(struct mt76_dev *dev);
+int mt76_evaluate_channel(struct mt76_dev *dev, uint8_t index);
+int mt76_channels_radio_off(struct mt76_dev *dev);
+int mt76_channels_radio_on(struct mt76_dev *dev);
 
 // LED control
 int mt76_set_led_mode(struct mt76_dev *dev, uint8_t mode);
 
 // Pairing functions
 int mt76_set_pairing(struct mt76_dev *dev, bool enable);
+int mt76_write_beacon(struct mt76_dev *dev, bool pair);
 
 // Client management
 int mt76_add_client(struct mt76_dev *dev, uint8_t wcid, const uint8_t *addr);
 int mt76_remove_client(struct mt76_dev *dev, uint8_t wcid);
 int mt76_send_pair_response(struct mt76_dev *dev, const uint8_t *addr);
+int mt76_send_pair_response_async(struct mt76_dev *dev, const uint8_t *addr);
 int mt76_set_client_key(struct mt76_dev *dev, uint8_t wcid, const uint8_t *key, uint16_t key_len);
 int mt76_send_client_command(struct mt76_dev *dev, uint8_t wcid, const uint8_t *addr, 
                              uint8_t cmd, const uint8_t *data, uint16_t len);

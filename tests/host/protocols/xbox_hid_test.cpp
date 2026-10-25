@@ -303,7 +303,7 @@ TEST(XboxHid, TickHelpersIgnoreOtherMappings)
     EXPECT_EQ(xbox_hid_tick_analog(s, as_button), 0);
     // axes the controller doesn't have
     EXPECT_EQ(axis(s, Gamepad_AccelX), 0);
-    EXPECT_EQ(axis(s, Gamepad_Gyro), 0);
+    EXPECT_EQ(axis(s, Gamepad_GyroY), 0);
 }
 
 TEST(XboxHid, DescriptorWithoutRecordOnlyTrustsTheSeriesPid)

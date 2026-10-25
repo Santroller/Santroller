@@ -330,14 +330,10 @@ static int mt76_send_ms_command(struct mt76_dev *dev, uint8_t cmd, const void *d
     return mt76_send_command(dev, buffer, sizeof(uint32_t) + len, MT_CMD_INIT_GAIN_OP);
 }
 
-static int mt76_send_wlan_frame(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
+// Prepends the TXWI for a frame sent without a WCID, returning the total length
+static uint16_t mt76_build_wlan_frame(uint8_t *frame, const uint8_t *data, uint16_t len)
 {
-    static uint8_t frame[512];
     struct mt76_txwi txwi = {0};
-
-    if (sizeof(txwi) + len > sizeof(frame)) {
-        return -1;
-    }
 
     txwi.flags = FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, IEEE80211_HT_MPDU_DENSITY_4);
     txwi.rate = FIELD_PREP(MT_RXWI_RATE_PHY, MT_PHY_TYPE_OFDM);
@@ -347,7 +343,17 @@ static int mt76_send_wlan_frame(struct mt76_dev *dev, const uint8_t *data, uint1
 
     memcpy(frame, &txwi, sizeof(txwi));
     memcpy(frame + sizeof(txwi), data, len);
-    return mt76_send_wlan(dev, frame, sizeof(txwi) + len);
+    return sizeof(txwi) + len;
+}
+
+static int mt76_send_wlan_frame(struct mt76_dev *dev, const uint8_t *data, uint16_t len)
+{
+    static uint8_t frame[512];
+
+    if (sizeof(struct mt76_txwi) + len > sizeof(frame)) {
+        return -1;
+    }
+    return mt76_send_wlan(dev, frame, mt76_build_wlan_frame(frame, data, len));
 }
 
 // Send association response frame
@@ -386,11 +392,7 @@ int mt76_send_assoc_response(struct mt76_dev *dev, uint8_t wcid, const uint8_t *
 }
 
 // Send pairing response to controller
-int mt76_send_pair_response(struct mt76_dev *dev, const uint8_t *addr) {
-    printf("MT76: Sending pairing response to controller\n");
-    
-    // Build 802.11 management frame with pairing response
-    static uint8_t frame[256];
+static uint16_t mt76_build_pair_response(struct mt76_dev *dev, const uint8_t *addr, uint8_t *frame) {
     int offset = 0;
     
     // 802.11 header
@@ -410,9 +412,24 @@ int mt76_send_pair_response(struct mt76_dev *dev, const uint8_t *addr) {
     uint8_t pair_data[] = { 0x00, 0x45, 0x55, 0x01, 0x0f, 0x8f, 0xff, 0x87, 0x1f };
     memcpy(&frame[offset], pair_data, sizeof(pair_data));
     offset += sizeof(pair_data);
+    return offset;
+}
 
-    // Send via USB
-    return mt76_send_wlan_frame(dev, frame, offset);
+int mt76_send_pair_response(struct mt76_dev *dev, const uint8_t *addr) {
+    static uint8_t frame[64];
+
+    printf("MT76: Sending pairing response to controller\n");
+    return mt76_send_wlan_frame(dev, frame, mt76_build_pair_response(dev, addr, frame));
+}
+
+// Sent from the RX callback, as some controllers (MadCatz RB4 instruments) seem to stop listening within
+// a fraction of a millisecond of their pairing request
+int mt76_send_pair_response_async(struct mt76_dev *dev, const uint8_t *addr) {
+    static uint8_t frame[64];
+    static uint8_t message[96];
+
+    uint16_t len = mt76_build_pair_response(dev, addr, frame);
+    return mt76_send_wlan_async(dev, message, mt76_build_wlan_frame(message, frame, len));
 }
 
 // Set encryption key for client
@@ -668,6 +685,12 @@ int mt76_init_address(struct mt76_dev *dev) {
         printf("MT76: Failed to write BSSID\n");
         return err;
     }
+
+    // The burst leaves the unicast-to-me mask untouched, and it read back as 0 on an adapter whose MAC we
+    // rewrite. Linux mt76 always sets it to 0xff.
+    mt76_write_register(dev, MT_MAC_ADDR_DW1,
+                        dev->mac_address[4] | (dev->mac_address[5] << 8) |
+                            FIELD_PREP(MT_MAC_ADDR_DW1_U2ME_MASK, 0xff));
     
     // Send MAC address to firmware
     err = mt76_send_ms_command(dev, XONE_MT_SET_MAC_ADDRESS, dev->mac_address, MT76_MAC_ADDR_LEN);
@@ -688,12 +711,8 @@ int mt76_init_address(struct mt76_dev *dev) {
 int mt76_init_radio(struct mt76_dev *dev) {
     int err;
     
+    // The caller waits MT76_BOOT_DELAY_MS after the firmware load, as the chip may reset after IVB load
     printf("MT76: Starting radio initialization\n");
-    
-    // Give device significant time to boot after firmware load
-    // The MT76 chip may reset after IVB load
-    printf("MT76: Waiting for device to boot with new firmware...\n");
-    sleep_ms(1000);
     
     // 1. Select function (Q_SELECT = 1)
     err = mt76_select_function(dev, MT_Q_SELECT, 1);
@@ -835,31 +854,42 @@ int mt76_get_channel_power(struct mt76_dev *dev, struct mt76_channel *chan) {
     return 0;
 }
 
-int mt76_evaluate_channels(struct mt76_dev *dev) {
-    int i;
+void mt76_begin_channels(struct mt76_dev *dev) {
+    printf("MT76: Initializing channels\n");
+    
+    // Copy default channel configuration
+    memcpy(dev->channels, default_channels, sizeof(default_channels));
+    
+    // Enable promiscuous mode for channel evaluation
+    mt76_write_register(dev, MT_RX_FILTR_CFG, 0x014f13);
+}
+
+int mt76_evaluate_channel(struct mt76_dev *dev, uint8_t index) {
+    struct mt76_channel *chan = &dev->channels[index];
+    
+    if (mt76_get_channel_power(dev, chan) < 0)
+    {
+        return -1;
+    }
+
+    chan->scan = true;
+    if (mt76_switch_channel(dev, chan) < 0) {
+        return -1;
+    }
+    
+    printf("MT76: Channel 0x%02X power: %d\n", chan->index, chan->power);
+    return 0;
+}
+
+int mt76_channels_radio_off(struct mt76_dev *dev) {
+    int err;
     int8_t best_power = -128;
     struct mt76_channel *best_chan = &dev->channels[0];
     
-    printf("MT76: Evaluating channels\n");
-    
-    for (i = 0; i < MT76_NUM_CHANNELS; i++) {
-        struct mt76_channel *chan = &dev->channels[i];
-        
-        if (mt76_get_channel_power(dev, chan) < 0)
-        {
-            return -1;
-        }
-
-        chan->scan = true;
-        if (mt76_switch_channel(dev, chan) < 0) {
-            return -1;
-        }
-        
-        printf("MT76: Channel 0x%02X power: %d\n", chan->index, chan->power);
-        
-        if (chan->power > best_power) {
-            best_power = chan->power;
-            best_chan = chan;
+    for (int i = 0; i < MT76_NUM_CHANNELS; i++) {
+        if (dev->channels[i].power > best_power) {
+            best_power = dev->channels[i].power;
+            best_chan = &dev->channels[i];
         }
     }
     
@@ -867,7 +897,43 @@ int mt76_evaluate_channels(struct mt76_dev *dev) {
     
     // Switch to best channel with scanning enabled
     best_chan->scan = true;
-    return mt76_switch_channel(dev, best_chan);
+    err = mt76_switch_channel(dev, best_chan);
+    if (err) {
+        return err;
+    }
+    
+    // Disable promiscuous mode
+    mt76_write_register(dev, MT_RX_FILTR_CFG, 0x017f17);
+    
+    err = mt76_set_power_mode(dev, MT_RADIO_OFF);
+    if (err) {
+        printf("MT76: Radio off failed\n");
+    }
+    return err;
+}
+
+int mt76_channels_radio_on(struct mt76_dev *dev) {
+    int err = mt76_set_power_mode(dev, MT_RADIO_ON);
+    if (err) {
+        printf("MT76: Radio on failed\n");
+        return err;
+    }
+
+    dev->current_channel->scan = false;
+    err = mt76_switch_channel(dev, dev->current_channel);
+    if (err) {
+        printf("MT76: Final channel switch failed\n");
+        return err;
+    }
+
+    err = mt76_set_channel_candidates(dev);
+    if (err) {
+        printf("MT76: Set channel candidates failed\n");
+        return err;
+    }
+    
+    printf("MT76: Channel initialization complete\n");
+    return 0;
 }
 
 int mt76_set_channel_candidates(struct mt76_dev *dev) {
@@ -892,60 +958,6 @@ int mt76_set_channel_candidates(struct mt76_dev *dev) {
     return mt76_send_ms_command(dev, XONE_MT_SET_CHAN_CANDIDATES, data, count * sizeof(uint32_t));
 }
 
-int mt76_init_channels(struct mt76_dev *dev) {
-    int err;
-    
-    printf("MT76: Initializing channels\n");
-    
-    // Copy default channel configuration
-    memcpy(dev->channels, default_channels, sizeof(default_channels));
-    
-    // Enable promiscuous mode for channel evaluation
-    printf("MT76: Enabling promiscuous mode for channel evaluation\n");
-    mt76_write_register(dev, MT_RX_FILTR_CFG, 0x014f13);
-    
-    // Evaluate channels and switch to best one
-    err = mt76_evaluate_channels(dev);
-    if (err) {
-        printf("MT76: Channel evaluation failed\n");
-        return err;
-    }
-    
-    // Disable promiscuous mode
-    printf("MT76: Disabling promiscuous mode\n");
-    mt76_write_register(dev, MT_RX_FILTR_CFG, 0x017f17);
-    
-    err = mt76_set_power_mode(dev, MT_RADIO_OFF);
-    if (err) {
-        printf("MT76: Radio off failed\n");
-        return err;
-    }
-
-    sleep_ms(50);
-
-    err = mt76_set_power_mode(dev, MT_RADIO_ON);
-    if (err) {
-        printf("MT76: Radio on failed\n");
-        return err;
-    }
-
-    dev->current_channel->scan = false;
-    err = mt76_switch_channel(dev, dev->current_channel);
-    if (err) {
-        printf("MT76: Final channel switch failed\n");
-        return err;
-    }
-
-    err = mt76_set_channel_candidates(dev);
-    if (err) {
-        printf("MT76: Set channel candidates failed\n");
-        return err;
-    }
-    
-    printf("MT76: Channel initialization complete\n");
-    return 0;
-}
-
 // LED Control
 
 int mt76_set_led_mode(struct mt76_dev *dev, uint8_t mode) {
@@ -956,7 +968,7 @@ int mt76_set_led_mode(struct mt76_dev *dev, uint8_t mode) {
 
 // Beacon Functions
 
-static int mt76_write_beacon(struct mt76_dev *dev, bool pair) {
+int mt76_write_beacon(struct mt76_dev *dev, bool pair) {
     uint8_t beacon_data[256];
     int offset = 0;
     
@@ -1000,8 +1012,6 @@ static int mt76_write_beacon(struct mt76_dev *dev, bool pair) {
         0x01, 0x10, pair ? 1 : 0, 0xa5, 0x30, 0x99, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00,
     };
-    // Advertised channel the controller associates on after pairing
-    ms_ie[14] = dev->current_channel ? dev->current_channel->index : 1;
 
     int mgmt_len = sizeof(hdr) + sizeof(beacon);
     txwi.len_ctl = mgmt_len + sizeof(ms_ie);
@@ -1048,12 +1058,8 @@ int mt76_set_pairing(struct mt76_dev *dev, bool enable) {
                enable ? "enabled" : "disabled", dev->current_channel->index);
     }
     
-    // Enable RX and TX in MAC system control
-    printf("MT76: Enabling MAC RX/TX\n");
-    mt76_write_register(dev, MT_MAC_SYS_CTRL, 
-                       MT_MAC_SYS_CTRL_ENABLE_RX | MT_MAC_SYS_CTRL_ENABLE_TX);
-    sleep_ms(100);
-    
+    // MAC RX/TX is enabled once by mt76_calibrate_radio and isn't touched again here (matches xone)
+
     // Enable beacon transmission timer
     // TSF timer, TBTT timer, AP mode, beacon TX, interval = 0x0640 (100ms)
     printf("MT76: Enabling beacon timer\n");

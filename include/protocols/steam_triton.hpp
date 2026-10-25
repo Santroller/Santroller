@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "input.pb.h"
+#include "protocols/motion.hpp"
 
 // 2026 Steam Controller (Triton), see SDL's SDL_hidapi_steam_triton.c
 
@@ -21,13 +22,19 @@
 #define TRITON_FEATURE_REPORT_LEN     64
 #define TRITON_CMD_SET_SETTINGS       0x87
 #define TRITON_SETTING_LIZARD_MODE    0x09
+#define TRITON_SETTING_IMU_MODE       0x30
+// SDL's SETTING_GYRO_MODE_SEND_RAW_ACCEL | SETTING_GYRO_MODE_SEND_RAW_GYRO
+#define TRITON_IMU_MODE_RAW           0x18
 
 // The controller re-enables lizard mode on a watchdog, so it has to be disabled periodically
 #define TRITON_LIZARD_REFRESH_MS      3000
 
-// Feature report message (without the report ID) that turns lizard mode off
-static const uint8_t TRITON_DISABLE_LIZARD_MSG[] = {
-    TRITON_CMD_SET_SETTINGS, 3, TRITON_SETTING_LIZARD_MODE, 0x00, 0x00};
+// Feature report message (without the report ID) that turns lizard mode off and raw motion on, as
+// 3 byte settings: the setting, then its value
+static const uint8_t TRITON_SETTINGS_MSG[] = {
+    TRITON_CMD_SET_SETTINGS, 6,
+    TRITON_SETTING_LIZARD_MODE, 0x00, 0x00,
+    TRITON_SETTING_IMU_MODE, TRITON_IMU_MODE_RAW, 0x00};
 
 // State reports without the report ID are this long, for both 0x45 and 0x47
 #define TRITON_STATE_PAYLOAD_LEN      45
@@ -78,6 +85,9 @@ struct SteamTritonState
     int16_t left_y = 0;
     int16_t right_x = 0;
     int16_t right_y = 0;
+    int16_t accel[3] = {};
+    int16_t gyro[3] = {};
+    bool has_imu = false;
 };
 
 static inline bool steam_triton_is_state_report(uint8_t report_id)
@@ -99,6 +109,17 @@ static inline bool steam_triton_parse_state(const uint8_t *buf, uint16_t len, St
     out.left_y = (int16_t)(buf[11] | (buf[12] << 8));
     out.right_x = (int16_t)(buf[13] | (buf[14] << 8));
     out.right_y = (int16_t)(buf[15] | (buf[16] << 8));
+    // then the trackpads and the IMU timestamp, which change size between the report variants, but
+    // the motion always ends the report
+    if (len >= TRITON_STATE_PAYLOAD_LEN)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            out.accel[i] = (int16_t)(buf[33 + i * 2] | (buf[34 + i * 2] << 8));
+            out.gyro[i] = (int16_t)(buf[39 + i * 2] | (buf[40 + i * 2] << 8));
+        }
+        out.has_imu = out.accel[0] || out.accel[1] || out.accel[2];
+    }
     return true;
 }
 
@@ -157,7 +178,16 @@ static inline uint16_t steam_triton_tick_analog(const SteamTritonState &s, proto
         case Gamepad_RightStickY:  return (uint16_t)s.right_y ^ 0x8000;
         case Gamepad_LeftTrigger:  return steam_triton_trigger(s.trigger_l);
         case Gamepad_RightTrigger: return steam_triton_trigger(s.trigger_r);
-        default:                   return 0;
+        default:
+            if (is_motion_axis(type.mapping.gamepadAxis))
+            {
+                if (!s.has_imu)
+                    return MOTION_ZERO;
+                float accel[3], gyro[3];
+                steam_triton_imu_decode(s.accel, s.gyro, accel, gyro);
+                return motion_host_axis(type.mapping.gamepadAxis, accel, gyro);
+            }
+            return 0;
         }
     }
     return 0;

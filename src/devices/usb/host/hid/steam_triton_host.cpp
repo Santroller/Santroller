@@ -88,7 +88,7 @@ void SteamTritonHost::disable_lizard_mode()
 {
     memset(m_feature_buf, 0, sizeof(m_feature_buf));
     m_feature_buf[0] = TRITON_FEATURE_REPORT_ID;
-    memcpy(m_feature_buf + 1, TRITON_DISABLE_LIZARD_MSG, sizeof(TRITON_DISABLE_LIZARD_MSG));
+    memcpy(m_feature_buf + 1, TRITON_SETTINGS_MSG, sizeof(TRITON_SETTINGS_MSG));
     set_report(TRITON_FEATURE_REPORT_ID, HID_REPORT_TYPE_FEATURE, m_feature_buf, sizeof(m_feature_buf));
     m_last_lizard_update = millis();
 }

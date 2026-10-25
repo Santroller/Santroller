@@ -256,7 +256,7 @@ TEST(Ps4Descriptor, FieldsMatchTheReportStruct)
     // the rest (status, motion, touchpad) is one vendor block up to the end of the struct
     auto rest = d.find_all(in, kGamepad, vendor(0x21));
     ASSERT_FALSE(rest.empty());
-    EXPECT_EQ(rest.front()->bit_offset + 8, FIELD(PS4Dpad_Data_t, padding).bit);
+    EXPECT_EQ(rest.front()->bit_offset + 8, FIELD(PS4Dpad_Data_t, sensorTimestamp).bit);
     EXPECT_EQ((rest.back()->bit_offset + rest.back()->bit_size) / 8 + 1, sizeof(PS4Dpad_Data_t));
 }
 

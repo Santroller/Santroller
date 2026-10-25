@@ -1,4 +1,5 @@
 #pragma once
+#include "protocols/motion.hpp"
 #include <stdint.h>
 
 #define PS5_INPUT_REPORT_ID 1
@@ -17,12 +18,6 @@ typedef struct
     TouchpadXY p2;
 } __attribute__((packed)) TouchpadData;
 
-typedef struct
-{
-    int16_t x;
-    int16_t y;
-    int16_t z;
-} __attribute__((packed)) PSSensor;
 
 typedef struct
 {
@@ -88,10 +83,10 @@ typedef struct
 
     uint32_t auth_seq_number;
 
-    PSSensor gyroscope;
-    PSSensor accelerometer;
+    PSImuSample imu;
 
-    uint16_t data_28_29;
+    // in µs, as third party controllers send it
+    uint16_t sensorTimestamp;
 
     uint16_t data_30_31_0x001a;
     uint8_t data_32;

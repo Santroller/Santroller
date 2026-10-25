@@ -10,6 +10,10 @@
 #include "managers/device_manager.hpp"
 #include "hidparser.h"
 
+// Motion calibration, as a DualSense reports it
+#define DS5_CALIBRATION_REPORT_ID 0x05
+#define DS5_CALIBRATION_REPORT_SIZE 41
+
 Ps5Host::~Ps5Host()
 {
     if (m_auth_registered)
@@ -124,6 +128,7 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
         USB_FreeReportInfo(info);
         auto intf = std::make_shared<Ps5Host>(dev_addr, itf_desc->bInterfaceNumber, list->m_id);
         intf->read_pairing_mac();
+        intf->read_imu_calibration();
         bool auth_only = vid == 0x2b81 && pid == 0x0101;
         intf->m_third_party = isThirdParty;
         if (isThirdParty)
@@ -225,6 +230,17 @@ bool Ps5Host::get_intr_report(void *buffer, uint8_t len)
     memcpy(buffer, m_ep_in_buf, TU_MIN(len, m_ep_in_size));
     received_packet = false;
     return true;
+}
+
+void Ps5Host::read_imu_calibration()
+{
+    // Like SDL, third party controllers are asked too, and keep the nominal scale if they don't answer
+    uint8_t data[DS5_CALIBRATION_REPORT_SIZE] = {};
+    if (get_report(DS5_CALIBRATION_REPORT_ID, HID_REPORT_TYPE_FEATURE, data, sizeof(data), nullptr) < sizeof(data))
+    {
+        return;
+    }
+    m_imu_calibration = ps_imu_parse_calibration(data, false);
 }
 
 void Ps5Host::read_pairing_mac()
@@ -442,11 +458,22 @@ bool ps5_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
     return false;
 }
 
-uint16_t ps5_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output& type)
+uint16_t ps5_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output& type, const PSImuCalibration *imu)
 {
     if (type.which_mapping == proto_Output_gamepadAxis_tag)
     {
         auto data = (PS5Gamepad_Data_t *)buf;
+        if (is_motion_axis(type.mapping.gamepadAxis))
+        {
+            if (!imu)
+            {
+                return MOTION_ZERO;
+            }
+            // first and third party controllers both put motion where the third party layout has it
+            float accel[3], gyro[3];
+            ps_imu_decode(((const PS5Dpad_Data_t *)buf)->imu, *imu, accel, gyro);
+            return motion_host_axis(type.mapping.gamepadAxis, accel, gyro);
+        }
         switch (type.mapping.gamepadAxis)
         {
         case Gamepad_LeftTrigger:
@@ -520,7 +547,7 @@ bool Ps5Host::tick_digital(proto_Output& type)
 
 uint16_t Ps5Host::tick_analog(proto_Output& type)
 {
-    return ps5_tick_analog(m_ep_in_buf, m_subtype, false, type);
+    return ps5_tick_analog(m_ep_in_buf, m_subtype, false, type, m_sensors_supported ? &m_imu_calibration : nullptr);
 }
 
 bool Ps5Host::send_ps5_output()

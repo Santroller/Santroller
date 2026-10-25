@@ -33,6 +33,7 @@ public:
                                                    HID_ReportInfo_t *info);
     bool tick_digital(proto_Output &type) override;
     uint16_t tick_analog(proto_Output &type) override;
+    bool has_motion() const override { return m_state.has_imu; }
 
 private:
     void set_connected(bool connected);

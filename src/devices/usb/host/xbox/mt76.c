@@ -6,23 +6,23 @@
 #include <string.h>
 #include <uzlib.h>
 
-static int mt76_usb_bulk_out_blocking(struct mt76_dev *dev, uint8_t *buffer, uint16_t len) {
-    if (!usbh_edpt_claim(dev->dev_addr, MT_EP_OUT)) {
+static int mt76_usb_bulk_out_blocking(struct mt76_dev *dev, uint8_t ep, uint8_t *buffer, uint16_t len) {
+    if (!usbh_edpt_claim(dev->dev_addr, ep)) {
         return -1;
     }
 
-    if (!usbh_edpt_xfer(dev->dev_addr, MT_EP_OUT, buffer, len)) {
-        usbh_edpt_release(dev->dev_addr, MT_EP_OUT);
+    if (!usbh_edpt_xfer(dev->dev_addr, ep, buffer, len)) {
+        usbh_edpt_release(dev->dev_addr, ep);
         return -1;
     }
 
     absolute_time_t deadline = make_timeout_time_ms(1000);
-    while (usbh_edpt_busy(dev->dev_addr, MT_EP_OUT)) {
+    while (usbh_edpt_busy(dev->dev_addr, ep)) {
         tuh_task();
         tud_task();
         if (time_reached(deadline)) {
-            printf("MT76: Bulk OUT transfer timed out\n");
-            tuh_edpt_abort_xfer(dev->dev_addr, MT_EP_OUT);
+            printf("MT76: Bulk OUT transfer timed out on 0x%02X\n", ep);
+            tuh_edpt_abort_xfer(dev->dev_addr, ep);
             return -1;
         }
     }
@@ -206,16 +206,6 @@ int mt76_step_firmware_compressed(struct mt76_dev *dev)
     return 0;
 }
 
-int mt76_load_firmware_compressed(struct mt76_dev *dev, const uint8_t *compressed_data,
-                                  uint32_t compressed_len, uint32_t decompressed_len)
-{
-    int result = mt76_begin_firmware_compressed(dev, compressed_data, compressed_len, decompressed_len);
-    if (result == 0) return 0;
-    while (result == 1) result = mt76_step_firmware_compressed(dev);
-    if (result == 0) result = mt76_finish_firmware(dev);
-    return result;
-}
-
 bool mt76_init(struct mt76_dev *dev, uint8_t dev_addr) {
     memset(dev, 0, sizeof(*dev));
     dev->dev_addr = dev_addr;
@@ -380,13 +370,13 @@ int mt76_reset_firmware(struct mt76_dev *dev) {
     /*
      * The MCU needs time to complete its startup sequence after the
      * firmware reset before it can handle bulk USB commands (matches xone).
+     * The caller waits MT76_FIRMWARE_RESET_DELAY_MS before the next command.
      */
-    sleep_ms(500);
     printf("MT76: Firmware reset complete\n");
     return 0;
 }
 
-int mt76_finish_firmware(struct mt76_dev *dev) {
+int mt76_start_firmware(struct mt76_dev *dev) {
     /*
      * The warm-boot path (reset_firmware) applies an RF patch before
      * triggering MCU execution via load_ivb. Without this patch the RF
@@ -400,12 +390,14 @@ int mt76_finish_firmware(struct mt76_dev *dev) {
         return -1;
     }
 
-    /*
-     * After load_ivb the chip briefly disconnects as part of startup.
-     * Wait long enough for disconnect/reconnect cycle before polling.
-     */
-    sleep_ms(500);
+    return 0;
+}
 
+int mt76_finish_firmware(struct mt76_dev *dev) {
+    /*
+     * After load_ivb the chip briefly disconnects as part of startup, so the
+     * caller waits MT76_IVB_DELAY_MS after mt76_start_firmware before this poll.
+     */
     if (!mt76_poll(dev, MT_FCE_DMA_ADDR | MT_VEND_TYPE_CFG, 0x01, 0x01)) {
         printf("MT76: IVB completion timeout\n");
         return -1;
@@ -451,7 +443,9 @@ static void mt76_prep_message(uint8_t *buffer, uint16_t *len, uint32_t info) {
     memcpy(buffer - MT_CMD_HDR_LEN, &header, MT_CMD_HDR_LEN);
     
     memset(buffer + *len, 0, pad);
-    *len = msg_len + MT_CMD_HDR_LEN + pad;
+    // Header + payload + padding and trailer. Counting msg_len here sent up to 3 stray bytes past the
+    // trailer, which at full speed can arrive as their own packet and stall the adapter's USB input.
+    *len = MT_CMD_HDR_LEN + *len + pad;
 }
 
 int mt76_send_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, enum mt76_mcu_cmd cmd) {
@@ -472,7 +466,7 @@ int mt76_send_command(struct mt76_dev *dev, const uint8_t *data, uint16_t len, e
     // printf("MT76: Sending command 0x%02X, len=%d (dev_addr=%d, ep=0x%02X)\n", 
     //        cmd, total_len, dev->dev_addr, MT_EP_OUT);
     
-    if (mt76_usb_bulk_out_blocking(dev, dev->bulk_buffer, total_len) < 0) {
+    if (mt76_usb_bulk_out_blocking(dev, MT_EP_OUT, dev->bulk_buffer, total_len) < 0) {
         printf("MT76: Bulk transfer failed\n");
         return -1;
     }
@@ -495,11 +489,37 @@ int mt76_send_wlan(struct mt76_dev *dev, const uint8_t *data, uint16_t len) {
     memcpy(dev->bulk_buffer + MT_CMD_HDR_LEN, data, len);
     mt76_prep_message(dev->bulk_buffer + MT_CMD_HDR_LEN, &total_len, info);
 
-    if (mt76_usb_bulk_out_blocking(dev, dev->bulk_buffer, total_len) < 0) {
+    if (mt76_usb_bulk_out_blocking(dev, MT_EP_OUT_WLAN, dev->bulk_buffer, total_len) < 0) {
         printf("MT76: WLAN transfer failed\n");
         return -1;
     }
 
+    return 0;
+}
+
+// Queues a WLAN frame without waiting for it, so it can be sent from inside a USB transfer callback
+int mt76_send_wlan_async(struct mt76_dev *dev, const uint8_t *data, uint16_t len) {
+    static CFG_TUSB_MEM_ALIGN uint8_t buffer[128];
+    uint32_t info = FIELD_PREP(MT_TXD_INFO_DPORT, MT_WLAN_PORT) |
+                    FIELD_PREP(MT_TXD_INFO_QSEL, MT_QSEL_EDCA) |
+                    MT_TXD_INFO_WIV |
+                    MT_TXD_INFO_80211;
+    uint16_t total_len = len;
+
+    if (len > sizeof(buffer) - MT_CMD_HDR_LEN * 2) {
+        return -1;
+    }
+
+    memcpy(buffer + MT_CMD_HDR_LEN, data, len);
+    mt76_prep_message(buffer + MT_CMD_HDR_LEN, &total_len, info);
+
+    if (!usbh_edpt_claim(dev->dev_addr, MT_EP_OUT_WLAN)) {
+        return -1;
+    }
+    if (!usbh_edpt_xfer(dev->dev_addr, MT_EP_OUT_WLAN, buffer, total_len)) {
+        usbh_edpt_release(dev->dev_addr, MT_EP_OUT_WLAN);
+        return -1;
+    }
     return 0;
 }
 
@@ -556,7 +576,7 @@ int mt76_usb_bulk_out(struct mt76_dev *dev, const uint8_t *data, uint16_t len) {
     // MT_EP_OUT is 0x08
     #define MT_EP_OUT 0x08
     
-    if (mt76_usb_bulk_out_blocking(dev, dev->tx_buffer, len) < 0) {
+    if (mt76_usb_bulk_out_blocking(dev, MT_EP_OUT, dev->tx_buffer, len) < 0) {
         printf("MT76: Bulk OUT transfer failed\n");
         return -1;
     }

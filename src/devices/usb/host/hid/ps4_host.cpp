@@ -12,6 +12,10 @@
 #include "hidparser.h"
 #include "utils.h"
 
+// Motion calibration, as a DualShock 4 reports it over USB
+#define DS4_CALIBRATION_REPORT_ID_USB 0x02
+#define DS4_CALIBRATION_REPORT_SIZE 37
+
 Ps4Host::~Ps4Host()
 {
     if (m_auth_registered)
@@ -35,7 +39,7 @@ void Ps4Host::disconnect()
 }
 
 bool ps4_parse_capabilities(const uint8_t *data, uint16_t len, uint16_t vid, uint16_t pid,
-                            SubType &subtype, bool &sensors, bool &lightbar, bool &vibration, bool &touchpad)
+                            SubType &subtype, bool &sensors, bool &lightbar, bool &vibration, bool &touchpad, PSImuCalibration &imu)
 {
     const uint8_t *caps = nullptr;
     if (len >= 6 && (data[2] == 0x27 || data[2] == 0xA7))
@@ -56,6 +60,10 @@ bool ps4_parse_capabilities(const uint8_t *data, uint16_t len, uint16_t vid, uin
 
     uint8_t capabilities = caps[2];
     uint8_t device_type = caps[3];
+    if (caps + 16 <= data + len)
+    {
+        ps_imu_parse_capability_scale(caps, imu);
+    }
     switch (device_type)
     {
     case 0x00:
@@ -140,7 +148,7 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
             ps4_parse_capabilities(data, sizeof(data), vid, pid,
                                    intf->m_subtype, intf->m_sensors_supported,
                                    intf->m_lightbar_supported, intf->m_vibration_supported,
-                                   intf->m_touchpad_supported);
+                                   intf->m_touchpad_supported, intf->m_imu_calibration);
         }
         else
         {
@@ -149,6 +157,7 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
             intf->m_lightbar_supported = true;
             intf->m_vibration_supported = true;
             intf->m_touchpad_supported = true;
+            intf->read_imu_calibration();
         }
         p_desc = tu_desc_next(p_desc);
         tusb_hid_descriptor_hid_t *x_desc =
@@ -217,6 +226,17 @@ void Ps4Host::read_pairing_mac()
     // reversed to the order bluetooth addresses are kept in, so the controller gets the same id either way
     const uint8_t mac[6] = {info[6], info[5], info[4], info[3], info[2], info[1]};
     m_hardware_id = hardware_id_from_mac(mac);
+}
+
+void Ps4Host::read_imu_calibration()
+{
+    // calibration over USB lists each axis' plus and minus readings together
+    uint8_t data[DS4_CALIBRATION_REPORT_SIZE] = {};
+    if (get_report(DS4_CALIBRATION_REPORT_ID_USB, HID_REPORT_TYPE_FEATURE, data, sizeof(data), nullptr) < sizeof(data))
+    {
+        return;
+    }
+    m_imu_calibration = ps_imu_parse_calibration(data, false);
 }
 
 bool Ps4Host::set_config()
@@ -401,11 +421,21 @@ bool ps4_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
     return false;
 }
 
-uint16_t ps4_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type)
+uint16_t ps4_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, const PSImuCalibration *imu)
 {
     if (type.which_mapping == proto_Output_gamepadAxis_tag)
     {
         auto data = (PS4Gamepad_Data_t *)buf;
+        if (is_motion_axis(type.mapping.gamepadAxis))
+        {
+            if (!imu)
+            {
+                return MOTION_ZERO;
+            }
+            float accel[3], gyro[3];
+            ps_imu_decode(data->imu, *imu, accel, gyro);
+            return motion_host_axis(type.mapping.gamepadAxis, accel, gyro);
+        }
         switch (type.mapping.gamepadAxis)
         {
         case Gamepad_LeftTrigger:
@@ -479,7 +509,7 @@ bool Ps4Host::tick_digital(proto_Output &type)
 
 uint16_t Ps4Host::tick_analog(proto_Output &type)
 {
-    return ps4_tick_analog(m_ep_in_buf, m_subtype, m_third_party, type);
+    return ps4_tick_analog(m_ep_in_buf, m_subtype, m_third_party, type, m_sensors_supported ? &m_imu_calibration : nullptr);
 }
 
 void Ps4Host::update(bool full_poll, bool send_events)

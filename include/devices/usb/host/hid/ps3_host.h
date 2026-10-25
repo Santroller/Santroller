@@ -39,6 +39,7 @@ public:
     void set_player_led(uint8_t player) override;
     void set_euphoria_led(bool state) override;
     bool has_rumble() const override { return !m_dancepad && !m_switch_arcade; }
+    bool has_motion() const override { return m_subtype == Gamepad; }
     bool has_player_led() const override { return !m_switch_arcade; }
     bool has_euphoria_led() const override { return m_subtype == DjHeroTurntable; }
     bool has_stagekit_led() const override { return subtype_supports_stagekit(m_subtype); }

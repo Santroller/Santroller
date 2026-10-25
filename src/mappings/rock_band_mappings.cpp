@@ -411,6 +411,15 @@ void RockBandGuitarAxisMapping::update_wii(uint8_t format, uint8_t *buf)
         break;
     }
 }
+void RockBandGuitarAxisMapping::update_motion(MotionState &motion)
+{
+    if (!motion.tilt_as_motion || m_mapping.mapping.mapping.rbAxis != RockBandGuitar_Tilt || !m_input->valid())
+    {
+        return;
+    }
+    m_tilt_motion.update(m_calibrated_value, time_us_64());
+    m_tilt_motion.apply(motion);
+}
 void RockBandGuitarAxisMapping::update_switch(uint8_t *buf)
 {
     if (m_centered)
@@ -425,8 +434,7 @@ void RockBandGuitarAxisMapping::update_switch(uint8_t *buf)
         report->rightStickX = SWITCH_STICK_CENTER - m_calibrated_value * SWITCH_STICK_TRAVEL / UINT16_MAX;
         break;
     case RockBandGuitar_Tilt:
-        // TODO: swap this when we can
-        report->dpadLeft = m_calibrated_value > 60000;
+        // a Switch reads tilt from motion, see update_motion
         break;
     default:
         break;

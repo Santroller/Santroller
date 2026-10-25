@@ -34,8 +34,10 @@ public:
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
+    void update_motion(MotionState &motion);
 
 private:
+    TiltMotion m_tilt_motion;
     // 0-4, which pickup selector notch the input is in
     uint8_t pickup_notch() const;
     // the lowest notch is a real position, so the pickup is reported even when "centred"

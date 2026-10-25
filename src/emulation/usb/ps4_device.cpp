@@ -28,6 +28,8 @@ class UsbHostInterface;
 #define PS5_FEATURE_WIRELESS 1<<0
 #define PS5_FEATURE_VENDOR_INT 1<<6
 
+// Bytes 10 - 17 are the motion scale, as gyro and accel numerator / denominator pairs: 61/1024 °/s
+// and 1/8192 g per count (PS4_IMU_GYRO_PER_DPS and PS4_IMU_ACCEL_PER_G)
 uint8_t ps4_feature_config[] = {
     0x03, 0x21, 0x27, 0x04, 0x91, /*type*/ 0x00, 0x2c, 0x56,
     0xa0, 0x0f, 0x3d, 0x00, 0x00, 0x04, 0x01, 0x00,
@@ -86,12 +88,14 @@ void PS4GamepadDevice::process(bool full_poll, bool send_events)
     if (!ready())
         return;
     memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
+    MotionState motion;
     for (const auto &profile : profiles)
     {
         for (const auto &mapping : profile->mappings)
         {
             mapping->update(full_poll, send_events);
             mapping->update_ps4(epin_buf);
+            mapping->update_motion(motion);
         }
         for (const auto &led : profile->leds)
         {
@@ -99,6 +103,12 @@ void PS4GamepadDevice::process(bool full_poll, bool send_events)
         }
     }
     PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)epin_buf;
+    if (subtype == Gamepad)
+    {
+        // in the scale feature report 0x03 states
+        gamepad->imu = ps_imu_encode(motion, PS4_IMU_GYRO_PER_DPS, PS4_IMU_ACCEL_PER_G);
+        gamepad->sensorTimestamp = (uint16_t)((uint64_t)time_us_32() * 3 / 16);
+    }
     if (!m_sent_first_report)
     {
         m_sent_first_report = true;
@@ -192,7 +202,7 @@ uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         {
         case Gamepad:
             buffer[5] = PS4_GAMEPAD;
-            buffer[4] = PS4_FEATURE_LIGHTBAR | PS4_FEATURE_VIBRATION | PS4_FEATURE_TOUCH_PAD;
+            buffer[4] = PS4_FEATURE_MOTION | PS4_FEATURE_LIGHTBAR | PS4_FEATURE_VIBRATION | PS4_FEATURE_TOUCH_PAD;
             break;
         case GuitarHeroGuitar:
         case LiveGuitar:

@@ -20,6 +20,8 @@ typedef enum
     GIP_VIRTUAL_KEYCODE = 0x07,
     GIP_CMD_RUMBLE = 0x09,
     GIP_CMD_LED_ON = 0x0A,
+    // Elite Series 2 5.13+ firmware follows each input report with its buttons before profile mapping
+    GIP_UNMAPPED_STATE = 0x0C,
     GIP_FINAL_AUTH = 0x1E,
     GIP_INPUT_REPORT = 0x20,
     GIP_HID_REPORT = 0x21,

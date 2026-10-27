@@ -3,8 +3,9 @@
 #include "device.pb.h"
 #include "protocols/rb_pickup.hpp"
 #include "protocols/rock_band_drums.hpp"
+#include "protocols/xbox_elite.hpp"
 
-bool gip_tick_digital(const void *input_data, uint8_t subtype, bool capture, proto_Output *type)
+bool gip_tick_digital(const void *input_data, uint8_t subtype, bool capture, uint8_t paddles, proto_Output *type)
 {
     if (!input_data || !type) {
         return false;
@@ -115,7 +116,7 @@ bool gip_tick_digital(const void *input_data, uint8_t subtype, bool capture, pro
         case Gamepad_Capture:
             return capture;
         default:
-            return false;
+            return xbox_elite_paddle_pressed(paddles, type->mapping.gamepadButton);
         }
     }
     

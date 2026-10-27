@@ -15,6 +15,7 @@
 #include "gip_test_support.hpp"
 #include "plasticband_metadata.hpp"
 #include "protocols/rb_pickup.hpp"
+#include "protocols/xbox_elite.hpp"
 
 using namespace gip_test;
 namespace pb = gip_test::plasticband;
@@ -110,7 +111,7 @@ protected:
     }
     bool digital(proto_Output o)
     {
-        return gip_tick_digital(dev.raw_input, dev.subtype, dev.capture, &o);
+        return gip_tick_digital(dev.raw_input, dev.subtype, dev.capture, dev.paddles, &o);
     }
     uint16_t analog(proto_Output o)
     {
@@ -249,6 +250,115 @@ TEST_F(GipInput, NoShareWithoutTheExtension)
     payload[14] = 0x01;
     report(payload);
     EXPECT_FALSE(digital(gamepad_button(Gamepad_Capture)));
+}
+
+// --- Xbox Elite paddles, see protocols/xbox_elite.hpp ---
+
+namespace
+{
+// Hello Device payload ([MS-GIPUSB] Table 27) with just the VID / PID filled in
+Bytes hello(uint16_t vid, uint16_t pid)
+{
+    Bytes h(28, 0);
+    h[8] = vid & 0xFF;
+    h[9] = vid >> 8;
+    h[10] = pid & 0xFF;
+    h[11] = pid >> 8;
+    return h;
+}
+
+const proto_GamepadButtonType PADDLES[] = {Gamepad_RightPaddle1, Gamepad_RightPaddle2, Gamepad_LeftPaddle1,
+                                           Gamepad_LeftPaddle2};
+} // namespace
+
+TEST_F(GipInput, ArrivalRecordsVidAndPid)
+{
+    report(hello(0x045E, 0x0B00), GIP_ANNOUNCE);
+    EXPECT_EQ(dev.vendor_id, 0x045E);
+    EXPECT_EQ(dev.product_id, 0x0B00);
+}
+
+// Elite Series 2 5.17+ firmware: 47 byte report, paddles in byte 14 and the profile in byte 20
+TEST_F(GipInput, EliteSeries2Paddles)
+{
+    report(hello(0x045E, 0x0B00), GIP_ANNOUNCE);
+    load_metadata(pb::MICROSOFT_GAMEPAD_METADATA);
+    for (int p = 0; p < 4; p++)
+    {
+        Bytes payload(47, 0);
+        payload[14] = 1 << p;
+        report(payload);
+        for (int q = 0; q < 4; q++)
+            EXPECT_EQ(digital(gamepad_button(PADDLES[q])), p == q) << "P" << p + 1 << " vs P" << q + 1;
+        EXPECT_FALSE(digital(gamepad_button(Gamepad_A)));
+    }
+    // a profile that maps the paddles presses other buttons instead
+    Bytes payload(47, 0);
+    payload[14] = 0x0F;
+    payload[20] = 1;
+    report(payload);
+    for (auto b : PADDLES)
+        EXPECT_FALSE(digital(gamepad_button(b)));
+}
+
+// 5.13 - 5.16 firmware follows each input report with GIP_UNMAPPED_STATE
+TEST_F(GipInput, EliteSeries2UnmappedState)
+{
+    report(hello(0x045E, 0x0B00), GIP_ANNOUNCE);
+    load_metadata(pb::MICROSOFT_GAMEPAD_METADATA);
+    Bytes input(14, 0);
+    report(input);
+    Bytes unmapped(17, 0);
+    unmapped[14] = XBOX_ELITE_P3;
+    report(unmapped, GIP_UNMAPPED_STATE);
+    EXPECT_TRUE(digital(gamepad_button(Gamepad_LeftPaddle1)));
+    // the next input report doesn't carry paddles, so they hold until the next unmapped state
+    report(input);
+    EXPECT_TRUE(digital(gamepad_button(Gamepad_LeftPaddle1)));
+    // a profile that doesn't change anything still leaves the paddles alone
+    unmapped[15] = 2;
+    report(unmapped, GIP_UNMAPPED_STATE);
+    EXPECT_TRUE(digital(gamepad_button(Gamepad_LeftPaddle1)));
+    // but once the mapped state differs, the paddles are being used for something else
+    input[0] = 0x10;
+    report(input);
+    report(unmapped, GIP_UNMAPPED_STATE);
+    EXPECT_FALSE(digital(gamepad_button(Gamepad_LeftPaddle1)));
+}
+
+// Elite Series 1: 29 byte report with the raw buttons at 14 and the paddles in byte 28, in another order
+TEST_F(GipInput, EliteSeries1Paddles)
+{
+    report(hello(0x045E, 0x02E3), GIP_ANNOUNCE);
+    load_metadata(pb::MICROSOFT_GAMEPAD_METADATA);
+    const uint8_t bits[] = {0x02, 0x08, 0x01, 0x04}; // P1 - P4
+    for (int p = 0; p < 4; p++)
+    {
+        Bytes payload(29, 0);
+        payload[28] = bits[p];
+        report(payload);
+        for (int q = 0; q < 4; q++)
+            EXPECT_EQ(digital(gamepad_button(PADDLES[q])), p == q) << "P" << p + 1 << " vs P" << q + 1;
+    }
+    // mapped buttons that differ from the raw ones mean the profile maps the paddles
+    Bytes payload(29, 0);
+    payload[28] = 0x0F;
+    payload[0] = 0x10;
+    report(payload);
+    for (auto b : PADDLES)
+        EXPECT_FALSE(digital(gamepad_button(b)));
+}
+
+// Other controllers can send 46 byte reports (Victrix Gambit), so only an Elite has paddles
+TEST_F(GipInput, NoPaddlesOnOtherControllers)
+{
+    report(hello(0x045E, 0x02EA), GIP_ANNOUNCE);
+    load_metadata(pb::MICROSOFT_GAMEPAD_METADATA);
+    Bytes payload(46, 0);
+    payload[18] = 0x0F;
+    report(payload);
+    for (auto b : PADDLES)
+        EXPECT_FALSE(digital(gamepad_button(b)));
 }
 
 // --- Rock Band guitar ---

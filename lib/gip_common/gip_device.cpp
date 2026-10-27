@@ -3,6 +3,7 @@
 #include "gip_report_queue.h"
 #include "../../lib/xgip_protocol/xgip_protocol.h"
 #include "../../include/protocols/xbox_one.hpp"
+#include "../../include/protocols/xbox_elite.hpp"
 #include <string.h>
 #include <stdio.h>
 
@@ -165,6 +166,9 @@ bool gip_device_process_incoming(
             if (input_len <= sizeof(device->raw_input)) {
                 memcpy(device->raw_input, input_data, input_len);
                 device->capture = gip_read_capture(device, input_data, input_len);
+                if (xbox_elite_has_paddles(device->vendor_id, device->product_id)) {
+                    xbox_elite_gip_paddles(input_data, input_len, device->paddles);
+                }
                 if (device->has_virtual_key_guide) {
                     auto gamepad = (XboxOneGamepad_Data_t *)device->raw_input;
                     gamepad->guide = gamepad->guide | (device->virtual_key_guide ? 1 : 0);
@@ -178,6 +182,11 @@ bool gip_device_process_incoming(
                 printf("GIP Input 0x20 [len=%d]: (btn=0x%04X, guide_bit=%d)\n", input_len, cur_btn, (input_data[0] >> 1) & 1);
             }
 #endif
+        }
+        else if (xgip->getCommand() == GIP_UNMAPPED_STATE) {
+            if (xbox_elite_has_paddles(device->vendor_id, device->product_id)) {
+                xbox_elite_gip_unmapped_paddles(xgip->getData(), xgip->getDataLength(), device->raw_input, device->paddles);
+            }
         }
         else if (xgip->getCommand() == GIP_VIRTUAL_KEYCODE) {
             const uint8_t *vk_data = xgip->getData();

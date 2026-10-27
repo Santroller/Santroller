@@ -34,10 +34,13 @@ typedef struct gip_device_t {
     uint8_t virtual_key_guide;            // Current guide button state from virtual key (0 or 1)
     bool capture;                         // Share/capture button state from the console function map
     uint16_t console_function_offset;     // Offset of IConsoleFunctionMap in the 0x20 input report, 0 = unsupported
+    uint8_t paddles;                      // Xbox Elite paddles, see protocols/xbox_elite.hpp
     bool auth_complete_sent;              // Auth-complete packet has already been queued
     uint32_t last_ghl_poke;               // Timestamp of last GHL magic poke sent
     const char *display_name;             // Display name from the matched descriptor mapping, NULL = unknown
     uint8_t address[6];                   // Device address from the arrival packet, all zero = not seen yet
+    uint16_t vendor_id;                   // From the arrival packet, 0 = not seen yet
+    uint16_t product_id;
     void *user_context;           // User context (e.g., pointer to owning controller instance)
     const gip_device_interface_t *interface;  // Interface for callbacks
 } gip_device_t;

@@ -76,22 +76,25 @@ TEST(SteamTriton, ButtonBitsMatchSdl)
         {0x00001000, Gamepad_DpadLeft},   {0x00002000, Gamepad_DpadUp},
         {0x00004000, Gamepad_Back},       {0x00008000, Gamepad_LeftThumbClick},
         {0x00010000, Gamepad_Guide},      {0x00080000, Gamepad_LeftShoulder},
+        {0x00020000, Gamepad_LeftPaddle1},     {0x00000080, Gamepad_RightPaddle1},
+        {0x00040000, Gamepad_LeftPaddle2},     {0x00000100, Gamepad_RightPaddle2},
+        {0x20000000, Gamepad_LeftGripTouch},   {0x10000000, Gamepad_RightGripTouch},
     };
     for (auto c : cases)
     {
         SteamTritonState s;
         s.buttons = c.bit;
-        for (int b = Gamepad_A; b <= Gamepad_DpadRight; b++)
+        for (int b = Gamepad_A; b <= Gamepad_RightGripTouch; b++)
             EXPECT_EQ(pressed(s, (GamepadButtonType)b), b == c.button) << "bit " << std::hex << c.bit << " button " << std::dec << b;
     }
 }
 
-TEST(SteamTriton, TouchAndPaddleBitsAreIgnored)
+TEST(SteamTriton, StickAndPadTouchBitsAreIgnored)
 {
-    // back paddles, capacitive touch and pad / trigger clicks
+    // stick and trackpad touch, and pad / trigger clicks
     SteamTritonState s;
-    s.buttons = 0x00000080 | 0x00000100 | 0x00020000 | 0x00040000 | 0x3FF00000;
-    for (int b = Gamepad_A; b <= Gamepad_DpadRight; b++)
+    s.buttons = 0x0FF00000;
+    for (int b = Gamepad_A; b <= Gamepad_RightGripTouch; b++)
         EXPECT_FALSE(pressed(s, (GamepadButtonType)b)) << b;
 }
 

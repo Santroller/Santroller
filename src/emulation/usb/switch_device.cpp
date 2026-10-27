@@ -39,7 +39,8 @@ SwitchGamepadDevice::SwitchGamepadDevice()
         .timestamp = 0,
 
         .inputs{
-            .connectionInfo = 0,
+            // powered over USB
+            .connectionInfo = 1,
             .batteryLevel = 0x08,
 
             // byte 00
@@ -60,7 +61,8 @@ SwitchGamepadDevice::SwitchGamepadDevice()
             .guide = 0,
             .capture = 0,
             .dummy2 = 0,
-            .chargingGrip = 0,
+            // set by a wired controller, which the console times motion samples by
+            .chargingGrip = 1,
 
             // byte 02
             .dpadDown = 0,
@@ -163,19 +165,57 @@ void SwitchGamepadDevice::process(bool full_poll, bool send_events)
                 led->update(full_poll, send_events);
             }
         }
-        if ((now - last_report_timer) >= SWITCH_PRO_KEEPALIVE_TIMER)
+        // A real controller sends no motion until the host turns its IMU on. After that it samples
+        // every 5ms and sends a report every 15ms with the three samples since the last one. The
+        // console treats every sample as new motion, so a sample sent twice turns it twice as far.
+        bool due = (now - last_report_timer) >= SWITCH_PRO_KEEPALIVE_TIMER;
+        if (isIMUEnabled)
+        {
+            uint64_t now_us = time_us_64();
+            uint64_t since = now_us - lastIMUSampleUs;
+            if (since >= SWITCH_PRO_IMU_SAMPLE_US)
+            {
+                // stay on the 5ms grid, unless a whole sample was missed
+                lastIMUSampleUs = since < 2 * SWITCH_PRO_IMU_SAMPLE_US ? lastIMUSampleUs + SWITCH_PRO_IMU_SAMPLE_US : now_us;
+                imuSamples[2] = imuSamples[1];
+                imuSamples[1] = imuSamples[0];
+                imuSamples[0] = switch_imu_encode(motion);
+                if (imuMode >= 2)
+                {
+                    imuOrientation.rotate(imuSamples[0], SWITCH_PRO_IMU_SAMPLE_US / 1000000.0f);
+                    imuOrientations[2] = imuOrientations[1];
+                    imuOrientations[1] = imuOrientations[0];
+                    imuOrientations[0] = imuOrientation;
+                }
+                if (newIMUSamples < 3)
+                    newIMUSamples++;
+            }
+            due = newIMUSamples >= 3;
+        }
+        if (due)
         {
             SwitchProGamepad_Data_t inputReport = switchReport;
-            inputReport.timestamp = last_report_counter;
-            // A real controller sends no motion until the host turns its IMU on. Each report carries
-            // the last three samples, and the older two are the ones the previous report sent.
-            inputReport.imuData[0] = isIMUEnabled ? switch_imu_encode(motion) : SwitchImuSample{};
-            inputReport.imuData[1] = switchReport.imuData[0];
-            inputReport.imuData[2] = switchReport.imuData[1];
+            // a real controller's timer ticks every 5ms, and the console times motion samples by it
+            inputReport.timestamp = (isIMUEnabled ? lastIMUSampleUs : time_us_64()) / SWITCH_PRO_IMU_SAMPLE_US;
+            if (imuMode >= 2)
+            {
+                // oldest first, each with its raw acceleration, then the orientations over their gyro
+                SwitchOrientation orientations[3];
+                for (int i = 0; i < 3; i++)
+                {
+                    inputReport.imuData[i] = imuSamples[2 - i];
+                    orientations[i] = imuOrientations[2 - i];
+                }
+                switch_imu_pack_orientations(inputReport.imuData, orientations, (lastIMUSampleUs - 2 * SWITCH_PRO_IMU_SAMPLE_US) / 1000);
+            }
+            else if (isIMUEnabled)
+            {
+                memcpy(inputReport.imuData, imuSamples, sizeof(inputReport.imuData));
+            }
             uint16_t report_size = sizeof(inputReport);
             if (ready() && sendReport(0, &inputReport, report_size))
             {
-                memcpy(switchReport.imuData, inputReport.imuData, sizeof(switchReport.imuData));
+                newIMUSamples = 0;
                 memcpy(last_report, &inputReport, report_size);
                 reportSent = true;
                 last_report_timer = now;
@@ -345,8 +385,33 @@ static inline uint8_t decode_switch_rumble(const uint8_t *data)
     return (hf_amp > lf_amp) ? hf_amp : lf_amp;
 }
 
+// DEBUG ONLY, not to be committed: the last output reports from the host, read over SWD
+struct SwitchDebugEntry
+{
+    uint32_t ms;
+    uint8_t type;
+    uint8_t len;
+    uint8_t data[18];
+};
+volatile SwitchDebugEntry g_switch_dbg[128];
+volatile uint32_t g_switch_dbg_count;
+volatile uint32_t g_switch_dbg_rumble;
 void SwitchGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
+    if (bufsize && buffer[0] == SwitchReportID::REPORT_OUTPUT_10)
+    {
+        g_switch_dbg_rumble++;
+    }
+    else
+    {
+        volatile SwitchDebugEntry &e = g_switch_dbg[g_switch_dbg_count % 128];
+        e.ms = to_ms_since_boot(get_absolute_time());
+        e.type = report_type;
+        e.len = bufsize;
+        for (uint16_t i = 0; i < sizeof(e.data); i++)
+            e.data[i] = i < bufsize ? buffer[i] : 0;
+        g_switch_dbg_count++;
+    }
     if (report_type != HID_REPORT_TYPE_OUTPUT)
         return;
 
@@ -453,7 +518,7 @@ void SwitchGamepadDevice::handleFeatureReport(uint8_t switchReportID, uint8_t sw
     bool canSend = false;
 
     report[0] = SwitchReportID::REPORT_OUTPUT_21;
-    report[1] = last_report_counter;
+    report[1] = time_us_64() / SWITCH_PRO_IMU_SAMPLE_US;
     memcpy(report + 2, &switchReport.inputs, sizeof(SwitchInputReport));
 
     switch (commandID)
@@ -576,7 +641,16 @@ void SwitchGamepadDevice::handleFeatureReport(uint8_t switchReportID, uint8_t sw
         canSend = true;
         break;
     case SwitchCommands::TOGGLE_IMU:
-        isIMUEnabled = reportData[11];
+        // 1 sends raw samples, while 2 and 3 send orientation, see switch_imu_pack_orientations
+        imuMode = reportData[11];
+        isIMUEnabled = imuMode;
+        imuOrientation.reset();
+        for (auto &orientation : imuOrientations)
+            orientation.reset();
+        // start sampling afresh, so the first report doesn't carry samples from before
+        newIMUSamples = 0;
+        lastIMUSampleUs = time_us_64();
+        memset(imuSamples, 0, sizeof(imuSamples));
         report[13] = 0x80;
         report[14] = commandID;
         report[15] = 0x00;

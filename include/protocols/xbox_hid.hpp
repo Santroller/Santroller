@@ -5,6 +5,7 @@
 #include "config.pb.h"
 #include "emulation/usb/usb_devices.h"
 #include "hidparser.h"
+#include "protocols/xbox_elite.hpp"
 
 // ---------------------------------------------------------------------------
 // Xbox One S / Elite 2 / Series controllers in HID mode
@@ -56,6 +57,7 @@ struct XboxHidState
     bool up, down, left, right;
     uint16_t lx = 0x8000, ly = 0x8000, rx = 0x8000, ry = 0x8000;
     uint16_t lt, rt;
+    uint8_t paddles;
     // Once a separate guide report shows up, ignore the guide bit in report 0x01
     bool has_guide_report;
 };
@@ -78,6 +80,7 @@ struct XboxHidDescriptor
     HID_ReportInfo_t *info = nullptr;
     bool has_share = false;
     bool share_in_descriptor = false;
+    bool has_paddles = false;
     USB_Host_Data_t data = {};
 
     XboxHidDescriptor() = default;
@@ -106,6 +109,7 @@ struct XboxHidDescriptor
         }
         // Without a descriptor, only the Series controller is known to have a Share button
         has_share = share_in_descriptor || pid == XBOX_SERIES_BT_PID;
+        has_paddles = xbox_elite_has_paddles(XBOX_VID, pid);
         printf("Xbox HID controller: pid=0x%04x descriptor=%d share=%d\r\n", pid, info != nullptr, has_share);
         // Parser report items come from a small shared pool, so only hang on to them if they're needed
         if (info && !share_in_descriptor)
@@ -187,6 +191,10 @@ static inline void xbox_hid_parse_fixed(const uint8_t *buf, uint16_t len, bool h
 static inline void xbox_hid_parse_report(const uint8_t *buf, uint16_t len, XboxHidDescriptor &desc, XboxHidState &out)
 {
     xbox_hid_parse_fixed(buf, len, desc.has_share, out);
+    if (desc.has_paddles && len && buf[0] == XBOX_HID_INPUT_REPORT_ID)
+    {
+        out.paddles = xbox_elite_hid_paddles(buf, len);
+    }
     if (desc.share_in_descriptor)
     {
         // Share may not be in byte 16 on third party controllers, so read it wherever the descriptor puts it
@@ -217,7 +225,7 @@ static inline bool xbox_hid_tick_digital(const XboxHidState &state, proto_Output
     case Gamepad_DpadDown:        return state.down;
     case Gamepad_DpadLeft:        return state.left;
     case Gamepad_DpadRight:       return state.right;
-    default:                      return false;
+    default:                      return xbox_elite_paddle_pressed(state.paddles, type.mapping.gamepadButton);
     }
 }
 

@@ -163,10 +163,16 @@ bool gip_process_packet(XGIPProtocol *xgip, gip_device_t *device)
         return true;
 
     case GIP_ARRIVAL:
-        // The arrival packet starts with the device's address
+        // The arrival packet starts with the device's address, then after two zero bytes, its VID and PID
         if (xgip->getDataLength() >= sizeof(device->address))
         {
             memcpy(device->address, xgip->getData(), sizeof(device->address));
+        }
+        if (xgip->getDataLength() >= 12)
+        {
+            const uint8_t *hello = xgip->getData();
+            device->vendor_id = hello[8] | (hello[9] << 8);
+            device->product_id = hello[10] | (hello[11] << 8);
         }
         if (interface->on_arrival)
         {

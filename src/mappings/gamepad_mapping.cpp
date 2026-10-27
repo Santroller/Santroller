@@ -885,6 +885,8 @@ void GamepadButtonMapping::update_switch(uint8_t *buf)
     case Gamepad_DpadRight:
         report->dpadRight |= m_last_value;
         break;
+    default:
+        break;
     }
 }
 

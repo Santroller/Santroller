@@ -6,6 +6,8 @@
 
 #include "tusb.h"
 #define SWITCH_PRO_KEEPALIVE_TIMER 5
+// A real controller samples motion every 5ms and reports the three samples since its last report
+#define SWITCH_PRO_IMU_SAMPLE_US 5000
 #define SWITCH_PRO_JOYSTICK_CENTER SWITCH_STICK_CENTER
 typedef enum {
     REPORT_OUTPUT_00 = 0x00,
@@ -263,6 +265,14 @@ private:
     uint8_t playerID = 0;
     uint8_t inputMode = 0x30;
     bool isIMUEnabled = false;
+    // Motion samples for the next report, newest first, and how many of them haven't been sent yet
+    SwitchImuSample imuSamples[3] = {};
+    uint8_t newIMUSamples = 0;
+    uint64_t lastIMUSampleUs = 0;
+    uint8_t imuMode = 0;
+    // For IMU modes 2 and 3, the orientation the gyro has turned the controller to, and at each sample
+    SwitchOrientation imuOrientation;
+    SwitchOrientation imuOrientations[3];
     bool isVibrationEnabled = false;
     uint16_t scale12To16(uint16_t pos) { return pos << 4; }
     uint16_t scale16To12(uint16_t pos) { return pos >> 4; }

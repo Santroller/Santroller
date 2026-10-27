@@ -101,15 +101,23 @@ TEST(SteamController, ButtonBitsMatchHidSteam)
     }
 }
 
-TEST(SteamController, GripsActAsShoulders)
+// SDL's STEAM_BUTTON_BACK_LEFT_MASK / STEAM_BUTTON_BACK_RIGHT_MASK, the only paddles it has
+TEST(SteamController, GripsArePaddles)
 {
     SteamControllerState s;
     s.buttons = STEAM_BTN_GRIP_L; // byte 9 bit 7, left back lever
-    EXPECT_TRUE(pressed(s, Gamepad_LeftShoulder));
-    EXPECT_FALSE(pressed(s, Gamepad_RightShoulder));
-    s.buttons = STEAM_BTN_GRIP_R; // byte 10 bit 0, right back lever
-    EXPECT_TRUE(pressed(s, Gamepad_RightShoulder));
+    EXPECT_TRUE(pressed(s, Gamepad_LeftPaddle1));
+    EXPECT_FALSE(pressed(s, Gamepad_RightPaddle1));
     EXPECT_FALSE(pressed(s, Gamepad_LeftShoulder));
+    s.buttons = STEAM_BTN_GRIP_R; // byte 10 bit 0, right back lever
+    EXPECT_TRUE(pressed(s, Gamepad_RightPaddle1));
+    EXPECT_FALSE(pressed(s, Gamepad_LeftPaddle1));
+    EXPECT_FALSE(pressed(s, Gamepad_RightShoulder));
+    s.buttons = 0xFFFFFF;
+    EXPECT_FALSE(pressed(s, Gamepad_LeftPaddle2));
+    EXPECT_FALSE(pressed(s, Gamepad_RightPaddle2));
+    EXPECT_FALSE(pressed(s, Gamepad_LeftGripTouch));
+    EXPECT_FALSE(pressed(s, Gamepad_RightGripTouch));
 }
 
 TEST(SteamController, NoCaptureButton)

@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <math.h>
+#include <string.h>
 #include "input_enums.pb.h"
 
 // Every motion source and output meets in one fixed scale, so any source can drive any output.
@@ -142,6 +143,162 @@ inline SwitchImuSample switch_imu_encode(const MotionState &motion)
         motion_clamp16(-motion.gyro_dps(0) * SWITCH_IMU_GYRO_PER_DPS),
         motion_clamp16(motion.gyro_dps(1) * SWITCH_IMU_GYRO_PER_DPS),
     };
+}
+
+// Consoles ask controllers with firmware 4.00 or newer for motion in IMU mode 2 (subcommand 0x40 0x02, or
+// 0x03 for the Ring-Con) instead of mode 1's raw samples. Each sample keeps its raw acceleration, but the
+// gyro bytes of the three samples together hold a 144 bit field of three orientation quaternions, oldest
+// first, and the console works out rotation from how the orientation changes. The field is little endian
+// and LSB first, and starts with which of three packings it uses, from the most precise to the most
+// tolerant of fast motion. Each leaves out the largest component of a quaternion, made positive, which
+// the console rebuilds from the other three. Layout from ndeadly's MissionControl and
+// dekuNukem/Nintendo_Switch_Reverse_Engineering#97.
+struct SwitchOrientation
+{
+    // x, y, z, w
+    float q[4] = {0, 0, 0, 1};
+
+    void reset()
+    {
+        q[0] = q[1] = q[2] = 0;
+        q[3] = 1;
+    }
+    // Turns by one sample's gyro over dt seconds
+    void rotate(const SwitchImuSample &sample, float dt)
+    {
+        float k = dt * (float)M_PI / 180.0f / SWITCH_IMU_GYRO_PER_DPS / 2;
+        float hx = sample.gyroX * k, hy = sample.gyroY * k, hz = sample.gyroZ * k;
+        float half = sqrtf(hx * hx + hy * hy + hz * hz);
+        float s = half > 1e-9f ? sinf(half) / half : 1.0f;
+        float ix = hx * s, iy = hy * s, iz = hz * s, iw = cosf(half);
+        // the gyro turns the controller around its own axes, so the turn goes on the right
+        float x = q[3] * ix + q[0] * iw + q[1] * iz - q[2] * iy;
+        float y = q[3] * iy + q[1] * iw + q[2] * ix - q[0] * iz;
+        float z = q[3] * iz + q[2] * iw + q[0] * iy - q[1] * ix;
+        float w = q[3] * iw - q[0] * ix - q[1] * iy - q[2] * iz;
+        float n = 1.0f / sqrtf(x * x + y * y + z * z + w * w);
+        q[0] = x * n;
+        q[1] = y * n;
+        q[2] = z * n;
+        q[3] = w * n;
+    }
+};
+
+class SwitchMotionBits
+{
+public:
+    // Appends the low width bits of value, so negative values come out as two's complement
+    void put(int32_t value, uint8_t width)
+    {
+        for (uint8_t i = 0; i < width; i++, m_pos++)
+        {
+            if ((value >> i) & 1)
+                m_bits[m_pos >> 3] |= 1 << (m_pos & 7);
+        }
+    }
+    // Into the gyro bytes of the three samples
+    void write(SwitchImuSample samples[3]) const
+    {
+        for (int i = 0; i < 3; i++)
+            memcpy(&samples[i].gyroX, m_bits + i * 6, 6);
+    }
+
+private:
+    uint8_t m_bits[18] = {};
+    uint16_t m_pos = 0;
+};
+
+inline int switch_quaternion_largest(const float q[4])
+{
+    int largest = 0;
+    for (int i = 1; i < 4; i++)
+    {
+        if (fabsf(q[i]) > fabsf(q[largest]))
+            largest = i;
+    }
+    return largest;
+}
+
+// A quaternion component in a signed field of the given width, where 1.0 is scale
+inline int32_t switch_quaternion_field(float value, float scale, uint8_t width)
+{
+    int32_t max = (1 << (width - 1)) - 1;
+    float v = roundf(value * scale);
+    if (v < -max - 1)
+        return -max - 1;
+    if (v > max)
+        return max;
+    return (int32_t)v;
+}
+
+// Writes three orientations, oldest first, into the gyro bytes of samples, with ms as the time of the first
+inline void switch_imu_pack_orientations(SwitchImuSample samples[3], const SwitchOrientation orientations[3], uint32_t ms)
+{
+    const float *first = orientations[0].q, *mid = orientations[1].q, *last = orientations[2].q;
+    // Packings 1 and 2 leave out the same component of all three, the middle one's largest
+    int largest = switch_quaternion_largest(mid);
+    float sign = mid[largest] < 0 ? -1.0f : 1.0f;
+    float f[3], m[3], l[3];
+    float last_from_first = 0, mid_from_chord = 0;
+    for (int i = 0; i < 3; i++)
+    {
+        int c = (largest + i + 1) & 3;
+        f[i] = first[c] * sign;
+        m[i] = mid[c] * sign;
+        l[i] = last[c] * sign;
+        last_from_first = fmaxf(last_from_first, fabsf(l[i] - f[i]));
+        mid_from_chord = fmaxf(mid_from_chord, fabsf(m[i] - (f[i] + l[i]) / 2));
+    }
+    bool shared = switch_quaternion_largest(first) == largest && switch_quaternion_largest(last) == largest;
+
+    const float scale2 = 1 << 20, scale1 = 1 << 15, scale0 = 1 << 12;
+    SwitchMotionBits bits;
+    if (shared && last_from_first * scale2 <= 4095 && mid_from_chord * scale2 <= 63)
+    {
+        // 2: the last in 21 bits, the first as a 13 bit difference from it, and the middle as a 7 bit
+        // difference from halfway between them
+        bits.put(2, 2);
+        bits.put(largest, 2);
+        for (int i = 0; i < 3; i++)
+            bits.put(switch_quaternion_field(l[i], scale2, 21), 21);
+        for (int i = 0; i < 3; i++)
+            bits.put(switch_quaternion_field(l[i] - f[i], scale2, 13), 13);
+        for (int i = 0; i < 3; i++)
+            bits.put(switch_quaternion_field(m[i] - (f[i] + l[i]) / 2, scale2, 7), 7);
+    }
+    else if (shared && mid_from_chord * scale1 <= 127 * 4)
+    {
+        // 1: the first and last in 16 bits, and the middle as an 8 bit difference from halfway between
+        // them, quartered if it doesn't fit
+        bool quartered = mid_from_chord * scale1 > 127;
+        bits.put(1, 2);
+        bits.put(quartered, 1);
+        bits.put(largest, 2);
+        for (int i = 0; i < 3; i++)
+            bits.put(switch_quaternion_field(f[i], scale1, 16), 16);
+        for (int i = 0; i < 3; i++)
+            bits.put(switch_quaternion_field(l[i], scale1, 16), 16);
+        for (int i = 0; i < 3; i++)
+            bits.put(switch_quaternion_field((m[i] - (f[i] + l[i]) / 2) / (quartered ? 4 : 1), scale1, 8), 8);
+    }
+    else
+    {
+        // 0: each in 13 bits with its own largest component left out
+        bits.put(0, 2);
+        for (int j = 0; j < 3; j++)
+        {
+            const float *q = orientations[j].q;
+            int own = switch_quaternion_largest(q);
+            float own_sign = q[own] < 0 ? -1.0f : 1.0f;
+            bits.put(own, 2);
+            for (int i = 1; i <= 3; i++)
+                bits.put(switch_quaternion_field(q[(own + i) & 3] * own_sign, scale0, 13), 13);
+        }
+    }
+    // then when the first was taken, in ms, and how many there are
+    bits.put(ms & 0x7FF, 11);
+    bits.put(3, 6);
+    bits.write(samples);
 }
 
 // A real controller's calibration, used to read its samples

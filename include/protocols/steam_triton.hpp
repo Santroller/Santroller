@@ -75,6 +75,8 @@ static const uint8_t TRITON_BLE_INPUT_0x47_UUID[16] = {
 #define TRITON_BTN_RT_CLICK           0x00800000
 #define TRITON_BTN_LEFT_PAD_CLICK     0x04000000
 #define TRITON_BTN_LT_CLICK           0x08000000
+#define TRITON_BTN_RIGHT_GRIP_TOUCH   0x10000000
+#define TRITON_BTN_LEFT_GRIP_TOUCH    0x20000000
 
 struct SteamTritonState
 {
@@ -154,6 +156,12 @@ static inline bool steam_triton_tick_digital(const SteamTritonState &s, proto_Ou
         case Gamepad_DpadDown:        return (s.buttons & TRITON_BTN_DPAD_DOWN) != 0;
         case Gamepad_DpadLeft:        return (s.buttons & TRITON_BTN_DPAD_LEFT) != 0;
         case Gamepad_DpadRight:       return (s.buttons & TRITON_BTN_DPAD_RIGHT) != 0;
+        case Gamepad_LeftPaddle1:     return (s.buttons & TRITON_BTN_L4) != 0;
+        case Gamepad_RightPaddle1:    return (s.buttons & TRITON_BTN_R4) != 0;
+        case Gamepad_LeftPaddle2:     return (s.buttons & TRITON_BTN_L5) != 0;
+        case Gamepad_RightPaddle2:    return (s.buttons & TRITON_BTN_R5) != 0;
+        case Gamepad_LeftGripTouch:   return (s.buttons & TRITON_BTN_LEFT_GRIP_TOUCH) != 0;
+        case Gamepad_RightGripTouch:  return (s.buttons & TRITON_BTN_RIGHT_GRIP_TOUCH) != 0;
         default:                      return false;
         }
     }

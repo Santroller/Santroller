@@ -103,7 +103,7 @@ bool XboxWirelessController::tick_digital(proto_Output &type)
         return false;
     }
     
-    return gip_tick_digital(controller->gip_device.raw_input, m_subtype, controller->gip_device.capture, &type);
+    return gip_tick_digital(controller->gip_device.raw_input, m_subtype, controller->gip_device.capture, controller->gip_device.paddles, &type);
 }
 
 uint16_t XboxWirelessController::tick_analog(proto_Output &type)

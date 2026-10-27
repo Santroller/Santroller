@@ -96,8 +96,11 @@ static inline bool steam_tick_digital(const SteamControllerState &s, proto_Outpu
         case Gamepad_B:               return (s.buttons & STEAM_BTN_B) != 0;
         case Gamepad_X:               return (s.buttons & STEAM_BTN_X) != 0;
         case Gamepad_Y:               return (s.buttons & STEAM_BTN_Y) != 0;
-        case Gamepad_LeftShoulder:    return (s.buttons & (STEAM_BTN_LB | STEAM_BTN_GRIP_L)) != 0;
-        case Gamepad_RightShoulder:   return (s.buttons & (STEAM_BTN_RB | STEAM_BTN_GRIP_R)) != 0;
+        case Gamepad_LeftShoulder:    return (s.buttons & STEAM_BTN_LB) != 0;
+        case Gamepad_RightShoulder:   return (s.buttons & STEAM_BTN_RB) != 0;
+        // the grips are the back paddles
+        case Gamepad_LeftPaddle1:     return (s.buttons & STEAM_BTN_GRIP_L) != 0;
+        case Gamepad_RightPaddle1:    return (s.buttons & STEAM_BTN_GRIP_R) != 0;
         case Gamepad_Back:            return (s.buttons & STEAM_BTN_SELECT) != 0;
         case Gamepad_Start:           return (s.buttons & STEAM_BTN_START) != 0;
         case Gamepad_LeftThumbClick:  return (s.buttons & STEAM_BTN_STICK_CLICK) != 0;

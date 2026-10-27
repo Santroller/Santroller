@@ -50,7 +50,7 @@ protected:
     }
     bool digital(uint8_t subtype, proto_Output out)
     {
-        return gip_tick_digital(dev.raw_input, subtype, dev.capture, &out);
+        return gip_tick_digital(dev.raw_input, subtype, dev.capture, dev.paddles, &out);
     }
 };
 

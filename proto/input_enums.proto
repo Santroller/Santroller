@@ -22,6 +22,15 @@ enum GamepadButtonType {
   Gamepad_DpadDown = 14;
   Gamepad_DpadLeft = 15;
   Gamepad_DpadRight = 16;
+
+  // Only read from host controllers, nothing emulated sends these. Paddle 1 is the upper paddle,
+  // or the only one, as in SDL.
+  Gamepad_LeftPaddle1 = 17;
+  Gamepad_RightPaddle1 = 18;
+  Gamepad_LeftPaddle2 = 19;
+  Gamepad_RightPaddle2 = 20;
+  Gamepad_LeftGripTouch = 21;
+  Gamepad_RightGripTouch = 22;
 }
 enum GamepadAxisType {
   Gamepad_LeftStickX = 1;

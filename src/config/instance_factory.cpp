@@ -11,6 +11,7 @@
 #include "emulation/wii_emulation.hpp"
 #include "emulation/joybus_emulation.hpp"
 #include "emulation/snes_emulation.hpp"
+#include "emulation/standby_lighting.hpp"
 #include "emulation/bt/wii_remote_emulation.hpp"
 #include "emulation/usb/hid_device.h"
 #include "emulation/usb/ogxbox_device.h"
@@ -133,6 +134,10 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
         }
         instance = std::make_shared<WiiExtensionEmulationDeviceInstance>(
             wii_dev->get_config());
+    }
+    else if (assignment_mask & ProfileAssignMask_AssignStandbyLighting)
+    {
+        instance = std::make_shared<StandbyLightingInstance>();
     }
     else if (assignment_mask & ProfileAssignMask_AssignUsb)
     {

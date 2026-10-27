@@ -315,6 +315,7 @@ add_executable(
   src/emulation/ps2_emulation.cpp
   src/emulation/joybus_emulation.cpp
   src/emulation/snes_emulation.cpp
+  src/emulation/standby_lighting.cpp
   src/emulation/wii_emulation.cpp
   src/input/accelerometer.cpp
   src/input/crkd.cpp

@@ -889,8 +889,51 @@ static std::shared_ptr<Profile> decode_profile(pb_istream_t stream, ConfigDecode
     return profile;
 }
 
+static bool read_standby_lighting(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    proto_ProfileOpts opts = proto_ProfileOpts_init_default;
+    if (!decode_profile_opts(stream, &opts))
+        return false;
+    *static_cast<bool *>(*arg) = opts.has_standbyLighting && opts.standbyLighting;
+    return true;
+}
+
+// The second pass, once no profile matched: only the first standby lighting profile is loaded
+static bool load_standby_profile(pb_istream_t *stream)
+{
+    if (config_mgr.has_seen_assignment(ProfileAssignMask_AssignStandbyLighting))
+    {
+        return true;
+    }
+    bool standby = false;
+    proto_Profile proto_profile = proto_Profile_init_zero;
+    proto_profile.opts.funcs.decode = &read_standby_lighting;
+    proto_profile.opts.arg = &standby;
+    pb_istream_t opts_stream = *stream;
+    pb_decode_ex(&opts_stream, proto_Profile_fields, &proto_profile, PB_DECODE_NOINIT);
+    if (!standby)
+    {
+        return true;
+    }
+    ConfigDecodeContext context;
+    // It has no assignments to match, and LEDs are only loaded for a profile that matched
+    context.matched = true;
+    auto profile = decode_profile(*stream, context);
+    auto &profile_mgr = ProfileManager::instance();
+    // Replaces the copy from the first pass, which has nothing loaded
+    profile_mgr.remove_profile(profile->profile_id);
+    profile_mgr.add_profile(profile->profile_id, profile);
+    printf("standby lighting p=%u\r\n", profile->profile_id);
+    profile_mgr.assign_profile_to_devices(profile, ProfileAssignMask_AssignStandbyLighting, config_mgr.get_requested_mode());
+    return true;
+}
+
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
+    if (config_mgr.is_standby_pass())
+    {
+        return load_standby_profile(stream);
+    }
     // Clean up any disconnected root devices before decoding profiles to free memory
     device_mgr.remove_disconnected_root_devices();
 

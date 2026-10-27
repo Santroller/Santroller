@@ -263,6 +263,7 @@ bool ProfileManager::assign_profile_to_devices(
     bool assigned = false;
     auto &config_mgr = ConfigManager::instance();
     const int assignment_types[] = {
+        ProfileAssignMask_AssignStandbyLighting,
         ProfileAssignMask_AssignBluetoothGamepad,
         ProfileAssignMask_AssignBluetoothWiimote,
         ProfileAssignMask_AssignPsx,

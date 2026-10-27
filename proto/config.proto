@@ -38,6 +38,10 @@ message ProfileOpts {
   // the other direction is still held or debouncing. The config tool keeps both strums'
   // debounce times the same while this is on.
   optional bool combinedStrumDebounce = 22;
+  // Not a controller: only its LEDs run, while no other profile is active (so the device is only showing
+  // its config interface, eg not plugged into anything or only charging). It has no assignments or
+  // mappings. Only the first one is used.
+  optional bool standbyLighting = 23;
 }
 
 message Profile {

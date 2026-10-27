@@ -132,6 +132,10 @@ public:
     bool local_inputs_available_to(const Profile *profile) const { return !m_local_inputs_owner || m_local_inputs_owner == profile; }
     void claim_local_inputs(const Profile *profile) { m_local_inputs_owner = profile; }
 
+    // The standby lighting profile is loaded in a second pass over the profiles, once none of them matched
+    void set_standby_pass(bool pass) { m_standby_pass = pass; }
+    bool is_standby_pass() const { return m_standby_pass; }
+
     // Startup triggers that matched, so the profile they picked survives later reloads (eg once
     // the console is detected), long after the input was let go. Kept until a new config is written.
     bool is_startup_trigger_latched(const StartupTriggerKey &key) const;
@@ -186,5 +190,6 @@ private:
     uint32_t m_time_since_mode;
     uint32_t m_seen_masks;
     const Profile *m_local_inputs_owner = nullptr;
+    bool m_standby_pass = false;
     std::vector<StartupTriggerKey> m_latched_startup_triggers;
 };

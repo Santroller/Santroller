@@ -357,6 +357,7 @@ enum ProfileAssignMask {
     AssignWiimoteExtension=16; /* Profile is assignable to Wiimote extension emulation */
     AssignJoybus=32; /* Profile is assignable to GameCube / N64 emulation */
     AssignSnes=64; /* Profile is assignable to SNES / NES emulation */
+    AssignStandbyLighting=128; /* Profile only runs its LEDs, while no other profile is active */
 }
 
 enum BluetoothMode {

@@ -12,6 +12,7 @@ public:
     }
     void clear_seen_masks() { fake_loader::state.calls.push_back("clear_seen_masks"); }
     void clear_deferred_forced_mode() {}
+    void set_standby_pass(bool pass) { fake_loader::state.calls.push_back(pass ? "standby_pass" : "end_standby_pass"); }
     bool is_mode_from_profile() const { return fake_loader::state.mode_from_profile; }
     void set_mode_from_profile(bool forced) { fake_loader::state.mode_from_profile = forced; }
     void request_mode(ConsoleMode mode)

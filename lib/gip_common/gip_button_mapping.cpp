@@ -241,19 +241,19 @@ uint16_t gip_tick_analog(const void *input_data, uint8_t subtype, proto_Output *
             switch (type->mapping.rbDrumAxis)
             {
             case RockBandDrums_GreenPad:
-                return data->greenVelocity << 12;
+                return rb4_drums_velocity_to_axis(data->greenVelocity, RB4_XBOX_ONE_MAX_VELOCITY);
             case RockBandDrums_RedPad:
-                return data->redVelocity << 12;
+                return rb4_drums_velocity_to_axis(data->redVelocity, RB4_XBOX_ONE_MAX_VELOCITY);
             case RockBandDrums_YellowPad:
-                return data->yellowVelocity << 12;
+                return rb4_drums_velocity_to_axis(data->yellowVelocity, RB4_XBOX_ONE_MAX_VELOCITY);
             case RockBandDrums_BluePad:
-                return data->blueVelocity << 12;
+                return rb4_drums_velocity_to_axis(data->blueVelocity, RB4_XBOX_ONE_MAX_VELOCITY);
             case RockBandDrums_GreenCymbal:
-                return data->greenCymbalVelocity << 12;
+                return rb4_drums_velocity_to_axis(data->greenCymbalVelocity, RB4_XBOX_ONE_MAX_VELOCITY);
             case RockBandDrums_YellowCymbal:
-                return data->yellowCymbalVelocity << 12;
+                return rb4_drums_velocity_to_axis(data->yellowCymbalVelocity, RB4_XBOX_ONE_MAX_VELOCITY);
             case RockBandDrums_BlueCymbal:
-                return data->blueCymbalVelocity << 12;
+                return rb4_drums_velocity_to_axis(data->blueCymbalVelocity, RB4_XBOX_ONE_MAX_VELOCITY);
             default:
                 return 0;
             }

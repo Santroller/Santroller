@@ -182,3 +182,25 @@ inline uint8_t rb4_drums_velocity(const Report *report, RockBandDrumsAxisType ax
         return 0;
     }
 }
+
+// Stock Xbox One kits only use 0-7 of their 4 bit velocities, their hardest hits reaching around 5, so
+// generated velocities are scaled to that range and anything above it from a hosted kit is clamped. Stock
+// PS4 / PS5 kits use the whole byte
+#define RB4_XBOX_ONE_MAX_VELOCITY 7
+#define RB4_PS_MAX_VELOCITY 0xFF
+
+inline uint16_t rb4_drums_velocity_to_axis(uint8_t velocity, uint8_t max)
+{
+    if (velocity > max)
+    {
+        velocity = max;
+    }
+    return velocity * UINT16_MAX / max;
+}
+
+// A light hit must never round to 0 or the game reads it as the other pad type
+inline uint8_t rb4_drums_axis_to_velocity(uint16_t value, uint8_t max)
+{
+    uint8_t velocity = ((uint32_t)value * max + UINT16_MAX / 2) / UINT16_MAX;
+    return velocity ? velocity : 1;
+}

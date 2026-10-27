@@ -1,5 +1,6 @@
 #include <string.h>
 #include "protocols/rb_pickup.hpp"
+#include "protocols/rock_band_drums.hpp"
 #include "protocols/keyboardmania.hpp"
 #include "events.pb.h"
 #include "instance.hpp"
@@ -1002,34 +1003,35 @@ void RockBandDrumsAxisMapping::update_ps4(uint8_t *buf)
         return;
     }
     PS4RockBandDrums_Data_t *report = (PS4RockBandDrums_Data_t *)buf;
+    uint8_t velocity = rb4_drums_axis_to_velocity(m_calibrated_value, RB4_PS_MAX_VELOCITY);
     switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
-        report->redVelocity = m_calibrated_value >> 8;
+        report->redVelocity = velocity;
         report->b = true;
         break;
     case RockBandDrums_YellowPad:
-        report->yellowVelocity = m_calibrated_value >> 8;
+        report->yellowVelocity = velocity;
         report->y = true;
         break;
     case RockBandDrums_BluePad:
-        report->blueVelocity = m_calibrated_value >> 8;
+        report->blueVelocity = velocity;
         report->x = true;
         break;
     case RockBandDrums_GreenPad:
-        report->greenVelocity = m_calibrated_value >> 8;
+        report->greenVelocity = velocity;
         report->a = true;
         break;
     case RockBandDrums_YellowCymbal:
-        report->yellowCymbalVelocity = m_calibrated_value >> 8;
+        report->yellowCymbalVelocity = velocity;
         report->y = true;
         break;
     case RockBandDrums_BlueCymbal:
-        report->blueCymbalVelocity = m_calibrated_value >> 8;
+        report->blueCymbalVelocity = velocity;
         report->x = true;
         break;
     case RockBandDrums_GreenCymbal:
-        report->greenCymbalVelocity = m_calibrated_value >> 8;
+        report->greenCymbalVelocity = velocity;
         report->a = true;
         break;
     default:
@@ -1044,34 +1046,35 @@ void RockBandDrumsAxisMapping::update_ps5(uint8_t *buf)
         return;
     }
     PS5RockBandDrums_Data_t *report = (PS5RockBandDrums_Data_t *)buf;
+    uint8_t velocity = rb4_drums_axis_to_velocity(m_calibrated_value, RB4_PS_MAX_VELOCITY);
     switch (m_mapping.mapping.mapping.rbDrumAxis)
     {
     case RockBandDrums_RedPad:
-        report->redVelocity = m_calibrated_value >> 8;
+        report->redVelocity = velocity;
         report->b = true;
         break;
     case RockBandDrums_YellowPad:
-        report->yellowVelocity = m_calibrated_value >> 8;
+        report->yellowVelocity = velocity;
         report->y = true;
         break;
     case RockBandDrums_BluePad:
-        report->blueVelocity = m_calibrated_value >> 8;
+        report->blueVelocity = velocity;
         report->x = true;
         break;
     case RockBandDrums_GreenPad:
-        report->greenVelocity = m_calibrated_value >> 8;
+        report->greenVelocity = velocity;
         report->a = true;
         break;
     case RockBandDrums_YellowCymbal:
-        report->yellowCymbalVelocity = m_calibrated_value >> 8;
+        report->yellowCymbalVelocity = velocity;
         report->y = true;
         break;
     case RockBandDrums_BlueCymbal:
-        report->blueCymbalVelocity = m_calibrated_value >> 8;
+        report->blueCymbalVelocity = velocity;
         report->x = true;
         break;
     case RockBandDrums_GreenCymbal:
-        report->greenCymbalVelocity = m_calibrated_value >> 8;
+        report->greenCymbalVelocity = velocity;
         report->a = true;
         break;
     default:
@@ -1251,12 +1254,7 @@ void RockBandDrumsAxisMapping::update_xboxone(uint8_t *buf)
         return;
     }
     XboxOneRockBandDrums_Data_t *report = (XboxOneRockBandDrums_Data_t *)buf;
-    // Velocity is 4 bits; a light hit must never round to 0 or the game reads it as the other pad type
-    uint8_t velocity = m_calibrated_value >> 12;
-    if (velocity == 0)
-    {
-        velocity = 1;
-    }
+    uint8_t velocity = rb4_drums_axis_to_velocity(m_calibrated_value, RB4_XBOX_ONE_MAX_VELOCITY);
 
     switch (m_mapping.mapping.mapping.rbDrumAxis)
     {

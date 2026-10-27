@@ -496,7 +496,7 @@ uint16_t ps5_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
     {
     case RockBandDrums:
         if (type.which_mapping == proto_Output_rbDrumAxis_tag)
-            return rb4_drums_velocity((PS5RockBandDrums_Data_t *)buf, type.mapping.rbDrumAxis) << 8;
+            return rb4_drums_velocity_to_axis(rb4_drums_velocity((PS5RockBandDrums_Data_t *)buf, type.mapping.rbDrumAxis), RB4_PS_MAX_VELOCITY);
         break;
     case LiveGuitar:
         if (type.which_mapping == proto_Output_ghlAxis_tag)

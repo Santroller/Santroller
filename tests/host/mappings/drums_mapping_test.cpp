@@ -1,9 +1,11 @@
 #include <gtest/gtest.h>
 #include "mappings/mapping_test_support.hpp"
+#include "protocols/rock_band_drums.hpp"
 
 // Drum outputs: pad / cymbal hits (calibrated like triggers, so 0 is no hit) become velocities,
-// face buttons and the Rock Band pad / cymbal flags. Rock Band drum velocities are inverted, a
-// harder hit giving a smaller value.
+// face buttons and the Rock Band pad / cymbal flags. Xbox 360 and PS3 Rock Band velocities are
+// inverted, a harder hit giving a smaller value. RB4 kits (Xbox One, PS4, PS5) are not: real
+// hardware sends larger values for harder hits.
 namespace
 {
 proto_Mapping rb_drum(RockBandDrumsAxisType type)
@@ -258,28 +260,53 @@ TEST_F(Drums, RBPS3TwoCymbalsKeepTheHarderHitsDpad)
 
 // Rock Band 4
 
-TEST_F(Drums, RBPS4HasSeparateCymbalVelocities)
+TEST_F(Drums, RBPS4HasSeparateFullByteCymbalVelocities)
 {
     Report<PS4RockBandDrums_Data_t> report;
     hit(rb_drum(RockBandDrums_YellowCymbal), UINT16_MAX)->update_ps4(report.buf());
     hit(rb_drum(RockBandDrums_YellowPad), 0x8000)->update_ps4(report.buf());
+    hit(rb_drum(RockBandDrums_GreenPad), 0x00FF)->update_ps4(report.buf());
     EXPECT_EQ(report->yellowCymbalVelocity, 0xFF);
     EXPECT_EQ(report->yellowVelocity, 0x80);
+    EXPECT_EQ(report->greenVelocity, 1);
     EXPECT_TRUE(report->y);
 }
 
-TEST_F(Drums, RBXboxOneVelocitiesAreFourBitAndNeverZero)
+TEST_F(Drums, RBPS5VelocitiesUseTheFullByte)
+{
+    Report<PS5RockBandDrums_Data_t> report;
+    hit(rb_drum(RockBandDrums_RedPad), UINT16_MAX)->update_ps5(report.buf());
+    EXPECT_EQ(report->redVelocity, 0xFF);
+    EXPECT_TRUE(report->b);
+}
+
+TEST_F(Drums, RBXboxOneVelocitiesStopAtSevenAndAreNeverZero)
 {
     Report<XboxOneRockBandDrums_Data_t> report;
     hit(rb_drum(RockBandDrums_RedPad), UINT16_MAX)->update_xboxone(report.buf());
     hit(rb_drum(RockBandDrums_GreenCymbal), 0x0FFF)->update_xboxone(report.buf());
     hit(rb_drum(RockBandDrums_BluePad), 0x8000)->update_xboxone(report.buf());
-    EXPECT_EQ(report->redVelocity, 0xF);
+    EXPECT_EQ(report->redVelocity, 7);
     EXPECT_EQ(report->greenCymbalVelocity, 1);
-    EXPECT_EQ(report->blueVelocity, 0x8);
+    EXPECT_EQ(report->blueVelocity, 4);
     EXPECT_TRUE(report->b);
     EXPECT_TRUE(report->a);
     EXPECT_TRUE(report->x);
+}
+
+// A hosted kit's velocity has to come back out unchanged, and anything past the Xbox One stock range is clamped
+TEST(DrumsVelocity, RB4HostVelocitiesRoundTrip)
+{
+    for (uint8_t max : {(uint8_t)RB4_XBOX_ONE_MAX_VELOCITY, (uint8_t)RB4_PS_MAX_VELOCITY})
+    {
+        for (int velocity = 1; velocity <= max; velocity++)
+        {
+            EXPECT_EQ(rb4_drums_axis_to_velocity(rb4_drums_velocity_to_axis(velocity, max), max), velocity);
+        }
+        EXPECT_EQ(rb4_drums_velocity_to_axis(0, max), 0);
+        EXPECT_EQ(rb4_drums_velocity_to_axis(max, max), UINT16_MAX);
+    }
+    EXPECT_EQ(rb4_drums_velocity_to_axis(0xF, RB4_XBOX_ONE_MAX_VELOCITY), UINT16_MAX);
 }
 
 TEST_F(Drums, RBOGXboxVelocities)

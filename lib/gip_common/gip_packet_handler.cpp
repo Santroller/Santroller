@@ -343,8 +343,8 @@ void gip_send_power_on_sequence(gip_device_t *device)
 
     if (device->subtype == RockBandDrums || device->subtype == RockBandGuitar)
     {
-        // Rock Band instruments (e.g. Mad Catz drums/strat) expect GIP_PWR_ON (mode 0x00),
-        // LED on (to initialize Guide button LED ring), and auth complete.
+        // Rock Band instruments (e.g. Mad Catz drums/strat) expect GIP_PWR_ON (mode 0x00)
+        // and LED on (to initialize Guide button LED ring).
         // Sending wired console MAC wireless pairing packets corrupts controller state.
         uint8_t seq1 = gip_sequence_pool_next(&device->tx_sequence_pools, GIP_POWER_MODE_DEVICE_CONFIG);
         xgip->reset();

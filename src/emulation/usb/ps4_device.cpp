@@ -61,6 +61,7 @@ void PS4GamepadDevice::initialize()
     ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
 
     PS4Dpad_Data_t *gamepad = (PS4Dpad_Data_t *)m_initial_report;
+    memset(gamepad, 0, sizeof(PS4Dpad_Data_t));
     gamepad->report_id = 1;
     gamepad->leftStickX = PS3_STICK_CENTER;
     gamepad->leftStickY = PS3_STICK_CENTER;

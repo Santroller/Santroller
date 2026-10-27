@@ -981,7 +981,6 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
     // We changed inputs since generating our last report, increment last report counter (but don't update until success)
     if (memcmp(last_report, epin_buf, xboneReportSize) != 0)
     {
-        memcpy(last_report, epin_buf, xboneReportSize);
         outgoingXGIP.reset();
         // Guitar Hero Live guitars send their guitar state as 0x21; 0x20 is the navigation report
         outgoingXGIP.setAttributes(subtype == LiveGuitar ? GHL_HID_REPORT : GIP_INPUT_REPORT, last_report_counter, 0, 0, 0);
@@ -990,6 +989,7 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
         // don't put things in the queue here otherwise we will fill it pretty quick!
         if (send_xbone_usb(test, outgoingXGIP.getPacketLength()))
         {
+            memcpy(last_report, epin_buf, xboneReportSize);
             last_report_counter++; // will rollover
             if (last_report_counter == 0)
                 last_report_counter = 1;

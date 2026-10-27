@@ -94,6 +94,10 @@ struct BleConnectionContext
     uint16_t pending_hids_cid = 0;
     uint8_t desc_copy[512] = {};
     uint16_t desc_len = 0;
+    // A Santroller with no profile using bluetooth, serving only its config service. Kept connected without a
+    // host, so it isn't taken for the controller it was paired as. It drops us once a profile starts using
+    // bluetooth, and is reconnected to then.
+    bool config_only = false;
 
     std::shared_ptr<BluetoothHostInterface> host; // never touched by reset — see below
 };
@@ -144,6 +148,7 @@ static BleConnectionContext *ble_context_alloc()
             ctx.host_create_queued = false;
             ctx.pending_hids_cid = 0;
             ctx.desc_len = 0;
+            ctx.config_only = false;
 
             ctx.in_use = true;
             return &ctx;
@@ -380,7 +385,7 @@ bool ble_is_connecting()
         return true;
     for (const auto &ctx : s_context_pool)
     {
-        if (ctx.in_use && !ctx.host)
+        if (ctx.in_use && !ctx.host && !ctx.config_only)
             return true;
     }
     return false;
@@ -568,12 +573,21 @@ static void ble_copy_descriptor(BleConnectionContext *ctx, uint16_t cid)
 
 static void ble_register_hids_host(BleConnectionContext *ctx, uint16_t cid)
 {
-    if (!ctx || ctx->host)
+    if (!ctx || ctx->host || ctx->config_only)
         return;
 
     HID_ReportInfo_t *info = nullptr;
+    uint8_t parse_result = HID_PARSE_Successful;
     if (ctx->desc_len > 0)
-        USB_ProcessHIDReport(ctx->desc_copy, ctx->desc_len, &info);
+        parse_result = USB_ProcessHIDReport(ctx->desc_copy, ctx->desc_len, &info);
+
+    // The config only database's HID service carries only the vendor config reports, which hidparser keeps none of
+    if (ctx->vid == SANTROLLER_VID && ctx->pid == SANTROLLER_PID && parse_result == HID_PARSE_NoUnfilteredReportItems)
+    {
+        printf("BLE Santroller %s has no profile using bluetooth, waiting for it to start one\r\n", bd_addr_to_str(ctx->addr));
+        ctx->config_only = true;
+        return;
+    }
 
     uint16_t device_id = BluetoothStack::instance().device_id();
     auto host = ble_create_host(ctx->vid, ctx->pid, ctx->version, device_id, info, ctx->known_subtype);

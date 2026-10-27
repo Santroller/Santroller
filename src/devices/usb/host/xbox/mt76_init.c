@@ -665,12 +665,13 @@ int mt76_init_address(struct mt76_dev *dev) {
            dev->mac_address[0], dev->mac_address[1], dev->mac_address[2],
            dev->mac_address[3], dev->mac_address[4], dev->mac_address[5]);
     
-    // Xbox adapters need specific MAC prefix (62:45:bd)
-    if (dev->mac_address[0] != 0x62) {
-        dev->mac_address[0] = 0x62;
-        dev->mac_address[1] = 0x45;
-        dev->mac_address[2] = 0xbd;
-        printf("MT76: Adjusted MAC to Xbox format\n");
+    // Controllers only connect to 62:45:bX:xx:xx:xx. Windows' xboxgip.sys keeps a burned-in address of that
+    // form and otherwise falls back to a fixed one, so using the same fallback lets controllers paired on
+    // Windows reconnect here (xone keeps the low three bytes instead)
+    if (dev->mac_address[0] != 0x62 || dev->mac_address[1] != 0x45 || (dev->mac_address[2] & 0xf0) != 0xb0) {
+        static const uint8_t windows_fallback[MT76_MAC_ADDR_LEN] = {0x62, 0x45, 0xbd, 0x77, 0x37, 0x81};
+        memcpy(dev->mac_address, windows_fallback, MT76_MAC_ADDR_LEN);
+        printf("MT76: Using the Windows fallback MAC\n");
     }
     
     // Write MAC address to registers

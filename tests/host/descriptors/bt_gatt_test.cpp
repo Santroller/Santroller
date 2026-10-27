@@ -6,6 +6,7 @@
 #include <vector>
 #include "firmware_descriptors.hpp"
 #include "hid_descriptor.hpp"
+#include "hidparser.h"
 #include "source_check.hpp"
 
 // Over BLE (HID over GATT) a report can only be sent or received if the GATT database has a Report
@@ -279,6 +280,27 @@ TEST_P(BtGattDatabase, ReportsTheModeUsesHaveCharacteristics)
             continue;
         EXPECT_EQ(r.id, GetParam().inputs.front());
         break;
+    }
+}
+
+// A Santroller dongle (ble_rx.cpp, ble_register_hids_host) connects to the first HID service and only takes
+// the device for a controller when hidparser keeps something from its report map. Config only has just the
+// config HID service, and must not be taken for the controller it was paired as.
+TEST_P(BtGattDatabase, DongleOnlyTakesControllerModesForAController)
+{
+    const bool config_only = GetParam().report_maps.empty();
+    auto maps = config_only ? std::vector<std::vector<uint8_t>>{bytes_of(kConfig)}
+                            : GetParam().report_maps;
+    for (const auto &map : maps)
+    {
+        HID_ReportInfo_t *info = nullptr;
+        uint8_t result = USB_ProcessHIDReport(map.data(), map.size(), &info);
+        if (info)
+            USB_FreeReportInfo(info);
+        if (config_only)
+            EXPECT_EQ(result, HID_PARSE_NoUnfilteredReportItems);
+        else
+            EXPECT_EQ(result, HID_PARSE_Successful);
     }
 }
 

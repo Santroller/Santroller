@@ -466,6 +466,35 @@ size_t PS3GamepadDevice::device_name(uint8_t idx, char *desc)
 
 void PS3GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 {
+    if (m_wiirb)
+    {
+        switch (subtype)
+        {
+        case RockBandGuitar:
+            desc->idVendor = HARMONIX_VID;
+            desc->idProduct = WII_RB_GUITAR_2_PID;
+            return;
+        case RockBandDrums:
+            desc->idVendor = HARMONIX_VID;
+            desc->idProduct = WII_RB_DRUM_2_PID;
+            return;
+        case ProKeys:
+            desc->idVendor = HARMONIX_VID;
+            desc->idProduct = WII_KEYBOARD_PID;
+            return;
+        case ProGuitarMustang:
+            desc->idVendor = HARMONIX_VID;
+            desc->idProduct = WII_MUSTANG_PID;
+            return;
+        case ProGuitarSquier:
+            desc->idVendor = HARMONIX_VID;
+            desc->idProduct = WII_SQUIER_PID;
+            return;
+        default:
+            break;
+        }
+    }
+
     switch (subtype)
     {
     case Dancepad:

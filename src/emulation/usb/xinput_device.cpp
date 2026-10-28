@@ -137,7 +137,7 @@ uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16
         m_wireless = wireless;
         // A genuine receiver reports a controller linking without being asked
         m_send_presence = wireless;
-        m_send_link = false;
+        m_send_link = wireless;
         m_send_caps = false;
         drv_len += x_desc->bLength;
         p_desc = tu_desc_next(p_desc);
@@ -327,10 +327,6 @@ void XInputGamepadDevice::process_wireless_command(const uint8_t *buf, uint32_t 
     {
         // is anything linked to this slot
         m_send_presence = true;
-    }
-    else if (buf[0] == 0x00 && buf[1] == 0x00 && buf[2] == 0x00 && buf[3] == 0x40)
-    {
-        // who is linked
         m_send_link = true;
     }
     else if (buf[0] == 0x00 && buf[1] == 0x00 && buf[2] == 0x02 && buf[3] == 0x80)
@@ -634,7 +630,7 @@ size_t XInputGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     last_serial_query_time = 0;
     if (ProfileManager::instance().xinput_receiver())
     {
-        uint8_t desc[] = {TUD_XINPUT_WIRELESS_CONTROLLER_DESCRIPTOR(interface_id, m_epin, m_epout)};
+        uint8_t desc[] = {TUD_XINPUT_WIRELESS_CONTROLLER_DESCRIPTOR(interface_id, m_epin, m_epout, m_strid)};
         assert(sizeof(desc) <= remaining);
         memcpy(dest, desc, sizeof(desc));
         return sizeof(desc);

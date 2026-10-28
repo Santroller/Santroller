@@ -286,9 +286,9 @@ enum
 #define TUD_GHARCADE_VENDOR_DESC_LEN    (9 + 7 + 7 + 7)
 
 // One controller slot of a 360 wireless receiver, as a genuine receiver describes it
-#define TUD_XINPUT_WIRELESS_CONTROLLER_DESCRIPTOR(_itfnum, _epin, _epout) \
+#define TUD_XINPUT_WIRELESS_CONTROLLER_DESCRIPTOR(_itfnum, _epin, _epout, _strnum) \
   /* Interface */\
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xFF, 0x5D, 0x81, 0,\
+  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xFF, 0x5D, 0x81, _strnum,\
   /* XInput wireless descriptor */\
   20, 0x22, 0x00, 0x01, 0x13, _epin, 0x1D, 0x00, 0x17, 0x01, 0x02, 0x08, 0x13, _epout, 0x0C, 0x00, 0x0C, 0x01, 0x02, 0x08,\
   /* Endpoint In */\

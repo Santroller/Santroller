@@ -78,14 +78,12 @@ protected:
     {
         gip_fake::reset();
         ConfigManager::instance().set_xbox_one_legacy_adapter(false);
-        ConfigManager::instance().set_xbox_one_legacy_adapter_gamepad(true);
     }
     void TearDown() override
     {
         dev.reset();
         gip_fake::reset();
         ConfigManager::instance().set_xbox_one_legacy_adapter(false);
-        ConfigManager::instance().set_xbox_one_legacy_adapter_gamepad(true);
     }
     void plug(SubType subtype, bool with_profile = true)
     {
@@ -302,6 +300,38 @@ TEST_F(XoneDevice, SendsItsMetadata)
     EXPECT_TRUE(headers[headers.size() - 2].flags & FLAG_ACME);
     for (auto &h : headers)
         EXPECT_EQ(h.sequence, headers.front().sequence);
+}
+
+TEST_F(XoneDevice, LegacyAdapterAlwaysAdvertisesGamepadAndGuitarSupport)
+{
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    plug(Gamepad);
+    run(600);
+    from_console(packet(GIP_DEVICE_DESCRIPTOR, FLAG_SYSTEM, next_seq(), {}));
+    Bytes expected = firmware_table(SOURCE, "xb1_descriptor_legacy_adapter_gamepad");
+    Bytes reassembled;
+    bool complete = false;
+    for (int round = 0; round < 50 && !complete; ++round)
+    {
+        for (const auto &p : of_type(run(40), GIP_DEVICE_DESCRIPTOR))
+        {
+            Header h = decode(p);
+            if (h.length == 0)
+            {
+                complete = true;
+                break;
+            }
+            Bytes payload = payload_of(p);
+            reassembled.insert(reassembled.end(), payload.begin(), payload.end());
+            if (h.flags & FLAG_ACME)
+                from_console(ack(GIP_DEVICE_DESCRIPTOR, h.sequence, reassembled.size(), expected.size() - reassembled.size()));
+        }
+    }
+    ASSERT_TRUE(complete);
+    EXPECT_EQ(reassembled, expected);
+    const std::string metadata(reassembled.begin(), reassembled.end());
+    EXPECT_NE(metadata.find("Windows.Xbox.Input.Gamepad"), std::string::npos);
+    EXPECT_NE(metadata.find("Activision.Xbox.Input.GH7"), std::string::npos);
 }
 
 // The device ACKs a console message that asks for one ([MS-GIPUSB] 3.1.5.1)
@@ -608,16 +638,18 @@ TEST_F(XoneDevice, LegacyAuthenticationSurvivesAnEmptySlotBeforeAGhlGuitarArrive
     EXPECT_FALSE(ConfigManager::instance().should_reinitialize_device_stack());
 }
 
-TEST_F(XoneDevice, LegacyGhlWithoutGamepadDescriptorStillReportsWithoutOutput)
+TEST_F(XoneDevice, LegacyGhlAlwaysStartsWithGamepadNavigation)
 {
     ConfigManager::instance().set_xbox_one_legacy_adapter(true);
-    ConfigManager::instance().set_xbox_one_legacy_adapter_gamepad(false);
     plug(LiveGuitar);
     run(600);
     start();
     mapping->bytes = {0x02};
     auto sent = run(400);
-    EXPECT_FALSE(of_type(sent, GHL_HID_REPORT).empty());
+    EXPECT_TRUE(of_type(sent, GHL_HID_REPORT).empty());
+    auto navigation = of_type(sent, GIP_INPUT_REPORT);
+    ASSERT_EQ(navigation.size(), 1u);
+    EXPECT_EQ(payload_of(navigation[0])[0], 0x10);
     EXPECT_TRUE(of_type(sent, GIP_VIRTUAL_KEYCODE).empty());
 }
 

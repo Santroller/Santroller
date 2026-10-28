@@ -107,15 +107,13 @@ private:
     bool legacy_guide_pressed[MAX_LEGACY_PLAYERS] = {};
     size_t legacy_poll_start_player = 0;
     // RB4 requests device info whenever it gains focus, and the console quiesces devices whenever focus changes.
-    // With the gamepad descriptor, the input report uses the legacy adapter layout while it is set and the standard
+    // The input report uses the legacy adapter layout while it is set and the standard
     // gamepad layout otherwise
     bool legacy_game_active = false;
     // GH7 output selects guitar input until QUIESCE returns the adapter to gamepad navigation.
     bool legacy_ghl_active = false;
-    // The descriptor has Windows.Xbox.Input.Gamepad, Config.xboxOneLegacyAdapterGamepad
-    bool legacy_gamepad() const;
     // Input uses the legacy adapter layout, and device info and disconnects are sent
-    bool legacy_wla_layout() const { return !legacy_ghl_active && (legacy_game_active || !legacy_gamepad()); }
+    bool legacy_wla_layout() const { return !legacy_ghl_active && legacy_game_active; }
     static constexpr uint32_t LEGACY_INFO_REQUEST_INTERVAL = 100;
     bool legacy_info_requested = false;
     uint32_t legacy_info_request_time = 0;

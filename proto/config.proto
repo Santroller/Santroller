@@ -325,12 +325,11 @@ message Config {
   optional string manufacturerName = 9;
   // Always emulate the Rock Band 4 wireless legacy adapter on Xbox One / Series, instead of only when there's
   // more than one player. Gamepads still work outside of Rock Band 4, and players can come and go without
-  // authenticating again. Doesn't apply to the Guitar Hero Live guitar or the toy portals.
+  // authenticating again. Supports Guitar Hero Live guitars, but not toy portals.
   optional bool xboxOneLegacyAdapter = 10;
-  // Give the Rock Band 4 wireless legacy adapter Windows.Xbox.Input.Gamepad, so gamepads work fully outside of
-  // Rock Band 4. Its input then swaps between the gamepad and legacy adapter layouts, which only Rock Band 4
-  // copes with. Defaults to on when unset.
-  optional bool xboxOneLegacyAdapterGamepad = 11;
+  // WLA gamepad support is unconditional; ignore this retired option in older configs.
+  reserved 11;
+  reserved "xboxOneLegacyAdapterGamepad";
 }
 
 message ConfigInfo {

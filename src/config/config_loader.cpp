@@ -138,13 +138,6 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     ConfigManager::instance().set_device_name(config.has_deviceName ? config.deviceName : nullptr);
     ConfigManager::instance().set_manufacturer_name(config.has_manufacturerName ? config.manufacturerName : nullptr);
     ConfigManager::instance().set_xbox_one_legacy_adapter(config.has_xboxOneLegacyAdapter && config.xboxOneLegacyAdapter);
-    bool legacy_gamepad = !config.has_xboxOneLegacyAdapterGamepad || config.xboxOneLegacyAdapterGamepad;
-    // The legacy adapter's descriptor depends on it, so the host has to see it again
-    if (config_mgr.has_loaded_any() && legacy_gamepad != config_mgr.xbox_one_legacy_adapter_gamepad())
-    {
-        config_mgr.request_device_stack_reinit();
-    }
-    config_mgr.set_xbox_one_legacy_adapter_gamepad(legacy_gamepad);
     profile_mgr.refresh_bt_config_name();
     if (config.has_peripheralBoot)
     {

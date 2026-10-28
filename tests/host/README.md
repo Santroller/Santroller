@@ -22,14 +22,14 @@ UBSan by default; pass `-DSANTROLLER_TESTS_SANITIZE=OFF` to turn them off. The o
 - `support/` – shared test helpers, plus fakes for SDK / TinyUSB / BTstack functions. Fakes for an area go
   in `support/<area>/` so areas don't step on each other.
 
-The Xbox One legacy adapter's gamepad-enabled mode uses GH7 output (`0x22`) to select guitar reports
+The Xbox One legacy adapter always supports gamepads and uses GH7 output (`0x22`) to select guitar reports
 (`0x21`) for `LiveGuitar` profiles alongside standard navigation (`0x20`) and Guide virtual-key events.
 QUIESCE stops guitar reports while keeping gamepad navigation; Rock Band 4 device-info
 requests select the legacy layout instead. GIP device tests cover these transitions and unchanged-input
 resends. Guitar reports are polled even without input changes; navigation reports are change-only.
 The navigation layout follows PlasticBand's Xbox One six-fret documentation: White 2/3 and GHTV are
-excluded, and strum uses signed left-stick Y. The descriptor without gamepad support retains its
-standalone guitar reporting.
+excluded, and strum uses signed left-stick Y. Older configs' retired gamepad-support option is ignored;
+the adapter always advertises the gamepad-capable descriptor.
 With WLA enabled, an existing Xbox One adapter is also reused when no profiles match, without adding a
 config interface or re-enumerating. This preserves console authentication while the authentication
 gamepad is unplugged and a guitar is connected. Config-loader and GIP tests cover the idle gap,

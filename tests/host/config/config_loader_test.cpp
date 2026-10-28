@@ -391,6 +391,20 @@ TEST_F(ConfigLoaderTest, AnIdleAdapterIsNotRetainedOutsideLegacyXboxOneMode)
     }
 }
 
+TEST_F(ConfigLoaderTest, RetiredGamepadSupportSettingDoesNotChangeTheUsbLayout)
+{
+    fake_loader::state.requested_mode = ModeXboxOne;
+    ConfigSpec spec;
+    spec.xbox_one_legacy_adapter = true;
+    for (uint8_t enabled : {0, 1})
+    {
+        auto main = encode_config(spec);
+        main.insert(main.end(), {0x58, enabled}); // Retired field 11, varint.
+        ASSERT_TRUE(store_and_apply(main, {}, ModeXboxOne));
+        EXPECT_EQ(fake_loader::state.reinitialize_device_stack_calls, 0);
+    }
+}
+
 TEST_F(ConfigLoaderTest, LegacyModeWithoutAPreviousAdapterStillExposesTheConfigInterface)
 {
     fake_loader::state.has_active_instances = false;

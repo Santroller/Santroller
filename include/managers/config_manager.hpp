@@ -74,9 +74,6 @@ public:
     // Config.xboxOneLegacyAdapter
     bool xbox_one_legacy_adapter() const { return m_xbox_one_legacy_adapter; }
     void set_xbox_one_legacy_adapter(bool legacy) { m_xbox_one_legacy_adapter = legacy; }
-    // Config.xboxOneLegacyAdapterGamepad
-    bool xbox_one_legacy_adapter_gamepad() const { return m_xbox_one_legacy_adapter_gamepad; }
-    void set_xbox_one_legacy_adapter_gamepad(bool gamepad) { m_xbox_one_legacy_adapter_gamepad = gamepad; }
     bool has_bluetooth() const { return m_has_bluetooth; }
     void set_bluetooth_available(bool available) { m_has_bluetooth = available; }
     bool is_reloading() const { return m_reloading; }
@@ -164,7 +161,6 @@ private:
     char m_device_name[sizeof(proto_Config::deviceName)] = {};
     char m_manufacturer_name[sizeof(proto_Config::manufacturerName)] = {};
     bool m_xbox_one_legacy_adapter = false;
-    bool m_xbox_one_legacy_adapter_gamepad = true;
     
     ~ConfigManager() = default;
     ConfigManager(const ConfigManager&) = delete;

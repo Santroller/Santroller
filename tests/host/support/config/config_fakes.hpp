@@ -60,7 +60,6 @@ struct State
     std::string manufacturer_name;
     bool manufacturer_name_set = false;
     bool xbox_one_legacy_adapter = false;
-    bool xbox_one_legacy_adapter_gamepad = true;
     bool loaded_any = false;
     int secondary_pico_inits = 0;
     int reinitialize_device_stack_calls = 0;

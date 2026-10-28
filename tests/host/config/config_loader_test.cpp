@@ -9,6 +9,7 @@
 #include "config/config_storage.hpp"
 #include "config/device_factory.hpp"
 #include "devices/bt/bt_tlv_storage.hpp"
+#include "emulation/usb/device.hpp"
 #include "config_builder.hpp"
 #include "config_test_support.hpp"
 
@@ -354,6 +355,51 @@ TEST_F(ConfigLoaderTest, Xbox360ModeAddsTheConfigAndSecurityInterfaces)
     ASSERT_TRUE(store_and_apply(encode_config({}), {}, ModeXbox360));
     EXPECT_EQ(fake_loader::state.usb_instances_added, 2);
     EXPECT_EQ(fake_loader::state.reinitialize_device_stack_calls, 0);
+}
+
+TEST_F(ConfigLoaderTest, AnIdleLegacyAdapterSurvivesReloadsWithoutAddingAConfigInterface)
+{
+    fake_loader::state.has_active_instances = false;
+    fake_loader::state.requested_mode = ModeXboxOne;
+    auto adapter = std::make_shared<UsbDevice>();
+    fake_loader::state.xbox_one_adapter = adapter;
+    ConfigSpec spec;
+    spec.xbox_one_legacy_adapter = true;
+
+    for (int reload = 0; reload < 2; ++reload)
+    {
+        ASSERT_TRUE(store_and_apply(encode_config(spec), {}, ModeXboxOne));
+        EXPECT_EQ(fake_loader::state.xbox_one_adapter, adapter);
+        EXPECT_EQ(fake_loader::state.usb_instances_added, 1);
+        EXPECT_EQ(fake_loader::state.reinitialize_device_stack_calls, 0);
+    }
+}
+
+TEST_F(ConfigLoaderTest, AnIdleAdapterIsNotRetainedOutsideLegacyXboxOneMode)
+{
+    for (auto mode : {ModeXboxOne, ModePs3})
+    {
+        fake_loader::reset();
+        fake_loader::state.has_active_instances = false;
+        fake_loader::state.requested_mode = mode;
+        fake_loader::state.xbox_one_adapter = std::make_shared<UsbDevice>();
+        ConfigSpec spec;
+        spec.xbox_one_legacy_adapter = mode != ModeXboxOne;
+        ASSERT_TRUE(store_and_apply(encode_config(spec), {}, mode));
+        EXPECT_FALSE(fake_loader::state.xbox_one_adapter);
+        EXPECT_EQ(fake_loader::state.usb_instances_added, 1);
+    }
+}
+
+TEST_F(ConfigLoaderTest, LegacyModeWithoutAPreviousAdapterStillExposesTheConfigInterface)
+{
+    fake_loader::state.has_active_instances = false;
+    fake_loader::state.requested_mode = ModeXboxOne;
+    ConfigSpec spec;
+    spec.xbox_one_legacy_adapter = true;
+    ASSERT_TRUE(store_and_apply(encode_config(spec), {}, ModeXboxOne));
+    EXPECT_FALSE(fake_loader::state.xbox_one_adapter);
+    EXPECT_EQ(fake_loader::state.usb_instances_added, 1);
 }
 
 TEST_F(ConfigLoaderTest, AModeChangeReinitialisesTheDeviceStack)

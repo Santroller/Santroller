@@ -152,7 +152,18 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
         secondary_pico_slave_init(i2c_block, config.peripheralBoot.i2c.sda, config.peripheralBoot.i2c.scl, config.peripheralBoot.idPin);
     }
     const ConsoleMode resolved_mode = config_mgr.get_requested_mode();
-    if (nothing_matched || resolved_mode == ModeHid || resolved_mode == ModeXbox360)
+    if (resolved_mode == ModeXboxOne && config_mgr.xbox_one_legacy_adapter() &&
+        !profile_mgr.get_emulated_device(ModeXboxOne))
+    {
+        // Keep the authenticated adapter and its endpoints alive between attached controllers.
+        auto adapter = profile_mgr.reuse_usb_instance(profile_mgr.usb_instance_count(), ModeXboxOne, SubType_Gamepad, false);
+        if (adapter)
+        {
+            profile_mgr.set_emulated_device(ModeXboxOne, adapter);
+        }
+    }
+    const bool idle_xbox_one_adapter = resolved_mode == ModeXboxOne && profile_mgr.get_emulated_device(ModeXboxOne);
+    if ((nothing_matched && !idle_xbox_one_adapter) || resolved_mode == ModeHid || resolved_mode == ModeXbox360)
     {
         auto confDevice = HIDConfigDevice::instance;
         confDevice->interface_id = profile_mgr.usb_instance_count();

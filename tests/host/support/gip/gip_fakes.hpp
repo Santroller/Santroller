@@ -19,6 +19,7 @@ struct Transfer
 inline bool device_mounted = true;
 inline bool device_suspended = false;
 inline bool device_in_busy = false;
+inline bool device_in_busy_after_transfer = false;
 inline std::vector<Transfer> device_in;  // reports sent to the console on IN endpoints
 inline int device_out_arms = 0;          // how many times an OUT transfer was queued
 

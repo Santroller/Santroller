@@ -77,11 +77,15 @@ protected:
     void SetUp() override
     {
         gip_fake::reset();
+        ConfigManager::instance().set_xbox_one_legacy_adapter(false);
+        ConfigManager::instance().set_xbox_one_legacy_adapter_gamepad(true);
     }
     void TearDown() override
     {
         dev.reset();
         gip_fake::reset();
+        ConfigManager::instance().set_xbox_one_legacy_adapter(false);
+        ConfigManager::instance().set_xbox_one_legacy_adapter_gamepad(true);
     }
     void plug(SubType subtype, bool with_profile = true)
     {
@@ -95,6 +99,7 @@ protected:
             profile->mappings.push_back(mapping);
             dev->profiles.push_back(profile);
         }
+        dev->update_identity();
         ASSERT_EQ(dev->open((tusb_desc_interface_t const *)GIP_INTERFACE, sizeof(GIP_INTERFACE)), sizeof(GIP_INTERFACE));
     }
     // The console sends one transfer
@@ -363,6 +368,257 @@ TEST_F(XoneDevice, GhlBlack1IsNotGuide)
     auto reports = of_type(sent, GHL_HID_REPORT);
     ASSERT_EQ(reports.size(), 1u);
     EXPECT_EQ(payload_of(reports[0])[0], 0x02);
+}
+
+TEST_F(XoneDevice, LegacyGhlSwitchesOnOutputAndQuiescesToGamepad)
+{
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    plug(LiveGuitar);
+    run(600);
+    ASSERT_TRUE(dev->is_legacy_adapter());
+    start();
+
+    mapping->bytes = {0x02}; // Black 1, translated to gamepad A outside GHL.
+    auto sent = run(10);
+    EXPECT_TRUE(of_type(sent, GHL_HID_REPORT).empty());
+    auto navigation = of_type(sent, GIP_INPUT_REPORT);
+    ASSERT_EQ(navigation.size(), 1u);
+    EXPECT_EQ(payload_of(navigation[0]).size(), sizeof(GipLegacyWirelessReport_t));
+    EXPECT_EQ(payload_of(navigation[0])[0], 0x10);
+    EXPECT_TRUE(of_type(sent, GIP_VIRTUAL_KEYCODE).empty());
+    EXPECT_GT(mapping->ps3_writes, 0u);
+
+    const Bytes output = {0x01, 0x08, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00};
+    const size_t navigation_writes = mapping->ps3_writes;
+    from_console(packet(GHL_HID_OUTPUT, 0, next_seq(), output));
+    sent = run(10);
+    auto guitar = of_type(sent, GHL_HID_REPORT);
+    ASSERT_GE(guitar.size(), 1u);
+    EXPECT_EQ(payload_of(guitar[0]).size(), sizeof(XboxOneGHLGuitar_Data_t));
+    EXPECT_EQ(payload_of(guitar[0])[0], 0x02);
+    EXPECT_TRUE(of_type(sent, GIP_INPUT_REPORT).empty());
+    EXPECT_TRUE(of_type(sent, GIP_LEGACY_DEVICE_INFO).empty());
+    EXPECT_GT(mapping->ps3_writes, navigation_writes);
+
+    mapping->bytes = {0x04}; // Black 2 must reach both report formats while GHL has focus.
+    sent = run(10);
+    guitar = of_type(sent, GHL_HID_REPORT);
+    navigation = of_type(sent, GIP_INPUT_REPORT);
+    ASSERT_GE(guitar.size(), 1u);
+    ASSERT_EQ(navigation.size(), 1u);
+    EXPECT_EQ(payload_of(guitar[0])[0], 0x04);
+    EXPECT_EQ(payload_of(navigation[0])[0], 0x20); // Gamepad B, not the PS3 button bits.
+    EXPECT_EQ(payload_of(navigation[0]).size(), sizeof(GipLegacyWirelessReport_t));
+    EXPECT_TRUE(of_type(sent, GIP_VIRTUAL_KEYCODE).empty());
+
+    from_console(packet(GHL_HID_OUTPUT, 0, next_seq(), output));
+    EXPECT_FALSE(of_type(run(10), GHL_HID_REPORT).empty());
+    from_console(packet(GIP_SET_STATE, FLAG_SYSTEM, next_seq(), {GIP_STATE_QUIESCE}));
+    sent = run(10);
+    EXPECT_TRUE(of_type(sent, GHL_HID_REPORT).empty());
+    navigation = of_type(sent, GIP_INPUT_REPORT);
+    ASSERT_EQ(navigation.size(), 1u);
+    EXPECT_EQ(payload_of(navigation[0])[0], 0x20);
+
+    from_console(packet(GHL_HID_OUTPUT, 0, next_seq(), output));
+    guitar = of_type(run(10), GHL_HID_REPORT);
+    ASSERT_GE(guitar.size(), 1u);
+    EXPECT_EQ(payload_of(guitar[0])[0], 0x04);
+
+    from_console(packet(GIP_LEGACY_REQUEST_DEVICE_INFO, 0, next_seq()));
+    sent = run(400);
+    EXPECT_TRUE(of_type(sent, GHL_HID_REPORT).empty());
+    EXPECT_FALSE(of_type(sent, GIP_LEGACY_DEVICE_INFO).empty());
+    EXPECT_FALSE(of_type(sent, GIP_INPUT_REPORT).empty());
+}
+
+TEST_F(XoneDevice, LegacyGhlResendsNeutralInputAfterReset)
+{
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    plug(LiveGuitar);
+    run(600);
+    start();
+    const Bytes output = {0x01, 0x08, 0x0f, 0, 0, 0, 0, 0};
+    from_console(packet(GHL_HID_OUTPUT, 0, next_seq(), output));
+    ASSERT_FALSE(of_type(run(10), GHL_HID_REPORT).empty());
+    from_console(packet(GIP_SET_STATE, FLAG_SYSTEM, next_seq(), {GIP_STATE_RESET}));
+    run(600);
+    start();
+    EXPECT_TRUE(of_type(run(10), GHL_HID_REPORT).empty());
+    from_console(packet(GHL_HID_OUTPUT, 0, next_seq(), output));
+    EXPECT_FALSE(of_type(run(10), GHL_HID_REPORT).empty());
+}
+
+TEST_F(XoneDevice, LegacyGhlSendsGuidePressAndReleaseWhileFocused)
+{
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    plug(LiveGuitar);
+    run(600);
+    start();
+    from_console(packet(GHL_HID_OUTPUT, 0, next_seq(), {0x01, 0x08, 0x0f, 0, 0, 0, 0, 0}));
+    run(10);
+
+    XboxOneGHLGuitar_Data_t buttons = {};
+    buttons.report.guide = 1;
+    const auto *bytes = reinterpret_cast<const uint8_t *>(&buttons);
+    mapping->bytes.assign(bytes, bytes + sizeof(buttons));
+    auto pressed = of_type(run(100), GIP_VIRTUAL_KEYCODE);
+    ASSERT_EQ(pressed.size(), 1u);
+    EXPECT_EQ(payload_of(pressed[0]), (Bytes{0x01, 0x5b}));
+
+    mapping->bytes.clear();
+    auto released = of_type(run(100), GIP_VIRTUAL_KEYCODE);
+    ASSERT_EQ(released.size(), 1u);
+    EXPECT_EQ(payload_of(released[0]), (Bytes{0x00, 0x5b}));
+}
+
+TEST_F(XoneDevice, LegacyGhlNavigationMatchesTheStockGuitarLayout)
+{
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    plug(LiveGuitar);
+    run(600);
+    start();
+    from_console(packet(GHL_HID_OUTPUT, 0, next_seq(), {0x01, 0x08, 0x0f, 0, 0, 0, 0, 0}));
+    run(10);
+
+    // White 2/3 and GHTV exist only in the guitar report.
+    mapping->bytes = {0x30, 0x04};
+    auto sent = run(10);
+    EXPECT_TRUE(of_type(sent, GIP_INPUT_REPORT).empty());
+    ASSERT_FALSE(of_type(sent, GHL_HID_REPORT).empty());
+
+    mapping->bytes = {0x3f, 0x07, 0x05}; // All frets, Pause, Hero Power, GHTV, up-left.
+    mapping->strum = 0x00;
+    sent = run(10);
+    auto navigation = of_type(sent, GIP_INPUT_REPORT);
+    ASSERT_EQ(navigation.size(), 1u);
+    Bytes expected(14, 0);
+    expected[0] = 0xfc;
+    expected[1] = 0x05;
+    expected[8] = 0xff;
+    expected[9] = 0x7f;
+    EXPECT_EQ(payload_of(navigation[0]), expected);
+    auto guitar = of_type(sent, GHL_HID_REPORT);
+    ASSERT_FALSE(guitar.empty());
+    EXPECT_EQ(payload_of(guitar[0])[2], 7); // Hat, not the internal d-pad bitmask.
+    EXPECT_EQ(payload_of(guitar[0])[4], 0);
+
+    mapping->strum = 0xff;
+    navigation = of_type(run(10), GIP_INPUT_REPORT);
+    ASSERT_EQ(navigation.size(), 1u);
+    expected[8] = 0;
+    expected[9] = 0x80;
+    EXPECT_EQ(payload_of(navigation[0]), expected);
+
+    mapping->bytes.clear();
+    mapping->strum = 0x80;
+    sent = run(10);
+    navigation = of_type(sent, GIP_INPUT_REPORT);
+    ASSERT_EQ(navigation.size(), 1u);
+    EXPECT_EQ(payload_of(navigation[0]), Bytes(14, 0));
+    guitar = of_type(sent, GHL_HID_REPORT);
+    ASSERT_FALSE(guitar.empty());
+    Bytes idle(27, 0);
+    idle[2] = 0x0f;
+    idle[4] = idle[5] = idle[6] = idle[19] = idle[21] = 0x80;
+    idle[22] = 1;
+    idle[24] = idle[26] = 2;
+    EXPECT_EQ(payload_of(guitar[0]), idle);
+    EXPECT_TRUE(of_type(run(10), GIP_INPUT_REPORT).empty());
+}
+
+TEST_F(XoneDevice, LegacyGhlAndNavigationShareABusyEndpointWithoutStarvation)
+{
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    plug(LiveGuitar);
+    run(600);
+    start();
+    from_console(packet(GHL_HID_OUTPUT, 0, next_seq(), {0x01, 0x08, 0x0f, 0, 0, 0, 0, 0}));
+    gip_fake::device_in_busy_after_transfer = true;
+    size_t guitar_reports = 0;
+    size_t navigation_reports = 0;
+    for (int tick = 0; tick < 30; ++tick)
+    {
+        mapping->bytes = {uint8_t(1u << (tick % 4))};
+        gip_fake::device_in_busy = false;
+        auto sent = run(1);
+        EXPECT_LE(sent.size(), 1u);
+        guitar_reports += of_type(sent, GHL_HID_REPORT).size();
+        navigation_reports += of_type(sent, GIP_INPUT_REPORT).size();
+    }
+    EXPECT_GE(guitar_reports, 10u);
+    EXPECT_GE(navigation_reports, 10u);
+
+    gip_fake::device_in_busy_after_transfer = false;
+    gip_fake::device_in_busy = false;
+    run(10);
+    auto unchanged = run(10);
+    EXPECT_FALSE(of_type(unchanged, GHL_HID_REPORT).empty());
+    EXPECT_TRUE(of_type(unchanged, GIP_INPUT_REPORT).empty());
+}
+
+TEST_F(XoneDevice, LegacyGhlOutputDoesNotConvertGamepadProfiles)
+{
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    plug(Gamepad);
+    run(600);
+    start();
+    from_console(packet(GHL_HID_OUTPUT, 0, next_seq(), {0x01, 0x08, 0x0f, 0, 0, 0, 0, 0}));
+    mapping->bytes = {0x10};
+    auto sent = run(10);
+    EXPECT_TRUE(of_type(sent, GHL_HID_REPORT).empty());
+    EXPECT_FALSE(of_type(sent, GIP_INPUT_REPORT).empty());
+}
+
+TEST_F(XoneDevice, LegacyAuthenticationSurvivesAnEmptySlotBeforeAGhlGuitarArrives)
+{
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    auth_broker.register_handler(ModeXboxOne, [](XGIPProtocol *) {});
+    plug(Gamepad);
+    ASSERT_TRUE(dev->is_legacy_adapter());
+    run(600);
+    start();
+    from_console(packet(GIP_AUTH, FLAG_SYSTEM, next_seq(), {0x01, 0x00}));
+    ASSERT_TRUE(auth_broker.is_console_authenticated(ModeXboxOne));
+    run(10);
+
+    auth_broker.unregister_handler(ModeXboxOne);
+    dev->profiles.clear();
+    EXPECT_FALSE(dev->update_identity());
+    EXPECT_TRUE(dev->is_legacy_adapter());
+    auto idle = run(16000);
+    EXPECT_FALSE(of_type(idle, GIP_KEEPALIVE).empty());
+    EXPECT_TRUE(of_type(idle, GIP_ANNOUNCE).empty());
+    EXPECT_TRUE(auth_broker.is_auth_completed(ModeXboxOne));
+    EXPECT_TRUE(auth_broker.is_console_authenticated(ModeXboxOne));
+
+    auto guitar = std::make_shared<Profile>();
+    guitar->subtype = LiveGuitar;
+    guitar->mappings.push_back(mapping);
+    dev->profiles.push_back(guitar);
+    EXPECT_FALSE(dev->update_identity());
+    from_console(packet(GHL_HID_OUTPUT, 0, next_seq(), {0x01, 0x08, 0x0f, 0, 0, 0, 0, 0}));
+    mapping->bytes = {0x02};
+    auto sent = run(100);
+    auto reports = of_type(sent, GHL_HID_REPORT);
+    ASSERT_GE(reports.size(), 1u);
+    EXPECT_EQ(payload_of(reports[0])[0], 0x02);
+    EXPECT_TRUE(of_type(sent, GIP_ANNOUNCE).empty());
+    EXPECT_TRUE(auth_broker.is_console_authenticated(ModeXboxOne));
+    EXPECT_FALSE(ConfigManager::instance().should_reinitialize_device_stack());
+}
+
+TEST_F(XoneDevice, LegacyGhlWithoutGamepadDescriptorStillReportsWithoutOutput)
+{
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    ConfigManager::instance().set_xbox_one_legacy_adapter_gamepad(false);
+    plug(LiveGuitar);
+    run(600);
+    start();
+    mapping->bytes = {0x02};
+    auto sent = run(400);
+    EXPECT_FALSE(of_type(sent, GHL_HID_REPORT).empty());
+    EXPECT_TRUE(of_type(sent, GIP_VIRTUAL_KEYCODE).empty());
 }
 
 TEST_F(XoneDevice, NoInputBeforeStart)

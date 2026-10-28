@@ -1,4 +1,5 @@
 #include "tusb_option.h"
+#include <algorithm>
 #include <memory>
 #include <iterator>
 #include "managers/config_manager.hpp"
@@ -25,6 +26,25 @@ static uint8_t xb1_keep_alive[] = {0x80, 0x00, 0x00, 0x00};
 
 // Check if Auth is completed (start is 0x01, 0x01, and invalid is 0x01, 0x07)
 const uint8_t authReady[] = {0x01, 0x00};
+
+// Inspect xone_debug over SWD without stopping USB. History survives USB resets; auth payloads are omitted.
+static struct
+{
+    struct Packet
+    {
+        uint32_t time_ms;
+        uint32_t wire_length;
+        uint8_t captured_length;
+        uint8_t data[CFG_TUD_XONE_RX_BUFSIZE];
+    };
+    Packet rx_history[32] = {};
+    uint32_t rx_count = 0;
+    uint32_t rx_errors = 0;
+    uint32_t parse_errors = 0;
+    uint32_t ghl_output_count = 0;
+    Packet last_ghl_output = {};
+    uint32_t ghl_input_sent = 0;
+} xone_debug;
 
 static bool is_drum_subtype(SubType subtype)
 {
@@ -294,6 +314,11 @@ uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint1
     auth_broker.set_console_authenticated(ModeXboxOne, false);
     waiting_ack = false;
     xbox_one_powered_on = false;
+    legacy_game_active = false;
+    legacy_ghl_active = false;
+    legacy_ghl_report_valid = false;
+    legacy_ghl_navigation_pending = false;
+    memset(legacy_report_valid, 0, sizeof(legacy_report_valid));
     auth_handler_connected = auth_broker.has_handler(ModeXboxOne);
     report_queue_head = 0;
     report_queue_count = 0;
@@ -312,10 +337,27 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
     // Output report
     if (XFER_RESULT_SUCCESS == result)
     {
+        auto &trace = xone_debug.rx_history[xone_debug.rx_count % std::size(xone_debug.rx_history)];
+        trace = {};
+        trace.time_ms = to_ms_since_boot(get_absolute_time());
+        trace.wire_length = xferred_bytes;
+        size_t captured_length = std::min<size_t>(xferred_bytes, sizeof(trace.data));
+        if (captured_length && (epout_buf[0] == GIP_AUTH || epout_buf[0] == GIP_FINAL_AUTH))
+        {
+            captured_length = std::min<size_t>(captured_length, 4);
+        }
+        trace.captured_length = captured_length;
+        memcpy(trace.data, epout_buf, captured_length);
+        xone_debug.rx_count++;
+
         // The console can send other messages between the fragments of one it's still sending
         XGIPProtocol &in = (epout_buf[1] & 0x80) ? incomingChunkXGIP : incomingXGIP;
         // Parse incoming packet and verify its valid
         bool parsed = in.parse(epout_buf, xferred_bytes);
+        if (!parsed)
+        {
+            xone_debug.parse_errors++;
+        }
 
         uint8_t command = in.getCommand();
         // Setup an ack before we change anything about the incoming packet
@@ -333,7 +375,21 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE, false));
             return true;
         }
-        // printf("got cmd: %02x\r\n", command);
+        if (command == GHL_HID_OUTPUT)
+        {
+            xone_debug.last_ghl_output = trace;
+            xone_debug.ghl_output_count++;
+            printf("xb1 GHL output: seq=%u len=%u data=", in.getSequence(), in.getDataLength());
+            for (size_t i = 0; i < std::min<size_t>(in.getDataLength(), 32); i++)
+            {
+                printf("%02x ", in.getData()[i]);
+            }
+            printf("\r\n");
+        }
+        else if (command != GIP_ACK_RESPONSE && command != GIP_AUTH && command != GIP_FINAL_AUTH)
+        {
+            printf("xb1 rx: cmd=%02x seq=%u len=%u\r\n", command, in.getSequence(), in.getDataLength());
+        }
         if (command == GIP_ACK_RESPONSE)
         {
             waiting_ack = false;
@@ -447,9 +503,17 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             case GIP_STATE_QUIESCE:
                 // Only matters with the gamepad descriptor, see legacy_wla_layout
                 legacy_game_active = false;
+                legacy_ghl_active = false;
+                legacy_ghl_report_valid = false;
+                legacy_ghl_navigation_pending = false;
+                memset(legacy_report_valid, 0, sizeof(legacy_report_valid));
                 break;
             case GIP_STATE_RESET:
                 legacy_game_active = false;
+                legacy_ghl_active = false;
+                legacy_ghl_report_valid = false;
+                legacy_ghl_navigation_pending = false;
+                memset(legacy_report_valid, 0, sizeof(legacy_report_valid));
                 legacy_info_requested = false;
                 auth_completed = false;
                 auth_broker.set_auth_completed(ModeXboxOne, false);
@@ -513,8 +577,23 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             auth_broker.forward_auth(ModeXboxOne, &in);
             in.reset();
         }
+        else if (command == GHL_HID_OUTPUT && is_legacy_adapter())
+        {
+            if (!legacy_ghl_active)
+            {
+                legacy_ghl_report_valid = false;
+                legacy_ghl_navigation_pending = false;
+            }
+            legacy_ghl_active = true;
+            legacy_game_active = false;
+        }
         else if (command == GIP_LEGACY_REQUEST_DEVICE_INFO)
         {
+            if (!legacy_game_active)
+            {
+                memset(legacy_report_valid, 0, sizeof(legacy_report_valid));
+            }
+            legacy_ghl_active = false;
             legacy_game_active = true;
             // A game may ask again for every report from a slot it doesn't know yet, while every slot's device
             // info is still on its way
@@ -531,12 +610,14 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
                     GipLegacyWirelessDeviceType dev_type = get_legacy_wireless_device_type(legacy_players[i]->subtype);
                     legacy_connected[i] = true;
                     legacy_device_types[i] = dev_type;
+                    legacy_report_valid[i] = false;
                     send_legacy_device_info(i, dev_type);
                 }
                 // Players that left while Rock Band 4 didn't have focus
                 else if (legacy_connected[i])
                 {
                     legacy_connected[i] = false;
+                    legacy_report_valid[i] = false;
                     send_legacy_disconnection(i);
                 }
             }
@@ -545,6 +626,10 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
         {
             // Auto-calibration sensor command (Guitar Stratocaster)
         }
+    }
+    else
+    {
+        xone_debug.rx_errors++;
     }
 
     // prepare for new transfer
@@ -891,12 +976,14 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
                 {
                     legacy_connected[i] = true;
                     legacy_device_types[i] = dev_type;
+                    legacy_report_valid[i] = false;
                     send_legacy_device_info((uint8_t)i, dev_type);
                 }
                 else if (legacy_device_types[i] != dev_type)
                 {
                     send_legacy_disconnection((uint8_t)i);
                     legacy_device_types[i] = dev_type;
+                    legacy_report_valid[i] = false;
                     memset(legacy_last_report[i], 0, sizeof(legacy_last_report[i]));
                     send_legacy_device_info((uint8_t)i, dev_type);
                 }
@@ -905,6 +992,7 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
             {
                 legacy_connected[i] = false;
                 send_legacy_disconnection((uint8_t)i);
+                legacy_report_valid[i] = false;
                 memset(legacy_last_report[i], 0, sizeof(legacy_last_report[i]));
             }
         }
@@ -989,6 +1077,10 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
         // don't put things in the queue here otherwise we will fill it pretty quick!
         if (send_xbone_usb(test, outgoingXGIP.getPacketLength()))
         {
+            if (subtype == LiveGuitar)
+            {
+                xone_debug.ghl_input_sent++;
+            }
             memcpy(last_report, epin_buf, xboneReportSize);
             last_report_counter++; // will rollover
             if (last_report_counter == 0)
@@ -1165,16 +1257,34 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
         Profile *profile = legacy_players[i];
         bool is_drums = is_drum_subtype(profile->subtype);
         bool is_gamepad = get_legacy_wireless_device_type(profile->subtype) == GipLegacyWirelessDeviceType::Gamepad;
+        bool ghl_navigation = profile->subtype == LiveGuitar && legacy_gamepad();
 
         // Buffer to accumulate mapping outputs for this profile
         uint8_t profile_buf[sizeof(XboxOneRockBandGuitar_Data_t)] = {};
+        XboxOneGHLGuitar_Data_t navigation_buf = {};
+        if (profile->subtype == LiveGuitar)
+        {
+            auto &guitar = reinterpret_cast<XboxOneGHLGuitar_Data_t *>(profile_buf)->report;
+            guitar.strumBar = 0x80;
+            guitar.whammy = 0x80;
+            guitar.tilt = 0x80;
+        }
+        navigation_buf.report.strumBar = 0x80;
 
         for (const auto &mapping : profile->mappings)
         {
             mapping->update(full_poll, send_events);
             if (m_player_matches_identity)
             {
-                mapping->update_xboxone(profile_buf);
+                if (ghl_navigation)
+                {
+                    // Common buttons must use the same PS3 layout as the six-fret mappings.
+                    mapping->update_ps3(reinterpret_cast<uint8_t *>(&navigation_buf));
+                }
+                if (!ghl_navigation || legacy_ghl_active)
+                {
+                    mapping->update_xboxone(profile_buf);
+                }
             }
         }
         for (const auto &led : profile->leds)
@@ -1182,30 +1292,68 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
             led->update(full_poll, send_events);
         }
 
-        // Guitar Hero Live guitars send their PS3 style report as 0x21 for Activision.Xbox.Input.GH7, which
-        // Rock Band 4 doesn't read, and that report has no guide button
-        if (profile->subtype == LiveGuitar)
+        // Without the gamepad descriptor, retain the standalone GH7 reporting behavior.
+        if (profile->subtype == LiveGuitar && (legacy_ghl_active || !legacy_gamepad()))
         {
             static_assert(sizeof(XboxOneGHLGuitar_Data_t) <= sizeof(profile_buf));
+            auto &guitar = reinterpret_cast<XboxOneGHLGuitar_Data_t *>(profile_buf)->report;
+            const bool up = guitar.dpadUp && !guitar.dpadDown;
+            const bool down = guitar.dpadDown && !guitar.dpadUp;
+            const bool left = guitar.dpadLeft && !guitar.dpadRight;
+            const bool right = guitar.dpadRight && !guitar.dpadLeft;
+            profile_buf[2] = up ? (right ? 1 : left ? 7 : 0) :
+                             down ? (right ? 3 : left ? 5 : 4) :
+                             right ? 2 : left ? 6 : 0x0f;
+            guitar.tilt2 = guitar.tilt == 0 ? 0x00 : guitar.tilt >= 0xff ? 0xff : 0x80;
+            guitar.unused4[0] = guitar.tilt2 == 0x80 ? 0x180 : 0x200;
+            guitar.unused4[1] = 0x200;
+            guitar.unused4[2] = 0x200;
             bool rock_band_active = legacy_gamepad() && legacy_game_active;
-            if (rock_band_active || report_queue_count ||
-                memcmp(legacy_ghl_last_report, profile_buf, sizeof(legacy_ghl_last_report)) == 0)
+            if (!rock_band_active && !report_queue_count &&
+                (!ghl_navigation || !legacy_ghl_navigation_pending))
             {
+                outgoingXGIP.reset();
+                outgoingXGIP.setAttributes(GHL_HID_REPORT, legacy_report_counter[i], 0, 0, 0);
+                outgoingXGIP.setData(profile_buf, sizeof(XboxOneGHLGuitar_Data_t));
+                uint8_t *packet = outgoingXGIP.generatePacket();
+                if (send_xbone_usb(packet, outgoingXGIP.getPacketLength()))
+                {
+                    xone_debug.ghl_input_sent++;
+                    memcpy(legacy_ghl_last_report, profile_buf, sizeof(legacy_ghl_last_report));
+                    legacy_ghl_report_valid = true;
+                    legacy_report_counter[i]++;
+                    if (legacy_report_counter[i] == 0)
+                        legacy_report_counter[i] = 1;
+                    // Give navigation the next available transfer even if guitar inputs keep changing.
+                    legacy_ghl_navigation_pending = ghl_navigation;
+                    if (!ghl_navigation)
+                        break;
+                }
+            }
+            if (!ghl_navigation)
                 continue;
-            }
-            outgoingXGIP.reset();
-            outgoingXGIP.setAttributes(GHL_HID_REPORT, legacy_report_counter[i], 0, 0, 0);
-            outgoingXGIP.setData(profile_buf, sizeof(XboxOneGHLGuitar_Data_t));
-            uint8_t *packet = outgoingXGIP.generatePacket();
-            if (send_xbone_usb(packet, outgoingXGIP.getPacketLength()))
-            {
-                memcpy(legacy_ghl_last_report, profile_buf, sizeof(legacy_ghl_last_report));
-                legacy_report_counter[i]++;
-                if (legacy_report_counter[i] == 0)
-                    legacy_report_counter[i] = 1;
-                break;
-            }
-            continue;
+        }
+
+        if (ghl_navigation)
+        {
+            const auto &guitar = navigation_buf.report;
+            XboxOneGamepad_Data_t navigation = {};
+            navigation.a = guitar.a;
+            navigation.b = guitar.b;
+            navigation.x = guitar.x;
+            navigation.y = guitar.y;
+            navigation.start = guitar.start;
+            navigation.back = guitar.back;
+            navigation.guide = guitar.guide;
+            navigation.dpadUp = guitar.dpadUp;
+            navigation.dpadDown = guitar.dpadDown;
+            navigation.dpadLeft = guitar.dpadLeft;
+            navigation.dpadRight = guitar.dpadRight;
+            navigation.leftStickY = guitar.strumBar < 0x80 ? INT16_MAX :
+                                   guitar.strumBar > 0x80 ? INT16_MIN : 0;
+            static_assert(sizeof(navigation) <= sizeof(profile_buf));
+            memset(profile_buf, 0, sizeof(profile_buf));
+            memcpy(profile_buf, &navigation, sizeof(navigation));
         }
 
         XboxOneGamepad_Data_t *gp = (XboxOneGamepad_Data_t *)profile_buf;
@@ -1243,7 +1391,7 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
             // with the legacy layout. Instruments just send their buttons, their axes would otherwise land on
             // the triggers and sticks
             static_assert(sizeof(legacy_report) == offsetof(XboxOneGamepad_Data_t, consoleFunctions));
-            if (is_gamepad)
+            if (is_gamepad || ghl_navigation)
             {
                 memcpy(&legacy_report, profile_buf, sizeof(legacy_report));
             }
@@ -1265,7 +1413,8 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
 
         // Send report if inputs changed. Device info and disconnects are queued, and input mustn't overtake them,
         // or a game sees input for a slot it doesn't know about yet
-        if (report_queue_count == 0 && memcmp(legacy_last_report[i], &legacy_report, sizeof(legacy_report)) != 0)
+        if (report_queue_count == 0 &&
+            (!legacy_report_valid[i] || memcmp(legacy_last_report[i], &legacy_report, sizeof(legacy_report)) != 0))
         {
             outgoingXGIP.reset();
             outgoingXGIP.setAttributes(GIP_INPUT_REPORT, legacy_report_counter[i], 0, 0, 0);
@@ -1274,12 +1423,19 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
             if (send_xbone_usb(packet, outgoingXGIP.getPacketLength()))
             {
                 memcpy(legacy_last_report[i], &legacy_report, sizeof(legacy_report));
+                legacy_report_valid[i] = true;
+                if (ghl_navigation)
+                    legacy_ghl_navigation_pending = false;
                 legacy_report_counter[i]++;
                 if (legacy_report_counter[i] == 0)
                     legacy_report_counter[i] = 1;
                 // Endpoint is busy for this USB frame, break to next poll
                 break;
             }
+        }
+        else if (ghl_navigation && report_queue_count == 0)
+        {
+            legacy_ghl_navigation_pending = false;
         }
     }
 }

@@ -15,6 +15,7 @@ void gip_fake::reset()
     device_mounted = true;
     device_suspended = false;
     device_in_busy = false;
+    device_in_busy_after_transfer = false;
     device_in.clear();
     device_out_arms = 0;
     host_out.clear();
@@ -125,7 +126,11 @@ extern "C" bool usbd_edpt_xfer(uint8_t rhport, uint8_t ep_addr, uint8_t *buffer,
     (void)rhport;
     (void)is_isr;
     if (tu_edpt_dir(ep_addr) == TUSB_DIR_IN)
+    {
         gip_fake::device_in.push_back({ep_addr, std::vector<uint8_t>(buffer, buffer + total_bytes)});
+        if (gip_fake::device_in_busy_after_transfer)
+            gip_fake::device_in_busy = true;
+    }
     else
         gip_fake::device_out_arms++;
     return true;

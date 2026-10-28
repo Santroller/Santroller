@@ -100,6 +100,7 @@ private:
 
     static constexpr size_t MAX_LEGACY_PLAYERS = 4;
     uint8_t legacy_last_report[MAX_LEGACY_PLAYERS][14] = {};
+    bool legacy_report_valid[MAX_LEGACY_PLAYERS] = {};
     uint8_t legacy_report_counter[MAX_LEGACY_PLAYERS] = {};
     bool legacy_connected[MAX_LEGACY_PLAYERS] = {};
     GipLegacyWirelessDeviceType legacy_device_types[MAX_LEGACY_PLAYERS] = {};
@@ -109,15 +110,19 @@ private:
     // With the gamepad descriptor, the input report uses the legacy adapter layout while it is set and the standard
     // gamepad layout otherwise
     bool legacy_game_active = false;
+    // GH7 output selects guitar input until QUIESCE returns the adapter to gamepad navigation.
+    bool legacy_ghl_active = false;
     // The descriptor has Windows.Xbox.Input.Gamepad, Config.xboxOneLegacyAdapterGamepad
     bool legacy_gamepad() const;
     // Input uses the legacy adapter layout, and device info and disconnects are sent
-    bool legacy_wla_layout() const { return legacy_game_active || !legacy_gamepad(); }
+    bool legacy_wla_layout() const { return !legacy_ghl_active && (legacy_game_active || !legacy_gamepad()); }
     static constexpr uint32_t LEGACY_INFO_REQUEST_INTERVAL = 100;
     bool legacy_info_requested = false;
     uint32_t legacy_info_request_time = 0;
     // The 0x21 report has nothing to say which player it's from, so there can only be one Guitar Hero Live guitar
     uint8_t legacy_ghl_last_report[sizeof(XboxOneGHLGuitar_Data_t)] = {};
+    bool legacy_ghl_report_valid = false;
+    bool legacy_ghl_navigation_pending = false;
 
     void send_legacy_device_info(uint8_t user_index, GipLegacyWirelessDeviceType dev_type);
     void send_legacy_disconnection(uint8_t user_index);

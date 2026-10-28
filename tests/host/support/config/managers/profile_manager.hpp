@@ -12,14 +12,39 @@ public:
         static ProfileManager manager;
         return manager;
     }
-    void prepare_for_config_reload() { fake_loader::state.calls.push_back("prepare_for_config_reload"); }
+    void prepare_for_config_reload()
+    {
+        fake_loader::state.calls.push_back("prepare_for_config_reload");
+        fake_loader::state.previous_xbox_one_adapter = std::move(fake_loader::state.xbox_one_adapter);
+        fake_loader::state.usb_instances_added = 0;
+    }
     void refresh_bt_config_name() {}
     void finish_config_reload() { fake_loader::state.calls.push_back("finish_config_reload"); }
     bool has_active_instances() const { return fake_loader::state.has_active_instances; }
     uint8_t usb_instance_count() const { return uint8_t(fake_loader::state.usb_instances_added); }
     void add_instance(std::shared_ptr<Instance>) { fake_loader::state.usb_instances_added++; }
     void set_usb_instance(uint8_t, std::shared_ptr<UsbDevice>) {}
-    std::shared_ptr<UsbDevice> reuse_usb_instance(uint8_t, ConsoleMode, SubType, bool) { return nullptr; }
+    std::shared_ptr<UsbDevice> reuse_usb_instance(uint8_t id, ConsoleMode mode, SubType subtype, bool auxiliary)
+    {
+        if (id == 0 && mode == ModeXboxOne && subtype == SubType_Gamepad && !auxiliary &&
+            fake_loader::state.previous_xbox_one_adapter)
+        {
+            fake_loader::state.usb_instances_added++;
+            return fake_loader::state.previous_xbox_one_adapter;
+        }
+        return nullptr;
+    }
+    std::shared_ptr<UsbDevice> get_emulated_device(ConsoleMode mode)
+    {
+        return mode == ModeXboxOne ? fake_loader::state.xbox_one_adapter : nullptr;
+    }
+    void set_emulated_device(ConsoleMode mode, std::shared_ptr<UsbDevice> device)
+    {
+        if (mode == ModeXboxOne)
+        {
+            fake_loader::state.xbox_one_adapter = std::move(device);
+        }
+    }
     void set_usb_reload_identity(uint8_t, ConsoleMode, SubType, bool) {}
     void finish_usb_instance_initialization(uint8_t) {}
     bool changed_types() const { return fake_loader::state.changed_types; }

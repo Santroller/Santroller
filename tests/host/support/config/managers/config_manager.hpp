@@ -35,6 +35,7 @@ public:
         fake_loader::state.manufacturer_name = name ? name : "";
     }
     void set_xbox_one_legacy_adapter(bool legacy) { fake_loader::state.xbox_one_legacy_adapter = legacy; }
+    bool xbox_one_legacy_adapter() const { return fake_loader::state.xbox_one_legacy_adapter; }
     bool xbox_one_legacy_adapter_gamepad() const { return fake_loader::state.xbox_one_legacy_adapter_gamepad; }
     void set_xbox_one_legacy_adapter_gamepad(bool gamepad) { fake_loader::state.xbox_one_legacy_adapter_gamepad = gamepad; }
     bool has_loaded_any() const { return fake_loader::state.loaded_any; }

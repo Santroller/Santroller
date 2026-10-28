@@ -1,9 +1,12 @@
 #pragma once
 // What the fakes in support/config record, so the config tests can see what ConfigLoader::apply did
 #include <stdint.h>
+#include <memory>
 #include <string>
 #include <vector>
 #include "config.pb.h"
+
+class UsbDevice;
 
 namespace fake_loader
 {
@@ -44,6 +47,8 @@ struct State
     bool changed_types = false;
     bool mode_from_profile = false;
     bool tool_closed = true;
+    std::shared_ptr<UsbDevice> previous_xbox_one_adapter;
+    std::shared_ptr<UsbDevice> xbox_one_adapter;
 
     // Outputs of apply
     bool inactivity_configured = false;

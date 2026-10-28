@@ -30,6 +30,9 @@ resends. Guitar reports are polled even without input changes; navigation report
 The navigation layout follows PlasticBand's Xbox One six-fret documentation: White 2/3 and GHTV are
 excluded, and strum uses signed left-stick Y. Older configs' retired gamepad-support option is ignored;
 the adapter always advertises the gamepad-capable descriptor.
+On detected Windows hosts, Xbox One mode uses the native identity of the first reporting profile,
+even with WLA enabled or several players attached. This lets Fortnite Festival see a standard guitar.
+Windows detection overrides sticky WLA identity; idle WLA retention remains console-only.
 With WLA enabled, an existing Xbox One adapter is also reused when no profiles match, without adding a
 config interface or re-enumerating. This preserves console authentication while the authentication
 gamepad is unplugged and a guitar is connected. Config-loader and GIP tests cover the idle gap,

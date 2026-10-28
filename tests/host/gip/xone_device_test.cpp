@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 
 #include "emulation/usb/xone_device.h"
+#include "emulation/usb/usb_descriptors.h"
 #include "gip_device_mappings.h"
 #include "gip_fakes.hpp"
 #include "gip_packet_handler.h"
@@ -332,6 +333,47 @@ TEST_F(XoneDevice, LegacyAdapterAlwaysAdvertisesGamepadAndGuitarSupport)
     const std::string metadata(reassembled.begin(), reassembled.end());
     EXPECT_NE(metadata.find("Windows.Xbox.Input.Gamepad"), std::string::npos);
     EXPECT_NE(metadata.find("Activision.Xbox.Input.GH7"), std::string::npos);
+}
+
+TEST_F(XoneDevice, WindowsUsesNativeGuitarIdentityEvenWithWlaEnabledAndMultiplePlayers)
+{
+    auto &detection = UsbDetectionState::instance();
+    detection.mark_windows_xb1_seen();
+    detection.mark_windows_string_seen();
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    plug(RockBandGuitar);
+    EXPECT_FALSE(dev->is_legacy_adapter());
+    auto second = std::make_shared<Profile>();
+    second->subtype = RockBandDrums;
+    dev->profiles.push_back(second);
+    EXPECT_FALSE(dev->update_identity());
+    EXPECT_FALSE(dev->is_legacy_adapter());
+    auto hello = of_type(run(600), GIP_ANNOUNCE);
+    ASSERT_EQ(hello.size(), 1u);
+    auto payload = payload_of(hello[0]);
+    EXPECT_EQ(le16(payload, 8), 0x0e6f);
+    EXPECT_EQ(le16(payload, 10), 0x0248);
+    start();
+    mapping->bytes = {0x10};
+    auto reports = of_type(run(10), GIP_INPUT_REPORT);
+    ASSERT_EQ(reports.size(), 1u);
+    EXPECT_EQ(payload_of(reports[0]).size(), sizeof(XboxOneRockBandGuitar_Data_t));
+    EXPECT_EQ(payload_of(reports[0])[0], 0x10);
+}
+
+TEST_F(XoneDevice, LateWindowsDetectionOverridesStickyWlaAndConsoleAuthState)
+{
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    plug(RockBandGuitar);
+    ASSERT_TRUE(dev->is_legacy_adapter());
+    auth_broker.set_console_authenticated(ModeXboxOne, true);
+    auto &detection = UsbDetectionState::instance();
+    detection.mark_windows_xb1_seen();
+    EXPECT_FALSE(dev->update_identity()); // Xbox also requests the OS descriptors.
+    detection.mark_windows_string_seen();
+    EXPECT_TRUE(dev->update_identity());
+    EXPECT_FALSE(dev->is_legacy_adapter());
+    EXPECT_FALSE(dev->update_identity());
 }
 
 // The device ACKs a console message that asks for one ([MS-GIPUSB] 3.1.5.1)

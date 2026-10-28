@@ -323,7 +323,7 @@ message Config {
   optional string deviceName = 8;
   // USB manufacturer string. Unset or empty keeps "sanjay900"
   optional string manufacturerName = 9;
-  // On Xbox One / Series (not Windows), always emulate the Rock Band 4 wireless legacy adapter instead of only when there's
+  // Always emulate the Rock Band 4 wireless legacy adapter on Xbox One / Series, instead of only when there's
   // more than one player. Gamepads still work outside of Rock Band 4, and players can come and go without
   // authenticating again. Supports Guitar Hero Live guitars, but not toy portals.
   optional bool xboxOneLegacyAdapter = 10;

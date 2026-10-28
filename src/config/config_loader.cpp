@@ -6,7 +6,6 @@
 #include "emulation/usb/gh_arcade_device.h"
 #include "emulation/usb/hid_device.h"
 #include "emulation/usb/xinput_device.h"
-#include "emulation/usb/usb_descriptors.h"
 #include "managers/device_manager.hpp"
 #include "managers/profile_manager.hpp"
 #include "managers/config_manager.hpp"
@@ -146,7 +145,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
         secondary_pico_slave_init(i2c_block, config.peripheralBoot.i2c.sda, config.peripheralBoot.i2c.scl, config.peripheralBoot.idPin);
     }
     const ConsoleMode resolved_mode = config_mgr.get_requested_mode();
-    if (resolved_mode == ModeXboxOne && !UsbDetectionState::instance().host_is_windows() &&
+    if (resolved_mode == ModeXboxOne && !config_mgr.is_mode_from_profile() &&
         config_mgr.xbox_one_legacy_adapter() &&
         !profile_mgr.get_emulated_device(ModeXboxOne))
     {

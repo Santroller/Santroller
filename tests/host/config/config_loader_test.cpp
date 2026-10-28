@@ -10,7 +10,6 @@
 #include "config/device_factory.hpp"
 #include "devices/bt/bt_tlv_storage.hpp"
 #include "emulation/usb/device.hpp"
-#include "emulation/usb/usb_descriptors.h"
 #include "config_builder.hpp"
 #include "config_test_support.hpp"
 
@@ -64,7 +63,6 @@ protected:
         DeviceFactory::clear_arcade_side();
         DeviceFactory::clear_bluetooth_pairing_states();
         ConfigLoader::reset_bluetooth_loaded();
-        UsbDetectionState::instance().reboot();
     }
 
     // Store main + aux the way the tool uploads them, then load the cached image like load() does
@@ -407,13 +405,12 @@ TEST_F(ConfigLoaderTest, RetiredGamepadSupportSettingDoesNotChangeTheUsbLayout)
     }
 }
 
-TEST_F(ConfigLoaderTest, WindowsDoesNotRetainAnIdleLegacyAdapter)
+TEST_F(ConfigLoaderTest, ForcedModeDoesNotRetainAnIdleLegacyAdapter)
 {
-    auto &detection = UsbDetectionState::instance();
-    detection.mark_windows_xb1_seen();
-    detection.mark_windows_string_seen();
     fake_loader::state.has_active_instances = false;
     fake_loader::state.requested_mode = ModeXboxOne;
+    fake_loader::state.mode_from_profile = true;
+    fake_loader::state.tool_closed = false;
     fake_loader::state.xbox_one_adapter = std::make_shared<UsbDevice>();
     ConfigSpec spec;
     spec.xbox_one_legacy_adapter = true;

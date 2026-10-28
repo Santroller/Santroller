@@ -4,7 +4,6 @@
 #include "gip_fakes.hpp"
 #include "devices/usb.hpp"
 #include "emulation/usb/device.hpp"
-#include "emulation/usb/usb_descriptors.h"
 #include "usb/auth_broker.h"
 #include "managers/config_manager.hpp"
 #include "pico/time.h"
@@ -13,7 +12,6 @@ std::array<std::shared_ptr<UsbHostDevice>, 127> host_devices;
 
 void gip_fake::reset()
 {
-    UsbDetectionState::instance().reboot();
     device_mounted = true;
     device_suspended = false;
     device_in_busy = false;

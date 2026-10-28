@@ -4,7 +4,6 @@
 #include <gtest/gtest.h>
 
 #include "emulation/usb/xone_device.h"
-#include "emulation/usb/usb_descriptors.h"
 #include "gip_device_mappings.h"
 #include "gip_fakes.hpp"
 #include "gip_packet_handler.h"
@@ -335,11 +334,9 @@ TEST_F(XoneDevice, LegacyAdapterAlwaysAdvertisesGamepadAndGuitarSupport)
     EXPECT_NE(metadata.find("Activision.Xbox.Input.GH7"), std::string::npos);
 }
 
-TEST_F(XoneDevice, WindowsUsesNativeGuitarIdentityEvenWithWlaEnabledAndMultiplePlayers)
+TEST_F(XoneDevice, ForcedModeUsesNativeGuitarIdentityEvenWithWlaEnabledAndMultiplePlayers)
 {
-    auto &detection = UsbDetectionState::instance();
-    detection.mark_windows_xb1_seen();
-    detection.mark_windows_string_seen();
+    ConfigManager::instance().set_mode_from_profile(true);
     ConfigManager::instance().set_xbox_one_legacy_adapter(true);
     plug(RockBandGuitar);
     EXPECT_FALSE(dev->is_legacy_adapter());
@@ -361,16 +358,13 @@ TEST_F(XoneDevice, WindowsUsesNativeGuitarIdentityEvenWithWlaEnabledAndMultipleP
     EXPECT_EQ(payload_of(reports[0])[0], 0x10);
 }
 
-TEST_F(XoneDevice, LateWindowsDetectionOverridesStickyWlaAndConsoleAuthState)
+TEST_F(XoneDevice, ForcedModeOverridesStickyWlaAndConsoleAuthState)
 {
     ConfigManager::instance().set_xbox_one_legacy_adapter(true);
     plug(RockBandGuitar);
     ASSERT_TRUE(dev->is_legacy_adapter());
     auth_broker.set_console_authenticated(ModeXboxOne, true);
-    auto &detection = UsbDetectionState::instance();
-    detection.mark_windows_xb1_seen();
-    EXPECT_FALSE(dev->update_identity()); // Xbox also requests the OS descriptors.
-    detection.mark_windows_string_seen();
+    ConfigManager::instance().set_mode_from_profile(true);
     EXPECT_TRUE(dev->update_identity());
     EXPECT_FALSE(dev->is_legacy_adapter());
     EXPECT_FALSE(dev->update_identity());

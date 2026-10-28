@@ -18,7 +18,6 @@
 #include "managers/config_manager.hpp"
 #include "utils.h"
 #include "emulation/usb/usb_devices.h"
-#include "emulation/usb/usb_descriptors.h"
 #include "xgip_protocol.h"
 
 static uint8_t xb1_guide_on[] = {0x01, 0x5b};
@@ -738,13 +737,13 @@ bool XboxOneGamepadDevice::update_identity()
     // guitars and drums come and go, or always when the config asks for it
     bool always_legacy = ConfigManager::instance().xbox_one_legacy_adapter() && legacy_supported &&
                          legacy_adapter_supported(native);
-    const bool windows = UsbDetectionState::instance().host_is_windows();
-    bool legacy = !windows &&
+    const bool forced_mode = ConfigManager::instance().is_mode_from_profile();
+    bool legacy = !forced_mode &&
                   (always_legacy || count > 1 || (instruments_only && m_identity_set && m_is_legacy_adapter));
     bool changed = m_identity_set && (legacy != m_is_legacy_adapter || (!legacy && native != m_native_subtype));
     m_player_matches_identity = true;
     // The console would ask to authenticate again, and nothing could answer it
-    if (changed && !windows && auth_broker.is_console_authenticated(ModeXboxOne) && !auth_broker.has_handler(ModeXboxOne))
+    if (changed && !forced_mode && auth_broker.is_console_authenticated(ModeXboxOne) && !auth_broker.has_handler(ModeXboxOne))
     {
         printf("xb1 keeping legacy=%d sub=%d, nothing to authenticate (wanted legacy=%d sub=%d)\r\n", m_is_legacy_adapter, m_native_subtype, legacy, native);
         m_player_matches_identity = m_is_legacy_adapter ? legacy_supported : (count == 0 || native == m_native_subtype);

@@ -152,13 +152,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
   auto &detection = UsbDetectionState::instance();
   if (detection.seen_windows_xb1())
   {
-    const bool was_windows = detection.host_is_windows();
     detection.mark_windows_string_seen();
-    if (!was_windows && ConfigManager::instance().get_requested_mode() == ModeXboxOne)
-    {
-      // Forced Xbox One mode may have created a WLA before Windows was identified.
-      reload();
-    }
   }
   size_t chr_count;
   const char *str = nullptr;

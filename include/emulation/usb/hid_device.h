@@ -146,6 +146,7 @@ class HIDGamepadDevice : public HIDDevice
 {
 public:
   HIDGamepadDevice();
+  uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len) override;
   void initialize();
   void process(bool full_poll, bool send_events);
   size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);

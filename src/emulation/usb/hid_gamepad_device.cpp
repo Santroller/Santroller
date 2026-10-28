@@ -19,6 +19,7 @@
 #include "pico/bootrom.h"
 #include "utils.h"
 #include "managers/battery_manager.hpp"
+#include "protocols/santroller_v2.hpp"
 
 // Dance pads really need simultaneous directions, so they emulate buttons instead of hats
 static uint8_t const desc_hid_report_buttons[] =
@@ -210,10 +211,20 @@ size_t HIDGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t rem
 
 size_t HIDGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-  uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, report_desc_len(), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+  uint8_t desc[] = {
+      TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, report_desc_len(), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1),
+      SANTROLLER_USB_IDENTITY_DESCRIPTOR(subtype, capabilities)};
   assert(sizeof(desc) <= remaining);
   memcpy(dest, desc, sizeof(desc));
   return sizeof(desc);
+}
+
+uint16_t HIDGamepadDevice::open(tusb_desc_interface_t const *desc_itf, uint16_t max_len)
+{
+  uint16_t length = HIDDevice::open(desc_itf, max_len);
+  TU_VERIFY(length && max_len >= length + SANTROLLER_USB_IDENTITY_DESCRIPTOR_LENGTH, 0);
+  // The trailing identity belongs to this interface, not the next class driver.
+  return length + SANTROLLER_USB_IDENTITY_DESCRIPTOR_LENGTH;
 }
 
 size_t HIDGamepadDevice::device_name(uint8_t idx, char *desc)

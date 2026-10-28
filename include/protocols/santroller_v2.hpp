@@ -6,6 +6,12 @@
 #define SANTROLLER_VID 0x1209
 #define SANTROLLER_PID 0x2883
 
+// Trailing USB configuration descriptor for each native HID gamepad interface.
+#define SANTROLLER_USB_IDENTITY_DESCRIPTOR_LENGTH 9
+#define SANTROLLER_USB_IDENTITY_DESCRIPTOR(subtype, capabilities) \
+    SANTROLLER_USB_IDENTITY_DESCRIPTOR_LENGTH, 0xFF, 'S', 'A', 'N', 'T', 2, \
+        static_cast<uint8_t>(subtype), static_cast<uint8_t>(capabilities)
+
 // Santroller 2 HID gamepad reports (report id 1) mirror the XInput layout, except the low
 // nibble of byte 2 is a hat. Turn it into XInput's dpad bits (a dancepad already reports
 // its dpad as a bitmask) so the shared xinput tick helpers can read the report directly.

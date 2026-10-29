@@ -181,9 +181,8 @@ uint8_t UsbDevice::m_last_epout = 0x01;
 uint8_t UsbDevice::m_last_strid = 0;
 volatile uint32_t UsbDevice::suspend_generation = 0;
 
-bool UsbDevice::process_suspended(bool full_poll, bool send_events)
+void UsbDevice::process_suspended(bool full_poll, bool send_events)
 {
     (void)full_poll;
     (void)send_events;
-    return false;
 }

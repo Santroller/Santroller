@@ -13,8 +13,7 @@ public:
     void leds_off();
     // standbyWhileSuspended
     bool lights_while_suspended() const;
-    // With wake buttons, only they wake a host, rather than any of the active profiles' buttons
-    bool has_wake_buttons() const;
+    // Only the wake buttons wake a sleeping host
     bool wake_pressed() const;
 
 private:

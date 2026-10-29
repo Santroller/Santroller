@@ -328,12 +328,11 @@ void ProfileManager::update(bool full_poll, bool send_events)
         }
     }
     const bool host_suspended = UsbDevice::update_host_suspended();
-    bool wake_pressed = false;
     for (const auto &instance : m_instances)
     {
         if (host_suspended && instance->suspends_with_host())
         {
-            wake_pressed |= instance->process_suspended(full_poll, send_events);
+            instance->process_suspended(full_poll, send_events);
         }
         else
         {
@@ -342,20 +341,15 @@ void ProfileManager::update(bool full_poll, bool send_events)
     }
     const bool host_in_standby = !host_suspended && this->host_in_standby();
     update_suspended_standby(host_suspended || host_in_standby, full_poll, send_events);
-    const bool standby_wake_buttons = m_suspended_standby && m_suspended_standby->has_wake_buttons();
+    // Only the standby profile's wake buttons wake the host, so without any it stays asleep
+    const bool wake_pressed = m_suspended_standby && m_suspended_standby->wake_pressed();
     if (host_suspended)
     {
-        // Standby lighting's wake buttons pick which buttons wake the host, otherwise any of the profiles' do
-        if (standby_wake_buttons)
-        {
-            wake_pressed = m_suspended_standby->wake_pressed();
-        }
         UsbDevice::wake_host(wake_pressed);
     }
     else
     {
-        // Without wake buttons, a pad's own guide button already does it
-        UsbDevice::wake_console_in_standby(host_in_standby, standby_wake_buttons && m_suspended_standby->wake_pressed());
+        UsbDevice::wake_console_in_standby(host_in_standby, wake_pressed);
     }
 
     update_device_assignments(full_poll, send_events);

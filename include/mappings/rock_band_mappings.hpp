@@ -157,7 +157,6 @@ public:
     ~ProKeysKeyMapping() {}
     ProKeysKeyMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update(bool full_poll, bool send_events);
-    bool wake_pressed() const override { return m_active_keys || m_single_pressed; }
     void update_keyboardmania(uint8_t *report) override;
     void update_hid(uint8_t *report);
     void update_wii(uint8_t format, uint8_t *buf);

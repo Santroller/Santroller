@@ -37,10 +37,10 @@ public:
     virtual bool control_transfer(uint8_t stage, tusb_control_request_t const *request) = 0;
     virtual uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len) = 0;
     bool suspends_with_host() const override { return true; }
-    // Runs in place of process() while the host is suspended: turns the LEDs off and keeps polling
-    // the mappings, returning whether any of them are held so a press can remote-wake the host.
-    bool process_suspended(bool full_poll, bool send_events) override;
-    // Once per loop while the host is suspended, with whether a button that wakes it is held
+    // Runs in place of process() while the host is suspended: turns the LEDs off and keeps the mappings
+    // updating, so their state is current when the host resumes
+    void process_suspended(bool full_poll, bool send_events) override;
+    // Once per loop while the host is suspended, with whether one of the standby profile's wake buttons is held
     static void wake_host(bool pressed);
     // Once per loop otherwise, with whether a 360 is in standby (see host_in_standby) and whether one of
     // standby lighting's wake buttons is held. A fresh press sends guide, which turns it on.

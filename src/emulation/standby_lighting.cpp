@@ -38,18 +38,6 @@ bool StandbyLightingInstance::lights_while_suspended() const
     return false;
 }
 
-bool StandbyLightingInstance::has_wake_buttons() const
-{
-    for (const auto &profile : profiles)
-    {
-        if (!profile->standby_wake.empty())
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
 bool StandbyLightingInstance::wake_pressed() const
 {
     bool pressed = false;

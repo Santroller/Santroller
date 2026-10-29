@@ -427,10 +427,14 @@ TEST_F(Arcade, ProKeyDebounce)
     auto key = pressed<ProKeysKeyMapping>(config);
     fake_time::advance_us(2000);
     key.set_digital(false);
-    EXPECT_TRUE(key->wake_pressed());
+    Report<XInputRockBandKeyboard_Data_t> held;
+    key->update_xinput(held.buf());
+    EXPECT_TRUE(key_down(held.data, 1));
     fake_time::advance_us(1);
     key.set_digital(false);
-    EXPECT_FALSE(key->wake_pressed());
+    Report<XInputRockBandKeyboard_Data_t> released;
+    key->update_xinput(released.buf());
+    EXPECT_FALSE(key_down(released.data, 1));
 }
 
 TEST_F(Arcade, ProKeyRangeFromAKeyRangeInput)

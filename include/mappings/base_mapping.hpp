@@ -117,8 +117,6 @@ public:
     // Motion goes to a shared MotionState instead of a report, as every console with motion gets it
     // from the same mappings. The device turns it into its own format afterwards.
     virtual void update_motion(MotionState &motion) { (void)motion; }
-    // Whether this mapping is currently held as a button, used to wake a suspended host
-    virtual bool wake_pressed() const { return false; }
     virtual ButtonMapping *as_button_mapping() { return nullptr; }
     virtual KeyboardPassthroughMapping *as_keyboard_passthrough() { return nullptr; }
     void update_digital(bool full_poll);
@@ -176,7 +174,6 @@ public:
     void update(bool full_poll, bool send_events);
     // Read and debounce the input without touching the value outputs report
     void sample(bool full_poll, bool send_events);
-    bool wake_pressed() const override { return m_live_value; }
     bool live_value() const { return m_live_value; }
     int8_t queue_bit() const { return m_queue_bit; }
     void set_queue_bit(int8_t bit) { m_queue_bit = bit; }

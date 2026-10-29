@@ -566,14 +566,13 @@ bool UsbDevice::update_host_suspended()
   return s_host_suspended;
 }
 
-bool UsbDevice::process_suspended(bool full_poll, bool send_events)
+void UsbDevice::process_suspended(bool full_poll, bool send_events)
 {
   if (m_suspend_generation != suspend_generation)
   {
     m_suspend_generation = suspend_generation;
     disconnect_bluetooth_controllers();
   }
-  bool pressed = false;
   for (const auto &profile : profiles)
   {
     for (const auto &led : profile->leds)
@@ -583,10 +582,8 @@ bool UsbDevice::process_suspended(bool full_poll, bool send_events)
     for (const auto &mapping : profile->mappings)
     {
       mapping->update(full_poll, send_events);
-      pressed |= mapping->wake_pressed();
     }
   }
-  return pressed;
 }
 
 bool UsbDevice::s_wake_armed = false;

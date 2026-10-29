@@ -22,11 +22,11 @@ void UsbMidiDevice::initialize()
     m_output.reset();
 }
 
-bool UsbMidiDevice::process_suspended(bool full_poll, bool send_events)
+void UsbMidiDevice::process_suspended(bool full_poll, bool send_events)
 {
     // Nothing is played while the host sleeps, so a MIDI out jack doesn't hold the last notes
     m_state.clear_all();
-    return UsbDevice::process_suspended(full_poll, send_events);
+    UsbDevice::process_suspended(full_poll, send_events);
 }
 
 void UsbMidiDevice::process(bool full_poll, bool send_events)

@@ -244,6 +244,11 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
             }
         }
     }
+    // A 360 in standby turns on for guide, which only the standby profile's wake buttons should do
+    if (host_in_standby())
+    {
+        report->guide = 0;
+    }
     if (s_wake_guide_pending)
     {
         s_wake_guide_pending = false;

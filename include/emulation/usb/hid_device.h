@@ -70,6 +70,8 @@ public:
   HIDConfigDevice();
   void initialize();
   void process(bool full_poll, bool send_events);
+  // Always there for the config tool, a suspended host doesn't change that
+  bool suspends_with_host() const override { return false; }
   static bool tool_closed();
   // Also true for a while after the device stack restarted under an open tool, as it reconnects
   static bool tool_may_be_open();

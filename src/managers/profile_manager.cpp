@@ -9,6 +9,7 @@
 #include "emulation/usb/xone_device.h"
 #include "managers/battery_manager.hpp"
 #include "emulation/bt/bt_gamepad.h"
+#include "emulation/standby_lighting.hpp"
 #include "emulation/usb/usb_descriptors.h"
 #include <algorithm>
 
@@ -34,6 +35,7 @@ namespace
                     free_vector(profile->mappings);
                     free_vector(profile->triggers);
                     free_vector(profile->leds);
+                    free_vector(profile->standby_wake);
                     profile->devices.clear();
                     profile->temp_devices.clear();
                     profile->claimed_devices.clear();
@@ -231,6 +233,16 @@ void ProfileManager::update_device_assignments(bool full_poll, bool send_events)
     {
         for (auto &profile : profile_pair.second)
         {
+            // Standby lighting's rules only claim while it loads (a controller turning up reloads anyway), and
+            // each of them can, so they're only checked for the config tool here
+            if (profile->standby_lighting)
+            {
+                for (auto &trigger_list : profile->triggers)
+                {
+                    trigger_list->validate(false, full_poll, send_events);
+                }
+                continue;
+            }
             bool has_claimed_list = false;
             for (auto &trigger_list : profile->triggers)
             {
@@ -315,13 +327,80 @@ void ProfileManager::update(bool full_poll, bool send_events)
             profile->update_actions();
         }
     }
+    const bool host_suspended = UsbDevice::update_host_suspended();
+    bool wake_pressed = false;
     for (const auto &instance : m_instances)
     {
-        instance->process(full_poll, send_events);
+        if (host_suspended && instance->suspends_with_host())
+        {
+            wake_pressed |= instance->process_suspended(full_poll, send_events);
+        }
+        else
+        {
+            instance->process(full_poll, send_events);
+        }
+    }
+    const bool host_in_standby = !host_suspended && this->host_in_standby();
+    update_suspended_standby(host_suspended || host_in_standby, full_poll, send_events);
+    const bool standby_wake_buttons = m_suspended_standby && m_suspended_standby->has_wake_buttons();
+    if (host_suspended)
+    {
+        // Standby lighting's wake buttons pick which buttons wake the host, otherwise any of the profiles' do
+        if (standby_wake_buttons)
+        {
+            wake_pressed = m_suspended_standby->wake_pressed();
+        }
+        UsbDevice::wake_host(wake_pressed);
+    }
+    else
+    {
+        // Without wake buttons, a pad's own guide button already does it
+        UsbDevice::wake_console_in_standby(host_in_standby, standby_wake_buttons && m_suspended_standby->wake_pressed());
     }
 
     update_device_assignments(full_poll, send_events);
     update_bt_config_instance(full_poll, send_events);
+}
+
+bool ProfileManager::host_in_standby() const
+{
+    bool any = false;
+    for (const auto &instance : m_instances)
+    {
+        if (!instance->suspends_with_host())
+        {
+            continue;
+        }
+        if (!instance->host_in_standby())
+        {
+            return false;
+        }
+        any = true;
+    }
+    return any;
+}
+
+void ProfileManager::update_suspended_standby(bool host_asleep, bool full_poll, bool send_events)
+{
+    if (!m_suspended_standby)
+    {
+        return;
+    }
+    // Only once every active profile is asleep, a bluetooth one would still be using its LEDs. It runs after
+    // them, so its LEDs win over theirs being turned off. It may only be loaded for its wake buttons.
+    bool lit = host_asleep && m_suspended_standby->lights_while_suspended() && !m_active_instances.empty() &&
+               std::all_of(m_active_instances.begin(), m_active_instances.end(),
+                           [](const auto &instance) { return instance->suspends_with_host(); });
+    if (lit)
+    {
+        m_suspended_standby->update_leds(full_poll, send_events);
+    }
+    else if (m_suspended_standby_lit)
+    {
+        // The other profiles' LEDs only cover what they drive, so turn off the rest
+        m_suspended_standby->leds_off();
+    }
+    m_suspended_standby_lit = lit;
 }
 
 void ProfileManager::update_bt_config_instance(bool full_poll, bool send_events)
@@ -429,6 +508,8 @@ void ProfileManager::prepare_for_config_reload()
             free_vector(instance->profiles);
         }
     }
+    m_suspended_standby.reset();
+    m_suspended_standby_lit = false;
     m_previous_bt_gamepad_instance = std::move(m_bt_gamepad_instance);
     m_previous_wiimote_instance = std::move(m_wiimote_instance);
     free_vector(m_instances);
@@ -622,6 +703,8 @@ void ProfileManager::update_profile_components(uint32_t profile_id, size_t insta
 void ProfileManager::clear_all()
 {
     stop_bt_config_instance();
+    m_suspended_standby.reset();
+    m_suspended_standby_lit = false;
     m_bt_gamepad_instance.reset();
     m_previous_bt_gamepad_instance.reset();
     m_wiimote_instance.reset();

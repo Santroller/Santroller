@@ -12,6 +12,13 @@ public:
     virtual ~Instance() {}
     virtual void initialize() = 0;
     virtual void process(bool full_poll, bool send_events) = 0;
+    virtual bool suspends_with_host() const { return false; }
+    virtual bool process_suspended(bool full_poll, bool send_events)
+    {
+        process(full_poll, send_events);
+        return false;
+    }
+    virtual bool host_in_standby() const { return false; }
     SubType subtype = Gamepad;
     ConsoleMode mode = ModeXboxOne;
     std::vector<std::shared_ptr<Profile>> profiles;

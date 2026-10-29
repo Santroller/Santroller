@@ -13,6 +13,7 @@ public:
     UsbMidiDevice();
     void initialize();
     void process(bool full_poll, bool send_events);
+    bool process_suspended(bool full_poll, bool send_events) override;
     uint8_t interface_count() const override { return 2; }
     size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
     size_t config_descriptor(uint8_t *desc, size_t remaining);

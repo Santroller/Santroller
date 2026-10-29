@@ -56,10 +56,6 @@ void Spice2xDevice::initialize() {
 }
 
 void Spice2xDevice::process(bool full_poll, bool send_events) {
-    if (tud_suspended()) {
-        process_suspended(full_poll, send_events);
-        return;
-    }
     if (!tud_ready()) {
         for (auto const &profile : profiles)
             for (auto const &led : profile->leds) led->update(full_poll, send_events);

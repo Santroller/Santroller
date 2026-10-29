@@ -90,11 +90,6 @@ void HIDGamepadDevice::initialize()
 }
 void HIDGamepadDevice::process(bool full_poll, bool send_events)
 {
-  if (tud_suspended())
-  {
-      process_suspended(full_poll, send_events);
-      return;
-  }
   // Deal with devices that don't have easy detection methods
   // This has to run before the tud_ready() check, as the PS2 never configures the device
   auto &detection = UsbDetectionState::instance();

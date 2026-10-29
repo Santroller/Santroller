@@ -18,6 +18,8 @@
 #include "config/mapping_factory.hpp"
 #include "mappings/base_mapping.hpp"
 #include "config/trigger_factory.hpp"
+#include "emulation/standby_lighting.hpp"
+#include "triggers/input_trigger.hpp"
 #include "config/led_factory.hpp"
 #include "config/config_storage.hpp"
 #include "config/FlashPROM.h"
@@ -137,6 +139,10 @@ struct ConfigDecodeContext
     bool changed = false;
     // Building an inactive profile for the config tool: load everything, but never activate it
     bool preview = false;
+    // Loading standby lighting, so its rules claim their controllers
+    bool standby_claims = false;
+    // Other profiles are active, so its rules borrow the controllers those claimed instead
+    bool standby_borrows = false;
     std::array<uint16_t, 7> slot_counts{};
     // deviceSlotIdVersion 2: slot ids come from the whole profile, scanned before it is loaded
     bool profile_wide_slot_ids = false;
@@ -627,6 +633,15 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
         return true;
     }
+    if (profile->standby_lighting)
+    {
+        // Standby lighting has no output, its rules only claim the controllers its wake buttons and LEDs read.
+        // Each rule claims whatever is connected. With other profiles active, it borrows the controllers they
+        // claimed, leaving them theirs.
+        profile->standby_borrows = context->standby_borrows;
+        list->validate(context->standby_claims, false, false);
+        return true;
+    }
     // Assign triggers before building the profile
     if (!context->matched && list->validate(true, false, false))
     {
@@ -739,6 +754,34 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     return true;
 }
 
+bool load_standby_wake(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto *context = static_cast<ConfigDecodeContext *>(*arg);
+    if (!context->matched)
+    {
+        // Its wake buttons are used while the other profiles are asleep with their host, so it's loaded then
+        if (context->profile->standby_lighting && !context->preview)
+        {
+            config_mgr.note_standby(true);
+        }
+        return true;
+    }
+    proto_InputActivationTrigger proto_wake = proto_InputActivationTrigger_init_default;
+    proto_wake.input.cb_input.funcs.decode = &load_input_dev;
+    proto_wake.input.cb_input.arg = *arg;
+    if (!pb_decode_ex(stream, proto_InputActivationTrigger_fields, &proto_wake, PB_DECODE_NOINIT))
+    {
+        return false;
+    }
+    auto input = make_input(proto_wake.input, *context, stream);
+    if (input)
+    {
+        auto profile = context->profile;
+        profile->standby_wake.push_back(std::make_shared<InputActivationTrigger>(true, proto_wake, std::move(input), profile, 0, 0));
+    }
+    return true;
+}
+
 // The controller types RPCS3's USB passthrough knows about
 static bool rpcs3_passthrough_supported(SubType subtype)
 {
@@ -783,6 +826,12 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->disconnect_bluetooth_on_suspend = opts.has_disconnectBluetoothOnSuspend && opts.disconnectBluetoothOnSuspend;
     profile->per_kind_slot_ids = opts.has_deviceSlotIdVersion && opts.deviceSlotIdVersion >= 1;
     profile->subtype = opts.deviceToEmulate;
+    profile->standby_lighting = opts.has_standbyLighting && opts.standbyLighting;
+    profile->standby_while_suspended = opts.has_standbyWhileSuspended && opts.standbyWhileSuspended;
+    if (profile->standby_lighting && !context->preview)
+    {
+        config_mgr.note_standby(opts.has_standbyWhileSuspended && opts.standbyWhileSuspended);
+    }
     // GuitarFreaks has a single strum, so it always queues to turn quick re-strums into separate picks
     bool guitar_freaks = profile->subtype == GuitarFreaks;
     profile->input_queue.enabled = (opts.has_queueInputs && opts.queueInputs) || guitar_freaks;
@@ -872,6 +921,8 @@ static std::shared_ptr<Profile> decode_profile(pb_istream_t stream, ConfigDecode
     proto_profile.opts.arg = &context;
     proto_profile.leds.funcs.decode = &load_leds;
     proto_profile.leds.arg = &context;
+    proto_profile.standbyWake.funcs.decode = &load_standby_wake;
+    proto_profile.standbyWake.arg = &context;
     pb_decode_ex(&stream, proto_Profile_fields, &proto_profile, PB_DECODE_NOINIT);
     profile->triggers_only = !context.matched && !context.preview;
     profile->preview = context.preview;
@@ -889,42 +940,74 @@ static std::shared_ptr<Profile> decode_profile(pb_istream_t stream, ConfigDecode
     return profile;
 }
 
-static bool read_standby_lighting(pb_istream_t *stream, const pb_field_t *field, void **arg)
+struct StandbyOpts
+{
+    bool standby = false;
+    bool while_suspended = false;
+    bool has_wake = false;
+};
+
+static bool note_standby_wake(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    // Not read, nanopb skips the rest once nothing more is
+    static_cast<StandbyOpts *>(*arg)->has_wake = true;
+    return true;
+}
+
+static bool read_standby_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     proto_ProfileOpts opts = proto_ProfileOpts_init_default;
     if (!decode_profile_opts(stream, &opts))
         return false;
-    *static_cast<bool *>(*arg) = opts.has_standbyLighting && opts.standbyLighting;
+    auto *result = static_cast<StandbyOpts *>(*arg);
+    result->standby = opts.has_standbyLighting && opts.standbyLighting;
+    result->while_suspended = opts.has_standbyWhileSuspended && opts.standbyWhileSuspended;
     return true;
 }
 
-// The second pass, once no profile matched: only the first standby lighting profile is loaded
+// The second pass: only the first standby lighting profile is loaded. It's active if no other profile
+// matched, otherwise it's only kept to light up while they're all asleep with their host
 static bool load_standby_profile(pb_istream_t *stream)
 {
-    if (config_mgr.has_seen_assignment(ProfileAssignMask_AssignStandbyLighting))
+    auto &profile_mgr = ProfileManager::instance();
+    if (config_mgr.has_seen_assignment(ProfileAssignMask_AssignStandbyLighting) || profile_mgr.suspended_standby())
     {
         return true;
     }
-    bool standby = false;
+    StandbyOpts opts;
     proto_Profile proto_profile = proto_Profile_init_zero;
-    proto_profile.opts.funcs.decode = &read_standby_lighting;
-    proto_profile.opts.arg = &standby;
+    proto_profile.opts.funcs.decode = &read_standby_opts;
+    proto_profile.opts.arg = &opts;
+    proto_profile.standbyWake.funcs.decode = &note_standby_wake;
+    proto_profile.standbyWake.arg = &opts;
     pb_istream_t opts_stream = *stream;
     pb_decode_ex(&opts_stream, proto_Profile_fields, &proto_profile, PB_DECODE_NOINIT);
-    if (!standby)
+    const bool nothing_matched = !profile_mgr.has_active_instances();
+    if (!opts.standby || (!nothing_matched && !opts.while_suspended && !opts.has_wake))
     {
         return true;
     }
     ConfigDecodeContext context;
     // It has no assignments to match, and LEDs are only loaded for a profile that matched
     context.matched = true;
+    context.standby_claims = true;
+    context.standby_borrows = !nothing_matched;
     auto profile = decode_profile(*stream, context);
-    auto &profile_mgr = ProfileManager::instance();
     // Replaces the copy from the first pass, which has nothing loaded
     profile_mgr.remove_profile(profile->profile_id);
     profile_mgr.add_profile(profile->profile_id, profile);
-    printf("standby lighting p=%u\r\n", profile->profile_id);
-    profile_mgr.assign_profile_to_devices(profile, ProfileAssignMask_AssignStandbyLighting, config_mgr.get_requested_mode());
+    if (nothing_matched)
+    {
+        printf("standby lighting p=%u\r\n", profile->profile_id);
+        profile_mgr.assign_profile_to_devices(profile, ProfileAssignMask_AssignStandbyLighting, config_mgr.get_requested_mode());
+    }
+    else
+    {
+        printf("standby lighting while suspended p=%u\r\n", profile->profile_id);
+        auto instance = std::make_shared<StandbyLightingInstance>();
+        instance->profiles.push_back(profile);
+        profile_mgr.set_suspended_standby(instance);
+    }
     return true;
 }
 

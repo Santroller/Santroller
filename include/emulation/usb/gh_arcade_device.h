@@ -16,6 +16,8 @@ public:
     GHArcadeVendorDevice();
     void initialize();
     void process(bool full_poll, bool send_events);
+    // Only answers the cabinet's requests, so there's nothing to do differently while it sleeps
+    bool suspends_with_host() const override { return false; }
     size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
     size_t config_descriptor(uint8_t *desc, size_t remaining);
     size_t device_name(uint8_t idx, char *desc);

@@ -36,9 +36,22 @@ public:
     virtual bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) = 0;
     virtual bool control_transfer(uint8_t stage, tusb_control_request_t const *request) = 0;
     virtual uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len) = 0;
-    // Call from process() while tud_suspended(): turns the LEDs off and keeps polling
-    // the mappings so a button press can remote-wake the host.
-    void process_suspended(bool full_poll, bool send_events);
+    bool suspends_with_host() const override { return true; }
+    // Runs in place of process() while the host is suspended: turns the LEDs off and keeps polling
+    // the mappings, returning whether any of them are held so a press can remote-wake the host.
+    bool process_suspended(bool full_poll, bool send_events) override;
+    // Once per loop while the host is suspended, with whether a button that wakes it is held
+    static void wake_host(bool pressed);
+    // Once per loop otherwise, with whether a 360 is in standby (see host_in_standby) and whether one of
+    // standby lighting's wake buttons is held. A fresh press sends guide, which turns it on.
+    static void wake_console_in_standby(bool in_standby, bool pressed);
+    // Works out whether the host is suspending the bus, once per loop before the instances run
+    static bool update_host_suspended();
+    static bool host_suspended() { return s_host_suspended; }
+    // No frames from the host for a while, whether or not it ever configured us
+    static bool bus_idle() { return s_bus_idle; }
+    // Whether a host has configured us since the device stack started
+    static bool mounted_since_init;
     // Disconnects the bluetooth controllers of profiles that ask for it, once per suspend
     void disconnect_bluetooth_controllers();
     static inline uint8_t next_epin()
@@ -64,10 +77,15 @@ public:
     static volatile uint32_t suspend_generation;
 
 private:
+    // The suspend this instance last saw start, to disconnect bluetooth controllers once per suspend
+    uint32_t m_suspend_generation = 0;
     // Only wake on a fresh press, so a button held as the host suspends doesn't wake it
     // straight back up, and one press doesn't keep re-signalling resume.
-    bool m_wake_armed = false;
-    uint32_t m_wake_generation = 0;
+    static bool s_wake_armed;
+    static bool s_standby_wake_armed;
+    static uint32_t s_wake_generation;
+    static bool s_host_suspended;
+    static bool s_bus_idle;
     static uint8_t m_last_epin;
     static uint8_t m_last_epout;
     static uint8_t m_last_strid;

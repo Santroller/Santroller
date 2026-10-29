@@ -22,6 +22,16 @@ public:
     // What a MIDI instrument played on its last process, for MIDI out jacks to send as well
     virtual const MidiState *midi_output_state() const { return nullptr; }
     virtual void process(bool full_poll, bool send_events) = 0;
+    // While the USB host is suspended, ProfileManager calls process_suspended instead of process for
+    // instances that sleep along with it. Returns whether a button that wakes the host is held.
+    virtual bool suspends_with_host() const { return false; }
+    virtual bool process_suspended(bool full_poll, bool send_events)
+    {
+        process(full_poll, send_events);
+        return false;
+    }
+    // The host is in standby without suspending the bus (a 360 keeps polling its pads)
+    virtual bool host_in_standby() const { return false; }
     SubType subtype;
     ConsoleMode mode;
     bool xinput_on_windows = 0;

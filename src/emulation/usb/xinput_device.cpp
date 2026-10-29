@@ -21,6 +21,7 @@ static bool s_security_verified = false;
 #include "emulation/usb/usb_devices.h"
 #include "config/config.hpp"
 #include "hardware/structs/usb.h"
+#include "utils.h"
 static const char str_xb360_auth[] = "Xbox Security Method 3, Version 1.00, \xa9 2005 Microsoft Corporation. All rights reserved.";
 static const uint8_t xbox_players[] = {
     0, // 0x00	 All off
@@ -178,29 +179,23 @@ uint16_t XInputGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16
     }
     return 0;
 }
+bool XInputGamepadDevice::s_wake_guide_pending = false;
+bool XInputGamepadDevice::s_wake_guide_held = false;
+uint32_t XInputGamepadDevice::s_wake_guide_since = 0;
+// Like a deliberate press of a real guide button, as a quick one doesn't turn the console on. Kept short of
+// the hold that brings up the turn off prompt on a console that's already on
+static constexpr uint32_t WAKE_GUIDE_MS = 1000;
+// How long after signalling resume the console has to start polling again for it to get the guide press
+static constexpr uint32_t WAKE_GUIDE_EXPIRE_MS = 5000;
+
+void XInputGamepadDevice::hold_guide_for_wake()
+{
+    s_wake_guide_pending = true;
+    s_wake_guide_since = millis();
+}
+
 void XInputGamepadDevice::process(bool full_poll, bool send_events)
 {
-    bool is_360 = ConfigManager::instance().get_current_mode() == ModeXbox360;
-    // A 360 going into standby resets the bus before idling it, which leaves tinyusb
-    // unconnected and never reporting the suspend, so read the bus state from the SIE.
-    // The bus also idles between attaching and the host's first reset (eg after switching
-    // into 360 mode on Windows), so only trust this once the host has configured us.
-    if (tud_mounted())
-    {
-        mounted_since_init = true;
-    }
-    bool bus_suspended = is_360 && mounted_since_init && (usb_hw->sie_status & USB_SIE_STATUS_SUSPENDED_BITS);
-    // tud_suspend_cb never runs for this, so count it as a new suspend here
-    if (bus_suspended && !m_bus_suspended && !tud_suspended())
-    {
-        suspend_generation++;
-    }
-    m_bus_suspended = bus_suspended;
-    if (tud_suspended() || bus_suspended)
-    {
-        process_suspended(full_poll, send_events);
-        return;
-    }
     if (!tud_ready())
     {
         for (const auto &profile : profiles)
@@ -238,8 +233,31 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
         }
         for (const auto &led : profile->leds)
         {
-            led->update(full_poll, send_events);
+            // In standby the 360 keeps polling, but the LEDs go off like they would for a suspended host
+            if (host_in_standby())
+            {
+                led->off();
+            }
+            else
+            {
+                led->update(full_poll, send_events);
+            }
         }
+    }
+    if (s_wake_guide_pending)
+    {
+        s_wake_guide_pending = false;
+        // A console that ignored the resume shouldn't get a guide press whenever it's next turned on
+        s_wake_guide_held = millis() - s_wake_guide_since < WAKE_GUIDE_EXPIRE_MS;
+        s_wake_guide_since = millis();
+    }
+    if (s_wake_guide_held && millis() - s_wake_guide_since < WAKE_GUIDE_MS)
+    {
+        report->guide = 1;
+    }
+    else
+    {
+        s_wake_guide_held = false;
     }
     if (subtype == GuitarHeroGuitar && has_slider)
     {
@@ -852,5 +870,4 @@ uint8_t XInputGamepadDevice::lastIntfInput = 0;
 uint32_t XInputGamepadDevice::last_caps_query_time = 0;
 uint8_t XInputGamepadDevice::lastIntfSerial = 0;
 uint32_t XInputGamepadDevice::last_serial_query_time = 0;
-bool XInputGamepadDevice::mounted_since_init = false;
 volatile uint32_t XInputGamepadDevice::report_generation = 0;

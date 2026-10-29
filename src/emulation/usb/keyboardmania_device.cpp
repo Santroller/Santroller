@@ -15,10 +15,6 @@ void KeyboardManiaDevice::initialize() {
 }
 
 void KeyboardManiaDevice::process(bool full_poll, bool send_events) {
-    if (tud_suspended()) {
-        process_suspended(full_poll, send_events);
-        return;
-    }
     // A PC reads the HID descriptor, the PS2 never does as it has no driver for our VID / PID,
     // so swap to the real controller for it. This has to run before the tud_ready() check, as
     // the PS2 never configures the device either.

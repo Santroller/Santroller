@@ -19,6 +19,8 @@ public:
     XInputSecurityDevice();
     void initialize();
     void process(bool full_poll, bool send_events);
+    // Only answers the console's requests, so there's nothing to do differently while it sleeps
+    bool suspends_with_host() const override { return false; }
     size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
     size_t config_descriptor(uint8_t *desc, size_t remaining);
     size_t device_name(uint8_t idx, char *desc);
@@ -35,6 +37,9 @@ public:
     XInputGamepadDevice();
     void initialize();
     void process(bool full_poll, bool send_events);
+    // A 360 going into standby turns the pads' LEDs off, and keeps polling them so guide can turn it back on.
+    // When it's on, every pad has a player LED.
+    bool host_in_standby() const override { return !m_wireless && player_led_set && player_led == 0; }
     size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
     size_t config_descriptor(uint8_t *desc, size_t remaining);
     size_t device_name(uint8_t idx, char *desc);
@@ -62,10 +67,14 @@ public:
     static uint8_t lastIntfSerial;
     static uint32_t last_serial_query_time;
     static volatile uint32_t report_generation;
-    // Cleared when the device stack starts, set once the host configures us
-    static bool mounted_since_init;
+    // A press woke a sleeping 360, which only powers on for the guide button. So once it resumes, the pads
+    // hold guide for a moment, whichever button it was
+    static void hold_guide_for_wake();
 
 private:
+    static bool s_wake_guide_pending;
+    static bool s_wake_guide_held;
+    static uint32_t s_wake_guide_since;
     // Receiver slot replies, sent on the IN endpoint ahead of the next input report
     bool send_wireless_reply();
     void handle_led(uint8_t led);
@@ -83,5 +92,4 @@ private:
     // the frame an unchanged report was skipped in, so the next isn't built until a new frame
     uint16_t m_unchanged_frame = 0;
     bool m_has_unchanged_frame = false;
-    bool m_bus_suspended = false;
 };

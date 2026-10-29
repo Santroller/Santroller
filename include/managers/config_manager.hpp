@@ -122,6 +122,8 @@ public:
     {
         m_seen_masks = 0;
         m_local_inputs_owner = nullptr;
+        m_has_standby = false;
+        m_standby_while_suspended = false;
     }
 
     // The onboard inputs go to the first profile that claims them each load, so only one of the
@@ -132,6 +134,14 @@ public:
     // The standby lighting profile is loaded in a second pass over the profiles, once none of them matched
     void set_standby_pass(bool pass) { m_standby_pass = pass; }
     bool is_standby_pass() const { return m_standby_pass; }
+    // Seen while the first pass reads the profiles, so the second only runs when it'll load something.
+    // while_suspended: it's used while other profiles are asleep with their host (its LEDs or wake buttons)
+    void note_standby(bool while_suspended)
+    {
+        m_has_standby = true;
+        m_standby_while_suspended |= while_suspended;
+    }
+    bool wants_standby_pass(bool nothing_matched) const { return m_has_standby && (nothing_matched || m_standby_while_suspended); }
 
     // Startup triggers that matched, so the profile they picked survives later reloads (eg once
     // the console is detected), long after the input was let go. Kept until a new config is written.
@@ -187,5 +197,7 @@ private:
     uint32_t m_seen_masks;
     const Profile *m_local_inputs_owner = nullptr;
     bool m_standby_pass = false;
+    bool m_has_standby = false;
+    bool m_standby_while_suspended = false;
     std::vector<StartupTriggerKey> m_latched_startup_triggers;
 };

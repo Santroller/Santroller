@@ -52,12 +52,13 @@ static std::shared_ptr<Device> get_assignable_device(Profile *profile, bool clai
             return device.second;
         }
     }
-    if (claim_device)
+    // Standby lighting alongside other active profiles only borrows controllers, so they stay where they are
+    if (claim_device && !profile->standby_borrows)
     {
         return DeviceManager::instance().claim_assignable_device_if(predicate);
     }
     auto device = DeviceManager::instance().find_assignable_device_if(predicate);
-    if (device || !reads_claimed)
+    if (device || !(reads_claimed || profile->standby_borrows))
     {
         return device;
     }

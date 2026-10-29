@@ -78,12 +78,16 @@ protected:
     {
         gip_fake::reset();
         ConfigManager::instance().set_xbox_one_legacy_adapter(false);
+        // ConfigManager is a singleton, so a forced mode would carry over into the next test
+        ConfigManager::instance().set_mode_from_profile(false);
     }
     void TearDown() override
     {
         dev.reset();
         gip_fake::reset();
         ConfigManager::instance().set_xbox_one_legacy_adapter(false);
+        // ConfigManager is a singleton, so a forced mode would carry over into the next test
+        ConfigManager::instance().set_mode_from_profile(false);
     }
     void plug(SubType subtype, bool with_profile = true)
     {

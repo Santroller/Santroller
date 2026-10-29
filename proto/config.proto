@@ -42,6 +42,10 @@ message ProfileOpts {
   // its config interface, eg not plugged into anything or only charging). It has no assignments or
   // mappings. Only the first one is used.
   optional bool standbyLighting = 23;
+  // Standby lighting only: also light up while every other active profile's USB host is suspended (eg the
+  // console or PC is asleep), in place of their LEDs going off. Not much power can be drawn from a suspended
+  // port, so this is off unless asked for.
+  optional bool standbyWhileSuspended = 24;
 }
 
 message Profile {
@@ -49,6 +53,11 @@ message Profile {
   repeated ProfileAssignment assignments = 3;
   repeated Mapping mappings = 4;
   repeated Led leds = 9;
+  // Standby lighting only: pressing any of these signals resume on the USB bus, which turns on a powered off
+  // Xbox 360 the device is plugged into, like the guide button on a real controller. There can be one for
+  // each controller it reads. The USB profiles handle waking
+  // a host that went to sleep with them on it.
+  repeated InputActivationTrigger standbyWake = 10;
 }
 message InputLedMapping {
   required Input input = 1;

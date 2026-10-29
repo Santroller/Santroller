@@ -16,12 +16,13 @@ public:
     int assignedDevices() { return 0; }
     bool reads_input() const override { return true; }
     bool awaiting_startup_input() const override;
+    // The input's state with the trigger's threshold and inversion applied
+    bool calc_val();
 
 protected:
     proto_InputActivationTrigger m_activation_trigger;
     std::unique_ptr<Input> m_input;
     bool m_any_time;
 private:
-    bool calc_val();
     StartupTriggerKey startup_key() const;
 };

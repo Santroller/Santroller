@@ -122,9 +122,10 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
         config.guiConfig.funcs.decode = nullptr;
     }
     auto ret = pb_decode(&inputStream, proto_Config_fields, &config);
-    // Nothing matched, so the device only shows its config interface. The standby lighting profile takes over
     const bool nothing_matched = !profile_mgr.has_active_instances();
-    if (ret && nothing_matched)
+    // Nothing matched, so the device only shows its config interface and the standby lighting profile takes
+    // over. Otherwise it may still light up while the other profiles are asleep with their host.
+    if (ret && config_mgr.wants_standby_pass(nothing_matched))
     {
         // The rest of config decodes the same again, the devices are left alone
         config = proto_Config_init_zero;

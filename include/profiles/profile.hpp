@@ -17,6 +17,7 @@ class Mapping;
 class ButtonMapping;
 class ActionMapping;
 class LedMapping;
+class InputActivationTrigger;
 
 enum class DeviceSlotKind : uint8_t
 {
@@ -71,6 +72,13 @@ public:
     bool xbox_one_auth_held = false;
     std::vector<std::unique_ptr<Mapping>> mappings;
     std::vector<std::unique_ptr<ActivationTriggerList>> triggers;
+    bool standby_lighting = false;
+    bool standby_while_suspended = false;
+    // Standby lighting loaded alongside other active profiles: its rules read the controllers they claimed
+    // rather than claiming their own
+    bool standby_borrows = false;
+    // Standby lighting: the inputs that wake a powered off Xbox 360, see standbyWake
+    std::vector<std::shared_ptr<InputActivationTrigger>> standby_wake;
     std::vector<std::unique_ptr<LedMapping>> leds;
     std::map<uint16_t, std::shared_ptr<Device>> devices;
     std::map<uint16_t, std::shared_ptr<Device>> temp_devices;

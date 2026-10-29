@@ -14,6 +14,7 @@
 #include "emulation/usb/ps3_device.h"
 #include "emulation/usb/ps4_device.h"
 #include "device/dcd.h"
+#include "hardware/structs/usb.h"
 #include "hid_reports.h"
 #include <pico/unique_id.h>
 #include "enums.pb.h"
@@ -292,7 +293,7 @@ static uint8_t s_last_xinput_itf = 0;
 
 void tud_init(void)
 {
-  XInputGamepadDevice::mounted_since_init = false;
+  UsbDevice::mounted_since_init = false;
   tud_reset(TUD_OPT_RHPORT);
 }
 void tud_reset(uint8_t rhport)
@@ -528,12 +529,48 @@ void tud_suspend_cb(bool remote_wakeup_en)
   UsbDevice::suspend_generation++;
 }
 
-void UsbDevice::process_suspended(bool full_poll, bool send_events)
+bool UsbDevice::mounted_since_init = false;
+bool UsbDevice::s_host_suspended = false;
+bool UsbDevice::s_bus_idle = false;
+static uint16_t s_last_sof = 0;
+static uint32_t s_last_sof_at = 0;
+// A full speed host sends a frame every ms, so this many without one means the bus has gone idle
+static constexpr uint32_t BUS_IDLE_MS = 10;
+
+bool UsbDevice::update_host_suspended()
 {
-  if (m_wake_generation != suspend_generation)
+  if (tud_mounted())
   {
-    m_wake_generation = suspend_generation;
-    m_wake_armed = false;
+    mounted_since_init = true;
+  }
+  // SIE_STATUS's suspended bit can't be read for this, as tinyusb's interrupt handler clears it straight away
+  uint16_t sof = usb_hw->sof_rd & USB_SOF_RD_BITS;
+  uint32_t now = millis();
+  if (sof != s_last_sof)
+  {
+    s_last_sof = sof;
+    s_last_sof_at = now;
+  }
+  s_bus_idle = now - s_last_sof_at > BUS_IDLE_MS;
+  // A 360 going into standby resets the bus before idling it, which leaves tinyusb unconnected and
+  // never reporting the suspend, so look at the bus itself. The bus also idles between attaching
+  // and the host's first reset (eg after switching into 360 mode on Windows), so only trust this
+  // once the host has configured us.
+  bool bus_suspended = ConfigManager::instance().get_current_mode() == ModeXbox360 && mounted_since_init && s_bus_idle;
+  // tud_suspend_cb never runs for this, so count it as a new suspend here
+  if (bus_suspended && !tud_suspended() && !s_host_suspended)
+  {
+    suspend_generation++;
+  }
+  s_host_suspended = tud_suspended() || bus_suspended;
+  return s_host_suspended;
+}
+
+bool UsbDevice::process_suspended(bool full_poll, bool send_events)
+{
+  if (m_suspend_generation != suspend_generation)
+  {
+    m_suspend_generation = suspend_generation;
     disconnect_bluetooth_controllers();
   }
   bool pressed = false;
@@ -549,21 +586,53 @@ void UsbDevice::process_suspended(bool full_poll, bool send_events)
       pressed |= mapping->wake_pressed();
     }
   }
+  return pressed;
+}
+
+bool UsbDevice::s_wake_armed = false;
+bool UsbDevice::s_standby_wake_armed = false;
+uint32_t UsbDevice::s_wake_generation = 0;
+
+void UsbDevice::wake_console_in_standby(bool in_standby, bool pressed)
+{
+  // Disarmed until it's in standby with nothing held, so a button held as it turns off doesn't turn it back on
+  if (!in_standby || !pressed)
+  {
+    s_standby_wake_armed = in_standby;
+    return;
+  }
+  if (!s_standby_wake_armed)
+  {
+    return;
+  }
+  s_standby_wake_armed = false;
+  // It's still polling, so there's nothing to resume
+  XInputGamepadDevice::hold_guide_for_wake();
+}
+
+void UsbDevice::wake_host(bool pressed)
+{
+  if (s_wake_generation != suspend_generation)
+  {
+    s_wake_generation = suspend_generation;
+    s_wake_armed = false;
+  }
   if (!pressed)
   {
-    m_wake_armed = true;
+    s_wake_armed = true;
     return;
   }
-  if (!m_wake_armed)
+  if (!s_wake_armed)
   {
     return;
   }
-  m_wake_armed = false;
+  s_wake_armed = false;
   if (ConfigManager::instance().get_current_mode() == ModeXbox360)
   {
     // The 360 suspends without ever sending SET_FEATURE(DEVICE_REMOTE_WAKEUP), but still
     // powers on when a wired controller signals resume, so ignore the host's setting.
     dcd_remote_wakeup(TUD_OPT_RHPORT);
+    XInputGamepadDevice::hold_guide_for_wake();
     return;
   }
   // fails harmlessly if the host didn't enable remote wakeup before suspending

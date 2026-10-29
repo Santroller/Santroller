@@ -112,10 +112,6 @@ void GHArcadeGamepadDevice::initialize()
 }
 void GHArcadeGamepadDevice::process(bool full_poll, bool send_events)
 {
-    if (tud_suspended()) {
-        process_suspended(full_poll, send_events);
-        return;
-    }
     if (!tud_ready())
     {
         for (const auto &profile : profiles)

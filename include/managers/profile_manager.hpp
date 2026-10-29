@@ -15,6 +15,7 @@
 class Device;
 class UsbDevice;
 class XboxOneGamepadDevice;
+class StandbyLightingInstance;
 
 class ProfileManager
 {
@@ -116,6 +117,10 @@ public:
     void release_previous_wiimote_instance() { m_previous_wiimote_instance.reset(); }
     
     void add_instance(std::shared_ptr<Instance> instance);
+    // Standby lighting, while other profiles are active. It runs while they're all asleep with their host, for
+    // its LEDs (standbyWhileSuspended) and its wake buttons
+    std::shared_ptr<StandbyLightingInstance> suspended_standby() const { return m_suspended_standby; }
+    void set_suspended_standby(std::shared_ptr<StandbyLightingInstance> instance) { m_suspended_standby = instance; }
     size_t instance_count() const;
     template <typename Func>
     void for_each_instance(Func func) const
@@ -180,6 +185,10 @@ public:
 private:
     // Keeps the bluetooth config service reachable while no profile is using bluetooth
     void update_bt_config_instance(bool full_poll, bool send_events);
+    // host_asleep: the host is suspended, or in standby without suspending the bus (see host_in_standby)
+    void update_suspended_standby(bool host_asleep, bool full_poll, bool send_events);
+    // Every USB pad's host is in standby without suspending the bus (see Instance::host_in_standby)
+    bool host_in_standby() const;
 
     ProfileManager() = default;
     ~ProfileManager() = default;
@@ -202,6 +211,8 @@ private:
     
     std::vector<std::shared_ptr<Instance>> m_instances;
     std::shared_ptr<Instance> m_bt_config_instance;
+    std::shared_ptr<StandbyLightingInstance> m_suspended_standby;
+    bool m_suspended_standby_lit = false;
     std::shared_ptr<Instance> m_bt_gamepad_instance;
     // Held from prepare_for_config_reload until the new config reuses it or something else needs the stack
     std::shared_ptr<Instance> m_previous_bt_gamepad_instance;

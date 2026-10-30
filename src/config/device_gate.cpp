@@ -1,37 +1,10 @@
 #include "config/device_gate.hpp"
-#include "hardware/adc.h"
+#include "devices/pins.hpp"
 #include "hardware/gpio.h"
 #include "pico/time.h"
 #include <stdio.h>
 
-static constexpr uint32_t ADC_PIN_COUNT = 4;
 static constexpr uint32_t ADC_SAMPLES = 8;
-// The ADC's reference, as on a Pico
-static constexpr uint32_t ADC_VREF_MV = 3300;
-
-static bool is_adc_pin(int32_t pin)
-{
-    return pin >= ADC_BASE_PIN && pin < static_cast<int32_t>(ADC_BASE_PIN + ADC_PIN_COUNT);
-}
-
-static void set_pulls(uint pin, PinMode mode)
-{
-    switch (mode)
-    {
-    case PinMode_PullUp:
-        gpio_set_pulls(pin, true, false);
-        break;
-    case PinMode_PullDown:
-        gpio_set_pulls(pin, false, true);
-        break;
-    case PinMode_BusKeep:
-        gpio_set_pulls(pin, true, true);
-        break;
-    default:
-        gpio_set_pulls(pin, false, false);
-        break;
-    }
-}
 
 bool DeviceGates::read(const proto_DeviceGate &gate)
 {
@@ -45,15 +18,7 @@ bool DeviceGates::read(const proto_DeviceGate &gate)
         {
             return false;
         }
-        adc_select_input(gate.pin - ADC_BASE_PIN);
-        // The first read after switching channels can still see the last one
-        adc_read();
-        uint32_t total = 0;
-        for (uint32_t i = 0; i < ADC_SAMPLES; i++)
-        {
-            total += adc_read();
-        }
-        return device_gate_matches(gate, false, total * ADC_VREF_MV / (ADC_SAMPLES * 4095));
+        return device_gate_matches(gate, false, adc_read_pin_mv(gate.pin, ADC_SAMPLES));
     }
     return device_gate_matches(gate, gpio_get(gate.pin), 0);
 }
@@ -69,16 +34,10 @@ bool DeviceGates::check(uint32_t device_id, const proto_DeviceGate &gate)
     }
     if (gate.pin >= 0)
     {
-        if (gate.analog && is_adc_pin(gate.pin))
-        {
-            adc_gpio_init(gate.pin);
-        }
-        else
-        {
-            gpio_init(gate.pin);
-            gpio_set_dir(gate.pin, GPIO_IN);
-        }
-        set_pulls(gate.pin, gate.pinMode);
+        // Analog gates are switched over to the ADC only while they're read
+        gpio_init(gate.pin);
+        gpio_set_dir(gate.pin, GPIO_IN);
+        gpio_set_pin_mode(gate.pin, gate.pinMode);
         // Let the pull charge whatever is on the pin before reading it
         busy_wait_us(200);
     }

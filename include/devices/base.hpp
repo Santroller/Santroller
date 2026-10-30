@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <optional>
+#include <memory>
 #include "devices/hardware_id.hpp"
 #include "config.pb.h"
 #include "commands.pb.h"
@@ -157,6 +158,13 @@ protected:
 private:
     static inline uint32_t s_next_serial = 0;
 };
+
+// The device as a T, or nullptr when it's missing or isn't one
+template <typename T>
+std::shared_ptr<T> device_cast(const std::shared_ptr<Device> &device)
+{
+    return device && T::is_instance(*device) ? std::static_pointer_cast<T>(device) : nullptr;
+}
 
 class LedDevice : public Device
 {

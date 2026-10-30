@@ -14,12 +14,7 @@ public:
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
     void link_device(bool claim_devices) override
     {
-        auto device = m_profile->get_claimed_device(DeviceSlotKind::WiiExtension, m_input.deviceid, !claim_devices);
-        if (!device) {
-            auto it = m_profile->devices.find(m_input.deviceid);
-            if (it != m_profile->devices.end()) device = it->second;
-        }
-        m_device = device && device->is_wii_device() ? std::static_pointer_cast<WiiDevice>(device) : nullptr;
+        m_device = m_profile->find_slot_device<WiiDevice>(m_input.deviceid, claim_devices);
     };
     uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
 
@@ -40,12 +35,7 @@ public:
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
     void link_device(bool claim_devices) override
     {
-        auto device = m_profile->get_claimed_device(DeviceSlotKind::WiiExtension, m_input.deviceid, !claim_devices);
-        if (!device) {
-            auto it = m_profile->devices.find(m_input.deviceid);
-            if (it != m_profile->devices.end()) device = it->second;
-        }
-        m_device = device && device->is_wii_device() ? std::static_pointer_cast<WiiDevice>(device) : nullptr;
+        m_device = m_profile->find_slot_device<WiiDevice>(m_input.deviceid, claim_devices);
     };
     uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
 

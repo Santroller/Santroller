@@ -42,7 +42,7 @@ public:
     void link_device(bool claim_devices) override
     {
         auto device = m_profile->get_midi_source_device(m_device_id, m_slot_kind, !claim_devices);
-        m_device = device && device->is_midi_device() ? std::static_pointer_cast<MidiDevice>(device) : nullptr;
+        m_device = device_cast<MidiDevice>(device);
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
     uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
@@ -67,7 +67,7 @@ public:
     void link_device(bool claim_devices) override
     {
         auto device = m_profile->get_midi_source_device(m_device_id, m_slot_kind, !claim_devices);
-        m_device = device && device->is_midi_device() ? std::static_pointer_cast<MidiDevice>(device) : nullptr;
+        m_device = device_cast<MidiDevice>(device);
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
     uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
@@ -90,7 +90,7 @@ public:
     void link_device(bool claim_devices) override
     {
         auto device = m_profile->get_midi_source_device(m_device_id, m_slot_kind, !claim_devices);
-        m_device = device && device->is_midi_device() ? std::static_pointer_cast<MidiDevice>(device) : nullptr;
+        m_device = device_cast<MidiDevice>(device);
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
     uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
@@ -112,7 +112,7 @@ public:
     void link_device(bool claim_devices) override
     {
         auto device = m_profile->get_midi_source_device(m_device_id, m_slot_kind, !claim_devices);
-        m_device = device && device->is_midi_device() ? std::static_pointer_cast<MidiDevice>(device) : nullptr;
+        m_device = device_cast<MidiDevice>(device);
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
     uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
@@ -135,7 +135,7 @@ public:
     void link_device(bool claim_devices) override
     {
         auto device = m_profile->get_midi_source_device(m_device_id, m_slot_kind, !claim_devices);
-        m_device = device && device->is_midi_device() ? std::static_pointer_cast<MidiDevice>(device) : nullptr;
+        m_device = device_cast<MidiDevice>(device);
     };
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
     uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }

@@ -80,6 +80,20 @@ public:
         return it == claimed.end() ? nullptr : it->second;
     }
 
+    // The device an input on device_id reads: the one claimed into that slot, or else the root device
+    // with that id
+    template <typename T>
+    std::shared_ptr<T> find_slot_device(uint16_t device_id, bool claim_devices) const
+    {
+        auto device = get_claimed_device(T::SLOT_KIND, device_id, !claim_devices);
+        if (!device)
+        {
+            auto it = devices.find(device_id);
+            if (it != devices.end()) device = it->second;
+        }
+        return device_cast<T>(device);
+    }
+
     std::shared_ptr<Device> get_midi_source_device(
         uint16_t slot_id,
         DeviceSlotKind source_kind,

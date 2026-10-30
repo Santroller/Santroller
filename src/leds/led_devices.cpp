@@ -2,6 +2,7 @@
 #include "instance.hpp"
 #include "utils.h"
 #include "hardware/pwm.h"
+#include "devices/bt/bluetooth_stack.hpp"
 #include <stdio.h>
 void RgbLedDevice::write_val(uint16_t val)
 {
@@ -190,8 +191,27 @@ void VTechGuitarIoExpanderLedDevice::off()
         }
     }
 }
+// The onboard LED's pin on a Pico. On a Pico W GP25 is the CYW43's chip select instead, and the LED is
+// on the CYW43, so outputs on GP25 drive that while it's in use, as other libraries do
+static constexpr int32_t ONBOARD_LED_PIN = 25;
+
+bool GpioLedDevice::write_cyw43(bool on)
+{
+    if (m_device.pin != ONBOARD_LED_PIN || !BluetoothStack::instance().using_cyw43_pin(m_device.pin))
+    {
+        return false;
+    }
+    bool inv = m_device.has_inverted && m_device.inverted;
+    BluetoothStack::instance().set_cyw43_led(inv ? !on : on);
+    return true;
+}
+
 void GpioLedDevice::setup()
 {
+    if (write_cyw43(false))
+    {
+        return;
+    }
     bool inv = m_device.has_inverted && m_device.inverted;
     if (m_device.analog)
     {
@@ -209,6 +229,10 @@ void GpioLedDevice::setup()
 }
 void GpioLedDevice::write_val(uint16_t val)
 {
+    if (write_cyw43(val != 0))
+    {
+        return;
+    }
     bool inv = m_device.has_inverted && m_device.inverted;
     if (m_device.analog)
     {
@@ -219,6 +243,10 @@ void GpioLedDevice::write_val(uint16_t val)
 }
 void GpioLedDevice::write_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
+    if (write_cyw43(r || g || b))
+    {
+        return;
+    }
     bool inv = m_device.has_inverted && m_device.inverted;
     if (m_device.analog)
     {
@@ -245,6 +273,10 @@ bool GpioLedDevice::supports_brightness()
 }
 void GpioLedDevice::off()
 {
+    if (write_cyw43(false))
+    {
+        return;
+    }
     bool inv = m_device.has_inverted && m_device.inverted;
     if (m_device.analog)
     {

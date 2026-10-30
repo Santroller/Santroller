@@ -501,9 +501,9 @@ void UsbDevice::disconnect_bluetooth_controllers()
 {
   auto disconnect = [](const std::shared_ptr<Device> &device)
   {
-    if (device && device->is_bluetooth_host_interface())
+    if (auto bt = device_cast<BluetoothHostInterface>(device))
     {
-      std::static_pointer_cast<BluetoothHostInterface>(device)->disconnect();
+      bt->disconnect();
     }
   };
   for (const auto &profile : profiles)

@@ -186,6 +186,8 @@ void BluetoothStack::power_on()
         int err = hci_power_control(HCI_POWER_ON);
         printf("BT: power on (%d)\r\n", err);
         m_powered = true;
+        // In case powering the radio back up reset the CYW43's LED
+        m_led_known = false;
     }
 }
 
@@ -241,6 +243,26 @@ bool BluetoothStack::controller_available() const
 bool BluetoothStack::initialized() const
 {
     return m_initialized;
+}
+
+bool BluetoothStack::set_cyw43_led(bool on)
+{
+#ifdef CYW43_WL_GPIO_LED_PIN
+    if (!m_initialized || m_usb_dongle)
+    {
+        return false;
+    }
+    // Each write is a transaction with the CYW43
+    if (!m_led_known || m_led != on)
+    {
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, on);
+        m_led_known = true;
+        m_led = on;
+    }
+    return true;
+#else
+    return false;
+#endif
 }
 
 bool BluetoothStack::vbus_present(bool &present, uint32_t now)

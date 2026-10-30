@@ -56,6 +56,7 @@ public:
     LedId led_id(uint8_t i);
 
 protected:
+    bool write_cyw43(bool on);
     proto_GpioLedDevice m_device;
 };
 

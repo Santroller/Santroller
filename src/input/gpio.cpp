@@ -1,4 +1,6 @@
 #include "input/gpio.hpp"
+#include "devices/pins.hpp"
+#include "devices/bt/bluetooth_stack.hpp"
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 #include "stdio.h"
@@ -31,14 +33,15 @@ uint16_t GPIOInput::tick_analog()
 void GPIOInput::setup()
 {
     m_pin = m_input.pin;
-    if (m_input.pin < 0)
+    // On a Pico W the wireless chip uses some pins (GP29 is its SPI clock), so they can't be read
+    // while bluetooth is running
+    if (m_input.pin < 0 || BluetoothStack::instance().using_cyw43_pin(m_pin))
     {
         m_valid = false;
         return;
     }
     m_valid = true;
-    ;
-    if (m_analog && m_pin >= ADC_BASE_PIN)
+    if (m_analog && is_adc_pin(m_pin))
     {
         adc_gpio_init(m_pin);
     }
@@ -47,19 +50,5 @@ void GPIOInput::setup()
         m_analog = false;
         gpio_init(m_pin);
     }
-    switch (m_input.pinMode)
-    {
-    case PinMode::BusKeep:
-        gpio_set_pulls(m_pin, true, true);
-        break;
-    case PinMode::Floating:
-        gpio_set_pulls(m_pin, false, false);
-        break;
-    case PinMode::PullDown:
-        gpio_set_pulls(m_pin, false, true);
-        break;
-    case PinMode::PullUp:
-        gpio_set_pulls(m_pin, true, false);
-        break;
-    }
+    gpio_set_pin_mode(m_pin, m_input.pinMode);
 }

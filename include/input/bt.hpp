@@ -28,12 +28,7 @@ public:
     }
     void link_device(bool claim_devices) override
     {
-        auto device = m_profile->get_claimed_device(DeviceSlotKind::Bluetooth, m_input.deviceid, !claim_devices);
-        if (!device) {
-            auto it = m_profile->devices.find(m_input.deviceid);
-            if (it != m_profile->devices.end()) device = it->second;
-        }
-        m_device = device && device->is_bluetooth_host_interface() ? std::static_pointer_cast<BluetoothHostInterface>(device) : nullptr;
+        m_device = m_profile->find_slot_device<BluetoothHostInterface>(m_input.deviceid, claim_devices);
     };
 
 private:
@@ -63,12 +58,7 @@ public:
     uint32_t linked_device_serial() const override { return m_device ? m_device->m_serial : 0; }
     void link_device(bool claim_devices) override
     {
-        auto device = m_profile->get_claimed_device(DeviceSlotKind::Bluetooth, m_input.deviceid, !claim_devices);
-        if (!device) {
-            auto it = m_profile->devices.find(m_input.deviceid);
-            if (it != m_profile->devices.end()) device = it->second;
-        }
-        m_device = device && device->is_bluetooth_host_interface() ? std::static_pointer_cast<BluetoothHostInterface>(device) : nullptr;
+        m_device = m_profile->find_slot_device<BluetoothHostInterface>(m_input.deviceid, claim_devices);
     };
 
 private:

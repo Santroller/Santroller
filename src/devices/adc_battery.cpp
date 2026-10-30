@@ -1,21 +1,16 @@
 #include "devices/adc_battery.hpp"
-#include "devices/bt/bluetooth_stack.hpp"
+#include "devices/pins.hpp"
 #include "emulation/usb/hid_device.h"
 #include "managers/battery_manager.hpp"
-#include "hardware/adc.h"
-#include "hardware/structs/io_bank0.h"
-#include "hardware/structs/pads_bank0.h"
 #include "utils.h"
 #include <pico/cyw43_arch.h>
 
-#define ADC_FIRST_PIN 26
-#define ADC_PIN_COUNT 4
 #define SAMPLE_COUNT 16
 
 AdcBatteryDevice::AdcBatteryDevice(proto_AdcBatteryDevice device, uint16_t id) : Device(id), m_device(device)
 {
     BatteryManager::instance().set_present();
-    m_valid = device.pin >= ADC_FIRST_PIN && device.pin < ADC_FIRST_PIN + ADC_PIN_COUNT && device.fullMv > device.emptyMv;
+    m_valid = is_adc_pin(device.pin) && device.fullMv > device.emptyMv;
 }
 
 void AdcBatteryDevice::begin()
@@ -28,30 +23,8 @@ void AdcBatteryDevice::end(bool full)
 
 bool AdcBatteryDevice::read_mv(uint32_t &mv)
 {
-    uint32_t total = 0;
-    {
-        // On a Pico W, GP29 is also the wireless chip's SPI clock. Holding the stack lock keeps
-        // the chip off the bus while it is used as an ADC, and the driver takes the pin back at
-        // the start of its next transfer. Without bluetooth this lock does nothing.
-        BtStackLock lock;
-        // Put the pad back afterwards. Left in ADC mode its digital input stays off, so anything else
-        // reading the pin (eg a button input) sees it low, and is set up again, high, on every reload
-        const uint32_t pad = pads_bank0_hw->io[m_device.pin];
-        const uint32_t ctrl = io_bank0_hw->io[m_device.pin].ctrl;
-        adc_gpio_init(m_device.pin);
-        adc_select_input(m_device.pin - ADC_FIRST_PIN);
-        // the first readings after switching inputs can be low
-        adc_read();
-        for (int i = 0; i < SAMPLE_COUNT; i++)
-        {
-            total += adc_read();
-        }
-        io_bank0_hw->io[m_device.pin].ctrl = ctrl;
-        pads_bank0_hw->io[m_device.pin] = pad;
-    }
-    uint32_t raw = total / SAMPLE_COUNT;
-    // 12 bit reading of 0 to 3.3V, scaled back up through the divider
-    mv = raw * 3300 / 4095 * m_device.dividerX1000 / 1000;
+    // Scaled back up through the divider
+    mv = adc_read_pin_mv(m_device.pin, SAMPLE_COUNT) * m_device.dividerX1000 / 1000;
     return true;
 }
 

@@ -55,6 +55,9 @@ public:
     // Whether the USB port has power, which the CYW43 senses on boards like the Pico W. Returns
     // false when that isn't known (no CYW43, or it isn't up yet).
     bool vbus_present(bool &present, uint32_t now);
+    // Turns a Pico W's onboard LED on or off, as it's on the CYW43 rather than a pin. Returns false when
+    // there's no CYW43 in use.
+    bool set_cyw43_led(bool on);
     uint16_t device_id() const { return m_device_id; }
     void set_device_id(uint16_t device_id) { m_device_id = device_id; }
 
@@ -65,6 +68,9 @@ private:
     bool m_powered = false;
     bool m_usb_dongle = false;
     bool m_cyw43_pins_released = false;
+    // What the CYW43's LED was last set to, so only changes are sent
+    bool m_led_known = false;
+    bool m_led = false;
     bool m_restarting = false;
     void *m_wiimote_report = nullptr;
     uint16_t m_device_id = 0;

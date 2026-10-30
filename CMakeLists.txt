@@ -360,6 +360,7 @@ add_executable(
   src/managers/inactivity_manager.cpp
   src/devices/power_management.cpp
   src/devices/adc_battery.cpp
+  src/devices/pins.cpp
   src/profiles/profile.cpp
   src/config/device_factory.cpp
   src/config/device_gate.cpp

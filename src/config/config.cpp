@@ -14,6 +14,7 @@
 #include "managers/device_manager.hpp"
 #include "managers/config_manager.hpp"
 #include "config/device_factory.hpp"
+#include "config/device_gate.hpp"
 #include "config/input_factory.hpp"
 #include "config/mapping_factory.hpp"
 #include "mappings/base_mapping.hpp"
@@ -209,6 +210,17 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     auto device_id = proto_device.deviceid;
     DeviceReloadState previous_state;
     auto previous_device = device_mgr.get_root_device(device_id);
+
+    if (proto_device.has_gate && !DeviceGates::instance().check(device_id, proto_device.gate))
+    {
+        // Its connector isn't plugged in. Inputs on it read as if it were disconnected
+        if (previous_device)
+        {
+            previous_device->end(true);
+            device_mgr.remove_root_device(device_id);
+        }
+        return true;
+    }
 
     // Console links must survive even full reloads when their wiring is unchanged. So must the USB
     // host, since restarting it disconnects everything plugged into it. SNES and joybus pads are

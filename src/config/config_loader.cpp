@@ -2,6 +2,7 @@
 
 #include "config/aux_config.hpp"
 #include "config/device_factory.hpp"
+#include "config/device_gate.hpp"
 #include "devices/usb.hpp"
 #include "emulation/usb/gh_arcade_device.h"
 #include "emulation/usb/hid_device.h"
@@ -20,28 +21,47 @@
 bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg);
 bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg);
 
-// Collects the ids of the config's devices without building them
+// Collects the ids of the config's devices without building them, leaving out the ones whose gate
+// is closed
 static bool collect_device_id(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto *ids = static_cast<std::vector<uint32_t> *>(*arg);
     pb_wire_type_t wire_type;
     uint32_t tag;
     bool eof;
+    uint64_t id = 0;
+    bool has_gate = false;
+    proto_DeviceGate gate = proto_DeviceGate_init_zero;
     while (pb_decode_tag(stream, &wire_type, &tag, &eof))
     {
         if (tag == proto_Device_deviceid_tag && wire_type == PB_WT_VARINT)
         {
-            uint64_t id;
             if (!pb_decode_varint(stream, &id))
             {
                 return false;
             }
-            ids->push_back(static_cast<uint32_t>(id));
+        }
+        else if (tag == proto_Device_gate_tag && wire_type == PB_WT_STRING)
+        {
+            pb_istream_t gate_stream;
+            if (!pb_make_string_substream(stream, &gate_stream))
+            {
+                return false;
+            }
+            has_gate = pb_decode(&gate_stream, proto_DeviceGate_fields, &gate);
+            if (!pb_close_string_substream(stream, &gate_stream))
+            {
+                return false;
+            }
         }
         else if (!pb_skip_field(stream, wire_type))
         {
             return false;
         }
+    }
+    if (!has_gate || DeviceGates::instance().check(static_cast<uint32_t>(id), gate))
+    {
+        ids->push_back(static_cast<uint32_t>(id));
     }
     return eof;
 }
@@ -82,6 +102,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
         config_mgr.request_mode(config_mgr.get_detected_mode());
     }
     BatteryManager::instance().begin_config_reload();
+    DeviceGates::instance().clear();
     device_mgr.clear_active_devices();
     device_mgr.mark_root_devices_disconnected();
     profile_mgr.prepare_for_config_reload();
@@ -105,7 +126,8 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     {
         // Devices the new config doesn't have go before it builds its own. One whose id changed would
         // otherwise run alongside its replacement on the same hardware until the end of the reload,
-        // eg still polling a bus from its alarms while the replacement resets it
+        // eg still polling a bus from its alarms while the replacement resets it. So do devices whose
+        // gate closed, as the device on the connector plugged in instead is likely on the same pins
         // (reusing config for the scan, it's big and core0's stack is tight during a reload)
         std::vector<uint32_t> ids;
         config = proto_Config_init_zero;

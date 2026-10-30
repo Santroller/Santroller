@@ -9,6 +9,7 @@
 #include "managers/profile_manager.hpp"
 #include "managers/device_manager.hpp"
 #include "managers/inactivity_manager.hpp"
+#include "config/device_gate.hpp"
 
 #include "config.pb.h"
 #include "pico/stdlib.h"
@@ -303,6 +304,16 @@ static void update_usb_host_presence()
     }
 }
 
+// Loads the devices again when a connector gating them is plugged in or out
+static void update_device_gates()
+{
+    if (DeviceGates::instance().poll(millis()))
+    {
+        printf("device gate changed\r\n");
+        reload();
+    }
+}
+
 bool send_timeout = false;
 
 void update()
@@ -380,6 +391,7 @@ int main()
         tud_task(); // tinyusb device task
         tuh_task();
         update_usb_host_presence();
+        update_device_gates();
         if (!reload_config())
         {
             hid_task();

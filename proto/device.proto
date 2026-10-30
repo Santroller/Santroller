@@ -270,8 +270,23 @@ message DMXDevice {
   required int32 channelCount = 2;
 }
 
+// Only loads a device while a pin reads a certain way, so devices on different connectors can share
+// pins (eg a PS2 and a SNES port wired to the same GPIOs) without both of them driving those pins.
+// The connectors are told apart by what they do to the pin: tie it high or low, or (on an ADC pin)
+// pull it to a different voltage through a resistor on each. Plugging one in or out reloads the config.
+message DeviceGate {
+  required int32 pin = 1;
+  required PinMode pinMode = 2;
+  // Load while the voltage on the pin (GP26 to GP29) is between minMv and maxMv, inclusive.
+  // Otherwise the pin is read as digital, and like GPIO inputs it is active low with a pull up.
+  optional bool analog = 3;
+  optional uint32 minMv = 4;
+  optional uint32 maxMv = 5;
+}
+
 message Device {
   required int32 deviceid = 1;
+  optional DeviceGate gate = 50;
   oneof device {
     AccelerometerDevice accelerometer = 2;
     Max1704xDevice max1704x = 4;

@@ -44,6 +44,11 @@ void GPIOInput::setup()
     if (m_analog && is_adc_pin(m_pin))
     {
         adc_gpio_init(m_pin);
+        m_floating = m_input.ignoreWhenFloating && adc_pin_floating(m_pin);
+        if (m_floating)
+        {
+            printf("gpio %d is floating, ignoring it\r\n", m_pin);
+        }
     }
     else
     {

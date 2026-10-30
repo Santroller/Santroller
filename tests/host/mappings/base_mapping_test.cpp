@@ -86,6 +86,8 @@ TEST_F(AxisUpdate, InvalidInputCountsAsCentred)
     axis.input->is_valid = false;
     axis.set_analog(UINT16_MAX);
     EXPECT_TRUE(axis->centered());
+    // a floating pin reads anything, so the stick stays where it rests instead
+    EXPECT_EQ(axis->value(), kStickCentre);
 }
 
 TEST_F(AxisUpdate, DigitalToAxisUsesPressedValue)
@@ -369,6 +371,27 @@ TEST_F(ButtonUpdate, AnalogThresholdIgnoresTheDigitalReading)
     EXPECT_FALSE(button->value());
     button.set_analog(5000);
     EXPECT_TRUE(button->value());
+}
+
+TEST_F(ButtonUpdate, InvalidInputIsNeverPressed)
+{
+    auto config = gamepad_button(Gamepad_A);
+    config.has_trigger = true;
+    config.trigger = AnalogToDigitalTriggerType_JoyLow;
+    config.triggerValue = 10000;
+    auto button = drive<ProbeButton>(config, profile);
+    button.input->is_valid = false;
+    button.set_analog(0);
+    EXPECT_FALSE(button->value());
+    EXPECT_EQ(button->pressure(), 0);
+}
+
+TEST_F(ButtonUpdate, InvalidDigitalInputIsNeverPressed)
+{
+    auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
+    button.input->is_valid = false;
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
 }
 
 TEST_F(ButtonUpdate, InvertedAnalogThreshold)

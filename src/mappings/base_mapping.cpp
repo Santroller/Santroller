@@ -96,6 +96,13 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
         }
     }
 
+    // an input with nothing behind it can read anything, including past a low trigger
+    if (!m_input->valid())
+    {
+        calcVal = false;
+        trigger_value = 0;
+    }
+
     bool physical_pressed = calcVal;
 
     // Release latching: if previously suppressed by a shortcut, remain suppressed
@@ -343,6 +350,12 @@ void AxisMapping::update(bool full_poll, bool send_events)
     else if (!m_mapping.has_pressed)
     {
         rest = 0;
+    }
+
+    // whatever an input with nothing behind it reads would calibrate to some deflection
+    if (!m_input->valid())
+    {
+        val = rest;
     }
 
     bool physical_pressed = (val != rest);

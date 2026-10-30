@@ -16,6 +16,9 @@ message GPIOInput {
   required int32 pin = 1;
   required PinMode pinMode = 2;
   required bool analog = 3;
+  // For an optional part, like a joystick a board may be sold without. An analog pin with nothing
+  // on it follows its pulls, so when it does, mappings on it sit at rest instead of drifting.
+  optional bool ignoreWhenFloating = 4;
 }
 message MatrixInput {
   required int32 deviceid = 1;

@@ -685,7 +685,18 @@ void RockBandDrumsButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 }
 void RockBandDrumsButtonMapping::update_switch(uint8_t *buf)
 {
-    // not a thing
+    SwitchInputReport *report = (SwitchInputReport *)buf;
+    switch (m_mapping.mapping.mapping.rbDrumButton)
+    {
+    case RockBandDrums_Kick1Pedal:
+        report->rightShoulder |= m_last_value;
+        break;
+    case RockBandDrums_Kick2Pedal:
+        report->leftShoulder |= m_last_value;
+        break;
+    default:
+        break;
+    }
 }
 
 void RockBandDrumsButtonMapping::update_ps2(uint8_t *buf)
@@ -861,7 +872,38 @@ void RockBandDrumsAxisMapping::update_wii(uint8_t format, uint8_t *buf)
 }
 void RockBandDrumsAxisMapping::update_switch(uint8_t *buf)
 {
-    // not a thing on switch
+    // Switch has no drums, so the pads are laid out as lanes on a Pro controller
+    if (m_centered)
+    {
+        return;
+    }
+    SwitchInputReport *report = (SwitchInputReport *)buf;
+    switch (m_mapping.mapping.mapping.rbDrumAxis)
+    {
+    case RockBandDrums_RedPad:
+        report->dpadLeft = true;
+        break;
+    case RockBandDrums_YellowPad:
+        report->dpadDown = true;
+        break;
+    case RockBandDrums_BluePad:
+        report->y = true;
+        break;
+    case RockBandDrums_GreenPad:
+        report->b = true;
+        break;
+    case RockBandDrums_YellowCymbal:
+        report->dpadUp = true;
+        break;
+    case RockBandDrums_BlueCymbal:
+        report->x = true;
+        break;
+    case RockBandDrums_GreenCymbal:
+        report->a = true;
+        break;
+    default:
+        break;
+    }
 }
 
 void RockBandDrumsAxisMapping::update_ps2(uint8_t *buf)

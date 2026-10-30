@@ -1,6 +1,7 @@
 // Link time fakes for the config tests: NOR flash, the state half of DeviceFactory, and stand-ins for
 // config.cpp's load_device / load_profile (which build real devices and profiles) that just record
 // what they were handed
+#include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <mutex>
@@ -8,6 +9,7 @@
 #include <pb_decode.h>
 #include "config/FlashPROM.h"
 #include "config/device_factory.hpp"
+#include "config/device_gate.hpp"
 #include "config/profile_opts.hpp"
 #include "devices/bt/bt_tlv_storage.hpp"
 #include "config_fakes.hpp"
@@ -49,6 +51,15 @@ void ensure_core1_running()
     std::call_once(started, []
                    { std::thread(flash_core1_loop).detach(); });
 }
+}
+
+// Gates read their pins on the Pico, here they read from fake_loader::state
+bool DeviceGates::check(uint32_t device_id, const proto_DeviceGate &gate)
+{
+    auto &state = fake_loader::state;
+    state.checked_gate_device_ids.push_back(device_id);
+    return std::find(state.closed_gate_device_ids.begin(), state.closed_gate_device_ids.end(), device_id) ==
+           state.closed_gate_device_ids.end();
 }
 
 // Same as the state half of src/config/device_factory.cpp, which can't be built here without every device

@@ -546,6 +546,27 @@ TEST_F(ConfigLoaderTest, DevicesMissingFromTheConfigAreDroppedBeforeAnyAreBuilt)
     EXPECT_EQ(fake_loader::state.devices.size(), 3u);
 }
 
+// A device whose connector isn't plugged in goes like one the config doesn't have, as whatever is
+// plugged in instead is likely on the same pins
+TEST_F(ConfigLoaderTest, DevicesWithAClosedGateAreDroppedBeforeAnyAreBuilt)
+{
+    ConfigSpec spec = realistic_config();
+    for (auto &device : spec.devices)
+    {
+        if (device.device.deviceid != 3)
+        {
+            device.device.has_gate = true;
+            device.device.gate.pin = 10;
+            device.device.gate.pinMode = PinMode_PullUp;
+        }
+    }
+    fake_loader::state.closed_gate_device_ids = {2};
+    ASSERT_TRUE(store_and_apply(encode_config(spec), {}));
+    // Only the gated devices are checked
+    EXPECT_EQ(fake_loader::state.checked_gate_device_ids, (std::vector<uint32_t>{1, 2}));
+    EXPECT_EQ(fake_loader::state.kept_root_device_ids, (std::vector<uint32_t>{1, 3}));
+}
+
 TEST_F(ConfigLoaderTest, TheSavedArcadeSideIsRestored)
 {
     AuxSpec aux;

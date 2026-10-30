@@ -37,6 +37,8 @@ struct State
     std::vector<std::string> calls;
     // The ids apply kept when it dropped the devices the new config doesn't have
     std::vector<uint32_t> kept_root_device_ids;
+    // The devices whose gate apply checked, in order
+    std::vector<uint32_t> checked_gate_device_ids;
 
     // Inputs to apply
     ConsoleMode requested_mode = ModeHid;
@@ -47,6 +49,8 @@ struct State
     bool changed_types = false;
     bool mode_from_profile = false;
     bool tool_closed = true;
+    // Devices whose gate reads closed, so the scan leaves them out
+    std::vector<uint32_t> closed_gate_device_ids;
     std::shared_ptr<UsbDevice> previous_xbox_one_adapter;
     std::shared_ptr<UsbDevice> xbox_one_adapter;
 

@@ -9,3 +9,6 @@ proto.BluetoothPairingState.name max_size:32
 proto.BluetoothPairingState.macAddress max_size:6 fixed_length:1
 proto.BluetoothPairingState.linkKey max_size:16 fixed_length:1
 proto.BluetoothTlvEntry.value max_size:70
+proto.DisplayLedDevice.text max_size:33
+proto.DisplayLedDevice.image type:FT_CALLBACK
+proto.LedDevice.* submsg_callback:true

@@ -1,6 +1,5 @@
 #include "wiimote_btstack.h"
 #include <stdio.h>
-#include <math.h>
 #include "btstack.h"
 
 #include "sdp_consts.h"
@@ -21,9 +20,6 @@ static btstack_timer_source_t led_state;
 void (*callback_led_func[2])();
 int state = -1;
 //convert_data
-static const double pointer_margin = 0.5;
-float pointer_x = 0.5;
-float pointer_y = 0.5;
 volatile WiimoteReport *input_report;
 
 static void l2cap_sdp_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
@@ -511,33 +507,19 @@ static void input_update_wiimote(){
 
     switch(input_report->mode){
         case NO_EXTENSION:{
-            float pointer_delta_x = 0, pointer_delta_y = 0;
             struct wiimote_buttons wiimote_report = input_report->wiimote;
 
             memcpy(&wiimote.usr, &wiimote_report, 14);
 
-            pointer_delta_x += (input_report->wiimote.ir_x / 127.0) * 0.008;
-            pointer_delta_y += (input_report->wiimote.ir_y / 127.0) * 0.008;
-
-            pointer_x = fmax(-pointer_margin, fmin(1.0 + pointer_margin, pointer_x + pointer_delta_x));
-            pointer_y = fmax(-pointer_margin, fmin(1.0 + pointer_margin, pointer_y + pointer_delta_y));
-
-            set_motion_state(&wiimote, pointer_x, pointer_y);
+            set_motion_state(&wiimote);
         }
             break;
         case WIIMOTE_AND_NUNCHUCK:{
             // Wiimote
-            float pointer_delta_x = 0, pointer_delta_y = 0;
             struct wiimote_buttons wiimote_report = input_report->wiimote;
             memcpy(&wiimote.usr, &wiimote_report, 14);
 
-            pointer_delta_x += (input_report->wiimote.ir_x / 127.0) * 0.008;
-            pointer_delta_y += (input_report->wiimote.ir_y / 127.0) * 0.008;
-
-            pointer_x = fmax(-pointer_margin, fmin(1.0 + pointer_margin, pointer_x + pointer_delta_x));
-            pointer_y = fmax(-pointer_margin, fmin(1.0 + pointer_margin, pointer_y + pointer_delta_y));
-
-            set_motion_state(&wiimote, pointer_x, pointer_y);
+            set_motion_state(&wiimote);
 
             if(input_report->fake_motion || input_report->center_accel){
                 wiimote.usr.accel_x = input_report->wiimote.accel_x;

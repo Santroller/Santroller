@@ -180,6 +180,13 @@ add_compile_options(
 include(cmake/Uzlib.cmake)
 add_subdirectory(lib)
 add_subdirectory(lib/pico_fota_bootloader)
+# Drawing on a display isn't time critical, so it's built for size, as RP2040 flash is nearly full
+set_source_files_properties(
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/display/libdisplay.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/display/mono_framebuffer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/devices/display.cpp
+  PROPERTIES COMPILE_OPTIONS -Os
+)
 
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -442,6 +449,7 @@ add_executable(
   src/devices/max1704x.cpp
   src/devices/xbox_one_auth.cpp
   src/devices/mpr121.cpp
+  src/devices/display.cpp
   src/devices/ws2812.cpp
   src/devices/apa102.cpp
   src/devices/dmx.cpp
@@ -571,6 +579,7 @@ target_link_libraries(
   max1704x
   xbox_one_auth
   mpr121
+  display
   ads1115
   multiplexer
   picodmx

@@ -274,17 +274,21 @@ TEST(Motion, PS3Clamps)
     EXPECT_EQ(ds3_imu_encode(motion).accel[0], 1023);
 }
 
-// SDL_hidapi_wii.c: x = -wii x, y = wii z, z = wii y at 100 counts per g around 0x200
+// SDL_hidapi_wii.c: x = -wii x, y = wii z, z = wii y. The emulated remote uses the calibration in its
+// EEPROM, a real one is read at SDL's 100 counts per g around 0x200.
 TEST(Motion, WiimoteLyingFlat)
 {
     uint16_t accel[3];
     wiimote_accel_encode(lying_flat(), accel);
-    EXPECT_EQ(accel[0], 0x200);
-    EXPECT_EQ(accel[1], 0x200);
-    EXPECT_EQ(accel[2], 0x200 + 100);
+    EXPECT_EQ(accel[0], 0x85 << 2);
+    EXPECT_EQ(accel[1], 0x85 << 2);
+    EXPECT_EQ(accel[2], 0xA0 << 2);
+    const uint16_t real[3] = {0x200, 0x200, 0x200 + 100};
     float back[3];
-    wiimote_accel_decode(accel, back);
+    wiimote_accel_decode(real, back);
+    EXPECT_FLOAT_EQ(back[0], 0.0f);
     EXPECT_FLOAT_EQ(back[1], 1.0f);
+    EXPECT_FLOAT_EQ(back[2], 0.0f);
 }
 
 // SDL_hidapi_steam.c: acceleration x = x, y = z, z = -y at 2 g, gyro x = x, y = z, z = y at 2000 °/s

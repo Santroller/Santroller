@@ -6,6 +6,7 @@
 #include "wiimote.h"
 #include "wm_reports.h"
 #include "eeprom.bin.h"
+#include "protocols/wiimote_calibration.h"
 #include "wii_extension_backend.h"
 
 static uint8_t *eeprom_bin;
@@ -838,9 +839,9 @@ void wiimote_init(struct wiimote_state *state)
   memset(state, 0, sizeof(struct wiimote_state));
 
   //flat
-  state->usr.accel_x = 0x82 << 2;
-  state->usr.accel_y = 0x82 << 2;
-  state->usr.accel_z = 0x9f << 2;
+  state->usr.accel_x = WIIMOTE_EMULATED_ACCEL_ZERO;
+  state->usr.accel_y = WIIMOTE_EMULATED_ACCEL_ZERO;
+  state->usr.accel_z = WIIMOTE_EMULATED_ACCEL_ONE_G;
 
   reset_input_ir(state->usr.ir_object);
   reset_input_motionplus(&state->usr.motionplus);

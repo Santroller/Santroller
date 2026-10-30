@@ -4,6 +4,7 @@
 #include "hardware/pwm.h"
 #include "devices/bt/bluetooth_stack.hpp"
 #include <stdio.h>
+#include <algorithm>
 void RgbLedDevice::write_val(uint16_t val)
 {
     uint16_t r = ((float)val * scaleR) + startR;
@@ -353,4 +354,48 @@ uint8_t MPR121LedDevice::led_count()
 LedId MPR121LedDevice::led_id(uint8_t i)
 {
     return {m_led_device.get(), (uint32_t)m_device.pin};
+}
+
+void DisplayLedDevice::set_state(bool visible, uint16_t value)
+{
+    if (visible == m_visible && value == m_value)
+    {
+        return;
+    }
+    m_visible = visible;
+    m_value = value;
+    m_display->element_changed();
+}
+void DisplayLedDevice::write_val(uint16_t val)
+{
+    // A bar stays up while it's empty, the rest only show while they're on
+    set_state(m_device.type == DisplayElementBar || val, val);
+}
+void DisplayLedDevice::write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
+{
+    write_val(std::max({r, g, b}) * 257);
+}
+void DisplayLedDevice::off()
+{
+    set_state(false, 0);
+}
+void DisplayLedDevice::draw(MonoFramebuffer &frame)
+{
+    if (!m_visible)
+    {
+        return;
+    }
+    bool invert = m_device.has_invert && m_device.invert;
+    switch (m_device.type)
+    {
+    case DisplayElementText:
+        frame.draw_text(m_device.x, m_device.y, m_device.text, m_device.has_scale ? m_device.scale : 1, invert);
+        break;
+    case DisplayElementImage:
+        frame.draw_bitmap(m_device.x, m_device.y, m_device.width, m_device.height, m_image.data(), m_image.size(), invert);
+        break;
+    case DisplayElementBar:
+        frame.draw_bar(m_device.x, m_device.y, m_device.width, m_device.height, m_value, m_device.has_vertical && m_device.vertical, invert);
+        break;
+    }
 }

@@ -4,10 +4,12 @@
 #include "devices/dmx.hpp"
 #include "devices/stp16cpc.hpp"
 #include "devices/vtechexpander.hpp"
+#include "devices/display.hpp"
 
 std::unique_ptr<LedMappingDevice> LedFactory::create_led_device(
     const proto_LedDevice& proto_led_device,
-    std::shared_ptr<Profile> profile)
+    std::shared_ptr<Profile> profile,
+    std::vector<uint8_t> image)
 {
     switch (proto_led_device.which_device)
     {
@@ -59,6 +61,16 @@ std::unique_ptr<LedMappingDevice> LedFactory::create_led_device(
             std::static_pointer_cast<VTechGuitarIOExpanderDevice>(profile->devices[proto_led_device.device.vtechExpander.deviceId])
         );
         
+    case proto_LedDevice_display_tag:
+        if (profile->devices.find(proto_led_device.device.display.deviceId) == profile->devices.end()) {
+            return nullptr;
+        }
+        return std::make_unique<DisplayLedDevice>(
+            proto_led_device.device.display,
+            std::move(image),
+            std::static_pointer_cast<DisplayDevice>(profile->devices[proto_led_device.device.display.deviceId])
+        );
+
     default:
         return nullptr;
     }

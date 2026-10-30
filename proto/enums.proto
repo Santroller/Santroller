@@ -387,3 +387,21 @@ enum MidiSerialDirection {
   MidiSerialIn = 1;
   MidiSerialOut = 2;
 }
+
+// Monochrome I2C OLED controllers
+enum DisplayController {
+  DisplaySSD1306 = 1;
+  DisplaySH1106 = 2;
+  // An SSD1306 without the charge pump, often on 2.42" displays
+  DisplaySSD1309 = 3;
+  // 128 x 128, or 64 x 128 panels (usually used sideways)
+  DisplaySH1107 = 4;
+}
+
+enum DisplayElementType {
+  // Shown while its LED value is non zero
+  DisplayElementText = 1;
+  DisplayElementImage = 2;
+  // Filled in proportion to its LED value
+  DisplayElementBar = 3;
+}

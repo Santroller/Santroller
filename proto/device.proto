@@ -194,6 +194,23 @@ message APA102Device {
   required APA102Type type = 2;
   required int32 count = 3;
 }
+// A monochrome OLED. What it shows comes from display LEDs, each one an element drawn on it while its
+// LED mapping is on
+message DisplayDevice {
+  required I2CDevice i2c = 1;
+  required DisplayController controller = 2;
+  // 7 bit I2C address, unset is 0x3C
+  optional int32 address = 3;
+  // The panel's height: 64 or 32 pixels (unset is 64). The SH1107 is always 128.
+  optional uint32 height = 4;
+  // Quarter turns clockwise that everything is rotated by on the panel, so it can be mounted upside down
+  // or sideways. Positions on the display are after rotating.
+  optional uint32 rotation = 5;
+  // 0 - 255, unset is 207
+  optional uint32 contrast = 6;
+  // The SH1107 panel's width: 64 or 128 pixels (unset is 128). The rest are always 128.
+  optional uint32 width = 7;
+}
 message VTechGuitarIOExpanderDevice {
   required SPIDevice spi = 1;
   required int32 attPin = 2;
@@ -329,6 +346,7 @@ message Device {
     PowerManagementDevice powerManagement = 41;
     AdcBatteryDevice adcBattery = 42;
     SNESEmulationDevice snesEmulation = 43;
+    DisplayDevice display = 44;
   }
 }
 message InfiniumFaderDevice {

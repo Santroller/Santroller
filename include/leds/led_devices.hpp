@@ -6,7 +6,9 @@
 #include "devices/stp16cpc.hpp"
 #include "devices/vtechexpander.hpp"
 #include "devices/mpr121.hpp"
+#include "devices/display.hpp"
 #include <memory>
+#include <vector>
 
 class RgbLedDevice : public LedMappingDevice
 {
@@ -139,4 +141,32 @@ public:
 protected:
     proto_MPR121LedDevice m_device;
     std::shared_ptr<MPR121Device> m_led_device;
+};
+
+// One element on a display: text and images show while the value is non zero, bars are filled by it. Each
+// one is its own LED, so they never cover each other up.
+class DisplayLedDevice : public LedMappingDevice, public DisplayElement
+{
+public:
+    DisplayLedDevice(proto_DisplayLedDevice device, std::vector<uint8_t> image, std::shared_ptr<DisplayDevice> display) : LedMappingDevice(), m_device(device), m_image(std::move(image)), m_display(std::move(display))
+    {
+        m_display->add_element(this);
+    }
+    ~DisplayLedDevice() { m_display->remove_element(this); }
+    void off();
+    void write_val(uint16_t val);
+    void write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
+    void setup() {}
+    bool supports_brightness() { return false; }
+    uint8_t led_count() { return 1; }
+    LedId led_id(uint8_t i) { return {this, 0}; }
+    void draw(MonoFramebuffer &frame);
+
+protected:
+    void set_state(bool visible, uint16_t value);
+    proto_DisplayLedDevice m_device;
+    std::vector<uint8_t> m_image;
+    std::shared_ptr<DisplayDevice> m_display;
+    bool m_visible = false;
+    uint16_t m_value = 0;
 };

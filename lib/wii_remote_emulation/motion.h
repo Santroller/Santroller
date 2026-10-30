@@ -3,6 +3,7 @@
 
 #include "wiimote.h"
 
-void set_motion_state(struct wiimote_state * state, float pointer_x, float pointer_y);
+// The IR camera and accelerometer of a remote pointing at the middle of the screen
+void set_motion_state(struct wiimote_state *state);
 
 #endif

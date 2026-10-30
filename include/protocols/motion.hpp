@@ -3,6 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include "input_enums.pb.h"
+#include "protocols/wiimote_calibration.h"
 
 // Every motion source and output meets in one fixed scale, so any source can drive any output.
 // Motion travels through mappings like any other axis, with MOTION_ZERO (the centre of a stick)
@@ -540,16 +541,19 @@ inline void ps3_third_party_imu_decode(const PS3ImuSample &sample, float accel_g
 // ---------------------------------------------------------------------------
 // Wii remote
 // ---------------------------------------------------------------------------
-// 10 bit values centred on 0x200 at about 100 counts per g. SDL_hidapi_wii.c reads them as
-// x = -wii x, y = wii z and z = wii y.
+// 10 bit values. SDL_hidapi_wii.c reads them as x = -wii x, y = wii z and z = wii y.
+// A real remote is read like SDL does, as centred on 0x200 at about 100 counts per g.
 inline constexpr float WIIMOTE_IMU_CENTER = 0x200;
 inline constexpr float WIIMOTE_IMU_ACCEL_PER_G = 100.0f;
 
+// The emulated remote reports in the scale its EEPROM gives the console
 inline void wiimote_accel_encode(const MotionState &motion, uint16_t out[3])
 {
-    out[0] = motion_clamp10(WIIMOTE_IMU_CENTER - motion.accel_g(0) * WIIMOTE_IMU_ACCEL_PER_G);
-    out[1] = motion_clamp10(WIIMOTE_IMU_CENTER + motion.accel_g(2) * WIIMOTE_IMU_ACCEL_PER_G);
-    out[2] = motion_clamp10(WIIMOTE_IMU_CENTER + motion.accel_g(1) * WIIMOTE_IMU_ACCEL_PER_G);
+    const float zero = WIIMOTE_EMULATED_ACCEL_ZERO;
+    const float per_g = WIIMOTE_EMULATED_ACCEL_PER_G;
+    out[0] = motion_clamp10(zero - motion.accel_g(0) * per_g);
+    out[1] = motion_clamp10(zero + motion.accel_g(2) * per_g);
+    out[2] = motion_clamp10(zero + motion.accel_g(1) * per_g);
 }
 
 inline void wiimote_accel_decode(const uint16_t in[3], float accel_g[3])

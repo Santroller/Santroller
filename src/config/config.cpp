@@ -77,6 +77,7 @@
 #include "devices/max1704x.hpp"
 #include "devices/vtechexpander.hpp"
 #include "devices/mpr121.hpp"
+#include "devices/display.hpp"
 #include "devices/ws2812.hpp"
 #include "devices/apa102.hpp"
 #include "devices/midiserial.hpp"
@@ -725,6 +726,27 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field, void **arg)
     }
     return true;
 }
+// A display LED's image, which is at most a whole screen
+static bool load_display_image(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto *image = static_cast<std::vector<uint8_t> *>(*arg);
+    if (stream->bytes_left > MonoFramebuffer::MAX_WIDTH * MonoFramebuffer::MAX_HEIGHT / 8)
+    {
+        return pb_read(stream, nullptr, stream->bytes_left);
+    }
+    image->resize(stream->bytes_left);
+    return pb_read(stream, image->data(), image->size());
+}
+static bool load_led_device_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    if (field->tag == proto_LedDevice_display_tag)
+    {
+        proto_DisplayLedDevice *msg = (proto_DisplayLedDevice *)field->pData;
+        msg->image.funcs.decode = load_display_image;
+        msg->image.arg = *arg;
+    }
+    return true;
+}
 bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto *context = static_cast<ConfigDecodeContext *>(*arg);
@@ -736,9 +758,12 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_Led proto_led = proto_Led_init_default;
     proto_led.mapping.led.inputMapping.input.cb_input.funcs.decode = load_input_dev;
     proto_led.mapping.led.inputMapping.input.cb_input.arg = *arg;
+    std::vector<uint8_t> image;
+    proto_led.device.cb_device.funcs.decode = load_led_device_dev;
+    proto_led.device.cb_device.arg = &image;
     pb_decode_ex(stream, proto_Led_fields, &proto_led, PB_DECODE_NOINIT);
 
-    auto device = LedFactory::create_led_device(proto_led.device, profile);
+    auto device = LedFactory::create_led_device(proto_led.device, profile, std::move(image));
     if (!device)
     {
         return false;

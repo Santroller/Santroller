@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <stdint.h>
+#include <vector>
 #include "input.pb.h"
 #include "config.pb.h"
 
@@ -11,10 +12,11 @@ class Input;
 
 class LedFactory {
 public:
-    // Create LED device from protobuf
+    // Create LED device from protobuf. image is a display LED's image, which is decoded separately
     static std::unique_ptr<LedMappingDevice> create_led_device(
         const proto_LedDevice& proto_led_device,
-        std::shared_ptr<Profile> profile
+        std::shared_ptr<Profile> profile,
+        std::vector<uint8_t> image = {}
     );
     
     // Create LED mapping from protobuf

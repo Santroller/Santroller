@@ -21,6 +21,7 @@
 #include "devices/max1704x.hpp"
 #include "devices/xbox_one_auth.hpp"
 #include "devices/mpr121.hpp"
+#include "devices/display.hpp"
 #include "devices/usb.hpp"
 #include "devices/ads1115.hpp"
 #include "devices/debug.hpp"
@@ -315,6 +316,10 @@ std::shared_ptr<Device> DeviceFactory::create_device(
 
     case proto_Device_mpr121_tag:
         device = std::make_shared<MPR121Device>(proto_device.device.mpr121, device_id);
+        break;
+
+    case proto_Device_display_tag:
+        device = std::make_shared<DisplayDevice>(proto_device.device.display, device_id);
         break;
         
     case proto_Device_usbHost_tag:

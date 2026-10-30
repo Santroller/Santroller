@@ -138,6 +138,27 @@ message STP16CPCLedDevice {
   required int32 deviceId = 1;
   repeated int32 activeLed = 2;
 }
+// One element drawn on a display, while its mapping has it on. Elements are drawn in the order they
+// are listed in, over the top of the ones before them.
+message DisplayLedDevice {
+  required int32 deviceId = 1;
+  required DisplayElementType type = 2;
+  // Top left corner, in pixels
+  required int32 x = 3;
+  required int32 y = 4;
+  // Images and bars only
+  optional int32 width = 5;
+  optional int32 height = 6;
+  // Text only: each character is 6 x 8 pixels times this, unset is 1
+  optional uint32 scale = 7;
+  optional string text = 8;
+  // 1 bit per pixel, row by row (each starting on a new byte), most significant bit first, set bits lit
+  optional bytes image = 9;
+  // Draw lit pixels dark and dark pixels lit
+  optional bool invert = 10;
+  // Bars only: fill from the bottom up instead of left to right
+  optional bool vertical = 11;
+}
 message LedDevice {
   oneof device {
     RGBLedDevice rgb = 4;
@@ -146,6 +167,7 @@ message LedDevice {
     VTechGuitarIOExpanderLedDevice vtechExpander = 7;
     DMXLedDevice dmx = 8;
     MPR121LedDevice mpr121 = 9;
+    DisplayLedDevice display = 10;
   }
 }
 message LedMapping {

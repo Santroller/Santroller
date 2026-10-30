@@ -69,8 +69,10 @@ add_executable(santroller_tests
   unit/midi_output_test.cpp
   unit/xbox360_chatpad_test.cpp
   unit/device_gate_test.cpp
+  unit/mono_framebuffer_test.cpp
+  ${SANTROLLER_ROOT}/lib/display/mono_framebuffer.cpp
 )
-target_include_directories(santroller_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/support)
+target_include_directories(santroller_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/support ${SANTROLLER_ROOT}/lib/display)
 target_compile_options(santroller_tests PRIVATE -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter)
 target_link_libraries(santroller_tests PRIVATE santroller_hidparser GTest::gtest_main)
 

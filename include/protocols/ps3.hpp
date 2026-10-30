@@ -24,6 +24,21 @@ struct PS3InstrumentOutput
 static_assert(sizeof(PS3InstrumentOutput) == 8, "PS3 instrument output is 8 bytes");
 static_assert(offsetof(PS3InstrumentOutput, player_led) == 2, "Player LED mask is output byte 2");
 
+#define PS3_FEATURE_MAGIC 0x2621
+
+// Feature report 0x00, which the PS3 reads to find out what a third party controller supports
+struct PS3FeatureReport
+{
+    uint16_t magic;
+    uint8_t protocol_version;
+    uint8_t analog_pressure : 1;
+    uint8_t motion_sensors : 1;
+    uint8_t led : 1;
+    uint8_t : 5;
+    uint8_t reserved[4];
+} __attribute__((packed));
+static_assert(sizeof(PS3FeatureReport) == 8, "PS3 feature report is 8 bytes");
+
 #define PS3_RUMBLE_ID 0x01
 #define PS3_LED_ID 0x00
 #define DJ_LED_ID 0x91

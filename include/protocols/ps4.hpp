@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <stddef.h>
 #include "protocols/motion.hpp"
 
 static const uint8_t ps4_colors[4][3] = {
@@ -309,3 +310,97 @@ enum PS4ReportIds {
 #define CHALLENGE_SIZE 0x100
 /** Total length of a response. */
 #define RESPONSE_SIZE 0x410
+
+#define PS4_FEATURE_MAGIC 0x2721
+#define PS5_FEATURE_MAGIC 0x2821
+
+enum PS4DeviceType : uint8_t
+{
+    PS4DeviceStandard = 0x00,
+    PS4DeviceGuitar = 0x01,
+    PS4DeviceDrums = 0x02,
+    // PS4 only
+    PS4DeviceDjTurntable = 0x03,
+    PS4DeviceDanceMat = 0x04,
+    PS4DeviceNavigation = 0x05,
+    PS4DeviceSteeringWheel = 0x06,
+    PS4DeviceStick = 0x07,
+    PS4DeviceFlightStick = 0x08,
+};
+
+// Feature report 0x03, which the PS4 and PS5 read to find out what a controller supports. Both
+// consoles use the same layout, the PS5 adds the battery and player indicator bits to capability 2
+struct PS4FeatureReport
+{
+    uint8_t report_id;
+    uint16_t magic;
+    uint8_t protocol_version;
+
+    // capability
+    uint8_t analog_pressure : 1;
+    uint8_t motion_sensors : 1;
+    uint8_t light_bar : 1;
+    uint8_t vibration : 1;
+    uint8_t extended_data : 1;
+    uint8_t speaker : 1;
+    uint8_t touch_pad : 1;
+    uint8_t audio_jack : 1;
+
+    uint8_t device_type;
+
+    // dots per mm, as the digits before and after the decimal point, 0 without a touch pad
+    uint8_t touch_pad_density_integer;
+    uint8_t touch_pad_density_fraction;
+
+    // motion sensor scale, all 0 without motion sensors
+    uint16_t timestamp_tick_us;
+    uint16_t gyro_multiplier;
+    uint16_t gyro_divisor;
+    uint16_t accel_multiplier;
+    uint16_t accel_divisor;
+
+    // 0x0d is what a DualShock uses, and should be used if you don't have sticks
+    uint8_t left_stick_dead_zone;
+    uint8_t right_stick_dead_zone;
+
+    // capability 2
+    uint8_t wireless : 1;
+    uint8_t : 1;
+    uint8_t battery : 1; // PS5 only
+    uint8_t : 3;
+    uint8_t vendor_interface : 1;
+    uint8_t player_indicator : 1; // PS5 only
+
+    uint8_t reserved[3];
+
+    // depends on device_type
+    union
+    {
+        struct
+        {
+            uint8_t selector_switch : 1;
+            uint8_t tilt : 1;
+            uint8_t whammy_bar : 1;
+            uint8_t : 5;
+            // not counting "no effect"
+            uint8_t effect_count;
+        } __attribute__((packed)) guitar;
+        struct
+        {
+            // no tom 2 without this
+            uint8_t four_pads : 1;
+            uint8_t hi_hat : 1;
+            uint8_t ride : 1;
+            uint8_t crash : 1;
+            uint8_t extra_foot_pedal : 1;
+            uint8_t : 3;
+        } __attribute__((packed)) drums;
+        uint8_t extended[9];
+    };
+
+    uint8_t reserved2[15];
+} __attribute__((packed));
+static_assert(sizeof(PS4FeatureReport) == 48, "PS4 feature report is 48 bytes");
+static_assert(offsetof(PS4FeatureReport, device_type) == 5, "Device type is feature report byte 5");
+static_assert(offsetof(PS4FeatureReport, left_stick_dead_zone) == 18, "Dead zones are feature report bytes 18 and 19");
+static_assert(offsetof(PS4FeatureReport, guitar) == 24, "Extended capability is feature report byte 24");

@@ -16,27 +16,75 @@ class UsbHostInterface;
 #include "emulation/usb/usb_devices.h"
 #include "devices/usb/host/hid/hid_host.h"
 
-#define PS4_FEATURE_PRESSURE 1<<0
-#define PS4_FEATURE_MOTION 1<<1
-#define PS4_FEATURE_LIGHTBAR 1<<2
-#define PS4_FEATURE_VIBRATION 1<<3
-#define PS4_FEATURE_EXTENDED 1<<4
-#define PS4_FEATURE_SPEAKER 1<<5
-#define PS4_FEATURE_TOUCH_PAD 1<<6
-#define PS4_FEATURE_AUDIO_JACK 1<<7
+// 61/1024 °/s and 1/8192 g per count (PS4_IMU_GYRO_PER_DPS and PS4_IMU_ACCEL_PER_G)
+static void ps4_set_motion_scale(PS4FeatureReport &report)
+{
+    report.timestamp_tick_us = 4000;
+    report.gyro_multiplier = 61;
+    report.gyro_divisor = 1024;
+    report.accel_multiplier = 1;
+    report.accel_divisor = 8192;
+}
 
-#define PS5_FEATURE_WIRELESS 1<<0
-#define PS5_FEATURE_VENDOR_INT 1<<6
-
-// Bytes 10 - 17 are the motion scale, as gyro and accel numerator / denominator pairs: 61/1024 °/s
-// and 1/8192 g per count (PS4_IMU_GYRO_PER_DPS and PS4_IMU_ACCEL_PER_G)
-uint8_t ps4_feature_config[] = {
-    0x03, 0x21, 0x27, 0x04, 0x91, /*type*/ 0x00, 0x2c, 0x56,
-    0xa0, 0x0f, 0x3d, 0x00, 0x00, 0x04, 0x01, 0x00,
-    0x00, 0x20, 0x0d, 0x0d, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static PS4FeatureReport ps4_feature_report(SubType subtype)
+{
+    PS4FeatureReport report = {};
+    report.report_id = ReportId::ReportIdPs4Feature;
+    report.magic = PS4_FEATURE_MAGIC;
+    report.protocol_version = 0x04;
+    report.left_stick_dead_zone = 0x0d;
+    report.right_stick_dead_zone = 0x0d;
+    if (subtype == LiveGuitar)
+    {
+        // Matches a real GHL guitar, which only says that it is a guitar
+        report.device_type = PS4DeviceGuitar;
+        return report;
+    }
+    report.touch_pad_density_integer = 44;
+    report.touch_pad_density_fraction = 86;
+    switch (subtype)
+    {
+    case Gamepad:
+        report.device_type = PS4DeviceStandard;
+        report.motion_sensors = true;
+        report.light_bar = true;
+        report.vibration = true;
+        report.touch_pad = true;
+        ps4_set_motion_scale(report);
+        break;
+    case GuitarHeroGuitar:
+    case RockBandGuitar:
+        // Matches a real PS4 guitar, which lacks the pickup selector that RB guitars have
+        report.device_type = PS4DeviceGuitar;
+        report.analog_pressure = true;
+        report.extended_data = true;
+        report.wireless = true;
+        report.guitar.selector_switch = subtype == RockBandGuitar;
+        report.guitar.tilt = true;
+        report.guitar.whammy_bar = true;
+        break;
+    case GuitarHeroDrums:
+    case RockBandDrums:
+        // Matches a real PS4 drum kit
+        report.device_type = PS4DeviceDrums;
+        report.analog_pressure = true;
+        report.extended_data = true;
+        report.drums.four_pads = true;
+        report.drums.hi_hat = true;
+        report.drums.ride = true;
+        report.drums.crash = true;
+        report.drums.extra_foot_pedal = true;
+        break;
+    default:
+        report.device_type = subtype == FightStick ? PS4DeviceStick : PS4DeviceStandard;
+        report.analog_pressure = true;
+        report.extended_data = true;
+        report.audio_jack = true;
+        ps4_set_motion_scale(report);
+        break;
+    }
+    return report;
+}
 
 AuthPageSizeReport ps4_pagesize_report = {
     type : 0xF3,
@@ -194,41 +242,11 @@ uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
     switch (report_id)
     {
     case ReportId::ReportIdPs4Feature:
-        memcpy(buffer, ps4_feature_config, sizeof(ps4_feature_config));
-        switch (subtype)
-        {
-        case Gamepad:
-            buffer[5] = PS4_GAMEPAD;
-            buffer[4] = PS4_FEATURE_MOTION | PS4_FEATURE_LIGHTBAR | PS4_FEATURE_VIBRATION | PS4_FEATURE_TOUCH_PAD;
-            break;
-        case GuitarHeroGuitar:
-        case LiveGuitar:
-            buffer[5] = PS4_GUITAR;
-            buffer[4] = PS4_FEATURE_LIGHTBAR | PS4_FEATURE_EXTENDED;
-            buffer[24] = 0x06;
-            break;
-        case RockBandGuitar:
-            buffer[5] = PS4_GUITAR;
-            buffer[4] = PS4_FEATURE_LIGHTBAR | PS4_FEATURE_EXTENDED;
-            buffer[24] = 0x07;
-            break;
-        case GuitarHeroDrums:
-            buffer[5] = PS4_DRUMS;
-            buffer[4] = PS4_FEATURE_LIGHTBAR | PS4_FEATURE_EXTENDED;
-            buffer[24] = 0x1f;
-            break;
-        case RockBandDrums:
-            buffer[5] = PS4_DRUMS;
-            buffer[4] = PS4_FEATURE_LIGHTBAR | PS4_FEATURE_EXTENDED;
-            buffer[24] = 0x1f;
-            break;
-        case FightStick:
-            buffer[5] = PS4_FIGHTSTICK;
-            break;
-        default:
-            break;
-        }
-        return sizeof(ps4_feature_config);
+    {
+        PS4FeatureReport report = ps4_feature_report(subtype);
+        memcpy(buffer, &report, sizeof(report));
+        return sizeof(report);
+    }
     case ReportId::ReportIdPs4GetResponse:
     case ReportId::ReportIdPs4GetAuthStatus:
         if (host_device)

@@ -4,6 +4,7 @@
 class UsbHostInterface;
 #include <memory>
 #include "managers/profile_manager.hpp"
+#include "protocols/ps4.hpp"
 #include "protocols/ps5.hpp"
 #include "enums.pb.h"
 #include "main.hpp"
@@ -12,23 +13,9 @@ class UsbHostInterface;
 #include "emulation/usb/usb_devices.h"
 #include "devices/usb/host/hid/hid_host.h"
 
-#define PS5_FEATURE_PRESSURE 1 << 0
-#define PS5_FEATURE_MOTION 1 << 1
-#define PS5_FEATURE_LIGHTBAR 1 << 2
-#define PS5_FEATURE_VIBRATION 1 << 3
-#define PS5_FEATURE_EXTENDED 1 << 4
-#define PS5_FEATURE_SPEAKER 1 << 5
-#define PS5_FEATURE_TOUCH_PAD 1 << 6
-#define PS5_FEATURE_AUDIO_JACK 1 << 7
-
 // Motion calibration, as a DualSense reports it
 #define PS5_CALIBRATION_REPORT_ID 0x05
 #define PS5_CALIBRATION_REPORT_SIZE 41
-
-#define PS5_FEATURE_WIRELESS 1 << 0
-#define PS5_FEATURE_BATTERY 1 << 2
-#define PS5_FEATURE_VENDOR_INT 1 << 6
-#define PS5_FEATURE_PLAYER_INDICATOR 1 << 7
 
 static const int ps5_colors[4][3] = {
     {0x00, 0x00, 0x40}, /* Blue */
@@ -37,15 +24,89 @@ static const int ps5_colors[4][3] = {
     {0x20, 0x00, 0x20}  /* Pink */
 };
 
-// Bytes 10 - 17 are the motion scale, as gyro and accel numerator / denominator pairs: 2000/32768 °/s
-// and 4/32768 g per count (PS5_IMU_GYRO_PER_DPS and PS5_IMU_ACCEL_PER_G)
-uint8_t ps5_feature_config[] = {
-    0x03, 0x21, 0x28, 0x03, 0x91, 0x00 /*type*/, 0x2C, 0x56,
-    0x01, 0x00, 0xD0, 0x07, 0x00, 0x80, 0x04, 0x00,
-    0x00, 0x80, 0x0D, 0x0D, 0x84, 0x00, 0x00, 0x00,
-    0x00 /*extended type*/, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+// 2000/32768 °/s and 4/32768 g per count (PS5_IMU_GYRO_PER_DPS and PS5_IMU_ACCEL_PER_G)
+static void ps5_set_motion_scale(PS4FeatureReport &report)
+{
+    report.timestamp_tick_us = 1;
+    report.gyro_multiplier = 2000;
+    report.gyro_divisor = 32768;
+    report.accel_multiplier = 4;
+    report.accel_divisor = 32768;
+}
+
+static PS4FeatureReport ps5_feature_report(SubType subtype)
+{
+    PS4FeatureReport report = {};
+    report.report_id = ReportId::ReportIdPs5Feature;
+    report.magic = PS5_FEATURE_MAGIC;
+    report.protocol_version = 0x03;
+    report.left_stick_dead_zone = 0x0d;
+    report.right_stick_dead_zone = 0x0d;
+    if (subtype == LiveGuitar)
+    {
+        // Matches a real GHL guitar, which only says that it is a guitar
+        report.device_type = PS4DeviceGuitar;
+        return report;
+    }
+    report.touch_pad_density_integer = 44;
+    report.touch_pad_density_fraction = 86;
+    switch (subtype)
+    {
+    case Gamepad:
+        report.device_type = PS4DeviceStandard;
+        report.motion_sensors = true;
+        report.light_bar = true;
+        report.vibration = true;
+        report.touch_pad = true;
+        report.battery = true;
+        report.player_indicator = true;
+        ps5_set_motion_scale(report);
+        break;
+    case GuitarHeroGuitar:
+    case RockBandGuitar:
+        // Matches a real PS5 guitar, which lacks the pickup selector that RB guitars have
+        report.device_type = PS4DeviceGuitar;
+        report.analog_pressure = true;
+        report.extended_data = true;
+        report.wireless = true;
+        report.guitar.selector_switch = subtype == RockBandGuitar;
+        report.guitar.tilt = true;
+        report.guitar.whammy_bar = true;
+        break;
+    case GuitarHeroDrums:
+    case RockBandDrums:
+        // Matches a real PS5 drum kit
+        report.device_type = PS4DeviceDrums;
+        report.analog_pressure = true;
+        report.extended_data = true;
+        report.battery = true;
+        report.drums.four_pads = true;
+        report.drums.hi_hat = true;
+        report.drums.ride = true;
+        report.drums.crash = true;
+        report.drums.extra_foot_pedal = true;
+        break;
+    case FightStick:
+        report.device_type = PS4DeviceStick;
+        report.light_bar = true;
+        report.vibration = true;
+        report.touch_pad = true;
+        report.battery = true;
+        report.player_indicator = true;
+        ps5_set_motion_scale(report);
+        break;
+    default:
+        report.device_type = PS4DeviceStandard;
+        report.analog_pressure = true;
+        report.extended_data = true;
+        report.audio_jack = true;
+        report.battery = true;
+        report.player_indicator = true;
+        ps5_set_motion_scale(report);
+        break;
+    }
+    return report;
+}
 
 uint8_t const desc_hid_report_ps5[] =
     {
@@ -187,43 +248,12 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
     switch (report_id)
     {
     case ReportId::ReportIdPs5Feature:
-        memcpy(buffer, ps5_feature_config, sizeof(ps5_feature_config));
-        switch (subtype)
-        {
-        case Gamepad:
-            buffer[5] = PS5_GAMEPAD;
-            buffer[4] = PS5_FEATURE_MOTION | PS5_FEATURE_LIGHTBAR | PS5_FEATURE_VIBRATION | PS5_FEATURE_TOUCH_PAD;
-            break;
-        case GuitarHeroGuitar:
-        case LiveGuitar:
-            buffer[5] = PS5_GUITAR;
-            buffer[4] = PS5_FEATURE_LIGHTBAR | PS5_FEATURE_EXTENDED;
-            buffer[24] = 0x06;
-            break;
-        case RockBandGuitar:
-            buffer[5] = PS5_GUITAR;
-            buffer[4] = PS5_FEATURE_LIGHTBAR | PS5_FEATURE_EXTENDED;
-            buffer[24] = 0x07;
-            break;
-        case GuitarHeroDrums:
-            buffer[5] = PS5_DRUMS;
-            buffer[4] = PS5_FEATURE_LIGHTBAR | PS5_FEATURE_EXTENDED;
-            buffer[24] = 0x1f;
-            break;
-        case RockBandDrums:
-            buffer[5] = PS5_DRUMS;
-            buffer[4] = PS5_FEATURE_LIGHTBAR | PS5_FEATURE_EXTENDED;
-            buffer[24] = 0x1f;
-            break;
-        case FightStick:
-            buffer[5] = PS5_FIGHTSTICK;
-            buffer[4] = PS5_FEATURE_LIGHTBAR | PS5_FEATURE_VIBRATION | PS5_FEATURE_TOUCH_PAD;
-            break;
-        default:
-            break;
-        }
+    {
+        PS4FeatureReport report = ps5_feature_report(subtype);
+        memcpy(buffer, &report, sizeof(report));
         got_feature = true;
-        return sizeof(ps5_feature_config);
+        return sizeof(report);
+    }
     case PS5_CALIBRATION_REPORT_ID:
         // SDL reads motion through this calibration even from third party controllers, ignoring the
         // scale in report 0x03, so state the same scale here

@@ -6,10 +6,6 @@
 #include "tusb.h"
 
 #define PS4_LED_RUMBLE_ID 0x05
-#define PS4_GAMEPAD 0
-#define PS4_GUITAR 1
-#define PS4_DRUMS 2
-#define PS4_FIGHTSTICK 7 
 
 class PS4GamepadDevice : public HIDDevice
 {

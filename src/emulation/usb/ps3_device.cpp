@@ -103,25 +103,53 @@ const uint8_t ps3_feature_ef[] = {
     0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-// PowerGig guitars send a specific response when woken up
-const uint8_t powergig_response[3][8] = {{0xe9, 0x6d, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00},
-                                         {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-                                         {0x21, 0x26, 0x01, 0x05, 0x00, 0x00, 0x00, 0x00}};
+// PowerGig guitars send a specific response when woken up, followed by the feature report
+const uint8_t powergig_response[2][8] = {{0xe9, 0x6d, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00},
+                                         {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
 
-// Pro instruments send specific reports when woken up
-const uint8_t disabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x00, 0x02, 0x0d, 0x01},
+// Pro instruments send specific reports when woken up, followed by the feature report
+const uint8_t disabled_response[4][8] = {{0xe9, 0x00, 0x00, 0x00, 0x00, 0x02, 0x0d, 0x01},
                                          {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
                                          {0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x82},
-                                         {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-                                         {0x21, 0x26, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00}};
+                                         {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
 
-const uint8_t enabled_response[5][8] = {{0xe9, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00},
+const uint8_t enabled_response[4][8] = {{0xe9, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00},
                                         {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
                                         {0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x8a},
-                                        {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-                                        {0x21, 0x26, 0x02, 0x06, 0x00, 0x00, 0x00, 0x00}};
+                                        {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
 
-const uint8_t ps3_init[] = {0x21, 0x26, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00};
+static PS3FeatureReport ps3_feature_report(SubType subtype)
+{
+    PS3FeatureReport report = {};
+    report.magic = PS3_FEATURE_MAGIC;
+    report.protocol_version = 1;
+    report.led = true;
+    switch (subtype)
+    {
+    case GuitarHeroGuitar:
+    case RockBandGuitar:
+    case LiveGuitar:
+    case DjHeroTurntable:
+        report.motion_sensors = true;
+        break;
+    case RockBandDrums:
+    case PowerGigGuitar:
+    case PowerGigDrum:
+        report.analog_pressure = true;
+        break;
+    case ProGuitarMustang:
+    case ProGuitarSquier:
+    case ProKeys:
+        report.protocol_version = 2;
+        report.motion_sensors = true;
+        break;
+    default:
+        report.motion_sensors = true;
+        report.analog_pressure = true;
+        break;
+    }
+    return report;
+}
 
 uint8_t handle_player_leds_ds3(uint8_t player_mask)
 {
@@ -632,46 +660,35 @@ uint16_t PS3GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         memcpy(buffer, ps3_feature_01, sizeof(ps3_feature_01));
         return sizeof(ps3_feature_01);
     case ReportId::ReportIdPs3Feature:
-        memcpy(buffer, ps3_init, sizeof(ps3_init));
+    {
+        PS3FeatureReport report = ps3_feature_report(subtype);
+        memcpy(buffer, &report, sizeof(report));
         switch (subtype)
         {
-        case GuitarHeroGuitar:
-        case RockBandGuitar:
-        case LiveGuitar:
-        case DjHeroTurntable:
-            buffer[3] = 0x06;
-            break;
-        case RockBandDrums:
-            buffer[3] = 0x05;
-            break;
         case ProGuitarMustang:
         case ProGuitarSquier:
         case ProKeys:
             // RB Pro instruments follow a slightly different request flow
-            if (m_enabled)
+            if (m_pro_id < 4)
             {
-                memcpy(buffer, enabled_response[m_pro_id], sizeof(enabled_response[m_pro_id]));
+                memcpy(buffer, m_enabled ? enabled_response[m_pro_id] : disabled_response[m_pro_id], sizeof(report));
+                m_pro_id++;
             }
-            else
-            {
-                memcpy(buffer, disabled_response[m_pro_id], sizeof(disabled_response[m_pro_id]));
-            }
-            m_pro_id++;
-            if (m_pro_id > 4)
-                m_pro_id = 4;
             break;
             // as does power gig
         case PowerGigGuitar:
         case PowerGigDrum:
-            memcpy(buffer, powergig_response[m_pg_id], sizeof(powergig_response[m_pg_id]));
-            m_pg_id++;
-            if (m_pg_id > 2)
-                m_pg_id = 2;
+            if (m_pg_id < 2)
+            {
+                memcpy(buffer, powergig_response[m_pg_id], sizeof(report));
+                m_pg_id++;
+            }
             break;
         default:
             break;
         }
-        return sizeof(ps3_init);
+        return sizeof(report);
+    }
     }
     return 0;
 }

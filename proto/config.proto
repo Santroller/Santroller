@@ -175,6 +175,23 @@ message SpecificUsbDevice {
   optional SubType subtype = 3;
 }
 
+message AnyMidiSourceDevice {
+
+}
+// Limits a MIDI slot to one device, or to where it's connected, instead of any device that has sent on its channel
+message MidiSourceDevice {
+  oneof device {
+    SpecificUsbDevice usbDevice = 1;
+    SpecificBluetoothDevice bluetoothDevice = 2;
+    // A device from the config, eg a serial MIDI input or a Wii extension
+    int32 deviceid = 3;
+    // Any device on the USB host port
+    AnyMidiSourceDevice usbHost = 4;
+    // Any bluetooth device
+    AnyMidiSourceDevice bluetooth = 5;
+  }
+}
+
 message UsbDeviceAssignment {
   optional ConsoleType consoleType = 1;
   optional ConsoleMode forcedType = 2;
@@ -240,6 +257,8 @@ message ProfileAssignmentInfo {
     JoybusControllerType joybusCnt = 24;
     XboxOneAuthAssignment xboxOneAuth = 25;
   }
+  // Only for midiChannel and midiProGuitar, which otherwise take any MIDI device
+  optional MidiSourceDevice midiDevice = 26;
   reserved 12;
 }
 

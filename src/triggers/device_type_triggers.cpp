@@ -382,14 +382,34 @@ void SpecificBluetoothDeviceActivationTrigger::reset()
     clear_profile_temp_devices(m_profile);
 }
 
-MidiChannelActivationTrigger::MidiChannelActivationTrigger(uint32_t channel, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_channel(channel)
+// Whether a MIDI slot limited to source can take device
+static bool is_midi_source_device(const std::shared_ptr<Device> &device, const proto_MidiSourceDevice &source)
+{
+    switch (source.which_device)
+    {
+    case proto_MidiSourceDevice_usbDevice_tag:
+        return device->is_usb_device(source.device.usbDevice);
+    case proto_MidiSourceDevice_bluetoothDevice_tag:
+        return device->is_bluetooth_device(source.device.bluetoothDevice);
+    case proto_MidiSourceDevice_deviceid_tag:
+        return device->m_id == source.device.deviceid;
+    case proto_MidiSourceDevice_usbHost_tag:
+        return device->is_usb_host_interface();
+    case proto_MidiSourceDevice_bluetooth_tag:
+        return device->is_bluetooth_host_interface();
+    default:
+        return true;
+    }
+}
+
+MidiChannelActivationTrigger::MidiChannelActivationTrigger(uint32_t channel, const proto_MidiSourceDevice *source, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_channel(channel), m_has_source(source != nullptr), m_source(source ? *source : proto_MidiSourceDevice{})
 {
 }
 
 bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
     auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
-                                        { return device->has_midi_channel(m_channel - 1); });
+                                        { return device->has_midi_channel(m_channel - 1) && (!m_has_source || is_midi_source_device(device, m_source)); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -421,14 +441,14 @@ void MidiChannelActivationTrigger::reset()
     clear_profile_temp_devices(m_profile);
 }
 
-MidiProGuitarActivationTrigger::MidiProGuitarActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_channel(type == ProGuitarSquier ? MIDI_CHANNEL_PROGUITAR_SQUIER : MIDI_CHANNEL_PROGUITAR_MUSTANG)
+MidiProGuitarActivationTrigger::MidiProGuitarActivationTrigger(proto_SubType type, const proto_MidiSourceDevice *source, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id) : ActivationTrigger(profile, id, slot_id, list_id), m_channel(type == ProGuitarSquier ? MIDI_CHANNEL_PROGUITAR_SQUIER : MIDI_CHANNEL_PROGUITAR_MUSTANG), m_has_source(source != nullptr), m_source(source ? *source : proto_MidiSourceDevice{})
 {
 }
 
 bool MidiProGuitarActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
     auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
-                                        { return device->has_midi_channel(m_channel); });
+                                        { return device->has_midi_channel(m_channel) && (!m_has_source || is_midi_source_device(device, m_source)); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {

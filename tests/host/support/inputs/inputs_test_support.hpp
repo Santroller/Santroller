@@ -127,6 +127,8 @@ public:
     // vid / pid, 0 for none
     uint32_t vid = 0;
     uint32_t pid = 0;
+    bool usb_host = false;
+    bool bt_host = false;
     // Bit n set: MIDI channel n (0 based, as on the wire) has been seen
     uint32_t midi_channels = 0;
     int player_led = -1;
@@ -143,6 +145,8 @@ public:
     bool is_bluetooth_type(SubType type) override { return bt_type && type == bt_type; }
     bool is_usb_device(proto_SpecificUsbDevice type) override { return vid && type.vid == vid && type.pid == pid; }
     bool is_bluetooth_device(proto_SpecificBluetoothDevice type) override { return vid && type.vid == vid && type.pid == pid; }
+    bool is_usb_host_interface() const override { return usb_host; }
+    bool is_bluetooth_host_interface() const override { return bt_host; }
     bool has_midi_channel(uint8_t channel) override { return channel < 32 && (midi_channels & (1u << channel)); }
     void set_player_led(uint8_t player) override { player_led = player; }
 };

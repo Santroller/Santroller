@@ -120,6 +120,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
     case proto_ProfileAssignmentInfo_midiChannel_tag:
         return std::make_unique<MidiChannelActivationTrigger>(
             proto_assignment.assignment.midiChannel,
+            proto_assignment.has_midiDevice ? &proto_assignment.midiDevice : nullptr,
             profile,
             trigger_id,
             slot_id,
@@ -129,6 +130,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
     case proto_ProfileAssignmentInfo_midiProGuitar_tag:
         return std::make_unique<MidiProGuitarActivationTrigger>(
             proto_assignment.assignment.midiProGuitar,
+            proto_assignment.has_midiDevice ? &proto_assignment.midiDevice : nullptr,
             profile,
             trigger_id,
             slot_id,

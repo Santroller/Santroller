@@ -117,7 +117,7 @@ protected:
 class MidiChannelActivationTrigger : public ActivationTrigger
 {
 public:
-    MidiChannelActivationTrigger(uint32_t channel, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
+    MidiChannelActivationTrigger(uint32_t channel, const proto_MidiSourceDevice *source, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
     ~MidiChannelActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset() override;
@@ -126,13 +126,15 @@ public:
 
 protected:
     uint32_t m_channel;
+    bool m_has_source;
+    proto_MidiSourceDevice m_source;
 };
 
 // A Squier or Mustang Pro Guitar, seen by its sysex over MIDI
 class MidiProGuitarActivationTrigger : public ActivationTrigger
 {
 public:
-    MidiProGuitarActivationTrigger(proto_SubType type, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
+    MidiProGuitarActivationTrigger(proto_SubType type, const proto_MidiSourceDevice *source, std::shared_ptr<Profile> profile, uint32_t id, uint32_t slot_id, uint32_t list_id);
     ~MidiProGuitarActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     void reset() override;
@@ -141,6 +143,8 @@ public:
 
 protected:
     uint8_t m_channel;
+    bool m_has_source;
+    proto_MidiSourceDevice m_source;
 };
 
 // The onboard inputs, which only the first profile that claims them each load gets

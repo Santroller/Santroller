@@ -181,14 +181,80 @@ TEST_F(DeviceTriggerTest, MidiChannelIsOneBased)
     // The configurator's MIDI channel is 1 - 16; channel 1 is 0 on the wire
     auto keyboard = plug_in(10);
     keyboard->midi_channels = 1u << 0;
-    MidiChannelActivationTrigger channel1(1, profile, 1, 0, 0);
-    MidiChannelActivationTrigger channel2(2, profile, 2, 0, 0);
+    MidiChannelActivationTrigger channel1(1, nullptr, profile, 1, 0, 0);
+    MidiChannelActivationTrigger channel2(2, nullptr, profile, 2, 0, 0);
     EXPECT_TRUE(channel1.validate(false, false, false));
     EXPECT_FALSE(channel2.validate(false, false, false));
     keyboard->midi_channels = 1u << 15;
-    MidiChannelActivationTrigger channel16(16, profile, 3, 0, 0);
+    MidiChannelActivationTrigger channel16(16, nullptr, profile, 3, 0, 0);
     EXPECT_TRUE(channel16.validate(true, false, false));
     EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::MIDI, 0), keyboard);
+}
+
+TEST_F(DeviceTriggerTest, MidiChannelCanBeLimitedToOneDevice)
+{
+    // Two kits on the same channel, each going to its own slot
+    auto kit_a = plug_in(10);
+    kit_a->midi_channels = 1u << 9;
+    auto kit_b = plug_in(11);
+    kit_b->midi_channels = 1u << 9;
+    kit_b->vid = 0x1234;
+    kit_b->pid = 0x5678;
+
+    proto_MidiSourceDevice usb = proto_MidiSourceDevice_init_zero;
+    usb.which_device = proto_MidiSourceDevice_usbDevice_tag;
+    usb.device.usbDevice = {0x1234, 0x5678};
+    MidiChannelActivationTrigger by_usb(10, &usb, profile, 1, 0, 0);
+    EXPECT_TRUE(by_usb.validate(false, false, false));
+    EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::MIDI, 0, true), kit_b);
+    by_usb.reset();
+
+    proto_MidiSourceDevice configured = proto_MidiSourceDevice_init_zero;
+    configured.which_device = proto_MidiSourceDevice_deviceid_tag;
+    configured.device.deviceid = 10;
+    MidiChannelActivationTrigger by_id(10, &configured, profile, 2, 0, 0);
+    EXPECT_TRUE(by_id.validate(false, false, false));
+    EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::MIDI, 0, true), kit_a);
+    by_id.reset();
+
+    // Still needs the channel
+    MidiChannelActivationTrigger wrong_channel(1, &configured, profile, 3, 0, 0);
+    EXPECT_FALSE(wrong_channel.validate(false, false, false));
+
+    proto_MidiSourceDevice bluetooth = proto_MidiSourceDevice_init_zero;
+    bluetooth.which_device = proto_MidiSourceDevice_bluetoothDevice_tag;
+    bluetooth.device.bluetoothDevice = {0x1111, 0x2222};
+    MidiProGuitarActivationTrigger squier(ProGuitarSquier, &bluetooth, profile, 4, 0, 0);
+    kit_a->midi_channels = 1u << MIDI_CHANNEL_PROGUITAR_SQUIER;
+    EXPECT_FALSE(squier.validate(false, false, false));
+    kit_a->vid = 0x1111;
+    kit_a->pid = 0x2222;
+    EXPECT_TRUE(squier.validate(false, false, false));
+}
+
+TEST_F(DeviceTriggerTest, MidiChannelCanBeLimitedToUsbHostOrBluetooth)
+{
+    auto serial = plug_in(10);
+    serial->midi_channels = 1u << 9;
+    auto usb = plug_in(11);
+    usb->midi_channels = 1u << 9;
+    usb->usb_host = true;
+    auto bt = plug_in(12);
+    bt->midi_channels = 1u << 9;
+    bt->bt_host = true;
+
+    proto_MidiSourceDevice any_usb = proto_MidiSourceDevice_init_zero;
+    any_usb.which_device = proto_MidiSourceDevice_usbHost_tag;
+    MidiChannelActivationTrigger by_usb(10, &any_usb, profile, 1, 0, 0);
+    EXPECT_TRUE(by_usb.validate(false, false, false));
+    EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::MIDI, 0, true), usb);
+    by_usb.reset();
+
+    proto_MidiSourceDevice any_bt = proto_MidiSourceDevice_init_zero;
+    any_bt.which_device = proto_MidiSourceDevice_bluetooth_tag;
+    MidiChannelActivationTrigger by_bt(10, &any_bt, profile, 2, 0, 0);
+    EXPECT_TRUE(by_bt.validate(false, false, false));
+    EXPECT_EQ(profile->get_claimed_device(DeviceSlotKind::MIDI, 0, true), bt);
 }
 
 TEST_F(DeviceTriggerTest, MidiProGuitarMatchesItsSysexId)
@@ -196,8 +262,8 @@ TEST_F(DeviceTriggerTest, MidiProGuitarMatchesItsSysexId)
     // A Squier and a Mustang are told apart by the sysex they send, not by a MIDI channel
     auto guitar = plug_in(10);
     guitar->midi_channels = 1u << MIDI_CHANNEL_PROGUITAR_SQUIER;
-    MidiProGuitarActivationTrigger squier(ProGuitarSquier, profile, 1, 0, 0);
-    MidiProGuitarActivationTrigger mustang(ProGuitarMustang, profile, 2, 0, 0);
+    MidiProGuitarActivationTrigger squier(ProGuitarSquier, nullptr, profile, 1, 0, 0);
+    MidiProGuitarActivationTrigger mustang(ProGuitarMustang, nullptr, profile, 2, 0, 0);
     EXPECT_TRUE(squier.validate(false, false, false));
     EXPECT_FALSE(mustang.validate(false, false, false));
     guitar->midi_channels = 1u << MIDI_CHANNEL_PROGUITAR_MUSTANG;

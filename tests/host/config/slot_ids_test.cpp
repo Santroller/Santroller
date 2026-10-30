@@ -36,6 +36,24 @@ proto_ProfileAssignmentInfo wii_ext(WiiExtType type)
     return info;
 }
 
+proto_ProfileAssignmentInfo midi_channel(uint32_t channel)
+{
+    proto_ProfileAssignmentInfo info = proto_ProfileAssignmentInfo_init_default;
+    info.which_assignment = proto_ProfileAssignmentInfo_midiChannel_tag;
+    info.assignment.midiChannel = channel;
+    return info;
+}
+
+proto_ProfileAssignmentInfo midi_channel_from_usb(uint32_t channel, uint32_t vid, uint32_t pid)
+{
+    auto info = midi_channel(channel);
+    info.has_midiDevice = true;
+    info.midiDevice.which_device = proto_MidiSourceDevice_usbDevice_tag;
+    info.midiDevice.device.usbDevice.vid = vid;
+    info.midiDevice.device.usbDevice.pid = pid;
+    return info;
+}
+
 proto_ProfileAssignmentInfo console()
 {
     proto_ProfileAssignmentInfo info = proto_ProfileAssignmentInfo_init_default;
@@ -45,7 +63,7 @@ proto_ProfileAssignmentInfo console()
 
 // Scans the lists like the firmware does before loading a profile, then returns the id each
 // assignment gets while loading
-std::vector<std::vector<uint16_t>> slot_ids(const std::vector<List> &lists)
+std::vector<std::vector<uint16_t>> slot_ids(const std::vector<List> &lists, uint32_t version = SLOT_ID_VERSION_LATEST)
 {
     ProfileSlotIds ids;
     for (const auto &list : lists)
@@ -56,7 +74,7 @@ std::vector<std::vector<uint16_t>> slot_ids(const std::vector<List> &lists)
         }
         ids.end_list();
     }
-    ids.build();
+    ids.build(version);
     std::vector<std::vector<uint16_t>> result;
     for (const auto &list : lists)
     {
@@ -109,4 +127,17 @@ TEST(SlotIdsTest, SpecificDevicesShareTheirSubtypesNumbering)
     auto ids = slot_ids({{usb_device(1, 2, false), usb_type(KeyboardMouse), usb_device(3, 4, true, Gamepad)},
                          {usb_type(Gamepad)}});
     EXPECT_EQ(ids, (std::vector<std::vector<uint16_t>>{{3, 2, 1}, {1}}));
+}
+
+TEST(SlotIdsTest, Version2SharesMidiSlotsAcrossChannelsAndDevices)
+{
+    // Profiles saved with version 2 keep the ids their inputs were set up with
+    auto ids = slot_ids({{midi_channel(10)}, {midi_channel(5)}, {midi_channel_from_usb(10, 1, 2)}}, 2);
+    EXPECT_EQ(ids, (std::vector<std::vector<uint16_t>>{{1}, {1}, {1}}));
+}
+
+TEST(SlotIdsTest, MidiSlotsOnDifferentChannelsOrDevicesAreDifferentSlots)
+{
+    auto ids = slot_ids({{midi_channel(10)}, {midi_channel(5)}, {midi_channel_from_usb(10, 1, 2)}, {midi_channel(10)}});
+    EXPECT_EQ(ids, (std::vector<std::vector<uint16_t>>{{2}, {1}, {3}, {2}}));
 }

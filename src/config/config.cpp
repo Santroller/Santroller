@@ -881,7 +881,7 @@ static bool scan_slot_opts(pb_istream_t *stream, const pb_field_t *field, void *
     return true;
 }
 
-// Slot ids in deviceSlotIdVersion 2 depend on every assignment list in the profile, but the lists
+// Slot ids from deviceSlotIdVersion 2 depend on every assignment list in the profile, but the lists
 // are claimed as they are decoded, so read them all first
 static void scan_slot_ids(pb_istream_t stream, ConfigDecodeContext &context)
 {
@@ -895,7 +895,7 @@ static void scan_slot_ids(pb_istream_t stream, ConfigDecodeContext &context)
     {
         return;
     }
-    scan.ids.build();
+    scan.ids.build(scan.version);
     context.slot_ids = std::move(scan.ids);
     context.profile_wide_slot_ids = true;
 }

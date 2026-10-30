@@ -16,6 +16,8 @@ public:
     uint16_t read_axis(proto_JoybusAxisType type);
     bool read_button(proto_JoybusButtonType type);
     bool is_joybus_device() const override { return true; }
+    static constexpr DeviceSlotKind SLOT_KIND = DeviceSlotKind::Joybus;
+    static bool is_instance(const Device &device) { return device.is_joybus_device(); }
     bool is_assignable() const override { return true; }
     bool is_joybus_type(JoybusControllerType type) override;
     void rescan(bool first) override;

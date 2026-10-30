@@ -79,9 +79,26 @@ struct DeviceReloadState
     bool snes_emulation_communicating = false;
 };
 
+enum class DeviceSlotKind : uint8_t
+{
+    WiiExtension,
+    PS2,
+    USB,
+    Bluetooth,
+    MIDI,
+    SNES,
+    Joybus,
+    None = 0xff
+};
+
 class Device
 {
 public:
+    // The kind of slot a profile claims devices of this type through. Devices without one (None) are
+    // always there once they're configured. Types with a slot hide these with their own.
+    static constexpr DeviceSlotKind SLOT_KIND = DeviceSlotKind::None;
+    // Whether device is of this type
+    static bool is_instance(const Device &) { return true; }
     Device(uint16_t id) : m_id(id), m_serial(++s_next_serial) {}
     virtual ~Device() {}
     virtual bool valid() { return true; }

@@ -33,7 +33,6 @@ template<typename InputType, typename DeviceType, typename ConfigType>
 static std::unique_ptr<Input> create_device_input(const proto_Input &proto_input, std::shared_ptr<Profile> profile, uint32_t device_id, const ConfigType &config)
 {
     auto device = InputFactory::get_device<DeviceType>(profile, device_id);
-    auto input = std::make_unique<InputType>(config, device && device->valid() ? device : nullptr, profile.get());
     if (!device && profile)
     {
         // A device running on a secondary pico: it reads the input there and sends back its state
@@ -42,11 +41,21 @@ static std::unique_ptr<Input> create_device_input(const proto_Input &proto_input
             if (it.second && it.second->owns_sub_device(device_id))
             {
                 auto peripheral = std::static_pointer_cast<SecondaryPicoDevice>(it.second);
+                auto input = std::make_unique<InputType>(config, nullptr, profile.get());
                 return std::make_unique<SecondaryPicoForwardedInput>(proto_input, peripheral, std::move(input));
             }
         }
     }
-    return input;
+    if constexpr (DeviceType::SLOT_KIND == DeviceSlotKind::None)
+    {
+        // The device isn't loaded, eg its gate is closed. Not every input copes without one, as they
+        // otherwise always have their device, so it reads as released instead
+        if (!device)
+        {
+            return std::make_unique<FixedInput>(proto_FixedInput{0});
+        }
+    }
+    return std::make_unique<InputType>(config, device && device->valid() ? device : nullptr, profile.get());
 }
 
 template<typename InputType, typename ConfigType>

@@ -16,6 +16,8 @@ public:
     uint16_t read_axis(proto_SNESAxisType type);
     bool read_button(proto_SNESButtonType type);
     bool is_snes_device() const override { return true; }
+    static constexpr DeviceSlotKind SLOT_KIND = DeviceSlotKind::SNES;
+    static bool is_instance(const Device &device) { return device.is_snes_device(); }
     bool is_assignable() const override { return true; }
     bool is_snes_type(SNESControllerType type) override;
     void rescan(bool first) override;

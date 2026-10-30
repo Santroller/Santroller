@@ -77,6 +77,8 @@ public:
     }
     bool is_assignable() const override { return true; }
     bool is_midi_device() const override { return true; }
+    static constexpr DeviceSlotKind SLOT_KIND = DeviceSlotKind::MIDI;
+    static bool is_instance(const Device &device) { return device.is_midi_device(); }
     void save_reload_state(DeviceReloadState& state) const override;
 
 protected:

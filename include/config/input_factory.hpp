@@ -6,13 +6,7 @@
 #include "profiles/profile.hpp"
 
 class Input;
-class UsbHostInterface;
-class PS2Device;
-class BluetoothHostInterface;
-class WiiDevice;
 class MidiDevice;
-class SNESDevice;
-class JoybusDevice;
 
 class InputFactory {
 public:
@@ -24,49 +18,11 @@ public:
     
     template<typename T>
     static std::shared_ptr<T> get_device(std::shared_ptr<Profile> profile, uint32_t device_id) {
-        constexpr DeviceSlotKind slot_kind = [] {
-            if constexpr (std::is_same_v<T, UsbHostInterface>) return DeviceSlotKind::USB;
-            else if constexpr (std::is_same_v<T, PS2Device>) return DeviceSlotKind::PS2;
-            else if constexpr (std::is_same_v<T, BluetoothHostInterface>) return DeviceSlotKind::Bluetooth;
-            else if constexpr (std::is_same_v<T, WiiDevice>) return DeviceSlotKind::WiiExtension;
-            else if constexpr (std::is_same_v<T, MidiDevice>) return DeviceSlotKind::MIDI;
-            else if constexpr (std::is_same_v<T, SNESDevice>) return DeviceSlotKind::SNES;
-            else if constexpr (std::is_same_v<T, JoybusDevice>) return DeviceSlotKind::Joybus;
-            else return DeviceSlotKind::None;
-        }();
+        constexpr DeviceSlotKind slot_kind = T::SLOT_KIND;
 
         auto cast_device = [](const std::shared_ptr<Device> &device) -> std::shared_ptr<T> {
-            if (!device) {
+            if (!device || !T::is_instance(*device)) {
                 return nullptr;
-            }
-            if constexpr (std::is_same_v<T, UsbHostInterface>) {
-                if (!device->is_usb_host_interface()) {
-                    return nullptr;
-                }
-            } else if constexpr (std::is_same_v<T, PS2Device>) {
-                if (!device->is_ps2_controller()) {
-                    return nullptr;
-                }
-            } else if constexpr (std::is_same_v<T, BluetoothHostInterface>) {
-                if (!device->is_bluetooth_host_interface()) {
-                    return nullptr;
-                }
-            } else if constexpr (std::is_same_v<T, WiiDevice>) {
-                if (!device->is_wii_device()) {
-                    return nullptr;
-                }
-            } else if constexpr (std::is_same_v<T, MidiDevice>) {
-                if (!device->is_midi_device()) {
-                    return nullptr;
-                }
-            } else if constexpr (std::is_same_v<T, SNESDevice>) {
-                if (!device->is_snes_device()) {
-                    return nullptr;
-                }
-            } else if constexpr (std::is_same_v<T, JoybusDevice>) {
-                if (!device->is_joybus_device()) {
-                    return nullptr;
-                }
             }
             return std::static_pointer_cast<T>(device);
         };

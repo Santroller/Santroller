@@ -19,18 +19,6 @@ class ActionMapping;
 class LedMapping;
 class InputActivationTrigger;
 
-enum class DeviceSlotKind : uint8_t
-{
-    WiiExtension,
-    PS2,
-    USB,
-    Bluetooth,
-    MIDI,
-    SNES,
-    Joybus,
-    None = 0xff
-};
-
 using DeviceSlotKey = std::pair<DeviceSlotKind, uint16_t>;
 
 class Profile

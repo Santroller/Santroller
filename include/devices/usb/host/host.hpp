@@ -70,6 +70,8 @@ public:
         return true;
     }
     bool is_usb_host_interface() const override { return true; }
+    static constexpr DeviceSlotKind SLOT_KIND = DeviceSlotKind::USB;
+    static bool is_instance(const Device &device) { return device.is_usb_host_interface(); }
     // Shown as a bluetooth adapter in the config tool's list of USB devices
     virtual bool is_bluetooth_adapter() const { return false; }
     // A Switch 2 controller's gyro bias, read on its command interface for its HID interface

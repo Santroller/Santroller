@@ -115,6 +115,8 @@ public:
     void end(bool full) {}
     bool is_assignable() const override { return true; }
     bool is_bluetooth_host_interface() const override { return true; }
+    static constexpr DeviceSlotKind SLOT_KIND = DeviceSlotKind::Bluetooth;
+    static bool is_instance(const Device &device) { return device.is_bluetooth_host_interface(); }
     bool using_pin(uint8_t pin) { return false; }
     bool is_usb_type(SubType type) { return false; }
     bool is_bluetooth_type(SubType type) { return type == m_subtype; }

@@ -18,6 +18,8 @@ public:
     uint16_t read_button_pressure(proto_WiiButtonType type);
     bool is_wii_extension(WiiExtType type);
     bool is_wii_device() const override { return true; }
+    static constexpr DeviceSlotKind SLOT_KIND = DeviceSlotKind::WiiExtension;
+    static bool is_instance(const Device &device) { return device.is_wii_device(); }
     // A drum kit acts as a MIDI device on channel 10, so a MIDI channel 10 assignment can claim it
     bool has_midi_channel(uint8_t channel) override
     {

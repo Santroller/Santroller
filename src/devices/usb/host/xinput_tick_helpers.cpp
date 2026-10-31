@@ -483,6 +483,10 @@ uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtype, prot
             switch (type.mapping.proKeyboardAxis)
             {
             case ProKeyboardPedal:
+                // Switch pedals (e.g. a RB1 kick pedal) only flip the digital bit, the analog value stays at rest.
+                // Every bit is set with nothing plugged in, so the digital bit only counts with a pedal connected.
+                if (data->pedalConnection && data->pedalDigital)
+                    return UINT16_MAX;
                 return (0x7f - data->pedalAnalog) << 9;
             case ProKeyboardTouchPad:
                 return data->touchPad << 9;

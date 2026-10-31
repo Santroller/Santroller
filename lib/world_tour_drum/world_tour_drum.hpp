@@ -6,8 +6,8 @@ typedef enum
 {
     WT_DRUM_REQUEST_STATUS,
     WT_DRUM_CHECK_STATUS,
+    WT_DRUM_READ_COUNT,
     WT_DRUM_READ_DATA,
-    WT_DRUM_END
 } wt_status_e;
 class WorldTourDrum
 {
@@ -34,6 +34,7 @@ private:
     wt_status_e status = WT_DRUM_REQUEST_STATUS;
     alarm_id_t restart_alarm_id = 0;
     volatile bool finished = false;
-    uint8_t m_rxBuf[64] = {0};
-    size_t m_bytesToRead = 0;
+    uint8_t m_rxBuf[3] = {0};
+    uint8_t m_pos = 0;
+    uint8_t m_len = 1;
 };

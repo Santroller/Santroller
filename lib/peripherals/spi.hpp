@@ -20,7 +20,6 @@ public:
     void transfer(const uint8_t *tx, uint8_t *rx, size_t len);
 
     bool transfer_dma_start(const uint8_t *tx, uint8_t *rx, size_t len);
-    bool transfer_dma_start_paced(const uint8_t *tx, uint8_t *rx, size_t len, uint32_t interval_us);
     bool transfer_dma_busy();
     void transfer_dma_finish(uint8_t *rx, size_t len);
     void transfer_dma_abort();
@@ -34,7 +33,6 @@ private:
     uint32_t m_byte_timeout_us;
     int m_dma_tx = -1;
     int m_dma_rx = -1;
-    int m_dma_timer = -1;
     uint8_t m_dma_tx_buf[64] = {0};
     uint8_t m_dma_rx_buf[64] = {0};
 };

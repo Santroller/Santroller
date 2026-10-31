@@ -69,6 +69,9 @@ private:
     static constexpr uint32_t SWITCH_MODE_RETRY_MS = 500;
     // between the subcommands sent after the report mode, so each gets its reply before the next
     static constexpr uint32_t SWITCH_SUBCOMMAND_INTERVAL_MS = 50;
+    // Player lights get dropped like the mode command, so resend them until the controller acks them
+    static constexpr uint32_t SWITCH_PLAYER_LED_RETRY_MS = 250;
+    static constexpr uint8_t SWITCH_PLAYER_LED_MAX_RETRIES = 10;
     bool m_is_switch2 = false;
     uint32_t m_mode_sent_at = 0;
     // Set once full reports arrive, so no output goes out ahead of the report mode command
@@ -79,6 +82,9 @@ private:
     SwitchImuState m_imu;
     uint8_t m_imu_init_step = 0;
     uint32_t m_imu_init_at = 0;
+    bool m_player_led_unacked = false;
+    uint32_t m_player_led_sent_at = 0;
+    uint8_t m_player_led_retries = 0;
 };
 
 // ---------------------------------------------------------------------------

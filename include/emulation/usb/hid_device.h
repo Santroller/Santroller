@@ -78,6 +78,8 @@ public:
   static void reset_keepalive();
   // For a device stack restart: the tool, if open, will be back once the device re-enumerates
   static void restart_keepalive();
+  // The config reloaded while the tool's keepalive had lapsed, so it gets told once it's back
+  static void reload_missed();
   size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
   size_t config_descriptor(uint8_t *desc, size_t remaining);
   size_t device_name(uint8_t idx, char *desc);
@@ -129,6 +131,7 @@ private:
   bool profile_selected = false;
   // The keepalive lapsed while a profile was selected, so put it back when the tool returns
   bool tool_lapsed = false;
+  bool tool_missed_reload = false;
   bool profile_changed = false;
   bool fw_update_active = false;
   uint16_t last_adc_vals[NUM_ADC_CHANNELS];

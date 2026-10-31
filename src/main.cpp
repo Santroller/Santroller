@@ -214,6 +214,10 @@ static bool __noinline reload_config()
     {
         send_loaded_event();
     }
+    else
+    {
+        HIDConfigDevice::reload_missed();
+    }
     return true;
 }
 

@@ -132,6 +132,13 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
     profile_changed = true;
     just_loaded = true;
   }
+  if (tool_missed_reload)
+  {
+    // Otherwise it keeps showing the profiles that were active before
+    tool_missed_reload = false;
+    proto_Event event = {which_event : proto_Event_loaded_tag, event : {loaded : {}}};
+    send_event(event, false);
+  }
   bool profile_just_changed = profile_changed;
   if (profile_changed)
   {
@@ -1129,6 +1136,16 @@ void HIDConfigDevice::reset_keepalive()
   dev->profile_selected = false;
   dev->profile_changed = false;
   dev->tool_lapsed = false;
+  dev->tool_missed_reload = false;
+}
+
+void HIDConfigDevice::reload_missed()
+{
+  auto dev = HIDConfigDevice::instance;
+  if (dev && dev->tool_seen)
+  {
+    dev->tool_missed_reload = true;
+  }
 }
 
 void HIDConfigDevice::restart_keepalive()
@@ -1141,6 +1158,8 @@ void HIDConfigDevice::restart_keepalive()
   {
     // 0 means no deadline
     instance->tool_return_deadline = (millis() + TOOL_RETURN_GRACE_MS) | 1;
+    // Some HID backends reopen the device without the tool seeing it go away, so it never reads it again
+    instance->tool_missed_reload = true;
   }
 }
 

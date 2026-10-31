@@ -1,6 +1,7 @@
 #include "world_tour_drum.hpp"
 #include <hardware/gpio.h>
 #include <pico/time.h>
+#include "hardware/sync.h"
 #include "utils.h"
 static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
 {
@@ -42,16 +43,25 @@ void WorldTourDrum::end()
     mInterface.transfer_dma_abort();
     printf("wt end\r\n");
 }
+void WorldTourDrum::schedule(uint32_t delay_us)
+{
+    // A failed add leaves this 0, and tick() restarts polling
+    alarm_id_t id = add_alarm_in_us(delay_us, restart_handler, this, true);
+    restart_alarm_id = (id > 0) ? id : 0;
+}
 void WorldTourDrum::process_data()
 {
     if (finished) {
         return;
     }
+    // Whatever alarm got us here has fired
+    restart_alarm_id = 0;
+    lastPoll = to_ms_since_boot(get_absolute_time());
     if (status == WT_DRUM_REQUEST_STATUS)
     {
         gpio_put(mCsPin, false);
         status = WT_DRUM_CHECK_STATUS;
-        restart_alarm_id = add_alarm_in_us(50, restart_handler, this, true);
+        schedule(50);
         return;
     }
     if (status == WT_DRUM_CHECK_STATUS)
@@ -67,10 +77,11 @@ void WorldTourDrum::process_data()
             }
             gpio_put(mCsPin, true);
             status = WT_DRUM_REQUEST_STATUS;
-            restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+            schedule(500);
             return;
         }
         connected = true;
+        missing = 0;
         // 2: Send 0x55, response: packet count in buffer
         resp = mInterface.transfer(0x55);
         if (!resp)
@@ -78,7 +89,7 @@ void WorldTourDrum::process_data()
             // no packets in buffer
             gpio_put(mCsPin, true);
             status = WT_DRUM_REQUEST_STATUS;
-            restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+            schedule(500);
             return;
         }
         // 3: Stream in data with 50us inter-byte pacing using PWM-paced DMA
@@ -86,14 +97,14 @@ void WorldTourDrum::process_data()
         if (mInterface.transfer_dma_start_paced(nullptr, m_rxBuf, m_bytesToRead, 50))
         {
             status = WT_DRUM_READ_DATA;
-            restart_alarm_id = add_alarm_in_us(m_bytesToRead * 50 + 10, restart_handler, this, true);
+            schedule(m_bytesToRead * 50 + 10);
             return;
         }
         else
         {
             gpio_put(mCsPin, true);
             status = WT_DRUM_REQUEST_STATUS;
-            restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+            schedule(500);
             return;
         }
     }
@@ -101,7 +112,7 @@ void WorldTourDrum::process_data()
     {
         if (mInterface.transfer_dma_busy())
         {
-            restart_alarm_id = add_alarm_in_us(50, restart_handler, this, true);
+            schedule(50);
             return;
         }
         mInterface.transfer_dma_finish(m_rxBuf, m_bytesToRead);
@@ -109,10 +120,20 @@ void WorldTourDrum::process_data()
 
         gpio_put(mCsPin, true);
         status = WT_DRUM_REQUEST_STATUS;
-        restart_alarm_id = add_alarm_in_us(500, restart_handler, this, true);
+        schedule(500);
         return;
     }
 }
 void WorldTourDrum::tick()
 {
-};
+    // Scheduling the next poll failed. Masked so a poll can't run while this restarts from scratch
+    uint32_t irq_status = save_and_disable_interrupts();
+    if (!finished && !restart_alarm_id && lastPoll && to_ms_since_boot(get_absolute_time()) - lastPoll > 1000)
+    {
+        mInterface.transfer_dma_abort();
+        gpio_put(mCsPin, true);
+        status = WT_DRUM_REQUEST_STATUS;
+        process_data();
+    }
+    restore_interrupts(irq_status);
+}

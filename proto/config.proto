@@ -146,7 +146,7 @@ message DisplayLedDevice {
   // Top left corner, in pixels
   required int32 x = 3;
   required int32 y = 4;
-  // Images and bars only
+  // Everything but text
   optional int32 width = 5;
   optional int32 height = 6;
   // Text only: each character is 6 x 8 pixels times this, unset is 1
@@ -158,6 +158,11 @@ message DisplayLedDevice {
   optional bool invert = 10;
   // Bars only: fill from the bottom up instead of left to right
   optional bool vertical = 11;
+  // Joysticks only: the axes that move the dot, larger is right and up like a stick's X and Y
+  optional Input stickX = 12;
+  optional Input stickY = 13;
+  // Rectangles and circles only: drawn as an outline while the LED is off instead of not at all
+  optional bool outlineWhenOff = 14;
 }
 message LedDevice {
   oneof device {

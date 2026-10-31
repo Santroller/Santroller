@@ -79,9 +79,8 @@ void MidiDevice::rescan(bool first)
 
 void MidiDevice::process_midi_data(uint8_t *data, uint16_t len)
 {
-    tu_edpt_stream_t *ep_str_rx = &ep_stream.rx;
-    memcpy(ep_str_rx->ep_buf, data, len);
-    tu_edpt_stream_read_xfer_complete(ep_str_rx, len);
+    // Straight into the fifo, which drops what doesn't fit. ep_buf is only one endpoint packet long
+    tu_edpt_stream_read_xfer_complete_with_buf(&ep_stream.rx, data, len);
 }
 // Reads the endpoint's rx FIFO for MidiInput
 struct MidiEndpointStream

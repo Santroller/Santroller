@@ -10,6 +10,8 @@ class DisplayElement
 public:
     virtual ~DisplayElement() {}
     virtual void draw(MonoFramebuffer &frame) = 0;
+    // Every update, for elements that follow something themselves rather than their LED value
+    virtual void tick() {}
 };
 
 class DisplayDevice : public Device

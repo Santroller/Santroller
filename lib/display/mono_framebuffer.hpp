@@ -33,6 +33,14 @@ public:
     void draw_bitmap(int x, int y, int w, int h, const uint8_t *bitmap, uint32_t len, bool invert);
     // An outline, filled from the left (or the bottom) in proportion to value out of UINT16_MAX
     void draw_bar(int x, int y, int w, int h, uint16_t value, bool vertical, bool invert);
+    // An outline with a dot where a joystick is, larger values right and up
+    void draw_stick(int x, int y, int w, int h, uint16_t stick_x, uint16_t stick_y, bool invert);
+    // Where draw_stick puts the dot in its w x h box, and how big it is
+    static void stick_dot(int w, int h, uint16_t stick_x, uint16_t stick_y, int &dot_x, int &dot_y, int &size);
+    // A w x h rectangle, or the ellipse that fits in it, filled or as a 1 pixel outline
+    void draw_shape(int x, int y, int w, int h, bool ellipse, bool filled, bool invert);
+    // The columns of row (0 to h - 1) inside the ellipse that fits a w x h box, none when left > right
+    static void ellipse_span(int w, int h, int row, int &left, int &right);
 
     // Indexed by the panel's page and column
     uint8_t pages[MAX_PAGES][MAX_WIDTH];
@@ -40,6 +48,7 @@ public:
 private:
     // Where (x, y) is on the panel, false when it's off the edge
     bool to_panel(int &x, int &y) const;
+    void draw_outline(int x, int y, int w, int h, bool on);
     // Already on the panel and clipped to it
     void fill_panel(int x, int y, int w, int h, bool on);
     // Sets n (up to 8) rows of a panel column from py down to the low n bits of bits, bit 0 at the top

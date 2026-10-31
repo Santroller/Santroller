@@ -368,8 +368,16 @@ void DisplayLedDevice::set_state(bool visible, uint16_t value)
 }
 void DisplayLedDevice::write_val(uint16_t val)
 {
-    // A bar stays up while it's empty, the rest only show while they're on
-    set_state(m_device.type == DisplayElementBar || val, val);
+    // A bar stays up while it's empty, as does a shape that's outlined while it's off. The rest only show
+    // while they're on, and only a bar shows how bright it is, so the others only redraw on and off.
+    bool outlined = (m_device.type == DisplayElementRectangle || m_device.type == DisplayElementCircle) &&
+                    m_device.has_outlineWhenOff && m_device.outlineWhenOff;
+    if (m_device.type == DisplayElementBar)
+    {
+        set_state(true, val);
+        return;
+    }
+    set_state(outlined || val, val ? 1 : 0);
 }
 void DisplayLedDevice::write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
@@ -378,6 +386,36 @@ void DisplayLedDevice::write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_
 void DisplayLedDevice::off()
 {
     set_state(false, 0);
+}
+void DisplayLedDevice::setup()
+{
+    if (m_stick_x)
+    {
+        m_stick_x->setup();
+    }
+    if (m_stick_y)
+    {
+        m_stick_y->setup();
+    }
+}
+void DisplayLedDevice::tick()
+{
+    if (m_device.type != DisplayElementStick || !m_visible)
+    {
+        return;
+    }
+    uint16_t x = m_stick_x ? m_stick_x->tick_analog() : UINT16_MAX / 2;
+    uint16_t y = m_stick_y ? m_stick_y->tick_analog() : UINT16_MAX / 2;
+    // Only drawn again once the dot moves a pixel, so a noisy stick doesn't keep redrawing it
+    int old_x, old_y, new_x, new_y, size;
+    MonoFramebuffer::stick_dot(m_device.width, m_device.height, m_stick_x_value, m_stick_y_value, old_x, old_y, size);
+    MonoFramebuffer::stick_dot(m_device.width, m_device.height, x, y, new_x, new_y, size);
+    if (old_x != new_x || old_y != new_y)
+    {
+        m_stick_x_value = x;
+        m_stick_y_value = y;
+        m_display->element_changed();
+    }
 }
 void DisplayLedDevice::draw(MonoFramebuffer &frame)
 {
@@ -396,6 +434,13 @@ void DisplayLedDevice::draw(MonoFramebuffer &frame)
         break;
     case DisplayElementBar:
         frame.draw_bar(m_device.x, m_device.y, m_device.width, m_device.height, m_value, m_device.has_vertical && m_device.vertical, invert);
+        break;
+    case DisplayElementRectangle:
+    case DisplayElementCircle:
+        frame.draw_shape(m_device.x, m_device.y, m_device.width, m_device.height, m_device.type == DisplayElementCircle, m_value, invert);
+        break;
+    case DisplayElementStick:
+        frame.draw_stick(m_device.x, m_device.y, m_device.width, m_device.height, m_stick_x_value, m_stick_y_value, invert);
         break;
     }
 }

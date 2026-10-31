@@ -7,6 +7,7 @@
 #include "devices/vtechexpander.hpp"
 #include "devices/mpr121.hpp"
 #include "devices/display.hpp"
+#include "input/input.hpp"
 #include <memory>
 #include <vector>
 
@@ -148,7 +149,11 @@ protected:
 class DisplayLedDevice : public LedMappingDevice, public DisplayElement
 {
 public:
-    DisplayLedDevice(proto_DisplayLedDevice device, std::vector<uint8_t> image, std::shared_ptr<DisplayDevice> display) : LedMappingDevice(), m_device(device), m_image(std::move(image)), m_display(std::move(display))
+    // stick_x and stick_y move a joystick's dot, they're null for the other elements
+    DisplayLedDevice(proto_DisplayLedDevice device, std::vector<uint8_t> image, std::unique_ptr<Input> stick_x,
+                     std::unique_ptr<Input> stick_y, std::shared_ptr<DisplayDevice> display)
+        : LedMappingDevice(), m_device(device), m_image(std::move(image)), m_stick_x(std::move(stick_x)),
+          m_stick_y(std::move(stick_y)), m_display(std::move(display))
     {
         m_display->add_element(this);
     }
@@ -156,17 +161,23 @@ public:
     void off();
     void write_val(uint16_t val);
     void write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
-    void setup() {}
+    void setup();
     bool supports_brightness() { return false; }
     uint8_t led_count() { return 1; }
     LedId led_id(uint8_t i) { return {this, 0}; }
     void draw(MonoFramebuffer &frame);
+    void tick();
 
 protected:
     void set_state(bool visible, uint16_t value);
     proto_DisplayLedDevice m_device;
     std::vector<uint8_t> m_image;
+    std::unique_ptr<Input> m_stick_x;
+    std::unique_ptr<Input> m_stick_y;
     std::shared_ptr<DisplayDevice> m_display;
     bool m_visible = false;
     uint16_t m_value = 0;
+    // Where a joystick is, centred until its inputs say otherwise
+    uint16_t m_stick_x_value = UINT16_MAX / 2;
+    uint16_t m_stick_y_value = UINT16_MAX / 2;
 };

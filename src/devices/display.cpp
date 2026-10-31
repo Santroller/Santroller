@@ -103,6 +103,10 @@ void DisplayDevice::update(bool full_poll, bool send_events)
 {
     // Elements can change every update (eg a bar following an axis), but drawing faster than the display
     // takes frames would be wasted, so the next one waits until the last one has been sent
+    for (auto *element : m_elements)
+    {
+        element->tick();
+    }
     uint32_t since_draw = millis() - m_last_draw;
     bool can_draw = m_display.is_connected()
                         ? m_display.caught_up() && since_draw >= DISPLAY_DRAW_INTERVAL_MS

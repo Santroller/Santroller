@@ -1,5 +1,6 @@
 #include "mono_framebuffer.hpp"
 #include "font5x7.h"
+#include <algorithm>
 
 static uint8_t reverse_bits(uint8_t b)
 {
@@ -351,10 +352,7 @@ void MonoFramebuffer::draw_bar(int x, int y, int w, int h, uint16_t value, bool 
     int border = w >= 3 && h >= 3 ? 1 : 0;
     if (border)
     {
-        fill_rect(x, y, w, 1, !invert);
-        fill_rect(x, y + h - 1, w, 1, !invert);
-        fill_rect(x, y, 1, h, !invert);
-        fill_rect(x + w - 1, y, 1, h, !invert);
+        draw_outline(x, y, w, h, !invert);
     }
     int inner_w = w - border * 2;
     int inner_h = h - border * 2;
@@ -367,5 +365,124 @@ void MonoFramebuffer::draw_bar(int x, int y, int w, int h, uint16_t value, bool 
     {
         int filled = ((uint32_t)inner_w * value + UINT16_MAX / 2) / UINT16_MAX;
         fill_rect(x + border, y + border, filled, inner_h, !invert);
+    }
+}
+
+void MonoFramebuffer::stick_dot(int w, int h, uint16_t stick_x, uint16_t stick_y, int &dot_x, int &dot_y, int &size)
+{
+    // Inside the outline, a 3 pixel dot once there's room to see it move
+    int inner_w = w - 2;
+    int inner_h = h - 2;
+    size = inner_w >= 9 && inner_h >= 9 ? 3 : 1;
+    dot_x = 1 + ((uint32_t)(inner_w - size) * stick_x + UINT16_MAX / 2) / UINT16_MAX;
+    dot_y = 1 + ((uint32_t)(inner_h - size) * (UINT16_MAX - stick_y) + UINT16_MAX / 2) / UINT16_MAX;
+}
+
+void MonoFramebuffer::draw_stick(int x, int y, int w, int h, uint16_t stick_x, uint16_t stick_y, bool invert)
+{
+    if (w < 3 || h < 3 || w > m_width || h > m_height)
+    {
+        return;
+    }
+    fill_rect(x, y, w, h, invert);
+    draw_outline(x, y, w, h, !invert);
+    int dot_x, dot_y, size;
+    stick_dot(w, h, stick_x, stick_y, dot_x, dot_y, size);
+    fill_rect(x + dot_x, y + dot_y, size, size, !invert);
+}
+
+void MonoFramebuffer::draw_outline(int x, int y, int w, int h, bool on)
+{
+    fill_rect(x, y, w, 1, on);
+    fill_rect(x, y + h - 1, w, 1, on);
+    fill_rect(x, y, 1, h, on);
+    fill_rect(x + w - 1, y, 1, h, on);
+}
+
+static uint32_t isqrt(uint32_t n)
+{
+    uint32_t root = 0;
+    for (uint32_t bit = 1u << 30; bit; bit >>= 2)
+    {
+        if (n >= root + bit)
+        {
+            n -= root + bit;
+            root = (root >> 1) + bit;
+        }
+        else
+        {
+            root >>= 1;
+        }
+    }
+    return root;
+}
+
+void MonoFramebuffer::ellipse_span(int w, int h, int row, int &left, int &right)
+{
+    // A pixel is inside when its centre is, measured in half pixels from the middle of the box so it's
+    // all whole numbers: (X / w)^2 + (Y / h)^2 <= 1
+    int dy = 2 * row + 1 - h;
+    uint32_t reach = isqrt((uint32_t)(w * w) * (uint32_t)(h * h - dy * dy)) / h;
+    // The columns whose X = 2 * column + 1 - w is within reach either side
+    left = (w - 1 - (int)reach + 1) / 2;
+    right = (w - 1 + (int)reach) / 2;
+}
+
+void MonoFramebuffer::draw_shape(int x, int y, int w, int h, bool ellipse, bool filled, bool invert)
+{
+    if (w <= 0 || h <= 0 || w > m_width || h > m_height)
+    {
+        return;
+    }
+    if (invert)
+    {
+        fill_rect(x, y, w, h, true);
+    }
+    if (!ellipse)
+    {
+        if (filled || w < 3 || h < 3)
+        {
+            fill_rect(x, y, w, h, !invert);
+        }
+        else
+        {
+            draw_outline(x, y, w, h, !invert);
+        }
+        return;
+    }
+    for (int row = 0; row < h; row++)
+    {
+        int left, right;
+        ellipse_span(w, h, row, left, right);
+        if (left > right)
+        {
+            continue;
+        }
+        if (filled)
+        {
+            fill_rect(x + left, y + row, right - left + 1, 1, !invert);
+            continue;
+        }
+        // The edge is what's inside this row but not the rows either side. Past the top and bottom
+        // nothing is inside.
+        int inner_left = w, inner_right = -1;
+        if (row > 0 && row < h - 1)
+        {
+            int above_left, above_right, below_left, below_right;
+            ellipse_span(w, h, row - 1, above_left, above_right);
+            ellipse_span(w, h, row + 1, below_left, below_right);
+            inner_left = std::max(above_left, below_left);
+            inner_right = std::min(above_right, below_right);
+        }
+        if (inner_left > inner_right)
+        {
+            fill_rect(x + left, y + row, right - left + 1, 1, !invert);
+            continue;
+        }
+        // The ends of the row are always edge, and so is anything past the rows either side
+        int edge_left = std::max(inner_left, left + 1);
+        int edge_right = std::min(inner_right, right - 1);
+        fill_rect(x + left, y + row, edge_left - left, 1, !invert);
+        fill_rect(x + edge_right + 1, y + row, right - edge_right, 1, !invert);
     }
 }

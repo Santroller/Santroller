@@ -1,4 +1,5 @@
 #include "config/led_factory.hpp"
+#include "config/input_factory.hpp"
 #include "profiles/profile.hpp"
 #include "leds/leds.hpp"
 #include "devices/dmx.hpp"
@@ -65,11 +66,18 @@ std::unique_ptr<LedMappingDevice> LedFactory::create_led_device(
         if (profile->devices.find(proto_led_device.device.display.deviceId) == profile->devices.end()) {
             return nullptr;
         }
+    {
+        // A joystick's axes, composite inputs (held, toggles etc) aren't supported here
+        const proto_DisplayLedDevice &display = proto_led_device.device.display;
+        bool stick = display.type == DisplayElementStick;
         return std::make_unique<DisplayLedDevice>(
-            proto_led_device.device.display,
+            display,
             std::move(image),
-            std::static_pointer_cast<DisplayDevice>(profile->devices[proto_led_device.device.display.deviceId])
+            stick && display.has_stickX ? InputFactory::create_input(display.stickX, profile) : nullptr,
+            stick && display.has_stickY ? InputFactory::create_input(display.stickY, profile) : nullptr,
+            std::static_pointer_cast<DisplayDevice>(profile->devices[display.deviceId])
         );
+    }
 
     default:
         return nullptr;

@@ -2,8 +2,6 @@
 #include "devices/midi.hpp"
 #include <stdint.h>
 #include "spi.hpp"
-#define DRUM_ADDR 0x0D
-#define BH_DRUM_PTR 0x10
 typedef enum
 {
     WT_DRUM_REQUEST_STATUS,
@@ -26,12 +24,13 @@ public:
     }
 
 private:
+    void schedule(uint32_t delay_us);
     SPIMasterInterface mInterface;
     int8_t mCsPin;
-    int missing;
-    bool connected;
+    int missing = 0;
+    bool connected = false;
     MidiDevice *m_device;
-    uint32_t last = 0;
+    uint32_t lastPoll = 0;
     wt_status_e status = WT_DRUM_REQUEST_STATUS;
     alarm_id_t restart_alarm_id = 0;
     volatile bool finished = false;

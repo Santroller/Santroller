@@ -404,4 +404,11 @@ enum DisplayElementType {
   DisplayElementImage = 2;
   // Filled in proportion to its LED value
   DisplayElementBar = 3;
+  // A box with a dot showing where a joystick is, from stickX and stickY. The mapping only says when it's
+  // shown.
+  DisplayElementStick = 4;
+  // Filled while its LED value is non zero, or outlined while it's zero with outlineWhenOff
+  DisplayElementRectangle = 5;
+  // The ellipse that fits its width and height
+  DisplayElementCircle = 6;
 }

@@ -66,6 +66,107 @@ TEST(MonoFramebuffer, FillsBarsInProportion)
     EXPECT_EQ(rows(vertical, 3, 6), (std::vector<std::string>{"###", "#.#", "#.#", "###", "###", "###"}));
 }
 
+TEST(MonoFramebuffer, DrawsAStickWithUpAtTheTop)
+{
+    auto frame = blank();
+    // Up and to the left: larger Y is up
+    frame.draw_stick(0, 0, 11, 11, 0, UINT16_MAX, false);
+    EXPECT_EQ(rows(frame, 11, 11), (std::vector<std::string>{
+                                       "###########",
+                                       "####......#",
+                                       "####......#",
+                                       "####......#",
+                                       "#.........#",
+                                       "#.........#",
+                                       "#.........#",
+                                       "#.........#",
+                                       "#.........#",
+                                       "#.........#",
+                                       "###########",
+                                   }));
+    auto centre = blank();
+    centre.draw_stick(0, 0, 11, 11, UINT16_MAX / 2, UINT16_MAX / 2, false);
+    EXPECT_EQ(rows(centre, 11, 11)[5], "#...###...#");
+    // Too small for a 3 pixel dot, down and to the right
+    auto small = blank();
+    small.draw_stick(0, 0, 5, 5, UINT16_MAX, 0, false);
+    EXPECT_EQ(rows(small, 5, 5), (std::vector<std::string>{
+                                     "#####",
+                                     "#...#",
+                                     "#...#",
+                                     "#..##",
+                                     "#####",
+                                 }));
+}
+
+TEST(MonoFramebuffer, DrawsRectanglesFilledOrOutlined)
+{
+    auto frame = blank();
+    frame.draw_shape(1, 1, 5, 4, false, false, false);
+    EXPECT_EQ(rows(frame, 7, 6), (std::vector<std::string>{
+                                     ".......",
+                                     ".#####.",
+                                     ".#...#.",
+                                     ".#...#.",
+                                     ".#####.",
+                                     ".......",
+                                 }));
+    auto filled = blank();
+    filled.draw_shape(0, 0, 3, 2, false, true, false);
+    EXPECT_EQ(rows(filled, 4, 3), (std::vector<std::string>{"###.", "###.", "...."}));
+}
+
+TEST(MonoFramebuffer, DrawsCircles)
+{
+    auto frame = blank();
+    frame.draw_shape(0, 0, 9, 9, true, false, false);
+    EXPECT_EQ(rows(frame, 9, 9), (std::vector<std::string>{
+                                     "..#####..",
+                                     ".#.....#.",
+                                     "#.......#",
+                                     "#.......#",
+                                     "#.......#",
+                                     "#.......#",
+                                     "#.......#",
+                                     ".#.....#.",
+                                     "..#####..",
+                                 }));
+}
+
+// Filled is every pixel whose centre is inside the ellipse, outlined is those of them next to one that isn't
+TEST(MonoFramebuffer, EllipsesMatchTheirPixelCentres)
+{
+    for (int w = 1; w <= 40; w++)
+    {
+        for (int h = 1; h <= 40; h++)
+        {
+            auto inside = [&](int x, int y)
+            {
+                if (x < 0 || y < 0 || x >= w || y >= h)
+                {
+                    return false;
+                }
+                int64_t dx = 2 * x + 1 - w, dy = 2 * y + 1 - h;
+                return dx * dx * h * h + dy * dy * w * w <= (int64_t)w * w * h * h;
+            };
+            auto filled = blank();
+            filled.draw_shape(2, 3, w, h, true, true, false);
+            auto outline = blank();
+            outline.draw_shape(2, 3, w, h, true, false, false);
+            for (int y = -1; y <= h; y++)
+            {
+                for (int x = -1; x <= w; x++)
+                {
+                    bool in = inside(x, y);
+                    bool edge = in && (!inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y - 1) || !inside(x, y + 1));
+                    ASSERT_EQ(filled.pixel(x + 2, y + 3), in) << w << "x" << h << " at " << x << "," << y;
+                    ASSERT_EQ(outline.pixel(x + 2, y + 3), edge) << w << "x" << h << " at " << x << "," << y;
+                }
+            }
+        }
+    }
+}
+
 TEST(MonoFramebuffer, DrawsBitmapsRowByRow)
 {
     auto frame = blank();

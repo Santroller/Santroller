@@ -12,8 +12,8 @@ public:
     static constexpr int MAX_HEIGHT = 128;
     static constexpr int MAX_PAGES = MAX_HEIGHT / 8;
     // Each character takes up this much room, the glyphs being 5 x 7 with a gap right and below
-    static constexpr int CHAR_WIDTH = 6;
-    static constexpr int CHAR_HEIGHT = 8;
+    static constexpr int GLYPH_WIDTH = 6;
+    static constexpr int GLYPH_HEIGHT = 8;
     static constexpr int MAX_SCALE = 8;
 
     MonoFramebuffer() { configure(128, 64, 0); }

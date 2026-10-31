@@ -158,7 +158,7 @@ void MonoFramebuffer::draw_text(int x, int y, const char *text, int scale, bool 
     {
         scale = MAX_SCALE;
     }
-    for (; *text && x < m_width; text++, x += CHAR_WIDTH * scale)
+    for (; *text && x < m_width; text++, x += GLYPH_WIDTH * scale)
     {
         uint8_t c = *text;
         if (c < FONT5X7_FIRST || c > FONT5X7_LAST)
@@ -166,7 +166,7 @@ void MonoFramebuffer::draw_text(int x, int y, const char *text, int scale, bool 
             c = '?';
         }
         const uint8_t *glyph = font5x7[c - FONT5X7_FIRST];
-        for (int col = 0; col < CHAR_WIDTH; col++)
+        for (int col = 0; col < GLYPH_WIDTH; col++)
         {
             uint8_t bits = col < 5 ? glyph[col] : 0;
             if (invert)
@@ -181,22 +181,22 @@ void MonoFramebuffer::draw_text(int x, int y, const char *text, int scale, bool 
                 {
                     if (m_rotation == 2)
                     {
-                        write_column(m_panel_width - 1 - lx, m_panel_height - y - CHAR_HEIGHT, reverse_bits(bits),
-                                     CHAR_HEIGHT);
+                        write_column(m_panel_width - 1 - lx, m_panel_height - y - GLYPH_HEIGHT, reverse_bits(bits),
+                                     GLYPH_HEIGHT);
                     }
                     else
                     {
-                        write_column(lx, y, bits, CHAR_HEIGHT);
+                        write_column(lx, y, bits, GLYPH_HEIGHT);
                     }
                 }
                 continue;
             }
             // Each run of rows that are the same is one rectangle
             int start = 0;
-            for (int row = 1; row <= CHAR_HEIGHT; row++)
+            for (int row = 1; row <= GLYPH_HEIGHT; row++)
             {
                 bool on = (bits >> start) & 1;
-                if (row == CHAR_HEIGHT || ((bits >> row) & 1) != on)
+                if (row == GLYPH_HEIGHT || ((bits >> row) & 1) != on)
                 {
                     fill_rect(x + col * scale, y + start * scale, scale, (row - start) * scale, on);
                     start = row;

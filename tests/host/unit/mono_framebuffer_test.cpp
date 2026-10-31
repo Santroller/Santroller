@@ -348,12 +348,12 @@ TEST(MonoFramebuffer, TextMatchesItsGlyphsInEveryRotation)
                 for (int i = 0; i < 4; i++)
                 {
                     const char c = "Ag!~"[i];
-                    for (int col = 0; col < MonoFramebuffer::CHAR_WIDTH * scale; col++)
+                    for (int col = 0; col < MonoFramebuffer::GLYPH_WIDTH * scale; col++)
                     {
                         uint8_t bits = col / scale < 5 ? font5x7[c - FONT5X7_FIRST][col / scale] : 0;
-                        for (int row = 0; row < MonoFramebuffer::CHAR_HEIGHT * scale; row++)
+                        for (int row = 0; row < MonoFramebuffer::GLYPH_HEIGHT * scale; row++)
                         {
-                            int x = -3 + i * MonoFramebuffer::CHAR_WIDTH * scale + col;
+                            int x = -3 + i * MonoFramebuffer::GLYPH_WIDTH * scale + col;
                             if (x < 0)
                             {
                                 continue;
@@ -405,12 +405,12 @@ TEST(MonoFramebuffer, TextMatchesDrawingPixelByPixelAnywhere)
                 fast.draw_text(x, y, text, scale, invert);
                 for (int i = 0; i < 5; i++)
                 {
-                    for (int col = 0; col < MonoFramebuffer::CHAR_WIDTH * scale; col++)
+                    for (int col = 0; col < MonoFramebuffer::GLYPH_WIDTH * scale; col++)
                     {
                         uint8_t bits = col / scale < 5 ? font5x7[text[i] - FONT5X7_FIRST][col / scale] : 0;
-                        for (int row = 0; row < MonoFramebuffer::CHAR_HEIGHT * scale; row++)
+                        for (int row = 0; row < MonoFramebuffer::GLYPH_HEIGHT * scale; row++)
                         {
-                            slow.set_pixel(x + i * MonoFramebuffer::CHAR_WIDTH * scale + col, y + row,
+                            slow.set_pixel(x + i * MonoFramebuffer::GLYPH_WIDTH * scale + col, y + row,
                                            ((bits >> (row / scale)) & 1) != invert);
                         }
                     }

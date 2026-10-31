@@ -126,6 +126,13 @@ private:
     void send_legacy_disconnection(uint8_t user_index);
     void process_legacy_adapter(bool full_poll, bool send_events);
     void process_auth_device_connection(uint32_t now);
+    // Wheels answer the console's capability query, and send their capabilities unasked once a little
+    // after an app starts or exits, as some games (Wreckfest) never ask
+    void queue_wheel_capabilities();
+    static constexpr uint32_t WHEEL_CAPABILITIES_DELAY = 2000;
+    uint8_t wheel_capabilities_sequence = 1;
+    bool wheel_capabilities_due = false;
+    uint32_t wheel_app_event_time = 0;
 
     XboxOneDriverState xboneDriverState = EMU_NOT_READY;
 };

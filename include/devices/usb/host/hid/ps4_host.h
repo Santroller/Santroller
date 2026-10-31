@@ -32,6 +32,7 @@ public:
     void set_lightbar(uint8_t r, uint8_t g, uint8_t b) override;
     bool has_rumble() const override { return true; }
     bool has_motion() const override { return m_sensors_supported; }
+    bool decodes_wheel() const override { return m_subtype == Wheel; }
     bool has_player_led() const override { return true; }
     bool has_lightbar() const override { return true; }
     std::optional<uint64_t> hardware_id() const override { return m_hardware_id ? m_hardware_id : UsbHostInterface::hardware_id(); }

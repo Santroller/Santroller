@@ -20,6 +20,10 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
     void update_motion(MotionState &motion);
+
+protected:
+    // For outputs written as a gamepad axis that calibrate differently, e.g. a wheel's pedals rest at their minimum
+    GamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile, bool trigger);
 };
 
 class PS3GamepadAxisMapping : public GamepadAxisMapping

@@ -17,6 +17,10 @@ GamepadAxisMapping::GamepadAxisMapping(const proto_Mapping &mapping, std::unique
 {
 }
 
+GamepadAxisMapping::GamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile, bool trigger) : AxisMapping(mapping, std::move(input), id, profile, trigger)
+{
+}
+
 static int16_t invert_signed_axis(int16_t value)
 {
     return static_cast<int16_t>(~static_cast<uint16_t>(value));

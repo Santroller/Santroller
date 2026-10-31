@@ -40,6 +40,18 @@ static PS4FeatureReport ps4_feature_report(SubType subtype)
         report.device_type = PS4DeviceGuitar;
         return report;
     }
+    if (subtype == Wheel)
+    {
+        // Matches a real G29, as GIMX and GP2040-CE send it
+        report.protocol_version = 0x03;
+        report.device_type = PS4DeviceSteeringWheel;
+        report.analog_pressure = true;
+        report.extended_data = true;
+        report.extended[0] = 0x0d;
+        report.extended[1] = 0x84;
+        report.extended[2] = 0x03;
+        return report;
+    }
     report.touch_pad_density_integer = 44;
     report.touch_pad_density_fraction = 86;
     switch (subtype)
@@ -116,6 +128,10 @@ void PS4GamepadDevice::initialize()
     gamepad->rightStickX = PS3_STICK_CENTER;
     gamepad->rightStickY = PS3_STICK_CENTER;
     gamepad->reportCounter = 1;
+    if (subtype == Wheel)
+    {
+        ps_wheel_rest(((PS4Wheel_Data_t *)m_initial_report)->wheel);
+    }
 }
 void PS4GamepadDevice::process(bool full_poll, bool send_events)
 {
@@ -204,6 +220,11 @@ void PS4GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
     case Dancepad:
         desc->idVendor = 0x1532;
         desc->idProduct = 0x0401;
+        break;
+    case Wheel:
+        // The console only takes wheels it knows, so this is a G29
+        desc->idVendor = LOGITECH_VID;
+        desc->idProduct = LOGITECH_G29_PS4_PID;
         break;
     default:
         break;

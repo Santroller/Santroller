@@ -8,6 +8,7 @@ WorldTourDrumDevice::WorldTourDrumDevice(const DeviceReloadState* state, proto_W
     m_world_tour_drum(this, device.spi.block, device.spi.sck, device.spi.mosi, device.spi.miso, device.spi.clock, device.csPin),
     m_device(device)
 {
+    preset_channel_seen(MIDI_CHANNEL_DRUMS);
 }
 void WorldTourDrumDevice::begin()
 {

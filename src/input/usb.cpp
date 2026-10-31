@@ -3,19 +3,26 @@
 #include "hardware/adc.h"
 #include "stdio.h"
 #include "protocols/face_buttons.hpp"
+#include "protocols/wheel.hpp"
 
-USBAxisInput::USBAxisInput(proto_USBAxisInput input, std::shared_ptr<UsbHostInterface> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
+USBAxisInput::USBAxisInput(proto_USBAxisInput input, std::shared_ptr<UsbHostInterface> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile), m_gamepad_axis(input.axis)
 {
+    wheel_axis_as_gamepad(m_gamepad_axis);
+}
+// Wheel axes are read as the gamepad axes they are sent on, unless the host reads the wheel's own report
+proto_Output &USBAxisInput::axis()
+{
+    return m_device->decodes_wheel() ? m_input.axis : m_gamepad_axis;
 }
 bool USBAxisInput::tick_digital()
 {
     if (!m_device) return false;
-    return m_device->tick_axis_digital(m_input.axis);
+    return m_device->tick_axis_digital(axis());
 }
 uint16_t USBAxisInput::tick_analog()
 {
     if (!m_device) return 0;
-    return m_device->tick_analog(m_input.axis);
+    return m_device->tick_analog(axis());
 }
 void USBAxisInput::setup()
 {

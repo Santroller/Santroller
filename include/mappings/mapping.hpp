@@ -25,6 +25,7 @@
 #include "mappings/rock_band_mappings.hpp"
 #include "mappings/konami_mappings.hpp"
 #include "mappings/peripheral_mappings.hpp"
+#include "mappings/wheel_mapping.hpp"
 
 #include "triggers/activation_trigger.hpp"
 

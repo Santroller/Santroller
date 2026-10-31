@@ -36,6 +36,10 @@ void JoybusEmulationDeviceInstance::initialize()
         joybus_dev->get_controller().acquire();
         m_acquired = true;
     }
+    if (joybus_dev)
+    {
+        joybus_dev->get_controller().set_wheel(subtype == Wheel);
+    }
     memset(m_initial_report, 0, sizeof(m_initial_report));
     if (!m_n64)
     {
@@ -45,6 +49,14 @@ void JoybusEmulationDeviceInstance::initialize()
         report->leftStickY = GC_STICK_CENTER;
         report->cStickX = GC_STICK_CENTER;
         report->cStickY = GC_STICK_CENTER;
+        if (subtype == Wheel)
+        {
+            // A Speed Force's status (power and pedals connected) is where the stick's X would be, and
+            // its pedals rest at 0
+            report->leftStickX = GC_WHEEL_POWER_AND_PEDALS;
+            report->cStickX = 0;
+            report->cStickY = 0;
+        }
     }
 }
 

@@ -265,6 +265,97 @@ typedef struct
 
     uint8_t unused2[56];
 } __attribute__((packed)) PS4GHLGuitar_Data_t;
+// A G29's wheel data, from GIMX (shared/gimxcontroller/include/g29_ps4.h) and GP2040-CE, which agree.
+// The pedals read 0xFFFF released. A PS4 report keeps it where the other instruments keep their
+// data, and PS5 wheels are assumed to do the same in a PS5 report.
+typedef struct
+{
+    uint16_t steering;
+    uint16_t accelerator;
+    uint16_t brake;
+    uint16_t clutch;
+
+    uint8_t gear1 : 1;
+    uint8_t gear2 : 1;
+    uint8_t gear3 : 1;
+    uint8_t gear4 : 1;
+    uint8_t gear5 : 1;
+    uint8_t gear6 : 1;
+    uint8_t : 1;
+    uint8_t gearReverse : 1;
+
+    // always 0xFFFF
+    uint16_t unknown;
+
+    uint8_t dialEnter : 1;
+    uint8_t dialDown : 1;
+    uint8_t dialUp : 1;
+    uint8_t minus : 1;
+    uint8_t plus : 1;
+    uint8_t : 3;
+} __attribute__((packed)) PSWheel_Data_t;
+
+// A G29 at rest: steering centred, pedals released
+inline void ps_wheel_rest(PSWheel_Data_t &wheel)
+{
+    wheel.steering = 0x8000;
+    wheel.accelerator = UINT16_MAX;
+    wheel.brake = UINT16_MAX;
+    wheel.clutch = UINT16_MAX;
+    wheel.unknown = UINT16_MAX;
+}
+
+// A G29 in PS4 mode
+typedef struct
+{
+    uint8_t report_id;
+    uint8_t leftStickX;
+    uint8_t leftStickY;
+    uint8_t rightStickX;
+    uint8_t rightStickY;
+
+    // To make things easier we use bitfields here and them map to dpad later
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+
+    uint8_t x : 1; // square
+    uint8_t a : 1; // cross
+    uint8_t b : 1; // circle
+    uint8_t y : 1; // triangle
+
+    uint8_t leftShoulder : 1;  // l1
+    uint8_t rightShoulder : 1; // r1
+    uint8_t l2 : 1;
+    uint8_t r2 : 1;
+    uint8_t back : 1;  // share
+    uint8_t start : 1; // options
+    uint8_t leftThumbClick : 1;
+    uint8_t rightThumbClick : 1;
+
+    uint8_t guide : 1;
+    uint8_t capture : 1;
+    uint8_t : 6;
+
+    uint8_t leftTrigger;
+    uint8_t rightTrigger;
+    uint8_t unused2[20];
+
+    uint8_t powerLevel : 4;
+    uint8_t : 4;
+
+    uint8_t unused3[12];
+
+    PSWheel_Data_t wheel;
+
+    uint8_t unused4[9];
+} __attribute__((packed)) PS4Wheel_Data_t;
+static_assert(sizeof(PSWheel_Data_t) == 12, "A G29's wheel data is 12 bytes");
+static_assert(offsetof(PS4Wheel_Data_t, wheel) == 43, "G29 steering is PS4 report byte 43");
+static_assert(offsetof(PS4Wheel_Data_t, wheel) + offsetof(PSWheel_Data_t, unknown) == 52, "G29 buttons follow its shifter");
+static_assert(sizeof(PS4Wheel_Data_t) == 64, "PS4 reports are 64 bytes");
+
 typedef struct {
     uint8_t type;
     uint8_t u1;

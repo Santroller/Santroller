@@ -119,6 +119,18 @@ const XID_DESCRIPTOR DukeXIDDescriptor = {
     wAlternateProductIds : {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF}
 };
 
+// A steering wheel (from sonik-br's xid_wheel_adapter) sends the same report
+const XID_DESCRIPTOR WheelXIDDescriptor = {
+    bLength : sizeof(XID_DESCRIPTOR),
+    bDescriptorType : 0x42,
+    bcdXid : 0x0100,
+    bType : 0x01,
+    bSubType : 0x10,
+    bMaxInputReportSize : sizeof(OGXboxGamepad_Data_t),
+    bMaxOutputReportSize : sizeof(OGXboxOutput_Report_t),
+    wAlternateProductIds : {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF}
+};
+
 const OGXboxGamepadCapabilities_Data_t DukeXIDInputCapabilities = {
     rid : 0x00,
     rsize : sizeof(OGXboxGamepadCapabilities_Data_t),
@@ -305,7 +317,7 @@ bool OGXboxGamepadDevice::control_transfer_impl(uint8_t stage, tusb_control_requ
                 {
                     if (stage == CONTROL_STAGE_SETUP)
                     {
-                        tud_control_xfer(TUD_OPT_RHPORT, request, (void *)&DukeXIDDescriptor, sizeof(DukeXIDDescriptor));
+                        tud_control_xfer(TUD_OPT_RHPORT, request, (void *)(subtype == Wheel ? &WheelXIDDescriptor : &DukeXIDDescriptor), sizeof(DukeXIDDescriptor));
                     }
                     return true;
                 }

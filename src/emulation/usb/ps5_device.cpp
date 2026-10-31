@@ -48,6 +48,17 @@ static PS4FeatureReport ps5_feature_report(SubType subtype)
         report.device_type = PS4DeviceGuitar;
         return report;
     }
+    if (subtype == Wheel)
+    {
+        // There's no PS5 wheel to copy, so this is what a G29 sends a PS4
+        report.device_type = PS4DeviceSteeringWheel;
+        report.analog_pressure = true;
+        report.extended_data = true;
+        report.extended[0] = 0x0d;
+        report.extended[1] = 0x84;
+        report.extended[2] = 0x03;
+        return report;
+    }
     report.touch_pad_density_integer = 44;
     report.touch_pad_density_fraction = 86;
     switch (subtype)
@@ -129,6 +140,10 @@ void PS5GamepadDevice::initialize()
     gamepad->rightStickX = PS3_STICK_CENTER;
     gamepad->rightStickY = PS3_STICK_CENTER;
     gamepad->data_30_31_0x001a = 0x001a;
+    if (subtype == Wheel)
+    {
+        ps_wheel_rest(((PS5Wheel_Data_t *)m_initial_report)->wheel);
+    }
 }
 void PS5GamepadDevice::process(bool full_poll, bool send_events)
 {

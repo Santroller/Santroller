@@ -47,6 +47,9 @@ public:
     virtual bool nintendo_face_layout() const { return false; }
     // Whether Gamepad_Accel / Gamepad_Gyro read real motion
     virtual bool has_motion() const { return false; }
+    // Whether Wheel axes read the wheel's own report. Otherwise they are read as the gamepad axes
+    // an XInput wheel sends them on
+    virtual bool decodes_wheel() const { return false; }
     virtual void update(bool full_poll, bool send_events);
     bool is_wii_extension(WiiExtType type)
     {

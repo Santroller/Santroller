@@ -10,6 +10,7 @@
 #include "devices/midi.hpp"
 #include "input/midi.hpp"
 #include "input_enums.pb.h"
+#include "protocols/wheel.hpp"
 #include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,6 +57,7 @@ static bool make_output(uint32_t tag, uint8_t value, proto_Output &output)
         DETECT_OUTPUT(kbmButton, proto_KeyboardManiaButtonType)
         DETECT_OUTPUT(mouseButton, proto_MouseButtonType)
         DETECT_OUTPUT(mouseAxis, proto_MouseAxisType)
+        DETECT_OUTPUT(wheelAxis, proto_WheelAxisType)
 #undef DETECT_OUTPUT
     default:
         return false;
@@ -176,6 +178,12 @@ bool InputDetector::read(bool axis, uint8_t value, uint16_t &out)
         if (!make_output(axis ? m_command.axisOutput : m_command.buttonOutput, value, output))
         {
             return false;
+        }
+        if (m_command.kind == DetectBluetooth || !std::static_pointer_cast<UsbHostInterface>(m_device)->decodes_wheel())
+        {
+            // read the way USBAxisInput / BTAxisInput will. Only the local copy changes, what was
+            // detected is still reported as the wheel axis
+            wheel_axis_as_gamepad(output);
         }
         // motion moves whenever the controller does, so it would win over whatever was meant
         if (output.which_mapping == proto_Output_gamepadAxis_tag && is_motion_axis(output.mapping.gamepadAxis))

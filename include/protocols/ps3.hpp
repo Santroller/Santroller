@@ -168,6 +168,62 @@ typedef struct
     uint16_t gyro;   // Left/right instantaneous rotation (yaw)
 } __attribute__((packed)) PS3Dpad_Data_t;
 
+// A G27 in its native mode, the wheel most PS3 racing games know. From GIMX (shared/gimxcontroller,
+// g27_ps3) and its EMUG27 firmware, whose report descriptor this matches. It has no report ID. The pedals
+// read 0xFF released, and the shifter reports where its stick is as well as which gear it is in.
+typedef struct
+{
+    // To make things easier we use bitfields here and them map to a hat later
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    uint8_t cross : 1;
+    uint8_t square : 1;
+    uint8_t circle : 1;
+    uint8_t triangle : 1;
+
+    uint8_t r1 : 1; // right paddle
+    uint8_t l1 : 1; // left paddle
+    uint8_t r2 : 1;
+    uint8_t l2 : 1;
+    uint8_t select : 1;
+    uint8_t start : 1;
+    uint8_t r3 : 1;
+    uint8_t l3 : 1;
+
+    uint8_t gear1 : 1;
+    uint8_t gear2 : 1;
+    uint8_t gear3 : 1;
+    uint8_t gear4 : 1;
+    uint8_t gear5 : 1;
+    uint8_t gear6 : 1;
+    uint8_t r4 : 1;
+    uint8_t r5 : 1;
+
+    uint16_t l4 : 1;
+    uint16_t l5 : 1;
+    // 0x2000 in the middle
+    uint16_t steering : 14;
+
+    uint8_t accelerator;
+    uint8_t brake;
+    uint8_t clutch;
+
+    uint8_t shifterX;
+    uint8_t shifterY;
+    uint8_t shifterStatus;
+} __attribute__((packed)) PS3G27_Data_t;
+static_assert(sizeof(PS3G27_Data_t) == 11, "A G27 report is 11 bytes");
+
+#define G27_SHIFTER_CENTER 0x80
+#define G27_SHIFTER_LEFT 0x55
+#define G27_SHIFTER_RIGHT 0xab
+#define G27_SHIFTER_DOWN 0x00
+#define G27_SHIFTER_UP 0xff
+#define G27_SHIFTER_DEFAULT_STATUS 0x9c
+#define G27_SHIFTER_REVERSE 0x41
+
 typedef struct
 {
     uint8_t report_id;

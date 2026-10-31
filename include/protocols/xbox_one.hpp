@@ -78,6 +78,74 @@ typedef struct
     uint8_t consoleFunctions[18];
 } __attribute__((packed)) XboxOneGamepad_Data_t;
 
+// A wheel's report, from the Linux xbox_gip driver, a Thrustmaster 458, a G920 (as sonik-br's
+// xid_wheel_adapter reads it) and sonik-br's pico_gip_wheel_poc (MIT, from the lgff wheel adapter's
+// DriveHub captures), which agree. The buttons are a gamepad's, with the paddles on the shoulder buttons.
+// The ranges are whatever the wheel's capabilities (0x21) say, a G920's steering is 16 bit and its
+// pedals 8 bit. Everything after the gear is the same in every capture.
+typedef struct
+{
+    uint8_t sync : 1;
+    uint8_t guide : 1;
+    uint8_t start : 1; // menu
+    uint8_t back : 1;  // view
+
+    uint8_t a : 1;
+    uint8_t b : 1;
+    uint8_t x : 1;
+    uint8_t y : 1;
+
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+
+    uint8_t leftShoulder : 1;
+    uint8_t rightShoulder : 1;
+    uint8_t leftThumbClick : 1;
+    uint8_t rightThumbClick : 1;
+
+    // 0x8000 in the middle
+    uint16_t steering;
+    uint16_t accelerator;
+    uint16_t brake;
+    uint16_t clutch;
+    uint8_t handbrake;
+    // 0xE0 and the number of gears with an H shifter, without one the gear is ignored. Some other high
+    // nibbles stop all input on the console
+    uint8_t shifter;
+    // 1 - 6, 0 in neutral and -1 in reverse
+    int8_t gear;
+    uint8_t unknown[3];
+
+    uint8_t : 3;
+    uint8_t hasPower : 1;
+    uint8_t handbrakeConnected : 1;
+    uint8_t clutchConnected : 1;
+    uint8_t brakeConnected : 1;
+    uint8_t acceleratorConnected : 1;
+} __attribute__((packed)) XboxOneWheel_Data_t;
+static_assert(sizeof(XboxOneWheel_Data_t) == 17, "The wheel descriptor's input report is 17 bytes");
+
+// A G920 at rest, with its 6 speed shifter
+inline void xbox_one_wheel_rest(XboxOneWheel_Data_t &wheel)
+{
+    wheel.steering = 0x8000;
+    wheel.shifter = 0xE6;
+    wheel.unknown[0] = 0xC8;
+    wheel.unknown[2] = 0xFF;
+    wheel.hasPower = true;
+    wheel.handbrakeConnected = true;
+    wheel.clutchConnected = true;
+    wheel.brakeConnected = true;
+    wheel.acceleratorConnected = true;
+}
+
+// The wheel's reply (0x21) to the console's capability query (a non internal 0x0A, 00): the bits of
+// steering, accelerator, brake, clutch and handbrake (0 hides it), then 0x0E 0x01, the rotation range
+// in degrees, force feedback (bit 0) and 0x48. A G920 without force feedback yet.
+static const uint8_t xbox_one_wheel_capabilities[] = {16, 8, 8, 8, 0, 0x0E, 0x01, 900 & 0xFF, 900 >> 8, 0x00, 0x48};
+
 typedef struct
 {
     uint8_t sync : 1;

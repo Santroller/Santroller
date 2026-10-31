@@ -37,6 +37,8 @@ public:
     bool is_communicating() const;
     bool get_rumble() const { return m_rumble; }
     bool is_n64() const { return m_n64; }
+    // A GameCube Speed Force wheel instead of a controller, which has its own ID and poll command
+    void set_wheel(bool wheel);
 
 private:
     static void irq_handler();
@@ -48,6 +50,7 @@ private:
 
     uint8_t m_pin;
     bool m_n64;
+    volatile bool m_wheel = false;
     bool m_started = false;
     PIO m_pio = nullptr;
     uint m_sm = 0;

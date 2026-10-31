@@ -333,6 +333,41 @@ bool ps4_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
     }
     switch (subtype)
     {
+    case Wheel:
+        if (type.which_mapping == proto_Output_wheelButton_tag)
+        {
+            auto data = &((PS4Wheel_Data_t *)buf)->wheel;
+            switch (type.mapping.wheelButton)
+            {
+            case Wheel_Gear1:
+                return data->gear1;
+            case Wheel_Gear2:
+                return data->gear2;
+            case Wheel_Gear3:
+                return data->gear3;
+            case Wheel_Gear4:
+                return data->gear4;
+            case Wheel_Gear5:
+                return data->gear5;
+            case Wheel_Gear6:
+                return data->gear6;
+            case Wheel_GearReverse:
+                return data->gearReverse;
+            case Wheel_Plus:
+                return data->plus;
+            case Wheel_Minus:
+                return data->minus;
+            case Wheel_DialUp:
+                return data->dialUp;
+            case Wheel_DialDown:
+                return data->dialDown;
+            case Wheel_DialEnter:
+                return data->dialEnter;
+            default:
+                return false;
+            }
+        }
+        return false;
     case RockBandGuitar:
         if (type.which_mapping == proto_Output_rbButton_tag)
         {
@@ -456,6 +491,26 @@ uint16_t ps4_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
     }
     switch (subtype)
     {
+    case Wheel:
+        // a G29's pedals read 0xFFFF released, see PS4Wheel_Data_t
+        if (type.which_mapping == proto_Output_wheelAxis_tag)
+        {
+            auto data = &((PS4Wheel_Data_t *)buf)->wheel;
+            switch (type.mapping.wheelAxis)
+            {
+            case Wheel_Steering:
+                return data->steering;
+            case Wheel_Accelerator:
+                return UINT16_MAX - data->accelerator;
+            case Wheel_Brake:
+                return UINT16_MAX - data->brake;
+            case Wheel_Clutch:
+                return UINT16_MAX - data->clutch;
+            default:
+                return 0;
+            }
+        }
+        break;
     case RockBandDrums:
         if (type.which_mapping == proto_Output_rbDrumAxis_tag)
             return rb4_drums_velocity_to_axis(rb4_drums_velocity((PS4RockBandDrums_Data_t *)buf, type.mapping.rbDrumAxis), RB4_PS_MAX_VELOCITY);

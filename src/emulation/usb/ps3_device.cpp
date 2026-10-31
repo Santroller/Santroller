@@ -222,6 +222,18 @@ uint8_t const desc_hid_report_ps3_thirdparty[] =
 uint8_t const desc_hid_report_ps3_gamepad[] =
     {
         TUD_HID_REPORT_DESC_PS3_FIRSTPARTY_GAMEPAD(HID_REPORT_ID(ReportIdGamepad))};
+// A G27's, from GIMX's EMUG27 firmware: a hat, 22 buttons, 14 bit steering, three pedals, the shifter's
+// stick and status, and the force feedback output and feature reports
+uint8_t const desc_hid_report_g27[] = {
+    0x05, 0x01, 0x09, 0x04, 0xA1, 0x01, 0x15, 0x00, 0x25, 0x07, 0x35, 0x00, 0x46, 0x3B, 0x01, 0x65,
+    0x14, 0x09, 0x39, 0x75, 0x04, 0x95, 0x01, 0x81, 0x42, 0x65, 0x00, 0x25, 0x01, 0x45, 0x01, 0x05,
+    0x09, 0x19, 0x01, 0x29, 0x16, 0x75, 0x01, 0x95, 0x16, 0x81, 0x02, 0x26, 0xFF, 0x3F, 0x46, 0xFF,
+    0x3F, 0x75, 0x0E, 0x95, 0x01, 0x05, 0x01, 0x09, 0x30, 0x81, 0x02, 0x26, 0xFF, 0x00, 0x46, 0xFF,
+    0x00, 0x75, 0x08, 0x95, 0x03, 0x09, 0x32, 0x09, 0x35, 0x09, 0x31, 0x81, 0x02, 0x06, 0x00, 0xFF,
+    0x09, 0x01, 0x95, 0x02, 0x81, 0x02, 0x95, 0x01, 0x75, 0x01, 0x25, 0x01, 0x45, 0x01, 0x05, 0x09,
+    0x09, 0x17, 0x81, 0x02, 0x06, 0x00, 0xFF, 0x09, 0x01, 0x95, 0x07, 0x81, 0x02, 0x26, 0xFF, 0x00,
+    0x46, 0xFF, 0x00, 0x06, 0x00, 0xFF, 0x09, 0x02, 0x95, 0x07, 0x75, 0x08, 0x91, 0x02, 0x95, 0x90,
+    0x09, 0x03, 0xB1, 0x02, 0xC0};
 PS3GamepadDevice::PS3GamepadDevice(bool wiirb) : m_wiirb(wiirb)
 {
 }
@@ -232,6 +244,19 @@ void PS3GamepadDevice::initialize()
     m_strid = next_strid();
     ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
     ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
+    if (subtype == Wheel)
+    {
+        PS3G27_Data_t *report = (PS3G27_Data_t *)m_initial_report;
+        memset(report, 0, sizeof(PS3G27_Data_t));
+        report->steering = 0x2000;
+        report->accelerator = UINT8_MAX;
+        report->brake = UINT8_MAX;
+        report->clutch = UINT8_MAX;
+        report->shifterX = G27_SHIFTER_CENTER;
+        report->shifterY = G27_SHIFTER_CENTER;
+        report->shifterStatus = G27_SHIFTER_DEFAULT_STATUS;
+        return;
+    }
     if (uses_ps3_gamepad_report(subtype))
     {
         PS3Gamepad_Data_t *report = (PS3Gamepad_Data_t *)m_initial_report;
@@ -375,6 +400,13 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
             led->update(full_poll, send_events);
         }
     }
+    if (subtype == Wheel)
+    {
+        // convert bitmask dpad to actual hid dpad
+        epin_buf[0] = (epin_buf[0] & 0xF0) | GamepadButtonMapping::dpad_bindings[epin_buf[0] & 0x0F];
+        send_report(sizeof(PS3G27_Data_t), 0, epin_buf);
+        return;
+    }
     if (subtype != PowerGigGuitar && subtype != PowerGigDrum)
     {
         if (uses_ps3_gamepad_report(subtype))
@@ -436,7 +468,7 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
 
 size_t PS3GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
 {
-    if (subtype != GuitarHeroGuitar && !uses_ps3_gamepad_report(subtype))
+    if (subtype != GuitarHeroGuitar && subtype != Wheel && !uses_ps3_gamepad_report(subtype))
     {
         OS_COMPATIBLE_SECTION section = {
             FirstInterfaceNumber : interface_id,
@@ -454,6 +486,13 @@ size_t PS3GamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t rem
 
 size_t PS3GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
+    if (subtype == Wheel)
+    {
+        uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_g27), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
+        assert(sizeof(desc) <= remaining);
+        memcpy(dest, desc, sizeof(desc));
+        return sizeof(desc);
+    }
     if (uses_ps3_gamepad_report(subtype))
     {
 
@@ -523,7 +562,6 @@ void PS3GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
     case Dancepad:
     case StageKit:
     case KeyboardMouse:
-    case Wheel:
     case DisneyInfinity:
     case Skylanders:
     case LegoDimensions:
@@ -536,6 +574,11 @@ void PS3GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
     case DJMax:
     case ProjectDiva:
     case RockRevolutionGuitar:
+        return;
+    case Wheel:
+        // PS3 racing games only take the wheels they know
+        desc->idVendor = LOGITECH_VID;
+        desc->idProduct = LOGITECH_G27_PID;
         return;
     case Gamepad:
     case Taiko:
@@ -587,6 +630,10 @@ void PS3GamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 }
 const uint8_t *PS3GamepadDevice::report_descriptor()
 {
+    if (subtype == Wheel)
+    {
+        return desc_hid_report_g27;
+    }
     if (uses_ps3_gamepad_report(subtype))
     {
         return desc_hid_report_ps3_gamepad;
@@ -599,6 +646,10 @@ const uint8_t *PS3GamepadDevice::report_descriptor()
 
 uint16_t PS3GamepadDevice::report_desc_len()
 {
+    if (subtype == Wheel)
+    {
+        return sizeof(desc_hid_report_g27);
+    }
     if (uses_ps3_gamepad_report(subtype))
     {
         return sizeof(desc_hid_report_ps3_gamepad);

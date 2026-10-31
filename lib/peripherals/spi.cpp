@@ -18,6 +18,9 @@ static bool spi_write_read_bounded(spi_inst_t *spi, const uint8_t *src, uint8_t 
     const uint32_t start = time_us_32();
     while (rx_remaining || tx_remaining)
     {
+        // Sampled before the fifos are checked, so if a higher priority IRQ holds us up past the deadline
+        // the byte that finished meanwhile is still picked up, instead of being thrown away as a timeout
+        const bool timed_out = time_us_32() - start > timeout_us;
         if (tx_remaining && spi_is_writable(spi) && rx_remaining < tx_remaining + fifo_depth)
         {
             spi_get_hw(spi)->dr = (uint32_t)*src++;
@@ -33,7 +36,7 @@ static bool spi_write_read_bounded(spi_inst_t *spi, const uint8_t *src, uint8_t 
             }
             --rx_remaining;
         }
-        if (time_us_32() - start > timeout_us)
+        if (timed_out && (rx_remaining || tx_remaining))
         {
             // Drop anything left over so the next transfer starts in step
             while (spi_is_readable(spi))

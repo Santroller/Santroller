@@ -83,6 +83,9 @@ public:
 
 protected:
     virtual bool mark_channel_seen(uint8_t channel);
+    // For a channel the device always sends on, so its slot exists from the start. Otherwise the reload
+    // from first seeing it eats that first message
+    void preset_channel_seen(uint8_t channel) { m_midi.set_channel_seen(channel); }
     // Whether data arrives as 4 byte USB MIDI packets rather than a plain MIDI byte stream
     void set_usb_packets(bool usb_packets) { m_midi.set_usb_packets(usb_packets); }
 

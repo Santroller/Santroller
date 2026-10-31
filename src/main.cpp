@@ -66,6 +66,51 @@ void __verbose_terminate_handler()
     panic("terminate");
 }
 }
+
+// The std containers report errors through these, and libstdc++'s versions throw, which links in the
+// whole exception runtime (the unwinder, personality routine and unwind tables, ~11KB of flash).
+// With exceptions off a throw ends in terminate anyway, so stop here instead
+namespace std
+{
+void __throw_length_error(const char *)
+{
+    panic("terminate");
+}
+void __throw_bad_alloc()
+{
+    panic("terminate");
+}
+void __throw_bad_array_new_length()
+{
+    panic("terminate");
+}
+void __throw_bad_function_call()
+{
+    panic("terminate");
+}
+}
+
+// libstdc++'s catches std::bad_alloc, which also needs the exception runtime. std::stable_partition
+// uses it for a temporary buffer, and does without one when this returns nullptr
+void *operator new(size_t size, const std::nothrow_t &) noexcept
+{
+    return malloc(size);
+}
+
+// libstdc++'s RTTI support (which std::make_shared uses) has unwind tables naming these personality
+// routines, which would link in the unwinder. Nothing unwinds with exceptions off, so they never run
+extern "C" void __aeabi_unwind_cpp_pr0()
+{
+    panic("terminate");
+}
+extern "C" void __aeabi_unwind_cpp_pr1()
+{
+    panic("terminate");
+}
+extern "C" void __aeabi_unwind_cpp_pr2()
+{
+    panic("terminate");
+}
 class HidConsoleBridge
 {
 public:

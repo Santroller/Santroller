@@ -11,6 +11,7 @@ set(MAPPINGS_SOURCES
   ${SANTROLLER_ROOT}/src/mappings/project_diva_mappings.cpp
   ${SANTROLLER_ROOT}/src/mappings/taiko_mappings.cpp
   ${SANTROLLER_ROOT}/src/mappings/peripheral_mappings.cpp
+  ${SANTROLLER_ROOT}/src/mappings/wheel_mapping.cpp
   ${SANTROLLER_ROOT}/src/mappings/powergig_mappings.cpp
   ${SANTROLLER_ROOT}/src/mappings/rock_revolution_mappings.cpp
   ${SANTROLLER_ROOT}/src/profiles/socd.cpp
@@ -28,6 +29,7 @@ add_executable(mappings_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/mappings/guitar_mapping_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mappings/drums_mapping_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mappings/arcade_mapping_test.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/mappings/wheel_mapping_test.cpp
 )
 # The fakes come first so they shadow the firmware's own headers
 target_include_directories(mappings_tests BEFORE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/support/mappings)

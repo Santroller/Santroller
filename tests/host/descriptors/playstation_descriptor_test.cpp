@@ -266,6 +266,7 @@ TEST(Ps4Descriptor, InstrumentReportsFitTheReport)
     EXPECT_EQ(sizeof(PS4RockBandGuitar_Data_t), sizeof(PS4Dpad_Data_t));
     EXPECT_EQ(sizeof(PS4RockBandDrums_Data_t), sizeof(PS4Dpad_Data_t));
     EXPECT_EQ(sizeof(PS4GHLGuitar_Data_t), sizeof(PS4Dpad_Data_t));
+    EXPECT_EQ(sizeof(PS4Wheel_Data_t), sizeof(PS4Dpad_Data_t));
 }
 
 TEST(Ps4Descriptor, OutputReportFields)
@@ -331,6 +332,7 @@ TEST(Ps5Descriptor, InstrumentReportsFitTheReport)
     // are checked in instrument_layout_test.cpp
     EXPECT_LE(sizeof(PS5Gamepad_Data_t), sizeof(PS5Dpad_Data_t));
     EXPECT_EQ(sizeof(PS5RockBandGuitar_Data_t), sizeof(PS5Dpad_Data_t));
+    EXPECT_EQ(sizeof(PS5Wheel_Data_t), sizeof(PS5Dpad_Data_t));
     EXPECT_EQ(sizeof(PS5RockBandDrums_Data_t), sizeof(PS5Dpad_Data_t));
     EXPECT_EQ(sizeof(PS5GHLGuitar_Data_t), sizeof(PS5Dpad_Data_t));
 }

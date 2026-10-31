@@ -354,6 +354,8 @@ message Output {
     // Always true
     bool keyboardPassthrough = 41;
     TurnOffControllerOutput turnOffController = 42;
+    WheelAxisType wheelAxis = 43;
+    WheelButtonType wheelButton = 44;
   }
 }
 

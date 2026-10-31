@@ -34,6 +34,11 @@ typedef struct
     uint8_t rightTrigger;
 } __attribute__((packed)) GameCubeGamepad_Data_t;
 
+// A Speed Force wheel uses the same report, from sonik-br's gamecube_ffb_wheel_adapter: its status in the
+// stick's X, steering in its Y, the gas and brake on the C stick (released at 0) and the paddles on the
+// analog triggers
+#define GC_WHEEL_POWER_AND_PEDALS 14
+
 // Real sticks only reach about this far from center, so games are tuned for it. Some
 // consoles (at least the Analogue 3D) scale the value and wrap around to the other
 // direction somewhere past +-84, so stay clear of that.

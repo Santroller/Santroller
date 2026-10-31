@@ -104,6 +104,11 @@ void XInputGamepadDevice::initialize()
         report->leftThumbClick = true;
         break;
     }
+    case Wheel:
+        // the clutch and handbrake rest at their minimum, see WheelAxisMapping
+        m_initial_report.leftStickY = INT16_MIN;
+        m_initial_report.rightStickY = INT16_MIN;
+        break;
     default:
         break;
     }

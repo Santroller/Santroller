@@ -8,6 +8,7 @@ BandHeroDrumDevice::BandHeroDrumDevice(const DeviceReloadState* state, proto_Ban
     m_band_hero_drum(this, device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock),
     m_device(device)
 {
+    preset_channel_seen(MIDI_CHANNEL_DRUMS);
 }
 void BandHeroDrumDevice::begin()
 {

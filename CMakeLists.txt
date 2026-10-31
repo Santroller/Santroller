@@ -387,6 +387,7 @@ add_executable(
   src/mappings/project_diva_mappings.cpp
   src/mappings/taiko_mappings.cpp
   src/mappings/peripheral_mappings.cpp
+  src/mappings/wheel_mapping.cpp
   src/mappings/powergig_mappings.cpp
   src/mappings/rock_revolution_mappings.cpp
   src/devices/bt/ble_rx.cpp

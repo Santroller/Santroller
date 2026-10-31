@@ -397,6 +397,15 @@ void BTGamepadDevice::initialize()
         report->leftThumbClick = true;
         break;
     }
+    case Wheel:
+    {
+        // the pedals rest at their minimum, see WheelAxisMapping::update_hid
+        PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)&m_initial_report;
+        report->leftStickY = INT16_MIN;
+        report->rightStickX = INT16_MIN;
+        report->rightStickY = INT16_MIN;
+        break;
+    }
     default:
         break;
     }

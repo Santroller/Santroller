@@ -27,9 +27,12 @@ public:
 
 private:
     void setup();
+    proto_Output &axis();
     proto_USBAxisInput m_input;
     std::shared_ptr<UsbHostInterface> m_device;
     Profile *m_profile;
+    // m_input's axis as a gamepad axis, for hosts that don't decode wheels
+    proto_Output m_gamepad_axis;
 };
 class USBButtonInput : public Input
 {

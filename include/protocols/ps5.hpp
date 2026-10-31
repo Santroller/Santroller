@@ -1,5 +1,7 @@
 #pragma once
 #include "protocols/motion.hpp"
+#include "protocols/ps4.hpp"
+#include <stddef.h>
 #include <stdint.h>
 
 #define PS5_INPUT_REPORT_ID 1
@@ -207,6 +209,56 @@ typedef struct
     uint8_t unused4[11];
     uint64_t checksum;
 } __attribute__((__packed__)) PS5RockBandGuitar_Data_t;
+
+// A PS5 wheel, guessed from a PS4 one (a G29): the same wheel data where a PS5 guitar keeps its
+// pickup, as a PS4 guitar's and wheel's data both start at byte 43
+typedef struct
+{
+    uint8_t report_id;
+    uint8_t leftStickX;
+    uint8_t leftStickY;
+    uint8_t rightStickX;
+    uint8_t rightStickY;
+    uint8_t leftTrigger;
+    uint8_t rightTrigger;
+
+    uint8_t reserved;
+
+    uint8_t dpadUp : 1;
+    uint8_t dpadDown : 1;
+    uint8_t dpadLeft : 1;
+    uint8_t dpadRight : 1;
+    uint8_t x : 1; // square
+    uint8_t a : 1; // cross
+    uint8_t b : 1; // circle
+    uint8_t y : 1; // triangle
+
+    uint8_t leftShoulder : 1;
+    uint8_t rightShoulder : 1;
+    uint8_t l2 : 1;
+    uint8_t r2 : 1;
+    uint8_t back : 1;  // share
+    uint8_t start : 1; // options
+    uint8_t leftThumbClick : 1;
+    uint8_t rightThumbClick : 1;
+
+    uint8_t guide : 1;
+    uint8_t capture : 1;
+    uint8_t : 6;
+
+    uint8_t unused2;
+
+    uint32_t packetCounter;
+
+    uint8_t unused3[24];
+
+    PSWheel_Data_t wheel;
+
+    uint8_t unused4[4];
+    uint64_t checksum;
+} __attribute__((__packed__)) PS5Wheel_Data_t;
+static_assert(offsetof(PS5Wheel_Data_t, wheel) == offsetof(PS5RockBandGuitar_Data_t, pickup), "PS5 wheel data is where a guitar's is");
+static_assert(sizeof(PS5Wheel_Data_t) == 64, "PS5 reports are 64 bytes");
 
 typedef struct
 {

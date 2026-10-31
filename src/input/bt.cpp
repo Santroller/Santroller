@@ -1,5 +1,6 @@
 #include "input/bt.hpp"
 #include "protocols/face_buttons.hpp"
+#include "protocols/wheel.hpp"
 
 BTButtonInput::BTButtonInput(proto_BTButtonInput input,
                              std::shared_ptr<BluetoothHostInterface> device, Profile* profile)
@@ -43,6 +44,8 @@ BTAxisInput::BTAxisInput(proto_BTAxisInput input,
                          std::shared_ptr<BluetoothHostInterface> device, Profile* profile)
     : m_input(input), m_device(device), m_profile(profile)
 {
+    // Bluetooth wheels are read as the gamepad axes they send on, see USBAxisInput
+    wheel_axis_as_gamepad(m_input.axis);
 }
 
 bool BTAxisInput::tick_digital()

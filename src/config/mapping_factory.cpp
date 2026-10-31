@@ -4,8 +4,25 @@
 #include "mappings/mapping.hpp"
 #include "mappings/project_diva_mappings.hpp"
 #include "mappings/taiko_mappings.hpp"
+#include "protocols/wheel.hpp"
 
 static auto& config_mgr = ConfigManager::instance();
+
+// A gamepad axis on a wheel: the left stick and triggers are its steering and pedals, so they go where
+// the wheel's report has them on every console
+static std::unique_ptr<Mapping> create_wheel_gamepad_axis_mapping(
+    const proto_Mapping& proto_mapping,
+    std::shared_ptr<Profile> profile,
+    std::unique_ptr<Input> input,
+    uint32_t mapping_id)
+{
+    WheelAxisType axis;
+    if (gamepad_wheel_axis(proto_mapping.mapping.mapping.gamepadAxis, axis))
+    {
+        return std::make_unique<WheelAxisMapping>(proto_mapping, axis, std::move(input), mapping_id, profile);
+    }
+    return std::make_unique<WheelGamepadAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
+}
 
 // Kept out of line so the converted proto_Mapping copy only takes stack on the konami path,
 // create_mapping runs deep in the config decode on core0's 4k stack
@@ -34,6 +51,9 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
     switch (proto_mapping.mapping.which_mapping)
     {
     case proto_Output_gamepadAxis_tag:
+        if (profile->subtype == Wheel) {
+            return create_wheel_gamepad_axis_mapping(proto_mapping, profile, std::move(input), mapping_id);
+        }
         if (profile->subtype == Taiko) {
             return std::make_unique<TaikoAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
@@ -61,6 +81,12 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
         }
         return std::make_unique<GamepadAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         
+    case proto_Output_wheelAxis_tag:
+        return std::make_unique<WheelAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
+
+    case proto_Output_wheelButton_tag:
+        return std::make_unique<WheelButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
+
     case proto_Output_ghAxis_tag:
         return std::make_unique<GuitarHeroGuitarAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         
@@ -80,6 +106,10 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
         return std::make_unique<RockBandGuitarButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         
     case proto_Output_gamepadButton_tag:
+        // PS3 and GameCube wheels put some buttons elsewhere
+        if (profile->subtype == Wheel) {
+            return std::make_unique<WheelGamepadButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
+        }
         if (profile->subtype == Taiko) {
             return std::make_unique<TaikoButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }

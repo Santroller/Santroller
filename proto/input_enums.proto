@@ -181,6 +181,31 @@ enum DJMaxTurntableAxisType {
   DJMaxTurntable_RightVelocity = 2;
 }
 
+// Steering is a centred axis, the pedals and handbrake rest at their minimum.
+// Wheel buttons are gamepad buttons, apart from those in WheelButtonType
+enum WheelAxisType {
+  Wheel_Steering = 1;
+  Wheel_Accelerator = 2;
+  Wheel_Brake = 3;
+  Wheel_Clutch = 4;
+  Wheel_Handbrake = 5;
+}
+// The buttons a G29 has that a gamepad doesn't: its H shifter and the buttons around its dial
+enum WheelButtonType {
+  Wheel_Gear1 = 1;
+  Wheel_Gear2 = 2;
+  Wheel_Gear3 = 3;
+  Wheel_Gear4 = 4;
+  Wheel_Gear5 = 5;
+  Wheel_Gear6 = 6;
+  Wheel_GearReverse = 7;
+  Wheel_Plus = 8;
+  Wheel_Minus = 9;
+  Wheel_DialUp = 10;
+  Wheel_DialDown = 11;
+  Wheel_DialEnter = 12;
+}
+
 enum BeatManiaButtonType {
   BeatMania_Button1 = 1;
   BeatMania_Button2 = 2;

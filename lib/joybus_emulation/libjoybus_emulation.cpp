@@ -53,6 +53,18 @@ JoybusEmulation::~JoybusEmulation()
     end();
 }
 
+// From sonik-br's gamecube_ffb_wheel_adapter. Its force feedback goes in the poll's third byte.
+void JoybusEmulation::set_wheel(bool wheel)
+{
+    if (m_n64 || wheel == m_wheel)
+    {
+        return;
+    }
+    const uint8_t probe[] = {static_cast<uint8_t>(wheel ? 0x08 : 0x09), 0x00, 0x03};
+    m_probe_count = encode(probe, 3, m_probe_words, false);
+    m_wheel = wheel;
+}
+
 bool JoybusEmulation::begin()
 {
     if (m_started)
@@ -258,6 +270,7 @@ uint8_t JoybusEmulation::command_length(uint8_t command) const
     }
     switch (command)
     {
+    case 0x30: // wheel poll
     case 0x40: // poll
     case 0x42: // calibrate
         return 3;
@@ -344,9 +357,19 @@ void __time_critical_func(JoybusEmulation::handle_command)()
         reply(m_origin_words, m_origin_count);
         return;
     case 0x40:
+        if (m_wheel)
+        {
+            return;
+        }
         // the third byte holds the rumble motor state (1 = on, 2 = brake)
         m_rumble = (m_command[2] & 0x03) == 0x01;
         reply(m_report_words[report_index], m_report_count);
+        return;
+    case 0x30:
+        if (m_wheel)
+        {
+            reply(m_report_words[report_index], m_report_count);
+        }
         return;
     }
 }

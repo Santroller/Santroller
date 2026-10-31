@@ -369,6 +369,7 @@ add_executable(
   src/devices/adc_battery.cpp
   src/devices/pins.cpp
   src/profiles/profile.cpp
+  src/profiles/socd.cpp
   src/config/device_factory.cpp
   src/config/device_gate.cpp
   src/config/input_factory.cpp

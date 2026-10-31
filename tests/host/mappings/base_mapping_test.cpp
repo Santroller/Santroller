@@ -685,6 +685,145 @@ TEST_F(ButtonUpdate, CombinedStrumDebounceBlocksTheOtherDirection)
     EXPECT_TRUE(down->value());
 }
 
+namespace
+{
+// The four D-pad directions, cleaned by the profile's SOCD mode like config loading sets them up
+struct SocdDpad
+{
+    Driven<ProbeButton> up, down, left, right;
+
+    explicit SocdDpad(const std::shared_ptr<Profile> &profile)
+        : up(drive<ProbeButton>(gamepad_button(Gamepad_DpadUp), profile)),
+          down(drive<ProbeButton>(gamepad_button(Gamepad_DpadDown), profile)),
+          left(drive<ProbeButton>(gamepad_button(Gamepad_DpadLeft), profile)),
+          right(drive<ProbeButton>(gamepad_button(Gamepad_DpadRight), profile))
+    {
+        add(profile, up, Gamepad_DpadUp);
+        add(profile, down, Gamepad_DpadDown);
+        add(profile, left, Gamepad_DpadLeft);
+        add(profile, right, Gamepad_DpadRight);
+    }
+
+    static void add(const std::shared_ptr<Profile> &profile, Driven<ProbeButton> &d, GamepadButtonType button)
+    {
+        uint8_t bit = profile->socd_bit_for_output(gamepad_button(button).mapping);
+        if (bit)
+        {
+            d->set_socd_bit(bit);
+            profile->socd_mappings.push_back(d.mapping.get());
+        }
+    }
+
+    // Set the held directions, then update every mapping in order like a report does
+    void hold(bool u, bool d, bool l, bool r)
+    {
+        up.input->digital = u;
+        down.input->digital = d;
+        left.input->digital = l;
+        right.input->digital = r;
+        for (auto *m : {&up, &down, &left, &right})
+        {
+            m->mapping->update(false, false);
+        }
+    }
+};
+} // namespace
+
+TEST_F(ButtonUpdate, SocdOffReportsOppositeDirections)
+{
+    SocdDpad dpad(profile);
+    EXPECT_TRUE(profile->socd_mappings.empty());
+    dpad.hold(true, true, true, true);
+    EXPECT_TRUE(dpad.up->value());
+    EXPECT_TRUE(dpad.down->value());
+    EXPECT_TRUE(dpad.left->value());
+    EXPECT_TRUE(dpad.right->value());
+}
+
+TEST_F(ButtonUpdate, SocdNeutralDropsBothDirections)
+{
+    profile->socd_mode = SocdNeutral;
+    SocdDpad dpad(profile);
+    dpad.hold(true, true, true, false);
+    EXPECT_FALSE(dpad.up->value());
+    EXPECT_FALSE(dpad.down->value());
+    EXPECT_TRUE(dpad.left->value());
+    dpad.hold(false, true, true, true);
+    EXPECT_TRUE(dpad.down->value());
+    EXPECT_FALSE(dpad.left->value());
+    EXPECT_FALSE(dpad.right->value());
+}
+
+TEST_F(ButtonUpdate, SocdUpPriorityKeepsUpAndNeutralsHorizontal)
+{
+    profile->socd_mode = SocdUpPriority;
+    SocdDpad dpad(profile);
+    dpad.hold(false, true, false, false);
+    dpad.hold(true, true, true, true);
+    EXPECT_TRUE(dpad.up->value());
+    EXPECT_FALSE(dpad.down->value());
+    EXPECT_FALSE(dpad.left->value());
+    EXPECT_FALSE(dpad.right->value());
+}
+
+TEST_F(ButtonUpdate, SocdLastInputFollowsTheNewestPress)
+{
+    profile->socd_mode = SocdLastInput;
+    SocdDpad dpad(profile);
+    dpad.hold(false, false, true, false);
+    dpad.hold(false, false, true, true);
+    EXPECT_FALSE(dpad.left->value());
+    EXPECT_TRUE(dpad.right->value());
+    // letting go of the newest goes back to the one still held
+    dpad.hold(false, false, true, false);
+    EXPECT_TRUE(dpad.left->value());
+    // pressing the other again takes over
+    dpad.hold(false, false, true, true);
+    EXPECT_TRUE(dpad.right->value());
+    dpad.hold(false, false, false, true);
+    dpad.hold(false, false, true, true);
+    EXPECT_TRUE(dpad.left->value());
+    EXPECT_FALSE(dpad.right->value());
+}
+
+TEST_F(ButtonUpdate, SocdFirstInputKeepsTheOneHeldFirst)
+{
+    profile->socd_mode = SocdFirstInput;
+    SocdDpad dpad(profile);
+    dpad.hold(true, false, false, false);
+    dpad.hold(true, true, false, false);
+    EXPECT_TRUE(dpad.up->value());
+    EXPECT_FALSE(dpad.down->value());
+}
+
+TEST_F(ButtonUpdate, SocdOppositesPressedTogetherAreNeutral)
+{
+    for (auto mode : {SocdLastInput, SocdFirstInput})
+    {
+        profile = make_profile();
+        profile->socd_mode = mode;
+        SocdDpad dpad(profile);
+        dpad.hold(false, false, true, true);
+        EXPECT_FALSE(dpad.left->value());
+        EXPECT_FALSE(dpad.right->value());
+    }
+}
+
+TEST_F(ButtonUpdate, SocdOnlyCleansGamepadsAndFightSticks)
+{
+    for (auto subtype : {SubType_Dancepad, SubType_GuitarHeroGuitar})
+    {
+        profile = make_profile(subtype);
+        profile->socd_mode = SocdNeutral;
+        SocdDpad dpad(profile);
+        EXPECT_TRUE(profile->socd_mappings.empty());
+    }
+    profile = make_profile(SubType_FightStick);
+    profile->socd_mode = SocdNeutral;
+    SocdDpad dpad(profile);
+    EXPECT_EQ(profile->socd_mappings.size(), 4u);
+}
+
 TEST_F(ButtonUpdate, SendsButtonEventsOnChange)
 {
     auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);

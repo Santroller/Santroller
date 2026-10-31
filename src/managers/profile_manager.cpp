@@ -32,6 +32,7 @@ namespace
                 {
                     free_vector(profile->action_mappings);
                     free_vector(profile->strum_mappings);
+                    free_vector(profile->socd_mappings);
                     free_vector(profile->mappings);
                     free_vector(profile->triggers);
                     free_vector(profile->leds);

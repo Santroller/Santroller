@@ -17,6 +17,7 @@ set(WII_MAPPING_SOURCES
   ${SANTROLLER_ROOT}/src/mappings/peripheral_mappings.cpp
   ${SANTROLLER_ROOT}/src/mappings/powergig_mappings.cpp
   ${SANTROLLER_ROOT}/src/mappings/rock_revolution_mappings.cpp
+  ${SANTROLLER_ROOT}/src/profiles/socd.cpp
 )
 
 file(GLOB SANTROLLER_WII_TESTS CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/wii/*_test.cpp)

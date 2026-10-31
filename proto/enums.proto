@@ -113,6 +113,15 @@ enum FaceButtonMappingMode {
   PositionBased = 2; /* Map face buttons by position */
 }
 
+// What the D-pad reports while opposite directions are held at once (eg on a hitbox)
+enum SocdMode {
+  SocdOff = 0;        /* Report both directions */
+  SocdNeutral = 1;    /* Report neither direction */
+  SocdUpPriority = 2; /* Up wins over down, left + right is neutral */
+  SocdLastInput = 3;  /* The direction pressed most recently wins */
+  SocdFirstInput = 4; /* The direction that was held first wins */
+}
+
 enum WiiExtType {
     WiiNunchuk = 0x0000;
     WiiClassicController = 0x0001;

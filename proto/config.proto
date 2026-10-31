@@ -46,6 +46,8 @@ message ProfileOpts {
   // console or PC is asleep), in place of their LEDs going off. Not much power can be drawn from a suspended
   // port, so this is off unless asked for.
   optional bool standbyWhileSuspended = 24;
+  // Gamepads and fight sticks only: how the D-pad resolves opposite directions held at once
+  optional SocdMode socdMode = 25;
 }
 
 message Profile {

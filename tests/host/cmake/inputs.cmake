@@ -12,6 +12,7 @@ set(INPUTS_SOURCES
   ${SANTROLLER_ROOT}/src/devices/cycle.cpp
   ${SANTROLLER_ROOT}/src/devices/device.cpp
   ${SANTROLLER_ROOT}/src/profiles/profile.cpp
+  ${SANTROLLER_ROOT}/src/profiles/socd.cpp
   ${SANTROLLER_ROOT}/src/triggers/activation_trigger_list.cpp
   ${SANTROLLER_ROOT}/src/triggers/device_type_triggers.cpp
   ${SANTROLLER_ROOT}/src/triggers/input_trigger.cpp

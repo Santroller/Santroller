@@ -508,6 +508,12 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
             button->set_strum_bit(bit);
             profile->strum_mappings.push_back(button);
         }
+        uint8_t socd_bit = button ? profile->socd_bit_for_output(proto_mapping.mapping) : 0;
+        if (socd_bit)
+        {
+            button->set_socd_bit(socd_bit);
+            profile->socd_mappings.push_back(button);
+        }
         if (proto_mapping.mapping.which_mapping == proto_Output_action_tag)
         {
             profile->action_mappings.push_back(static_cast<ActionMapping *>(mapping.get()));
@@ -858,6 +864,7 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->full_range_turntable_on_pc = opts.has_fullRangeTurntableOnPc && opts.fullRangeTurntableOnPc;
     profile->ps3_on_rpcs3 = rpcs3_passthrough_supported(opts.deviceToEmulate) && (!opts.has_ps3OnRpcs3 || opts.ps3OnRpcs3);
     profile->select_to_dpad_left = opts.has_selectToDpadLeft && opts.selectToDpadLeft;
+    profile->socd_mode = opts.has_socdMode ? opts.socdMode : SocdOff;
     profile->position_based_face_buttons = opts.faceButtonMappingMode == PositionBased;
     profile->combined_strum_debounce = opts.has_combinedStrumDebounce && opts.combinedStrumDebounce;
     profile->disconnect_bluetooth_on_suspend = opts.has_disconnectBluetoothOnSuspend && opts.disconnectBluetoothOnSuspend;
@@ -1089,6 +1096,8 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
             profile->action_mappings.shrink_to_fit();
             profile->strum_mappings.clear();
             profile->strum_mappings.shrink_to_fit();
+            profile->socd_mappings.clear();
+            profile->socd_mappings.shrink_to_fit();
             profile->mappings.clear();
             profile->mappings.shrink_to_fit();
             profile->triggers.clear();
@@ -1111,6 +1120,7 @@ bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
             profile->leds.shrink_to_fit();
             profile->action_mappings.shrink_to_fit();
             profile->strum_mappings.shrink_to_fit();
+            profile->socd_mappings.shrink_to_fit();
             profile->queued_mappings.shrink_to_fit();
             profile->queued_last_live.shrink_to_fit();
         }

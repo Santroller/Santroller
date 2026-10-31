@@ -610,8 +610,8 @@ void PS3GamepadAxisMapping::update_ps3(uint8_t *buf)
     return;
 }
 
-// One per combination of the four bits, as the dpad nibble can hold any of them. Opposite directions held
-// together cancel out to neutral, and so does any combination with both of a pair.
+// One per combination of the four bits, as the dpad nibble can hold any of them. A hat can't hold opposite
+// directions, so those cancel out on their axis, leaving the other axis's direction (like SocdNeutral).
 const uint8_t GamepadButtonMapping::dpad_bindings[16] = {
     0x08, // none
     0x00, // up
@@ -620,14 +620,14 @@ const uint8_t GamepadButtonMapping::dpad_bindings[16] = {
     0x06, // left
     0x07, // up + left
     0x05, // down + left
-    0x08, // up + down + left
+    0x06, // up + down + left
     0x02, // right
     0x01, // up + right
     0x03, // down + right
-    0x08, // up + down + right
+    0x02, // up + down + right
     0x08, // left + right
-    0x08, // up + left + right
-    0x08, // down + left + right
+    0x00, // up + left + right
+    0x04, // down + left + right
     0x08, // all four
 };
 GamepadButtonMapping::GamepadButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)

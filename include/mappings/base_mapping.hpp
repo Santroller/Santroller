@@ -172,13 +172,28 @@ public:
     }
     ButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : ButtonMapping(mapping, std::move(input), id, profile.get()) {}
     void update(bool full_poll, bool send_events);
+    // Sample the input and set the value outputs report, which update leaves to the profile for
+    // SOCD cleaned mappings
+    void update_value(bool full_poll, bool send_events);
     // Read and debounce the input without touching the value outputs report
     void sample(bool full_poll, bool send_events);
     bool live_value() const { return m_live_value; }
+    bool value() const { return m_last_value; }
     int8_t queue_bit() const { return m_queue_bit; }
     void set_queue_bit(int8_t bit) { m_queue_bit = bit; }
     int8_t strum_bit() const { return m_strum_bit; }
     void set_strum_bit(int8_t bit) { m_strum_bit = bit; }
+    uint8_t socd_bit() const { return m_socd_bit; }
+    void set_socd_bit(uint8_t bit) { m_socd_bit = bit; }
+    // Release the output if SOCD cleaning dropped this mapping's direction
+    void mask_socd(uint8_t allowed)
+    {
+        if (!(allowed & m_socd_bit))
+        {
+            m_last_value = false;
+            m_last_pressure = 0;
+        }
+    }
     ButtonMapping *as_button_mapping() override { return this; }
 
 protected:
@@ -189,6 +204,8 @@ protected:
     uint16_t m_live_pressure = 0;
     int8_t m_queue_bit = -1;
     int8_t m_strum_bit = -1;
+    // The D-pad direction this mapping outputs while SOCD cleaning is on, see Profile::update_socd
+    uint8_t m_socd_bit = 0;
     bool m_last_sent_value = false;
     uint16_t m_last_sent_pressure = 0;
     bool m_calibrated_value = false;

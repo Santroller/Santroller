@@ -268,6 +268,21 @@ void ActionMapping::update_action()
 
 void ButtonMapping::update(bool full_poll, bool send_events)
 {
+    // SOCD cleaned mappings all update with the first one, so every direction is known before
+    // any of them write a report
+    if (m_socd_bit)
+    {
+        if (m_profile->socd_mappings.front() == this)
+        {
+            m_profile->update_socd(full_poll, send_events);
+        }
+        return;
+    }
+    update_value(full_poll, send_events);
+}
+
+void ButtonMapping::update_value(bool full_poll, bool send_events)
+{
     sample(full_poll, send_events);
     if (m_queue_bit >= 0)
     {

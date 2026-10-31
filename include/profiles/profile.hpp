@@ -44,6 +44,9 @@ public:
     bool ps3_on_rpcs3 = true;
     bool disconnect_bluetooth_on_suspend = false;
     bool select_to_dpad_left = false;
+    uint8_t socd_held = 0;
+    // Per axis (vertical, horizontal), the direction pressed most recently, 0 if both were pressed at once
+    uint8_t socd_newest[2] = {0, 0};
     // Gamepad face buttons are mapped by position instead of by legend, see protocols/face_buttons.hpp
     bool position_based_face_buttons = false;
     bool select_as_dpad_left() const
@@ -130,6 +133,17 @@ public:
     // Whether a strum in a direction other than strum_bit is held or still debouncing
     bool other_strum_live(int8_t strum_bit) const;
     void update_actions();
+    // Gamepads and fight sticks: the D-pad mappings socd_mode cleans, in mapping order
+    SocdMode socd_mode = SocdOff;
+    std::vector<ButtonMapping *> socd_mappings;
+    static constexpr uint8_t SOCD_UP = 1;
+    static constexpr uint8_t SOCD_DOWN = 2;
+    static constexpr uint8_t SOCD_LEFT = 4;
+    static constexpr uint8_t SOCD_RIGHT = 8;
+    // The SOCD direction bit for a mapping's output, or 0 when it isn't cleaned
+    uint8_t socd_bit_for_output(const proto_Output &output) const;
+    // Update every SOCD cleaned mapping, then release the directions socd_mode drops
+    void update_socd(bool full_poll, bool send_events);
     DrumState drum_state;
     KeyboardState keyboard_state;
     MouseState mouse_state;

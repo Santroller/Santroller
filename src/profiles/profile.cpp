@@ -13,6 +13,7 @@ Profile::~Profile()
     queued_mappings.clear();
     action_mappings.clear();
     strum_mappings.clear();
+    socd_mappings.clear();
     mappings.clear();
     triggers.clear();
     leds.clear();
@@ -33,6 +34,8 @@ void Profile::release_to_triggers()
     action_mappings.shrink_to_fit();
     strum_mappings.clear();
     strum_mappings.shrink_to_fit();
+    socd_mappings.clear();
+    socd_mappings.shrink_to_fit();
     mappings.clear();
     mappings.shrink_to_fit();
     leds.clear();

@@ -12,6 +12,8 @@
 #include "managers/inactivity_manager.hpp"
 #include "managers/config_manager.hpp"
 #include "pico/bootrom.h"
+#include "devices/usb/host/host.hpp"
+#include "devices/bt/bt_host.hpp"
 
 uint16_t Mapping::sample_ui_event()
 {
@@ -245,6 +247,23 @@ void ButtonMapping::sample(bool full_poll, bool send_events)
         InactivityManager::instance().input_activity(millis());
     }
 }
+void ActionMapping::turn_off_controller(const proto_TurnOffControllerOutput &output)
+{
+    std::shared_ptr<Device> device;
+    if (output.which_slot == proto_TurnOffControllerOutput_usb_tag)
+    {
+        device = m_profile->find_slot_device<UsbHostInterface>(output.slot.usb, true);
+    }
+    else if (output.which_slot == proto_TurnOffControllerOutput_bluetooth_tag)
+    {
+        device = m_profile->find_slot_device<BluetoothHostInterface>(output.slot.bluetooth, true);
+    }
+    if (device && device->can_power_off())
+    {
+        device->power_off();
+    }
+}
+
 void ActionMapping::update_action()
 {
     sample(false, false);
@@ -253,6 +272,11 @@ void ActionMapping::update_action()
     m_was_pressed = pressed;
     if (!pressed || was_pressed)
     {
+        return;
+    }
+    if (m_mapping.mapping.which_mapping == proto_Output_turnOffController_tag)
+    {
+        turn_off_controller(m_mapping.mapping.mapping.turnOffController);
         return;
     }
     switch (m_mapping.mapping.mapping.action)

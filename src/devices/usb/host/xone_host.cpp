@@ -385,3 +385,12 @@ void XboxOneHost::set_player_led(uint8_t player)
     // LED is a system message ([MS-GIPUSB] Table 41)
     send_feedback_packet(GIP_CMD_LED_ON, true, data, sizeof(data));
 }
+
+void XboxOneHost::power_off()
+{
+    uint8_t data[] = {GIP_STATE_OFF};
+    // Device state is a system message ([MS-GIPUSB] 3.1.5.5.6)
+    send_feedback_packet(GIP_SET_STATE, true, data, sizeof(data));
+    // Pressing guide announces it again, and it stays dark until it is powered on again
+    m_power_on_sent = false;
+}

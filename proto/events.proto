@@ -103,6 +103,8 @@ message UsbDeviceHotplugEvent {
     // Lets the config tool fill in a specific device trigger from a connected device
     optional uint32 vid = 9;
     optional uint32 pid = 10;
+    // A wireless controller that TurnOffControllerCommand can turn off
+    optional bool canTurnOff = 11;
 }
 
 message WiiDeviceHotplugEvent {

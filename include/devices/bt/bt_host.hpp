@@ -25,6 +25,9 @@ void bt_host_save_pairing(const std::shared_ptr<BluetoothHostInterface> &device,
 void bt_host_subtype_changed(BluetoothHostInterface *device);
 // Forgets a paired controller: disconnects it, deletes its bond and removes (and saves) its pairing
 void bt_forget_pairing(int32_t id);
+// Turns off the controller with this hotplug event sourceId. Dropping the connection is what turns
+// bluetooth controllers off, and BLE ones are held off from reconnecting for a while so they don't come back
+void bt_host_power_off(uint32_t source_id);
 // Forgets the hosts we paired with as a controller: drops a connected host and deletes their bonds
 void bt_forget_hosts();
 // Fills in the CRC32 at the end of a DS4 (0x11) / DS5 (0x31) bluetooth output report. The report starts at
@@ -98,6 +101,9 @@ public:
     virtual void on_disconnected();
     // Drop the connection, eg so the controller turns off while the host is asleep
     void disconnect();
+    // Dropping the connection is what turns a bluetooth controller off
+    bool can_power_off() const override { return true; }
+    void power_off() override { disconnect(); }
 
     // Tick interface — same as UsbHostInterface
     virtual bool tick_digital(proto_Output &type) = 0;

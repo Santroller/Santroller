@@ -27,6 +27,8 @@
 #define XINPUT_WIRELESS_DEBUG_PRINT(...)
 #endif
 static const uint8_t capabilitiesRequest[] = {0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+// Turns the linked controller off, as Linux's xpad does
+static const uint8_t xbox360w_power_off[] = {0x00, 0x00, 0x08, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t xbox360w_prescence[] = {0x08, 0x00, 0x0f, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const char xinput_wireless_gamepad_slot_name[] = "X360 Wireless Receiver Slot 0";
 
@@ -165,7 +167,7 @@ void XInputWirelessGamepadHost::update(bool full_poll, bool send_events)
     {
         m_link_lost_ms = now;
     }
-    if (m_found && m_link_lost && now - m_link_lost_ms >= link_loss_grace_ms)
+    if (m_found && m_link_lost && (m_powering_off || now - m_link_lost_ms >= link_loss_grace_ms))
     {
         XINPUT_WIRELESS_DEBUG_PRINT("w %lu %u DISC after %lu\r\n",
                                     static_cast<unsigned long>(now), m_interface,
@@ -227,6 +229,7 @@ void XInputWirelessGamepadHost::link_restored(const char *why)
                                 static_cast<unsigned long>(millis()), m_interface, why,
                                 static_cast<unsigned long>(millis() - m_link_lost_ms));
     m_link_lost = false;
+    m_powering_off = false;
     m_link_up_ms = millis();
     set_linked(true);
     // The controller re-linked, so its LED state was reset
@@ -239,10 +242,23 @@ void XInputWirelessGamepadHost::disconnect()
     UsbHostInterface::disconnect();
 }
 
+void XInputWirelessGamepadHost::power_off()
+{
+    if (!m_found || m_link_lost)
+    {
+        return;
+    }
+    if (send_out("off", xbox360w_power_off, sizeof(xbox360w_power_off)))
+    {
+        m_powering_off = true;
+    }
+}
+
 void XInputWirelessGamepadHost::disconnect_controller()
 {
     set_linked(false);
     m_link_lost = false;
+    m_powering_off = false;
     m_input_count = 0;
     m_last_input_ms = 0;
     m_reported_input_count = 0;

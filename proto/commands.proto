@@ -52,6 +52,10 @@ message UnpairBluetoothCommand {
 message ForgetBluetoothHostsCommand {
 
 }
+// Turn off a wireless controller on the USB host port or connected over bluetooth, by the sourceId of its hotplug event
+message TurnOffControllerCommand {
+  required uint32 sourceId = 1;
+}
 message CrkdCalibrationUpdateCommand {
   required uint32 id = 1;
   required CrkdDrumCalibrationType type = 2;
@@ -84,5 +88,6 @@ message Command {
         DetectInputCommand detectInput = 10;
         SetCycleCommand setCycle = 11;
         ForgetBluetoothHostsCommand forgetBluetoothHosts = 12;
+        TurnOffControllerCommand turnOffController = 13;
     }
 }

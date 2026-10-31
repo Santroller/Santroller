@@ -137,6 +137,8 @@ void usb_host_remove_assignable_interface(UsbHostInterface *device);
 void usb_host_remove_enumerating_interface(UsbHostInterface *device);
 void usb_host_remove_interfaces_by_address(uint8_t dev_addr);
 size_t usb_host_assignable_interface_count();
+// Turns off the wireless controller with this hotplug event sourceId, if it can be
+void usb_host_power_off(uint32_t source_id);
 void usb_host_add_assignable_devices(bool rescan);
 void usb_host_update_interfaces(bool full_poll, bool send_events);
 

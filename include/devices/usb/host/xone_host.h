@@ -28,6 +28,9 @@ public:
     bool is_xbox_one_pad() const override { return m_subtype == SubType_Gamepad; }
     bool has_rumble() const override { return true; }
     bool has_player_led() const override { return true; }
+    // USB keeps it powered, but it goes dark and stops reporting until its guide button is pressed
+    bool can_power_off() const override { return true; }
+    void power_off() override;
     std::optional<uint64_t> hardware_id() const override
     {
         auto id = hardware_id_from_mac(m_gip_device.address);

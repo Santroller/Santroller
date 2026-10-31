@@ -514,7 +514,8 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
             button->set_socd_bit(socd_bit);
             profile->socd_mappings.push_back(button);
         }
-        if (proto_mapping.mapping.which_mapping == proto_Output_action_tag)
+        if (proto_mapping.mapping.which_mapping == proto_Output_action_tag ||
+            proto_mapping.mapping.which_mapping == proto_Output_turnOffController_tag)
         {
             profile->action_mappings.push_back(static_cast<ActionMapping *>(mapping.get()));
         }

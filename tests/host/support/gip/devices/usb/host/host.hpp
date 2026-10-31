@@ -29,6 +29,8 @@ public:
     virtual void set_player_led(uint8_t player) { (void)player; }
     virtual bool has_rumble() const { return false; }
     virtual bool has_player_led() const { return false; }
+    virtual bool can_power_off() const { return false; }
+    virtual void power_off() {}
     virtual std::optional<uint64_t> hardware_id() const { return std::nullopt; }
     virtual bool is_xbox_one_pad() const { return false; }
     virtual bool key_pressed(uint8_t keycode) { (void)keycode; return false; }

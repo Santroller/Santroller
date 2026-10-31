@@ -188,6 +188,9 @@ public:
     void set_player_led(uint8_t player) override;
     bool has_rumble() const override { return true; }
     bool has_player_led() const override { return true; }
+    // an empty slot has nothing to turn off
+    bool can_power_off() const override { return m_found; }
+    void power_off() override;
     // not the receiver's iSerialNumber, which every slot shares
     std::optional<uint64_t> hardware_id() const override { return m_found ? m_hardware_id : std::nullopt; }
 
@@ -250,6 +253,8 @@ private:
     uint32_t m_last_drop_ms = 0;
     uint32_t m_link_up_ms = 0;
     static constexpr uint32_t link_loss_grace_ms = 3000;
+    // Told to turn off, so its link dropping is it turning off and not something to wait out
+    bool m_powering_off = false;
     bool m_led_set = false;
     bool m_wt = false;
     WtSliderFilter m_wt_filter;

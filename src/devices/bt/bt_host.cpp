@@ -208,6 +208,18 @@ void bt_forget_pairing(int32_t id)
     ble_resync_reconnect();
 }
 
+void bt_host_power_off(uint32_t source_id)
+{
+    for (const auto &device : bt_assignable_interfaces)
+    {
+        if (device->source_id() == source_id)
+        {
+            device->power_off();
+            return;
+        }
+    }
+}
+
 void bt_forget_hosts()
 {
     printf("BT: forgetting paired hosts\r\n");

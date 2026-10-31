@@ -11,6 +11,7 @@
 #include "main.hpp"
 #include "emulation/usb/hid_device.h"
 #include "emulation/bt/bt_config_service.h"
+#include "devices/usb/host/host.hpp"
 #include "devices/bt/bt_host.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
 #include "emulation/usb/ps3_device.h"
@@ -442,6 +443,12 @@ void HIDConfigDevice::handle_command(proto_Command command)
   case proto_Command_unpairBluetooth_tag:
   {
     bt_forget_pairing(command.command.unpairBluetooth.id);
+    return;
+  }
+  case proto_Command_turnOffController_tag:
+  {
+    usb_host_power_off(command.command.turnOffController.sourceId);
+    bt_host_power_off(command.command.turnOffController.sourceId);
     return;
   }
   case proto_Command_forgetBluetoothHosts_tag:

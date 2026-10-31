@@ -294,6 +294,14 @@ message MidiNoteOutput {
   optional uint32 velocity = 3;
 }
 
+// Turns off the wireless controller in a USB host or bluetooth slot (the slot id, like USB and bluetooth inputs)
+message TurnOffControllerOutput {
+  oneof slot {
+    int32 usb = 1;
+    int32 bluetooth = 2;
+  }
+}
+
 // A control change on a MIDI channel (1 - 16), from an axis
 message MidiControlOutput {
   required uint32 channel = 1;
@@ -345,6 +353,7 @@ message Output {
     // Every key held on the USB keyboard the input reads from, apart from keys other mappings read from it.
     // Always true
     bool keyboardPassthrough = 41;
+    TurnOffControllerOutput turnOffController = 42;
   }
 }
 

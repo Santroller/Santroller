@@ -254,6 +254,29 @@ TEST_F(XoneHost, PlayerLedIsASystemMessage)
     EXPECT_EQ(payload_of(sent[0]), (Bytes{0x00, 0x01, 0x14}));
 }
 
+// Turning it off is Set Device State OFF (0x04, [MS-GIPUSB] 3.1.5.5.6), a system message like
+// xone's gip_set_power_mode(GIP_PWR_OFF). A wired one stays powered, so it says hello again when
+// its guide button is pressed, and has to be powered on again then
+TEST_F(XoneHost, TurningOffIsSetDeviceStateOffAndItPowersOnAgainAfter)
+{
+    send_metadata(pb::MADCATZ_STRATOCASTER_METADATA);
+    drain();
+    host->power_off();
+    auto sent = drain();
+    ASSERT_EQ(sent.size(), 1u);
+    Header h = decode(sent[0]);
+    EXPECT_EQ(h.type, GIP_SET_STATE);
+    EXPECT_EQ(h.flags, FLAG_SYSTEM);
+    EXPECT_EQ(payload_of(sent[0]), (Bytes{GIP_STATE_OFF}));
+
+    from_controller(packet(GIP_ANNOUNCE, FLAG_SYSTEM, 0x01, pb::MADCATZ_STRATOCASTER_HELLO));
+    drain();
+    auto init = without_acks(send_metadata(pb::MADCATZ_STRATOCASTER_METADATA));
+    ASSERT_GE(init.size(), 1u);
+    EXPECT_EQ(decode(init[0]).type, GIP_SET_STATE);
+    EXPECT_EQ(payload_of(init[0]), (Bytes{GIP_STATE_START}));
+}
+
 // Security messages from the console are passed to the controller unchanged, re-fragmented with
 // the same framing a real host uses (see xgip_fragment_test.cpp), and the controller's reply goes
 // back to the console. send_report_from_host queues its first fragment whole (see

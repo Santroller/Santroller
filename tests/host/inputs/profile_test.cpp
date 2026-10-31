@@ -446,6 +446,30 @@ TEST_F(ProfileTest, BootloaderActionNeedsTheFullHold)
     EXPECT_EQ(fake_bootrom::reset_count, 1);
 }
 
+TEST_F(ProfileTest, TurnOffControllerWithAnEmptySlotDoesNothing)
+{
+    proto_Mapping config = proto_Mapping_init_default;
+    config.mapping.which_mapping = proto_Output_turnOffController_tag;
+    config.mapping.mapping.turnOffController.which_slot = proto_TurnOffControllerOutput_usb_tag;
+    config.mapping.mapping.turnOffController.slot.usb = 3;
+    TestInput *button = nullptr;
+    auto mapping = std::make_unique<ActionMapping>(config, test_input(button), 0, profile);
+    profile->action_mappings.push_back(mapping.get());
+    profile->mappings.push_back(std::move(mapping));
+    button->set(false);
+    profile->update_actions();
+    button->set(true);
+    profile->update_actions();
+    config.mapping.mapping.turnOffController.which_slot = proto_TurnOffControllerOutput_bluetooth_tag;
+    auto bt_mapping = std::make_unique<ActionMapping>(config, test_input(button), 1, profile);
+    profile->action_mappings.push_back(bt_mapping.get());
+    profile->mappings.push_back(std::move(bt_mapping));
+    button->set(false);
+    profile->update_actions();
+    button->set(true);
+    profile->update_actions();
+}
+
 TEST_F(ProfileTest, ActionHeldAtStartNeedsReleasingFirst)
 {
     // Restarting the device stack while still holding the button mustn't restart it again

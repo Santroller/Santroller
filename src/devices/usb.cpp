@@ -196,6 +196,17 @@ void usb_host_remove_interfaces_by_address(uint8_t dev_addr)
                             { return device->dev_addr() == dev_addr; });
 }
 
+void usb_host_power_off(uint32_t source_id)
+{
+    for (const auto &device : usb_assignable_interfaces)
+    {
+        if (device->source_id() == source_id && device->can_power_off())
+        {
+            device->power_off();
+        }
+    }
+}
+
 size_t usb_host_assignable_interface_count()
 {
     return usb_assignable_interfaces.size();
@@ -681,6 +692,8 @@ void UsbHostInterface::send_hotplug_event(bool connected)
         event.event.usb.vid = m_vid;
         event.event.usb.has_pid = true;
         event.event.usb.pid = m_pid;
+        event.event.usb.has_canTurnOff = can_power_off();
+        event.event.usb.canTurnOff = can_power_off();
     }
     if (connected)
     {

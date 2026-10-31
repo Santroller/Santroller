@@ -362,3 +362,14 @@ void XboxWirelessController::set_player_led(uint8_t player)
     send_feedback_packet(GIP_CMD_LED_ON, true, data, sizeof(data));
 }
 
+void XboxWirelessController::power_off()
+{
+    xbox_controller_t *controller = get_controller_data();
+    if (!controller || controller->status != XBOX_CONTROLLER_READY)
+    {
+        return;
+    }
+    uint8_t data[] = {GIP_STATE_OFF};
+    // Device state is a system message ([MS-GIPUSB] 3.1.5.5.6)
+    send_feedback_packet(GIP_SET_STATE, true, data, sizeof(data));
+}

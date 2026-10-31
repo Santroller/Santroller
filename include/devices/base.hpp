@@ -146,6 +146,9 @@ public:
     virtual bool has_euphoria_led() const { return false; }
     virtual bool has_lightbar() const { return false; }
     virtual bool has_stagekit_led() const { return false; }
+    // Wireless controllers that can be told to turn themselves off
+    virtual bool can_power_off() const { return false; }
+    virtual void power_off() {}
     uint16_t m_id;
     // Unique to this object, unlike m_id, which every interface on a USB host port shares and a
     // controller keeps when it is plugged in again

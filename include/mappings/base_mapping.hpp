@@ -227,6 +227,7 @@ public:
     void update_action();
 
 private:
+    void turn_off_controller(const proto_TurnOffControllerOutput &output);
     // Starts as held, so a button still held after a restart (or at boot) needs releasing first
     bool m_was_pressed = true;
 };

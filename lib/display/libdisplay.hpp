@@ -1,6 +1,7 @@
 #pragma once
 
 #include "i2c.hpp"
+#include "spi.hpp"
 #include "pico/time.h"
 #include "mono_framebuffer.hpp"
 
@@ -16,6 +17,23 @@ typedef enum
     MONO_DISPLAY_SH1107,
 } mono_display_controller_e;
 
+// Where the display is: I2C when spi is false, otherwise SPI. Pins that aren't connected are -1, cs and
+// reset can be wired to GND and 3V3 instead.
+typedef struct
+{
+    bool spi;
+    uint8_t block;
+    int8_t sda;
+    int8_t scl;
+    uint32_t clock;
+    uint8_t address;
+    int8_t sck;
+    int8_t mosi;
+    int8_t dc;
+    int8_t cs;
+    int8_t reset;
+} mono_display_bus_t;
+
 typedef enum
 {
     MONO_DISPLAY_IDLE,
@@ -24,15 +42,14 @@ typedef enum
     MONO_DISPLAY_POWER,
 } mono_display_status_e;
 
-// An SSD1306, SSD1309, SH1106 or SH1107 OLED on I2C. Everything goes out from tick(), only the parts of the
-// frame that changed, and the I2C interrupt just notes when each transfer is done.
+// An SSD1306, SSD1309, SH1106 or SH1107 OLED on I2C or SPI. Everything goes out from tick(), only the
+// parts of the frame that changed, and the I2C interrupt or SPI DMA just notes when each transfer is done.
 class MonoDisplay : public I2CDMAInterface
 {
 public:
     // width only matters for the SH1107 and height for the rest, rotation is in quarter turns clockwise
-    MonoDisplay(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock, uint8_t address,
-                mono_display_controller_e controller, uint8_t width, uint8_t height, uint8_t rotation,
-                uint8_t contrast);
+    MonoDisplay(const mono_display_bus_t &bus, mono_display_controller_e controller, uint8_t width,
+                uint8_t height, uint8_t rotation, uint8_t contrast);
     void tick();
     void begin();
     void end();
@@ -51,11 +68,19 @@ public:
     void set_on(bool on);
 
 private:
-    bool start_transfer(mono_display_status_e status, uint8_t len);
+    // Sends commands, followed by m_chunk when data is set
+    bool send(mono_display_status_e status, const uint8_t *commands, uint8_t len, bool data);
+    void spi_done();
     bool next_chunk(uint8_t &page, uint8_t &chunk);
     uint8_t pages() const { return m_frame.panel_height() / 8; }
     uint8_t chunks() const { return m_frame.panel_width() / MONO_DISPLAY_CHUNK; }
+    // Only the one the display is on has pins
     I2CMasterInterface interface;
+    SPIMasterInterface spi_interface;
+    bool m_spi;
+    int8_t m_dc;
+    int8_t m_cs;
+    int8_t m_reset;
     uint8_t m_address;
     mono_display_controller_e m_controller;
     uint8_t m_contrast;
@@ -76,10 +101,13 @@ private:
     volatile bool m_failed = false;
     uint8_t m_sending_page = 0;
     uint8_t m_sending_chunk = 0;
+    bool m_sending_on = false;
     uint32_t m_sent_at = 0;
     uint32_t m_retry_at = 0;
     int m_fail_count = 0;
     bool m_stopped = true;
+    // The chunk being sent, which is what the display has once it's done
+    uint8_t m_chunk[MONO_DISPLAY_CHUNK];
     uint8_t m_tx[48];
     uint16_t m_cmds[48];
 };

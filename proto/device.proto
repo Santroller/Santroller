@@ -197,7 +197,8 @@ message APA102Device {
 // A monochrome OLED. What it shows comes from display LEDs, each one an element drawn on it while its
 // LED mapping is on
 message DisplayDevice {
-  required I2CDevice i2c = 1;
+  // Set for a display on I2C, otherwise it's on spi
+  optional I2CDevice i2c = 1;
   required DisplayController controller = 2;
   // 7 bit I2C address, unset is 0x3C
   optional int32 address = 3;
@@ -210,6 +211,13 @@ message DisplayDevice {
   optional uint32 contrast = 6;
   // The SH1107 panel's width: 64 or 128 pixels (unset is 128). The rest are always 128.
   optional uint32 width = 7;
+  // A display on SPI: MOSI and SCK (it has no MISO, and the clock is set by the controller), the pin that
+  // picks commands or data, and its chip select and reset pins (unset or -1 when they're wired to GND
+  // and 3V3)
+  optional SPIDevice spi = 8;
+  optional int32 dc_pin = 9;
+  optional int32 cs_pin = 10;
+  optional int32 reset_pin = 11;
 }
 message VTechGuitarIOExpanderDevice {
   required SPIDevice spi = 1;

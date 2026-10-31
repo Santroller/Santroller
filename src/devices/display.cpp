@@ -26,10 +26,47 @@ static mono_display_controller_e controller(DisplayController controller)
     }
 }
 
+static int8_t optional_pin(bool has, int32_t pin)
+{
+    return has ? pin : -1;
+}
+
+static mono_display_bus_t bus(const proto_DisplayDevice &device)
+{
+    if (device.has_spi)
+    {
+        return {
+            spi : true,
+            block : (uint8_t)device.spi.block,
+            sda : -1,
+            scl : -1,
+            clock : 0,
+            address : 0,
+            sck : (int8_t)device.spi.sck,
+            mosi : (int8_t)device.spi.mosi,
+            dc : optional_pin(device.has_dc_pin, device.dc_pin),
+            cs : optional_pin(device.has_cs_pin, device.cs_pin),
+            reset : optional_pin(device.has_reset_pin, device.reset_pin),
+        };
+    }
+    return {
+        spi : false,
+        block : (uint8_t)device.i2c.block,
+        sda : optional_pin(device.has_i2c, device.i2c.sda),
+        scl : optional_pin(device.has_i2c, device.i2c.scl),
+        clock : (uint32_t)device.i2c.clock,
+        address : (uint8_t)(device.has_address ? device.address : 0x3C),
+        sck : -1,
+        mosi : -1,
+        dc : -1,
+        cs : -1,
+        reset : -1,
+    };
+}
+
 DisplayDevice::DisplayDevice(proto_DisplayDevice device, uint16_t id)
     : Device(id),
-      m_display(device.i2c.block, device.i2c.sda, device.i2c.scl, device.i2c.clock,
-                device.has_address ? device.address : 0x3C, controller(device.controller),
+      m_display(bus(device), controller(device.controller),
                 device.has_width ? device.width : 128, device.has_height ? device.height : 64,
                 device.has_rotation ? device.rotation : 0,
                 device.has_contrast ? std::min<uint32_t>(device.contrast, 255) : 207),
@@ -106,5 +143,11 @@ void DisplayDevice::update(bool full_poll, bool send_events)
 
 bool DisplayDevice::using_pin(uint8_t pin)
 {
-    return pin == m_device.i2c.scl || pin == m_device.i2c.sda;
+    if (m_device.has_spi)
+    {
+        return pin == m_device.spi.sck || pin == m_device.spi.mosi ||
+               (m_device.has_dc_pin && pin == m_device.dc_pin) || (m_device.has_cs_pin && pin == m_device.cs_pin) ||
+               (m_device.has_reset_pin && pin == m_device.reset_pin);
+    }
+    return m_device.has_i2c && (pin == m_device.i2c.scl || pin == m_device.i2c.sda);
 }

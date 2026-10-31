@@ -26,7 +26,12 @@ static bool spi_write_read_bounded(spi_inst_t *spi, const uint8_t *src, uint8_t 
         }
         if (rx_remaining && spi_is_readable(spi))
         {
-            *dst++ = (uint8_t)spi_get_hw(spi)->dr;
+            // Write only transfers have nowhere to put what comes back
+            uint8_t data = (uint8_t)spi_get_hw(spi)->dr;
+            if (dst)
+            {
+                *dst++ = data;
+            }
             --rx_remaining;
         }
         if (time_us_32() - start > timeout_us)
@@ -36,7 +41,10 @@ static bool spi_write_read_bounded(spi_inst_t *spi, const uint8_t *src, uint8_t 
             {
                 (void)spi_get_hw(spi)->dr;
             }
-            memset(dst, 0xFF, rx_remaining);
+            if (dst)
+            {
+                memset(dst, 0xFF, rx_remaining);
+            }
             return false;
         }
     }

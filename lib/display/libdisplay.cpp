@@ -1,6 +1,7 @@
 #include "libdisplay.hpp"
 #include <string.h>
 #include "utils.h"
+#include <hardware/gpio.h>
 
 // Control bytes: the rest of the transfer is commands, one command then another control byte, or the
 // rest of the transfer is data
@@ -11,11 +12,14 @@
 #define MONO_DISPLAY_RETRY_MS 500
 // The SH1106 has 132 columns, the 128 that are visible start at 2
 #define SH1106_COLUMN_OFFSET 2
+// The fastest SPI clocks they're rated for
+#define SSD130X_SPI_CLOCK 8000000
+#define SH110X_SPI_CLOCK 4000000
 
 // Panel off, clock, display offset and start line, the controller's own power setup, then follow RAM
 // and not inverted. The settings that change go after these.
 static const uint8_t ssd1306_init[] = {
-    CONTROL_COMMANDS, 0xAE, 0xD5, 0x80, 0xD3, 0x00, 0x40,
+    0xAE, 0xD5, 0x80, 0xD3, 0x00, 0x40,
     // charge pump on, page addressing like the SH1106, no scrolling
     0x8D, 0x14, 0x20, 0x02, 0x2E,
     // precharge, VCOMH
@@ -23,12 +27,12 @@ static const uint8_t ssd1306_init[] = {
     0xA4, 0xA6};
 // The same, but it has no charge pump, the panel's supply comes from outside
 static const uint8_t ssd1309_init[] = {
-    CONTROL_COMMANDS, 0xAE, 0xD5, 0x80, 0xD3, 0x00, 0x40,
+    0xAE, 0xD5, 0x80, 0xD3, 0x00, 0x40,
     0x20, 0x02, 0x2E,
     0xD9, 0xF1, 0xDB, 0x40,
     0xA4, 0xA6};
 static const uint8_t sh1106_init[] = {
-    CONTROL_COMMANDS, 0xAE, 0xD5, 0x80, 0xD3, 0x00, 0x40,
+    0xAE, 0xD5, 0x80, 0xD3, 0x00, 0x40,
     // DC-DC converter on, pump voltage 8V
     0xAD, 0x8B, 0x32,
     // precharge, VCOMH
@@ -37,14 +41,26 @@ static const uint8_t sh1106_init[] = {
 // Panel off, clock, page addressing, DC-DC converter on, start line 0, precharge, VCOMH, follow RAM and
 // not inverted. Its start line command takes the line as a second byte.
 static const uint8_t sh1107_init[] = {
-    CONTROL_COMMANDS, 0xAE, 0xD5, 0x51, 0x20, 0xAD, 0x8A, 0xDC, 0x00,
+    0xAE, 0xD5, 0x51, 0x20, 0xAD, 0x8A, 0xDC, 0x00,
     0xD9, 0x22, 0xDB, 0x35,
     0xA4, 0xA6};
 
-MonoDisplay::MonoDisplay(uint8_t block, uint8_t sda, uint8_t scl, uint32_t clock, uint8_t address,
-                         mono_display_controller_e controller, uint8_t width, uint8_t height, uint8_t rotation,
-                         uint8_t contrast)
-    : interface(block, sda, scl, clock), m_address(address), m_controller(controller), m_contrast(contrast)
+static uint32_t spi_clock(mono_display_controller_e controller)
+{
+    return controller == MONO_DISPLAY_SH1106 || controller == MONO_DISPLAY_SH1107 ? SH110X_SPI_CLOCK
+                                                                                   : SSD130X_SPI_CLOCK;
+}
+
+// Only the bus it's on is given pins, the other is left alone
+MonoDisplay::MonoDisplay(const mono_display_bus_t &bus, mono_display_controller_e controller, uint8_t width,
+                         uint8_t height, uint8_t rotation, uint8_t contrast)
+    : interface(bus.block, bus.spi ? -1 : bus.sda, bus.spi ? -1 : bus.scl, bus.clock),
+      spi_interface(bus.block, SPI_CPHA_0, SPI_CPOL_0, bus.spi ? bus.sck : -1, bus.spi ? bus.mosi : -1, -1, true,
+                    spi_clock(controller)),
+      m_spi(bus.spi),
+      // Without the pin that picks commands or data, nothing can be sent
+      m_dc(bus.spi && bus.sck >= 0 && bus.mosi >= 0 ? bus.dc : -1), m_cs(bus.spi ? bus.cs : -1),
+      m_reset(bus.spi ? bus.reset : -1), m_address(bus.address), m_controller(controller), m_contrast(contrast)
 {
     // The SH1107 is 64 or 128 wide and 128 tall, the rest are 128 wide and 64 or 32 tall
     if (controller == MONO_DISPLAY_SH1107)
@@ -65,12 +81,43 @@ void MonoDisplay::begin()
     m_status = MONO_DISPLAY_IDLE;
     m_fail_count = 0;
     m_retry_at = 0;
-    interface.dmaInit(m_address, this);
+    if (!m_spi)
+    {
+        interface.dmaInit(m_address, this);
+        return;
+    }
+    if (m_dc < 0)
+    {
+        return;
+    }
+    gpio_init(m_dc);
+    gpio_set_dir(m_dc, GPIO_OUT);
+    if (m_cs >= 0)
+    {
+        gpio_init(m_cs);
+        gpio_put(m_cs, 1);
+        gpio_set_dir(m_cs, GPIO_OUT);
+    }
+    if (m_reset >= 0)
+    {
+        // They want reset held low for at least 10us, then a moment before the first command
+        gpio_init(m_reset);
+        gpio_set_dir(m_reset, GPIO_OUT);
+        gpio_put(m_reset, 0);
+        busy_wait_us(20);
+        gpio_put(m_reset, 1);
+        m_retry_at = millis() + 2;
+    }
 }
 
 void MonoDisplay::end()
 {
     m_stopped = true;
+    if (m_spi)
+    {
+        spi_interface.transfer_dma_abort();
+        spi_done();
+    }
     interface.dmaDeinit(m_address);
     m_connected = false;
     m_busy = false;
@@ -88,13 +135,70 @@ void MonoDisplay::process_data(uint8_t addr, bool running, bool timeout, bool ab
     m_busy = false;
 }
 
-bool MonoDisplay::start_transfer(mono_display_status_e status, uint8_t len)
+void MonoDisplay::spi_done()
+{
+    if (m_cs >= 0)
+    {
+        gpio_put(m_cs, 1);
+    }
+    m_busy = false;
+}
+
+bool MonoDisplay::send(mono_display_status_e status, const uint8_t *commands, uint8_t len, bool data)
 {
     m_status = status;
     m_failed = false;
     m_busy = true;
     m_sent_at = millis();
-    if (!interface.dmaWriteRead(m_address, m_tx, len, nullptr, 0, m_cmds))
+    if (m_spi)
+    {
+        // Nothing comes back on SPI, so a display that's there is just assumed. The commands are only a
+        // few bytes, the data goes out by DMA while the main loop carries on.
+        if (m_dc < 0)
+        {
+            m_busy = false;
+            m_failed = true;
+            return false;
+        }
+        if (m_cs >= 0)
+        {
+            gpio_put(m_cs, 0);
+        }
+        gpio_put(m_dc, 0);
+        spi_interface.transfer(commands, nullptr, len);
+        if (data)
+        {
+            gpio_put(m_dc, 1);
+            if (spi_interface.transfer_dma_start(m_chunk, nullptr, MONO_DISPLAY_CHUNK))
+            {
+                return true;
+            }
+            spi_interface.transfer(m_chunk, nullptr, MONO_DISPLAY_CHUNK);
+        }
+        spi_done();
+        return true;
+    }
+    // On I2C a control byte says whether commands or data follow: all commands, or one command at a time
+    // until the data
+    uint8_t n = 0;
+    if (data)
+    {
+        for (uint8_t i = 0; i < len; i++)
+        {
+            m_tx[n++] = CONTROL_ONE_COMMAND;
+            m_tx[n++] = commands[i];
+        }
+        m_tx[n++] = CONTROL_DATA;
+        memcpy(&m_tx[n], m_chunk, MONO_DISPLAY_CHUNK);
+        n += MONO_DISPLAY_CHUNK;
+    }
+    else
+    {
+        m_tx[n++] = CONTROL_COMMANDS;
+        memcpy(&m_tx[n], commands, len);
+        n += len;
+    }
+    if (!interface.dmaWriteRead(m_address, m_tx, n, nullptr, 0, m_cmds))
     {
         m_busy = false;
         m_failed = true;
@@ -132,6 +236,10 @@ void MonoDisplay::tick()
         return;
     }
     uint32_t now = millis();
+    if (m_spi && m_busy && !spi_interface.transfer_dma_busy())
+    {
+        spi_done();
+    }
     if (m_busy)
     {
         if (now - m_sent_at < 1000)
@@ -139,6 +247,11 @@ void MonoDisplay::tick()
             return;
         }
         // The transfer never came back
+        if (m_spi)
+        {
+            spi_interface.transfer_dma_abort();
+            spi_done();
+        }
         m_busy = false;
         m_failed = true;
     }
@@ -168,11 +281,11 @@ void MonoDisplay::tick()
             m_check = true;
             break;
         case MONO_DISPLAY_CHUNK_WRITE:
-            memcpy(&m_shown.pages[m_sending_page][m_sending_chunk * MONO_DISPLAY_CHUNK], &m_tx[7], MONO_DISPLAY_CHUNK);
+            memcpy(&m_shown.pages[m_sending_page][m_sending_chunk * MONO_DISPLAY_CHUNK], m_chunk, MONO_DISPLAY_CHUNK);
             m_unknown &= ~(1ull << (m_sending_page * MONO_DISPLAY_MAX_CHUNKS + m_sending_chunk));
             break;
         case MONO_DISPLAY_POWER:
-            m_panel_on = m_tx[1] == 0xAF;
+            m_panel_on = m_sending_on;
             break;
         default:
             break;
@@ -205,32 +318,33 @@ void MonoDisplay::tick()
         default:
             break;
         }
-        memcpy(m_tx, init, len);
+        uint8_t commands[40];
+        memcpy(commands, init, len);
         // Rotating is done when drawing, so the segment remap and COM scan direction are just what puts
         // the top left of the frame at the top left of the panel
         if (m_controller == MONO_DISPLAY_SH1107)
         {
             // Its COM lines run across the panel. The 64 wide panels use the middle of its 128.
-            m_tx[len++] = 0xA8;
-            m_tx[len++] = m_frame.panel_width() - 1;
-            m_tx[len++] = 0xD3;
-            m_tx[len++] = m_frame.panel_width() == 64 ? 0x60 : 0x00;
-            m_tx[len++] = 0xA0;
-            m_tx[len++] = 0xC0;
+            commands[len++] = 0xA8;
+            commands[len++] = m_frame.panel_width() - 1;
+            commands[len++] = 0xD3;
+            commands[len++] = m_frame.panel_width() == 64 ? 0x60 : 0x00;
+            commands[len++] = 0xA0;
+            commands[len++] = 0xC0;
         }
         else
         {
-            m_tx[len++] = 0xA8;
-            m_tx[len++] = m_frame.panel_height() - 1;
-            m_tx[len++] = 0xA1;
-            m_tx[len++] = 0xC8;
+            commands[len++] = 0xA8;
+            commands[len++] = m_frame.panel_height() - 1;
+            commands[len++] = 0xA1;
+            commands[len++] = 0xC8;
             // COM pin layout, sequential on the 32 tall SSD1306 / SSD1309 panels
-            m_tx[len++] = 0xDA;
-            m_tx[len++] = m_frame.panel_height() == 32 && m_controller != MONO_DISPLAY_SH1106 ? 0x02 : 0x12;
+            commands[len++] = 0xDA;
+            commands[len++] = m_frame.panel_height() == 32 && m_controller != MONO_DISPLAY_SH1106 ? 0x02 : 0x12;
         }
-        m_tx[len++] = 0x81;
-        m_tx[len++] = m_contrast;
-        if (!start_transfer(MONO_DISPLAY_INIT, len))
+        commands[len++] = 0x81;
+        commands[len++] = m_contrast;
+        if (!send(MONO_DISPLAY_INIT, commands, len, false))
         {
             m_status = MONO_DISPLAY_IDLE;
             m_retry_at = now + MONO_DISPLAY_RETRY_MS;
@@ -241,24 +355,18 @@ void MonoDisplay::tick()
     if (m_check && next_chunk(page, chunk))
     {
         uint8_t col = chunk * MONO_DISPLAY_CHUNK + (m_controller == MONO_DISPLAY_SH1106 ? SH1106_COLUMN_OFFSET : 0);
-        m_tx[0] = CONTROL_ONE_COMMAND;
-        m_tx[1] = 0xB0 | page;
-        m_tx[2] = CONTROL_ONE_COMMAND;
-        m_tx[3] = 0x00 | (col & 0x0F);
-        m_tx[4] = CONTROL_ONE_COMMAND;
-        m_tx[5] = 0x10 | (col >> 4);
-        m_tx[6] = CONTROL_DATA;
-        memcpy(&m_tx[7], &m_frame.pages[page][chunk * MONO_DISPLAY_CHUNK], MONO_DISPLAY_CHUNK);
+        const uint8_t commands[] = {(uint8_t)(0xB0 | page), (uint8_t)(0x00 | (col & 0x0F)), (uint8_t)(0x10 | (col >> 4))};
+        memcpy(m_chunk, &m_frame.pages[page][chunk * MONO_DISPLAY_CHUNK], MONO_DISPLAY_CHUNK);
         m_sending_page = page;
         m_sending_chunk = chunk;
-        start_transfer(MONO_DISPLAY_CHUNK_WRITE, 7 + MONO_DISPLAY_CHUNK);
+        send(MONO_DISPLAY_CHUNK_WRITE, commands, sizeof(commands), true);
         return;
     }
     m_check = false;
     if (m_panel_on != m_on)
     {
-        m_tx[0] = CONTROL_COMMANDS;
-        m_tx[1] = m_on ? 0xAF : 0xAE;
-        start_transfer(MONO_DISPLAY_POWER, 2);
+        const uint8_t command = m_on ? 0xAF : 0xAE;
+        m_sending_on = m_on;
+        send(MONO_DISPLAY_POWER, &command, 1, false);
     }
 }

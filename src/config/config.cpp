@@ -1222,6 +1222,10 @@ uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload, ui
     info.magic = metadata.magic;
     info.mainSize = metadata.main_size;
     info.auxSize = metadata.aux_size;
+    info.has_firmwareVerification = true;
+#ifdef PFB_WITH_SHA256_HASHING
+    info.firmwareVerification = true;
+#endif
     bool needs_uf2 = false;
 #if defined(ENABLE_XBOX_WIRELESS) && ENABLE_XBOX_WIRELESS
     bool missing = (xbox_get_static_firmware_header() == NULL);

@@ -416,6 +416,9 @@ message ConfigInfo {
   // How much config each ReportIdConfig read returns, the last one being shorter. Anything after that
   // in a report is padding. Smaller over bluetooth HID, where reads leave room for a byte of padding.
   optional uint32 configChunkSize = 12;
+  // SHA256 is checked before installing OTA images. Older firmware omits this; the configurator
+  // requires a one-time UF2 update rather than uploading through an unverified receiver.
+  optional bool firmwareVerification = 13;
 }
 
 message GetActiveProfiles {

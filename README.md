@@ -12,6 +12,7 @@ not valid OTA inputs; use the generated `santroller_fota_image.bin` or the confi
 packaged OTA image. Automatic secondary-Pico updates generate the same trailer from
 the running application.
 
-Older firmware without verification can install the new image, but cannot validate that
-first transition. Verification applies to subsequent updates received by the new firmware.
+The configurator requires a one-time UF2 update for installed builds before 3493, which first
+enabled verification. Firmware without a build number must report image verification support
+instead. Subsequent updates can use verified OTA images.
 This detects accidental corruption, not image authenticity or hardware compatibility.

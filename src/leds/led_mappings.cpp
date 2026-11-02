@@ -288,10 +288,23 @@ void InputLedMapping::update(bool full_poll, bool send_events)
         }
         curr = m_pos;
     }
-    if (!overridden())
+    if (overridden())
     {
-        m_device->set_val(curr);
+        return;
     }
+    if (m_mapping.has_pattern && m_mapping.pattern == PatternSpread)
+    {
+        // Each LED takes its share of the range in turn, the one being filled lit part way
+        uint8_t leds = m_device->led_count();
+        uint32_t level = (uint32_t)curr * leds;
+        for (uint8_t i = 0; i < leds; i++)
+        {
+            uint32_t start = (uint32_t)i * UINT16_MAX;
+            m_device->set_val_at(i, level <= start ? 0 : std::min<uint32_t>(level - start, UINT16_MAX));
+        }
+        return;
+    }
+    m_device->set_val(curr);
 }
 InputLedMapping::InputLedMapping(std::unique_ptr<LedMappingDevice> device, proto_InputLedMapping mapping, std::unique_ptr<Input> input, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_input(std::move(input)), m_mapping(mapping)
 {

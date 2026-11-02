@@ -180,7 +180,13 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
         }
     }
     const bool idle_xbox_one_adapter = resolved_mode == ModeXboxOne && profile_mgr.get_emulated_device(ModeXboxOne);
-    if ((nothing_matched && !idle_xbox_one_adapter) || resolved_mode == ModeHid || resolved_mode == ModeXbox360)
+    // A microphone without a controller on a 360 is the Logitech one, which is all the 360 should see
+    bool only_microphones = !nothing_matched;
+    profile_mgr.for_each_usb_instance([&only_microphones](const auto &instance)
+                                      { only_microphones &= instance->subtype == SubType_Microphone; });
+    const bool xbox360_microphone = resolved_mode == ModeXbox360 && only_microphones;
+    if ((nothing_matched && !idle_xbox_one_adapter) || resolved_mode == ModeHid ||
+        (resolved_mode == ModeXbox360 && !xbox360_microphone))
     {
         auto confDevice = HIDConfigDevice::instance;
         confDevice->interface_id = profile_mgr.usb_instance_count();
@@ -204,6 +210,10 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     case ModeHid:
     case ModeXbox360:
     {
+        if (xbox360_microphone)
+        {
+            break;
+        }
         const auto id = profile_mgr.usb_instance_count();
         auto secDevice = profile_mgr.reuse_usb_instance(id, resolved_mode, static_cast<SubType>(0), true);
         if (!secDevice)

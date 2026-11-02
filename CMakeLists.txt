@@ -275,6 +275,7 @@ add_executable(
   src/emulation/usb/hid_device.cpp
   src/emulation/usb/hid_keyboard_device.cpp
   src/emulation/usb/midi_device.cpp
+  src/emulation/usb/mic_device.cpp
   src/emulation/usb/hid_gamepad_device.cpp
   src/emulation/usb/hid_config_device.cpp
   src/emulation/usb/switch_device.cpp
@@ -284,6 +285,8 @@ add_executable(
   src/emulation/usb/pdloader_device.cpp
   src/devices/usb/host/xone_host.cpp
   src/devices/usb/host/midi_host.cpp
+  src/devices/usb/host/mic_host.cpp
+  src/devices/mic_stream.cpp
   src/devices/usb/host/ogxbox_host.cpp
   src/devices/usb/host/hid/hid_host.cpp
   src/devices/usb/host/hid/ps3_host.cpp
@@ -547,6 +550,9 @@ pico_set_program_name(${TARGET} "Santroller")
 # BTstack's flash bank would sit inside the config, see btstack_ram_flash_bank.cpp
 target_link_options(${TARGET} PRIVATE -Wl,--wrap=pico_flash_bank_instance)
 target_compile_definitions(${TARGET} PRIVATE PFB_RESERVED_FILESYSTEM_SIZE_KB=${PFB_RESERVED_FILESYSTEM_SIZE_KB})
+# Isochronous IN on the USB host port, for microphones. The RX buffer fits a 48kHz stereo 16 bit packet,
+# and the ring holds ~20 frames of it so a slow main loop doesn't lose audio
+target_compile_definitions(${TARGET} PRIVATE PIO_USB_ISO_RING_SIZE=2048 PIO_USB_RX_BUFFER_SIZE=264)
 pico_set_program_version(${TARGET} ${GIT_REPO_VERSION})
 target_link_libraries(
   ${TARGET}

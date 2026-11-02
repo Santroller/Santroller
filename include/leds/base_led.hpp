@@ -25,6 +25,17 @@ public:
             write_val(val);
         }
     }
+    // Drives only the index'th LED of this device, as set_val drives all of them
+    void set_val_at(uint8_t index, uint16_t val)
+    {
+        track(index);
+        track(val);
+        m_lit |= val != 0;
+        if (!InactivityManager::instance().leds_off())
+        {
+            write_val_at(index, val);
+        }
+    }
     void set_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
     {
         track(index);
@@ -75,6 +86,8 @@ public:
 protected:
     virtual void write_val(uint16_t val) = 0;
     virtual void write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness) = 0;
+    // Devices with a single LED have nothing else to drive
+    virtual void write_val_at(uint8_t index, uint16_t val) { write_val(val); }
 
 private:
     void track(uint32_t val)

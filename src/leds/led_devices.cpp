@@ -5,17 +5,30 @@
 #include "devices/bt/bluetooth_stack.hpp"
 #include <stdio.h>
 #include <algorithm>
+bool RgbLedDevice::colour(uint16_t val, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &w)
+{
+    r = ((float)val * scaleR) + startR;
+    g = ((float)val * scaleG) + startG;
+    b = ((float)val * scaleB) + startB;
+    w = ((float)val * scaleBrightness) + m_device.startW;
+    return m_device.hasStart || r || g || b;
+}
 void RgbLedDevice::write_val(uint16_t val)
 {
-    uint16_t r = ((float)val * scaleR) + startR;
-    uint16_t g = ((float)val * scaleG) + startG;
-    uint16_t b = ((float)val * scaleB) + startB;
-    uint16_t w = ((float)val * scaleBrightness) + m_device.startW;
-    if (!m_device.hasStart && !r && !g && !b)
+    uint8_t r, g, b, w;
+    if (!colour(val, r, g, b, w))
     {
         return;
     }
     for (int i = 0; i < m_device.activeLed_count; i++)
+    {
+        m_led_device->set_led(m_device.activeLed[i], r, g, b, w);
+    }
+}
+void RgbLedDevice::write_val_at(uint8_t i, uint16_t val)
+{
+    uint8_t r, g, b, w;
+    if (colour(val, r, g, b, w))
     {
         m_led_device->set_led(m_device.activeLed[i], r, g, b, w);
     }
@@ -102,6 +115,12 @@ void STP16CPCLedDevice::write_val_raw(uint8_t i, uint8_t r, uint8_t g, uint8_t b
 {
     m_led_device->set_led(m_device.activeLed[i], r, g, b, brightness);
 }
+void STP16CPCLedDevice::write_val_at(uint8_t i, uint16_t val)
+{
+    // On or off, so a partly lit LED rounds to the nearer one
+    uint8_t on = val > UINT16_MAX / 2 ? 255 : 0;
+    m_led_device->set_led(m_device.activeLed[i], on, on, on, 0);
+}
 uint8_t STP16CPCLedDevice::led_count()
 {
     return m_device.activeLed_count;
@@ -144,6 +163,16 @@ void VTechGuitarIoExpanderLedDevice::write_val(uint16_t val)
 void VTechGuitarIoExpanderLedDevice::write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
     m_led_device->set_led(index, r || g || b);
+}
+void VTechGuitarIoExpanderLedDevice::write_val_at(uint8_t index, uint16_t val)
+{
+    uint32_t bit = led_id(index).index;
+    if (bit >= 8)
+    {
+        return;
+    }
+    // led order is 7,6,5,4,0,1,2,3, and they're only on or off, so a partly lit LED rounds to the nearer one
+    m_led_device->set_led(bit > 3 ? bit - 4 : 7 - bit, val > UINT16_MAX / 2);
 }
 void VTechGuitarIoExpanderLedDevice::setup()
 {

@@ -26,6 +26,7 @@
 #include "emulation/usb/keyboardmania_device.h"
 #include "emulation/usb/pdloader_device.h"
 #include "emulation/usb/midi_device.h"
+#include "emulation/usb/mic_device.h"
 #include "emulation/usb/usb_descriptors.h"
 
 static auto &profile_mgr = ProfileManager::instance();
@@ -53,9 +54,9 @@ static SubType reload_subtype(ConsoleMode mode, SubType subtype)
 
 bool InstanceFactory::uses_xinput_on_windows(SubType subtype, bool xinput_on_windows)
 {
-    // There is no xinput keyboard, MIDI device or KeyboardMania
+    // There is no xinput keyboard, MIDI device, KeyboardMania or microphone
     return xinput_on_windows && subtype != SubType_KeyboardMouse && subtype != SubType_Midi &&
-           subtype != SubType_KeyboardMania;
+           subtype != SubType_KeyboardMania && subtype != SubType_Microphone;
 }
 
 std::shared_ptr<Instance> InstanceFactory::create_instance(
@@ -152,7 +153,16 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
         {
             usb_mode = ModeXbox360;
         }
-        if (usb_mode == ModeXboxOne)
+        const bool microphone = profile->subtype == SubType_Microphone;
+        // The OG Xbox doesn't take USB audio class microphones. A 360 or an Xbox One takes the Logitech
+        // one, which it only is without a controller alongside it
+        if (microphone && (usb_mode == ModeOgXbox ||
+                           ((usb_mode == ModeXbox360 || usb_mode == ModeXboxOne) && !UsbMicDevice::alone_in_hid())))
+        {
+            return nullptr;
+        }
+        // A microphone goes alongside the controller, so none of the one controller per mode limits apply
+        if (usb_mode == ModeXboxOne && !microphone)
         {
             auto existing_dev = profile_mgr.get_emulated_device(ModeXboxOne);
             if (existing_dev)
@@ -163,7 +173,7 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
                 return existing_dev;
             }
         }
-        if (usb_mode == ModePs5)
+        if (usb_mode == ModePs5 && !microphone)
         {
             auto existing_dev = profile_mgr.get_emulated_device(ModePs5);
             if (existing_dev)
@@ -172,7 +182,7 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
                 return nullptr;
             }
         }
-        if (usb_mode == ModePs4)
+        if (usb_mode == ModePs4 && !microphone)
         {
             auto existing_dev = profile_mgr.get_emulated_device(ModePs4);
             if (existing_dev)
@@ -181,7 +191,7 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
                 return nullptr;
             }
         }
-        if (usb_mode == ModePs3)
+        if (usb_mode == ModePs3 && !microphone)
         {
             auto existing_dev = profile_mgr.get_emulated_device(ModePs3);
             if (existing_dev)
@@ -193,7 +203,7 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
         auto reused = profile_mgr.reuse_usb_instance(profile_mgr.usb_instance_count(), usb_mode, reload_subtype(usb_mode, profile->subtype), false);
         if (reused)
         {
-            if (!profile_mgr.get_emulated_device(usb_mode))
+            if (!microphone && !profile_mgr.get_emulated_device(usb_mode))
             {
                 profile_mgr.set_emulated_device(usb_mode, reused);
             }
@@ -237,7 +247,12 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
 
     mode = usb_mode_for_subtype(mode, subtype);
     printf("usbd new mode=%d sub=%d\r\n", mode, subtype);
-    switch (mode)
+    // the same audio class microphone in every mode, and never the mode's emulated controller
+    if (subtype == SubType_Microphone)
+    {
+        instance = std::make_shared<UsbMicDevice>();
+    }
+    else switch (mode)
     {
     case ModeHid:
         if (subtype == SubType_KeyboardMouse)
@@ -316,7 +331,7 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
     default:
         return nullptr;
     }
-    if (!profile_mgr.get_emulated_device(mode))
+    if (subtype != SubType_Microphone && !profile_mgr.get_emulated_device(mode))
     {
         profile_mgr.set_emulated_device(mode, instance);
     }

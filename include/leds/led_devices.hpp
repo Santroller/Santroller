@@ -22,12 +22,16 @@ public:
     void test_on() override;
     void write_val(uint16_t val);
     void write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
+    void write_val_at(uint8_t index, uint16_t val) override;
     void setup();
     bool supports_brightness();
     uint8_t led_count();
     LedId led_id(uint8_t i);
 
 protected:
+    // false when the colour for val is black and there's no start colour, which leaves the LED to whatever
+    // else drives it
+    bool colour(uint16_t val, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &w);
     proto_RGBLedDevice m_device;
     std::shared_ptr<LedDevice> m_led_device;
     float scaleR = 0;
@@ -73,6 +77,7 @@ public:
     void off();
     void write_val(uint16_t val);
     void write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
+    void write_val_at(uint8_t index, uint16_t val) override;
     void setup();
     bool supports_brightness();
     uint8_t led_count();
@@ -94,6 +99,7 @@ public:
     void off();
     void write_val(uint16_t val);
     void write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
+    void write_val_at(uint8_t index, uint16_t val) override;
     void setup();
     bool supports_brightness();
     uint8_t led_count();

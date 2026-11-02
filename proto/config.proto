@@ -48,6 +48,9 @@ message ProfileOpts {
   optional bool standbyWhileSuspended = 24;
   // Gamepads and fight sticks only: how the D-pad resolves opposite directions held at once
   optional SocdMode socdMode = 25;
+  // Config tool only: whether the profile has been through its setup wizard (or skipped it). Profiles from
+  // before this was added don't have it, and count as set up once they have mappings.
+  optional bool setUp = 26;
 }
 
 message Profile {

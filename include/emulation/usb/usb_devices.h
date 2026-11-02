@@ -10,6 +10,8 @@
 #define LOGITECH_G920_PID 0xC261
 // A G27 in its native mode
 #define LOGITECH_G27_PID 0xC29B
+// The Logitech USB Microphone, also sold as the Rock Band and Guitar Hero microphone
+#define LOGITECH_MIC_PID 0x0A03
 #define NINTENDO_VID 0x057E
 #define SWITCH_PRO_PID 0x2009
 #define SWITCH_JOYCON_L_PID 0x2006

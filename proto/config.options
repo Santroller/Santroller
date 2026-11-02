@@ -1,4 +1,5 @@
 proto.ProfileOpts.name max_size:32
+proto.ProfileOpts.setUp type:FT_IGNORE
 proto.Config.deviceName max_size:32
 proto.Config.manufacturerName max_size:32
 proto.Profile.opts type:FT_CALLBACK

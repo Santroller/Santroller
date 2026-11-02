@@ -8,6 +8,7 @@
 #include "devices/usb/host/xinput_host.h"
 #include "devices/usb/host/hid/hid_host.h"
 #include "devices/usb/host/midi_host.h"
+#include "devices/usb/host/mic_host.h"
 #include "devices/usb/host/pdloader_host.h"
 #include "devices/usb/host/ogxbox_host.h"
 #include "devices/usb/host/xone_host.h"
@@ -760,6 +761,8 @@ static std::shared_ptr<UsbHostInterface> (*host_device_types[])(std::shared_ptr<
     GameCubeAdapterHost::open,
     Switch2CommandHost::open,
     HidHost::open,
+    // before MidiHost, which would otherwise look at every Audio Control interface
+    MicHost::open,
     MidiHost::open};
 
 uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len)

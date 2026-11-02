@@ -169,6 +169,7 @@ enum SubType {
   BeatMania = 29;
   DrumMania = 30;
   KeyboardMania = 31;
+  Microphone = 32;
   Unknown = 255;
 }
 
@@ -345,6 +346,7 @@ enum RgbPatternType {
 enum ReactiveRgbPatternType {
     PatternStatic=1;
     PatternHeatmap=2;
+    // The input fills up the mapping's LEDs in order, lighting more of them the further it goes
     PatternSpread=3;
 }
 

@@ -129,7 +129,7 @@ set(PICO_BOARD pico_w_compat CACHE STRING "Board type")
 list(PREPEND PICO_BOARD_HEADER_DIRS ${CMAKE_SOURCE_DIR}/boards)
 set(PICO_BOARD_HEADER_DIRS ${PICO_BOARD_HEADER_DIRS} CACHE STRING "PICO board header directories" FORCE)
 set(PFB_WITH_IMAGE_ENCRYPTION OFF)
-set(PFB_WITH_SHA256_HASHING OFF)
+set(PFB_WITH_SHA256_HASHING ON)
 # The config lives in the last 32KB of flash (EEPROM_SIZE_BYTES). Reserving it keeps firmware updates out
 # of it. Changing this moves the download slot, which the bootloader has compiled in, so the app reports
 # that a UF2 update is needed until the bootloader matches (pfb_bootloader_layout_matches)

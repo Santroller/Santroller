@@ -40,6 +40,7 @@ static const char type[] = PICO_BOARD;
 static constexpr uint16_t firmware_upload_report_size = 63;
 static constexpr uint32_t firmware_write_alignment = 256;
 static constexpr uint32_t firmware_write_block_size = 4096;
+static constexpr uint32_t firmware_update_stall_ms = 10000;
 // Config reports are 63 bytes, but a transport can ask for less (bluetooth HID leaves room for padding).
 // Every config report is read with the same reqlen, so ConfigInfo can tell the tool the chunk size too.
 static uint32_t config_chunk_size(uint16_t reqlen)
@@ -83,6 +84,10 @@ void HIDConfigDevice::initialize()
 }
 void HIDConfigDevice::process(bool full_poll, bool send_events)
 {
+  if (ConfigManager::instance().is_updating_firmware())
+  {
+    return;
+  }
   // Before the tool checks below: a hotkey tool only sends commands, never keepalives
   if (!pending_cycle_commands.empty())
   {
@@ -611,7 +616,8 @@ bool HIDConfigDevice::in_use_elsewhere(ConfigTransport transport) const
   // so one would scramble the other's reads and undo its changes. The tool already open keeps the
   // device until it closes: its keepalive lapses (or it doesn't return after a reload) and it isn't
   // partway through an upload
-  return ConfigManager::instance().is_working() || tool_may_be_open();
+  return ConfigManager::instance().is_working() ||
+         ConfigManager::instance().is_updating_firmware() || tool_may_be_open();
 }
 
 uint16_t HIDConfigDevice::handle_get_report_in_use(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
@@ -679,6 +685,16 @@ bool HIDConfigDevice::is_registered()
 
 bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
+  auto &config_mgr = ConfigManager::instance();
+  if (config_mgr.is_updating_firmware() &&
+      report_id != ReportId::ReportIdUpdateFirmware &&
+      report_id != ReportId::ReportIdUploadFirmware &&
+      report_id != ReportId::ReportIdKeepalive &&
+      report_id != ReportId::ReportIdBootloader)
+  {
+    printf("report 0x%02x refused during fw update\r\n", report_id);
+    return false;
+  }
   if (report_type == HID_REPORT_TYPE_FEATURE ||
       (report_type == HID_REPORT_TYPE_OUTPUT && report_id == ReportId::ReportIdUploadFirmware))
   {
@@ -696,10 +712,10 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
     case ReportId::ReportIdUploadFirmware:
     {
       tool_seen = true;
-      if (!fw_update_active)
+      if (!config_mgr.is_updating_firmware())
       {
         printf("fw update data before metadata\r\n");
-        break;
+        return false;
       }
       if (update_state.firmwareSize <= 0 ||
           update_state.offset < 0 ||
@@ -707,7 +723,8 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
           update_state.chunkSize <= 0)
       {
         printf("invalid fw update state\r\n");
-        break;
+        finish_firmware_update();
+        return false;
       }
       uint32_t firmware_size = static_cast<uint32_t>(update_state.firmwareSize);
       uint32_t firmware_offset = static_cast<uint32_t>(update_state.offset);
@@ -715,13 +732,15 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
       if (chunk_offset >= firmware_write_block_size)
       {
         printf("invalid fw update chunk offset\r\n");
-        break;
+        finish_firmware_update();
+        return false;
       }
       uint32_t uploaded_before = firmware_offset + chunk_offset;
       if (uploaded_before >= firmware_size)
       {
         printf("fw update received data past end\r\n");
-        break;
+        finish_firmware_update();
+        return false;
       }
       uint32_t remaining_firmware = firmware_size - uploaded_before;
       uint32_t remaining_block = firmware_write_block_size - chunk_offset;
@@ -734,6 +753,7 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
       memcpy(fw_update_tmp + chunk_offset, buffer, to_copy);
       chunk_offset += to_copy;
       update_state.chunkOffset = chunk_offset;
+      config_mgr.touch_firmware_update(millis());
       if (chunk_offset == firmware_write_block_size ||
           (firmware_offset + chunk_offset) >= firmware_size)
       {
@@ -746,13 +766,22 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
           for (uint32_t i = 0; i < send_len; i += 256)
           {
             uint32_t len = std::min<uint32_t>(256, send_len - i);
-            m_target_secondary_pico->send_ota_chunk(firmware_offset + i, fw_update_tmp + i, len);
+            if (!m_target_secondary_pico->send_ota_chunk(firmware_offset + i, fw_update_tmp + i, len))
+            {
+              printf("failed to send secondary fw update chunk\r\n");
+              finish_firmware_update();
+              return false;
+            }
           }
           if (uploaded >= firmware_size)
           {
-            m_target_secondary_pico->send_ota_finish(firmware_size);
-            m_target_secondary_pico = nullptr;
-            fw_update_active = false;
+            bool finished = m_target_secondary_pico->send_ota_finish(firmware_size);
+            finish_firmware_update();
+            if (!finished)
+            {
+              printf("failed to finish secondary fw update\r\n");
+              return false;
+            }
           }
           else
           {
@@ -796,32 +825,50 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
             memset(fw_update_tmp, 0, sizeof(fw_update_tmp));
           }
           flash_write_end();
+          if (write_failed || uploaded >= firmware_size)
+          {
+            finish_firmware_update();
+            return false;
+          }
         }
       }
       break;
     }
     case ReportId::ReportIdUpdateFirmware:
     {
+      if (config_mgr.is_working() || config_mgr.is_reloading())
+      {
+        printf("fw update refused during config write or reload\r\n");
+        return false;
+      }
       // An update written with this firmware's layout would be swapped in by the bootloader from where its
       // own layout puts the download slot. Only a UF2 (bootloader included) can update it safely
       if (!pfb_bootloader_layout_matches())
       {
         printf("Bootloader layout doesn't match, refusing an OTA update\r\n");
-        fw_update_active = false;
-        break;
+        finish_firmware_update();
+        return false;
       }
       proto_FirmwareUpdate decoded;
       if (!decode_firmware_update(buffer, bufsize, &decoded))
       {
         printf("Didn't decode fw update?\r\n");
-        fw_update_active = false;
-        break;
+        finish_firmware_update();
+        return false;
+      }
+      if (decoded.firmwareSize <= 0 || decoded.offset < 0 ||
+          decoded.offset >= decoded.firmwareSize || decoded.chunkOffset != 0 ||
+          decoded.chunkSize <= 0 || decoded.chunkSize > firmware_upload_report_size)
+      {
+        printf("invalid fw update metadata\r\n");
+        finish_firmware_update();
+        return false;
       }
       // A streamed upload sends this between blocks, both to wait for the block to be written and to
       // check it all arrived: the offset has to be where the upload is up to, which is the start of the
       // next block once a block is written. Otherwise refuse it, so the configurator sends that block again
       // (starting with this report at the offset it is up to, which resets the block).
-      if (fw_update_active && !m_target_secondary_pico && decoded.offset > 0 &&
+      if (config_mgr.is_updating_firmware() && !m_target_secondary_pico && decoded.offset > 0 &&
           !(decoded.has_deviceId && decoded.deviceId > 0) && decoded.offset != update_state.offset)
       {
         printf("fw update at 0x%lx, expected 0x%lx\r\n", (unsigned long)decoded.offset, (unsigned long)update_state.offset);
@@ -830,7 +877,7 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
       update_state = decoded;
       // printf("fw update offset: %02x\r\n", update_state.offset);
       tool_seen = true;
-      fw_update_active = true;
+      config_mgr.touch_firmware_update(millis());
       if (update_state.has_deviceId && update_state.deviceId > 0)
       {
         auto dev = DeviceManager::instance().get_root_device(update_state.deviceId);
@@ -846,13 +893,24 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
         memset(fw_update_tmp, 0, sizeof(fw_update_tmp));
         if (m_target_secondary_pico)
         {
-          m_target_secondary_pico->send_ota_begin(update_state.firmwareSize);
+          if (!m_target_secondary_pico->send_ota_begin(update_state.firmwareSize))
+          {
+            printf("failed to begin secondary fw update\r\n");
+            finish_firmware_update();
+            return false;
+          }
         }
         else
         {
           flash_write_begin();
-          pfb_initialize_download_slot();
+          int result = pfb_initialize_download_slot();
           flash_write_end();
+          if (result)
+          {
+            printf("failed to initialize fw update slot\r\n");
+            finish_firmware_update();
+            return false;
+          }
         }
       }
       break;
@@ -900,6 +958,26 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
     }
   }
   return true;
+}
+
+void HIDConfigDevice::finish_firmware_update()
+{
+  if (m_target_secondary_pico)
+  {
+    m_target_secondary_pico->cancel_host_ota();
+    m_target_secondary_pico = nullptr;
+  }
+  ConfigManager::instance().finish_firmware_update();
+  lastKeepAlive = millis();
+}
+
+void HIDConfigDevice::check_firmware_update_timeout()
+{
+  if (instance && ConfigManager::instance().firmware_update_stalled(millis(), firmware_update_stall_ms))
+  {
+    printf("fw update stalled, abandoning it\r\n");
+    instance->finish_firmware_update();
+  }
 }
 
 bool encode_active_profiles(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)

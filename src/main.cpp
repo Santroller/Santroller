@@ -250,6 +250,11 @@ static bool __noinline reload_config()
     {
         send_reload_event();
     }
+    // Sending the event services USB, which can accept the first firmware packet.
+    if (config_mgr.is_updating_firmware())
+    {
+        return false;
+    }
     config_mgr.begin_reinit();
     load();
     config_mgr.finish_reinit(millis());
@@ -269,7 +274,10 @@ static bool __noinline reload_config()
 void hid_task(void)
 {
     auto& config_mgr = ConfigManager::instance();
-    
+    if (config_mgr.is_updating_firmware())
+    {
+        return;
+    }
     uint32_t now = millis();
     if (config_mgr.is_working())
     {
@@ -367,8 +375,20 @@ bool send_timeout = false;
 
 void update()
 {
+    if (ConfigManager::instance().is_updating_firmware())
+    {
+        return;
+    }
     DeviceManager::instance().update(false, false);
+    if (ConfigManager::instance().is_updating_firmware())
+    {
+        return;
+    }
     ProfileManager::instance().update(false, false);
+    if (ConfigManager::instance().is_updating_firmware())
+    {
+        return;
+    }
     InactivityManager::instance().tick();
 }
 
@@ -439,6 +459,14 @@ int main()
         reattach_device_stack();
         tud_task(); // tinyusb device task
         tuh_task();
+        bt_config_service_handle_requests();
+        HIDConfigDevice::check_firmware_update_timeout();
+        if (ConfigManager::instance().is_updating_firmware())
+        {
+            HidConsoleBridge::instance().flush();
+            BluetoothStack::instance().tick();
+            continue;
+        }
         update_usb_host_presence();
         update_device_gates();
         if (!reload_config())
@@ -446,7 +474,10 @@ int main()
             hid_task();
         }
         HidConsoleBridge::instance().flush();
-        EEPROM.tick();
+        if (!ConfigManager::instance().is_updating_firmware())
+        {
+            EEPROM.tick();
+        }
         BluetoothStack::instance().tick();
     }
     return 0;

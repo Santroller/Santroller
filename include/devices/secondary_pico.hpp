@@ -70,6 +70,7 @@ public:
     bool send_ota_begin(uint32_t total_size);
     bool send_ota_chunk(uint32_t offset, const uint8_t *data, uint16_t length);
     bool send_ota_finish(uint32_t total_size);
+    void cancel_host_ota() { m_host_ota = false; }
 
     inline bool is_connected() const { return m_connected; }
 
@@ -151,5 +152,6 @@ private:
     bool m_rebooting = false;
     uint32_t m_ota_offset = 0;
     uint32_t m_ota_total_size = 0;
+    uint8_t m_ota_sha256[32] = {};
     uint32_t m_last_ota_percent = 0;
 };

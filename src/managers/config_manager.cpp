@@ -35,7 +35,8 @@ void ConfigManager::host_detected(ConsoleMode mode)
 
 bool ConfigManager::should_reinit(uint32_t now) const
 {
-    return m_requested_mode != m_current_mode || (m_reinit_time && now > m_reinit_time);
+    return !m_updating_firmware &&
+           (m_requested_mode != m_current_mode || (m_reinit_time && now > m_reinit_time));
 }
 
 void ConfigManager::begin_reinit()
@@ -59,6 +60,8 @@ void ConfigManager::clear_all()
     m_requested_mode = ModeHid;
     m_mode_changed = false;
     m_working = false;
+    m_updating_firmware = false;
+    m_last_firmware_update = 0;
     m_loaded_any = false;
     m_has_bluetooth = false;
     m_reloading = false;

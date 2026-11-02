@@ -165,6 +165,10 @@ void secondary_pico_handle_ota_command(const uint8_t *rx_buf, size_t rx_len)
             pfb_mark_download_slot_as_valid();
             pfb_perform_update();
         }
+        else
+        {
+            printf("Secondary Pico: firmware image verification failed\r\n");
+        }
     }
 }
 

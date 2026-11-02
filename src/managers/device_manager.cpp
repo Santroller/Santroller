@@ -1,4 +1,5 @@
 #include "managers/device_manager.hpp"
+#include "managers/config_manager.hpp"
 #include "devices/base.hpp"
 #include "devices/ps2_emulation.hpp"
 #include "devices/joybus_emulation.hpp"
@@ -129,9 +130,15 @@ void DeviceManager::set_auth_device(ConsoleMode mode, std::shared_ptr<UsbHostInt
 
 void DeviceManager::update(bool profile_changed, bool send_events) {
     for (const auto &device : m_active_devices) {
+        if (ConfigManager::instance().is_updating_firmware()) {
+            return;
+        }
         device->update(profile_changed, send_events);
     }
     for (const auto &device : m_assignable_devices) {
+        if (ConfigManager::instance().is_updating_firmware()) {
+            return;
+        }
         device->update(profile_changed, send_events);
     }
 }

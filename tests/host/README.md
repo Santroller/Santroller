@@ -40,6 +40,15 @@ keep-alives, and subsequent GHL input without another authentication.
 
 ## Writing tests
 
+Firmware-upload state tests in `inputs/firmware_update_test.cpp` cover deferred config reloads,
+mode changes and device-stack restarts, and the upload inactivity timeout (including clock wrap).
+During configurator-driven firmware uploads, normal device/profile processing and config flash
+commits are paused, while USB host/device transport and Bluetooth requests remain serviced.
+Unrelated writes are refused. Upload errors or 10 seconds without firmware packets release the
+busy state; queued reloads and restarts are then processed normally.
+The configurator also ignores reload notifications and pauses background config/profile reads
+and config saves during the upload, without suppressing debug output or peripheral update events.
+
 Prefer testing pure logic. When firmware logic is tangled with hardware or USB / Bluetooth stacks, move
 the logic into a header-only class or function under `include/protocols/` (like `hid_keyboard.hpp` and
 `ble_midi.hpp`) and keep the device class as a thin wrapper around it. Only fall back to compiling a

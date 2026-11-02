@@ -319,6 +319,10 @@ bool ProfileManager::assign_profile_to_devices(
 
 void ProfileManager::update(bool full_poll, bool send_events)
 {
+    if (ConfigManager::instance().is_updating_firmware())
+    {
+        return;
+    }
     // Queued inputs are sampled every loop, not just when an output is ready to report
     for (const auto &instance : m_active_instances)
     {
@@ -338,6 +342,11 @@ void ProfileManager::update(bool full_poll, bool send_events)
         else
         {
             instance->process(full_poll, send_events);
+        }
+        // Processing an instance can service USB and start an upload.
+        if (ConfigManager::instance().is_updating_firmware())
+        {
+            return;
         }
     }
     const bool host_in_standby = !host_suspended && this->host_in_standby();

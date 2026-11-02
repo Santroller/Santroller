@@ -56,6 +56,17 @@ public:
         m_last_work = now;
     }
     bool working_stalled(uint32_t now, uint32_t timeout_ms) const { return m_working && now - m_last_work > timeout_ms; }
+    bool is_updating_firmware() const { return m_updating_firmware; }
+    void touch_firmware_update(uint32_t now)
+    {
+        m_updating_firmware = true;
+        m_last_firmware_update = now;
+    }
+    void finish_firmware_update() { m_updating_firmware = false; }
+    bool firmware_update_stalled(uint32_t now, uint32_t timeout_ms) const
+    {
+        return m_updating_firmware && now - m_last_firmware_update > timeout_ms;
+    }
     bool has_loaded_any() const { return m_loaded_any; }
     void set_loaded_any(bool loaded) { m_loaded_any = loaded; }
     // What the whole device is called (Config.deviceName), or nullptr when it isn't named
@@ -88,6 +99,10 @@ public:
     void request_device_stack_restart() { m_restart_device_stack = true; }
     bool take_device_stack_restart()
     {
+        if (m_updating_firmware)
+        {
+            return false;
+        }
         bool requested = m_restart_device_stack;
         m_restart_device_stack = false;
         return requested;
@@ -180,6 +195,8 @@ private:
     ConsoleMode m_requested_mode;
     bool m_mode_changed;
     bool m_working;
+    bool m_updating_firmware = false;
+    uint32_t m_last_firmware_update = 0;
     bool m_loaded_any;
     bool m_has_bluetooth;
     bool m_reloading;

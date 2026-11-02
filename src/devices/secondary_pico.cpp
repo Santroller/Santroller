@@ -6,6 +6,8 @@
 #include "utils.h"
 #include <pb_decode.h>
 #include <pb_encode.h>
+#include <mbedtls/sha256.h>
+#include <mbedtls/version.h>
 
 // Each slot's input, already encoded
 static bool encode_inputs_callback(pb_ostream_t *stream, const pb_field_t *field, void * const *arg)
@@ -365,7 +367,19 @@ void SecondaryPicoDevice::version_received()
         if (raw_fw_size > 0 && raw_fw_size < 0x200000)
         {
             m_auto_ota_attempts++;
-            m_ota_total_size = ((raw_fw_size + SECONDARY_PICO_OTA_CHUNK_SIZE - 1) / SECONDARY_PICO_OTA_CHUNK_SIZE) * SECONDARY_PICO_OTA_CHUNK_SIZE;
+            const auto *app_start = reinterpret_cast<const uint8_t *>(&__FLASH_APP_START);
+#if MBEDTLS_VERSION_MAJOR >= 3
+            int result = mbedtls_sha256(app_start, raw_fw_size, m_ota_sha256, 0);
+#else
+            int result = mbedtls_sha256_ret(app_start, raw_fw_size, m_ota_sha256, 0);
+#endif
+            if (result || raw_fw_size % SECONDARY_PICO_OTA_CHUNK_SIZE)
+            {
+                printf("Secondary Pico: cannot hash unaligned firmware or SHA256 failed (%d)\r\n", result);
+                return;
+            }
+            // The running app has no on-flash hash trailer after a UF2 install, so generate it.
+            m_ota_total_size = raw_fw_size + SECONDARY_PICO_OTA_CHUNK_SIZE;
             m_ota_offset = 0;
             m_ota_stage = OtaStage::Begin;
             m_ota_in_progress = true;
@@ -530,6 +544,11 @@ void SecondaryPicoDevice::ota_step()
         {
             uint32_t copy_len = std::min<uint32_t>(SECONDARY_PICO_OTA_CHUNK_SIZE, raw_fw_size - m_ota_offset);
             memcpy(chunk, app_start + m_ota_offset, copy_len);
+        }
+        else if (m_ota_offset == raw_fw_size)
+        {
+            memcpy(chunk + SECONDARY_PICO_OTA_CHUNK_SIZE - sizeof(m_ota_sha256),
+                   m_ota_sha256, sizeof(m_ota_sha256));
         }
         m_ota_chunk_buf[0] = SLAVE_CMD_OTA_CHUNK;
         memcpy(&m_ota_chunk_buf[1], &m_ota_offset, 4);

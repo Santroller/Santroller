@@ -80,6 +80,7 @@ public:
   static void restart_keepalive();
   // The config reloaded while the tool's keepalive had lapsed, so it gets told once it's back
   static void reload_missed();
+  static void check_firmware_update_timeout();
   size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
   size_t config_descriptor(uint8_t *desc, size_t remaining);
   size_t device_name(uint8_t idx, char *desc);
@@ -112,6 +113,7 @@ private:
   void handle_command(proto_Command command);
   uint16_t handle_get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
   bool handle_set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
+  void finish_firmware_update();
   ConfigTransport m_transport = ConfigTransport::Usb;
   proto_EventList list;
   proto_PinDetectType m_detect_type;
@@ -133,7 +135,6 @@ private:
   bool tool_lapsed = false;
   bool tool_missed_reload = false;
   bool profile_changed = false;
-  bool fw_update_active = false;
   uint16_t last_adc_vals[NUM_ADC_CHANNELS];
   bool last_digital_vals[NUM_BANK0_GPIOS];
   // Digital pin detection: pins currently away from their idle level, when they last left it,

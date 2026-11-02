@@ -7,11 +7,11 @@
 #include "pico/time.h"
 
 // The last ADC channel is the temperature sensor rather than a pin
-static constexpr int32_t ADC_PINS = NUM_ADC_CHANNELS - 1;
+static constexpr uint32_t ADC_PINS = NUM_ADC_CHANNELS - 1;
 // The ADC's reference, as on a Pico
 static constexpr uint32_t ADC_VREF_MV = 3300;
 
-bool is_adc_pin(int32_t pin)
+bool is_adc_pin(uint32_t pin)
 {
     return pin >= ADC_BASE_PIN && pin < ADC_BASE_PIN + ADC_PINS;
 }

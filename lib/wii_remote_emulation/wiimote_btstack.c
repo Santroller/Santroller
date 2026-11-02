@@ -234,8 +234,7 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t* p
                         }
                         hid_cid = hid_subevent_connection_opened_get_hid_cid(packet);
                         hid_subevent_connection_opened_get_bd_addr(packet, wii_baddr);
-                        printf("Connected to ");
-                        printf_hexdump(wii_baddr, sizeof(wii_baddr));
+                        printf("Connected to %s\n", bd_addr_to_str(wii_baddr));
                         if (connection_established_callback) {
                             connection_established_callback(wii_baddr);
                         }

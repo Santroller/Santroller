@@ -1244,8 +1244,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 }
                 else
                 {
+#ifdef ENABLE_PRINTF_HEXDUMP
                     printf_hexdump(hid_subevent_report_get_report(packet),
                                    hid_subevent_report_get_report_len(packet));
+#endif
                 }
                 break;
             }

@@ -10,10 +10,13 @@
 #include "device/usbd_pvt.h"
 #include "class/audio/audio.h"
 
-// The unit the mute and volume requests go to (see TUD_AUDIO10_MIC_ONE_CH_DESCRIPTOR)
+// The Logitech USB Microphone's layout, which Mad Catz's microphones copy byte for byte too. Some games
+// only take its VID / PID, so it is copied exactly in case any look further than that.
+static constexpr uint8_t INPUT_TERMINAL_ID = 0x0D;
+// The unit the mute and volume requests go to
 static constexpr uint8_t FEATURE_UNIT_ID = 2;
-static constexpr uint32_t RATES[] = {8000, 11025, 16000, 22050, 32000, 44100, 48000};
-#define USB_MIC_RATES 8000, 11025, 16000, 22050, 32000, 44100, 48000
+static constexpr uint8_t OUTPUT_TERMINAL_ID = 0x0A;
+static constexpr uint32_t RATES[] = {8000, 11025, 22050, 44100, 48000};
 // Volume range offered to the host, in 1/256 dB. The Logitech microphone's, as Wii games set it
 static constexpr int16_t VOLUME_MIN = (int16_t)0x8001;
 static constexpr int16_t VOLUME_MAX = 0x0800;
@@ -80,15 +83,31 @@ size_t UsbMicDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
     const bool logitech = standalone();
     m_ep = logitech ? LOGITECH_MIC_EP : m_epin;
-    uint8_t desc[] = {TUD_AUDIO10_MIC_ONE_CH_DESCRIPTOR(interface_id, (uint8_t)(logitech ? 0 : m_strid), 2, 16, m_ep, USB_MIC_EP_SIZE, USB_MIC_RATES)};
+    const uint8_t as_itf = interface_id + 1;
+    // clang-format off
+    uint8_t desc[] = {
+        // Audio Control interface, then its header, input terminal, feature unit and output terminal
+        9, TUSB_DESC_INTERFACE, interface_id, 0, 0, TUSB_CLASS_AUDIO, AUDIO_SUBCLASS_CONTROL, AUDIO_INT_PROTOCOL_CODE_V1, (uint8_t)(logitech ? 0 : m_strid),
+        9, TUSB_DESC_CS_INTERFACE, AUDIO10_CS_AC_INTERFACE_HEADER, U16_TO_U8S_LE(0x0100), U16_TO_U8S_LE(9 + 12 + 9 + 9), 1, as_itf,
+        12, TUSB_DESC_CS_INTERFACE, AUDIO10_CS_AC_INTERFACE_INPUT_TERMINAL, INPUT_TERMINAL_ID, U16_TO_U8S_LE(AUDIO_TERM_TYPE_IN_GENERIC_MIC), 0, 1, U16_TO_U8S_LE(0), 0, 0,
+        // mute and volume on the master channel only
+        9, TUSB_DESC_CS_INTERFACE, AUDIO10_CS_AC_INTERFACE_FEATURE_UNIT, FEATURE_UNIT_ID, INPUT_TERMINAL_ID, 1, AUDIO10_FU_CONTROL_BM_MUTE | AUDIO10_FU_CONTROL_BM_VOLUME, 0, 0,
+        9, TUSB_DESC_CS_INTERFACE, AUDIO10_CS_AC_INTERFACE_OUTPUT_TERMINAL, OUTPUT_TERMINAL_ID, U16_TO_U8S_LE(AUDIO_TERM_TYPE_USB_STREAMING), 0, FEATURE_UNIT_ID, 0,
+        // Audio Streaming interface: alt setting 0 has no bandwidth, alt setting 1 streams
+        9, TUSB_DESC_INTERFACE, as_itf, 0, 0, TUSB_CLASS_AUDIO, AUDIO_SUBCLASS_STREAMING, AUDIO_INT_PROTOCOL_CODE_V1, 0,
+        9, TUSB_DESC_INTERFACE, as_itf, 1, 1, TUSB_CLASS_AUDIO, AUDIO_SUBCLASS_STREAMING, AUDIO_INT_PROTOCOL_CODE_V1, 0,
+        7, TUSB_DESC_CS_INTERFACE, AUDIO10_CS_AS_INTERFACE_AS_GENERAL, OUTPUT_TERMINAL_ID, 0, U16_TO_U8S_LE(AUDIO10_DATA_FORMAT_TYPE_I_PCM),
+        8 + TU_ARRAY_SIZE(RATES) * 3, TUSB_DESC_CS_INTERFACE, AUDIO10_CS_AS_INTERFACE_FORMAT_TYPE, AUDIO10_FORMAT_TYPE_I, 1, 2, 16, TU_ARRAY_SIZE(RATES),
+        U24_TO_U8S_LE(8000), U24_TO_U8S_LE(11025), U24_TO_U8S_LE(22050), U24_TO_U8S_LE(44100), U24_TO_U8S_LE(48000),
+        9, TUSB_DESC_ENDPOINT, m_ep, TUSB_XFER_ISOCHRONOUS | TUSB_ISO_EP_ATT_SYNCHRONOUS, U16_TO_U8S_LE(USB_MIC_EP_SIZE), 1, 0, 0,
+        7, TUSB_DESC_CS_ENDPOINT, AUDIO10_CS_EP_SUBTYPE_GENERAL, AUDIO10_CS_AS_ISO_DATA_EP_ATT_SAMPLING_FRQ, AUDIO10_CS_AS_ISO_DATA_EP_LOCK_DELAY_UNIT_PCM_SAMPLES, U16_TO_U8S_LE(1),
+    };
+    // clang-format on
+    static_assert(sizeof(desc) == 112, "the Logitech microphone's configuration is 121 bytes with its header");
     if (logitech)
     {
-        // It is the whole device, so nothing else has the Logitech microphone's endpoint. That endpoint is
-        // synchronous too: the attributes are the 4th of the endpoint descriptor's 9 bytes, which comes
-        // right before the class specific one at the end
+        // It is the whole device, so nothing else has the Logitech microphone's endpoint
         ProfileManager::instance().map_usb_instance_epin(m_ep, interface_id);
-        desc[sizeof(desc) - TUD_AUDIO10_DESC_CS_AS_ISO_EP_LEN - TUD_AUDIO10_DESC_STD_AS_ISO_EP_LEN + 3] =
-            TUSB_XFER_ISOCHRONOUS | TUSB_ISO_EP_ATT_SYNCHRONOUS;
     }
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
@@ -170,7 +189,7 @@ void UsbMicDevice::set_streaming(bool streaming)
         .bLength = sizeof(tusb_desc_endpoint_t),
         .bDescriptorType = TUSB_DESC_ENDPOINT,
         .bEndpointAddress = m_ep,
-        .bmAttributes = {.xfer = TUSB_XFER_ISOCHRONOUS, .sync = (uint8_t)(m_ep == LOGITECH_MIC_EP ? 3 : 1)},
+        .bmAttributes = {.xfer = TUSB_XFER_ISOCHRONOUS, .sync = 3},
         .wMaxPacketSize = USB_MIC_EP_SIZE,
         .bInterval = 1,
     };

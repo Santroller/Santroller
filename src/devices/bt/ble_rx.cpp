@@ -15,7 +15,9 @@
 #include "btstack_config.h"
 #include "gap.h"
 #include "hidparser.h"
+#ifdef BT_HCI_DUMP
 #include "hci_dump_embedded_stdout.h"
+#endif
 #include "devices/bt/bluetooth_stack.hpp"
 #include "devices/usb/host/xinput_wireless_status.hpp"
 

@@ -3,7 +3,7 @@
 #include "enums.pb.h"
 
 // Whether the pin can be read with the ADC (GP26 to GP29, or GP40 to GP47 on an RP2350B)
-bool is_adc_pin(int32_t pin);
+bool is_adc_pin(uint32_t pin);
 // Sets the pin's pulls for a PinMode
 void gpio_set_pin_mode(uint32_t pin, PinMode mode);
 // The average voltage on an ADC pin over samples readings, in mV. Safe on GP29 of a Pico W, and leaves

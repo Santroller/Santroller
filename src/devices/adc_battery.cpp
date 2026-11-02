@@ -10,7 +10,7 @@
 AdcBatteryDevice::AdcBatteryDevice(proto_AdcBatteryDevice device, uint16_t id) : Device(id), m_device(device)
 {
     BatteryManager::instance().set_present();
-    m_valid = is_adc_pin(device.pin) && device.fullMv > device.emptyMv;
+    m_valid = device.pin >= 0 && is_adc_pin(device.pin) && device.fullMv > device.emptyMv;
 }
 
 void AdcBatteryDevice::begin()

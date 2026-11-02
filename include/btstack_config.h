@@ -12,13 +12,13 @@
 #ifdef BT_HCI_DUMP
 #define ENABLE_LOG_INFO
 #define ENABLE_LOG_ERROR
-#endif
 #define ENABLE_PRINTF_HEXDUMP
+#endif
 // #define ENABLE_SCO_OVER_HCI
 
 #ifdef ENABLE_BLE
 #define ENABLE_GATT_CLIENT_PAIRING
-#define ENABLE_L2CAP_LE_CREDIT_BASED_FLOW_CONTROL_MODE
+// #define ENABLE_L2CAP_LE_CREDIT_BASED_FLOW_CONTROL_MODE
 #define ENABLE_LE_CENTRAL
 #define ENABLE_LE_DATA_LENGTH_EXTENSION
 #define ENABLE_LE_PERIPHERAL
@@ -35,7 +35,7 @@
 #endif
 
 #ifdef ENABLE_CLASSIC
-#define ENABLE_L2CAP_ENHANCED_RETRANSMISSION_MODE
+// #define ENABLE_L2CAP_ENHANCED_RETRANSMISSION_MODE
 // #define ENABLE_GOEP_L2CAP
 #else
 #error "BP32: ENABLE_CLASSIC should be defined"
@@ -73,14 +73,14 @@
 
 // Limit number of ACL/SCO Buffer to use by stack to avoid cyw43 shared bus overrun
 #define MAX_NR_CONTROLLER_ACL_BUFFERS 3
-#define MAX_NR_CONTROLLER_SCO_PACKETS 3
+#define MAX_NR_CONTROLLER_SCO_PACKETS 0
 
 // Enable and configure HCI Controller to Host Flow Control to avoid cyw43 shared bus overrun
 #define ENABLE_HCI_CONTROLLER_TO_HOST_FLOW_CONTROL
 #define HCI_HOST_ACL_PACKET_LEN 1024
 #define HCI_HOST_ACL_PACKET_NUM 3
 #define HCI_HOST_SCO_PACKET_LEN 120
-#define HCI_HOST_SCO_PACKET_NUM 3
+#define HCI_HOST_SCO_PACKET_NUM 0
 
 // Link Key DB and LE Device DB using TLV on top of Flash Sector interface
 #define NVM_NUM_DEVICE_DB_ENTRIES 16

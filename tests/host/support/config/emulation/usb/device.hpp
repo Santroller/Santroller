@@ -14,6 +14,7 @@ class UsbDevice : public Instance
 {
 public:
     uint8_t interface_id = 0;
+    SubType subtype = SubType_Gamepad;
     void initialize() override { fake_loader::state.calls.push_back("usb_initialize"); }
     static void reset_ep() { fake_loader::state.calls.push_back("reset_ep"); }
 };

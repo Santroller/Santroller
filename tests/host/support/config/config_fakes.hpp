@@ -68,6 +68,9 @@ struct State
     int secondary_pico_inits = 0;
     int reinitialize_device_stack_calls = 0;
     int usb_instances_added = 0;
+    std::vector<std::shared_ptr<UsbDevice>> usb_instances;
+    // What the active profiles made, as load_profile doesn't build them here
+    std::vector<std::shared_ptr<UsbDevice>> profile_usb_instances;
 };
 
 inline State state;

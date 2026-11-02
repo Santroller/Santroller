@@ -357,6 +357,28 @@ TEST_F(ConfigLoaderTest, Xbox360ModeAddsTheConfigAndSecurityInterfaces)
     EXPECT_EQ(fake_loader::state.reinitialize_device_stack_calls, 0);
 }
 
+TEST_F(ConfigLoaderTest, AMicrophoneOnItsOwnOnA360IsAllThe360Sees)
+{
+    // It is the Logitech microphone there, which has no config or security interface
+    auto microphone = std::make_shared<UsbDevice>();
+    microphone->subtype = SubType_Microphone;
+    fake_loader::state.profile_usb_instances.push_back(microphone);
+    fake_loader::state.requested_mode = ModeXbox360;
+    ASSERT_TRUE(store_and_apply(encode_config({}), {}, ModeXbox360));
+    EXPECT_EQ(fake_loader::state.usb_instances_added, 0);
+}
+
+TEST_F(ConfigLoaderTest, AMicrophoneWithAControllerOnA360KeepsTheConfigAndSecurityInterfaces)
+{
+    auto controller = std::make_shared<UsbDevice>();
+    auto microphone = std::make_shared<UsbDevice>();
+    microphone->subtype = SubType_Microphone;
+    fake_loader::state.profile_usb_instances = {controller, microphone};
+    fake_loader::state.requested_mode = ModeXbox360;
+    ASSERT_TRUE(store_and_apply(encode_config({}), {}, ModeXbox360));
+    EXPECT_EQ(fake_loader::state.usb_instances_added, 2);
+}
+
 TEST_F(ConfigLoaderTest, AnIdleLegacyAdapterSurvivesReloadsWithoutAddingAConfigInterface)
 {
     fake_loader::state.has_active_instances = false;

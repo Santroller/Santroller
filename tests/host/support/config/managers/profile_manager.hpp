@@ -17,13 +17,26 @@ public:
         fake_loader::state.calls.push_back("prepare_for_config_reload");
         fake_loader::state.previous_xbox_one_adapter = std::move(fake_loader::state.xbox_one_adapter);
         fake_loader::state.usb_instances_added = 0;
+        fake_loader::state.usb_instances.clear();
     }
     void refresh_bt_config_name() {}
     void finish_config_reload() { fake_loader::state.calls.push_back("finish_config_reload"); }
     bool has_active_instances() const { return fake_loader::state.has_active_instances; }
     uint8_t usb_instance_count() const { return uint8_t(fake_loader::state.usb_instances_added); }
     void add_instance(std::shared_ptr<Instance>) { fake_loader::state.usb_instances_added++; }
-    void set_usb_instance(uint8_t, std::shared_ptr<UsbDevice>) {}
+    void set_usb_instance(uint8_t, std::shared_ptr<UsbDevice> instance) { fake_loader::state.usb_instances.push_back(instance); }
+    template <typename Func>
+    void for_each_usb_instance(Func func) const
+    {
+        for (const auto &instance : fake_loader::state.profile_usb_instances)
+        {
+            func(instance);
+        }
+        for (const auto &instance : fake_loader::state.usb_instances)
+        {
+            func(instance);
+        }
+    }
     std::shared_ptr<UsbDevice> reuse_usb_instance(uint8_t id, ConsoleMode mode, SubType subtype, bool auxiliary)
     {
         if (id == 0 && mode == ModeXboxOne && subtype == SubType_Gamepad && !auxiliary &&

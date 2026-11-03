@@ -51,19 +51,12 @@ TEST(CalibrateTrigger, PastMaximumClampsToFull)
     EXPECT_EQ(trigger(UINT16_MAX, 1000, 61000), UINT16_MAX);
 }
 
-TEST(CalibrateTrigger, DeadzoneMovesTheStartPoint)
+TEST(CalibrateTrigger, IgnoresDeadzone)
 {
-    // min + deadzone = 1500 is the new zero point, and the range still ends at max
-    EXPECT_EQ(trigger(1499, 1000, 61500, 500), 0);
-    EXPECT_EQ(trigger(1500, 1000, 61500, 500), 0);
-    EXPECT_NEAR(trigger(31500, 1000, 61500, 500), 32767, 1);
+    EXPECT_EQ(trigger(999, 1000, 61500, 500), 0);
+    EXPECT_NEAR(trigger(1000, 1000, 61500, 500), 0, 1);
+    EXPECT_NEAR(trigger(31250, 1000, 61500, 500), 32767, 1);
     EXPECT_EQ(trigger(61500, 1000, 61500, 500), UINT16_MAX);
-}
-
-TEST(CalibrateTrigger, JustPastDeadzoneIsSmallButNonZero)
-{
-    // 1 step into a 60000 wide range is about 1.09 output steps
-    EXPECT_EQ(trigger(1501, 1000, 61500, 500), 1);
 }
 
 TEST(CalibrateTrigger, InvertedRunsFromMinDownToMax)
@@ -80,11 +73,10 @@ TEST(CalibrateTrigger, InvertedOutsideRangeClamps)
     EXPECT_EQ(trigger(0, 61000, 1000), UINT16_MAX);
 }
 
-TEST(CalibrateTrigger, InvertedDeadzoneCountsDownFromMin)
+TEST(CalibrateTrigger, InvertedIgnoresDeadzone)
 {
-    // the deadzone sits below min when inverted, so 60500 is the new zero point
-    EXPECT_EQ(trigger(60600, 61000, 1000, 500), 0);
-    EXPECT_EQ(trigger(60500, 61000, 1000, 500), 0);
+    EXPECT_EQ(trigger(61000, 61000, 1000, 500), 0);
+    EXPECT_NEAR(trigger(60500, 61000, 1000, 500), 546, 1);
     EXPECT_EQ(trigger(1000, 61000, 1000, 500), UINT16_MAX);
 }
 

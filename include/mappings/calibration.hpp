@@ -4,7 +4,7 @@
 #include "input.pb.h"
 
 // Scale a raw input value onto the full 0 - 65535 output range.
-// Triggers rest at 0 and use min + deadzone as their start point, sticks rest at the
+// Triggers rest at 0 and scale directly between min and max. Sticks rest at the
 // centre of the range and treat anything within deadzone of center as centred.
 // min > max inverts the axis.
 inline uint16_t calibrate_axis(float val, float max, float min, float deadzone, float center, bool trigger)
@@ -14,7 +14,6 @@ inline uint16_t calibrate_axis(float val, float max, float min, float deadzone, 
         auto inverted = min > max;
         if (inverted)
         {
-            min -= deadzone;
             if (val > min)
                 return 0;
             if (val < max)
@@ -22,7 +21,6 @@ inline uint16_t calibrate_axis(float val, float max, float min, float deadzone, 
         }
         else
         {
-            min += deadzone;
             if (val < min)
                 return 0;
             if (val > max)

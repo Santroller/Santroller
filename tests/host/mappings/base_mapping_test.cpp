@@ -69,15 +69,14 @@ TEST_F(AxisUpdate, TriggerAtRestIsCentred)
     EXPECT_FALSE(axis->centered());
 }
 
-TEST_F(AxisUpdate, TriggerAxesAreCalibratedAsTriggers)
+TEST_F(AxisUpdate, TriggerAxesIgnoreDeadzone)
 {
-    // a trigger's deadzone is measured up from min, not around a centre
     auto config = with_gamepad_axis(trigger_config(), Gamepad_RightTrigger);
     config.deadzone = 1000;
     auto axis = drive<ProbeAxis>(config, profile);
     axis.set_analog(999);
-    EXPECT_EQ(axis->value(), 0u);
-    EXPECT_TRUE(axis->centered());
+    EXPECT_EQ(axis->value(), 999u);
+    EXPECT_FALSE(axis->centered());
 }
 
 TEST_F(AxisUpdate, InvalidInputCountsAsCentred)

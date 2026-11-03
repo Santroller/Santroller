@@ -334,6 +334,13 @@ message GuiKeyboardKey {
   required int32 key = 2;
   optional bool showToCustomer = 3;
 }
+// Names one slot of a cycling input, by the value that slot has
+message GuiCycleSlot {
+  required string label = 1;
+  required int32 deviceid = 2;
+  required int32 slot = 3;
+  optional bool showToCustomer = 4;
+}
 message SellerConfig {
   required bytes logo = 1;
   required string name = 2;
@@ -349,6 +356,7 @@ message GuiConfig {
     GuiMatrixDevice matrixLabel = 6;
     GuiSwitchNetworkDevice switchNetworkLabel = 7;
     GuiKeyboardKey keyboardKeyLabel = 8;
+    GuiCycleSlot cycleSlotLabel = 10;
   }
   // uids of the profiles a label is shown in, or every profile when empty
   repeated uint32 profiles = 9;

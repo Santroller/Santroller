@@ -384,6 +384,7 @@ enum Xbox360RfModuleType {
 enum CycleType {
   custom=1;
   pickup=2;
+  slots=3;
 }
 
 enum CrkdDrumCalibrationType {

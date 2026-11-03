@@ -1,7 +1,7 @@
 // Input based profile activation ("Activation Condition" in the profile setup):
 //  - "Hold Button at Startup" / assignmentTypeDesc.input: "Match if an input is held when
 //    powering on this device". The firmware gives it the 2 s after the last mode change / reload,
-//    and once matched it stays matched until a new config is written.
+//    and once matched it stays matched until a new config is written or Reload Profiles runs.
 //  - "Press Button Anytime" / assignmentTypeDesc.inputAnyTime: "Match on input is pressed at any
 //    time". A press reloads the config so the profiles get reassigned.
 // Plus ActivationTriggerList, which ANDs the triggers of one list ("logic_and") and latches once
@@ -172,6 +172,34 @@ TEST_F(InputTriggerTest, StartupTriggerForgottenWhenANewConfigIsWritten)
     ConfigManager::instance().clear_startup_triggers();
     auto reloaded = make(false);
     EXPECT_FALSE(reloaded->validate(false, false, false));
+}
+
+TEST_F(InputTriggerTest, ProfileReloadSelectsCurrentlyHeldButtonsBeforeLoadingFinishes)
+{
+    boot();
+    auto previous = make(false);
+    button->set(true);
+    ASSERT_TRUE(previous->validate(false, false, false));
+    button->set(false);
+    clock_ms::advance(5000);
+
+    auto input = std::make_unique<TestInput>();
+    auto *selected_button = input.get();
+    input->set(true);
+    InputActivationTrigger selected(false, plain_trigger(), std::move(input), profile, 8, 2);
+    EXPECT_FALSE(selected.validate(false, false, false));
+    auto &manager = ConfigManager::instance();
+    manager.request_profile_reload(clock_ms::now());
+    EXPECT_TRUE(manager.should_reinit(clock_ms::now() + 1));
+    manager.begin_reinit();
+    EXPECT_FALSE(previous->validate(false, false, false));
+    EXPECT_TRUE(selected.validate(false, false, false));
+
+    manager.finish_reinit(clock_ms::now());
+    selected_button->set(false);
+    clock_ms::advance(5000);
+    EXPECT_TRUE(selected.validate(false, false, false));
+    EXPECT_FALSE(previous->validate(false, false, false));
 }
 
 TEST_F(InputTriggerTest, StartupTriggerNotHeldDoesNotMatch)

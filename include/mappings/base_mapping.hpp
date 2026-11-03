@@ -223,7 +223,10 @@ class ActionMapping : public ButtonMapping
 {
 public:
     ~ActionMapping() {}
-    ActionMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : ButtonMapping(mapping, std::move(input), id, profile) {}
+    ActionMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, const std::shared_ptr<Profile> &profile) : ButtonMapping(mapping, std::move(input), id, profile)
+    {
+        m_input->require_release();
+    }
     void update_action();
 
 private:

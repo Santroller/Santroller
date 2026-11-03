@@ -40,6 +40,8 @@ public:
     virtual bool tick_digital() = 0;
     virtual uint16_t tick_analog() = 0;
     virtual void setup() = 0;
+    // Action inputs must not finish a hold that started before their mapping was loaded.
+    virtual void require_release() {}
     virtual bool valid() const { return true; }
     virtual bool has_independent_analog_value() const { return false; }
     virtual bool consumes_events() const { return false; }

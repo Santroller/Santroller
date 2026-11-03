@@ -730,4 +730,6 @@ enum ActionType {
   ActionRestartDeviceStack = 1;
   // Reboot into the USB bootloader (BOOTSEL), eg for flashing firmware without opening the controller
   ActionBootloader = 2;
+  // Pick profiles again from the buttons held now, forgetting latched startup triggers
+  ActionReloadProfiles = 3;
 }

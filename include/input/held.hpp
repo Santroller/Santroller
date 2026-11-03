@@ -12,6 +12,12 @@ public:
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return m_input ? m_input->has_independent_analog_value() : false; }
     void setup();
+    void require_release() override
+    {
+        m_waiting_for_release = true;
+        m_last_pressed = 0;
+        if (m_input) m_input->require_release();
+    }
     ShortcutInput* as_shortcut() override { return m_input ? m_input->as_shortcut() : nullptr; }
     uint64_t hardware_id() const override { return m_input ? m_input->hardware_id() : 0; }
     Input* get_inner_input() const { return m_input.get(); }
@@ -26,4 +32,5 @@ private:
     std::unique_ptr<Input> m_input;
     uint32_t m_last_pressed = 0;
     uint64_t m_time = 0;
+    bool m_waiting_for_release = false;
 };

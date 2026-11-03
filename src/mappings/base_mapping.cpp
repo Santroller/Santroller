@@ -284,6 +284,10 @@ void ActionMapping::update_action()
     case ActionRestartDeviceStack:
         ConfigManager::instance().request_device_stack_restart();
         break;
+    case ActionReloadProfiles:
+        printf("reloading profiles from held buttons\r\n");
+        ConfigManager::instance().request_profile_reload(millis());
+        break;
     case ActionBootloader:
         reset_usb_boot(0, 0);
         break;

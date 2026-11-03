@@ -40,6 +40,11 @@ keep-alives, and subsequent GHL input without another authentication.
 
 ## Writing tests
 
+Profile action and input-trigger tests cover **Reload Profiles**: a hold longer than the configurator's
+default 1000 ms clears latched startup selections and opens the startup window before profiles load.
+Only currently held startup triggers match; normal reloads still preserve their selections.
+Held actions require release when loaded with their button down, preventing a reload loop.
+
 Firmware-upload state tests in `inputs/firmware_update_test.cpp` cover deferred config reloads,
 mode changes and device-stack restarts, and the upload inactivity timeout (including clock wrap).
 During configurator-driven firmware uploads, normal device/profile processing and config flash

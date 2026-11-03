@@ -489,3 +489,77 @@ TEST_F(ProfileTest, ActionHeldAtStartNeedsReleasingFirst)
     profile->update_actions();
     EXPECT_FALSE(ConfigManager::instance().take_device_stack_restart());
 }
+
+TEST_F(ProfileTest, ReloadProfilesNeedsTheFullHoldAndRunsOnceUntilReleased)
+{
+    constexpr uint8_t PS = 7;
+    auto &manager = ConfigManager::instance();
+    const StartupTriggerKey previous = {profile->profile_id, 0, 0, 0};
+    manager.latch_startup_trigger(previous);
+    clock_ms::advance(5000);
+    auto make_action = [&]() {
+        proto_HeldInput config = proto_HeldInput_init_default;
+        config.time = 1000;
+        auto held = std::make_unique<HeldInput>();
+        held->load(config, pin(PS));
+        return std::make_unique<ActionMapping>(
+            output(proto_Output_action_tag, ActionReloadProfiles), std::move(held), 0, profile);
+    };
+    auto action = make_action();
+    action->update_action();
+    fake_pins::state[PS] = true;
+    action->update_action();
+    clock_ms::advance(1000);
+    action->update_action();
+    EXPECT_EQ(manager.get_reinit_time(), 0u);
+    EXPECT_TRUE(manager.is_startup_trigger_latched(previous));
+    clock_ms::advance(1);
+    action->update_action();
+    EXPECT_EQ(manager.get_reinit_time(), clock_ms::now());
+    EXPECT_FALSE(manager.is_startup_trigger_latched(previous));
+    EXPECT_TRUE(manager.mode_recently_changed(clock_ms::now()));
+    EXPECT_FALSE(manager.take_device_stack_restart());
+    manager.clear_reinit();
+    action->update_action();
+    EXPECT_EQ(manager.get_reinit_time(), 0u);
+
+    // The reload constructs new mappings, possibly in a different profile, with PS still down.
+    action = make_action();
+    action->update_action();
+    clock_ms::advance(5000);
+    action->update_action();
+    EXPECT_EQ(manager.get_reinit_time(), 0u);
+    fake_pins::state[PS] = false;
+    action->update_action();
+    fake_pins::state[PS] = true;
+    action->update_action();
+    clock_ms::advance(1000);
+    action->update_action();
+    EXPECT_EQ(manager.get_reinit_time(), 0u);
+    clock_ms::advance(1);
+    action->update_action();
+    EXPECT_EQ(manager.get_reinit_time(), clock_ms::now());
+}
+
+TEST_F(ProfileTest, HeldActionsLoadedWhilePressedNeedReleasingFirst)
+{
+    for (auto type : {ActionRestartDeviceStack, ActionBootloader, ActionReloadProfiles})
+    {
+        ConfigManager::instance().clear_reinit();
+        ConfigManager::instance().take_device_stack_restart();
+        fake_bootrom::reset_count = 0;
+        proto_HeldInput config = proto_HeldInput_init_default;
+        config.time = 1000;
+        TestInput *button = nullptr;
+        auto held = std::make_unique<HeldInput>();
+        held->load(config, test_input(button));
+        button->set(true);
+        ActionMapping action(output(proto_Output_action_tag, type), std::move(held), 0, profile);
+        action.update_action();
+        clock_ms::advance(5000);
+        action.update_action();
+        EXPECT_EQ(ConfigManager::instance().get_reinit_time(), 0u);
+        EXPECT_FALSE(ConfigManager::instance().take_device_stack_restart());
+        EXPECT_EQ(fake_bootrom::reset_count, 0);
+    }
+}

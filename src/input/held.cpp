@@ -21,7 +21,16 @@ bool HeldInput::tick_digital()
     {
         return false;
     }
-    if (m_input->tick_digital())
+    bool pressed = m_input->tick_digital();
+    if (m_waiting_for_release)
+    {
+        if (!pressed)
+        {
+            m_waiting_for_release = false;
+        }
+        return false;
+    }
+    if (pressed)
     {
         if (m_last_pressed == 0)
         {

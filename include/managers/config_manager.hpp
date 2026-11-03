@@ -159,10 +159,17 @@ public:
     bool wants_standby_pass(bool nothing_matched) const { return m_has_standby && (nothing_matched || m_standby_while_suspended); }
 
     // Startup triggers that matched, so the profile they picked survives later reloads (eg once
-    // the console is detected), long after the input was let go. Kept until a new config is written.
+    // the console is detected), long after the input was let go. Cleared by a new config or Reload Profiles.
     bool is_startup_trigger_latched(const StartupTriggerKey &key) const;
     void latch_startup_trigger(const StartupTriggerKey &key);
     void clear_startup_triggers() { m_latched_startup_triggers.clear(); }
+    void request_profile_reload(uint32_t now)
+    {
+        clear_startup_triggers();
+        // Profiles are validated while loading, before finish_reinit opens the startup window.
+        mark_mode_change_time(now);
+        schedule_reinit(now);
+    }
     
     // Clear all state
     void clear_all();

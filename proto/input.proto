@@ -7,6 +7,10 @@ message CycleInput {
   required int32 deviceid = 1;
   optional Input input = 2;
   optional Input inputReverse = 3;
+  // For when it is used as a digital input, like inside a shortcut: which values count as pressed
+  optional AnalogToDigitalTriggerType trigger = 4;
+  optional int32 triggerValue = 5;
+  optional int32 maxTriggerValue = 6;
 }
 message ToggleInput {
   required int32 deviceid = 1;

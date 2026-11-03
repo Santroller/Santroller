@@ -1,6 +1,7 @@
 #include "input.hpp"
 #include "input.pb.h"
 #include "devices/cycle.hpp"
+#include "mappings/calibration.hpp"
 #include <vector>
 #include <memory>
 #pragma once
@@ -25,6 +26,7 @@ public:
 private:
     std::unique_ptr<Input> m_input;
     std::unique_ptr<Input> m_input_reverse;
+    proto_CycleInput m_config = proto_CycleInput_init_default;
     uint32_t m_last_toggled = 0;
     bool m_last_state = false;
     bool m_last_state_reverse = false;

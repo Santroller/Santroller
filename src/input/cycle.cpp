@@ -10,6 +10,7 @@ CycleInput::CycleInput()
 }
 void CycleInput::load(proto_CycleInput config, std::shared_ptr<CycleDevice> device, std::unique_ptr<Input> input, std::unique_ptr<Input> input_reverse)
 {
+    m_config = config;
     m_input = std::move(input);
     m_input_reverse = std::move(input_reverse);
     m_device = device;
@@ -31,10 +32,20 @@ void CycleInput::setup()
 }
 bool CycleInput::tick_digital()
 {
-    return tick_analog() > 0;
+    auto val = tick_analog();
+    if (m_config.has_trigger)
+    {
+        return analog_trigger_pressed(m_config.trigger, val, m_config.triggerValue, m_config.maxTriggerValue);
+    }
+    return val > 0;
 }
 uint16_t CycleInput::tick_analog()
 {
+    // Left unloaded when its cycle device isn't in the profile, see load_cycle
+    if (!m_device)
+    {
+        return 0;
+    }
     if (m_input)
     {
         if (m_input->tick_digital() && !m_last_state)

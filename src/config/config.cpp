@@ -307,6 +307,9 @@ bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg);
 bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
     auto *context = static_cast<ConfigDecodeContext *>(*arg);
+    // Decoding a special input (cycle, held, toggle, nested shortcut) clears or replaces
+    // last_shortcut, so keep hold of this one
+    auto *shortcut = context->last_shortcut;
     proto_Input input = proto_Input_init_default;
     input.cb_input.funcs.decode = &load_input_dev;
     input.cb_input.arg = *arg;
@@ -316,11 +319,12 @@ bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **a
         return false;
     }
     auto inputPtr = make_input(input, *context, stream);
-    if (!inputPtr)
+    context->last_shortcut = shortcut;
+    if (!inputPtr || !shortcut)
     {
         return true;
     }
-    context->last_shortcut->inputs.push_back(std::move(inputPtr));
+    shortcut->inputs.push_back(std::move(inputPtr));
     // printf("shortcut added: %d\r\n", context->last_shortcut->inputs.size());
     return true;
 }

@@ -109,7 +109,7 @@ if(SANTROLLER_VARIANT_DRIVER AND NOT SANTROLLER_VARIANT_BUILD)
         -DSANTROLLER_GIT_REPO_BUILD_ID=${SANTROLLER_GIT_REPO_BUILD_ID}
         -DSANTROLLER_SHARED_GENERATED_DIR=${CMAKE_BINARY_DIR}/generated
         -DSANTROLLER_VARIANT_BUILD=ON
-      COMMAND ${CMAKE_COMMAND} --build "${SANTROLLER_VARIANT_BINARY_DIR}" --parallel
+      COMMAND ${CMAKE_COMMAND} --build "${SANTROLLER_VARIANT_BINARY_DIR}" --parallel 2
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SANTROLLER_VARIANT_BINARY_DIR}/santroller.uf2" "${CMAKE_BINARY_DIR}/santroller_${SANTROLLER_VARIANT}.uf2"
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SANTROLLER_VARIANT_BINARY_DIR}/santroller_fota.uf2" "${CMAKE_BINARY_DIR}/santroller_${SANTROLLER_VARIANT}_fota.uf2"
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SANTROLLER_VARIANT_BINARY_DIR}/santroller_fota_image.bin" "${CMAKE_BINARY_DIR}/santroller_${SANTROLLER_VARIANT}.bin"
@@ -652,7 +652,7 @@ if(NOT SANTROLLER_VARIANT_BUILD)
       -DENABLE_WIFI=${ENABLE_WIFI}
       -DENABLE_XBOX_WIRELESS=${ENABLE_XBOX_WIRELESS}
       -DSANTROLLER_VARIANT_DRIVER=ON
-    COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}/variants" --parallel
+    COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}/variants" --parallel 1
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico_w.uf2" "${CMAKE_BINARY_DIR}/santroller_pico_w.uf2"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico_w_fota.uf2" "${CMAKE_BINARY_DIR}/santroller_pico_w_fota.uf2"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_BINARY_DIR}/variants/santroller_pico2_w.uf2" "${CMAKE_BINARY_DIR}/santroller_pico2_w.uf2"

@@ -15,7 +15,6 @@ static char const str_gha_input[] = "RT-GH INPUT ";
 static char const str_gha_led[] = "RT-GH LED ";
 static char const str_gha_controller[] = "RT-GH CONTROLLER ";
 
-
 GHArcadeVendorDevice::GHArcadeVendorDevice()
 {
 }
@@ -63,9 +62,10 @@ size_t GHArcadeVendorDevice::compatible_section_descriptor(uint8_t *dest, size_t
 {
     return 0;
 }
-size_t GHArcadeVendorDevice::device_name(uint8_t idx, char *desc) 
+size_t GHArcadeVendorDevice::device_name(uint8_t idx, char *desc)
 {
-    if (m_strid != idx) {
+    if (m_strid != idx)
+    {
         return 0;
     }
     memcpy(desc, str_gha_led, sizeof(str_gha_led));
@@ -140,7 +140,8 @@ void GHArcadeGamepadDevice::process(bool full_poll, bool send_events)
             mapping->update(full_poll, send_events);
             mapping->update_hid(epin_buf);
         }
-        for (const auto& led : profile->leds) {
+        for (const auto &led : profile->leds)
+        {
             led->update(full_poll, send_events);
         }
     }
@@ -159,9 +160,10 @@ size_t GHArcadeGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);
 }
-size_t GHArcadeGamepadDevice::device_name(uint8_t idx, char *desc) 
+size_t GHArcadeGamepadDevice::device_name(uint8_t idx, char *desc)
 {
-    if (m_strid != idx) {
+    if (m_strid != idx)
+    {
         return 0;
     }
     memcpy(desc, str_gha_input, sizeof(str_gha_input));

@@ -25,4 +25,3 @@ void wireless_enable_pairing(struct mt76_dev *dev);
 void wireless_queue_disassociation(struct mt76_dev *dev, uint8_t wcid);
 
 #endif // WIRELESS_H
-

@@ -10,11 +10,16 @@ static inline GamepadButtonType swap_nintendo_face_button(GamepadButtonType butt
 {
     switch (button)
     {
-    case Gamepad_A: return Gamepad_B;
-    case Gamepad_B: return Gamepad_A;
-    case Gamepad_X: return Gamepad_Y;
-    case Gamepad_Y: return Gamepad_X;
-    default:        return button;
+    case Gamepad_A:
+        return Gamepad_B;
+    case Gamepad_B:
+        return Gamepad_A;
+    case Gamepad_X:
+        return Gamepad_Y;
+    case Gamepad_Y:
+        return Gamepad_X;
+    default:
+        return button;
     }
 }
 
@@ -32,8 +37,11 @@ static inline GamepadButtonType gamecube_button_at(GamepadButtonType position)
 {
     switch (position)
     {
-    case Gamepad_B: return Gamepad_X;
-    case Gamepad_X: return Gamepad_B;
-    default:        return position;
+    case Gamepad_B:
+        return Gamepad_X;
+    case Gamepad_X:
+        return Gamepad_B;
+    default:
+        return position;
     }
 }

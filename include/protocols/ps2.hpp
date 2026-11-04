@@ -72,8 +72,7 @@ typedef struct
     uint8_t blue : 1;          // cross
     uint8_t orange : 1;        // square
 
-    union
-    {
+    union {
         struct
         {
             uint8_t psDpadUp : 1;
@@ -90,8 +89,7 @@ typedef struct
     };
     uint8_t : 8; // rightStickY
 
-    union
-    {
+    union {
         struct
         {
             uint8_t tapGreen : 1;

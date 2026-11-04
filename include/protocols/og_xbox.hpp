@@ -117,8 +117,7 @@ typedef struct
     uint8_t key18 : 1;
     uint8_t key17 : 1;
 
-    union
-    {
+    union {
         struct
         {
             uint8_t velocity1 : 7;
@@ -153,17 +152,17 @@ typedef struct
 
     uint8_t start : 1;
     uint8_t back : 1;
-    uint8_t kick2 : 1; // pedal2
-    uint8_t padFlag : 1;        // right thumb click
+    uint8_t kick2 : 1;   // pedal2
+    uint8_t padFlag : 1; // right thumb click
 
     uint8_t padding;
 
-    uint8_t a;            // green
-    uint8_t b;            // red
-    uint8_t x;            // blue
-    uint8_t y;            // yellow
-    uint8_t kick1; // pedal1
-    uint8_t cymbalFlag;   // right shoulder click
+    uint8_t a;          // green
+    uint8_t b;          // red
+    uint8_t x;          // blue
+    uint8_t y;          // yellow
+    uint8_t kick1;      // pedal1
+    uint8_t cymbalFlag; // right shoulder click
 
     uint8_t unused[2];
     int16_t redVelocity;
@@ -198,8 +197,7 @@ typedef struct
 
     uint8_t unused1[2];
     int16_t leftStickX;
-    union
-    {
+    union {
         struct
         {
             uint8_t greenVelocity;
@@ -239,8 +237,7 @@ typedef struct
 
     uint8_t accelZ;
     uint8_t accelX;
-    union
-    {
+    union {
         struct
         {
             int16_t tapGreen : 1;
@@ -388,8 +385,7 @@ typedef struct
     uint16_t highEFret : 5;
     uint16_t solo : 1;
 
-    union
-    {
+    union {
         struct
         {
             uint16_t lowEFretVelocity : 7;

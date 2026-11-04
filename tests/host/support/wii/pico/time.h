@@ -7,11 +7,12 @@ typedef int32_t alarm_id_t;
 typedef int64_t (*alarm_callback_t)(alarm_id_t id, void *user_data);
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
-alarm_id_t add_alarm_in_ms(uint32_t ms, alarm_callback_t callback, void *user_data, bool fire_if_past);
-alarm_id_t add_alarm_in_us(uint64_t us, alarm_callback_t callback, void *user_data, bool fire_if_past);
-bool cancel_alarm(alarm_id_t alarm_id);
+    alarm_id_t add_alarm_in_ms(uint32_t ms, alarm_callback_t callback, void *user_data, bool fire_if_past);
+    alarm_id_t add_alarm_in_us(uint64_t us, alarm_callback_t callback, void *user_data, bool fire_if_past);
+    bool cancel_alarm(alarm_id_t alarm_id);
 #ifdef __cplusplus
 }
 #endif

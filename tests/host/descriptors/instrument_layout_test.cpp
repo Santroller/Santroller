@@ -21,23 +21,23 @@ using namespace hid_desc;
     EXPECT_EQ(FIELD(Other, other_field).bit, FIELD(Base, base_field).bit) << #Other "." #other_field " vs " #Base "." #base_field
 
 // dpadUp / Down / Left / Right are the bits 0 - 3 of the base report's hat nibble
-#define EXPECT_DPAD_ON_HAT(Base, Other)                                                  \
-    do                                                                                 \
-    {                                                                                  \
-        const uint32_t hat_ = FIELD(Base, dpad).bit;                                   \
-        EXPECT_EQ(FIELD(Other, dpadUp).bit, hat_ + 0) << #Other ".dpadUp";             \
-        EXPECT_EQ(FIELD(Other, dpadDown).bit, hat_ + 1) << #Other ".dpadDown";         \
-        EXPECT_EQ(FIELD(Other, dpadLeft).bit, hat_ + 2) << #Other ".dpadLeft";         \
-        EXPECT_EQ(FIELD(Other, dpadRight).bit, hat_ + 3) << #Other ".dpadRight";       \
+#define EXPECT_DPAD_ON_HAT(Base, Other)                                          \
+    do                                                                           \
+    {                                                                            \
+        const uint32_t hat_ = FIELD(Base, dpad).bit;                             \
+        EXPECT_EQ(FIELD(Other, dpadUp).bit, hat_ + 0) << #Other ".dpadUp";       \
+        EXPECT_EQ(FIELD(Other, dpadDown).bit, hat_ + 1) << #Other ".dpadDown";   \
+        EXPECT_EQ(FIELD(Other, dpadLeft).bit, hat_ + 2) << #Other ".dpadLeft";   \
+        EXPECT_EQ(FIELD(Other, dpadRight).bit, hat_ + 3) << #Other ".dpadRight"; \
     } while (0)
 
-#define EXPECT_FACE_BUTTONS(Base, Other)      \
-    do                                        \
-    {                                         \
-        EXPECT_SAME_BIT(Base, a, Other, a);   \
-        EXPECT_SAME_BIT(Base, b, Other, b);   \
-        EXPECT_SAME_BIT(Base, x, Other, x);   \
-        EXPECT_SAME_BIT(Base, y, Other, y);   \
+#define EXPECT_FACE_BUTTONS(Base, Other)    \
+    do                                      \
+    {                                       \
+        EXPECT_SAME_BIT(Base, a, Other, a); \
+        EXPECT_SAME_BIT(Base, b, Other, b); \
+        EXPECT_SAME_BIT(Base, x, Other, x); \
+        EXPECT_SAME_BIT(Base, y, Other, y); \
     } while (0)
 
 // ---------------------------------------------------------------------------------------------

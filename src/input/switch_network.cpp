@@ -1,6 +1,6 @@
 #include "input/switch_network.hpp"
 
-SwitchNetworkInput::SwitchNetworkInput(proto_SwitchNetworkInput input, std::shared_ptr<SwitchNetworkDevice> device, Profile* profile)
+SwitchNetworkInput::SwitchNetworkInput(proto_SwitchNetworkInput input, std::shared_ptr<SwitchNetworkDevice> device, Profile *profile)
     : m_input(input), m_device(device)
 {
     (void)profile;

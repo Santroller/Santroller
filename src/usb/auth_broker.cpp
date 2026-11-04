@@ -6,99 +6,121 @@ class UsbHostInterface;
 // Global instance
 AuthBroker auth_broker;
 
-void AuthBroker::register_handler(ConsoleMode mode, AuthHandler handler) {
+void AuthBroker::register_handler(ConsoleMode mode, AuthHandler handler)
+{
     unregister_handler(mode);
     handlers[mode] = std::move(handler);
 }
 
-void AuthBroker::unregister_handler(ConsoleMode mode) {
+void AuthBroker::unregister_handler(ConsoleMode mode)
+{
     auto it = handlers.find(mode);
-    if (it != handlers.end()) {
+    if (it != handlers.end())
+    {
         auto handler = std::move(it->second);
         handlers.erase(it);
     }
 }
 
-bool AuthBroker::forward_auth(ConsoleMode mode, XGIPProtocol* packet) {
+bool AuthBroker::forward_auth(ConsoleMode mode, XGIPProtocol *packet)
+{
     auto it = handlers.find(mode);
-    if (it != handlers.end() && it->second) {
+    if (it != handlers.end() && it->second)
+    {
         it->second(packet);
         return true;
     }
     return false;
 }
 
-bool AuthBroker::has_handler(ConsoleMode mode) const {
+bool AuthBroker::has_handler(ConsoleMode mode) const
+{
     return handlers.find(mode) != handlers.end();
 }
 
-void AuthBroker::register_auth_device(ConsoleMode mode, std::shared_ptr<UsbHostInterface> device) {
+void AuthBroker::register_auth_device(ConsoleMode mode, std::shared_ptr<UsbHostInterface> device)
+{
     unregister_auth_device(mode);
     auth_devices[mode] = std::move(device);
 }
 
-std::shared_ptr<UsbHostInterface> AuthBroker::get_auth_device(ConsoleMode mode) const {
+std::shared_ptr<UsbHostInterface> AuthBroker::get_auth_device(ConsoleMode mode) const
+{
     auto it = auth_devices.find(mode);
     return (it != auth_devices.end()) ? it->second : nullptr;
 }
 
-void AuthBroker::unregister_auth_device(ConsoleMode mode) {
+void AuthBroker::unregister_auth_device(ConsoleMode mode)
+{
     auto it = auth_devices.find(mode);
-    if (it != auth_devices.end()) {
+    if (it != auth_devices.end())
+    {
         auto device = std::move(it->second);
         auth_devices.erase(it);
     }
 }
 
-void AuthBroker::register_response_handler(ConsoleMode mode, AuthHandler handler, const void *owner) {
+void AuthBroker::register_response_handler(ConsoleMode mode, AuthHandler handler, const void *owner)
+{
     unregister_response_handler(mode);
     response_handlers[mode] = std::move(handler);
     response_handler_owners[mode] = owner;
 }
 
-void AuthBroker::unregister_response_handler(ConsoleMode mode) {
+void AuthBroker::unregister_response_handler(ConsoleMode mode)
+{
     response_handler_owners.erase(mode);
     auto it = response_handlers.find(mode);
-    if (it != response_handlers.end()) {
+    if (it != response_handlers.end())
+    {
         auto handler = std::move(it->second);
         response_handlers.erase(it);
     }
 }
 
-void AuthBroker::unregister_response_handler(ConsoleMode mode, const void *owner) {
+void AuthBroker::unregister_response_handler(ConsoleMode mode, const void *owner)
+{
     auto it = response_handler_owners.find(mode);
-    if (it != response_handler_owners.end() && it->second == owner) {
+    if (it != response_handler_owners.end() && it->second == owner)
+    {
         unregister_response_handler(mode);
     }
 }
 
-bool AuthBroker::forward_auth_response(ConsoleMode mode, XGIPProtocol* packet) {
+bool AuthBroker::forward_auth_response(ConsoleMode mode, XGIPProtocol *packet)
+{
     auto it = response_handlers.find(mode);
-    if (it != response_handlers.end() && it->second) {
+    if (it != response_handlers.end() && it->second)
+    {
         it->second(packet);
         return true;
     }
     return false;
 }
 
-void AuthBroker::set_auth_completed(ConsoleMode mode, bool completed) {
+void AuthBroker::set_auth_completed(ConsoleMode mode, bool completed)
+{
     auth_completed[mode] = completed;
 }
 
-bool AuthBroker::is_auth_completed(ConsoleMode mode) const {
+bool AuthBroker::is_auth_completed(ConsoleMode mode) const
+{
     auto it = auth_completed.find(mode);
     return it != auth_completed.end() && it->second;
 }
 
-void AuthBroker::set_console_authenticated(ConsoleMode mode, bool authenticated) {
+void AuthBroker::set_console_authenticated(ConsoleMode mode, bool authenticated)
+{
     console_authenticated[mode] = authenticated;
 }
 
-bool AuthBroker::is_console_authenticated(ConsoleMode mode) const {
+bool AuthBroker::is_console_authenticated(ConsoleMode mode) const
+{
     auto it = console_authenticated.find(mode);
     return it != console_authenticated.end() && it->second;
 }
 
-bool AuthBroker::has_response_handler(ConsoleMode mode) const {
+bool AuthBroker::has_response_handler(ConsoleMode mode) const
+{
     return response_handlers.find(mode) != response_handlers.end();
 }

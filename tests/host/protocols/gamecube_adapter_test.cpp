@@ -73,12 +73,18 @@ TEST(GameCubeAdapter, NintendoReportButtonBits)
         uint8_t b1, b2;
         uint16_t button;
     } cases[] = {
-        {0x01, 0, GAMECUBE_BUTTON_A},          {0x02, 0, GAMECUBE_BUTTON_B},
-        {0x04, 0, GAMECUBE_BUTTON_X},          {0x08, 0, GAMECUBE_BUTTON_Y},
-        {0x10, 0, GAMECUBE_BUTTON_DPAD_LEFT},  {0x20, 0, GAMECUBE_BUTTON_DPAD_RIGHT},
-        {0x40, 0, GAMECUBE_BUTTON_DPAD_DOWN},  {0x80, 0, GAMECUBE_BUTTON_DPAD_UP},
-        {0, 0x01, GAMECUBE_BUTTON_START},      {0, 0x02, GAMECUBE_BUTTON_Z},
-        {0, 0x04, GAMECUBE_BUTTON_R},          {0, 0x08, GAMECUBE_BUTTON_L},
+        {0x01, 0, GAMECUBE_BUTTON_A},
+        {0x02, 0, GAMECUBE_BUTTON_B},
+        {0x04, 0, GAMECUBE_BUTTON_X},
+        {0x08, 0, GAMECUBE_BUTTON_Y},
+        {0x10, 0, GAMECUBE_BUTTON_DPAD_LEFT},
+        {0x20, 0, GAMECUBE_BUTTON_DPAD_RIGHT},
+        {0x40, 0, GAMECUBE_BUTTON_DPAD_DOWN},
+        {0x80, 0, GAMECUBE_BUTTON_DPAD_UP},
+        {0, 0x01, GAMECUBE_BUTTON_START},
+        {0, 0x02, GAMECUBE_BUTTON_Z},
+        {0, 0x04, GAMECUBE_BUTTON_R},
+        {0, 0x08, GAMECUBE_BUTTON_L},
     };
     for (const auto &c : cases)
     {

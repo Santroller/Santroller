@@ -9,7 +9,6 @@
 #include "hidparser.h"
 #include "protocols/dance_pad.hpp"
 
-
 std::shared_ptr<UsbHostInterface> StepmaniaHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
     uint8_t dev_addr = list->dev_addr();

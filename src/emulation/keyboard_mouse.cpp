@@ -121,7 +121,8 @@ void KeyboardMouseReports::collect(const std::vector<std::shared_ptr<Profile>> &
         m_mouse_acc[i] += mouse_axes[i] * elapsed * mouse_speeds[i];
         // don't let movement pile up while reports can't be sent
         const int64_t limit = INT8_MAX * mouse_unit;
-        m_mouse_acc[i] = m_mouse_acc[i] > limit ? limit : m_mouse_acc[i] < -limit ? -limit : m_mouse_acc[i];
+        m_mouse_acc[i] = m_mouse_acc[i] > limit ? limit : m_mouse_acc[i] < -limit ? -limit
+                                                                                  : m_mouse_acc[i];
     }
 }
 

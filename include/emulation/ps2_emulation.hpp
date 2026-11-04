@@ -20,6 +20,7 @@ public:
     Ps2EmulationDeviceInstance(proto_PSXEmulationDevice device);
     void initialize();
     void process(bool full_poll, bool send_events);
+
 private:
     proto_PSXEmulationDevice m_device;
     std::weak_ptr<class PSXEmulationDevice> m_psx_dev;

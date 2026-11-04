@@ -10,22 +10,22 @@
 
 #define SECONDARY_PICO_BASE_ADDR 0x75
 
-#define SLAVE_CMD_CONFIG              0x01
-#define SLAVE_CMD_GET_EVENTS          0x02
-#define SLAVE_CMD_GET_VERSION         0x03
-#define SLAVE_CMD_INITIALISE          0x0D
-#define SLAVE_CMD_OTA_BEGIN           0x80
-#define SLAVE_CMD_OTA_CHUNK           0x81
-#define SLAVE_CMD_OTA_FINISH          0x82
+#define SLAVE_CMD_CONFIG 0x01
+#define SLAVE_CMD_GET_EVENTS 0x02
+#define SLAVE_CMD_GET_VERSION 0x03
+#define SLAVE_CMD_INITIALISE 0x0D
+#define SLAVE_CMD_OTA_BEGIN 0x80
+#define SLAVE_CMD_OTA_CHUNK 0x81
+#define SLAVE_CMD_OTA_FINISH 0x82
 
-#define SECONDARY_PICO_CONFIG_SIZE    512
+#define SECONDARY_PICO_CONFIG_SIZE 512
 #define SECONDARY_PICO_OTA_CHUNK_SIZE 256
 // How many bytes are read for each GET_EVENTS, the secondary pico only sends what fits in this
-#define SECONDARY_PICO_EVENTS_SIZE    256
+#define SECONDARY_PICO_EVENTS_SIZE 256
 // Inputs set up on the secondary pico report their events with their index from here
-#define SECONDARY_PICO_INPUT_ID_BASE  0x100
+#define SECONDARY_PICO_INPUT_ID_BASE 0x100
 // Largest single transfer: the config write
-#define SECONDARY_PICO_MAX_TRANSFER   SECONDARY_PICO_CONFIG_SIZE
+#define SECONDARY_PICO_MAX_TRANSFER SECONDARY_PICO_CONFIG_SIZE
 
 // The devices configured to run on a secondary pico, collected while its config is decoded (see
 // load_device_dev) so they can be passed on to it as they are

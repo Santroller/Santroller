@@ -72,4 +72,3 @@ private:
     uint32_t m_raw_since = 0;
     bool m_host_seen = false;
 };
-

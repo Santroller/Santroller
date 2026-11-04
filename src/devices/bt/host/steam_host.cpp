@@ -59,7 +59,8 @@ void BleSteamHost::update(bool full_poll, bool send_events)
 
 void BleSteamHost::handle_report(const uint8_t *data, uint16_t len)
 {
-    if (len == 0) return;
+    if (len == 0)
+        return;
     uint16_t copy_len = len < sizeof(m_report_buf) ? len : sizeof(m_report_buf);
     memcpy(m_report_buf, data, copy_len);
 

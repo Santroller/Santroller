@@ -10,12 +10,12 @@
 #include "devices/usb.hpp"
 
 std::shared_ptr<UsbHostInterface> SteamHost::open(std::shared_ptr<UsbHostDevice> list,
-                                                   tusb_desc_interface_t const *itf_desc,
-                                                   uint16_t max_len,
-                                                   uint16_t vid,
-                                                   uint16_t pid,
-                                                   uint16_t revision,
-                                                   HID_ReportInfo_t *info)
+                                                  tusb_desc_interface_t const *itf_desc,
+                                                  uint16_t max_len,
+                                                  uint16_t vid,
+                                                  uint16_t pid,
+                                                  uint16_t revision,
+                                                  HID_ReportInfo_t *info)
 {
     bool is_steam = (vid == VALVE_USB_VID && (pid == VALVE_STEAM_CONTROLLER_WIRED_PID ||
                                               pid == VALVE_STEAM_CONTROLLER_DONGLE_PID ||
@@ -118,11 +118,21 @@ void SteamHost::configure_controller()
     memset(m_ep_out_buf, 0, sizeof(m_ep_out_buf));
     m_ep_out_buf[0] = STEAM_CMD_WRITE_REGISTER; // 0x87
     m_ep_out_buf[1] = 0x0F;                     // 15 bytes of settings (5 * 3 bytes)
-    m_ep_out_buf[2] = STEAM_REG_GYRO_MODE;   m_ep_out_buf[3] = STEAM_GYRO_MODE_RAW; m_ep_out_buf[4] = 0x00;
-    m_ep_out_buf[5] = STEAM_REG_LPAD_MODE;   m_ep_out_buf[6] = 0x07; m_ep_out_buf[7] = 0x00;
-    m_ep_out_buf[8] = STEAM_REG_RPAD_MODE;   m_ep_out_buf[9] = 0x07; m_ep_out_buf[10] = 0x00;
-    m_ep_out_buf[11] = STEAM_REG_RPAD_MARGIN; m_ep_out_buf[12] = 0x00; m_ep_out_buf[13] = 0x00;
-    m_ep_out_buf[14] = STEAM_REG_LED;         m_ep_out_buf[15] = 0x64; m_ep_out_buf[16] = 0x00;
+    m_ep_out_buf[2] = STEAM_REG_GYRO_MODE;
+    m_ep_out_buf[3] = STEAM_GYRO_MODE_RAW;
+    m_ep_out_buf[4] = 0x00;
+    m_ep_out_buf[5] = STEAM_REG_LPAD_MODE;
+    m_ep_out_buf[6] = 0x07;
+    m_ep_out_buf[7] = 0x00;
+    m_ep_out_buf[8] = STEAM_REG_RPAD_MODE;
+    m_ep_out_buf[9] = 0x07;
+    m_ep_out_buf[10] = 0x00;
+    m_ep_out_buf[11] = STEAM_REG_RPAD_MARGIN;
+    m_ep_out_buf[12] = 0x00;
+    m_ep_out_buf[13] = 0x00;
+    m_ep_out_buf[14] = STEAM_REG_LED;
+    m_ep_out_buf[15] = 0x64;
+    m_ep_out_buf[16] = 0x00;
     set_report(0, HID_REPORT_TYPE_FEATURE, m_ep_out_buf, sizeof(m_ep_out_buf), &status);
 }
 
@@ -133,7 +143,8 @@ bool SteamHost::set_config()
     {
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
-    if (m_vid != VALVE_USB_VID) return true;
+    if (m_vid != VALVE_USB_VID)
+        return true;
 
     if (m_pid == VALVE_STEAM_CONTROLLER_DONGLE_PID)
     {
@@ -230,4 +241,3 @@ uint16_t SteamHost::tick_analog(proto_Output &type)
 {
     return steam_tick_analog(m_state, type);
 }
-

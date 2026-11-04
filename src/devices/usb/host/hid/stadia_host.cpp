@@ -8,7 +8,6 @@
 #include "managers/device_manager.hpp"
 #include "hidparser.h"
 
-
 std::shared_ptr<UsbHostInterface> StadiaHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
     uint8_t dev_addr = list->dev_addr();

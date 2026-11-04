@@ -15,7 +15,10 @@ class AllDescriptors : public ::testing::TestWithParam<NamedDescriptor>
 {
 };
 
-std::string descriptor_name(const ::testing::TestParamInfo<NamedDescriptor> &info) { return info.param.name; }
+std::string descriptor_name(const ::testing::TestParamInfo<NamedDescriptor> &info)
+{
+    return info.param.name;
+}
 } // namespace
 
 TEST_P(AllDescriptors, ParsesCleanly)

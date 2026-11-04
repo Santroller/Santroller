@@ -184,8 +184,7 @@ TEST(Motion, PlayStationCalibrationReadsBackItsScale)
 {
     uint8_t data[41] = {0x05};
     ps_imu_write_calibration(data, false, PS5_IMU_GYRO_PER_DPS, PS5_IMU_ACCEL_PER_G);
-    auto load = [&](int i)
-    { return (int16_t)(data[i] | (data[i + 1] << 8)); };
+    auto load = [&](int i) { return (int16_t)(data[i] | (data[i + 1] << 8)); };
     float sensitivity = (load(19) + load(21)) * 1024.0f / (load(11) - load(13));
     EXPECT_NEAR(1024.0f / sensitivity, PS5_IMU_GYRO_PER_DPS, 0.01f);
     // SDL's sanity check

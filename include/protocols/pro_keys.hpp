@@ -5,7 +5,7 @@
 constexpr uint8_t PRO_KEYBOARD_DEFAULT_VELOCITY = 64;
 
 inline bool pro_keyboard_key_pressed(uint8_t key1, uint8_t key2, uint8_t key3,
-                                    const uint8_t *velocities, int32_t key)
+                                     const uint8_t *velocities, int32_t key)
 {
     if (key >= 1 && key <= 8)
         return key1 & (1u << (8 - key));

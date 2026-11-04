@@ -132,1142 +132,1314 @@ static bool config_commit_pending = false;
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
 
-struct ConfigDecodeContext {
-  std::shared_ptr<Profile> profile;
-  InputDecoder input_decoder;
-  bool matched = false;
-  bool changed = false;
-  // Building an inactive profile for the config tool: load everything, but
-  // never activate it
-  bool preview = false;
-  // Loading standby lighting, so its rules claim their controllers
-  bool standby_claims = false;
-  // Other profiles are active, so its rules borrow the controllers those
-  // claimed instead
-  bool standby_borrows = false;
-  std::array<uint16_t, 7> slot_counts{};
-  // deviceSlotIdVersion 2: slot ids come from the whole profile, scanned before
-  // it is loaded
-  bool profile_wide_slot_ids = false;
-  ProfileSlotIds slot_ids;
+struct ConfigDecodeContext
+{
+    std::shared_ptr<Profile> profile;
+    InputDecoder input_decoder;
+    bool matched = false;
+    bool changed = false;
+    // Building an inactive profile for the config tool: load everything, but
+    // never activate it
+    bool preview = false;
+    // Loading standby lighting, so its rules claim their controllers
+    bool standby_claims = false;
+    // Other profiles are active, so its rules borrow the controllers those
+    // claimed instead
+    bool standby_borrows = false;
+    std::array<uint16_t, 7> slot_counts{};
+    // deviceSlotIdVersion 2: slot ids come from the whole profile, scanned before
+    // it is loaded
+    bool profile_wide_slot_ids = false;
+    ProfileSlotIds slot_ids;
 };
 
 bool load_cycle_state(pb_istream_t *stream, const pb_field_t *field,
-                      void **arg) {
-  uint32_t state;
-  auto ret = pb_decode_varint32(stream, &state);
-  DeviceFactory::add_last_cycle_state(state);
-  return ret;
+                      void **arg)
+{
+    uint32_t state;
+    auto ret = pb_decode_varint32(stream, &state);
+    DeviceFactory::add_last_cycle_state(state);
+    return ret;
 }
 // The devices a secondary pico runs, collected while its config is decoded.
 // Never re-entered, as sub-devices can't be secondary picos themselves
 static SecondaryPicoSubDevices peripheral_sub_devices;
 static bool load_peripheral_sub_device(pb_istream_t *stream,
-                                       const pb_field_t *field, void **arg) {
-  auto *devices = static_cast<SecondaryPicoSubDevices *>(*arg);
-  const uint8_t *start = static_cast<const uint8_t *>(stream->state);
-  size_t len = stream->bytes_left;
-  // Its id, so inputs on it are sent to the secondary pico. Nothing nested is
-  // decoded
-  static proto_Device sub_device;
-  sub_device = proto_Device_init_zero;
-  pb_istream_t id_stream = *stream;
-  if (!pb_decode(&id_stream, proto_Device_fields, &sub_device))
-    return false;
-  uint8_t prefix[5];
-  pb_ostream_t prefix_stream = pb_ostream_from_buffer(prefix, sizeof(prefix));
-  pb_encode_varint(&prefix_stream, len);
-  devices->encoded.insert(devices->encoded.end(), prefix,
-                          prefix + prefix_stream.bytes_written);
-  devices->encoded.insert(devices->encoded.end(), start, start + len);
-  devices->ids.push_back(sub_device.deviceid);
-  return pb_read(stream, nullptr, len);
+                                       const pb_field_t *field, void **arg)
+{
+    auto *devices = static_cast<SecondaryPicoSubDevices *>(*arg);
+    const uint8_t *start = static_cast<const uint8_t *>(stream->state);
+    size_t len = stream->bytes_left;
+    // Its id, so inputs on it are sent to the secondary pico. Nothing nested is
+    // decoded
+    static proto_Device sub_device;
+    sub_device = proto_Device_init_zero;
+    pb_istream_t id_stream = *stream;
+    if (!pb_decode(&id_stream, proto_Device_fields, &sub_device))
+        return false;
+    uint8_t prefix[5];
+    pb_ostream_t prefix_stream = pb_ostream_from_buffer(prefix, sizeof(prefix));
+    pb_encode_varint(&prefix_stream, len);
+    devices->encoded.insert(devices->encoded.end(), prefix,
+                            prefix + prefix_stream.bytes_written);
+    devices->encoded.insert(devices->encoded.end(), start, start + len);
+    devices->ids.push_back(sub_device.deviceid);
+    return pb_read(stream, nullptr, len);
 }
 bool load_device_dev(pb_istream_t *stream, const pb_field_t *field,
-                     void **arg) {
-  if (field->tag == proto_Device_peripheral_tag) {
-    proto_PeripheralDevice *msg = (proto_PeripheralDevice *)field->pData;
-    msg->devices.funcs.decode = load_peripheral_sub_device;
-    msg->devices.arg = &peripheral_sub_devices;
-  }
-  if (field->tag == proto_Device_cycle_tag) {
-    proto_CycleDevice *msg = (proto_CycleDevice *)field->pData;
-    msg->values.funcs.decode = load_cycle_state;
-    msg->values.arg = *arg;
-  }
-  return true;
-}
-bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg) {
-  // ~500 bytes, too big for the stack. Safe as static as this is never
-  // re-entered, and devices keep their own copy of their config
-  static proto_Device proto_device;
-  proto_device = proto_Device_init_default;
-  peripheral_sub_devices.encoded.clear();
-  peripheral_sub_devices.ids.clear();
-  proto_device.cb_device.funcs.decode = load_device_dev;
-  proto_device.cb_device.arg = arg ? *arg : nullptr;
-  pb_decode_ex(stream, proto_Device_fields, &proto_device, PB_DECODE_NOINIT);
-
-  auto device_id = proto_device.deviceid;
-  DeviceReloadState previous_state;
-  auto previous_device = device_mgr.get_root_device(device_id);
-
-  if (proto_device.has_gate &&
-      !DeviceGates::instance().check(device_id, proto_device.gate)) {
-    // Its connector isn't plugged in. Inputs on it read as if it were
-    // disconnected
-    if (previous_device) {
-      previous_device->end(true);
-      device_mgr.remove_root_device(device_id);
+                     void **arg)
+{
+    if (field->tag == proto_Device_peripheral_tag)
+    {
+        proto_PeripheralDevice *msg = (proto_PeripheralDevice *)field->pData;
+        msg->devices.funcs.decode = load_peripheral_sub_device;
+        msg->devices.arg = &peripheral_sub_devices;
+    }
+    if (field->tag == proto_Device_cycle_tag)
+    {
+        proto_CycleDevice *msg = (proto_CycleDevice *)field->pData;
+        msg->values.funcs.decode = load_cycle_state;
+        msg->values.arg = *arg;
     }
     return true;
-  }
+}
+bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    // ~500 bytes, too big for the stack. Safe as static as this is never
+    // re-entered, and devices keep their own copy of their config
+    static proto_Device proto_device;
+    proto_device = proto_Device_init_default;
+    peripheral_sub_devices.encoded.clear();
+    peripheral_sub_devices.ids.clear();
+    proto_device.cb_device.funcs.decode = load_device_dev;
+    proto_device.cb_device.arg = arg ? *arg : nullptr;
+    pb_decode_ex(stream, proto_Device_fields, &proto_device, PB_DECODE_NOINIT);
 
-  // Console links must survive even full reloads when their wiring is
-  // unchanged. So must the USB host, since restarting it disconnects everything
-  // plugged into it. SNES and joybus pads are kept too: rebuilding them forgets
-  // the controller type, and finding it again reloads.
-  const bool keep_on_full_reload =
-      proto_device.which_device == proto_Device_psxEmulation_tag ||
-      proto_device.which_device == proto_Device_wiiEmulation_tag ||
-      proto_device.which_device == proto_Device_joybusEmulation_tag ||
-      proto_device.which_device == proto_Device_snesEmulation_tag ||
-      proto_device.which_device == proto_Device_snes_tag ||
-      proto_device.which_device == proto_Device_joybus_tag ||
-      proto_device.which_device == proto_Device_usbHost_tag;
-  if (previous_device &&
-      (keep_on_full_reload || !config_mgr.is_full_reload()) &&
-      previous_device->matches_reload_config(proto_device)) {
-    device_mgr.add_active_device(previous_device);
-    previous_device->still_connected = true;
-    previous_device->rescan(true);
+    auto device_id = proto_device.deviceid;
+    DeviceReloadState previous_state;
+    auto previous_device = device_mgr.get_root_device(device_id);
+
+    if (proto_device.has_gate &&
+        !DeviceGates::instance().check(device_id, proto_device.gate))
+    {
+        // Its connector isn't plugged in. Inputs on it read as if it were
+        // disconnected
+        if (previous_device)
+        {
+            previous_device->end(true);
+            device_mgr.remove_root_device(device_id);
+        }
+        return true;
+    }
+
+    // Console links must survive even full reloads when their wiring is
+    // unchanged. So must the USB host, since restarting it disconnects everything
+    // plugged into it. SNES and joybus pads are kept too: rebuilding them forgets
+    // the controller type, and finding it again reloads.
+    const bool keep_on_full_reload =
+        proto_device.which_device == proto_Device_psxEmulation_tag ||
+        proto_device.which_device == proto_Device_wiiEmulation_tag ||
+        proto_device.which_device == proto_Device_joybusEmulation_tag ||
+        proto_device.which_device == proto_Device_snesEmulation_tag ||
+        proto_device.which_device == proto_Device_snes_tag ||
+        proto_device.which_device == proto_Device_joybus_tag ||
+        proto_device.which_device == proto_Device_usbHost_tag;
+    if (previous_device &&
+        (keep_on_full_reload || !config_mgr.is_full_reload()) &&
+        previous_device->matches_reload_config(proto_device))
+    {
+        device_mgr.add_active_device(previous_device);
+        previous_device->still_connected = true;
+        previous_device->rescan(true);
+        return true;
+    }
+
+    if (previous_device)
+    {
+        previous_device->save_reload_state(previous_state);
+        previous_device->end(false);
+        device_mgr.remove_root_device(device_id);
+        previous_device.reset();
+    }
+
+    auto device = DeviceFactory::create_device(
+        proto_device, device_id,
+        previous_state.valid ? &previous_state : nullptr);
+    if (!device)
+    {
+        // Skip devices we can't build (no type set, or one this firmware doesn't
+        // know). Failing here aborts the whole config decode, and profiles come
+        // after devices, so none would load.
+        printf("skipping device %d type=%d\r\n", device_id,
+               proto_device.which_device);
+        return true;
+    }
+
+    device_mgr.set_root_device(device_id, device);
+    if (proto_device.which_device == proto_Device_psxEmulation_tag)
+    {
+        device_mgr.set_psx_emulation_device(
+            std::static_pointer_cast<PSXEmulationDevice>(device));
+    }
+    else if (proto_device.which_device == proto_Device_wiiEmulation_tag)
+    {
+        device_mgr.set_wii_emulation_device(
+            std::static_pointer_cast<WiiExtensionEmulationDevice>(device));
+    }
+    else if (proto_device.which_device == proto_Device_joybusEmulation_tag)
+    {
+        device_mgr.set_joybus_emulation_device(
+            std::static_pointer_cast<JoybusEmulationDevice>(device));
+    }
+    else if (proto_device.which_device == proto_Device_snesEmulation_tag)
+    {
+        device_mgr.set_snes_emulation_device(
+            std::static_pointer_cast<SNESEmulationDevice>(device));
+    }
+    device_mgr.add_active_device(device);
+    device->still_connected = true;
+    device->begin();
+    device->rescan(true);
     return true;
-  }
-
-  if (previous_device) {
-    previous_device->save_reload_state(previous_state);
-    previous_device->end(false);
-    device_mgr.remove_root_device(device_id);
-    previous_device.reset();
-  }
-
-  auto device = DeviceFactory::create_device(
-      proto_device, device_id,
-      previous_state.valid ? &previous_state : nullptr);
-  if (!device) {
-    // Skip devices we can't build (no type set, or one this firmware doesn't
-    // know). Failing here aborts the whole config decode, and profiles come
-    // after devices, so none would load.
-    printf("skipping device %d type=%d\r\n", device_id,
-           proto_device.which_device);
-    return true;
-  }
-
-  device_mgr.set_root_device(device_id, device);
-  if (proto_device.which_device == proto_Device_psxEmulation_tag) {
-    device_mgr.set_psx_emulation_device(
-        std::static_pointer_cast<PSXEmulationDevice>(device));
-  } else if (proto_device.which_device == proto_Device_wiiEmulation_tag) {
-    device_mgr.set_wii_emulation_device(
-        std::static_pointer_cast<WiiExtensionEmulationDevice>(device));
-  } else if (proto_device.which_device == proto_Device_joybusEmulation_tag) {
-    device_mgr.set_joybus_emulation_device(
-        std::static_pointer_cast<JoybusEmulationDevice>(device));
-  } else if (proto_device.which_device == proto_Device_snesEmulation_tag) {
-    device_mgr.set_snes_emulation_device(
-        std::static_pointer_cast<SNESEmulationDevice>(device));
-  }
-  device_mgr.add_active_device(device);
-  device->still_connected = true;
-  device->begin();
-  device->rescan(true);
-  return true;
 }
 std::unique_ptr<Input> make_input(proto_Input input,
                                   ConfigDecodeContext &context,
-                                  pb_istream_t *stream) {
-  context.input_decoder.profile = context.profile;
-  return context.input_decoder.take(input);
+                                  pb_istream_t *stream)
+{
+    context.input_decoder.profile = context.profile;
+    return context.input_decoder.take(input);
 }
 
-bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg) {
-  auto &context = *static_cast<ConfigDecodeContext *>(*arg);
-  context.input_decoder.profile = context.profile;
-  void *decoder = &context.input_decoder;
-  return InputDecoder::prepare(stream, field, &decoder);
+bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto &context = *static_cast<ConfigDecodeContext *>(*arg);
+    context.input_decoder.profile = context.profile;
+    void *decoder = &context.input_decoder;
+    return InputDecoder::prepare(stream, field, &decoder);
 }
-bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg) {
-  auto *context = static_cast<ConfigDecodeContext *>(*arg);
-  // Inactive profiles skip their mappings, nanopb skips whatever we leave
-  // unread
-  if (!context->matched && !context->preview) {
+bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto *context = static_cast<ConfigDecodeContext *>(*arg);
+    // Inactive profiles skip their mappings, nanopb skips whatever we leave
+    // unread
+    if (!context->matched && !context->preview)
+    {
+        return true;
+    }
+    auto profile = context->profile;
+    // Static as this sits at the bottom of a deep nested decode on core0's 4k
+    // stack, and the PIO USB SOF IRQ stacks on top of that. load_mapping never
+    // recurses, and config is only decoded from core0's main loop
+    static const proto_Mapping default_mapping = proto_Mapping_init_default;
+    static proto_Mapping proto_mapping;
+    proto_mapping = default_mapping;
+    proto_mapping.input.cb_input.funcs.decode = load_input_dev;
+    proto_mapping.input.cb_input.arg = *arg;
+    if (!pb_decode_ex(stream, proto_Mapping_fields, &proto_mapping,
+                      PB_DECODE_NOINIT))
+    {
+        printf("couldn't decode mapping: %s\r\n", PB_GET_ERROR(stream));
+        return false;
+    }
+
+    if (!proto_mapping.has_rapidTrigger &&
+        !proto_mapping.input.has_digitalTrigger &&
+        !proto_mapping.input.has_digitalTriggerValue &&
+        !proto_mapping.input.has_digitalMaxTriggerValue &&
+        (proto_mapping.has_trigger || proto_mapping.has_triggerValue ||
+         proto_mapping.has_maxTriggerValue))
+    {
+        proto_mapping.input.has_digitalTrigger = proto_mapping.has_trigger;
+        proto_mapping.input.digitalTrigger = proto_mapping.trigger;
+        proto_mapping.input.has_digitalTriggerValue =
+            proto_mapping.has_triggerValue;
+        proto_mapping.input.digitalTriggerValue = proto_mapping.triggerValue;
+        proto_mapping.input.has_digitalMaxTriggerValue =
+            proto_mapping.has_maxTriggerValue;
+        proto_mapping.input.digitalMaxTriggerValue = proto_mapping.maxTriggerValue;
+    }
+    if (proto_mapping.has_rapidTrigger &&
+        !proto_mapping.rapidTrigger.has_actuationValue &&
+        proto_mapping.has_triggerValue)
+    {
+        proto_mapping.rapidTrigger.has_actuationValue = true;
+        proto_mapping.rapidTrigger.actuationValue = proto_mapping.triggerValue;
+    }
+
+    std::unique_ptr<Input> input =
+        make_input(proto_mapping.input, *context, stream);
+    size_t mapping_id = profile->mappings.size();
+
+    auto mapping = MappingFactory::create_mapping(proto_mapping, profile,
+                                                  std::move(input), mapping_id);
+    if (mapping)
+    {
+        auto *button = mapping->as_button_mapping();
+        int8_t bit =
+            InputQueue::bit_for_output(proto_mapping.mapping, profile->subtype);
+        if (profile->input_queue.enabled && button && bit >= 0)
+        {
+            button->set_queue_bit(bit);
+            profile->queued_mappings.push_back(button);
+        }
+        // bits 10 and 11 are strum up and down
+        if (button && (bit == 10 || bit == 11))
+        {
+            button->set_strum_bit(bit);
+            profile->strum_mappings.push_back(button);
+        }
+        uint8_t socd_bit =
+            button ? profile->socd_bit_for_output(proto_mapping.mapping) : 0;
+        if (socd_bit)
+        {
+            button->set_socd_bit(socd_bit);
+            profile->socd_mappings.push_back(button);
+        }
+        if (proto_mapping.mapping.which_mapping == proto_Output_action_tag ||
+            proto_mapping.mapping.which_mapping ==
+                proto_Output_turnOffController_tag)
+        {
+            profile->action_mappings.push_back(
+                static_cast<ActionMapping *>(mapping.get()));
+        }
+        profile->mappings.push_back(std::move(mapping));
+    }
     return true;
-  }
-  auto profile = context->profile;
-  // Static as this sits at the bottom of a deep nested decode on core0's 4k
-  // stack, and the PIO USB SOF IRQ stacks on top of that. load_mapping never
-  // recurses, and config is only decoded from core0's main loop
-  static const proto_Mapping default_mapping = proto_Mapping_init_default;
-  static proto_Mapping proto_mapping;
-  proto_mapping = default_mapping;
-  proto_mapping.input.cb_input.funcs.decode = load_input_dev;
-  proto_mapping.input.cb_input.arg = *arg;
-  if (!pb_decode_ex(stream, proto_Mapping_fields, &proto_mapping,
-                    PB_DECODE_NOINIT)) {
-    printf("couldn't decode mapping: %s\r\n", PB_GET_ERROR(stream));
-    return false;
-  }
-
-  if (!proto_mapping.has_rapidTrigger &&
-      !proto_mapping.input.has_digitalTrigger &&
-      !proto_mapping.input.has_digitalTriggerValue &&
-      !proto_mapping.input.has_digitalMaxTriggerValue &&
-      (proto_mapping.has_trigger || proto_mapping.has_triggerValue ||
-       proto_mapping.has_maxTriggerValue)) {
-    proto_mapping.input.has_digitalTrigger = proto_mapping.has_trigger;
-    proto_mapping.input.digitalTrigger = proto_mapping.trigger;
-    proto_mapping.input.has_digitalTriggerValue =
-        proto_mapping.has_triggerValue;
-    proto_mapping.input.digitalTriggerValue = proto_mapping.triggerValue;
-    proto_mapping.input.has_digitalMaxTriggerValue =
-        proto_mapping.has_maxTriggerValue;
-    proto_mapping.input.digitalMaxTriggerValue = proto_mapping.maxTriggerValue;
-  }
-  if (proto_mapping.has_rapidTrigger &&
-      !proto_mapping.rapidTrigger.has_actuationValue &&
-      proto_mapping.has_triggerValue) {
-    proto_mapping.rapidTrigger.has_actuationValue = true;
-    proto_mapping.rapidTrigger.actuationValue = proto_mapping.triggerValue;
-  }
-
-  std::unique_ptr<Input> input =
-      make_input(proto_mapping.input, *context, stream);
-  size_t mapping_id = profile->mappings.size();
-
-  auto mapping = MappingFactory::create_mapping(proto_mapping, profile,
-                                                std::move(input), mapping_id);
-  if (mapping) {
-    auto *button = mapping->as_button_mapping();
-    int8_t bit =
-        InputQueue::bit_for_output(proto_mapping.mapping, profile->subtype);
-    if (profile->input_queue.enabled && button && bit >= 0) {
-      button->set_queue_bit(bit);
-      profile->queued_mappings.push_back(button);
-    }
-    // bits 10 and 11 are strum up and down
-    if (button && (bit == 10 || bit == 11)) {
-      button->set_strum_bit(bit);
-      profile->strum_mappings.push_back(button);
-    }
-    uint8_t socd_bit =
-        button ? profile->socd_bit_for_output(proto_mapping.mapping) : 0;
-    if (socd_bit) {
-      button->set_socd_bit(socd_bit);
-      profile->socd_mappings.push_back(button);
-    }
-    if (proto_mapping.mapping.which_mapping == proto_Output_action_tag ||
-        proto_mapping.mapping.which_mapping ==
-            proto_Output_turnOffController_tag) {
-      profile->action_mappings.push_back(
-          static_cast<ActionMapping *>(mapping.get()));
-    }
-    profile->mappings.push_back(std::move(mapping));
-  }
-  return true;
 }
 
 bool load_assignment_dev(pb_istream_t *stream, const pb_field_t *field,
-                         void **arg) {
-  // printf("load_assignment_dev: %d %p\r\n", field->tag, profile.get());
-  proto_ProfileAssignmentInfo *info =
-      (proto_ProfileAssignmentInfo *)field->message;
-  if (field->tag == proto_ProfileAssignmentInfo_input_tag) {
-    info->assignment.input.input.cb_input.funcs.decode = load_input_dev;
-    info->assignment.input.input.cb_input.arg = *arg;
-  }
-  if (field->tag == proto_ProfileAssignmentInfo_inputAnyTime_tag) {
-    info->assignment.inputAnyTime.input.cb_input.funcs.decode = load_input_dev;
-    info->assignment.inputAnyTime.input.cb_input.arg = *arg;
-  }
-  if (field->tag == proto_ProfileAssignmentInfo_xboxOneAuth_tag) {
-    info->assignment.xboxOneAuth.trigger.input.cb_input.funcs.decode =
-        load_input_dev;
-    info->assignment.xboxOneAuth.trigger.input.cb_input.arg = *arg;
-  }
-  return true;
+                         void **arg)
+{
+    // printf("load_assignment_dev: %d %p\r\n", field->tag, profile.get());
+    proto_ProfileAssignmentInfo *info =
+        (proto_ProfileAssignmentInfo *)field->message;
+    if (field->tag == proto_ProfileAssignmentInfo_input_tag)
+    {
+        info->assignment.input.input.cb_input.funcs.decode = load_input_dev;
+        info->assignment.input.input.cb_input.arg = *arg;
+    }
+    if (field->tag == proto_ProfileAssignmentInfo_inputAnyTime_tag)
+    {
+        info->assignment.inputAnyTime.input.cb_input.funcs.decode = load_input_dev;
+        info->assignment.inputAnyTime.input.cb_input.arg = *arg;
+    }
+    if (field->tag == proto_ProfileAssignmentInfo_xboxOneAuth_tag)
+    {
+        info->assignment.xboxOneAuth.trigger.input.cb_input.funcs.decode =
+            load_input_dev;
+        info->assignment.xboxOneAuth.trigger.input.cb_input.arg = *arg;
+    }
+    return true;
 }
 bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field,
-                          void **arg) {
-  auto *context = static_cast<ConfigDecodeContext *>(*arg);
-  auto profile = context->profile;
-  auto &list = profile->triggers.back();
-  proto_ProfileAssignmentInfo proto_assignment =
-      proto_ProfileAssignmentInfo_init_default;
-  proto_assignment.cb_assignment.funcs.decode = load_assignment_dev;
-  proto_assignment.cb_assignment.arg = *arg;
-  if (!pb_decode_ex(stream, proto_ProfileAssignmentInfo_fields,
-                    &proto_assignment, PB_DECODE_NOINIT)) {
-    printf("couldn't decode assignment: %s\r\n", PB_GET_ERROR(stream));
-    return false;
-  }
+                          void **arg)
+{
+    auto *context = static_cast<ConfigDecodeContext *>(*arg);
+    auto profile = context->profile;
+    auto &list = profile->triggers.back();
+    proto_ProfileAssignmentInfo proto_assignment =
+        proto_ProfileAssignmentInfo_init_default;
+    proto_assignment.cb_assignment.funcs.decode = load_assignment_dev;
+    proto_assignment.cb_assignment.arg = *arg;
+    if (!pb_decode_ex(stream, proto_ProfileAssignmentInfo_fields,
+                      &proto_assignment, PB_DECODE_NOINIT))
+    {
+        printf("couldn't decode assignment: %s\r\n", PB_GET_ERROR(stream));
+        return false;
+    }
 
-  // Get input for input-based triggers
-  std::unique_ptr<Input> input;
-  if (proto_assignment.which_assignment ==
-      proto_ProfileAssignmentInfo_input_tag) {
-    input =
-        make_input(proto_assignment.assignment.input.input, *context, stream);
-  } else if (proto_assignment.which_assignment ==
-             proto_ProfileAssignmentInfo_inputAnyTime_tag) {
-    input = make_input(proto_assignment.assignment.inputAnyTime.input, *context,
-                       stream);
-  } else if (proto_assignment.which_assignment ==
+    // Get input for input-based triggers
+    std::unique_ptr<Input> input;
+    if (proto_assignment.which_assignment ==
+        proto_ProfileAssignmentInfo_input_tag)
+    {
+        input =
+            make_input(proto_assignment.assignment.input.input, *context, stream);
+    }
+    else if (proto_assignment.which_assignment ==
+             proto_ProfileAssignmentInfo_inputAnyTime_tag)
+    {
+        input = make_input(proto_assignment.assignment.inputAnyTime.input, *context,
+                           stream);
+    }
+    else if (proto_assignment.which_assignment ==
                  proto_ProfileAssignmentInfo_xboxOneAuth_tag &&
-             proto_assignment.assignment.xboxOneAuth.has_trigger) {
-    input = make_input(proto_assignment.assignment.xboxOneAuth.trigger.input,
-                       *context, stream);
-  }
-
-  auto slot_id = static_cast<uint32_t>(list->triggers.size());
-  if (context->profile_wide_slot_ids) {
-    if (slot_kind_and_type(proto_assignment).first != DeviceSlotKind::None) {
-      slot_id = context->slot_ids.next_id(proto_assignment);
+             proto_assignment.assignment.xboxOneAuth.has_trigger)
+    {
+        input = make_input(proto_assignment.assignment.xboxOneAuth.trigger.input,
+                           *context, stream);
     }
-  } else if (profile->per_kind_slot_ids) {
-    DeviceSlotKind kind = DeviceSlotKind::None;
-    switch (proto_assignment.which_assignment) {
-    case proto_ProfileAssignmentInfo_wiiExt_tag:
-      kind = DeviceSlotKind::WiiExtension;
-      break;
-    case proto_ProfileAssignmentInfo_ps2Cnt_tag:
-      kind = DeviceSlotKind::PS2;
-      break;
-    case proto_ProfileAssignmentInfo_snesCnt_tag:
-      kind = DeviceSlotKind::SNES;
-      break;
-    case proto_ProfileAssignmentInfo_joybusCnt_tag:
-      kind = DeviceSlotKind::Joybus;
-      break;
-    case proto_ProfileAssignmentInfo_usbType_tag:
-    case proto_ProfileAssignmentInfo_usbDevice_tag:
-    case proto_ProfileAssignmentInfo_xboxOneAuth_tag:
-      kind = DeviceSlotKind::USB;
-      break;
-    case proto_ProfileAssignmentInfo_bluetoothType_tag:
-    case proto_ProfileAssignmentInfo_bluetoothDevice_tag:
-      kind = DeviceSlotKind::Bluetooth;
-      break;
-    case proto_ProfileAssignmentInfo_midiChannel_tag:
-    case proto_ProfileAssignmentInfo_midiProGuitar_tag:
-      kind = DeviceSlotKind::MIDI;
-      break;
-    default:
-      break;
+
+    auto slot_id = static_cast<uint32_t>(list->triggers.size());
+    if (context->profile_wide_slot_ids)
+    {
+        if (slot_kind_and_type(proto_assignment).first != DeviceSlotKind::None)
+        {
+            slot_id = context->slot_ids.next_id(proto_assignment);
+        }
     }
-    if (kind != DeviceSlotKind::None) {
-      const auto index = static_cast<size_t>(kind);
-      slot_id = ++context->slot_counts[index];
+    else if (profile->per_kind_slot_ids)
+    {
+        DeviceSlotKind kind = DeviceSlotKind::None;
+        switch (proto_assignment.which_assignment)
+        {
+        case proto_ProfileAssignmentInfo_wiiExt_tag:
+            kind = DeviceSlotKind::WiiExtension;
+            break;
+        case proto_ProfileAssignmentInfo_ps2Cnt_tag:
+            kind = DeviceSlotKind::PS2;
+            break;
+        case proto_ProfileAssignmentInfo_snesCnt_tag:
+            kind = DeviceSlotKind::SNES;
+            break;
+        case proto_ProfileAssignmentInfo_joybusCnt_tag:
+            kind = DeviceSlotKind::Joybus;
+            break;
+        case proto_ProfileAssignmentInfo_usbType_tag:
+        case proto_ProfileAssignmentInfo_usbDevice_tag:
+        case proto_ProfileAssignmentInfo_xboxOneAuth_tag:
+            kind = DeviceSlotKind::USB;
+            break;
+        case proto_ProfileAssignmentInfo_bluetoothType_tag:
+        case proto_ProfileAssignmentInfo_bluetoothDevice_tag:
+            kind = DeviceSlotKind::Bluetooth;
+            break;
+        case proto_ProfileAssignmentInfo_midiChannel_tag:
+        case proto_ProfileAssignmentInfo_midiProGuitar_tag:
+            kind = DeviceSlotKind::MIDI;
+            break;
+        default:
+            break;
+        }
+        if (kind != DeviceSlotKind::None)
+        {
+            const auto index = static_cast<size_t>(kind);
+            slot_id = ++context->slot_counts[index];
+        }
     }
-  }
 
-  auto trigger = TriggerFactory::create_trigger(
-      proto_assignment, profile, std::move(input), list->triggers.size(),
-      slot_id, profile->triggers.size() - 1);
+    auto trigger = TriggerFactory::create_trigger(
+        proto_assignment, profile, std::move(input), list->triggers.size(),
+        slot_id, profile->triggers.size() - 1);
 
-  if (trigger) {
-    list->triggers.push_back(std::move(trigger));
-  }
+    if (trigger)
+    {
+        list->triggers.push_back(std::move(trigger));
+    }
 
-  return true;
+    return true;
 }
 
 bool load_assignments(pb_istream_t *stream, const pb_field_t *field,
-                      void **arg) {
-  auto *context = static_cast<ConfigDecodeContext *>(*arg);
-  auto profile = context->profile;
-  auto list = new ActivationTriggerList();
-  context->slot_counts.fill(0);
-  context->slot_ids.end_list();
-  list->list_id = profile->triggers.size();
-  profile->triggers.emplace_back(list);
-  proto_ProfileAssignment proto_assignment =
-      proto_ProfileAssignment_init_default;
-  proto_assignment.assignments.funcs.decode = &load_assignment_info;
-  proto_assignment.assignments.arg = *arg;
-  pb_decode_ex(stream, proto_ProfileAssignment_fields, &proto_assignment,
-               PB_DECODE_NOINIT);
-  list->order_triggers();
-  if (context->preview) {
+                      void **arg)
+{
+    auto *context = static_cast<ConfigDecodeContext *>(*arg);
+    auto profile = context->profile;
+    auto list = new ActivationTriggerList();
+    context->slot_counts.fill(0);
+    context->slot_ids.end_list();
+    list->list_id = profile->triggers.size();
+    profile->triggers.emplace_back(list);
+    proto_ProfileAssignment proto_assignment =
+        proto_ProfileAssignment_init_default;
+    proto_assignment.assignments.funcs.decode = &load_assignment_info;
+    proto_assignment.assignments.arg = *arg;
+    pb_decode_ex(stream, proto_ProfileAssignment_fields, &proto_assignment,
+                 PB_DECODE_NOINIT);
+    list->order_triggers();
+    if (context->preview)
+    {
+        return true;
+    }
+    if (profile->standby_lighting)
+    {
+        // Standby lighting has no output, its rules only claim the controllers its
+        // wake buttons and LEDs read. Each rule claims whatever is connected. With
+        // other profiles active, it borrows the controllers they claimed, leaving
+        // them theirs.
+        profile->standby_borrows = context->standby_borrows;
+        list->validate(context->standby_claims, false, false);
+        return true;
+    }
+    // Assign triggers before building the profile
+    if (!context->matched && list->validate(true, false, false))
+    {
+        context->matched = true;
+        int assignedDevices = list->assignedDevices();
+        ConsoleMode usb_mode = config_mgr.get_requested_mode();
+        ConsoleMode forced_usb_mode;
+        bool is_mode_forced = list->forcedConsoleMode(forced_usb_mode);
+        if (is_mode_forced)
+        {
+            if (HIDConfigDevice::tool_may_be_open())
+            {
+                // Switching modes would drop the tool's connection, so apply it once
+                // the tool disconnects
+                printf("mode forced %d deferred, tool is open\r\n", forced_usb_mode);
+                config_mgr.defer_forced_mode(forced_usb_mode);
+            }
+            else
+            {
+                printf("mode forced %d (was %d)\r\n", forced_usb_mode,
+                       config_mgr.get_requested_mode());
+                config_mgr.request_mode(forced_usb_mode);
+                config_mgr.set_mode_from_profile(true);
+                usb_mode = forced_usb_mode;
+            }
+        }
+        else if (profile->ps3_on_rpcs3 && config_mgr.is_rpcs3_detected())
+        {
+            if (HIDConfigDevice::tool_may_be_open())
+            {
+                // Same as a forced mode, apply it once the tool disconnects
+                printf("rpcs3 mode deferred, tool is open\r\n");
+                config_mgr.defer_forced_mode(ModePs3);
+            }
+            else
+            {
+                printf("rpcs3 mode (was %d)\r\n", config_mgr.get_requested_mode());
+                config_mgr.request_mode(ModePs3);
+                config_mgr.set_mode_from_profile(true);
+                usb_mode = ModePs3;
+            }
+        }
+
+        bool xinput_win;
+        if (list->xinputOnWindows(xinput_win))
+        {
+            profile->xinput_on_windows = xinput_win;
+        }
+        // KeyboardMania is HID only, so it always stays in HID mode on windows
+        if (profile->subtype == SubType_KeyboardMania)
+        {
+            profile->xinput_on_windows = false;
+        }
+
+        bool ps4_mode;
+        if (list->ps4OrPs5Mode(ps4_mode))
+        {
+            profile->supports_ps4 = ps4_mode;
+        }
+
+        profile->xbox_one_auth_held = list->held();
+
+        printf("profile %d active mode=%d\r\n", profile->profile_id, usb_mode);
+
+        // Assign profile to appropriate devices
+        profile_mgr.assign_profile_to_devices(profile, assignedDevices, usb_mode);
+    }
+    else if (context->matched)
+    {
+        list->validate(false, false, false);
+    }
     return true;
-  }
-  if (profile->standby_lighting) {
-    // Standby lighting has no output, its rules only claim the controllers its
-    // wake buttons and LEDs read. Each rule claims whatever is connected. With
-    // other profiles active, it borrows the controllers they claimed, leaving
-    // them theirs.
-    profile->standby_borrows = context->standby_borrows;
-    list->validate(context->standby_claims, false, false);
-    return true;
-  }
-  // Assign triggers before building the profile
-  if (!context->matched && list->validate(true, false, false)) {
-    context->matched = true;
-    int assignedDevices = list->assignedDevices();
-    ConsoleMode usb_mode = config_mgr.get_requested_mode();
-    ConsoleMode forced_usb_mode;
-    bool is_mode_forced = list->forcedConsoleMode(forced_usb_mode);
-    if (is_mode_forced) {
-      if (HIDConfigDevice::tool_may_be_open()) {
-        // Switching modes would drop the tool's connection, so apply it once
-        // the tool disconnects
-        printf("mode forced %d deferred, tool is open\r\n", forced_usb_mode);
-        config_mgr.defer_forced_mode(forced_usb_mode);
-      } else {
-        printf("mode forced %d (was %d)\r\n", forced_usb_mode,
-               config_mgr.get_requested_mode());
-        config_mgr.request_mode(forced_usb_mode);
-        config_mgr.set_mode_from_profile(true);
-        usb_mode = forced_usb_mode;
-      }
-    } else if (profile->ps3_on_rpcs3 && config_mgr.is_rpcs3_detected()) {
-      if (HIDConfigDevice::tool_may_be_open()) {
-        // Same as a forced mode, apply it once the tool disconnects
-        printf("rpcs3 mode deferred, tool is open\r\n");
-        config_mgr.defer_forced_mode(ModePs3);
-      } else {
-        printf("rpcs3 mode (was %d)\r\n", config_mgr.get_requested_mode());
-        config_mgr.request_mode(ModePs3);
-        config_mgr.set_mode_from_profile(true);
-        usb_mode = ModePs3;
-      }
-    }
-
-    bool xinput_win;
-    if (list->xinputOnWindows(xinput_win)) {
-      profile->xinput_on_windows = xinput_win;
-    }
-    // KeyboardMania is HID only, so it always stays in HID mode on windows
-    if (profile->subtype == SubType_KeyboardMania) {
-      profile->xinput_on_windows = false;
-    }
-
-    bool ps4_mode;
-    if (list->ps4OrPs5Mode(ps4_mode)) {
-      profile->supports_ps4 = ps4_mode;
-    }
-
-    profile->xbox_one_auth_held = list->held();
-
-    printf("profile %d active mode=%d\r\n", profile->profile_id, usb_mode);
-
-    // Assign profile to appropriate devices
-    profile_mgr.assign_profile_to_devices(profile, assignedDevices, usb_mode);
-  } else if (context->matched) {
-    list->validate(false, false, false);
-  }
-  return true;
 }
 // A display LED's image, which is at most a whole screen
 static bool load_display_image(pb_istream_t *stream, const pb_field_t *field,
-                               void **arg) {
-  auto *image = static_cast<std::vector<uint8_t> *>(*arg);
-  if (stream->bytes_left >
-      MonoFramebuffer::MAX_WIDTH * MonoFramebuffer::MAX_HEIGHT / 8) {
-    return pb_read(stream, nullptr, stream->bytes_left);
-  }
-  image->resize(stream->bytes_left);
-  return pb_read(stream, image->data(), image->size());
+                               void **arg)
+{
+    auto *image = static_cast<std::vector<uint8_t> *>(*arg);
+    if (stream->bytes_left >
+        MonoFramebuffer::MAX_WIDTH * MonoFramebuffer::MAX_HEIGHT / 8)
+    {
+        return pb_read(stream, nullptr, stream->bytes_left);
+    }
+    image->resize(stream->bytes_left);
+    return pb_read(stream, image->data(), image->size());
 }
 static bool load_led_device_dev(pb_istream_t *stream, const pb_field_t *field,
-                                void **arg) {
-  if (field->tag == proto_LedDevice_display_tag) {
-    proto_DisplayLedDevice *msg = (proto_DisplayLedDevice *)field->pData;
-    msg->image.funcs.decode = load_display_image;
-    msg->image.arg = *arg;
-  }
-  return true;
-}
-bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg) {
-  auto *context = static_cast<ConfigDecodeContext *>(*arg);
-  if (!context->matched && !context->preview) {
+                                void **arg)
+{
+    if (field->tag == proto_LedDevice_display_tag)
+    {
+        proto_DisplayLedDevice *msg = (proto_DisplayLedDevice *)field->pData;
+        msg->image.funcs.decode = load_display_image;
+        msg->image.arg = *arg;
+    }
     return true;
-  }
-  auto profile = context->profile;
-  proto_Led proto_led = proto_Led_init_default;
-  proto_led.mapping.led.inputMapping.input.cb_input.funcs.decode =
-      load_input_dev;
-  proto_led.mapping.led.inputMapping.input.cb_input.arg = *arg;
-  std::vector<uint8_t> image;
-  proto_led.device.cb_device.funcs.decode = load_led_device_dev;
-  proto_led.device.cb_device.arg = &image;
-  if (!pb_decode_ex(stream, proto_Led_fields, &proto_led, PB_DECODE_NOINIT)) {
-    printf("couldn't decode LED: %s\r\n", PB_GET_ERROR(stream));
-    return false;
-  }
+}
+bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto *context = static_cast<ConfigDecodeContext *>(*arg);
+    if (!context->matched && !context->preview)
+    {
+        return true;
+    }
+    auto profile = context->profile;
+    proto_Led proto_led = proto_Led_init_default;
+    proto_led.mapping.led.inputMapping.input.cb_input.funcs.decode =
+        load_input_dev;
+    proto_led.mapping.led.inputMapping.input.cb_input.arg = *arg;
+    std::vector<uint8_t> image;
+    proto_led.device.cb_device.funcs.decode = load_led_device_dev;
+    proto_led.device.cb_device.arg = &image;
+    if (!pb_decode_ex(stream, proto_Led_fields, &proto_led, PB_DECODE_NOINIT))
+    {
+        printf("couldn't decode LED: %s\r\n", PB_GET_ERROR(stream));
+        return false;
+    }
 
-  auto device = LedFactory::create_led_device(proto_led.device, profile,
-                                              std::move(image));
-  if (!device) {
-    return false;
-  }
+    auto device = LedFactory::create_led_device(proto_led.device, profile,
+                                                std::move(image));
+    if (!device)
+    {
+        return false;
+    }
 
-  // Get input for input-based LED mappings
-  std::unique_ptr<Input> input;
-  if (proto_led.mapping.which_led == proto_LedMapping_inputMapping_tag) {
-    input =
-        make_input(proto_led.mapping.led.inputMapping.input, *context, stream);
-  }
+    // Get input for input-based LED mappings
+    std::unique_ptr<Input> input;
+    if (proto_led.mapping.which_led == proto_LedMapping_inputMapping_tag)
+    {
+        input =
+            make_input(proto_led.mapping.led.inputMapping.input, *context, stream);
+    }
 
-  auto led_mapping = LedFactory::create_led_mapping(
-      proto_led.mapping, profile, std::move(device), std::move(input),
-      profile->leds.size());
+    auto led_mapping = LedFactory::create_led_mapping(
+        proto_led.mapping, profile, std::move(device), std::move(input),
+        profile->leds.size());
 
-  if (led_mapping) {
-    profile->leds.push_back(std::move(led_mapping));
-  }
+    if (led_mapping)
+    {
+        profile->leds.push_back(std::move(led_mapping));
+    }
 
-  return true;
+    return true;
 }
 
 bool load_standby_wake(pb_istream_t *stream, const pb_field_t *field,
-                       void **arg) {
-  auto *context = static_cast<ConfigDecodeContext *>(*arg);
-  if (!context->matched) {
-    // Its wake buttons are used while the other profiles are asleep with their
-    // host, so it's loaded then
-    if (context->profile->standby_lighting && !context->preview) {
-      config_mgr.note_standby(true);
+                       void **arg)
+{
+    auto *context = static_cast<ConfigDecodeContext *>(*arg);
+    if (!context->matched)
+    {
+        // Its wake buttons are used while the other profiles are asleep with their
+        // host, so it's loaded then
+        if (context->profile->standby_lighting && !context->preview)
+        {
+            config_mgr.note_standby(true);
+        }
+        return true;
+    }
+    proto_InputActivationTrigger proto_wake =
+        proto_InputActivationTrigger_init_default;
+    proto_wake.input.cb_input.funcs.decode = &load_input_dev;
+    proto_wake.input.cb_input.arg = *arg;
+    if (!pb_decode_ex(stream, proto_InputActivationTrigger_fields, &proto_wake,
+                      PB_DECODE_NOINIT))
+    {
+        return false;
+    }
+    auto input = make_input(proto_wake.input, *context, stream);
+    if (input)
+    {
+        auto profile = context->profile;
+        profile->standby_wake.push_back(std::make_shared<InputActivationTrigger>(
+            true, proto_wake, std::move(input), profile, 0, 0));
     }
     return true;
-  }
-  proto_InputActivationTrigger proto_wake =
-      proto_InputActivationTrigger_init_default;
-  proto_wake.input.cb_input.funcs.decode = &load_input_dev;
-  proto_wake.input.cb_input.arg = *arg;
-  if (!pb_decode_ex(stream, proto_InputActivationTrigger_fields, &proto_wake,
-                    PB_DECODE_NOINIT)) {
-    return false;
-  }
-  auto input = make_input(proto_wake.input, *context, stream);
-  if (input) {
-    auto profile = context->profile;
-    profile->standby_wake.push_back(std::make_shared<InputActivationTrigger>(
-        true, proto_wake, std::move(input), profile, 0, 0));
-  }
-  return true;
 }
 
 // The controller types RPCS3's USB passthrough knows about
-static bool rpcs3_passthrough_supported(SubType subtype) {
-  switch (subtype) {
-  case Gamepad:
-  case GuitarHeroGuitar:
-  case RockBandGuitar:
-  case RockBandDrums:
-  case LiveGuitar:
-  case DjHeroTurntable:
-  case StageKit:
-  case ProKeys:
-  case ProGuitarMustang:
-  case ProGuitarSquier:
-    return true;
-  default:
-    return false;
-  }
+static bool rpcs3_passthrough_supported(SubType subtype)
+{
+    switch (subtype)
+    {
+    case Gamepad:
+    case GuitarHeroGuitar:
+    case RockBandGuitar:
+    case RockBandDrums:
+    case LiveGuitar:
+    case DjHeroTurntable:
+    case StageKit:
+    case ProKeys:
+    case ProGuitarMustang:
+    case ProGuitarSquier:
+        return true;
+    default:
+        return false;
+    }
 }
 
-bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg) {
-  auto *context = static_cast<ConfigDecodeContext *>(*arg);
-  auto profile = context->profile;
-  // printf("load_uid: %p\r\n", profile.get());
-  proto_ProfileOpts opts = proto_ProfileOpts_init_default;
-  if (!decode_profile_opts(stream, &opts))
-    return false;
-  profile->profile_id = opts.uid;
-  memcpy(profile->name, opts.name, sizeof(profile->name));
-  profile->xinput_on_windows = opts.has_xinputOnWindows && opts.xinputOnWindows;
-  profile->invert_y_axis_hid = opts.has_invertYAxisHid && opts.invertYAxisHid;
-  profile->supports_ps4 = opts.has_ps4OrPs5Mode && opts.ps4OrPs5Mode;
-  profile->supports_slider = opts.has_supportsSlider && opts.supportsSlider;
-  profile->cymbal_glitch_fix = opts.has_cymbalGlitchFix && opts.cymbalGlitchFix;
-  profile->full_range_turntable_on_pc =
-      opts.has_fullRangeTurntableOnPc && opts.fullRangeTurntableOnPc;
-  profile->ps3_on_rpcs3 = rpcs3_passthrough_supported(opts.deviceToEmulate) &&
-                          (!opts.has_ps3OnRpcs3 || opts.ps3OnRpcs3);
-  profile->select_to_dpad_left =
-      opts.has_selectToDpadLeft && opts.selectToDpadLeft;
-  profile->socd_mode = opts.has_socdMode ? opts.socdMode : SocdOff;
-  profile->position_based_face_buttons =
-      opts.faceButtonMappingMode == PositionBased;
-  profile->combined_strum_debounce =
-      opts.has_combinedStrumDebounce && opts.combinedStrumDebounce;
-  profile->disconnect_bluetooth_on_suspend =
-      opts.has_disconnectBluetoothOnSuspend &&
-      opts.disconnectBluetoothOnSuspend;
-  profile->per_kind_slot_ids =
-      opts.has_deviceSlotIdVersion && opts.deviceSlotIdVersion >= 1;
-  profile->subtype = opts.deviceToEmulate;
-  profile->standby_lighting = opts.has_standbyLighting && opts.standbyLighting;
-  profile->standby_while_suspended =
-      opts.has_standbyWhileSuspended && opts.standbyWhileSuspended;
-  if (profile->standby_lighting && !context->preview) {
-    config_mgr.note_standby(opts.has_standbyWhileSuspended &&
-                            opts.standbyWhileSuspended);
-  }
-  // GuitarFreaks has a single strum, so it always queues to turn quick
-  // re-strums into separate picks
-  bool guitar_freaks = profile->subtype == GuitarFreaks;
-  profile->input_queue.enabled =
-      (opts.has_queueInputs && opts.queueInputs) || guitar_freaks;
-  // a frame, so a game polling once per frame sees the release between picks
-  uint32_t default_interval = guitar_freaks ? 170 : 10;
-  profile->input_queue.interval_us =
-      (opts.has_dequeueInterval100us ? opts.dequeueInterval100us
-                                     : default_interval) *
-      100;
-  return true;
+bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    auto *context = static_cast<ConfigDecodeContext *>(*arg);
+    auto profile = context->profile;
+    // printf("load_uid: %p\r\n", profile.get());
+    proto_ProfileOpts opts = proto_ProfileOpts_init_default;
+    if (!decode_profile_opts(stream, &opts))
+        return false;
+    profile->profile_id = opts.uid;
+    memcpy(profile->name, opts.name, sizeof(profile->name));
+    profile->xinput_on_windows = opts.has_xinputOnWindows && opts.xinputOnWindows;
+    profile->invert_y_axis_hid = opts.has_invertYAxisHid && opts.invertYAxisHid;
+    profile->supports_ps4 = opts.has_ps4OrPs5Mode && opts.ps4OrPs5Mode;
+    profile->supports_slider = opts.has_supportsSlider && opts.supportsSlider;
+    profile->cymbal_glitch_fix = opts.has_cymbalGlitchFix && opts.cymbalGlitchFix;
+    profile->full_range_turntable_on_pc =
+        opts.has_fullRangeTurntableOnPc && opts.fullRangeTurntableOnPc;
+    profile->ps3_on_rpcs3 = rpcs3_passthrough_supported(opts.deviceToEmulate) &&
+                            (!opts.has_ps3OnRpcs3 || opts.ps3OnRpcs3);
+    profile->select_to_dpad_left =
+        opts.has_selectToDpadLeft && opts.selectToDpadLeft;
+    profile->socd_mode = opts.has_socdMode ? opts.socdMode : SocdOff;
+    profile->position_based_face_buttons =
+        opts.faceButtonMappingMode == PositionBased;
+    profile->combined_strum_debounce =
+        opts.has_combinedStrumDebounce && opts.combinedStrumDebounce;
+    profile->disconnect_bluetooth_on_suspend =
+        opts.has_disconnectBluetoothOnSuspend &&
+        opts.disconnectBluetoothOnSuspend;
+    profile->per_kind_slot_ids =
+        opts.has_deviceSlotIdVersion && opts.deviceSlotIdVersion >= 1;
+    profile->subtype = opts.deviceToEmulate;
+    profile->standby_lighting = opts.has_standbyLighting && opts.standbyLighting;
+    profile->standby_while_suspended =
+        opts.has_standbyWhileSuspended && opts.standbyWhileSuspended;
+    if (profile->standby_lighting && !context->preview)
+    {
+        config_mgr.note_standby(opts.has_standbyWhileSuspended &&
+                                opts.standbyWhileSuspended);
+    }
+    // GuitarFreaks has a single strum, so it always queues to turn quick
+    // re-strums into separate picks
+    bool guitar_freaks = profile->subtype == GuitarFreaks;
+    profile->input_queue.enabled =
+        (opts.has_queueInputs && opts.queueInputs) || guitar_freaks;
+    // a frame, so a game polling once per frame sees the release between picks
+    uint32_t default_interval = guitar_freaks ? 170 : 10;
+    profile->input_queue.interval_us =
+        (opts.has_dequeueInterval100us ? opts.dequeueInterval100us
+                                       : default_interval) *
+        100;
+    return true;
 }
-struct SlotIdScan {
-  uint32_t version = 0;
-  ProfileSlotIds ids;
+struct SlotIdScan
+{
+    uint32_t version = 0;
+    ProfileSlotIds ids;
 };
 
 static bool scan_slot_assignment_info(pb_istream_t *stream,
-                                      const pb_field_t *field, void **arg) {
-  auto *ids = static_cast<ProfileSlotIds *>(*arg);
-  proto_ProfileAssignmentInfo info = proto_ProfileAssignmentInfo_init_default;
-  if (!pb_decode(stream, proto_ProfileAssignmentInfo_fields, &info)) {
-    return false;
-  }
-  ids->add(info);
-  return true;
+                                      const pb_field_t *field, void **arg)
+{
+    auto *ids = static_cast<ProfileSlotIds *>(*arg);
+    proto_ProfileAssignmentInfo info = proto_ProfileAssignmentInfo_init_default;
+    if (!pb_decode(stream, proto_ProfileAssignmentInfo_fields, &info))
+    {
+        return false;
+    }
+    ids->add(info);
+    return true;
 }
 
 static bool scan_slot_assignments(pb_istream_t *stream, const pb_field_t *field,
-                                  void **arg) {
-  auto *ids = static_cast<ProfileSlotIds *>(*arg);
-  proto_ProfileAssignment list = proto_ProfileAssignment_init_default;
-  list.assignments.funcs.decode = &scan_slot_assignment_info;
-  list.assignments.arg = ids;
-  bool ok = pb_decode(stream, proto_ProfileAssignment_fields, &list);
-  ids->end_list();
-  return ok;
+                                  void **arg)
+{
+    auto *ids = static_cast<ProfileSlotIds *>(*arg);
+    proto_ProfileAssignment list = proto_ProfileAssignment_init_default;
+    list.assignments.funcs.decode = &scan_slot_assignment_info;
+    list.assignments.arg = ids;
+    bool ok = pb_decode(stream, proto_ProfileAssignment_fields, &list);
+    ids->end_list();
+    return ok;
 }
 
 static bool scan_slot_opts(pb_istream_t *stream, const pb_field_t *field,
-                           void **arg) {
-  auto *scan = static_cast<SlotIdScan *>(*arg);
-  proto_ProfileOpts opts = proto_ProfileOpts_init_default;
-  if (!decode_profile_opts(stream, &opts)) {
-    return false;
-  }
-  scan->version = opts.has_deviceSlotIdVersion ? opts.deviceSlotIdVersion : 0;
-  return true;
+                           void **arg)
+{
+    auto *scan = static_cast<SlotIdScan *>(*arg);
+    proto_ProfileOpts opts = proto_ProfileOpts_init_default;
+    if (!decode_profile_opts(stream, &opts))
+    {
+        return false;
+    }
+    scan->version = opts.has_deviceSlotIdVersion ? opts.deviceSlotIdVersion : 0;
+    return true;
 }
 
 // Slot ids from deviceSlotIdVersion 2 depend on every assignment list in the
 // profile, but the lists are claimed as they are decoded, so read them all
 // first
-static void scan_slot_ids(pb_istream_t stream, ConfigDecodeContext &context) {
-  SlotIdScan scan;
-  proto_Profile proto_profile = proto_Profile_init_default;
-  proto_profile.opts.funcs.decode = &scan_slot_opts;
-  proto_profile.opts.arg = &scan;
-  proto_profile.assignments.funcs.decode = &scan_slot_assignments;
-  proto_profile.assignments.arg = &scan.ids;
-  if (!pb_decode_ex(&stream, proto_Profile_fields, &proto_profile,
-                    PB_DECODE_NOINIT) ||
-      scan.version < 2) {
-    return;
-  }
-  scan.ids.build(scan.version);
-  context.slot_ids = std::move(scan.ids);
-  context.profile_wide_slot_ids = true;
+static void scan_slot_ids(pb_istream_t stream, ConfigDecodeContext &context)
+{
+    SlotIdScan scan;
+    proto_Profile proto_profile = proto_Profile_init_default;
+    proto_profile.opts.funcs.decode = &scan_slot_opts;
+    proto_profile.opts.arg = &scan;
+    proto_profile.assignments.funcs.decode = &scan_slot_assignments;
+    proto_profile.assignments.arg = &scan.ids;
+    if (!pb_decode_ex(&stream, proto_Profile_fields, &proto_profile,
+                      PB_DECODE_NOINIT) ||
+        scan.version < 2)
+    {
+        return;
+    }
+    scan.ids.build(scan.version);
+    context.slot_ids = std::move(scan.ids);
+    context.profile_wide_slot_ids = true;
 }
 
 static std::shared_ptr<Profile> decode_profile(pb_istream_t stream,
-                                               ConfigDecodeContext &context) {
-  scan_slot_ids(stream, context);
-  auto profile = std::make_shared<Profile>();
-  device_mgr.for_each_active_device([profile](const auto &device) {
-    if (!device->is_assignable()) {
-      profile->devices.emplace(device->m_id, device);
+                                               ConfigDecodeContext &context)
+{
+    scan_slot_ids(stream, context);
+    auto profile = std::make_shared<Profile>();
+    device_mgr.for_each_active_device([profile](const auto &device) {
+        if (!device->is_assignable())
+        {
+            profile->devices.emplace(device->m_id, device);
+        }
+    });
+    context.profile = profile;
+    proto_Profile proto_profile = proto_Profile_init_default;
+    proto_profile.assignments.funcs.decode = &load_assignments;
+    proto_profile.assignments.arg = &context;
+    proto_profile.mappings.funcs.decode = &load_mapping;
+    proto_profile.mappings.arg = &context;
+    proto_profile.opts.funcs.decode = &load_opts;
+    proto_profile.opts.arg = &context;
+    proto_profile.leds.funcs.decode = &load_leds;
+    proto_profile.leds.arg = &context;
+    proto_profile.standbyWake.funcs.decode = &load_standby_wake;
+    proto_profile.standbyWake.arg = &context;
+    pb_decode_ex(&stream, proto_Profile_fields, &proto_profile, PB_DECODE_NOINIT);
+    profile->triggers_only = !context.matched && !context.preview;
+    profile->preview = context.preview;
+    // Need to update capabilities again now the leds have been loaded
+    if (context.matched)
+    {
+        for (const auto &inst :
+             ProfileManager::instance().get_instances_for_profile(
+                 profile->profile_id))
+        {
+            if (inst)
+            {
+                inst->update_capabilities();
+            }
+        }
     }
-  });
-  context.profile = profile;
-  proto_Profile proto_profile = proto_Profile_init_default;
-  proto_profile.assignments.funcs.decode = &load_assignments;
-  proto_profile.assignments.arg = &context;
-  proto_profile.mappings.funcs.decode = &load_mapping;
-  proto_profile.mappings.arg = &context;
-  proto_profile.opts.funcs.decode = &load_opts;
-  proto_profile.opts.arg = &context;
-  proto_profile.leds.funcs.decode = &load_leds;
-  proto_profile.leds.arg = &context;
-  proto_profile.standbyWake.funcs.decode = &load_standby_wake;
-  proto_profile.standbyWake.arg = &context;
-  pb_decode_ex(&stream, proto_Profile_fields, &proto_profile, PB_DECODE_NOINIT);
-  profile->triggers_only = !context.matched && !context.preview;
-  profile->preview = context.preview;
-  // Need to update capabilities again now the leds have been loaded
-  if (context.matched) {
-    for (const auto &inst :
-         ProfileManager::instance().get_instances_for_profile(
-             profile->profile_id)) {
-      if (inst) {
-        inst->update_capabilities();
-      }
-    }
-  }
-  return profile;
+    return profile;
 }
 
-struct StandbyOpts {
-  bool standby = false;
-  bool while_suspended = false;
-  bool has_wake = false;
+struct StandbyOpts
+{
+    bool standby = false;
+    bool while_suspended = false;
+    bool has_wake = false;
 };
 
 static bool note_standby_wake(pb_istream_t *stream, const pb_field_t *field,
-                              void **arg) {
-  // Not read, nanopb skips the rest once nothing more is
-  static_cast<StandbyOpts *>(*arg)->has_wake = true;
-  return true;
+                              void **arg)
+{
+    // Not read, nanopb skips the rest once nothing more is
+    static_cast<StandbyOpts *>(*arg)->has_wake = true;
+    return true;
 }
 
 static bool read_standby_opts(pb_istream_t *stream, const pb_field_t *field,
-                              void **arg) {
-  proto_ProfileOpts opts = proto_ProfileOpts_init_default;
-  if (!decode_profile_opts(stream, &opts))
-    return false;
-  auto *result = static_cast<StandbyOpts *>(*arg);
-  result->standby = opts.has_standbyLighting && opts.standbyLighting;
-  result->while_suspended =
-      opts.has_standbyWhileSuspended && opts.standbyWhileSuspended;
-  return true;
+                              void **arg)
+{
+    proto_ProfileOpts opts = proto_ProfileOpts_init_default;
+    if (!decode_profile_opts(stream, &opts))
+        return false;
+    auto *result = static_cast<StandbyOpts *>(*arg);
+    result->standby = opts.has_standbyLighting && opts.standbyLighting;
+    result->while_suspended =
+        opts.has_standbyWhileSuspended && opts.standbyWhileSuspended;
+    return true;
 }
 
 // The second pass: only the first standby lighting profile is loaded. It's
 // active if no other profile matched, otherwise it's only kept to light up
 // while they're all asleep with their host
-static bool load_standby_profile(pb_istream_t *stream) {
-  auto &profile_mgr = ProfileManager::instance();
-  if (config_mgr.has_seen_assignment(ProfileAssignMask_AssignStandbyLighting) ||
-      profile_mgr.suspended_standby()) {
-    return true;
-  }
-  StandbyOpts opts;
-  proto_Profile proto_profile = proto_Profile_init_zero;
-  proto_profile.opts.funcs.decode = &read_standby_opts;
-  proto_profile.opts.arg = &opts;
-  proto_profile.standbyWake.funcs.decode = &note_standby_wake;
-  proto_profile.standbyWake.arg = &opts;
-  pb_istream_t opts_stream = *stream;
-  pb_decode_ex(&opts_stream, proto_Profile_fields, &proto_profile,
-               PB_DECODE_NOINIT);
-  const bool nothing_matched = !profile_mgr.has_active_instances();
-  if (!opts.standby ||
-      (!nothing_matched && !opts.while_suspended && !opts.has_wake)) {
-    return true;
-  }
-  ConfigDecodeContext context;
-  // It has no assignments to match, and LEDs are only loaded for a profile that
-  // matched
-  context.matched = true;
-  context.standby_claims = true;
-  context.standby_borrows = !nothing_matched;
-  auto profile = decode_profile(*stream, context);
-  // Replaces the copy from the first pass, which has nothing loaded
-  profile_mgr.remove_profile(profile->profile_id);
-  profile_mgr.add_profile(profile->profile_id, profile);
-  if (nothing_matched) {
-    printf("standby lighting p=%u\r\n", profile->profile_id);
-    profile_mgr.assign_profile_to_devices(
-        profile, ProfileAssignMask_AssignStandbyLighting,
-        config_mgr.get_requested_mode());
-  } else {
-    printf("standby lighting while suspended p=%u\r\n", profile->profile_id);
-    auto instance = std::make_shared<StandbyLightingInstance>();
-    instance->profiles.push_back(profile);
-    profile_mgr.set_suspended_standby(instance);
-  }
-  return true;
-}
-
-bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg) {
-  if (config_mgr.is_standby_pass()) {
-    return load_standby_profile(stream);
-  }
-  // Clean up any disconnected root devices before decoding profiles to free
-  // memory
-  device_mgr.remove_disconnected_root_devices();
-
-  // Snapshot this profile submessage'bytes (config is decoded from an in-memory
-  // buffer, so this is just a cheap copy of the stream cursor) so it can be
-  // re-decoded once per physical device combo that matches its triggers. That
-  // gives each matching device (e.g. two identical USB guitars) its own bound
-  // Profile/Instance instead of them fighting over one shared one.
-  pb_istream_t profile_bytes = *stream;
-
-  while (true) {
+static bool load_standby_profile(pb_istream_t *stream)
+{
+    auto &profile_mgr = ProfileManager::instance();
+    if (config_mgr.has_seen_assignment(ProfileAssignMask_AssignStandbyLighting) ||
+        profile_mgr.suspended_standby())
+    {
+        return true;
+    }
+    StandbyOpts opts;
+    proto_Profile proto_profile = proto_Profile_init_zero;
+    proto_profile.opts.funcs.decode = &read_standby_opts;
+    proto_profile.opts.arg = &opts;
+    proto_profile.standbyWake.funcs.decode = &note_standby_wake;
+    proto_profile.standbyWake.arg = &opts;
+    pb_istream_t opts_stream = *stream;
+    pb_decode_ex(&opts_stream, proto_Profile_fields, &proto_profile,
+                 PB_DECODE_NOINIT);
+    const bool nothing_matched = !profile_mgr.has_active_instances();
+    if (!opts.standby ||
+        (!nothing_matched && !opts.while_suspended && !opts.has_wake))
+    {
+        return true;
+    }
     ConfigDecodeContext context;
-    // Make sure to deal with triggers that don't assign any devices
-    size_t assignable_before = device_mgr.assignable_device_count();
-    auto profile = decode_profile(profile_bytes, context);
-
-    bool added = false;
-    if (context.matched) {
-      ProfileManager::instance().add_profile(profile->profile_id, profile);
-      added = true;
-    } else if (ProfileManager::instance().get_profile(profile->profile_id) ==
-               nullptr) {
-      ProfileManager::instance().add_profile(profile->profile_id, profile);
-      added = true;
+    // It has no assignments to match, and LEDs are only loaded for a profile that
+    // matched
+    context.matched = true;
+    context.standby_claims = true;
+    context.standby_borrows = !nothing_matched;
+    auto profile = decode_profile(*stream, context);
+    // Replaces the copy from the first pass, which has nothing loaded
+    profile_mgr.remove_profile(profile->profile_id);
+    profile_mgr.add_profile(profile->profile_id, profile);
+    if (nothing_matched)
+    {
+        printf("standby lighting p=%u\r\n", profile->profile_id);
+        profile_mgr.assign_profile_to_devices(
+            profile, ProfileAssignMask_AssignStandbyLighting,
+            config_mgr.get_requested_mode());
     }
-
-    if (!added) {
-      profile->action_mappings.clear();
-      profile->action_mappings.shrink_to_fit();
-      profile->strum_mappings.clear();
-      profile->strum_mappings.shrink_to_fit();
-      profile->socd_mappings.clear();
-      profile->socd_mappings.shrink_to_fit();
-      profile->mappings.clear();
-      profile->mappings.shrink_to_fit();
-      profile->triggers.clear();
-      profile->triggers.shrink_to_fit();
-      profile->leds.clear();
-      profile->leds.shrink_to_fit();
-      profile->devices.clear();
-      profile->temp_devices.clear();
-      profile->claimed_devices.clear();
-      profile->temp_claimed_devices.clear();
-      profile->queued_mappings.clear();
-      profile->queued_mappings.shrink_to_fit();
-      profile->queued_last_live.clear();
-      profile->queued_last_live.shrink_to_fit();
-    } else {
-      profile->mappings.shrink_to_fit();
-      profile->triggers.shrink_to_fit();
-      profile->leds.shrink_to_fit();
-      profile->action_mappings.shrink_to_fit();
-      profile->strum_mappings.shrink_to_fit();
-      profile->socd_mappings.shrink_to_fit();
-      profile->queued_mappings.shrink_to_fit();
-      profile->queued_last_live.shrink_to_fit();
+    else
+    {
+        printf("standby lighting while suspended p=%u\r\n", profile->profile_id);
+        auto instance = std::make_shared<StandbyLightingInstance>();
+        instance->profiles.push_back(profile);
+        profile_mgr.set_suspended_standby(instance);
     }
-
-    if (!context.matched ||
-        device_mgr.assignable_device_count() == assignable_before ||
-        device_mgr.assignable_device_count() == 0) {
-      break;
-    }
-
-    // loop again: other still-assignable devices may satisfy this profile too
-  }
-  return true;
+    return true;
 }
 
-struct PreviewProfileSearch {
-  uint32_t profile_id;
-  std::shared_ptr<Profile> profile;
+bool load_profile(pb_istream_t *stream, const pb_field_t *field, void **arg)
+{
+    if (config_mgr.is_standby_pass())
+    {
+        return load_standby_profile(stream);
+    }
+    // Clean up any disconnected root devices before decoding profiles to free
+    // memory
+    device_mgr.remove_disconnected_root_devices();
+
+    // Snapshot this profile submessage'bytes (config is decoded from an in-memory
+    // buffer, so this is just a cheap copy of the stream cursor) so it can be
+    // re-decoded once per physical device combo that matches its triggers. That
+    // gives each matching device (e.g. two identical USB guitars) its own bound
+    // Profile/Instance instead of them fighting over one shared one.
+    pb_istream_t profile_bytes = *stream;
+
+    while (true)
+    {
+        ConfigDecodeContext context;
+        // Make sure to deal with triggers that don't assign any devices
+        size_t assignable_before = device_mgr.assignable_device_count();
+        auto profile = decode_profile(profile_bytes, context);
+
+        bool added = false;
+        if (context.matched)
+        {
+            ProfileManager::instance().add_profile(profile->profile_id, profile);
+            added = true;
+        }
+        else if (ProfileManager::instance().get_profile(profile->profile_id) ==
+                 nullptr)
+        {
+            ProfileManager::instance().add_profile(profile->profile_id, profile);
+            added = true;
+        }
+
+        if (!added)
+        {
+            profile->action_mappings.clear();
+            profile->action_mappings.shrink_to_fit();
+            profile->strum_mappings.clear();
+            profile->strum_mappings.shrink_to_fit();
+            profile->socd_mappings.clear();
+            profile->socd_mappings.shrink_to_fit();
+            profile->mappings.clear();
+            profile->mappings.shrink_to_fit();
+            profile->triggers.clear();
+            profile->triggers.shrink_to_fit();
+            profile->leds.clear();
+            profile->leds.shrink_to_fit();
+            profile->devices.clear();
+            profile->temp_devices.clear();
+            profile->claimed_devices.clear();
+            profile->temp_claimed_devices.clear();
+            profile->queued_mappings.clear();
+            profile->queued_mappings.shrink_to_fit();
+            profile->queued_last_live.clear();
+            profile->queued_last_live.shrink_to_fit();
+        }
+        else
+        {
+            profile->mappings.shrink_to_fit();
+            profile->triggers.shrink_to_fit();
+            profile->leds.shrink_to_fit();
+            profile->action_mappings.shrink_to_fit();
+            profile->strum_mappings.shrink_to_fit();
+            profile->socd_mappings.shrink_to_fit();
+            profile->queued_mappings.shrink_to_fit();
+            profile->queued_last_live.shrink_to_fit();
+        }
+
+        if (!context.matched ||
+            device_mgr.assignable_device_count() == assignable_before ||
+            device_mgr.assignable_device_count() == 0)
+        {
+            break;
+        }
+
+        // loop again: other still-assignable devices may satisfy this profile too
+    }
+    return true;
+}
+
+struct PreviewProfileSearch
+{
+    uint32_t profile_id;
+    std::shared_ptr<Profile> profile;
 };
 
-struct ProfileUid {
-  uint32_t uid = 0;
-  bool found = false;
+struct ProfileUid
+{
+    uint32_t uid = 0;
+    bool found = false;
 };
 
 static bool read_profile_uid(pb_istream_t *stream, const pb_field_t *field,
-                             void **arg) {
-  auto *result = static_cast<ProfileUid *>(*arg);
-  proto_ProfileOpts opts = proto_ProfileOpts_init_default;
-  if (!decode_profile_opts(stream, &opts))
-    return false;
-  result->uid = opts.uid;
-  result->found = true;
-  return true;
+                             void **arg)
+{
+    auto *result = static_cast<ProfileUid *>(*arg);
+    proto_ProfileOpts opts = proto_ProfileOpts_init_default;
+    if (!decode_profile_opts(stream, &opts))
+        return false;
+    result->uid = opts.uid;
+    result->found = true;
+    return true;
 }
 
 static bool find_preview_profile(pb_istream_t *stream, const pb_field_t *field,
-                                 void **arg) {
-  auto *search = static_cast<PreviewProfileSearch *>(*arg);
-  if (search->profile) {
+                                 void **arg)
+{
+    auto *search = static_cast<PreviewProfileSearch *>(*arg);
+    if (search->profile)
+    {
+        return true;
+    }
+    // Only the opts are decoded while searching, everything else is skipped
+    ProfileUid uid;
+    proto_Profile proto_profile = proto_Profile_init_zero;
+    proto_profile.opts.funcs.decode = &read_profile_uid;
+    proto_profile.opts.arg = &uid;
+    pb_istream_t opts_stream = *stream;
+    pb_decode_ex(&opts_stream, proto_Profile_fields, &proto_profile,
+                 PB_DECODE_NOINIT);
+    if (!uid.found || uid.uid != search->profile_id)
+    {
+        return true;
+    }
+    ConfigDecodeContext context;
+    context.preview = true;
+    search->profile = decode_profile(*stream, context);
     return true;
-  }
-  // Only the opts are decoded while searching, everything else is skipped
-  ProfileUid uid;
-  proto_Profile proto_profile = proto_Profile_init_zero;
-  proto_profile.opts.funcs.decode = &read_profile_uid;
-  proto_profile.opts.arg = &uid;
-  pb_istream_t opts_stream = *stream;
-  pb_decode_ex(&opts_stream, proto_Profile_fields, &proto_profile,
-               PB_DECODE_NOINIT);
-  if (!uid.found || uid.uid != search->profile_id) {
-    return true;
-  }
-  ConfigDecodeContext context;
-  context.preview = true;
-  search->profile = decode_profile(*stream, context);
-  return true;
 }
 
-std::shared_ptr<Profile> load_preview_profile(uint32_t profile_id) {
-  // Read the image again rather than keeping offsets around, as the tool
-  // rewrites the cache while uploading
-  ConfigImage image;
-  if (!config_storage.read_flash(image, true)) {
-    return nullptr;
-  }
-  PreviewProfileSearch search{profile_id, nullptr};
-  proto_Config config = proto_Config_init_zero;
-  config.profiles.funcs.decode = &find_preview_profile;
-  config.profiles.arg = &search;
-  pb_istream_t stream = pb_istream_from_buffer(image.data, image.main_size);
-  pb_decode(&stream, proto_Config_fields, &config);
-  return search.profile;
+std::shared_ptr<Profile> load_preview_profile(uint32_t profile_id)
+{
+    // Read the image again rather than keeping offsets around, as the tool
+    // rewrites the cache while uploading
+    ConfigImage image;
+    if (!config_storage.read_flash(image, true))
+    {
+        return nullptr;
+    }
+    PreviewProfileSearch search{profile_id, nullptr};
+    proto_Config config = proto_Config_init_zero;
+    config.profiles.funcs.decode = &find_preview_profile;
+    config.profiles.arg = &search;
+    pb_istream_t stream = pb_istream_from_buffer(image.data, image.main_size);
+    pb_decode(&stream, proto_Config_fields, &config);
+    return search.profile;
 }
 
-bool load_empty() {
-  config_storage.initialize_empty();
+bool load_empty()
+{
+    config_storage.initialize_empty();
 
-  auto confDevice2 = HIDConfigDevice::instance;
-  confDevice2->interface_id = profile_mgr.usb_instance_count();
-  profile_mgr.add_instance(confDevice2);
-  // HIDConfigDevice is a special singleton instance, not profile-based
-  profile_mgr.set_usb_instance(confDevice2->interface_id, confDevice2);
-  confDevice2->initialize();
-  return true;
+    auto confDevice2 = HIDConfigDevice::instance;
+    confDevice2->interface_id = profile_mgr.usb_instance_count();
+    profile_mgr.add_instance(confDevice2);
+    // HIDConfigDevice is a special singleton instance, not profile-based
+    profile_mgr.set_usb_instance(confDevice2->interface_id, confDevice2);
+    confDevice2->initialize();
+    return true;
 }
 
 uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload,
-                          uint32_t chunk_size, bool in_use_by_other_tool) {
-  ConfigMetadata metadata = config_storage.read_metadata(cached);
-  proto_ConfigInfo info proto_ConfigInfo_init_zero;
-  info.dataCrc = metadata.data_crc;
-  info.dataSize = metadata.data_size;
-  info.magic = metadata.magic;
-  info.mainSize = metadata.main_size;
-  info.auxSize = metadata.aux_size;
-  info.has_firmwareVerification = true;
+                          uint32_t chunk_size, bool in_use_by_other_tool)
+{
+    ConfigMetadata metadata = config_storage.read_metadata(cached);
+    proto_ConfigInfo info proto_ConfigInfo_init_zero;
+    info.dataCrc = metadata.data_crc;
+    info.dataSize = metadata.data_size;
+    info.magic = metadata.magic;
+    info.mainSize = metadata.main_size;
+    info.auxSize = metadata.aux_size;
+    info.has_firmwareVerification = true;
 #ifdef PFB_WITH_SHA256_HASHING
-  info.firmwareVerification = true;
+    info.firmwareVerification = true;
 #endif
-  bool needs_uf2 = false;
+    bool needs_uf2 = false;
 #if defined(ENABLE_XBOX_WIRELESS) && ENABLE_XBOX_WIRELESS
-  bool missing = (xbox_get_static_firmware_header() == NULL);
-  info.has_missingStaticFirmware = true;
-  info.missingStaticFirmware = missing;
-  needs_uf2 |= missing;
+    bool missing = (xbox_get_static_firmware_header() == NULL);
+    info.has_missingStaticFirmware = true;
+    info.missingStaticFirmware = missing;
+    needs_uf2 |= missing;
 #endif
-  const bool bootloader_outdated = !pfb_bootloader_layout_matches();
-  info.has_bootloaderOutdated = true;
-  info.bootloaderOutdated = bootloader_outdated;
-  needs_uf2 |= bootloader_outdated;
+    const bool bootloader_outdated = !pfb_bootloader_layout_matches();
+    info.has_bootloaderOutdated = true;
+    info.bootloaderOutdated = bootloader_outdated;
+    needs_uf2 |= bootloader_outdated;
 #if PICO_RP2040
-  // Older compat builds booted with generic_03h. Any flash operation runs the
-  // boot stage again afterwards, so the SSI shows which one it is at any point
-  const bool slow_boot_stage =
-      (ssi_hw->spi_ctrlr0 >> SSI_SPI_CTRLR0_XIP_CMD_LSB) == 0x03;
-  info.has_slowBootStage = true;
-  info.slowBootStage = slow_boot_stage;
-  needs_uf2 |= slow_boot_stage;
+    // Older compat builds booted with generic_03h. Any flash operation runs the
+    // boot stage again afterwards, so the SSI shows which one it is at any point
+    const bool slow_boot_stage =
+        (ssi_hw->spi_ctrlr0 >> SSI_SPI_CTRLR0_XIP_CMD_LSB) == 0x03;
+    info.has_slowBootStage = true;
+    info.slowBootStage = slow_boot_stage;
+    needs_uf2 |= slow_boot_stage;
 #endif
-  info.has_needsUf2Update = true;
-  info.needsUf2Update = needs_uf2;
-  info.has_configChunkSize = true;
-  info.configChunkSize = chunk_size;
-  if (streamed_upload) {
-    info.has_streamedFirmwareUpload = true;
-    info.streamedFirmwareUpload = true;
-  }
-  if (in_use_by_other_tool) {
-    info.has_inUseByOtherTool = true;
-    info.inUseByOtherTool = true;
-  }
-  pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 64);
-  if (!pb_encode(&outputStream, proto_ConfigInfo_fields, &info)) {
-    return 0;
-  }
-  return outputStream.bytes_written;
+    info.has_needsUf2Update = true;
+    info.needsUf2Update = needs_uf2;
+    info.has_configChunkSize = true;
+    info.configChunkSize = chunk_size;
+    if (streamed_upload)
+    {
+        info.has_streamedFirmwareUpload = true;
+        info.streamedFirmwareUpload = true;
+    }
+    if (in_use_by_other_tool)
+    {
+        info.has_inUseByOtherTool = true;
+        info.inUseByOtherTool = true;
+    }
+    pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, 64);
+    if (!pb_encode(&outputStream, proto_ConfigInfo_fields, &info))
+    {
+        return 0;
+    }
+    return outputStream.bytes_written;
 }
 
-void reload() { config_mgr.schedule_reinit(millis()); }
-
-void update_aux_cycle(uint32_t id, uint32_t state) {
-  if (!config_mgr.has_loaded_any()) {
-    return;
-  }
-  DeviceFactory::set_cycle_state(id, state);
-  config_storage.update_auxiliary(encode_auxiliary);
+void reload()
+{
+    config_mgr.schedule_reinit(millis());
 }
 
-void update_aux_toggle(uint32_t id, bool state) {
-  // printf("update aux: %d %d %d\r\n", id, state,
-  // config_mgr.get_reinit_time());
-  if (config_mgr.get_reinit_time()) {
-    return;
-  }
-  DeviceFactory::set_toggle_state(id, state);
-  config_storage.update_auxiliary(encode_auxiliary);
+void update_aux_cycle(uint32_t id, uint32_t state)
+{
+    if (!config_mgr.has_loaded_any())
+    {
+        return;
+    }
+    DeviceFactory::set_cycle_state(id, state);
+    config_storage.update_auxiliary(encode_auxiliary);
 }
 
-void update_aux_arcade_side(uint8_t side) {
-  if (DeviceFactory::get_arcade_side() == side) {
-    return;
-  }
-  // the guitar has to report the new side straight away, even if saving it has
-  // to wait
-  DeviceFactory::set_arcade_side(side);
-  if (config_mgr.get_reinit_time()) {
-    return;
-  }
-  config_storage.update_auxiliary(encode_auxiliary);
+void update_aux_toggle(uint32_t id, bool state)
+{
+    // printf("update aux: %d %d %d\r\n", id, state,
+    // config_mgr.get_reinit_time());
+    if (config_mgr.get_reinit_time())
+    {
+        return;
+    }
+    DeviceFactory::set_toggle_state(id, state);
+    config_storage.update_auxiliary(encode_auxiliary);
 }
 
-static bool can_write_aux() {
-  return !config_mgr.get_reinit_time() && !config_mgr.is_reloading() &&
-         !config_storage.upload_active();
+void update_aux_arcade_side(uint8_t side)
+{
+    if (DeviceFactory::get_arcade_side() == side)
+    {
+        return;
+    }
+    // the guitar has to report the new side straight away, even if saving it has
+    // to wait
+    DeviceFactory::set_arcade_side(side);
+    if (config_mgr.get_reinit_time())
+    {
+        return;
+    }
+    config_storage.update_auxiliary(encode_auxiliary);
+}
+
+static bool can_write_aux()
+{
+    return !config_mgr.get_reinit_time() && !config_mgr.is_reloading() &&
+           !config_storage.upload_active();
 }
 
 // Pairings and bonds stay in memory across reloads, so a change to them can't
 // be dropped just because the cache can't be written right now. It's written by
 // flush_pending_aux once it can be
-static void save_bluetooth_aux() {
-  if (can_write_aux() && config_storage.update_auxiliary(encode_auxiliary)) {
-    return;
-  }
-  aux_pending = true;
-  aux_commit_pending = true;
+static void save_bluetooth_aux()
+{
+    if (can_write_aux() && config_storage.update_auxiliary(encode_auxiliary))
+    {
+        return;
+    }
+    aux_pending = true;
+    aux_commit_pending = true;
 }
 
-void flush_pending_aux() {
-  if (!aux_pending || !can_write_aux()) {
-    return;
-  }
-  if (config_commit_pending) {
-    config_storage.save(encode_auxiliary);
-  } else if (!config_storage.update_auxiliary(encode_auxiliary, nullptr,
+void flush_pending_aux()
+{
+    if (!aux_pending || !can_write_aux())
+    {
+        return;
+    }
+    if (config_commit_pending)
+    {
+        config_storage.save(encode_auxiliary);
+    }
+    else if (!config_storage.update_auxiliary(encode_auxiliary, nullptr,
                                               aux_commit_pending) &&
-             aux_commit_pending && !config_storage.preserving_flash()) {
-    // Still save what's cached rather than dropping a save that was waiting on
-    // this
-    printf(
-        "couldn't write back the pairings, saving the cached config as is\r\n");
-    EEPROM.commit();
-  }
-  aux_pending = false;
-  aux_commit_pending = false;
-  config_commit_pending = false;
+             aux_commit_pending && !config_storage.preserving_flash())
+    {
+        // Still save what's cached rather than dropping a save that was waiting on
+        // this
+        printf(
+            "couldn't write back the pairings, saving the cached config as is\r\n");
+        EEPROM.commit();
+    }
+    aux_pending = false;
+    aux_commit_pending = false;
+    config_commit_pending = false;
 }
 
-void remove_aux_bluetooth_pairing(int32_t id) {
-  DeviceFactory::remove_bluetooth_pairing_state(id);
-  save_bluetooth_aux();
+void remove_aux_bluetooth_pairing(int32_t id)
+{
+    DeviceFactory::remove_bluetooth_pairing_state(id);
+    save_bluetooth_aux();
 }
 
 void update_aux_bluetooth_pairing(uint32_t id, const uint8_t mac[6],
                                   const char *name, bool ble, SubType subtype,
                                   BtControllerType controller_type,
                                   uint16_t vid, uint16_t pid,
-                                  const uint8_t *link_key) {
-  DeviceFactory::set_bluetooth_pairing_state(
-      id, mac, name, ble, subtype, controller_type, vid, pid, link_key);
-  save_bluetooth_aux();
+                                  const uint8_t *link_key)
+{
+    DeviceFactory::set_bluetooth_pairing_state(
+        id, mac, name, ble, subtype, controller_type, vid, pid, link_key);
+    save_bluetooth_aux();
 }
 
-void update_aux_tlv() { save_bluetooth_aux(); }
-
-bool write_config_info(const uint8_t *buffer, uint16_t bufsize) {
-  if (!config_storage.write_info(buffer, bufsize)) {
-    return false;
-  }
-  // The cached config isn't readable until the upload finishes, so it counts as
-  // working from here
-  if (config_storage.upload_active()) {
-    config_mgr.touch_working(millis());
-  }
-  return true;
+void update_aux_tlv()
+{
+    save_bluetooth_aux();
 }
 
-void save_config() {
-  // The upload has already replaced the cached footer, committing now would
-  // store the new footer over the old data. Hold the save until the data has
-  // all arrived
-  if (config_storage.upload_active()) {
-    printf("save waiting for the config upload to finish\r\n");
-    save_after_upload = true;
-    return;
-  }
-  if (aux_pending) {
-    // The cache still has an upload's copy of the pairings, so commit once
-    // they're written back
-    config_commit_pending = true;
-  } else {
-    config_storage.save();
-  }
-  config_mgr.set_full_reload(true);
-  reload();
-}
-
-void abort_config_write() {
-  if (save_after_upload) {
-    printf("dropping the save that was waiting on it\r\n");
-    save_after_upload = false;
-  }
-  config_storage.abort_write();
-  config_mgr.set_working(false);
-  // If the old config had to come back from flash, its pairings may be older
-  // than the ones in memory
-  aux_pending = true;
-}
-
-bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start) {
-  auto result = config_storage.write_chunk(buffer, bufsize, start);
-  if (result == ConfigStorage::WriteResult::InProgress) {
-    // //printf("writing up to: %d < %d\r\n", start + bufsize, footer.dataSize);
-    config_mgr.touch_working(millis());
+bool write_config_info(const uint8_t *buffer, uint16_t bufsize)
+{
+    if (!config_storage.write_info(buffer, bufsize))
+    {
+        return false;
+    }
+    // The cached config isn't readable until the upload finishes, so it counts as
+    // working from here
+    if (config_storage.upload_active())
+    {
+        config_mgr.touch_working(millis());
+    }
     return true;
-  }
-  if (result == ConfigStorage::WriteResult::Invalid) {
-    // printf("Crc didnt match after writing? %d\r\n", footer.dataCrc);
-    // Left working, the device would stop updating and ignore the tool until it
-    // was power cycled
-    abort_config_write();
-    return false;
-  }
-  printf("Everything matched, saving!\r\n");
-  UsbDetectionState::instance().disable_console_inference();
-  // The triggers may have changed, so pick profiles from scratch
-  config_mgr.clear_startup_triggers();
-  // The upload carries the tool's copy of the pairings, put the device's back
-  // once it has loaded
-  aux_pending = true;
-  if (save_after_upload) {
-    save_after_upload = false;
-    config_commit_pending = true;
+}
+
+void save_config()
+{
+    // The upload has already replaced the cached footer, committing now would
+    // store the new footer over the old data. Hold the save until the data has
+    // all arrived
+    if (config_storage.upload_active())
+    {
+        printf("save waiting for the config upload to finish\r\n");
+        save_after_upload = true;
+        return;
+    }
+    if (aux_pending)
+    {
+        // The cache still has an upload's copy of the pairings, so commit once
+        // they're written back
+        config_commit_pending = true;
+    }
+    else
+    {
+        config_storage.save();
+    }
     config_mgr.set_full_reload(true);
-  }
-  reload();
-  config_mgr.set_working(false);
-  return true;
+    reload();
+}
+
+void abort_config_write()
+{
+    if (save_after_upload)
+    {
+        printf("dropping the save that was waiting on it\r\n");
+        save_after_upload = false;
+    }
+    config_storage.abort_write();
+    config_mgr.set_working(false);
+    // If the old config had to come back from flash, its pairings may be older
+    // than the ones in memory
+    aux_pending = true;
+}
+
+bool write_config(const uint8_t *buffer, uint16_t bufsize, uint32_t start)
+{
+    auto result = config_storage.write_chunk(buffer, bufsize, start);
+    if (result == ConfigStorage::WriteResult::InProgress)
+    {
+        // //printf("writing up to: %d < %d\r\n", start + bufsize, footer.dataSize);
+        config_mgr.touch_working(millis());
+        return true;
+    }
+    if (result == ConfigStorage::WriteResult::Invalid)
+    {
+        // printf("Crc didnt match after writing? %d\r\n", footer.dataCrc);
+        // Left working, the device would stop updating and ignore the tool until it
+        // was power cycled
+        abort_config_write();
+        return false;
+    }
+    printf("Everything matched, saving!\r\n");
+    UsbDetectionState::instance().disable_console_inference();
+    // The triggers may have changed, so pick profiles from scratch
+    config_mgr.clear_startup_triggers();
+    // The upload carries the tool's copy of the pairings, put the device's back
+    // once it has loaded
+    aux_pending = true;
+    if (save_after_upload)
+    {
+        save_after_upload = false;
+        config_commit_pending = true;
+        config_mgr.set_full_reload(true);
+    }
+    reload();
+    config_mgr.set_working(false);
+    return true;
 }
 
 uint32_t copy_config(uint8_t *buffer, uint32_t start, bool cached,
-                     uint32_t max_size) {
-  return config_storage.read_chunk(buffer, start, max_size, cached);
+                     uint32_t max_size)
+{
+    return config_storage.read_chunk(buffer, start, max_size, cached);
 }
-bool load() {
-  ConfigImage image;
-  if (!config_storage.read_flash(image, true)) {
-    printf("no valid config stored\r\n");
-    return false;
-  }
+bool load()
+{
+    ConfigImage image;
+    if (!config_storage.read_flash(image, true))
+    {
+        printf("no valid config stored\r\n");
+        return false;
+    }
 
-  const bool loaded = ConfigLoader::apply(image, config_mgr.get_current_mode());
-  if (!loaded) {
-    printf("stored config didn't load, keeping it in flash\r\n");
-  }
-  config_mgr.set_loaded_any(loaded);
-  return loaded;
+    const bool loaded = ConfigLoader::apply(image, config_mgr.get_current_mode());
+    if (!loaded)
+    {
+        printf("stored config didn't load, keeping it in flash\r\n");
+    }
+    config_mgr.set_loaded_any(loaded);
+    return loaded;
 }

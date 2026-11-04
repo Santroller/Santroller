@@ -73,8 +73,7 @@ void usb_host_remove_enumerating_interface(UsbHostInterface *device)
 
 void usb_host_remove_assignable_interface(UsbHostInterface *device)
 {
-    std::erase_if(gip_fake::assignable, [device](const auto &candidate)
-                  { return candidate.get() == device; });
+    std::erase_if(gip_fake::assignable, [device](const auto &candidate) { return candidate.get() == device; });
 }
 
 void UsbHostInterface::send_hotplug_event(bool connected)

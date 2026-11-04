@@ -8,23 +8,24 @@
 
 // Santroller 1 PC Reports (from Ardwiino-old include/reports/pc_reports.h)
 
-typedef struct {
+typedef struct
+{
     uint8_t reportId;
-    uint8_t x : 1;  // square
-    uint8_t a : 1;  // cross
-    uint8_t b : 1;  // circle
-    uint8_t y : 1;  // triangle
-    uint8_t leftShoulder : 1;   // l1
-    uint8_t rightShoulder : 1;  // r1
-    uint8_t l2 : 1;             // l2
-    uint8_t r2 : 1;             // r2
+    uint8_t x : 1;             // square
+    uint8_t a : 1;             // cross
+    uint8_t b : 1;             // circle
+    uint8_t y : 1;             // triangle
+    uint8_t leftShoulder : 1;  // l1
+    uint8_t rightShoulder : 1; // r1
+    uint8_t l2 : 1;            // l2
+    uint8_t r2 : 1;            // r2
 
-    uint8_t back : 1;  // select
+    uint8_t back : 1; // select
     uint8_t start : 1;
-    uint8_t leftThumbClick : 1;   // l3
-    uint8_t rightThumbClick : 1;  // r3
-    uint8_t guide : 1;    // ps
-    uint8_t capture : 1;  // switch capture button
+    uint8_t leftThumbClick : 1;  // l3
+    uint8_t rightThumbClick : 1; // r3
+    uint8_t guide : 1;           // ps
+    uint8_t capture : 1;         // switch capture button
     uint8_t : 2;
 
     uint8_t dpad; // hat (0..7, 8=neutral) or bitmask for dancepad
@@ -40,17 +41,17 @@ typedef struct {
 typedef struct
 {
     uint8_t reportId;
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // circle, red
-    uint8_t y : 1;  // triangle, yellow
-    uint8_t x : 1;  // square, blue
+    uint8_t a : 1; // cross, green
+    uint8_t b : 1; // circle, red
+    uint8_t y : 1; // triangle, yellow
+    uint8_t x : 1; // square, blue
 
-    uint8_t leftShoulder : 1;   // orange, l1
-    uint8_t rightShoulder : 1;  // spPedal, r1
-    uint8_t back : 1;           // select
+    uint8_t leftShoulder : 1;  // orange, l1
+    uint8_t rightShoulder : 1; // spPedal, r1
+    uint8_t back : 1;          // select
     uint8_t start : 1;
 
-    uint8_t guide : 1;  // ps
+    uint8_t guide : 1; // ps
     uint8_t : 7;
 
     uint8_t dpad;
@@ -64,12 +65,12 @@ typedef struct
 {
     uint8_t reportId;
 
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // circle, red
-    uint8_t y : 1;  // triangle, yellow
-    uint8_t x : 1;  // square, blue
+    uint8_t a : 1; // cross, green
+    uint8_t b : 1; // circle, red
+    uint8_t y : 1; // triangle, yellow
+    uint8_t x : 1; // square, blue
 
-    uint8_t leftShoulder : 1;  // orange, l1
+    uint8_t leftShoulder : 1; // orange, l1
 
     uint8_t soloGreen : 1;
     uint8_t soloRed : 1;
@@ -77,9 +78,9 @@ typedef struct
     uint8_t soloBlue : 1;
 
     uint8_t soloOrange : 1;
-    uint8_t back : 1;  // select
+    uint8_t back : 1; // select
     uint8_t start : 1;
-    uint8_t guide : 1;  // ps
+    uint8_t guide : 1; // ps
     uint8_t : 3;
 
     uint8_t dpad;
@@ -92,17 +93,17 @@ typedef struct
 typedef struct
 {
     uint8_t reportId;
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // circle, red
-    uint8_t y : 1;  // triangle, yellow
-    uint8_t x : 1;  // square, blue
+    uint8_t a : 1; // cross, green
+    uint8_t b : 1; // circle, red
+    uint8_t y : 1; // triangle, yellow
+    uint8_t x : 1; // square, blue
 
-    uint8_t rightShoulder : 1;  // orange, r1
-    uint8_t leftShoulder : 1;   // kick, l1
-    uint8_t back : 1;           // select
+    uint8_t rightShoulder : 1; // orange, r1
+    uint8_t leftShoulder : 1;  // kick, l1
+    uint8_t back : 1;          // select
     uint8_t start : 1;
 
-    uint8_t guide : 1;  // ps
+    uint8_t guide : 1; // ps
     uint8_t : 7;
 
     uint8_t dpad;
@@ -119,15 +120,15 @@ typedef struct
 {
     uint8_t reportId;
 
-    uint8_t a : 1;  // cross
-    uint8_t b : 1;  // circle
-    uint8_t x : 1;  // square
-    uint8_t y : 1;  // triangle
+    uint8_t a : 1; // cross
+    uint8_t b : 1; // circle
+    uint8_t x : 1; // square
+    uint8_t y : 1; // triangle
 
     uint8_t padFlag : 1;
     uint8_t cymbalFlag : 1;
-    uint8_t leftShoulder : 1;   // kick 1
-    uint8_t rightShoulder : 1;  // kick 2
+    uint8_t leftShoulder : 1;  // kick 1
+    uint8_t rightShoulder : 1; // kick 2
 
     uint8_t back : 1;
     uint8_t start : 1;
@@ -148,18 +149,18 @@ typedef struct
 typedef struct
 {
     uint8_t reportId;
-    uint8_t a : 1;  // cross, black1
-    uint8_t b : 1;  // circle, black2
-    uint8_t y : 1;  // triangle, black3
+    uint8_t a : 1; // cross, black1
+    uint8_t b : 1; // circle, black2
+    uint8_t y : 1; // triangle, black3
 
-    uint8_t x : 1;              // square, white1
-    uint8_t leftShoulder : 1;   // white2, l1
-    uint8_t rightShoulder : 1;  // white3, r1
-    uint8_t back : 1;           // back, heroPower
-    uint8_t start : 1;          // start, pause
+    uint8_t x : 1;             // square, white1
+    uint8_t leftShoulder : 1;  // white2, l1
+    uint8_t rightShoulder : 1; // white3, r1
+    uint8_t back : 1;          // back, heroPower
+    uint8_t start : 1;         // start, pause
 
-    uint8_t leftThumbClick : 1;  // leftThumbClick, ghtv
-    uint8_t guide : 1;           // ps
+    uint8_t leftThumbClick : 1; // leftThumbClick, ghtv
+    uint8_t guide : 1;          // ps
     uint8_t : 6;
 
     uint8_t dpad;
@@ -172,14 +173,14 @@ typedef struct
 {
     uint8_t reportId;
 
-    uint8_t a : 1;  // cross
-    uint8_t b : 1;  // circle
-    uint8_t x : 1;  // square
-    uint8_t y : 1;  // triangle, euphoria
+    uint8_t a : 1; // cross
+    uint8_t b : 1; // circle
+    uint8_t x : 1; // square
+    uint8_t y : 1; // triangle, euphoria
 
-    uint8_t back : 1;  // select
+    uint8_t back : 1; // select
     uint8_t start : 1;
-    uint8_t guide : 1;  // ps
+    uint8_t guide : 1; // ps
     uint8_t rightGreen : 1;
 
     uint8_t rightRed : 1;
@@ -199,24 +200,25 @@ typedef struct
     uint8_t crossfader;
 } __attribute__((packed)) Santroller1Turntable_Data_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t reportId;
     // same as the gamepad report, but with the face buttons in a different order
-    uint8_t a : 1;  // cross
-    uint8_t b : 1;  // circle
-    uint8_t x : 1;  // square
-    uint8_t y : 1;  // triangle
-    uint8_t leftShoulder : 1;   // l1
-    uint8_t rightShoulder : 1;  // r1
-    uint8_t l2 : 1;             // l2
-    uint8_t r2 : 1;             // r2
+    uint8_t a : 1;             // cross
+    uint8_t b : 1;             // circle
+    uint8_t x : 1;             // square
+    uint8_t y : 1;             // triangle
+    uint8_t leftShoulder : 1;  // l1
+    uint8_t rightShoulder : 1; // r1
+    uint8_t l2 : 1;            // l2
+    uint8_t r2 : 1;            // r2
 
-    uint8_t back : 1;  // select
+    uint8_t back : 1; // select
     uint8_t start : 1;
-    uint8_t leftThumbClick : 1;   // l3
-    uint8_t rightThumbClick : 1;  // r3
-    uint8_t guide : 1;    // ps
-    uint8_t capture : 1;  // switch capture button
+    uint8_t leftThumbClick : 1;  // l3
+    uint8_t rightThumbClick : 1; // r3
+    uint8_t guide : 1;           // ps
+    uint8_t capture : 1;         // switch capture button
     uint8_t : 2;
 
     uint8_t dpad;
@@ -232,14 +234,14 @@ typedef struct {
 typedef struct
 {
     uint8_t reportId;
-    uint8_t x : 1;  // square, blue
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // circle, red
-    uint8_t y : 1;  // triangle, yellow
+    uint8_t x : 1; // square, blue
+    uint8_t a : 1; // cross, green
+    uint8_t b : 1; // circle, red
+    uint8_t y : 1; // triangle, yellow
 
-    uint8_t back : 1;  // select
+    uint8_t back : 1; // select
     uint8_t start : 1;
-    uint8_t guide : 1;  // ps
+    uint8_t guide : 1; // ps
     uint8_t green : 1;
 
     uint8_t red : 1;
@@ -270,14 +272,14 @@ typedef struct
 typedef struct
 {
     uint8_t reportId;
-    uint8_t x : 1;  // square, blue
-    uint8_t a : 1;  // cross, green
-    uint8_t b : 1;  // circle, red
-    uint8_t y : 1;  // triangle, yellow
+    uint8_t x : 1; // square, blue
+    uint8_t a : 1; // cross, green
+    uint8_t b : 1; // circle, red
+    uint8_t y : 1; // triangle, yellow
 
-    uint8_t back : 1;  // select
+    uint8_t back : 1; // select
     uint8_t start : 1;
-    uint8_t guide : 1;  // ps
+    uint8_t guide : 1; // ps
     uint8_t overdrive : 1;
 
     uint8_t pedalDigital : 1;
@@ -292,9 +294,8 @@ typedef struct
 
     uint8_t pedalAnalog;
     uint8_t touchPad;
-    uint8_t velocities[5];  // 7 bit velocities, bit 7 of the first byte is key 25
+    uint8_t velocities[5]; // 7 bit velocities, bit 7 of the first byte is key 25
 } __attribute__((packed)) Santroller1ProKeys_Data_t;
-
 
 #ifdef __cplusplus
 #include "enums.pb.h"
@@ -306,22 +307,38 @@ static inline SubType santroller_v1_subtype(uint16_t version)
 {
     switch ((version >> 8) & 0xFF)
     {
-    case 1: return Gamepad;
-    case 2: return Dancepad;
-    case 3: return GuitarHeroGuitar;
-    case 4: return RockBandGuitar;
-    case 5: return GuitarHeroDrums;
-    case 6: return RockBandDrums;
-    case 7: return LiveGuitar;
-    case 8: return DjHeroTurntable;
-    case 9: return StageKit;
-    case 16: return ProKeys;
-    case 17: return ProGuitarMustang;
-    case 18: return ProGuitarSquier;
-    case 21: return DisneyInfinity;
-    case 22: return Skylanders;
-    case 23: return LegoDimensions;
-    case 24: return Taiko;
+    case 1:
+        return Gamepad;
+    case 2:
+        return Dancepad;
+    case 3:
+        return GuitarHeroGuitar;
+    case 4:
+        return RockBandGuitar;
+    case 5:
+        return GuitarHeroDrums;
+    case 6:
+        return RockBandDrums;
+    case 7:
+        return LiveGuitar;
+    case 8:
+        return DjHeroTurntable;
+    case 9:
+        return StageKit;
+    case 16:
+        return ProKeys;
+    case 17:
+        return ProGuitarMustang;
+    case 18:
+        return ProGuitarSquier;
+    case 21:
+        return DisneyInfinity;
+    case 22:
+        return Skylanders;
+    case 23:
+        return LegoDimensions;
+    case 24:
+        return Taiko;
     default:
         // 0 (keyboard / mouse), and types that never had a PC report, all send the gamepad report
         return Gamepad;

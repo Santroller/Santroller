@@ -24,7 +24,7 @@ struct StartupTriggerKey
 class ConfigManager
 {
 public:
-    static ConfigManager& instance()
+    static ConfigManager &instance()
     {
         static ConfigManager manager;
         return manager;
@@ -45,7 +45,7 @@ public:
     // in ModeHid and being detected all over again.
     ConsoleMode get_detected_mode() const { return m_detected_mode; }
     void host_detected(ConsoleMode mode);
-    
+
     // Config loading state
     bool is_working() const { return m_working; }
     void set_working(bool working) { m_working = working; }
@@ -170,33 +170,23 @@ public:
         mark_mode_change_time(now);
         schedule_reinit(now);
     }
-    
+
     // Clear all state
     void clear_all();
 
 private:
-    ConfigManager() 
-        : m_current_mode(ModeHid)
-        , m_requested_mode(ModeHid)
-        , m_mode_changed(false)
-        , m_working(false)
-        , m_loaded_any(false)
-        , m_has_bluetooth(false)
-        , m_reloading(false)
-        , m_full_reload(false)
-        , m_reinitialize_device_stack(false)
-        , m_reinit_time(0)
-        , m_time_since_mode(0)
-        , m_seen_masks(0)
-    {}
+    ConfigManager()
+        : m_current_mode(ModeHid), m_requested_mode(ModeHid), m_mode_changed(false), m_working(false), m_loaded_any(false), m_has_bluetooth(false), m_reloading(false), m_full_reload(false), m_reinitialize_device_stack(false), m_reinit_time(0), m_time_since_mode(0), m_seen_masks(0)
+    {
+    }
 
     char m_device_name[sizeof(proto_Config::deviceName)] = {};
     char m_manufacturer_name[sizeof(proto_Config::manufacturerName)] = {};
     bool m_xbox_one_legacy_adapter = false;
-    
+
     ~ConfigManager() = default;
-    ConfigManager(const ConfigManager&) = delete;
-    ConfigManager& operator=(const ConfigManager&) = delete;
+    ConfigManager(const ConfigManager &) = delete;
+    ConfigManager &operator=(const ConfigManager &) = delete;
 
     ConsoleMode m_current_mode;
     ConsoleMode m_requested_mode;

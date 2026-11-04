@@ -9,7 +9,7 @@ class WS2812Device : public LedDevice
 {
 public:
     WS2812Device(proto_WS2812Device device, uint16_t id);
-    ~WS2812Device() {printf("destroy ws2812dev\r\n");}
+    ~WS2812Device() { printf("destroy ws2812dev\r\n"); }
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);

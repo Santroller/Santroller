@@ -159,7 +159,10 @@ static BleConnectionContext *ble_context_alloc()
     printf("BLE connection pool exhausted\r\n");
     return nullptr;
 }
-static void ble_context_free(BleConnectionContext *ctx) { ctx->in_use = false; }
+static void ble_context_free(BleConnectionContext *ctx)
+{
+    ctx->in_use = false;
+}
 
 static BleConnectionContext *ble_context_by_handle(hci_con_handle_t handle)
 {
@@ -430,8 +433,8 @@ static void ble_set_connection_scan(uint16_t interval, uint16_t window)
 #define BLE_SLOW_SCAN_INTERVAL 0x0640 // 1s
 #define BLE_SLOW_SCAN_WINDOW 0x0018   // 15ms
 #define BLE_FAST_RECONNECT_MS 60000
-#define BLE_DIRECT_SCAN_INTERVAL 0x0060     // 60ms
-#define BLE_DIRECT_SCAN_WINDOW 0x0030       // 30ms
+#define BLE_DIRECT_SCAN_INTERVAL 0x0060 // 60ms
+#define BLE_DIRECT_SCAN_WINDOW 0x0030   // 30ms
 
 static void ble_sync_reconnect(void)
 {
@@ -463,16 +466,14 @@ static void ble_sync_reconnect(void)
     static Candidate candidates[MAX_BLE_RECONNECT_CANDIDATES];
     uint8_t candidate_count = 0;
 
-    auto candidate_exists = [&](const bd_addr_t addr)
-    {
+    auto candidate_exists = [&](const bd_addr_t addr) {
         for (uint8_t i = 0; i < candidate_count; i++)
             if (bd_addr_cmp(candidates[i].addr, addr) == 0)
                 return true;
         return false;
     };
 
-    auto try_add_candidate = [&](const bd_addr_t addr, bd_addr_type_t addr_type)
-    {
+    auto try_add_candidate = [&](const bd_addr_t addr, bd_addr_type_t addr_type) {
         if (candidate_count >= MAX_BLE_RECONNECT_CANDIDATES)
             return;
         if (candidate_exists(addr) || ble_is_held_off(addr))
@@ -483,8 +484,7 @@ static void ble_sync_reconnect(void)
     };
 
     // Only reconnect to controllers we have actually set up
-    DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state)
-                                                   {
+    DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state) {
         UNUSED(id);
         if (state.ble && !btstack_is_null_bd_addr(state.mac) && !ble_is_mac_connected(state.mac))
         {
@@ -829,8 +829,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
 
     switch (hci_event_gattservice_meta_get_subevent_code(packet))
     {
-    case GATTSERVICE_SUBEVENT_HID_SERVICE_CONNECTED:
-    {
+    case GATTSERVICE_SUBEVENT_HID_SERVICE_CONNECTED: {
         status = gattservice_subevent_hid_service_connected_get_status(packet);
         uint16_t cid = gattservice_subevent_hid_service_connected_get_hids_cid(packet);
         auto ctx = ble_context_by_cid(cid);
@@ -877,8 +876,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
         break;
     }
 
-    case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_PNP_ID:
-    {
+    case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_PNP_ID: {
         status = gattservice_subevent_device_information_pnp_id_get_att_status(packet);
         if (status != ATT_ERROR_SUCCESS)
         {
@@ -897,8 +895,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
         break;
     }
 
-    case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_DONE:
-    {
+    case GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_DONE: {
         hci_con_handle_t handle = gattservice_subevent_device_information_done_get_con_handle(packet);
         auto ctx = ble_context_by_handle(handle);
         if (ctx)
@@ -918,8 +915,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
         break;
     }
 
-    case GATTSERVICE_SUBEVENT_HID_INFORMATION:
-    {
+    case GATTSERVICE_SUBEVENT_HID_INFORMATION: {
         uint16_t cid = gattservice_subevent_hid_information_get_hids_cid(packet);
         auto ctx = ble_context_by_cid(cid);
         if (ctx && !ctx->host && !ctx->host_create_queued)
@@ -932,8 +928,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
         break;
     }
 
-    case GATTSERVICE_SUBEVENT_HID_REPORT:
-    {
+    case GATTSERVICE_SUBEVENT_HID_REPORT: {
         uint16_t cid = gattservice_subevent_hid_report_get_hids_cid(packet);
         auto ctx = ble_context_by_cid(cid);
         if (ctx && ctx->host)
@@ -951,8 +946,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel,
         break;
     }
 
-    case GATTSERVICE_SUBEVENT_HID_REPORT_WRITTEN:
-    {
+    case GATTSERVICE_SUBEVENT_HID_REPORT_WRITTEN: {
         auto ctx = ble_context_by_cid(gattservice_subevent_hid_report_written_get_hids_cid(packet));
         if (ctx && ctx->host)
             ctx->host->on_report_written();
@@ -980,8 +974,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         event = hci_event_packet_get_type(packet);
         switch (event)
         {
-        case BTSTACK_EVENT_STATE:
-        {
+        case BTSTACK_EVENT_STATE: {
             uint8_t state = btstack_event_state_get_state(packet);
             printf("BLE BTstack state: %d (WORKING=%d)\r\n", state, HCI_STATE_WORKING);
             if (state != HCI_STATE_WORKING)
@@ -991,8 +984,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
         }
 
-        case GAP_EVENT_ADVERTISING_REPORT:
-        {
+        case GAP_EVENT_ADVERTISING_REPORT: {
             if (!s_ble_scanning)
                 break;
 
@@ -1052,8 +1044,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                         }
                     }
                     break;
-                case BLUETOOTH_DATA_TYPE_APPEARANCE:
-                {
+                case BLUETOOTH_DATA_TYPE_APPEARANCE: {
                     appearance = little_endian_read_16(data, 0);
                     if (appearance == 0x03C4 /* Gamepad */ || appearance == 0x03C5 /* Joystick */ || appearance == 0x03C6 /* Simulation */)
                     {
@@ -1062,8 +1053,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     break;
                 }
                 case BLUETOOTH_DATA_TYPE_COMPLETE_LOCAL_NAME:
-                case BLUETOOTH_DATA_TYPE_SHORTENED_LOCAL_NAME:
-                {
+                case BLUETOOTH_DATA_TYPE_SHORTENED_LOCAL_NAME: {
                     int copy = data_len < (int)sizeof(dev_name) - 1 ? data_len : (int)sizeof(dev_name) - 1;
                     memcpy(dev_name, data, copy);
                     dev_name[copy] = '\0';
@@ -1121,7 +1111,9 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 devices_found = 1;
                 memcpy(scan_devices[0].addr, address, sizeof(bd_addr_t));
                 scan_devices[0].addr_type = addr_type;
-                strncpy(scan_devices[0].name_buffer, dev_name[0] ? dev_name : is_midi ? "BLE MIDI Device" : "BLE HID Device", sizeof(scan_devices[0].name_buffer) - 1);
+                strncpy(scan_devices[0].name_buffer, dev_name[0] ? dev_name : is_midi ? "BLE MIDI Device"
+                                                                                      : "BLE HID Device",
+                        sizeof(scan_devices[0].name_buffer) - 1);
                 scan_devices[0].is_midi = is_midi;
 
                 printf("Connecting to BLE device %s (type %d)...\r\n", bd_addr_to_str(address), addr_type);
@@ -1141,8 +1133,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
         }
 
-        case HCI_EVENT_DISCONNECTION_COMPLETE:
-        {
+        case HCI_EVENT_DISCONNECTION_COMPLETE: {
             hci_con_handle_t handle = hci_event_disconnection_complete_get_connection_handle(packet);
             auto ctx = ble_context_by_handle(handle);
             if (ctx)
@@ -1275,8 +1266,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         case HCI_EVENT_LE_META:
             switch (hci_event_le_meta_get_subevent_code(packet))
             {
-            case HCI_SUBEVENT_LE_CONNECTION_COMPLETE:
-            {
+            case HCI_SUBEVENT_LE_CONNECTION_COMPLETE: {
                 uint16_t conn_interval = hci_subevent_le_connection_complete_get_conn_interval(packet);
                 printf("LE Connection Complete: interval %u.%02u ms\r\n",
                        conn_interval * 125 / 100, 25 * (conn_interval & 3));
@@ -1325,8 +1315,7 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel,
         printf("Display Passkey: %" PRIu32 "\r\n",
                sm_event_passkey_display_number_get_passkey(packet));
         break;
-    case SM_EVENT_PAIRING_COMPLETE:
-    {
+    case SM_EVENT_PAIRING_COMPLETE: {
         hci_con_handle_t handle = sm_event_pairing_complete_get_handle(packet);
         auto ctx = ble_context_by_handle(handle);
         if (!ctx)
@@ -1393,8 +1382,7 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel,
         }
         break;
     }
-    case SM_EVENT_REENCRYPTION_COMPLETE:
-    {
+    case SM_EVENT_REENCRYPTION_COMPLETE: {
         hci_con_handle_t handle = sm_event_reencryption_complete_get_handle(packet);
         auto ctx = ble_context_by_handle(handle);
         if (!ctx)

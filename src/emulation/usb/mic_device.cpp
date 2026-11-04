@@ -43,8 +43,7 @@ bool UsbMicDevice::alone() const
 {
     // the config and security interfaces have no profiles
     bool alone = true;
-    ProfileManager::instance().for_each_usb_instance([this, &alone](const auto &instance)
-                                                     { alone &= instance.get() == this || instance->profiles.empty(); });
+    ProfileManager::instance().for_each_usb_instance([this, &alone](const auto &instance) { alone &= instance.get() == this || instance->profiles.empty(); });
     return alone;
 }
 
@@ -200,13 +199,15 @@ void UsbMicDevice::set_streaming(bool streaming)
 
 void UsbMicDevice::set_volume(int16_t volume)
 {
-    m_volume = volume < VOLUME_MIN ? VOLUME_MIN : volume > VOLUME_MAX ? VOLUME_MAX : volume;
+    m_volume = volume < VOLUME_MIN ? VOLUME_MIN : volume > VOLUME_MAX ? VOLUME_MAX
+                                                                      : volume;
     // 2^(dB / 6.0206), as a whole power of two and a quadratic fit of the rest (within 0.2%)
     int32_t const log2_q8 = ((int32_t)m_volume * 2721) >> 14;
     int32_t const whole = log2_q8 >> 8;
     int32_t const frac = log2_q8 & 0xFF;
     int32_t const gain = 4096 + ((2689 * frac) >> 8) + ((1407 * frac * frac) >> 16);
-    m_gain = whole >= 0 ? gain << whole : whole > -13 ? gain >> -whole : 0;
+    m_gain = whole >= 0 ? gain << whole : whole > -13 ? gain >> -whole
+                                                      : 0;
 }
 
 void UsbMicDevice::queue_packet()
@@ -223,7 +224,8 @@ void UsbMicDevice::queue_packet()
     for (size_t i = 0; i < count && m_gain != 4096; i++)
     {
         int32_t const sample = (m_packet[i] * m_gain) >> 12;
-        m_packet[i] = (int16_t)(sample > INT16_MAX ? INT16_MAX : sample < INT16_MIN ? INT16_MIN : sample);
+        m_packet[i] = (int16_t)(sample > INT16_MAX ? INT16_MAX : sample < INT16_MIN ? INT16_MIN
+                                                                                    : sample);
     }
     if (m_mute)
     {

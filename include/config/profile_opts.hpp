@@ -44,8 +44,7 @@ inline bool decode_profile_opts(pb_istream_t *stream, proto_ProfileOpts *opts)
         }
         switch (wire_type)
         {
-        case PB_WT_VARINT:
-        {
+        case PB_WT_VARINT: {
             uint64_t value;
             if (!pb_decode_varint(stream, &value) || !pb_encode_varint(&out, value))
             {
@@ -54,8 +53,7 @@ inline bool decode_profile_opts(pb_istream_t *stream, proto_ProfileOpts *opts)
             break;
         }
         case PB_WT_32BIT:
-        case PB_WT_64BIT:
-        {
+        case PB_WT_64BIT: {
             pb_byte_t value[8];
             const size_t size = wire_type == PB_WT_32BIT ? 4 : 8;
             if (!pb_read(stream, value, size) || !pb_write(&out, value, size))
@@ -64,8 +62,7 @@ inline bool decode_profile_opts(pb_istream_t *stream, proto_ProfileOpts *opts)
             }
             break;
         }
-        case PB_WT_STRING:
-        {
+        case PB_WT_STRING: {
             pb_istream_t substream;
             if (!pb_make_string_substream(stream, &substream))
             {

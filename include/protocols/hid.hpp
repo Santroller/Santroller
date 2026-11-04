@@ -16,7 +16,7 @@ typedef struct
     uint8_t leftShoulder : 1;
     uint8_t rightShoulder : 1;
     uint8_t guide : 1;
-    uint8_t capture: 1;
+    uint8_t capture : 1;
 
     uint8_t a : 1;
     uint8_t b : 1;
@@ -49,8 +49,7 @@ typedef struct
     uint8_t soloActive : 1;
     uint8_t noteMiss : 1;
     uint8_t : 5;
-    union
-    {
+    union {
         uint8_t noteHitRaw;
         struct
         {
@@ -115,36 +114,37 @@ typedef struct
     PCStageKitOutputWithoutReportId_Data_t report;
 } __attribute__((packed)) PCStageKitOutput_Data_t;
 
-
 typedef struct
 {
     // the axes are signed bytes from -127 to 127; a real guitar's Y, Z and Ry (tilt) are accelerometer
     // axes, and X and Rx stay at 0x26 and 0xFF
-    int8_t always_1d;  // Always 0x1d
+    int8_t always_1d; // Always 0x1d
     int8_t unk1;
     int8_t unk2;
-    int8_t always_ff;  // Always 0xFF
+    int8_t always_ff; // Always 0xFF
     int8_t tilt;
 
     union {
-        struct {
+        struct
+        {
             uint8_t dpadUp : 1;
             uint8_t dpadDown : 1;
             uint8_t dpadLeft : 1;
             uint8_t dpadRight : 1;
-            uint8_t a : 1;  // cross, green
-            uint8_t b : 1;  // circle, red
-            uint8_t x : 1;  // square, blue
-            uint8_t y : 1;  // triangle, yellow
+            uint8_t a : 1; // cross, green
+            uint8_t b : 1; // circle, red
+            uint8_t x : 1; // square, blue
+            uint8_t y : 1; // triangle, yellow
         };
-        struct {
+        struct
+        {
             uint8_t dpad : 4;
             uint8_t : 4;
         };
     };
 
-    uint8_t leftShoulder : 1;  // orange, l1
+    uint8_t leftShoulder : 1; // orange, l1
     uint8_t : 2;
-    uint8_t always_set : 1;  // set on a real guitar, purpose unknown
-    uint8_t side : 4;  // 1 for left, 2 for right
+    uint8_t always_set : 1; // set on a real guitar, purpose unknown
+    uint8_t side : 4;       // 1 for left, 2 for right
 } __attribute__((packed)) ArcadeGuitarHeroGuitar_Data_t;

@@ -7,7 +7,6 @@
 #include "config/config.hpp"
 #include "managers/device_manager.hpp"
 
-
 std::shared_ptr<UsbHostInterface> OGXboxHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
     TU_VERIFY(desc_itf->bInterfaceClass == 0x58, nullptr);
@@ -105,7 +104,7 @@ void OGXboxHost::update(bool full_poll, bool send_events)
     m_out_pending = true;
 }
 
-bool OGXboxHost::tick_digital(proto_Output& type)
+bool OGXboxHost::tick_digital(proto_Output &type)
 {
     if (type.which_mapping == proto_Output_gamepadButton_tag)
     {
@@ -148,26 +147,33 @@ bool OGXboxHost::tick_digital(proto_Output& type)
     return false;
 }
 
-uint16_t OGXboxHost::tick_button_pressure(proto_Output& type)
+uint16_t OGXboxHost::tick_button_pressure(proto_Output &type)
 {
     if (type.which_mapping == proto_Output_gamepadButton_tag)
     {
         auto data = (const OGXboxGamepad_Data_t *)m_ep_in_buf;
         switch (type.mapping.gamepadButton)
         {
-        case Gamepad_A: return data->a << 8;
-        case Gamepad_B: return data->b << 8;
-        case Gamepad_X: return data->x << 8;
-        case Gamepad_Y: return data->y << 8;
-        case Gamepad_LeftShoulder: return data->leftShoulder << 8;
-        case Gamepad_RightShoulder: return data->rightShoulder << 8;
-        default: break;
+        case Gamepad_A:
+            return data->a << 8;
+        case Gamepad_B:
+            return data->b << 8;
+        case Gamepad_X:
+            return data->x << 8;
+        case Gamepad_Y:
+            return data->y << 8;
+        case Gamepad_LeftShoulder:
+            return data->leftShoulder << 8;
+        case Gamepad_RightShoulder:
+            return data->rightShoulder << 8;
+        default:
+            break;
         }
     }
     return UsbHostInterface::tick_button_pressure(type);
 }
 
-uint16_t OGXboxHost::tick_analog(proto_Output& type)
+uint16_t OGXboxHost::tick_analog(proto_Output &type)
 {
     if (type.which_mapping == proto_Output_gamepadAxis_tag)
     {

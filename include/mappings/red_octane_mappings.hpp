@@ -51,7 +51,6 @@ public:
     void update_ps2(uint8_t *report);
 };
 
-
 class GuitarHeroDrumsButtonMapping : public ButtonMapping
 {
 public:
@@ -85,7 +84,6 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
 };
-
 
 class GuitarHeroArcadeButtonMapping : public ButtonMapping
 {
@@ -121,7 +119,6 @@ public:
     void update_xboxone(uint8_t *report);
 };
 
-
 class LiveGuitarButtonMapping : public ButtonMapping
 {
 public:
@@ -155,7 +152,6 @@ public:
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
 };
-
 
 class DJHTurntableButtonMapping : public ButtonMapping
 {

@@ -15,38 +15,38 @@
 
 namespace
 {
-    template <typename T>
-    inline void free_vector(std::vector<T> &v)
-    {
-        v.clear();
-        v.shrink_to_fit();
-    }
+template <typename T>
+inline void free_vector(std::vector<T> &v)
+{
+    v.clear();
+    v.shrink_to_fit();
+}
 
-    void release_profile_contents(std::unordered_map<uint32_t, std::vector<std::shared_ptr<Profile>>> &profiles)
+void release_profile_contents(std::unordered_map<uint32_t, std::vector<std::shared_ptr<Profile>>> &profiles)
+{
+    for (auto &profile_pair : profiles)
     {
-        for (auto &profile_pair : profiles)
+        for (auto &profile : profile_pair.second)
         {
-            for (auto &profile : profile_pair.second)
+            if (profile)
             {
-                if (profile)
-                {
-                    free_vector(profile->action_mappings);
-                    free_vector(profile->strum_mappings);
-                    free_vector(profile->socd_mappings);
-                    free_vector(profile->mappings);
-                    free_vector(profile->triggers);
-                    free_vector(profile->leds);
-                    free_vector(profile->standby_wake);
-                    profile->devices.clear();
-                    profile->temp_devices.clear();
-                    profile->claimed_devices.clear();
-                    profile->temp_claimed_devices.clear();
-                    free_vector(profile->queued_mappings);
-                    free_vector(profile->queued_last_live);
-                }
+                free_vector(profile->action_mappings);
+                free_vector(profile->strum_mappings);
+                free_vector(profile->socd_mappings);
+                free_vector(profile->mappings);
+                free_vector(profile->triggers);
+                free_vector(profile->leds);
+                free_vector(profile->standby_wake);
+                profile->devices.clear();
+                profile->temp_devices.clear();
+                profile->claimed_devices.clear();
+                profile->temp_claimed_devices.clear();
+                free_vector(profile->queued_mappings);
+                free_vector(profile->queued_last_live);
             }
         }
     }
+}
 }
 bool ProfileManager::changed_types()
 {

@@ -9,7 +9,8 @@
 // A real controller samples motion every 5ms and reports the three samples since its last report
 #define SWITCH_PRO_IMU_SAMPLE_US 5000
 #define SWITCH_PRO_JOYSTICK_CENTER SWITCH_STICK_CENTER
-typedef enum {
+typedef enum
+{
     REPORT_OUTPUT_00 = 0x00,
     REPORT_FEATURE = 0x01,
     REPORT_OUTPUT_10 = 0x10,
@@ -19,7 +20,8 @@ typedef enum {
     REPORT_USB_INPUT_81 = 0x81,
 } SwitchReportID;
 
-typedef enum {
+typedef enum
+{
     IDENTIFY = 0x01,
     HANDSHAKE,
     BAUD_RATE,
@@ -27,7 +29,8 @@ typedef enum {
     ENABLE_USB_TIMEOUT
 } SwitchOutputSubtypes;
 
-typedef enum {
+typedef enum
+{
     GET_CONTROLLER_STATE = 0x00,
     BLUETOOTH_PAIR_REQUEST = 0x01,
     REQUEST_DEVICE_INFO = 0x02,
@@ -50,16 +53,17 @@ typedef enum {
 
 static const uint8_t SWITCH_INIT_REPORT[10] = {SwitchReportID::REPORT_CONFIGURATION, SwitchOutputSubtypes::IDENTIFY};
 
-
 // left and right calibration are stored differently for some reason, so two structs
-typedef struct {
+typedef struct
+{
     uint8_t data[9];
 
-    void get_min(uint16_t& x, uint16_t& y) { pack_calibration(6, x, y); }
-    void get_center(uint16_t& x, uint16_t& y) { pack_calibration(3, x, y); }
-    void get_max(uint16_t& x, uint16_t& y) { pack_calibration(0, x, y); }
+    void get_min(uint16_t &x, uint16_t &y) { pack_calibration(6, x, y); }
+    void get_center(uint16_t &x, uint16_t &y) { pack_calibration(3, x, y); }
+    void get_max(uint16_t &x, uint16_t &y) { pack_calibration(0, x, y); }
 
-    void get_real_min(uint16_t& x, uint16_t& y) {
+    void get_real_min(uint16_t &x, uint16_t &y)
+    {
         uint16_t minX, minY;
         uint16_t cenX, cenY;
 
@@ -70,7 +74,8 @@ typedef struct {
         y = cenY - minY;
     }
 
-    void get_real_max(uint16_t& x, uint16_t& y) {
+    void get_real_max(uint16_t &x, uint16_t &y)
+    {
         uint16_t maxX, maxY;
         uint16_t cenX, cenY;
 
@@ -81,20 +86,23 @@ typedef struct {
         y = cenY + maxY;
     }
 
-    void pack_calibration(uint8_t offset, uint16_t& x, uint16_t& y) {
+    void pack_calibration(uint8_t offset, uint16_t &x, uint16_t &y)
+    {
         x = static_cast<uint16_t>(data[offset]) | ((data[offset + 1] & 0x0F) << 8);
         y = static_cast<uint16_t>(data[offset + 2] << 4) | (data[offset + 1] >> 4);
     }
 } SwitchLeftCalibration;
 
-typedef struct {
+typedef struct
+{
     uint8_t data[9];
 
-    void get_min(uint16_t& x, uint16_t& y) { pack_calibration(3, x, y); }
-    void get_center(uint16_t& x, uint16_t& y) { pack_calibration(0, x, y); }
-    void get_max(uint16_t& x, uint16_t& y) { pack_calibration(6, x, y); }
+    void get_min(uint16_t &x, uint16_t &y) { pack_calibration(3, x, y); }
+    void get_center(uint16_t &x, uint16_t &y) { pack_calibration(0, x, y); }
+    void get_max(uint16_t &x, uint16_t &y) { pack_calibration(6, x, y); }
 
-    void get_real_min(uint16_t& x, uint16_t& y) {
+    void get_real_min(uint16_t &x, uint16_t &y)
+    {
         uint16_t minX, minY;
         uint16_t cenX, cenY;
 
@@ -105,7 +113,8 @@ typedef struct {
         y = cenY - minY;
     }
 
-    void get_real_max(uint16_t& x, uint16_t& y) {
+    void get_real_max(uint16_t &x, uint16_t &y)
+    {
         uint16_t maxX, maxY;
         uint16_t cenX, cenY;
 
@@ -116,7 +125,8 @@ typedef struct {
         y = cenY + maxY;
     }
 
-    void pack_calibration(uint8_t offset, uint16_t& x, uint16_t& y) {
+    void pack_calibration(uint8_t offset, uint16_t &x, uint16_t &y)
+    {
         x = static_cast<uint16_t>(data[offset]) | ((data[offset + 1] & 0x0F) << 8);
         y = static_cast<uint16_t>(data[offset + 2] << 4) | (data[offset + 1] >> 4);
     }
@@ -188,8 +198,8 @@ typedef struct __attribute((packed, aligned(1)))
     uint8_t motionCalibration[24];
 } SwitchUserCalibration;
 
-
-typedef enum {
+typedef enum
+{
     SWITCH_TYPE_LEFT_JOYCON = 0x01,
     SWITCH_TYPE_RIGHT_JOYCON,
     SWITCH_TYPE_PRO_CONTROLLER,
@@ -201,7 +211,8 @@ typedef enum {
     SWITCH_TYPE_N64 = 0x0C,
 } SwitchControllerType;
 
-typedef struct {
+typedef struct
+{
     uint8_t majorVersion;
     uint8_t minorVersion;
     uint8_t controllerType;
@@ -213,12 +224,12 @@ typedef struct {
 
 typedef struct
 {
-	uint16_t buttons;
-	uint8_t hat;
-	uint8_t lx;
-	uint8_t ly;
-	uint8_t rx;
-	uint8_t ry;
+    uint16_t buttons;
+    uint8_t hat;
+    uint8_t lx;
+    uint8_t ly;
+    uint8_t rx;
+    uint8_t ry;
 } SwitchProOutReport;
 
 class SwitchGamepadDevice : public HIDDevice
@@ -235,15 +246,16 @@ public:
     uint16_t report_desc_len();
     uint16_t get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen);
     void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
+
 private:
-    void readSPIFlash(uint8_t* dest, uint32_t address, uint8_t size);
+    void readSPIFlash(uint8_t *dest, uint32_t address, uint8_t size);
     void handleFeatureReport(uint8_t switchReportID, uint8_t switchReportSubID, const uint8_t *reportData, uint16_t reportLength);
     void handleConfigReport(uint8_t switchReportID, uint8_t switchReportSubID, const uint8_t *reportData, uint16_t reportLength);
     void sendIdentify();
     void endSubCommand(uint8_t subCommand);
-    bool sendReport(uint8_t reportID, void const* reportData, uint16_t reportLength);
-    uint8_t report[CFG_TUD_HID_EP_BUFSIZE] = { };
-    uint8_t last_report[CFG_TUD_HID_EP_BUFSIZE] = { };
+    bool sendReport(uint8_t reportID, void const *reportData, uint16_t reportLength);
+    uint8_t report[CFG_TUD_HID_EP_BUFSIZE] = {};
+    uint8_t last_report[CFG_TUD_HID_EP_BUFSIZE] = {};
     SwitchProGamepad_Data_t switchReport;
     SwitchProGamepad_Data_t m_initial_report;
     uint8_t last_report_counter;
@@ -256,10 +268,9 @@ private:
 
     uint8_t handshakeCounter = 0;
 
-    std::map<uint32_t, const uint8_t*> spiFlashData = {
+    std::map<uint32_t, const uint8_t *> spiFlashData = {
         {0x6000, factoryConfigData},
-        {0x8000, userCalibrationData}
-    };
+        {0x8000, userCalibrationData}};
 
     SwitchDeviceInfo deviceInfo;
     uint8_t playerID = 0;
@@ -286,26 +297,26 @@ private:
     uint16_t rightMaxX, rightMaxY;
 
     // config data
-    SwitchFactoryConfig* factoryConfig = (SwitchFactoryConfig*)factoryConfigData;
+    SwitchFactoryConfig *factoryConfig = (SwitchFactoryConfig *)factoryConfigData;
     const uint8_t factoryConfigData[0xEFF] = {
         // serial number
         0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
         0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 
-        0xFF, 0xFF, 
+        0xFF, 0xFF,
 
         // device type
-        SwitchControllerType::SWITCH_TYPE_PRO_CONTROLLER, 
+        SwitchControllerType::SWITCH_TYPE_PRO_CONTROLLER,
 
         // unknown
-        0xA0, 
+        0xA0,
 
-        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 
         // color options
         0x02,
 
-        0xFF, 0xFF, 0xFF, 0xFF, 
+        0xFF, 0xFF, 0xFF, 0xFF,
 
         // motion calibration: accel origin and 4 g coefficient, then gyro origin and 936 °/s coefficient.
         // The origins are 0 so samples are exactly SWITCH_IMU_ACCEL_PER_G / SWITCH_IMU_GYRO_PER_DPS, see protocols/motion.hpp
@@ -313,11 +324,11 @@ private:
         0x00, 0x40, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x3B, 0x34, 0x3B, 0x34, 0x3B, 0x34,
 
-        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 
         // config & calibration 2
         // left stick
-        0xa4, 0x46, 0x6a, 0x00, 0x08, 0x80, 0xa4, 0x46, 
+        0xa4, 0x46, 0x6a, 0x00, 0x08, 0x80, 0xa4, 0x46,
         0x6a,
 
         // right stick
@@ -338,43 +349,42 @@ private:
         // right grip color
         0xEC, 0x00, 0x8C,
 
-        0x01, 
+        0x01,
 
         0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
         0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
         0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
         0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
         0xFF, 0xFF, 0xFF,
-        
-        0x50, 0xFD, 0x00, 0x00, 0xC6, 0x0F, 
-        0x0F, 0x30, 0x61, 0xAE, 0x90, 0xD9, 0xD4, 0x14, 
-        0x54, 0x41, 0x15, 0x54, 0xC7, 0x79, 0x9C, 0x33, 
-        0x36, 0x63, 
-        
-        0x0F, 0x30, 0x61, 0xAE, 0x90, 0xD9, 0xD4, 0x14, 
+
+        0x50, 0xFD, 0x00, 0x00, 0xC6, 0x0F,
+        0x0F, 0x30, 0x61, 0xAE, 0x90, 0xD9, 0xD4, 0x14,
+        0x54, 0x41, 0x15, 0x54, 0xC7, 0x79, 0x9C, 0x33,
+        0x36, 0x63,
+
+        0x0F, 0x30, 0x61, 0xAE, 0x90, 0xD9, 0xD4, 0x14,
         0x54, 0x41, 0x15, 0x54,
-        
+
         0xC7,
 
-        0x79, 
-        
-        0x9C, 
+        0x79,
 
-        0x33, 
-        
-        0x36, 
-        
+        0x9C,
+
+        0x33,
+
+        0x36,
+
         0x63, 0xFF, 0xFF, 0xFF,
-        0xFF, 0xFF, 0xFF
-    };
+        0xFF, 0xFF, 0xFF};
 
-    SwitchUserCalibration* userCalibration = (SwitchUserCalibration*)userCalibrationData;
+    SwitchUserCalibration *userCalibration = (SwitchUserCalibration *)userCalibrationData;
     const uint8_t userCalibrationData[0x3F] = {
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-        
+
         // Left Stick
-        0xB2, 0xA1, 0xa4, 0x46, 0x6a, 0x00, 0x08, 0x80, 
+        0xB2, 0xA1, 0xa4, 0x46, 0x6a, 0x00, 0x08, 0x80,
         0xa4, 0x46, 0x6a,
 
         // Right Stick
@@ -383,8 +393,7 @@ private:
 
         // Motion
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
-    };
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 };
 
 class SwitchArcadeDevice : public HIDDevice

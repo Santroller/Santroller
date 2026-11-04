@@ -57,7 +57,7 @@ BtStackLock::~BtStackLock()
 }
 
 static const uint8_t s_cyw43_pins[] = {CYW43_DEFAULT_PIN_WL_REG_ON, CYW43_DEFAULT_PIN_WL_DATA_OUT,
-                                        CYW43_DEFAULT_PIN_WL_CS, CYW43_DEFAULT_PIN_WL_CLOCK};
+                                       CYW43_DEFAULT_PIN_WL_CS, CYW43_DEFAULT_PIN_WL_CLOCK};
 
 bool BluetoothStack::is_cyw43_pin(uint8_t pin)
 {
@@ -85,7 +85,7 @@ static void release_cyw43_pins()
     }
 }
 
-BluetoothStack& BluetoothStack::instance()
+BluetoothStack &BluetoothStack::instance()
 {
     static BluetoothStack stack;
     return stack;
@@ -296,7 +296,8 @@ bool BluetoothStack::local_address(uint8_t addr[6]) const
     memcpy(addr, local, sizeof(local));
     return true;
 }
-void BluetoothStack::tick() {
+void BluetoothStack::tick()
+{
     if (m_initialized)
     {
         if (m_usb_dongle)

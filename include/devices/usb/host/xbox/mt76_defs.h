@@ -26,15 +26,16 @@
 #define XONE_MT_CLIENT_ENABLE_ENCRYPTION 0x10
 #include <stdbool.h>
 
-enum ieee80211_min_mpdu_spacing {
-	IEEE80211_HT_MPDU_DENSITY_NONE = 0,
-	IEEE80211_HT_MPDU_DENSITY_0_25 = 1,
-	IEEE80211_HT_MPDU_DENSITY_0_5 = 2,
-	IEEE80211_HT_MPDU_DENSITY_1 = 3,
-	IEEE80211_HT_MPDU_DENSITY_2 = 4,
-	IEEE80211_HT_MPDU_DENSITY_4 = 5,
-	IEEE80211_HT_MPDU_DENSITY_8 = 6,
-	IEEE80211_HT_MPDU_DENSITY_16 = 7,
+enum ieee80211_min_mpdu_spacing
+{
+    IEEE80211_HT_MPDU_DENSITY_NONE = 0,
+    IEEE80211_HT_MPDU_DENSITY_0_25 = 1,
+    IEEE80211_HT_MPDU_DENSITY_0_5 = 2,
+    IEEE80211_HT_MPDU_DENSITY_1 = 3,
+    IEEE80211_HT_MPDU_DENSITY_2 = 4,
+    IEEE80211_HT_MPDU_DENSITY_4 = 5,
+    IEEE80211_HT_MPDU_DENSITY_8 = 6,
+    IEEE80211_HT_MPDU_DENSITY_16 = 7,
 };
 
 /* Bit manipulation macros */
@@ -55,10 +56,10 @@ enum ieee80211_min_mpdu_spacing {
 #endif
 
 /* USB Endpoints */
-#define MT_EP_OUT      0x08  // In-band MCU commands
-#define MT_EP_OUT_WLAN 0x04  // First data queue (AC_BE), which xone uses for 802.11 frames
-#define MT_EP_IN_WLAN  0x84  // Wireless data
-#define MT_EP_IN_CMD   0x85  // Command responses and events
+#define MT_EP_OUT 0x08      // In-band MCU commands
+#define MT_EP_OUT_WLAN 0x04 // First data queue (AC_BE), which xone uses for 802.11 frames
+#define MT_EP_IN_WLAN 0x84  // Wireless data
+#define MT_EP_IN_CMD 0x85   // Command responses and events
 
 /* Firmware loading constants */
 #define MT_FW_CHUNK_SIZE 0x3800
@@ -78,9 +79,10 @@ enum ieee80211_min_mpdu_spacing {
 #define MT_CH_5G_LOW 0x01
 #define MT_CH_5G_HIGH 0x02
 
-enum mt76_channel_band {
-	MT_CHANNEL_BAND_2G = 0,
-	MT_CHANNEL_BAND_5G = 1,
+enum mt76_channel_band
+{
+    MT_CHANNEL_BAND_2G = 0,
+    MT_CHANNEL_BAND_5G = 1,
 };
 
 /* LED modes */
@@ -530,9 +532,9 @@ enum mt76_channel_band {
 #define MT_PROT_RATE_DUP_OFDM_24 0x2084
 #define MT_PROT_RATE_SGI_OFDM_24 0x2104
 #define MT_PROT_TXOP_ALLOW_ALL GENMASK(25, 20)
-#define MT_PROT_TXOP_ALLOW_BW20 (MT_PROT_TXOP_ALLOW_ALL & \
-	~MT_PROT_TXOP_ALLOW_MM40 & \
-	~MT_PROT_TXOP_ALLOW_GF40)
+#define MT_PROT_TXOP_ALLOW_BW20 (MT_PROT_TXOP_ALLOW_ALL &   \
+                                 ~MT_PROT_TXOP_ALLOW_MM40 & \
+                                 ~MT_PROT_TXOP_ALLOW_GF40)
 
 #define MT_EXP_ACK_TIME 0x1380
 
@@ -877,265 +879,282 @@ enum mt76_channel_band {
 
 #define MT_CMD_HDR_LEN 4
 
-enum mt76_vendor_req {
-	MT_VEND_DEV_MODE = 0x01,
-	MT_VEND_WRITE = 0x02,
-	MT_VEND_POWER_ON = 0x04,
-	MT_VEND_MULTI_WRITE = 0x06,
-	MT_VEND_MULTI_READ = 0x07,
-	MT_VEND_READ_EEPROM = 0x09,
-	MT_VEND_WRITE_FCE = 0x42,
-	MT_VEND_WRITE_CFG = 0x46,
-	MT_VEND_READ_CFG = 0x47,
-	MT_VEND_READ_EXT = 0x63,
-	MT_VEND_WRITE_EXT = 0x66,
-	MT_VEND_FEATURE_SET = 0x91,
+enum mt76_vendor_req
+{
+    MT_VEND_DEV_MODE = 0x01,
+    MT_VEND_WRITE = 0x02,
+    MT_VEND_POWER_ON = 0x04,
+    MT_VEND_MULTI_WRITE = 0x06,
+    MT_VEND_MULTI_READ = 0x07,
+    MT_VEND_READ_EEPROM = 0x09,
+    MT_VEND_WRITE_FCE = 0x42,
+    MT_VEND_WRITE_CFG = 0x46,
+    MT_VEND_READ_CFG = 0x47,
+    MT_VEND_READ_EXT = 0x63,
+    MT_VEND_WRITE_EXT = 0x66,
+    MT_VEND_FEATURE_SET = 0x91,
 };
 
-enum mt76_dma_msg_port {
-	MT_WLAN_PORT,
-	MT_CPU_RX_PORT,
-	MT_CPU_TX_PORT,
-	MT_HOST_PORT,
-	MT_VIRTUAL_CPU_RX_PORT,
-	MT_VIRTUAL_CPU_TX_PORT,
-	MT_DISCARD,
+enum mt76_dma_msg_port
+{
+    MT_WLAN_PORT,
+    MT_CPU_RX_PORT,
+    MT_CPU_TX_PORT,
+    MT_HOST_PORT,
+    MT_VIRTUAL_CPU_RX_PORT,
+    MT_VIRTUAL_CPU_TX_PORT,
+    MT_DISCARD,
 };
 
-enum mt76_mcu_cmd {
-	MT_CMD_FUN_SET_OP = 1,
-	MT_CMD_LOAD_CR = 2,
-	MT_CMD_INIT_GAIN_OP = 3,
-	MT_CMD_DYNC_VGA_OP = 6,
-	MT_CMD_TDLS_CH_SW = 7,
-	MT_CMD_BURST_WRITE = 8,
-	MT_CMD_READ_MODIFY_WRITE = 9,
-	MT_CMD_RANDOM_READ = 10,
-	MT_CMD_BURST_READ = 11,
-	MT_CMD_RANDOM_WRITE = 12,
-	MT_CMD_LED_MODE_OP = 16,
-	MT_CMD_POWER_SAVING_OP = 20,
-	MT_CMD_WOW_CONFIG = 21,
-	MT_CMD_WOW_QUERY = 22,
-	MT_CMD_WOW_FEATURE = 24,
-	MT_CMD_CARRIER_DETECT_OP = 28,
-	MT_CMD_RADOR_DETECT_OP = 29,
-	MT_CMD_SWITCH_CHANNEL_OP = 30,
-	MT_CMD_CALIBRATION_OP = 31,
-	MT_CMD_BEACON_OP = 32,
-	MT_CMD_ANTENNA_OP = 33,
-	MT_CMD_GET_CHANNEL_POWER = 0x1C,
-	MT_CMD_SET_CHANNEL_CANDIDATES = 0x1D,
+enum mt76_mcu_cmd
+{
+    MT_CMD_FUN_SET_OP = 1,
+    MT_CMD_LOAD_CR = 2,
+    MT_CMD_INIT_GAIN_OP = 3,
+    MT_CMD_DYNC_VGA_OP = 6,
+    MT_CMD_TDLS_CH_SW = 7,
+    MT_CMD_BURST_WRITE = 8,
+    MT_CMD_READ_MODIFY_WRITE = 9,
+    MT_CMD_RANDOM_READ = 10,
+    MT_CMD_BURST_READ = 11,
+    MT_CMD_RANDOM_WRITE = 12,
+    MT_CMD_LED_MODE_OP = 16,
+    MT_CMD_POWER_SAVING_OP = 20,
+    MT_CMD_WOW_CONFIG = 21,
+    MT_CMD_WOW_QUERY = 22,
+    MT_CMD_WOW_FEATURE = 24,
+    MT_CMD_CARRIER_DETECT_OP = 28,
+    MT_CMD_RADOR_DETECT_OP = 29,
+    MT_CMD_SWITCH_CHANNEL_OP = 30,
+    MT_CMD_CALIBRATION_OP = 31,
+    MT_CMD_BEACON_OP = 32,
+    MT_CMD_ANTENNA_OP = 33,
+    MT_CMD_GET_CHANNEL_POWER = 0x1C,
+    MT_CMD_SET_CHANNEL_CANDIDATES = 0x1D,
 };
 
-enum mt76_mcu_function {
-	MT_Q_SELECT = 1,
-	MT_BW_SETTING = 2,
-	MT_USB2_SW_DISCONNECT = 2,
-	MT_USB3_SW_DISCONNECT = 3,
-	MT_LOG_FW_DEBUG_MSG = 4,
-	MT_GET_FW_VERSION = 5,
+enum mt76_mcu_function
+{
+    MT_Q_SELECT = 1,
+    MT_BW_SETTING = 2,
+    MT_USB2_SW_DISCONNECT = 2,
+    MT_USB3_SW_DISCONNECT = 3,
+    MT_LOG_FW_DEBUG_MSG = 4,
+    MT_GET_FW_VERSION = 5,
 };
 
-enum mt76_mcu_cr_mode {
-	MT_RF_CR,
-	MT_BBP_CR,
-	MT_RF_BBP_CR,
-	MT_HL_TEMP_CR_UPDATE,
+enum mt76_mcu_cr_mode
+{
+    MT_RF_CR,
+    MT_BBP_CR,
+    MT_RF_BBP_CR,
+    MT_HL_TEMP_CR_UPDATE,
 };
 
-enum mt76_mcu_power_mode {
-	MT_RADIO_OFF = 0x30,
-	MT_RADIO_ON = 0x31,
-	MT_RADIO_OFF_AUTO_WAKEUP = 0x32,
-	MT_RADIO_OFF_ADVANCE = 0x33,
-	MT_RADIO_ON_ADVANCE = 0x34,
+enum mt76_mcu_power_mode
+{
+    MT_RADIO_OFF = 0x30,
+    MT_RADIO_ON = 0x31,
+    MT_RADIO_OFF_AUTO_WAKEUP = 0x32,
+    MT_RADIO_OFF_ADVANCE = 0x33,
+    MT_RADIO_ON_ADVANCE = 0x34,
 };
 
-enum mt76_mcu_calibration {
-	MT_MCU_CAL_R = 1,
-	MT_MCU_CAL_TEMP_SENSOR,
-	MT_MCU_CAL_RXDCOC,
-	MT_MCU_CAL_RC,
-	MT_MCU_CAL_SX_LOGEN,
-	MT_MCU_CAL_LC,
-	MT_MCU_CAL_TX_LOFT,
-	MT_MCU_CAL_TXIQ,
-	MT_MCU_CAL_TSSI,
-	MT_MCU_CAL_TSSI_COMP,
-	MT_MCU_CAL_DPD,
-	MT_MCU_CAL_RXIQC_FI,
-	MT_MCU_CAL_RXIQC_FD,
-	MT_MCU_CAL_PWRON,
-	MT_MCU_CAL_TX_SHAPING,
+enum mt76_mcu_calibration
+{
+    MT_MCU_CAL_R = 1,
+    MT_MCU_CAL_TEMP_SENSOR,
+    MT_MCU_CAL_RXDCOC,
+    MT_MCU_CAL_RC,
+    MT_MCU_CAL_SX_LOGEN,
+    MT_MCU_CAL_LC,
+    MT_MCU_CAL_TX_LOFT,
+    MT_MCU_CAL_TXIQ,
+    MT_MCU_CAL_TSSI,
+    MT_MCU_CAL_TSSI_COMP,
+    MT_MCU_CAL_DPD,
+    MT_MCU_CAL_RXIQC_FI,
+    MT_MCU_CAL_RXIQC_FD,
+    MT_MCU_CAL_PWRON,
+    MT_MCU_CAL_TX_SHAPING,
 };
 
-enum mt76_eeprom_mode {
-	MT_EE_READ,
-	MT_EE_PHYSICAL_READ,
+enum mt76_eeprom_mode
+{
+    MT_EE_READ,
+    MT_EE_PHYSICAL_READ,
 };
 
-enum mt76_eeprom_field {
-	MT_EE_CHIP_ID = 0x0000,
-	MT_EE_VERSION = 0x0002,
-	MT_EE_MAC_ADDR = 0x0004,
-	MT_EE_PCI_ID = 0x000a,
-	MT_EE_ANTENNA = 0x0022,
-	MT_EE_CFG1_INIT = 0x0024,
-	MT_EE_NIC_CONF_0 = 0x0034,
-	MT_EE_NIC_CONF_1 = 0x0036,
-	MT_EE_COUNTRY_REGION_5GHZ = 0x0038,
-	MT_EE_COUNTRY_REGION_2GHZ = 0x0039,
-	MT_EE_FREQ_OFFSET = 0x003a,
-	MT_EE_NIC_CONF_2 = 0x0042,
+enum mt76_eeprom_field
+{
+    MT_EE_CHIP_ID = 0x0000,
+    MT_EE_VERSION = 0x0002,
+    MT_EE_MAC_ADDR = 0x0004,
+    MT_EE_PCI_ID = 0x000a,
+    MT_EE_ANTENNA = 0x0022,
+    MT_EE_CFG1_INIT = 0x0024,
+    MT_EE_NIC_CONF_0 = 0x0034,
+    MT_EE_NIC_CONF_1 = 0x0036,
+    MT_EE_COUNTRY_REGION_5GHZ = 0x0038,
+    MT_EE_COUNTRY_REGION_2GHZ = 0x0039,
+    MT_EE_FREQ_OFFSET = 0x003a,
+    MT_EE_NIC_CONF_2 = 0x0042,
 
-	MT_EE_XTAL_TRIM_1 = 0x003a,
-	MT_EE_XTAL_TRIM_2 = 0x009e,
+    MT_EE_XTAL_TRIM_1 = 0x003a,
+    MT_EE_XTAL_TRIM_2 = 0x009e,
 
-	MT_EE_LNA_GAIN = 0x0044,
-	MT_EE_RSSI_OFFSET_2G_0 = 0x0046,
-	MT_EE_RSSI_OFFSET_2G_1 = 0x0048,
-	MT_EE_LNA_GAIN_5GHZ_1 = 0x0049,
-	MT_EE_RSSI_OFFSET_5G_0 = 0x004a,
-	MT_EE_RSSI_OFFSET_5G_1 = 0x004c,
-	MT_EE_LNA_GAIN_5GHZ_2 = 0x004d,
+    MT_EE_LNA_GAIN = 0x0044,
+    MT_EE_RSSI_OFFSET_2G_0 = 0x0046,
+    MT_EE_RSSI_OFFSET_2G_1 = 0x0048,
+    MT_EE_LNA_GAIN_5GHZ_1 = 0x0049,
+    MT_EE_RSSI_OFFSET_5G_0 = 0x004a,
+    MT_EE_RSSI_OFFSET_5G_1 = 0x004c,
+    MT_EE_LNA_GAIN_5GHZ_2 = 0x004d,
 
-	MT_EE_TX_POWER_DELTA_BW40 = 0x0050,
-	MT_EE_TX_POWER_DELTA_BW80 = 0x0052,
+    MT_EE_TX_POWER_DELTA_BW40 = 0x0050,
+    MT_EE_TX_POWER_DELTA_BW80 = 0x0052,
 
-	MT_EE_TX_POWER_EXT_PA_5G = 0x0054,
+    MT_EE_TX_POWER_EXT_PA_5G = 0x0054,
 
-	MT_EE_TX_POWER_0_START_2G = 0x0056,
-	MT_EE_TX_POWER_1_START_2G = 0x005c,
+    MT_EE_TX_POWER_0_START_2G = 0x0056,
+    MT_EE_TX_POWER_1_START_2G = 0x005c,
 
 #define MT_TX_POWER_GROUP_SIZE_5G 5
 #define MT_TX_POWER_GROUPS_5G 6
-	MT_EE_TX_POWER_0_START_5G = 0x0062,
-	MT_EE_TSSI_SLOPE_2G = 0x006e,
+    MT_EE_TX_POWER_0_START_5G = 0x0062,
+    MT_EE_TSSI_SLOPE_2G = 0x006e,
 
-	MT_EE_TX_POWER_0_GRP3_TX_POWER_DELTA = 0x0074,
-	MT_EE_TX_POWER_0_GRP4_TSSI_SLOPE = 0x0076,
+    MT_EE_TX_POWER_0_GRP3_TX_POWER_DELTA = 0x0074,
+    MT_EE_TX_POWER_0_GRP4_TSSI_SLOPE = 0x0076,
 
-	MT_EE_TX_POWER_1_START_5G = 0x0080,
+    MT_EE_TX_POWER_1_START_5G = 0x0080,
 
-	MT_EE_TX_POWER_CCK = 0x00a0,
-	MT_EE_TX_POWER_OFDM_2G_6M = 0x00a2,
-	MT_EE_TX_POWER_OFDM_2G_24M = 0x00a4,
-	MT_EE_TX_POWER_OFDM_5G_6M = 0x00b2,
-	MT_EE_TX_POWER_OFDM_5G_24M = 0x00b4,
-	MT_EE_TX_POWER_HT_MCS0 = 0x00a6,
-	MT_EE_TX_POWER_HT_MCS4 = 0x00a8,
-	MT_EE_TX_POWER_HT_MCS8 = 0x00aa,
-	MT_EE_TX_POWER_HT_MCS12 = 0x00ac,
-	MT_EE_TX_POWER_VHT_MCS0 = 0x00ba,
-	MT_EE_TX_POWER_VHT_MCS4 = 0x00bc,
-	MT_EE_TX_POWER_VHT_MCS8 = 0x00be,
+    MT_EE_TX_POWER_CCK = 0x00a0,
+    MT_EE_TX_POWER_OFDM_2G_6M = 0x00a2,
+    MT_EE_TX_POWER_OFDM_2G_24M = 0x00a4,
+    MT_EE_TX_POWER_OFDM_5G_6M = 0x00b2,
+    MT_EE_TX_POWER_OFDM_5G_24M = 0x00b4,
+    MT_EE_TX_POWER_HT_MCS0 = 0x00a6,
+    MT_EE_TX_POWER_HT_MCS4 = 0x00a8,
+    MT_EE_TX_POWER_HT_MCS8 = 0x00aa,
+    MT_EE_TX_POWER_HT_MCS12 = 0x00ac,
+    MT_EE_TX_POWER_VHT_MCS0 = 0x00ba,
+    MT_EE_TX_POWER_VHT_MCS4 = 0x00bc,
+    MT_EE_TX_POWER_VHT_MCS8 = 0x00be,
 
-	MT_EE_2G_TARGET_POWER = 0x00d0,
-	MT_EE_TEMP_OFFSET = 0x00d1,
-	MT_EE_5G_TARGET_POWER = 0x00d2,
-	MT_EE_TSSI_BOUND1 = 0x00d4,
-	MT_EE_TSSI_BOUND2 = 0x00d6,
-	MT_EE_TSSI_BOUND3 = 0x00d8,
-	MT_EE_TSSI_BOUND4 = 0x00da,
-	MT_EE_FREQ_OFFSET_COMPENSATION = 0x00db,
-	MT_EE_TSSI_BOUND5 = 0x00dc,
-	MT_EE_TX_POWER_BYRATE_BASE = 0x00de,
+    MT_EE_2G_TARGET_POWER = 0x00d0,
+    MT_EE_TEMP_OFFSET = 0x00d1,
+    MT_EE_5G_TARGET_POWER = 0x00d2,
+    MT_EE_TSSI_BOUND1 = 0x00d4,
+    MT_EE_TSSI_BOUND2 = 0x00d6,
+    MT_EE_TSSI_BOUND3 = 0x00d8,
+    MT_EE_TSSI_BOUND4 = 0x00da,
+    MT_EE_FREQ_OFFSET_COMPENSATION = 0x00db,
+    MT_EE_TSSI_BOUND5 = 0x00dc,
+    MT_EE_TX_POWER_BYRATE_BASE = 0x00de,
 
-	MT_EE_TSSI_SLOPE_5G = 0x00f0,
-	MT_EE_RF_TEMP_COMP_SLOPE_5G = 0x00f2,
-	MT_EE_RF_TEMP_COMP_SLOPE_2G = 0x00f4,
+    MT_EE_TSSI_SLOPE_5G = 0x00f0,
+    MT_EE_RF_TEMP_COMP_SLOPE_5G = 0x00f2,
+    MT_EE_RF_TEMP_COMP_SLOPE_2G = 0x00f4,
 
-	MT_EE_RF_2G_TSSI_OFF_TXPOWER = 0x00f6,
-	MT_EE_RF_2G_RX_HIGH_GAIN = 0x00f8,
-	MT_EE_RF_5G_GRP0_1_RX_HIGH_GAIN = 0x00fa,
-	MT_EE_RF_5G_GRP2_3_RX_HIGH_GAIN = 0x00fc,
-	MT_EE_RF_5G_GRP4_5_RX_HIGH_GAIN = 0x00fe,
+    MT_EE_RF_2G_TSSI_OFF_TXPOWER = 0x00f6,
+    MT_EE_RF_2G_RX_HIGH_GAIN = 0x00f8,
+    MT_EE_RF_5G_GRP0_1_RX_HIGH_GAIN = 0x00fa,
+    MT_EE_RF_5G_GRP2_3_RX_HIGH_GAIN = 0x00fc,
+    MT_EE_RF_5G_GRP4_5_RX_HIGH_GAIN = 0x00fe,
 
-	MT_EE_BT_RCAL_RESULT = 0x0138,
-	MT_EE_BT_VCDL_CALIBRATION = 0x013c,
-	MT_EE_BT_PMUCFG = 0x013e,
+    MT_EE_BT_RCAL_RESULT = 0x0138,
+    MT_EE_BT_VCDL_CALIBRATION = 0x013c,
+    MT_EE_BT_PMUCFG = 0x013e,
 
-	MT_EE_USAGE_MAP_START = 0x01e0,
-	MT_EE_USAGE_MAP_END = 0x01fc,
+    MT_EE_USAGE_MAP_START = 0x01e0,
+    MT_EE_USAGE_MAP_END = 0x01fc,
 };
 
-enum mt76_phy_type {
-	MT_PHY_TYPE_CCK,
-	MT_PHY_TYPE_OFDM,
-	MT_PHY_TYPE_HT,
-	MT_PHY_TYPE_HT_GF,
-	MT_PHY_TYPE_VHT,
-	MT_PHY_TYPE_HE_SU = 8,
-	MT_PHY_TYPE_HE_EXT_SU,
-	MT_PHY_TYPE_HE_TB,
-	MT_PHY_TYPE_HE_MU,
+enum mt76_phy_type
+{
+    MT_PHY_TYPE_CCK,
+    MT_PHY_TYPE_OFDM,
+    MT_PHY_TYPE_HT,
+    MT_PHY_TYPE_HT_GF,
+    MT_PHY_TYPE_VHT,
+    MT_PHY_TYPE_HE_SU = 8,
+    MT_PHY_TYPE_HE_EXT_SU,
+    MT_PHY_TYPE_HE_TB,
+    MT_PHY_TYPE_HE_MU,
 };
 
-enum mt76_phy_bandwidth {
-	MT_PHY_BW_20,
-	MT_PHY_BW_40,
-	MT_PHY_BW_80,
+enum mt76_phy_bandwidth
+{
+    MT_PHY_BW_20,
+    MT_PHY_BW_40,
+    MT_PHY_BW_80,
 };
 
-enum mt76_cal_channel_group {
-	MT_CH_5G_JAPAN,
-	MT_CH_5G_UNII_1,
-	MT_CH_5G_UNII_2,
-	MT_CH_5G_UNII_2E_1,
-	MT_CH_5G_UNII_2E_2,
-	MT_CH_5G_UNII_3,
+enum mt76_cal_channel_group
+{
+    MT_CH_5G_JAPAN,
+    MT_CH_5G_UNII_1,
+    MT_CH_5G_UNII_2,
+    MT_CH_5G_UNII_2E_1,
+    MT_CH_5G_UNII_2E_2,
+    MT_CH_5G_UNII_3,
 };
 
-enum mt76_qsel {
-	MT_QSEL_MGMT,
-	MT_QSEL_HCCA,
-	MT_QSEL_EDCA,
-	MT_QSEL_EDCA_2,
+enum mt76_qsel
+{
+    MT_QSEL_MGMT,
+    MT_QSEL_HCCA,
+    MT_QSEL_EDCA,
+    MT_QSEL_EDCA_2,
 };
 
-enum mt76_cipher_type {
-	MT_CIPHER_NONE,
-	MT_CIPHER_WEP40,
-	MT_CIPHER_WEP104,
-	MT_CIPHER_TKIP,
-	MT_CIPHER_AES_CCMP,
-	MT_CIPHER_CKIP40,
-	MT_CIPHER_CKIP104,
-	MT_CIPHER_CKIP128,
-	MT_CIPHER_WAPI,
+enum mt76_cipher_type
+{
+    MT_CIPHER_NONE,
+    MT_CIPHER_WEP40,
+    MT_CIPHER_WEP104,
+    MT_CIPHER_TKIP,
+    MT_CIPHER_AES_CCMP,
+    MT_CIPHER_CKIP40,
+    MT_CIPHER_CKIP104,
+    MT_CIPHER_CKIP128,
+    MT_CIPHER_WAPI,
 };
 
-struct mt76_fw_header {
-	uint32_t ilm_len;
-	uint32_t dlm_len;
-	uint16_t build_ver;
-	uint16_t fw_ver;
-	uint8_t pad[4];
-	char build_time[16];
+struct mt76_fw_header
+{
+    uint32_t ilm_len;
+    uint32_t dlm_len;
+    uint16_t build_ver;
+    uint16_t fw_ver;
+    uint8_t pad[4];
+    char build_time[16];
 } __attribute__((packed));
 
-struct mt76_rxwi {
-	uint32_t rxinfo;
-	uint32_t ctl;
-	uint16_t tid_sn;
-	uint16_t rate;
-	uint8_t rssi[4];
-	uint32_t bbp_rxinfo[4];
+struct mt76_rxwi
+{
+    uint32_t rxinfo;
+    uint32_t ctl;
+    uint16_t tid_sn;
+    uint16_t rate;
+    uint8_t rssi[4];
+    uint32_t bbp_rxinfo[4];
 } __attribute__((packed));
 
-struct mt76_txwi {
-	uint16_t flags;
-	uint16_t rate;
-	uint8_t ack_ctl;
-	uint8_t wcid;
-	uint16_t len_ctl;
-	uint32_t iv;
-	uint32_t eiv;
-	uint8_t aid;
-	uint8_t txstream;
-	uint8_t ctl2;
-	uint8_t pktid;
+struct mt76_txwi
+{
+    uint16_t flags;
+    uint16_t rate;
+    uint8_t ack_ctl;
+    uint8_t wcid;
+    uint16_t len_ctl;
+    uint32_t iv;
+    uint32_t eiv;
+    uint8_t aid;
+    uint8_t txstream;
+    uint8_t ctl2;
+    uint8_t pktid;
 } __attribute__((packed));
 
 #endif /* MT76_DEFS_H */

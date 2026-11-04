@@ -12,16 +12,17 @@ void reload();
 // BtWiiHost (Nintendo Wii Remote & Wii U Pro Controller)
 // ============================================================================
 
-#define WIIPROTO_REQ_LED     0x11
-#define WIIPROTO_REQ_DRM     0x12
-#define WIIPROTO_REQ_SREQ    0x15
-#define WIIPROTO_REQ_WMEM    0x16
-#define WIIPROTO_REQ_RMEM    0x17
-#define WIIPROTO_REQ_STATUS  0x20
-#define WIIPROTO_REQ_DATA    0x21
-#define WIIPROTO_REQ_RETURN  0x22
+#define WIIPROTO_REQ_LED 0x11
+#define WIIPROTO_REQ_DRM 0x12
+#define WIIPROTO_REQ_SREQ 0x15
+#define WIIPROTO_REQ_WMEM 0x16
+#define WIIPROTO_REQ_RMEM 0x17
+#define WIIPROTO_REQ_STATUS 0x20
+#define WIIPROTO_REQ_DATA 0x21
+#define WIIPROTO_REQ_RETURN 0x22
 
-enum {
+enum
+{
     WII_FSM_IDLE = 0,
     WII_FSM_W4_STATUS,
     WII_FSM_W4_INIT_ACK,
@@ -106,10 +107,14 @@ void BtWiiHost::send_feedback()
 {
     BtStackLock lock;
     uint8_t val = (m_rumble ? 0x01 : 0x00);
-    if (m_player == 1) val |= 0x10;
-    else if (m_player == 2) val |= 0x20;
-    else if (m_player == 3) val |= 0x40;
-    else if (m_player == 4) val |= 0x80;
+    if (m_player == 1)
+        val |= 0x10;
+    else if (m_player == 2)
+        val |= 0x20;
+    else if (m_player == 3)
+        val |= 0x40;
+    else if (m_player == 4)
+        val |= 0x80;
     m_cmd_buf[0] = val;
     hid_host_send_report(m_cid, WIIPROTO_REQ_LED, m_cmd_buf, 1);
 }
@@ -155,7 +160,8 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
         data++;
         len--;
     }
-    if (len < 1) return;
+    if (len < 1)
+        return;
 
     uint8_t report_id = data[0];
 
@@ -163,7 +169,8 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
     {
     case WIIPROTO_REQ_STATUS: // 0x20
     {
-        if (len < 4) return;
+        if (len < 4)
+            return;
         uint8_t flags = data[3] & 0x0F;
         bool ext_connected = (flags & 0x02) != 0;
 
@@ -271,8 +278,7 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
         break;
     }
 
-    case 0x30:
-    {
+    case 0x30: {
         if (!m_led_sent)
         {
             m_led_sent = true;
@@ -286,8 +292,7 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
         break;
     }
 
-    case 0x31:
-    {
+    case 0x31: {
         if (!m_led_sent)
         {
             m_led_sent = true;
@@ -305,8 +310,7 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
         break;
     }
 
-    case 0x35:
-    {
+    case 0x35: {
         if (!m_led_sent)
         {
             m_led_sent = true;
@@ -328,8 +332,7 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
         break;
     }
 
-    case 0x32:
-    {
+    case 0x32: {
         if (!m_led_sent)
         {
             m_led_sent = true;
@@ -347,8 +350,7 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
         break;
     }
 
-    case 0x34:
-    {
+    case 0x34: {
         if (!m_led_sent)
         {
             m_led_sent = true;
@@ -411,31 +413,50 @@ bool BtWiiHost::tick_digital(proto_Output &type)
         {
             switch (type.mapping.gamepadButton)
             {
-            case Gamepad_A:               return !(d[9] & 0x10);
-            case Gamepad_B:               return !(d[9] & 0x40);
-            case Gamepad_X:               return !(d[9] & 0x08);
-            case Gamepad_Y:               return !(d[9] & 0x20);
-            case Gamepad_DpadRight:       return !(d[8] & 0x80);
-            case Gamepad_DpadDown:        return !(d[8] & 0x40);
-            case Gamepad_DpadLeft:        return !(d[9] & 0x02);
-            case Gamepad_DpadUp:          return !(d[9] & 0x01);
-            case Gamepad_LeftShoulder:    return !(d[8] & 0x20);
-            case Gamepad_RightShoulder:   return !(d[8] & 0x02);
-            case Gamepad_LeftThumbClick:  return !(d[10] & 0x02);
-            case Gamepad_RightThumbClick: return !(d[10] & 0x01);
-            case Gamepad_Start:           return !(d[8] & 0x04);
-            case Gamepad_Back:            return !(d[8] & 0x10);
-            case Gamepad_Guide:           return !(d[8] & 0x08);
-            default:                      return false;
+            case Gamepad_A:
+                return !(d[9] & 0x10);
+            case Gamepad_B:
+                return !(d[9] & 0x40);
+            case Gamepad_X:
+                return !(d[9] & 0x08);
+            case Gamepad_Y:
+                return !(d[9] & 0x20);
+            case Gamepad_DpadRight:
+                return !(d[8] & 0x80);
+            case Gamepad_DpadDown:
+                return !(d[8] & 0x40);
+            case Gamepad_DpadLeft:
+                return !(d[9] & 0x02);
+            case Gamepad_DpadUp:
+                return !(d[9] & 0x01);
+            case Gamepad_LeftShoulder:
+                return !(d[8] & 0x20);
+            case Gamepad_RightShoulder:
+                return !(d[8] & 0x02);
+            case Gamepad_LeftThumbClick:
+                return !(d[10] & 0x02);
+            case Gamepad_RightThumbClick:
+                return !(d[10] & 0x01);
+            case Gamepad_Start:
+                return !(d[8] & 0x04);
+            case Gamepad_Back:
+                return !(d[8] & 0x10);
+            case Gamepad_Guide:
+                return !(d[8] & 0x08);
+            default:
+                return false;
             }
         }
         if (type.which_mapping == proto_Output_gamepadAxis_tag)
         {
             switch (type.mapping.gamepadAxis)
             {
-            case Gamepad_LeftTrigger: return !(d[9] & 0x80);
-            case Gamepad_RightTrigger: return !(d[9] & 0x04);
-            default: break;
+            case Gamepad_LeftTrigger:
+                return !(d[9] & 0x80);
+            case Gamepad_RightTrigger:
+                return !(d[9] & 0x04);
+            default:
+                break;
             }
         }
         return false;
@@ -453,18 +474,30 @@ bool BtWiiHost::tick_digital(proto_Output &type)
         uint8_t b1 = m_wii_buttons[1];
         switch (type.mapping.gamepadButton)
         {
-        case Gamepad_DpadLeft:      return (b0 & 0x01) != 0;
-        case Gamepad_DpadRight:     return (b0 & 0x02) != 0;
-        case Gamepad_DpadDown:      return (b0 & 0x04) != 0;
-        case Gamepad_DpadUp:        return (b0 & 0x08) != 0;
-        case Gamepad_Start:         return (b0 & 0x10) != 0;
-        case Gamepad_A:             return (b1 & 0x08) != 0;
-        case Gamepad_B:             return (b1 & 0x04) != 0;
-        case Gamepad_X:             return (b1 & 0x02) != 0;
-        case Gamepad_Y:             return (b1 & 0x01) != 0;
-        case Gamepad_Back:          return (b1 & 0x10) != 0;
-        case Gamepad_Guide:         return (b1 & 0x80) != 0;
-        default:                    return false;
+        case Gamepad_DpadLeft:
+            return (b0 & 0x01) != 0;
+        case Gamepad_DpadRight:
+            return (b0 & 0x02) != 0;
+        case Gamepad_DpadDown:
+            return (b0 & 0x04) != 0;
+        case Gamepad_DpadUp:
+            return (b0 & 0x08) != 0;
+        case Gamepad_Start:
+            return (b0 & 0x10) != 0;
+        case Gamepad_A:
+            return (b1 & 0x08) != 0;
+        case Gamepad_B:
+            return (b1 & 0x04) != 0;
+        case Gamepad_X:
+            return (b1 & 0x02) != 0;
+        case Gamepad_Y:
+            return (b1 & 0x01) != 0;
+        case Gamepad_Back:
+            return (b1 & 0x10) != 0;
+        case Gamepad_Guide:
+            return (b1 & 0x80) != 0;
+        default:
+            return false;
         }
     }
 
@@ -491,23 +524,19 @@ uint16_t BtWiiHost::tick_analog(proto_Output &type)
         {
             switch (type.mapping.gamepadAxis)
             {
-            case Gamepad_LeftStickX:
-            {
+            case Gamepad_LeftStickX: {
                 uint16_t val = d[0] | ((d[1] & 0x0F) << 8);
                 return val << 4;
             }
-            case Gamepad_LeftStickY:
-            {
+            case Gamepad_LeftStickY: {
                 uint16_t val = d[4] | ((d[5] & 0x0F) << 8);
                 return val << 4;
             }
-            case Gamepad_RightStickX:
-            {
+            case Gamepad_RightStickX: {
                 uint16_t val = d[2] | ((d[3] & 0x0F) << 8);
                 return val << 4;
             }
-            case Gamepad_RightStickY:
-            {
+            case Gamepad_RightStickY: {
                 uint16_t val = d[6] | ((d[7] & 0x0F) << 8);
                 return val << 4;
             }
@@ -537,9 +566,12 @@ uint16_t BtWiiHost::tick_button_pressure(proto_Output &type)
     {
         switch (type.mapping.gamepadButton)
         {
-        case Gamepad_LeftShoulder: return m_decoder.read_button_pressure(WiiButtonClassicLt);
-        case Gamepad_RightShoulder: return m_decoder.read_button_pressure(WiiButtonClassicRt);
-        default: break;
+        case Gamepad_LeftShoulder:
+            return m_decoder.read_button_pressure(WiiButtonClassicLt);
+        case Gamepad_RightShoulder:
+            return m_decoder.read_button_pressure(WiiButtonClassicRt);
+        default:
+            break;
         }
     }
     return BluetoothHostInterface::tick_button_pressure(type);

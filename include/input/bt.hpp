@@ -13,7 +13,7 @@
 class BTButtonInput : public Input
 {
 public:
-    BTButtonInput(proto_BTButtonInput input, std::shared_ptr<BluetoothHostInterface> device, Profile* profile);
+    BTButtonInput(proto_BTButtonInput input, std::shared_ptr<BluetoothHostInterface> device, Profile *profile);
     bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
@@ -45,7 +45,7 @@ private:
 class BTAxisInput : public Input
 {
 public:
-    BTAxisInput(proto_BTAxisInput input, std::shared_ptr<BluetoothHostInterface> device, Profile* profile);
+    BTAxisInput(proto_BTAxisInput input, std::shared_ptr<BluetoothHostInterface> device, Profile *profile);
     bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }

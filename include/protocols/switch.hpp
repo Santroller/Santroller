@@ -117,7 +117,6 @@ struct SwitchOutput
     }
 };
 
-
 typedef struct
 {
     uint8_t connectionInfo : 4;

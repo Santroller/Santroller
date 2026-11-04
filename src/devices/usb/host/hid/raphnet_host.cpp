@@ -114,8 +114,7 @@ bool RaphnetHost::tick_digital(proto_Output &type)
 {
     switch (m_subtype)
     {
-    case GuitarHeroGuitar:
-    {
+    case GuitarHeroGuitar: {
         auto data = (RaphnetGuitar_Data_t *)m_ep_in_buf;
         if (type.which_mapping == proto_Output_ghButton_tag)
         {
@@ -181,8 +180,7 @@ bool RaphnetHost::tick_digital(proto_Output &type)
         }
         return false;
     }
-    case GuitarHeroDrums:
-    {
+    case GuitarHeroDrums: {
         auto data = (RaphnetDrum_Data_t *)m_ep_in_buf;
         if (type.which_mapping == proto_Output_gamepadButton_tag)
         {
@@ -227,8 +225,7 @@ bool RaphnetHost::tick_digital(proto_Output &type)
         return false;
     }
     case Gamepad:
-    default:
-    {
+    default: {
         auto data = (RaphnetGamepad_Data_t *)m_ep_in_buf;
         if (type.which_mapping == proto_Output_gamepadButton_tag)
         {
@@ -284,8 +281,7 @@ bool RaphnetHost::tick_digital(proto_Output &type)
         }
         return false;
     }
-    case DjHeroTurntable:
-    {
+    case DjHeroTurntable: {
         auto data = (RaphnetTurntable_Data_t *)m_ep_in_buf;
         if (type.which_mapping == proto_Output_djhButton_tag)
         {
@@ -337,8 +333,7 @@ uint16_t RaphnetHost::tick_analog(proto_Output &type)
 {
     switch (m_subtype)
     {
-    case GuitarHeroGuitar:
-    {
+    case GuitarHeroGuitar: {
         auto data = (RaphnetGuitar_Data_t *)m_ep_in_buf;
         if (type.which_mapping == proto_Output_gamepadAxis_tag)
         {
@@ -374,8 +369,7 @@ uint16_t RaphnetHost::tick_analog(proto_Output &type)
         }
         return 0;
     }
-    case GuitarHeroDrums:
-    {
+    case GuitarHeroDrums: {
         auto data = (RaphnetDrum_Data_t *)m_ep_in_buf;
         if (type.which_mapping == proto_Output_gamepadAxis_tag)
         {
@@ -425,8 +419,7 @@ uint16_t RaphnetHost::tick_analog(proto_Output &type)
         }
         return 0;
     }
-    case DjHeroTurntable:
-    {
+    case DjHeroTurntable: {
         auto data = (RaphnetTurntable_Data_t *)m_ep_in_buf;
         if (type.which_mapping == proto_Output_gamepadAxis_tag)
         {
@@ -459,8 +452,7 @@ uint16_t RaphnetHost::tick_analog(proto_Output &type)
         return 0;
     }
     case Gamepad:
-    default:
-    {
+    default: {
         auto data = (RaphnetGamepad_Data_t *)m_ep_in_buf;
         if (type.which_mapping == proto_Output_gamepadAxis_tag)
         {

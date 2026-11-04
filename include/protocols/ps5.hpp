@@ -20,7 +20,6 @@ typedef struct
     TouchpadXY p2;
 } __attribute__((packed)) TouchpadData;
 
-
 typedef struct
 {
     uint8_t report_id; /* 0x2 */

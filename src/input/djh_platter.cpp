@@ -1,6 +1,6 @@
 #include "input/djh_platter.hpp"
 
-DJHeroPlatterInput::DJHeroPlatterInput(proto_DJHeroPlatterInput input, std::shared_ptr<DjHeroTurntableDevice> device, Profile* profile) : m_input(input), m_device(device)
+DJHeroPlatterInput::DJHeroPlatterInput(proto_DJHeroPlatterInput input, std::shared_ptr<DjHeroTurntableDevice> device, Profile *profile) : m_input(input), m_device(device)
 {
 }
 bool DJHeroPlatterInput::tick_digital_raw()

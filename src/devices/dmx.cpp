@@ -26,10 +26,11 @@ void DMXDevice::end(bool full)
 
 void DMXDevice::update(bool full_poll, bool send_events)
 {
-    if (!m_started || m_dmx.busy()) {
+    if (!m_started || m_dmx.busy())
+    {
         return;
     }
-    m_dmx.write((uint8_t*)led_state, m_device.channelCount);
+    m_dmx.write((uint8_t *)led_state, m_device.channelCount);
     // m_dmx.putLeds((uint8_t *)led_state);
 }
 

@@ -125,10 +125,8 @@ public:
     {
         midi.parse(
             stream,
-            [this](const uint8_t *data, uint8_t size)
-            { messages.emplace_back(data, data + size); },
-            [this](uint8_t channel)
-            {
+            [this](const uint8_t *data, uint8_t size) { messages.emplace_back(data, data + size); },
+            [this](uint8_t channel) {
                 // MidiDevice only reloads for channels it hasn't seen before
                 marked.push_back(channel);
                 if (midi.set_channel_seen(channel))

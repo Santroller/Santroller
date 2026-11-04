@@ -489,8 +489,7 @@ private:
             lastControlChange = {static_cast<uint16_t>(lastControlChange.sequence + 1), channel, data[1], midiControlChanges[channel][data[1]], data[2]};
             midiControlChanges[channel][data[1]] = data[2];
             break;
-        case MIDI_CIN_PITCH_BEND_CHANGE:
-        {
+        case MIDI_CIN_PITCH_BEND_CHANGE: {
             uint16_t value = ((uint16_t)data[2] << 7) | data[1];
             lastPitchBend = {static_cast<uint16_t>(lastPitchBend.sequence + 1), channel, 0, midiPitchWheel[channel], value};
             midiPitchWheel[channel] = value;

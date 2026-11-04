@@ -25,9 +25,9 @@ extern "C"
 
 namespace
 {
-    constexpr uint16_t XBOX_WIRELESS_ADAPTER_VID = 0x045E;
-    constexpr uint16_t XBOX_WIRELESS_ADAPTER_PID_02E6 = 0x02E6;
-    constexpr uint16_t XBOX_WIRELESS_ADAPTER_PID_02FE = 0x02FE;
+constexpr uint16_t XBOX_WIRELESS_ADAPTER_VID = 0x045E;
+constexpr uint16_t XBOX_WIRELESS_ADAPTER_PID_02E6 = 0x02E6;
+constexpr uint16_t XBOX_WIRELESS_ADAPTER_PID_02FE = 0x02FE;
 }
 
 static XboxWirelessHost *wireless_host(struct mt76_dev *dev)

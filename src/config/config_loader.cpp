@@ -108,7 +108,6 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     profile_mgr.prepare_for_config_reload();
     UsbDevice::reset_ep();
 
-
     pb_istream_t auxInputStream = pb_istream_from_buffer(image.data + image.main_size, image.aux_size);
     proto_AuxConfigBlock block proto_AuxConfigBlock_init_zero;
     block.states.funcs.decode = decode_cycle_input_states;
@@ -183,8 +182,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     // A microphone without a controller on a 360 is the Logitech one, which is all the 360 should see
     size_t usb_instances = 0;
     bool only_microphones = true;
-    profile_mgr.for_each_usb_instance([&](const auto &instance)
-                                      {
+    profile_mgr.for_each_usb_instance([&](const auto &instance) {
         usb_instances++;
         only_microphones &= instance->subtype == SubType_Microphone; });
     const bool xbox360_microphone = resolved_mode == ModeXbox360 && usb_instances && only_microphones;
@@ -211,8 +209,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     case ModeKeyboardMania:
         break;
     case ModeHid:
-    case ModeXbox360:
-    {
+    case ModeXbox360: {
         if (xbox360_microphone)
         {
             break;
@@ -231,8 +228,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
         }
         break;
     }
-    case ModeGuitarHeroArcade:
-    {
+    case ModeGuitarHeroArcade: {
         const auto id = profile_mgr.usb_instance_count();
         auto venDevice = profile_mgr.reuse_usb_instance(id, resolved_mode, static_cast<SubType>(0), true);
         if (!venDevice)

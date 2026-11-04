@@ -25,11 +25,11 @@ uint16_t xinput_rb_drum_axis(const uint8_t *ep_in_buf, RockBandDrumsAxisType axi
 // Guitar Hero kits report standard 7 bit MIDI velocities
 uint16_t xinput_gh_drum_axis(const uint8_t *ep_in_buf, GuitarHeroDrumsAxisType axis);
 
-bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_Output &type, bool is_wt = false, bool rb2 = false, WtSliderFilter *wt_filter = nullptr);
+bool xinput_tick_digital_impl(const uint8_t *ep_in_buf, SubType subtype, proto_Output &type, bool is_wt = false, bool rb2 = false, WtSliderFilter *wt_filter = nullptr);
 
 uint16_t xinput_turntable_velocity(int16_t velocity);
 
-uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtype, proto_Output &type, bool rb2 = false);
+uint16_t xinput_tick_analog_impl(const uint8_t *ep_in_buf, SubType subtype, proto_Output &type, bool rb2 = false);
 
 uint16_t xinput_tick_button_pressure_impl(const uint8_t *ep_in_buf, SubType subtype,
                                           proto_Output &type, bool is_wt = false, bool rb2 = false, WtSliderFilter *wt_filter = nullptr);

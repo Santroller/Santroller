@@ -246,7 +246,6 @@ void KeyboardManiaAxisMapping::update_xboxone(uint8_t *buf)
 
 SDVXButtonMapping::SDVXButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
-    
 }
 
 void SDVXButtonMapping::update_hid(uint8_t *buf)

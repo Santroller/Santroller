@@ -647,7 +647,6 @@ void RockBandGuitarGamepadAxisMapping::update_xboxone(uint8_t *buf)
     }
 }
 
-
 void RockBandGuitarGamepadAxisMapping::update_hid(uint8_t *buf)
 {
     if (!is_stick())

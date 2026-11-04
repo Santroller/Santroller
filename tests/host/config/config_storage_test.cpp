@@ -15,7 +15,10 @@ using WriteResult = ConfigStorage::WriteResult;
 
 namespace
 {
-const uint8_t *cache() { return EEPROM.writeCache; }
+const uint8_t *cache()
+{
+    return EEPROM.writeCache;
+}
 
 std::vector<uint8_t> image_bytes(const ConfigImage &image)
 {

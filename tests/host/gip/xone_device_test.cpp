@@ -22,9 +22,29 @@ namespace
 constexpr uint8_t EP_OUT = 0x01;
 constexpr uint8_t EP_IN = 0x81;
 const uint8_t GIP_INTERFACE[] = {
-    0x09, 0x04, 0x00, 0x00, 0x02, 0xFF, 0x47, 0xD0, 0x00,
-    0x07, 0x05, EP_OUT, 0x03, 0x40, 0x00, 0x01,
-    0x07, 0x05, EP_IN, 0x03, 0x40, 0x00, 0x01,
+    0x09,
+    0x04,
+    0x00,
+    0x00,
+    0x02,
+    0xFF,
+    0x47,
+    0xD0,
+    0x00,
+    0x07,
+    0x05,
+    EP_OUT,
+    0x03,
+    0x40,
+    0x00,
+    0x01,
+    0x07,
+    0x05,
+    EP_IN,
+    0x03,
+    0x40,
+    0x00,
+    0x01,
 };
 const char *SOURCE = "src/emulation/usb/xone_device.cpp";
 
@@ -463,9 +483,7 @@ TEST_P(Rb4Instrument, AnnouncesAndReportsOnlyAnInstrumentDeviceType)
     EXPECT_EQ(payload_of(reports[0])[3], drums ? 0x02 : 0x01);
 }
 
-INSTANTIATE_TEST_SUITE_P(Supported, Rb4Instrument, ::testing::Values(
-    GuitarHeroGuitar, RockBandGuitar, PowerGigGuitar, ProGuitarMustang, ProGuitarSquier,
-    RockRevolutionGuitar, GuitarHeroDrums, RockBandDrums, PowerGigDrum));
+INSTANTIATE_TEST_SUITE_P(Supported, Rb4Instrument, ::testing::Values(GuitarHeroGuitar, RockBandGuitar, PowerGigGuitar, ProGuitarMustang, ProGuitarSquier, RockRevolutionGuitar, GuitarHeroDrums, RockBandDrums, PowerGigDrum));
 
 TEST_F(XoneDevice, Rb4DisconnectsAnInstrumentReplacedByAGamepadAndAcceptsNewDrums)
 {

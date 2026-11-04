@@ -10,10 +10,10 @@
 // ============================================================================
 
 std::shared_ptr<BluetoothHostInterface> ble_create_host(uint16_t vid, uint16_t pid,
-                                                         uint16_t version,
-                                                         uint16_t device_id,
-                                                         HID_ReportInfo_t *info,
-                                                         SubType known_subtype)
+                                                        uint16_t version,
+                                                        uint16_t device_id,
+                                                        HID_ReportInfo_t *info,
+                                                        SubType known_subtype)
 {
     bool is_santroller = (vid == SANTROLLER_VID && (pid == SANTROLLER_PID || pid == SANTROLLER_V1_PID || pid == SANTROLLER_V1_BLE_PID));
 

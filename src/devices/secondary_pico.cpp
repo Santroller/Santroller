@@ -10,10 +10,11 @@
 #include <mbedtls/version.h>
 
 // Each slot's input, already encoded
-static bool encode_inputs_callback(pb_ostream_t *stream, const pb_field_t *field, void * const *arg)
+static bool encode_inputs_callback(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
     const auto *inputs = static_cast<const std::vector<SecondaryPicoInputSlot> *>(*arg);
-    if (!inputs) return true;
+    if (!inputs)
+        return true;
 
     for (const auto &input : *inputs)
     {
@@ -26,10 +27,11 @@ static bool encode_inputs_callback(pb_ostream_t *stream, const pb_field_t *field
 }
 
 // The sub-devices, passed on as they were in the config
-static bool encode_sub_devices_callback(pb_ostream_t *stream, const pb_field_t *field, void * const *arg)
+static bool encode_sub_devices_callback(pb_ostream_t *stream, const pb_field_t *field, void *const *arg)
 {
     const auto *devices = static_cast<const SecondaryPicoSubDevices *>(*arg);
-    if (!devices) return true;
+    if (!devices)
+        return true;
 
     pb_istream_t in = pb_istream_from_buffer(devices->encoded.data(), devices->encoded.size());
     while (in.bytes_left)
@@ -46,7 +48,8 @@ static bool encode_sub_devices_callback(pb_ostream_t *stream, const pb_field_t *
     return true;
 }
 
-extern "C" {
+extern "C"
+{
     extern uint32_t __FLASH_APP_START;
     extern uint32_t __flash_binary_end;
 }
@@ -315,8 +318,7 @@ void SecondaryPicoDevice::transfer_succeeded(Transfer transfer)
     case Transfer::OtaBegin:
         m_ota_stage = OtaStage::Chunks;
         break;
-    case Transfer::OtaChunk:
-    {
+    case Transfer::OtaChunk: {
         m_ota_offset += SECONDARY_PICO_OTA_CHUNK_SIZE;
         uint32_t percent = m_ota_total_size > 0 ? (m_ota_offset * 100) / m_ota_total_size : 0;
         if (percent > 100)
@@ -504,10 +506,10 @@ void SecondaryPicoDevice::send_config()
     proto_PeripheralDevice periph = m_device;
     periph.inputs.funcs.encode = &encode_inputs_callback;
     const void *arg = &m_inputs;
-    periph.inputs.arg = const_cast<void*>(arg);
+    periph.inputs.arg = const_cast<void *>(arg);
     periph.devices.funcs.encode = &encode_sub_devices_callback;
     const void *devices_arg = &m_sub_devices;
-    periph.devices.arg = const_cast<void*>(devices_arg);
+    periph.devices.arg = const_cast<void *>(devices_arg);
 
     pb_ostream_t stream = pb_ostream_from_buffer(m_config_buf + 1, sizeof(m_config_buf) - 1);
     if (!pb_encode_delimited(&stream, proto_PeripheralDevice_fields, &periph))
@@ -534,8 +536,7 @@ void SecondaryPicoDevice::ota_step()
         memcpy(&m_ota_cmd_buf[1], &m_ota_total_size, 4);
         start_transfer(Transfer::OtaBegin, m_ota_cmd_buf, sizeof(m_ota_cmd_buf), nullptr, 0);
         break;
-    case OtaStage::Chunks:
-    {
+    case OtaStage::Chunks: {
         const uint8_t *app_start = (const uint8_t *)&__FLASH_APP_START;
         uint32_t raw_fw_size = firmware_size();
         uint8_t *chunk = &m_ota_chunk_buf[5];
@@ -651,14 +652,16 @@ bool SecondaryPicoDevice::send_ota_finish(uint32_t total_size)
 bool SecondaryPicoDevice::read_digital_pin(uint32_t input_id)
 {
     auto it = m_digital_inputs.find(input_id);
-    if (it != m_digital_inputs.end()) return it->second;
+    if (it != m_digital_inputs.end())
+        return it->second;
     return false;
 }
 
 uint16_t SecondaryPicoDevice::read_analog_pin(uint32_t input_id)
 {
     auto it = m_analog_inputs.find(input_id);
-    if (it != m_analog_inputs.end()) return it->second;
+    if (it != m_analog_inputs.end())
+        return it->second;
     return 0;
 }
 

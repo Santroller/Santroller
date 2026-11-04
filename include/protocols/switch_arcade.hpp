@@ -22,19 +22,19 @@ static_assert(sizeof(SwitchArcadeReport) == 8, "Switch arcade HID report must be
 
 enum SwitchArcadeButton : uint16_t
 {
-    SwitchArcade_Y       = 1u << 0,
-    SwitchArcade_B       = 1u << 1,
-    SwitchArcade_A       = 1u << 2,
-    SwitchArcade_X       = 1u << 3,
-    SwitchArcade_L       = 1u << 4,
-    SwitchArcade_R       = 1u << 5,
-    SwitchArcade_ZL      = 1u << 6,  // Tatacon Ka Left
-    SwitchArcade_ZR      = 1u << 7,  // Tatacon Ka Right
-    SwitchArcade_Minus   = 1u << 8,
-    SwitchArcade_Plus    = 1u << 9,
-    SwitchArcade_LS      = 1u << 10, // Tatacon Don Left
-    SwitchArcade_RS      = 1u << 11, // Tatacon Don Right
-    SwitchArcade_Home    = 1u << 12,
+    SwitchArcade_Y = 1u << 0,
+    SwitchArcade_B = 1u << 1,
+    SwitchArcade_A = 1u << 2,
+    SwitchArcade_X = 1u << 3,
+    SwitchArcade_L = 1u << 4,
+    SwitchArcade_R = 1u << 5,
+    SwitchArcade_ZL = 1u << 6, // Tatacon Ka Left
+    SwitchArcade_ZR = 1u << 7, // Tatacon Ka Right
+    SwitchArcade_Minus = 1u << 8,
+    SwitchArcade_Plus = 1u << 9,
+    SwitchArcade_LS = 1u << 10, // Tatacon Don Left
+    SwitchArcade_RS = 1u << 11, // Tatacon Don Right
+    SwitchArcade_Home = 1u << 12,
     SwitchArcade_Capture = 1u << 13,
 };
 
@@ -58,7 +58,11 @@ inline void switch_arcade_finish_hat(SwitchArcadeReport &report)
     const bool down = (directions & 2) && !(directions & 1);
     const bool left = (directions & 4) && !(directions & 8);
     const bool right = (directions & 8) && !(directions & 4);
-    report.hat = up ? (right ? 1 : left ? 7 : 0)
-               : down ? (right ? 3 : left ? 5 : 4)
-               : right ? 2 : left ? 6 : 8;
+    report.hat = up      ? (right ? 1 : left ? 7
+                                             : 0)
+                 : down  ? (right ? 3 : left ? 5
+                                             : 4)
+                 : right ? 2
+                 : left  ? 6
+                         : 8;
 }

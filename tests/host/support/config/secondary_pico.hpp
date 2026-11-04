@@ -11,4 +11,7 @@ inline i2c_inst_t fake_i2c_blocks[2] = {{0}, {1}};
 #define i2c0 (&fake_i2c_blocks[0])
 #define i2c1 (&fake_i2c_blocks[1])
 
-inline void secondary_pico_slave_init(i2c_inst_t *, uint, uint, uint) { fake_loader::state.secondary_pico_inits++; }
+inline void secondary_pico_slave_init(i2c_inst_t *, uint, uint, uint)
+{
+    fake_loader::state.secondary_pico_inits++;
+}

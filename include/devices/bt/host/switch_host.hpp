@@ -6,7 +6,8 @@
 
 static inline bool is_switch_name(const char *name)
 {
-    if (!name || !name[0]) return false;
+    if (!name || !name[0])
+        return false;
     return strstr(name, "Pro Controller") != nullptr ||
            strstr(name, "Lic Pro Controller") != nullptr ||
            strstr(name, "Nintendo Wireless Gamepad") != nullptr ||
@@ -22,13 +23,20 @@ static inline bool is_switch_name(const char *name)
 
 static inline uint16_t switch_pid_from_name(const char *name)
 {
-    if (!name) return SWITCH_PRO_PID;
-    if (strstr(name, "Joy-Con (L)")) return SWITCH_JOYCON_L_PID;
-    if (strstr(name, "Joy-Con (R)")) return SWITCH_JOYCON_R_PID;
-    if (strstr(name, "SNES Controller")) return SWITCH_ONLINE_SNES_PID;
-    if (strstr(name, "NES Controller")) return SWITCH_ONLINE_NES_PID;
-    if (strstr(name, "N64 Controller")) return SWITCH_ONLINE_N64_PID;
-    if (strstr(name, "SEGA Controller") || strstr(name, "MD/Gen Control")) return SWITCH_ONLINE_SEGA_PID;
+    if (!name)
+        return SWITCH_PRO_PID;
+    if (strstr(name, "Joy-Con (L)"))
+        return SWITCH_JOYCON_L_PID;
+    if (strstr(name, "Joy-Con (R)"))
+        return SWITCH_JOYCON_R_PID;
+    if (strstr(name, "SNES Controller"))
+        return SWITCH_ONLINE_SNES_PID;
+    if (strstr(name, "NES Controller"))
+        return SWITCH_ONLINE_NES_PID;
+    if (strstr(name, "N64 Controller"))
+        return SWITCH_ONLINE_N64_PID;
+    if (strstr(name, "SEGA Controller") || strstr(name, "MD/Gen Control"))
+        return SWITCH_ONLINE_SEGA_PID;
     return SWITCH_PRO_PID;
 }
 

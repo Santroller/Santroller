@@ -5,7 +5,7 @@
 #include "protocols/face_buttons.hpp"
 #include "protocols/wheel.hpp"
 
-USBAxisInput::USBAxisInput(proto_USBAxisInput input, std::shared_ptr<UsbHostInterface> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile), m_gamepad_axis(input.axis)
+USBAxisInput::USBAxisInput(proto_USBAxisInput input, std::shared_ptr<UsbHostInterface> device, Profile *profile) : m_input(input), m_device(device), m_profile(profile), m_gamepad_axis(input.axis)
 {
     wheel_axis_as_gamepad(m_gamepad_axis);
 }
@@ -16,18 +16,20 @@ proto_Output &USBAxisInput::axis()
 }
 bool USBAxisInput::tick_digital_raw()
 {
-    if (!m_device) return false;
+    if (!m_device)
+        return false;
     return m_device->tick_axis_digital(axis());
 }
 uint16_t USBAxisInput::tick_analog()
 {
-    if (!m_device) return 0;
+    if (!m_device)
+        return 0;
     return m_device->tick_analog(axis());
 }
 void USBAxisInput::setup()
 {
 }
-USBButtonInput::USBButtonInput(proto_USBButtonInput input, std::shared_ptr<UsbHostInterface> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
+USBButtonInput::USBButtonInput(proto_USBButtonInput input, std::shared_ptr<UsbHostInterface> device, Profile *profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
 // In position based mode the mapped button is a position, so read whichever legend sits there on the pad
@@ -37,7 +39,8 @@ bool USBButtonInput::by_position() const
 }
 bool USBButtonInput::tick_digital_raw()
 {
-    if (!m_device) return false;
+    if (!m_device)
+        return false;
     if (by_position())
     {
         proto_Output button = swap_nintendo_face_button(m_input.button);
@@ -47,7 +50,8 @@ bool USBButtonInput::tick_digital_raw()
 }
 uint16_t USBButtonInput::tick_analog()
 {
-    if (!m_device) return 0;
+    if (!m_device)
+        return 0;
     if (by_position())
     {
         proto_Output button = swap_nintendo_face_button(m_input.button);
@@ -95,12 +99,13 @@ bool USBButtonInput::tick_pro_key_range(uint32_t &active_keys, uint8_t *velociti
 void USBButtonInput::setup()
 {
 }
-KeyboardKeyInput::KeyboardKeyInput(proto_KeyboardKeyInput input, std::shared_ptr<UsbHostInterface> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
+KeyboardKeyInput::KeyboardKeyInput(proto_KeyboardKeyInput input, std::shared_ptr<UsbHostInterface> device, Profile *profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
 bool KeyboardKeyInput::tick_digital_raw()
 {
-    if (!m_device) return false;
+    if (!m_device)
+        return false;
     return m_device->key_pressed(m_input.key);
 }
 uint16_t KeyboardKeyInput::tick_analog()
@@ -110,12 +115,13 @@ uint16_t KeyboardKeyInput::tick_analog()
 void KeyboardKeyInput::setup()
 {
 }
-MouseButtonInput::MouseButtonInput(proto_MouseButtonInput input, std::shared_ptr<UsbHostInterface> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
+MouseButtonInput::MouseButtonInput(proto_MouseButtonInput input, std::shared_ptr<UsbHostInterface> device, Profile *profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
 bool MouseButtonInput::tick_digital_raw()
 {
-    if (!m_device) return false;
+    if (!m_device)
+        return false;
     return m_device->mouse_button(m_input.button);
 }
 uint16_t MouseButtonInput::tick_analog()
@@ -125,7 +131,7 @@ uint16_t MouseButtonInput::tick_analog()
 void MouseButtonInput::setup()
 {
 }
-MouseAxisInput::MouseAxisInput(proto_MouseAxisInput input, std::shared_ptr<UsbHostInterface> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
+MouseAxisInput::MouseAxisInput(proto_MouseAxisInput input, std::shared_ptr<UsbHostInterface> device, Profile *profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
 bool MouseAxisInput::tick_digital_raw()
@@ -134,7 +140,8 @@ bool MouseAxisInput::tick_digital_raw()
 }
 uint16_t MouseAxisInput::tick_analog()
 {
-    if (!m_device) return UINT16_MAX / 2;
+    if (!m_device)
+        return UINT16_MAX / 2;
     return m_device->mouse_axis(m_input.axis);
 }
 void MouseAxisInput::setup()

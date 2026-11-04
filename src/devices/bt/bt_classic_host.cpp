@@ -10,20 +10,21 @@
 // ============================================================================
 
 std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uint16_t pid,
-                                                                uint16_t version,
-                                                                uint16_t device_id,
-                                                                HID_ReportInfo_t *info,
-                                                                SubType known_subtype,
-                                                                bool known_ready,
-                                                                const char *dev_name,
-                                                                BtControllerType known_controller_type)
+                                                               uint16_t version,
+                                                               uint16_t device_id,
+                                                               HID_ReportInfo_t *info,
+                                                               SubType known_subtype,
+                                                               bool known_ready,
+                                                               const char *dev_name,
+                                                               BtControllerType known_controller_type)
 {
     std::shared_ptr<BluetoothHostInterface> host = nullptr;
 
     // DS3 / DualShock 3 & Navigation Controller
     if (vid == SONY_VID && (pid == SONY_DS3_PID || pid == SONY_PS3_NAV_PID))
     {
-        if (info) USB_FreeReportInfo(info);
+        if (info)
+            USB_FreeReportInfo(info);
         host = std::make_shared<BtDs3Host>(device_id);
     }
     // DS4 instruments
@@ -31,8 +32,10 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
              (vid == PDP_VID && (pid == PS4_JAG_PID || pid == PS4_PDP_DRUM_PID)))
     {
         SubType sub = ((vid == MADCATZ_VID && pid == PS4_MADCATZ_DRUM_PID) || (vid == PDP_VID && pid == PS4_PDP_DRUM_PID))
-                       ? RockBandDrums : RockBandGuitar;
-        if (info) USB_FreeReportInfo(info);
+                          ? RockBandDrums
+                          : RockBandGuitar;
+        if (info)
+            USB_FreeReportInfo(info);
         host = std::make_shared<BtDs4Host>(device_id, sub,
                                            true, false, false, false, false,
                                            vid, pid);
@@ -44,7 +47,8 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
              (known_subtype != SubType_Unknown && (vid == SONY_VID || (info && info->foundPS4Usage))))
     {
         SubType sub = (known_subtype != SubType_Unknown) ? known_subtype : SubType_Gamepad;
-        if (info) USB_FreeReportInfo(info);
+        if (info)
+            USB_FreeReportInfo(info);
         host = std::make_shared<BtDs4Host>(device_id, sub,
                                            false, true, true, true, true,
                                            vid, pid);
@@ -54,7 +58,8 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
              (info && info->foundPS5Usage) || known_controller_type == BtControllerType_BtControllerTypePS5)
     {
         SubType sub = (known_subtype != SubType_Unknown) ? known_subtype : SubType_Gamepad;
-        if (info) USB_FreeReportInfo(info);
+        if (info)
+            USB_FreeReportInfo(info);
         host = std::make_shared<BtDs5Host>(device_id, sub,
                                            false, true, true, true, true,
                                            vid, pid);
@@ -69,9 +74,10 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
              is_switch_name(dev_name) ||
              known_controller_type == BtControllerType_BtControllerTypeSwitch)
     {
-        if (info) USB_FreeReportInfo(info);
+        if (info)
+            USB_FreeReportInfo(info);
         bool is_switch2 = (vid == NINTENDO_VID && (pid == SWITCH_2_PRO_PID || pid == SWITCH_2_JOY_L_PID ||
-                                                  pid == SWITCH_2_JOY_R_PID || pid == SWITCH_2_GC_PID)) ||
+                                                   pid == SWITCH_2_JOY_R_PID || pid == SWITCH_2_GC_PID)) ||
                           (dev_name && strstr(dev_name, "Switch 2") != nullptr);
         host = std::make_shared<BtSwitchHost>(device_id, is_switch2);
     }
@@ -86,13 +92,15 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
     // Nintendo Wii Remote
     else if (vid == NINTENDO_VID && pid == WII_REMOTE_PID)
     {
-        if (info) USB_FreeReportInfo(info);
+        if (info)
+            USB_FreeReportInfo(info);
         host = std::make_shared<BtWiiHost>(device_id, false);
     }
     // Nintendo Wii U Pro Controller
     else if (vid == NINTENDO_VID && pid == WII_U_PRO_PID)
     {
-        if (info) USB_FreeReportInfo(info);
+        if (info)
+            USB_FreeReportInfo(info);
         host = std::make_shared<BtWiiHost>(device_id, true);
     }
     // Xbox Wireless Controllers, plain HID over Bluetooth

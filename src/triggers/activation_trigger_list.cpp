@@ -72,8 +72,7 @@ bool ActivationTriggerList::validate(bool claim_devices, bool full_poll, bool se
 // it matched is claimed by another profile
 bool ActivationTriggerList::validate_triggers(bool claim_devices, bool full_poll, bool send_events, bool held, bool &claimable)
 {
-    auto skipped = [held](const std::unique_ptr<ActivationTrigger> &trigger)
-    {
+    auto skipped = [held](const std::unique_ptr<ActivationTrigger> &trigger) {
         return trigger->holds_xbox_one_auth() || (held && trigger->claims_device());
     };
     // A held button is only seen once its device sends a report, which can be after a profile
@@ -133,8 +132,7 @@ void ActivationTriggerList::order_triggers()
 {
     // An input can read a device that another trigger of the list puts in a slot (eg a button on
     // the guitar a USB type trigger picked), which only works once that trigger has been checked
-    std::stable_partition(triggers.begin(), triggers.end(), [](const auto &trigger)
-                          { return !trigger->reads_input(); });
+    std::stable_partition(triggers.begin(), triggers.end(), [](const auto &trigger) { return !trigger->reads_input(); });
 }
 
 int ActivationTriggerList::assignedDevices()
@@ -147,7 +145,7 @@ int ActivationTriggerList::assignedDevices()
     return assigned;
 }
 
-bool ActivationTriggerList::forcedConsoleMode(ConsoleMode& mode) const
+bool ActivationTriggerList::forcedConsoleMode(ConsoleMode &mode) const
 {
     bool found = false;
     for (auto &trigger : triggers)

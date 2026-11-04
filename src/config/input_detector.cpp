@@ -24,8 +24,8 @@ static bool make_output(uint32_t tag, uint8_t value, proto_Output &output)
     output.which_mapping = tag;
     switch (tag)
     {
-#define DETECT_OUTPUT(field, type)   \
-    case proto_Output_##field##_tag: \
+#define DETECT_OUTPUT(field, type)                       \
+    case proto_Output_##field##_tag:                     \
         output.mapping.field = static_cast<type>(value); \
         return true;
         DETECT_OUTPUT(gamepadButton, proto_GamepadButtonType)
@@ -118,8 +118,7 @@ std::shared_ptr<Device> InputDetector::find_device(const std::shared_ptr<Profile
         return InputFactory::get_device<UsbHostInterface>(profile, id);
     case DetectBluetooth:
         return InputFactory::get_device<BluetoothHostInterface>(profile, id);
-    case DetectMidi:
-    {
+    case DetectMidi: {
         // Found the same way as the MIDI input it'll become
         proto_MidiInput input = proto_MidiInput_init_zero;
         input.has_sourceType = m_command.has_midiSourceType;
@@ -147,33 +146,28 @@ bool InputDetector::read(bool axis, uint8_t value, uint16_t &out)
 {
     switch (m_command.kind)
     {
-    case DetectWii:
-    {
+    case DetectWii: {
         auto device = std::static_pointer_cast<WiiDevice>(m_device);
         out = axis ? device->read_axis(static_cast<proto_WiiAxisType>(value)) : device->read_button(static_cast<proto_WiiButtonType>(value));
         return true;
     }
-    case DetectPS2:
-    {
+    case DetectPS2: {
         auto device = std::static_pointer_cast<PS2Device>(m_device);
         out = axis ? device->read_axis(static_cast<proto_PS2AxisType>(value)) : device->read_button(static_cast<proto_PS2ButtonType>(value));
         return true;
     }
-    case DetectSNES:
-    {
+    case DetectSNES: {
         auto device = std::static_pointer_cast<SNESDevice>(m_device);
         out = axis ? device->read_axis(static_cast<proto_SNESAxisType>(value)) : device->read_button(static_cast<proto_SNESButtonType>(value));
         return true;
     }
-    case DetectJoybus:
-    {
+    case DetectJoybus: {
         auto device = std::static_pointer_cast<JoybusDevice>(m_device);
         out = axis ? device->read_axis(static_cast<proto_JoybusAxisType>(value)) : device->read_button(static_cast<proto_JoybusButtonType>(value));
         return true;
     }
     case DetectUsb:
-    case DetectBluetooth:
-    {
+    case DetectBluetooth: {
         proto_Output output;
         if (!make_output(axis ? m_command.axisOutput : m_command.buttonOutput, value, output))
         {

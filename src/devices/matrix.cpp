@@ -31,7 +31,6 @@ void MatrixDevice::update(bool full_poll, bool send_events)
 {
 }
 
-
 bool MatrixDevice::using_pin(uint8_t pin)
 {
     return pin < 64 && ((m_in_pins | m_out_pins) & (1ull << pin));

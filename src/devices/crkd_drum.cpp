@@ -129,7 +129,8 @@ void CrkdDrumDevice::update(bool full_poll, bool send_events)
         };
         HIDConfigDevice::send_event(event, true);
     }
-    if (memcmp(&drum.m_rawValuesPrev, &drum.m_rawValues, sizeof(drum.m_rawValues)) != 0) {
+    if (memcmp(&drum.m_rawValuesPrev, &drum.m_rawValues, sizeof(drum.m_rawValues)) != 0)
+    {
         memcpy(&drum.m_rawValuesPrev, &drum.m_rawValues, sizeof(drum.m_rawValues));
         proto_Event event = {
             which_event : proto_Event_crkdDrum_tag,

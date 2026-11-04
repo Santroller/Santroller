@@ -6,981 +6,1071 @@
 // AxisMapping::update and ButtonMapping::update: how an input sample becomes
 // the value the console outputs read (m_calibrated_value / m_centered for axes,
 // m_last_value / m_last_pressure for buttons)
-namespace {
+namespace
+{
 constexpr uint32_t kStickCentre = UINT16_MAX / 2;
 
-class ProbeAxis : public GamepadAxisMapping {
+class ProbeAxis : public GamepadAxisMapping
+{
 public:
-  using GamepadAxisMapping::GamepadAxisMapping;
-  uint32_t value() const { return m_calibrated_value; }
-  bool centered() const { return m_centered; }
+    using GamepadAxisMapping::GamepadAxisMapping;
+    uint32_t value() const { return m_calibrated_value; }
+    bool centered() const { return m_centered; }
 };
 
-class ProbeButton : public GamepadButtonMapping {
+class ProbeButton : public GamepadButtonMapping
+{
 public:
-  using GamepadButtonMapping::GamepadButtonMapping;
-  bool value() const { return m_last_value; }
-  uint16_t pressure() const { return m_last_pressure; }
+    using GamepadButtonMapping::GamepadButtonMapping;
+    bool value() const { return m_last_value; }
+    uint16_t pressure() const { return m_last_pressure; }
 };
 
-class AxisUpdate : public MappingTest {
+class AxisUpdate : public MappingTest
+{
 protected:
-  std::shared_ptr<Profile> profile = make_profile();
+    std::shared_ptr<Profile> profile = make_profile();
 };
 
-class ButtonUpdate : public MappingTest {
+class ButtonUpdate : public MappingTest
+{
 protected:
-  std::shared_ptr<Profile> profile = make_profile();
+    std::shared_ptr<Profile> profile = make_profile();
 };
 
-class EventInput : public Input {
+class EventInput : public Input
+{
 public:
-  bool tick_digital_raw() override { return false; }
-  uint16_t tick_analog() override { return 0; }
-  void setup() override {}
-  bool valid() const override { return true; }
-  bool consumes_events() const override { return true; }
-  bool consume_event(uint16_t &event) override {
-    if (!pending) {
-      return false;
+    bool tick_digital_raw() override { return false; }
+    uint16_t tick_analog() override { return 0; }
+    void setup() override {}
+    bool valid() const override { return true; }
+    bool consumes_events() const override { return true; }
+    bool consume_event(uint16_t &event) override
+    {
+        if (!pending)
+        {
+            return false;
+        }
+        event = value;
+        pending = false;
+        return true;
     }
-    event = value;
-    pending = false;
-    return true;
-  }
-  bool peek_event(uint16_t &event) override {
-    if (pending) {
-      event = value;
+    bool peek_event(uint16_t &event) override
+    {
+        if (pending)
+        {
+            event = value;
+        }
+        return pending;
     }
-    return pending;
-  }
-  void push(uint16_t next) {
-    value = next;
-    pending = true;
-  }
+    void push(uint16_t next)
+    {
+        value = next;
+        pending = true;
+    }
 
 private:
-  uint16_t value = 0;
-  bool pending = false;
+    uint16_t value = 0;
+    bool pending = false;
 };
 } // namespace
 
-TEST_F(AxisUpdate, StickAtRestIsCentred) {
-  auto axis = drive<ProbeAxis>(
-      with_gamepad_axis(stick_config(), Gamepad_LeftStickX), profile);
-  axis.set_analog(kStickCentre);
-  EXPECT_EQ(axis->value(), kStickCentre);
-  EXPECT_TRUE(axis->centered());
+TEST_F(AxisUpdate, StickAtRestIsCentred)
+{
+    auto axis = drive<ProbeAxis>(
+        with_gamepad_axis(stick_config(), Gamepad_LeftStickX), profile);
+    axis.set_analog(kStickCentre);
+    EXPECT_EQ(axis->value(), kStickCentre);
+    EXPECT_TRUE(axis->centered());
 }
 
-TEST_F(AxisUpdate, StickMovedIsNotCentred) {
-  auto axis = drive<ProbeAxis>(
-      with_gamepad_axis(stick_config(), Gamepad_LeftStickX), profile);
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), UINT16_MAX);
-  EXPECT_FALSE(axis->centered());
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), 0u);
-  EXPECT_FALSE(axis->centered());
+TEST_F(AxisUpdate, StickMovedIsNotCentred)
+{
+    auto axis = drive<ProbeAxis>(
+        with_gamepad_axis(stick_config(), Gamepad_LeftStickX), profile);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
+    EXPECT_FALSE(axis->centered());
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 0u);
+    EXPECT_FALSE(axis->centered());
 }
 
-TEST_F(AxisUpdate, TriggerAtRestIsCentred) {
-  auto axis = drive<ProbeAxis>(
-      with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger), profile);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), 0u);
-  EXPECT_TRUE(axis->centered());
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), UINT16_MAX);
-  EXPECT_FALSE(axis->centered());
+TEST_F(AxisUpdate, TriggerAtRestIsCentred)
+{
+    auto axis = drive<ProbeAxis>(
+        with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger), profile);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 0u);
+    EXPECT_TRUE(axis->centered());
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
+    EXPECT_FALSE(axis->centered());
 }
 
-TEST_F(AxisUpdate, TriggerAxesIgnoreDeadzone) {
-  auto config = with_gamepad_axis(trigger_config(), Gamepad_RightTrigger);
-  config.deadzone = 1000;
-  auto axis = drive<ProbeAxis>(config, profile);
-  axis.set_analog(999);
-  EXPECT_EQ(axis->value(), 999u);
-  EXPECT_FALSE(axis->centered());
+TEST_F(AxisUpdate, TriggerAxesIgnoreDeadzone)
+{
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_RightTrigger);
+    config.deadzone = 1000;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(999);
+    EXPECT_EQ(axis->value(), 999u);
+    EXPECT_FALSE(axis->centered());
 }
 
-TEST_F(AxisUpdate, InvalidInputCountsAsCentred) {
-  auto axis = drive<ProbeAxis>(
-      with_gamepad_axis(stick_config(), Gamepad_LeftStickX), profile);
-  axis.input->is_valid = false;
-  axis.set_analog(UINT16_MAX);
-  EXPECT_TRUE(axis->centered());
-  // a floating pin reads anything, so the stick stays where it rests instead
-  EXPECT_EQ(axis->value(), kStickCentre);
+TEST_F(AxisUpdate, InvalidInputCountsAsCentred)
+{
+    auto axis = drive<ProbeAxis>(
+        with_gamepad_axis(stick_config(), Gamepad_LeftStickX), profile);
+    axis.input->is_valid = false;
+    axis.set_analog(UINT16_MAX);
+    EXPECT_TRUE(axis->centered());
+    // a floating pin reads anything, so the stick stays where it rests instead
+    EXPECT_EQ(axis->value(), kStickCentre);
 }
 
-TEST_F(AxisUpdate, DigitalToAxisUsesPressedValue) {
-  auto config = with_gamepad_axis(stick_config(), Gamepad_LeftStickX);
-  config.has_pressed = true;
-  config.pressed = 1000;
-  config.has_released = true;
-  config.released = 50000;
-  auto axis = drive<ProbeAxis>(config, profile);
-  axis.set_digital(true);
-  EXPECT_EQ(axis->value(), 1000u);
-  axis.set_digital(false);
-  EXPECT_EQ(axis->value(), 50000u);
+TEST_F(AxisUpdate, DigitalToAxisUsesPressedValue)
+{
+    auto config = with_gamepad_axis(stick_config(), Gamepad_LeftStickX);
+    config.has_pressed = true;
+    config.pressed = 1000;
+    config.has_released = true;
+    config.released = 50000;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_digital(true);
+    EXPECT_EQ(axis->value(), 1000u);
+    axis.set_digital(false);
+    EXPECT_EQ(axis->value(), 50000u);
 }
 
-TEST_F(AxisUpdate, DigitalToAxisWithoutReleasedValueRestsAtCentre) {
-  auto config = with_gamepad_axis(stick_config(), Gamepad_LeftStickX);
-  config.has_pressed = true;
-  config.pressed = UINT16_MAX;
-  auto axis = drive<ProbeAxis>(config, profile);
-  axis.set_digital(true);
-  EXPECT_EQ(axis->value(), UINT16_MAX);
-  EXPECT_FALSE(axis->centered());
-  axis.set_digital(false);
-  EXPECT_EQ(axis->value(), (uint32_t)config.center);
-  EXPECT_TRUE(axis->centered());
+TEST_F(AxisUpdate, DigitalToAxisWithoutReleasedValueRestsAtCentre)
+{
+    auto config = with_gamepad_axis(stick_config(), Gamepad_LeftStickX);
+    config.has_pressed = true;
+    config.pressed = UINT16_MAX;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_digital(true);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
+    EXPECT_FALSE(axis->centered());
+    axis.set_digital(false);
+    EXPECT_EQ(axis->value(), (uint32_t)config.center);
+    EXPECT_TRUE(axis->centered());
 }
 
-TEST_F(AxisUpdate, PositiveHalfPushesFromCentreToTop) {
-  auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftStickX);
-  config.has_section = true;
-  config.section = AxisSectionPositive;
-  auto axis = drive<ProbeAxis>(config, profile);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), kStickCentre);
-  EXPECT_TRUE(axis->centered());
-  axis.set_analog(UINT16_MAX);
-  EXPECT_NEAR(axis->value(), UINT16_MAX, 1);
-  EXPECT_FALSE(axis->centered());
-  axis.set_analog(32768);
-  EXPECT_NEAR(axis->value(), kStickCentre + 16384, 1);
+TEST_F(AxisUpdate, PositiveHalfPushesFromCentreToTop)
+{
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftStickX);
+    config.has_section = true;
+    config.section = AxisSectionPositive;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), kStickCentre);
+    EXPECT_TRUE(axis->centered());
+    axis.set_analog(UINT16_MAX);
+    EXPECT_NEAR(axis->value(), UINT16_MAX, 1);
+    EXPECT_FALSE(axis->centered());
+    axis.set_analog(32768);
+    EXPECT_NEAR(axis->value(), kStickCentre + 16384, 1);
 }
 
-TEST_F(AxisUpdate, NegativeHalfPushesFromCentreToBottom) {
-  auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftStickX);
-  config.has_section = true;
-  config.section = AxisSectionNegative;
-  auto axis = drive<ProbeAxis>(config, profile);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), kStickCentre);
-  EXPECT_TRUE(axis->centered());
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), 0u);
-  EXPECT_FALSE(axis->centered());
+TEST_F(AxisUpdate, NegativeHalfPushesFromCentreToBottom)
+{
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftStickX);
+    config.has_section = true;
+    config.section = AxisSectionNegative;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), kStickCentre);
+    EXPECT_TRUE(axis->centered());
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 0u);
+    EXPECT_FALSE(axis->centered());
 }
 
-TEST_F(AxisUpdate, CustomSectionMovesFromStartToEnd) {
-  auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftStickX);
-  config.has_section = true;
-  config.section = AxisSectionCustom;
-  config.has_sectionStart = true;
-  config.sectionStart = 10000;
-  config.has_sectionEnd = true;
-  config.sectionEnd = 20000;
-  auto axis = drive<ProbeAxis>(config, profile);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), 10000u);
-  EXPECT_TRUE(axis->centered());
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), 20000u);
-  EXPECT_FALSE(axis->centered());
-  axis.set_analog(32768);
-  EXPECT_NEAR(axis->value(), 15000, 1);
+TEST_F(AxisUpdate, CustomSectionMovesFromStartToEnd)
+{
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftStickX);
+    config.has_section = true;
+    config.section = AxisSectionCustom;
+    config.has_sectionStart = true;
+    config.sectionStart = 10000;
+    config.has_sectionEnd = true;
+    config.sectionEnd = 20000;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 10000u);
+    EXPECT_TRUE(axis->centered());
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 20000u);
+    EXPECT_FALSE(axis->centered());
+    axis.set_analog(32768);
+    EXPECT_NEAR(axis->value(), 15000, 1);
 }
 
-TEST_F(AxisUpdate, CustomSectionCanRunBackwards) {
-  auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftStickX);
-  config.has_section = true;
-  config.section = AxisSectionCustom;
-  config.has_sectionStart = true;
-  config.sectionStart = 50000;
-  config.has_sectionEnd = true;
-  config.sectionEnd = 0;
-  auto axis = drive<ProbeAxis>(config, profile);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), 50000u);
-  EXPECT_TRUE(axis->centered());
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), 0u);
+TEST_F(AxisUpdate, CustomSectionCanRunBackwards)
+{
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftStickX);
+    config.has_section = true;
+    config.section = AxisSectionCustom;
+    config.has_sectionStart = true;
+    config.sectionStart = 50000;
+    config.has_sectionEnd = true;
+    config.sectionEnd = 0;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 50000u);
+    EXPECT_TRUE(axis->centered());
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 0u);
 }
 
-TEST_F(AxisUpdate, CustomSectionWorksOnATrigger) {
-  auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger);
-  config.has_section = true;
-  config.section = AxisSectionCustom;
-  config.has_sectionStart = true;
-  config.sectionStart = 0;
-  config.has_sectionEnd = true;
-  config.sectionEnd = 30000;
-  auto axis = drive<ProbeAxis>(config, profile);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), 0u);
-  EXPECT_TRUE(axis->centered());
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), 30000u);
-  EXPECT_FALSE(axis->centered());
+TEST_F(AxisUpdate, CustomSectionWorksOnATrigger)
+{
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger);
+    config.has_section = true;
+    config.section = AxisSectionCustom;
+    config.has_sectionStart = true;
+    config.sectionStart = 0;
+    config.has_sectionEnd = true;
+    config.sectionEnd = 30000;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 0u);
+    EXPECT_TRUE(axis->centered());
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 30000u);
+    EXPECT_FALSE(axis->centered());
 }
 
-TEST_F(AxisUpdate, HalfAxisIgnoresTheConfiguredCentre) {
-  // a half axis rests at the axis centre whatever its raw centre is
-  auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftStickY);
-  config.has_section = true;
-  config.section = AxisSectionPositive;
-  config.center = 1234;
-  auto axis = drive<ProbeAxis>(config, profile);
-  axis.set_analog(0);
-  EXPECT_TRUE(axis->centered());
+TEST_F(AxisUpdate, HalfAxisIgnoresTheConfiguredCentre)
+{
+    // a half axis rests at the axis centre whatever its raw centre is
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftStickY);
+    config.has_section = true;
+    config.section = AxisSectionPositive;
+    config.center = 1234;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(0);
+    EXPECT_TRUE(axis->centered());
 }
 
-TEST_F(AxisUpdate, DebounceHoldsTheLastValueBeforeReturningToRest) {
-  auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger);
-  config.has_debounce = true;
-  config.debounce = 5; // ms
-  auto axis = drive<ProbeAxis>(config, profile);
-  axis.set_analog(40000);
-  EXPECT_EQ(axis->value(), 40000u);
+TEST_F(AxisUpdate, DebounceHoldsTheLastValueBeforeReturningToRest)
+{
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger);
+    config.has_debounce = true;
+    config.debounce = 5; // ms
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(40000);
+    EXPECT_EQ(axis->value(), 40000u);
 
-  fake_time::advance_us(4000);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), 40000u);
-  EXPECT_FALSE(axis->centered());
+    fake_time::advance_us(4000);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 40000u);
+    EXPECT_FALSE(axis->centered());
 
-  fake_time::advance_us(1001);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), 0u);
-  EXPECT_TRUE(axis->centered());
+    fake_time::advance_us(1001);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 0u);
+    EXPECT_TRUE(axis->centered());
 }
 
-TEST_F(AxisUpdate, DebounceInHundredMicrosecondsTakesPriority) {
-  auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger);
-  config.has_debounce = true;
-  config.debounce = 50; // ms, ignored
-  config.has_debounce100us = true;
-  config.debounce100us = 3; // 300us
-  auto axis = drive<ProbeAxis>(config, profile);
-  axis.set_analog(40000);
-  fake_time::advance_us(300);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), 40000u);
-  fake_time::advance_us(1);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), 0u);
+TEST_F(AxisUpdate, DebounceInHundredMicrosecondsTakesPriority)
+{
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger);
+    config.has_debounce = true;
+    config.debounce = 50; // ms, ignored
+    config.has_debounce100us = true;
+    config.debounce100us = 3; // 300us
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(40000);
+    fake_time::advance_us(300);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 40000u);
+    fake_time::advance_us(1);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 0u);
 }
 
-TEST_F(AxisUpdate, WithoutDebounceFollowsTheInput) {
-  auto axis = drive<ProbeAxis>(
-      with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger), profile);
-  axis.set_analog(40000);
-  axis.set_analog(10000);
-  EXPECT_EQ(axis->value(), 10000u);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), 0u);
+TEST_F(AxisUpdate, WithoutDebounceFollowsTheInput)
+{
+    auto axis = drive<ProbeAxis>(
+        with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger), profile);
+    axis.set_analog(40000);
+    axis.set_analog(10000);
+    EXPECT_EQ(axis->value(), 10000u);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 0u);
 }
 
-TEST_F(AxisUpdate, PeakBasedKeepsTheHighestValueUntilRest) {
-  auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger);
-  config.has_peakBased = true;
-  config.peakBased = true;
-  auto axis = drive<ProbeAxis>(config, profile);
-  axis.set_analog(30000);
-  axis.set_analog(50000);
-  axis.set_analog(20000);
-  EXPECT_EQ(axis->value(), 50000u);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), 0u);
-  axis.set_analog(10000);
-  EXPECT_EQ(axis->value(), 10000u);
+TEST_F(AxisUpdate, PeakBasedKeepsTheHighestValueUntilRest)
+{
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger);
+    config.has_peakBased = true;
+    config.peakBased = true;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(30000);
+    axis.set_analog(50000);
+    axis.set_analog(20000);
+    EXPECT_EQ(axis->value(), 50000u);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 0u);
+    axis.set_analog(10000);
+    EXPECT_EQ(axis->value(), 10000u);
 }
 
 // An explicitly disabled peakBased behaves like no peakBased at all
-TEST_F(AxisUpdate, PeakBasedExplicitlyFalseFollowsTheInput) {
-  auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger);
-  config.has_peakBased = true;
-  config.peakBased = false;
-  auto axis = drive<ProbeAxis>(config, profile);
-  axis.set_analog(50000);
-  axis.set_analog(20000);
-  EXPECT_EQ(axis->value(), 20000u);
+TEST_F(AxisUpdate, PeakBasedExplicitlyFalseFollowsTheInput)
+{
+    auto config = with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger);
+    config.has_peakBased = true;
+    config.peakBased = false;
+    auto axis = drive<ProbeAxis>(config, profile);
+    axis.set_analog(50000);
+    axis.set_analog(20000);
+    EXPECT_EQ(axis->value(), 20000u);
 }
 
-TEST_F(AxisUpdate, ShortcutMaskHoldsAtRestUntilReleased) {
-  auto axis = drive<ProbeAxis>(
-      with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger), profile);
-  axis->mask_by_shortcut();
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), 0u);
-  EXPECT_TRUE(axis->centered());
-  // still held: the mask lasts until the input goes back to rest
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), 0u);
-  axis.set_analog(0);
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), UINT16_MAX);
+TEST_F(AxisUpdate, ShortcutMaskHoldsAtRestUntilReleased)
+{
+    auto axis = drive<ProbeAxis>(
+        with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger), profile);
+    axis->mask_by_shortcut();
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 0u);
+    EXPECT_TRUE(axis->centered());
+    // still held: the mask lasts until the input goes back to rest
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 0u);
+    axis.set_analog(0);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
 }
 
-TEST_F(AxisUpdate, SendsCalibratedValueToConfigTool) {
-  auto axis = drive<ProbeAxis>(
-      with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger), profile);
-  axis.input->analog = 40000;
-  axis->update(false, true);
-  ASSERT_EQ(HIDConfigDevice::sent_events.size(), 1u);
-  const auto &event = HIDConfigDevice::sent_events[0];
-  EXPECT_EQ(event.which_event, proto_Event_axis_tag);
-  // unchanged values aren't sent again unless it is a full poll
-  axis->update(false, true);
-  EXPECT_EQ(HIDConfigDevice::sent_events.size(), 1u);
-  axis->update(true, true);
-  EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
+TEST_F(AxisUpdate, SendsCalibratedValueToConfigTool)
+{
+    auto axis = drive<ProbeAxis>(
+        with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger), profile);
+    axis.input->analog = 40000;
+    axis->update(false, true);
+    ASSERT_EQ(HIDConfigDevice::sent_events.size(), 1u);
+    const auto &event = HIDConfigDevice::sent_events[0];
+    EXPECT_EQ(event.which_event, proto_Event_axis_tag);
+    // unchanged values aren't sent again unless it is a full poll
+    axis->update(false, true);
+    EXPECT_EQ(HIDConfigDevice::sent_events.size(), 1u);
+    axis->update(true, true);
+    EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
 }
 
 // The tool clears every value when it selects a profile, and a selector switch
 // can sit unchanged, so a full poll that found the queue full is retried
-TEST_F(AxisUpdate, RetriesAFullPollThatFoundTheQueueFull) {
-  auto axis = drive<ProbeAxis>(
-      with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger), profile);
-  axis.input->analog = 40000;
-  axis->update(false, true);
-  ASSERT_EQ(HIDConfigDevice::sent_events.size(), 1u);
-  HIDConfigDevice::queue_full = true;
-  axis->update(true, true);
-  HIDConfigDevice::queue_full = false;
-  axis->update(false, true);
-  EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
-  axis->update(false, true);
-  EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
+TEST_F(AxisUpdate, RetriesAFullPollThatFoundTheQueueFull)
+{
+    auto axis = drive<ProbeAxis>(
+        with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger), profile);
+    axis.input->analog = 40000;
+    axis->update(false, true);
+    ASSERT_EQ(HIDConfigDevice::sent_events.size(), 1u);
+    HIDConfigDevice::queue_full = true;
+    axis->update(true, true);
+    HIDConfigDevice::queue_full = false;
+    axis->update(false, true);
+    EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
+    axis->update(false, true);
+    EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
 }
 
-TEST_F(ButtonUpdate, DigitalPressIsFullPressure) {
-  auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
-  button.set_digital(true);
-  EXPECT_TRUE(button->value());
-  EXPECT_EQ(button->pressure(), UINT16_MAX);
-  button.set_digital(false);
-  EXPECT_FALSE(button->value());
-  EXPECT_EQ(button->pressure(), 0);
+TEST_F(ButtonUpdate, DigitalPressIsFullPressure)
+{
+    auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
+    EXPECT_EQ(button->pressure(), UINT16_MAX);
+    button.set_digital(false);
+    EXPECT_FALSE(button->value());
+    EXPECT_EQ(button->pressure(), 0);
 }
 
-TEST_F(ButtonUpdate, InvertedDigital) {
-  auto config = gamepad_button(Gamepad_A);
-  config.inverted = true;
-  auto button = drive<ProbeButton>(config, profile);
-  button.set_digital(false);
-  EXPECT_TRUE(button->value());
-  EXPECT_EQ(button->pressure(), UINT16_MAX);
-  button.set_digital(true);
-  EXPECT_FALSE(button->value());
-  EXPECT_EQ(button->pressure(), 0);
+TEST_F(ButtonUpdate, InvertedDigital)
+{
+    auto config = gamepad_button(Gamepad_A);
+    config.inverted = true;
+    auto button = drive<ProbeButton>(config, profile);
+    button.set_digital(false);
+    EXPECT_TRUE(button->value());
+    EXPECT_EQ(button->pressure(), UINT16_MAX);
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
+    EXPECT_EQ(button->pressure(), 0);
 }
 
-TEST_F(ButtonUpdate, AnalogThresholdPressureIsTheAnalogValue) {
-  auto config = gamepad_button(Gamepad_A);
-  config.input.has_digitalTrigger = true;
-  config.input.digitalTrigger = AnalogToDigitalTriggerType_JoyHigh;
-  config.input.has_digitalTriggerValue = true;
-  config.input.digitalTriggerValue = 40000;
-  auto button = drive<ProbeButton>(config, profile);
-  button.set_analog(40000);
-  EXPECT_FALSE(button->value());
-  EXPECT_EQ(button->pressure(), 0);
-  button.set_analog(50000);
-  EXPECT_TRUE(button->value());
-  EXPECT_EQ(button->pressure(), 50000);
+TEST_F(ButtonUpdate, AnalogThresholdPressureIsTheAnalogValue)
+{
+    auto config = gamepad_button(Gamepad_A);
+    config.input.has_digitalTrigger = true;
+    config.input.digitalTrigger = AnalogToDigitalTriggerType_JoyHigh;
+    config.input.has_digitalTriggerValue = true;
+    config.input.digitalTriggerValue = 40000;
+    auto button = drive<ProbeButton>(config, profile);
+    button.set_analog(40000);
+    EXPECT_FALSE(button->value());
+    EXPECT_EQ(button->pressure(), 0);
+    button.set_analog(50000);
+    EXPECT_TRUE(button->value());
+    EXPECT_EQ(button->pressure(), 50000);
 }
 
-TEST_F(ButtonUpdate, AnalogThresholdIgnoresTheDigitalReading) {
-  auto config = gamepad_button(Gamepad_A);
-  config.input.has_digitalTrigger = true;
-  config.input.digitalTrigger = AnalogToDigitalTriggerType_JoyLow;
-  config.input.has_digitalTriggerValue = true;
-  config.input.digitalTriggerValue = 10000;
-  auto button = drive<ProbeButton>(config, profile);
-  button.input->digital = true;
-  button.set_analog(20000);
-  EXPECT_FALSE(button->value());
-  button.set_analog(5000);
-  EXPECT_TRUE(button->value());
+TEST_F(ButtonUpdate, AnalogThresholdIgnoresTheDigitalReading)
+{
+    auto config = gamepad_button(Gamepad_A);
+    config.input.has_digitalTrigger = true;
+    config.input.digitalTrigger = AnalogToDigitalTriggerType_JoyLow;
+    config.input.has_digitalTriggerValue = true;
+    config.input.digitalTriggerValue = 10000;
+    auto button = drive<ProbeButton>(config, profile);
+    button.input->digital = true;
+    button.set_analog(20000);
+    EXPECT_FALSE(button->value());
+    button.set_analog(5000);
+    EXPECT_TRUE(button->value());
 }
 
-TEST_F(ButtonUpdate, InvalidInputIsNeverPressed) {
-  auto config = gamepad_button(Gamepad_A);
-  config.input.has_digitalTrigger = true;
-  config.input.digitalTrigger = AnalogToDigitalTriggerType_JoyLow;
-  config.input.has_digitalTriggerValue = true;
-  config.input.digitalTriggerValue = 10000;
-  auto button = drive<ProbeButton>(config, profile);
-  button.input->is_valid = false;
-  button.set_analog(0);
-  EXPECT_FALSE(button->value());
-  EXPECT_EQ(button->pressure(), 0);
+TEST_F(ButtonUpdate, InvalidInputIsNeverPressed)
+{
+    auto config = gamepad_button(Gamepad_A);
+    config.input.has_digitalTrigger = true;
+    config.input.digitalTrigger = AnalogToDigitalTriggerType_JoyLow;
+    config.input.has_digitalTriggerValue = true;
+    config.input.digitalTriggerValue = 10000;
+    auto button = drive<ProbeButton>(config, profile);
+    button.input->is_valid = false;
+    button.set_analog(0);
+    EXPECT_FALSE(button->value());
+    EXPECT_EQ(button->pressure(), 0);
 }
 
-TEST_F(ButtonUpdate, InvalidDigitalInputIsNeverPressed) {
-  auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
-  button.input->is_valid = false;
-  button.set_digital(true);
-  EXPECT_FALSE(button->value());
+TEST_F(ButtonUpdate, InvalidDigitalInputIsNeverPressed)
+{
+    auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
+    button.input->is_valid = false;
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
 }
 
-TEST_F(ButtonUpdate, InvertedAnalogThreshold) {
-  auto config = gamepad_button(Gamepad_A);
-  config.input.has_digitalTrigger = true;
-  config.input.digitalTrigger = AnalogToDigitalTriggerType_JoyHigh;
-  config.input.has_digitalTriggerValue = true;
-  config.input.digitalTriggerValue = 40000;
-  config.inverted = true;
-  auto button = drive<ProbeButton>(config, profile);
-  button.set_analog(10000);
-  EXPECT_TRUE(button->value());
-  button.set_analog(50000);
-  EXPECT_FALSE(button->value());
+TEST_F(ButtonUpdate, InvertedAnalogThreshold)
+{
+    auto config = gamepad_button(Gamepad_A);
+    config.input.has_digitalTrigger = true;
+    config.input.digitalTrigger = AnalogToDigitalTriggerType_JoyHigh;
+    config.input.has_digitalTriggerValue = true;
+    config.input.digitalTriggerValue = 40000;
+    config.inverted = true;
+    auto button = drive<ProbeButton>(config, profile);
+    button.set_analog(10000);
+    EXPECT_TRUE(button->value());
+    button.set_analog(50000);
+    EXPECT_FALSE(button->value());
 }
 
-TEST_F(ButtonUpdate, RangeThreshold) {
-  auto config = gamepad_button(Gamepad_DpadUp);
-  config.input.has_digitalTrigger = true;
-  config.input.digitalTrigger = AnalogToDigitalTriggerType_Range;
-  config.input.has_digitalTriggerValue = true;
-  config.input.digitalTriggerValue = 20000;
-  config.input.has_digitalMaxTriggerValue = true;
-  config.input.digitalMaxTriggerValue = 30000;
-  auto button = drive<ProbeButton>(config, profile);
-  button.set_analog(25000);
-  EXPECT_TRUE(button->value());
-  button.set_analog(30000);
-  EXPECT_FALSE(button->value());
+TEST_F(ButtonUpdate, RangeThreshold)
+{
+    auto config = gamepad_button(Gamepad_DpadUp);
+    config.input.has_digitalTrigger = true;
+    config.input.digitalTrigger = AnalogToDigitalTriggerType_Range;
+    config.input.has_digitalTriggerValue = true;
+    config.input.digitalTriggerValue = 20000;
+    config.input.has_digitalMaxTriggerValue = true;
+    config.input.digitalMaxTriggerValue = 30000;
+    auto button = drive<ProbeButton>(config, profile);
+    button.set_analog(25000);
+    EXPECT_TRUE(button->value());
+    button.set_analog(30000);
+    EXPECT_FALSE(button->value());
 }
 
-TEST_F(ButtonUpdate, EventDrivenAnalogInputUsesTheGenericThreshold) {
-  auto config = gamepad_button(Gamepad_A);
-  config.input.has_digitalTrigger = true;
-  config.input.digitalTrigger = AnalogToDigitalTriggerType_JoyHigh;
-  config.input.has_digitalTriggerValue = true;
-  config.input.digitalTriggerValue = 40000;
-  auto event_input = std::make_unique<EventInput>();
-  auto *raw = event_input.get();
-  event_input->configure_digital_trigger(
-      config.input.has_digitalTrigger, config.input.digitalTrigger,
-      config.input.has_digitalTriggerValue, config.input.digitalTriggerValue,
-      config.input.has_digitalMaxTriggerValue,
-      config.input.digitalMaxTriggerValue);
-  std::unique_ptr<Input> input = std::move(event_input);
-  ProbeButton button(config, std::move(input), 1, profile);
-  raw->push(30000);
-  button.update(false, false);
-  EXPECT_FALSE(button.value());
-  raw->push(50000);
-  button.update(false, false);
-  EXPECT_TRUE(button.value());
-  EXPECT_EQ(button.pressure(), 50000);
+TEST_F(ButtonUpdate, EventDrivenAnalogInputUsesTheGenericThreshold)
+{
+    auto config = gamepad_button(Gamepad_A);
+    config.input.has_digitalTrigger = true;
+    config.input.digitalTrigger = AnalogToDigitalTriggerType_JoyHigh;
+    config.input.has_digitalTriggerValue = true;
+    config.input.digitalTriggerValue = 40000;
+    auto event_input = std::make_unique<EventInput>();
+    auto *raw = event_input.get();
+    event_input->configure_digital_trigger(
+        config.input.has_digitalTrigger, config.input.digitalTrigger,
+        config.input.has_digitalTriggerValue, config.input.digitalTriggerValue,
+        config.input.has_digitalMaxTriggerValue,
+        config.input.digitalMaxTriggerValue);
+    std::unique_ptr<Input> input = std::move(event_input);
+    ProbeButton button(config, std::move(input), 1, profile);
+    raw->push(30000);
+    button.update(false, false);
+    EXPECT_FALSE(button.value());
+    raw->push(50000);
+    button.update(false, false);
+    EXPECT_TRUE(button.value());
+    EXPECT_EQ(button.pressure(), 50000);
 }
 
-TEST_F(ButtonUpdate, IndependentAnalogInputSetsPressure) {
-  auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
-  button.input->independent_analog = true;
-  button.input->analog = 12345;
-  button.set_digital(true);
-  EXPECT_TRUE(button->value());
-  EXPECT_EQ(button->pressure(), 12345);
+TEST_F(ButtonUpdate, IndependentAnalogInputSetsPressure)
+{
+    auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
+    button.input->independent_analog = true;
+    button.input->analog = 12345;
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
+    EXPECT_EQ(button->pressure(), 12345);
 }
 
-TEST_F(ButtonUpdate, DebounceHoldsAPressForTheDebounceTime) {
-  auto config = gamepad_button(Gamepad_A);
-  config.has_debounce = true;
-  config.debounce = 10; // ms
-  auto button = drive<ProbeButton>(config, profile);
-  button.set_digital(true);
-  fake_time::advance_us(10000);
-  button.set_digital(false);
-  EXPECT_TRUE(button->value());
-  fake_time::advance_us(1);
-  button.set_digital(false);
-  EXPECT_FALSE(button->value());
+TEST_F(ButtonUpdate, DebounceHoldsAPressForTheDebounceTime)
+{
+    auto config = gamepad_button(Gamepad_A);
+    config.has_debounce = true;
+    config.debounce = 10; // ms
+    auto button = drive<ProbeButton>(config, profile);
+    button.set_digital(true);
+    fake_time::advance_us(10000);
+    button.set_digital(false);
+    EXPECT_TRUE(button->value());
+    fake_time::advance_us(1);
+    button.set_digital(false);
+    EXPECT_FALSE(button->value());
 }
 
-TEST_F(ButtonUpdate, DebounceDoesNotDelayAPress) {
-  auto config = gamepad_button(Gamepad_A);
-  config.has_debounce = true;
-  config.debounce = 10;
-  auto button = drive<ProbeButton>(config, profile);
-  button.set_digital(true);
-  EXPECT_TRUE(button->value());
+TEST_F(ButtonUpdate, DebounceDoesNotDelayAPress)
+{
+    auto config = gamepad_button(Gamepad_A);
+    config.has_debounce = true;
+    config.debounce = 10;
+    auto button = drive<ProbeButton>(config, profile);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
 }
 
-namespace {
-proto_Mapping press_debounced_button(uint32_t debounce100us) {
-  auto config = gamepad_button(Gamepad_A);
-  config.has_debounce100us = true;
-  config.debounce100us = debounce100us;
-  config.has_debounceMode = true;
-  config.debounceMode = DebouncePress;
-  return config;
+namespace
+{
+proto_Mapping press_debounced_button(uint32_t debounce100us)
+{
+    auto config = gamepad_button(Gamepad_A);
+    config.has_debounce100us = true;
+    config.debounce100us = debounce100us;
+    config.has_debounceMode = true;
+    config.debounceMode = DebouncePress;
+    return config;
 }
 
-proto_Mapping impulse_debounced_button(uint32_t debounce100us) {
-  auto config = gamepad_button(Gamepad_A);
-  config.has_debounce100us = true;
-  config.debounce100us = debounce100us;
-  config.has_debounceMode = true;
-  config.debounceMode = DebounceImpulse;
-  return config;
+proto_Mapping impulse_debounced_button(uint32_t debounce100us)
+{
+    auto config = gamepad_button(Gamepad_A);
+    config.has_debounce100us = true;
+    config.debounce100us = debounce100us;
+    config.has_debounceMode = true;
+    config.debounceMode = DebounceImpulse;
+    return config;
 }
 
-proto_Mapping impulse_debounced_axis(uint32_t debounce100us) {
-  auto config = trigger_config();
-  config.has_debounce100us = true;
-  config.debounce100us = debounce100us;
-  config.has_debounceMode = true;
-  config.debounceMode = DebounceImpulse;
-  return with_gamepad_axis(config, Gamepad_LeftTrigger);
+proto_Mapping impulse_debounced_axis(uint32_t debounce100us)
+{
+    auto config = trigger_config();
+    config.has_debounce100us = true;
+    config.debounce100us = debounce100us;
+    config.has_debounceMode = true;
+    config.debounceMode = DebounceImpulse;
+    return with_gamepad_axis(config, Gamepad_LeftTrigger);
 }
 } // namespace
 
-TEST_F(ButtonUpdate, PressDebounceWaitsForTheDebounceTime) {
-  auto button = drive<ProbeButton>(press_debounced_button(20), profile); // 2ms
-  button.set_digital(true);
-  EXPECT_FALSE(button->value());
-  fake_time::advance_us(1999);
-  button.set_digital(true);
-  EXPECT_FALSE(button->value());
-  fake_time::advance_us(1);
-  button.set_digital(true);
-  EXPECT_TRUE(button->value());
+TEST_F(ButtonUpdate, PressDebounceWaitsForTheDebounceTime)
+{
+    auto button = drive<ProbeButton>(press_debounced_button(20), profile); // 2ms
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
+    fake_time::advance_us(1999);
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
+    fake_time::advance_us(1);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
 }
 
-TEST_F(ButtonUpdate, PressDebounceIgnoresPressesShorterThanTheDebounceTime) {
-  auto button = drive<ProbeButton>(press_debounced_button(20), profile);
-  button.set_digital(true);
-  fake_time::advance_us(1500);
-  button.set_digital(false);
-  // a new press starts the wait again, rather than carrying on from the last
-  // one
-  fake_time::advance_us(100);
-  button.set_digital(true);
-  fake_time::advance_us(1500);
-  button.set_digital(true);
-  EXPECT_FALSE(button->value());
-  fake_time::advance_us(500);
-  button.set_digital(true);
-  EXPECT_TRUE(button->value());
+TEST_F(ButtonUpdate, PressDebounceIgnoresPressesShorterThanTheDebounceTime)
+{
+    auto button = drive<ProbeButton>(press_debounced_button(20), profile);
+    button.set_digital(true);
+    fake_time::advance_us(1500);
+    button.set_digital(false);
+    // a new press starts the wait again, rather than carrying on from the last
+    // one
+    fake_time::advance_us(100);
+    button.set_digital(true);
+    fake_time::advance_us(1500);
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
+    fake_time::advance_us(500);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
 }
 
-TEST_F(ButtonUpdate, PressDebounceReleasesStraightAway) {
-  auto button = drive<ProbeButton>(press_debounced_button(20), profile);
-  button.set_digital(true);
-  fake_time::advance_us(2000);
-  button.set_digital(true);
-  EXPECT_TRUE(button->value());
-  button.set_digital(false);
-  EXPECT_FALSE(button->value());
+TEST_F(ButtonUpdate, PressDebounceReleasesStraightAway)
+{
+    auto button = drive<ProbeButton>(press_debounced_button(20), profile);
+    button.set_digital(true);
+    fake_time::advance_us(2000);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
+    button.set_digital(false);
+    EXPECT_FALSE(button->value());
 }
 
-TEST_F(ButtonUpdate, PressDebounceReportsNoPressureUntilPressed) {
-  auto config = press_debounced_button(20);
-  auto button = drive<ProbeButton>(config, profile);
-  button.input->independent_analog = true;
-  button.input->analog = 12345;
-  button.set_digital(true);
-  EXPECT_EQ(button->pressure(), 0);
-  fake_time::advance_us(2000);
-  button.set_digital(true);
-  EXPECT_EQ(button->pressure(), 12345);
+TEST_F(ButtonUpdate, PressDebounceReportsNoPressureUntilPressed)
+{
+    auto config = press_debounced_button(20);
+    auto button = drive<ProbeButton>(config, profile);
+    button.input->independent_analog = true;
+    button.input->analog = 12345;
+    button.set_digital(true);
+    EXPECT_EQ(button->pressure(), 0);
+    fake_time::advance_us(2000);
+    button.set_digital(true);
+    EXPECT_EQ(button->pressure(), 12345);
 }
 
-TEST_F(ButtonUpdate, ImpulseDebounceOutputsForDebounceTimeWhileHeld) {
-  auto button =
-      drive<ProbeButton>(impulse_debounced_button(20), profile); // 2ms = 2000us
-  button.set_digital(true);
-  EXPECT_TRUE(button->value());
-  fake_time::advance_us(1999);
-  button.set_digital(true);
-  EXPECT_TRUE(button->value());
-  fake_time::advance_us(1);
-  button.set_digital(true);
-  EXPECT_FALSE(button->value()); // Automatically drops after debounce period
-                                 // even though still held
+TEST_F(ButtonUpdate, ImpulseDebounceOutputsForDebounceTimeWhileHeld)
+{
+    auto button =
+        drive<ProbeButton>(impulse_debounced_button(20), profile); // 2ms = 2000us
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
+    fake_time::advance_us(1999);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
+    fake_time::advance_us(1);
+    button.set_digital(true);
+    EXPECT_FALSE(button->value()); // Automatically drops after debounce period
+                                   // even though still held
 }
 
-TEST_F(ButtonUpdate, ImpulseDebounceRequiresReleaseAndRepress) {
-  auto button = drive<ProbeButton>(impulse_debounced_button(20), profile);
-  button.set_digital(true);
-  fake_time::advance_us(2000);
-  button.set_digital(true);
-  EXPECT_FALSE(button->value());
-  // Still held down after 5ms
-  fake_time::advance_us(5000);
-  button.set_digital(true);
-  EXPECT_FALSE(button->value());
-  // Released
-  button.set_digital(false);
-  EXPECT_FALSE(button->value());
-  // Re-pressed
-  fake_time::advance_us(100);
-  button.set_digital(true);
-  EXPECT_TRUE(button->value());
+TEST_F(ButtonUpdate, ImpulseDebounceRequiresReleaseAndRepress)
+{
+    auto button = drive<ProbeButton>(impulse_debounced_button(20), profile);
+    button.set_digital(true);
+    fake_time::advance_us(2000);
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
+    // Still held down after 5ms
+    fake_time::advance_us(5000);
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
+    // Released
+    button.set_digital(false);
+    EXPECT_FALSE(button->value());
+    // Re-pressed
+    fake_time::advance_us(100);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
 }
 
-TEST_F(ButtonUpdate, ImpulseDebounceHoldsForFullDurationOnQuickRelease) {
-  auto button = drive<ProbeButton>(impulse_debounced_button(20), profile);
-  button.set_digital(true);
-  EXPECT_TRUE(button->value());
-  fake_time::advance_us(500);
-  button.set_digital(false);
-  EXPECT_TRUE(button->value()); // Stays active for full debounce duration
-  fake_time::advance_us(1499);
-  button.set_digital(false);
-  EXPECT_TRUE(button->value());
-  fake_time::advance_us(1);
-  button.set_digital(false);
-  EXPECT_FALSE(button->value()); // Drops at 2000us
+TEST_F(ButtonUpdate, ImpulseDebounceHoldsForFullDurationOnQuickRelease)
+{
+    auto button = drive<ProbeButton>(impulse_debounced_button(20), profile);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
+    fake_time::advance_us(500);
+    button.set_digital(false);
+    EXPECT_TRUE(button->value()); // Stays active for full debounce duration
+    fake_time::advance_us(1499);
+    button.set_digital(false);
+    EXPECT_TRUE(button->value());
+    fake_time::advance_us(1);
+    button.set_digital(false);
+    EXPECT_FALSE(button->value()); // Drops at 2000us
 }
 
-TEST_F(AxisUpdate, ImpulseDebounceOutputsForDebounceTimeWhileHeld) {
-  auto axis =
-      drive<ProbeAxis>(impulse_debounced_axis(20), profile); // 2ms = 2000us
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), UINT16_MAX);
-  EXPECT_FALSE(axis->centered());
-  fake_time::advance_us(1999);
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), UINT16_MAX);
-  fake_time::advance_us(1);
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), 0u); // Returns to rest
-  EXPECT_TRUE(axis->centered());
+TEST_F(AxisUpdate, ImpulseDebounceOutputsForDebounceTimeWhileHeld)
+{
+    auto axis =
+        drive<ProbeAxis>(impulse_debounced_axis(20), profile); // 2ms = 2000us
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
+    EXPECT_FALSE(axis->centered());
+    fake_time::advance_us(1999);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
+    fake_time::advance_us(1);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 0u); // Returns to rest
+    EXPECT_TRUE(axis->centered());
 }
 
-TEST_F(AxisUpdate, ImpulseDebounceRequiresReleaseAndRepress) {
-  auto axis = drive<ProbeAxis>(impulse_debounced_axis(20), profile);
-  axis.set_analog(UINT16_MAX);
-  fake_time::advance_us(2000);
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), 0u);
-  fake_time::advance_us(5000);
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), 0u);
-  // Release
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), 0u);
-  // Repress
-  fake_time::advance_us(100);
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), UINT16_MAX);
+TEST_F(AxisUpdate, ImpulseDebounceRequiresReleaseAndRepress)
+{
+    auto axis = drive<ProbeAxis>(impulse_debounced_axis(20), profile);
+    axis.set_analog(UINT16_MAX);
+    fake_time::advance_us(2000);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 0u);
+    fake_time::advance_us(5000);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), 0u);
+    // Release
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 0u);
+    // Repress
+    fake_time::advance_us(100);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
 }
 
-TEST_F(AxisUpdate, ImpulseDebounceHoldsForFullDurationOnQuickRelease) {
-  auto axis = drive<ProbeAxis>(impulse_debounced_axis(20), profile);
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), UINT16_MAX);
-  fake_time::advance_us(500);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(),
-            UINT16_MAX); // Stays active for full debounce duration
-  fake_time::advance_us(1499);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), UINT16_MAX);
-  fake_time::advance_us(1);
-  axis.set_analog(0);
-  EXPECT_EQ(axis->value(), 0u);
+TEST_F(AxisUpdate, ImpulseDebounceHoldsForFullDurationOnQuickRelease)
+{
+    auto axis = drive<ProbeAxis>(impulse_debounced_axis(20), profile);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
+    fake_time::advance_us(500);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(),
+              UINT16_MAX); // Stays active for full debounce duration
+    fake_time::advance_us(1499);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
+    fake_time::advance_us(1);
+    axis.set_analog(0);
+    EXPECT_EQ(axis->value(), 0u);
 }
 
-TEST_F(ButtonUpdate, ShortcutMaskHoldsReleasedUntilLetGo) {
-  auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
-  button->mask_by_shortcut();
-  button.set_digital(true);
-  EXPECT_FALSE(button->value());
-  button.set_digital(true);
-  EXPECT_FALSE(button->value());
-  button.set_digital(false);
-  button.set_digital(true);
-  EXPECT_TRUE(button->value());
+TEST_F(ButtonUpdate, ShortcutMaskHoldsReleasedUntilLetGo)
+{
+    auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
+    button->mask_by_shortcut();
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
+    button.set_digital(true);
+    EXPECT_FALSE(button->value());
+    button.set_digital(false);
+    button.set_digital(true);
+    EXPECT_TRUE(button->value());
 }
 
-TEST_F(ButtonUpdate, MaskedMappingsAreSuppressedWhileThisIsHeld) {
-  auto shortcut = drive<ProbeButton>(gamepad_button(Gamepad_Guide), profile);
-  auto masked = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
-  shortcut->add_masked_mapping(masked.mapping.get());
-  masked.input->digital = true;
-  shortcut.set_digital(true);
-  masked->update(false, false);
-  EXPECT_FALSE(masked->value());
-  EXPECT_TRUE(shortcut->value());
+TEST_F(ButtonUpdate, MaskedMappingsAreSuppressedWhileThisIsHeld)
+{
+    auto shortcut = drive<ProbeButton>(gamepad_button(Gamepad_Guide), profile);
+    auto masked = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
+    shortcut->add_masked_mapping(masked.mapping.get());
+    masked.input->digital = true;
+    shortcut.set_digital(true);
+    masked->update(false, false);
+    EXPECT_FALSE(masked->value());
+    EXPECT_TRUE(shortcut->value());
 }
 
-TEST_F(ButtonUpdate, CombinedStrumDebounceBlocksTheOtherDirection) {
-  profile->combined_strum_debounce = true;
-  auto up = drive<ProbeButton>(gamepad_button(Gamepad_DpadUp), profile);
-  auto down = drive<ProbeButton>(gamepad_button(Gamepad_DpadDown), profile);
-  up->set_strum_bit(0);
-  down->set_strum_bit(1);
-  profile->strum_mappings = {up.mapping.get(), down.mapping.get()};
-  up.set_digital(true);
-  down.set_digital(true);
-  EXPECT_TRUE(up->value());
-  EXPECT_FALSE(down->value());
-  up.set_digital(false);
-  down.set_digital(true);
-  EXPECT_TRUE(down->value());
+TEST_F(ButtonUpdate, CombinedStrumDebounceBlocksTheOtherDirection)
+{
+    profile->combined_strum_debounce = true;
+    auto up = drive<ProbeButton>(gamepad_button(Gamepad_DpadUp), profile);
+    auto down = drive<ProbeButton>(gamepad_button(Gamepad_DpadDown), profile);
+    up->set_strum_bit(0);
+    down->set_strum_bit(1);
+    profile->strum_mappings = {up.mapping.get(), down.mapping.get()};
+    up.set_digital(true);
+    down.set_digital(true);
+    EXPECT_TRUE(up->value());
+    EXPECT_FALSE(down->value());
+    up.set_digital(false);
+    down.set_digital(true);
+    EXPECT_TRUE(down->value());
 }
 
-namespace {
+namespace
+{
 // The four D-pad directions, cleaned by the profile's SOCD mode like config
 // loading sets them up
-struct SocdDpad {
-  Driven<ProbeButton> up, down, left, right;
+struct SocdDpad
+{
+    Driven<ProbeButton> up, down, left, right;
 
-  explicit SocdDpad(const std::shared_ptr<Profile> &profile)
-      : up(drive<ProbeButton>(gamepad_button(Gamepad_DpadUp), profile)),
-        down(drive<ProbeButton>(gamepad_button(Gamepad_DpadDown), profile)),
-        left(drive<ProbeButton>(gamepad_button(Gamepad_DpadLeft), profile)),
-        right(drive<ProbeButton>(gamepad_button(Gamepad_DpadRight), profile)) {
-    add(profile, up, Gamepad_DpadUp);
-    add(profile, down, Gamepad_DpadDown);
-    add(profile, left, Gamepad_DpadLeft);
-    add(profile, right, Gamepad_DpadRight);
-  }
-
-  static void add(const std::shared_ptr<Profile> &profile,
-                  Driven<ProbeButton> &d, GamepadButtonType button) {
-    uint8_t bit = profile->socd_bit_for_output(gamepad_button(button).mapping);
-    if (bit) {
-      d->set_socd_bit(bit);
-      profile->socd_mappings.push_back(d.mapping.get());
+    explicit SocdDpad(const std::shared_ptr<Profile> &profile)
+        : up(drive<ProbeButton>(gamepad_button(Gamepad_DpadUp), profile)),
+          down(drive<ProbeButton>(gamepad_button(Gamepad_DpadDown), profile)),
+          left(drive<ProbeButton>(gamepad_button(Gamepad_DpadLeft), profile)),
+          right(drive<ProbeButton>(gamepad_button(Gamepad_DpadRight), profile))
+    {
+        add(profile, up, Gamepad_DpadUp);
+        add(profile, down, Gamepad_DpadDown);
+        add(profile, left, Gamepad_DpadLeft);
+        add(profile, right, Gamepad_DpadRight);
     }
-  }
 
-  // Set the held directions, then update every mapping in order like a report
-  // does
-  void hold(bool u, bool d, bool l, bool r) {
-    up.input->digital = u;
-    down.input->digital = d;
-    left.input->digital = l;
-    right.input->digital = r;
-    for (auto *m : {&up, &down, &left, &right}) {
-      m->mapping->update(false, false);
+    static void add(const std::shared_ptr<Profile> &profile,
+                    Driven<ProbeButton> &d, GamepadButtonType button)
+    {
+        uint8_t bit = profile->socd_bit_for_output(gamepad_button(button).mapping);
+        if (bit)
+        {
+            d->set_socd_bit(bit);
+            profile->socd_mappings.push_back(d.mapping.get());
+        }
     }
-  }
+
+    // Set the held directions, then update every mapping in order like a report
+    // does
+    void hold(bool u, bool d, bool l, bool r)
+    {
+        up.input->digital = u;
+        down.input->digital = d;
+        left.input->digital = l;
+        right.input->digital = r;
+        for (auto *m : {&up, &down, &left, &right})
+        {
+            m->mapping->update(false, false);
+        }
+    }
 };
 } // namespace
 
-TEST_F(ButtonUpdate, SocdOffReportsOppositeDirections) {
-  SocdDpad dpad(profile);
-  EXPECT_TRUE(profile->socd_mappings.empty());
-  dpad.hold(true, true, true, true);
-  EXPECT_TRUE(dpad.up->value());
-  EXPECT_TRUE(dpad.down->value());
-  EXPECT_TRUE(dpad.left->value());
-  EXPECT_TRUE(dpad.right->value());
-}
-
-TEST_F(ButtonUpdate, SocdNeutralDropsBothDirections) {
-  profile->socd_mode = SocdNeutral;
-  SocdDpad dpad(profile);
-  dpad.hold(true, true, true, false);
-  EXPECT_FALSE(dpad.up->value());
-  EXPECT_FALSE(dpad.down->value());
-  EXPECT_TRUE(dpad.left->value());
-  dpad.hold(false, true, true, true);
-  EXPECT_TRUE(dpad.down->value());
-  EXPECT_FALSE(dpad.left->value());
-  EXPECT_FALSE(dpad.right->value());
-}
-
-TEST_F(ButtonUpdate, SocdUpPriorityKeepsUpAndNeutralsHorizontal) {
-  profile->socd_mode = SocdUpPriority;
-  SocdDpad dpad(profile);
-  dpad.hold(false, true, false, false);
-  dpad.hold(true, true, true, true);
-  EXPECT_TRUE(dpad.up->value());
-  EXPECT_FALSE(dpad.down->value());
-  EXPECT_FALSE(dpad.left->value());
-  EXPECT_FALSE(dpad.right->value());
-}
-
-TEST_F(ButtonUpdate, SocdLastInputFollowsTheNewestPress) {
-  profile->socd_mode = SocdLastInput;
-  SocdDpad dpad(profile);
-  dpad.hold(false, false, true, false);
-  dpad.hold(false, false, true, true);
-  EXPECT_FALSE(dpad.left->value());
-  EXPECT_TRUE(dpad.right->value());
-  // letting go of the newest goes back to the one still held
-  dpad.hold(false, false, true, false);
-  EXPECT_TRUE(dpad.left->value());
-  // pressing the other again takes over
-  dpad.hold(false, false, true, true);
-  EXPECT_TRUE(dpad.right->value());
-  dpad.hold(false, false, false, true);
-  dpad.hold(false, false, true, true);
-  EXPECT_TRUE(dpad.left->value());
-  EXPECT_FALSE(dpad.right->value());
-}
-
-TEST_F(ButtonUpdate, SocdFirstInputKeepsTheOneHeldFirst) {
-  profile->socd_mode = SocdFirstInput;
-  SocdDpad dpad(profile);
-  dpad.hold(true, false, false, false);
-  dpad.hold(true, true, false, false);
-  EXPECT_TRUE(dpad.up->value());
-  EXPECT_FALSE(dpad.down->value());
-}
-
-TEST_F(ButtonUpdate, SocdOppositesPressedTogetherAreNeutral) {
-  for (auto mode : {SocdLastInput, SocdFirstInput}) {
-    profile = make_profile();
-    profile->socd_mode = mode;
-    SocdDpad dpad(profile);
-    dpad.hold(false, false, true, true);
-    EXPECT_FALSE(dpad.left->value());
-    EXPECT_FALSE(dpad.right->value());
-  }
-}
-
-TEST_F(ButtonUpdate, SocdOnlyCleansGamepadsAndFightSticks) {
-  for (auto subtype : {SubType_Dancepad, SubType_GuitarHeroGuitar}) {
-    profile = make_profile(subtype);
-    profile->socd_mode = SocdNeutral;
+TEST_F(ButtonUpdate, SocdOffReportsOppositeDirections)
+{
     SocdDpad dpad(profile);
     EXPECT_TRUE(profile->socd_mappings.empty());
-  }
-  profile = make_profile(SubType_FightStick);
-  profile->socd_mode = SocdNeutral;
-  SocdDpad dpad(profile);
-  EXPECT_EQ(profile->socd_mappings.size(), 4u);
+    dpad.hold(true, true, true, true);
+    EXPECT_TRUE(dpad.up->value());
+    EXPECT_TRUE(dpad.down->value());
+    EXPECT_TRUE(dpad.left->value());
+    EXPECT_TRUE(dpad.right->value());
 }
 
-TEST_F(ButtonUpdate, SendsButtonEventsOnChange) {
-  auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
-  button.input->digital = true;
-  button->update(false, true);
-  button->update(false, true);
-  ASSERT_EQ(HIDConfigDevice::sent_events.size(), 1u);
-  EXPECT_EQ(HIDConfigDevice::sent_events[0].which_event,
-            proto_Event_button_tag);
-  button.input->digital = false;
-  button->update(false, true);
-  EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
+TEST_F(ButtonUpdate, SocdNeutralDropsBothDirections)
+{
+    profile->socd_mode = SocdNeutral;
+    SocdDpad dpad(profile);
+    dpad.hold(true, true, true, false);
+    EXPECT_FALSE(dpad.up->value());
+    EXPECT_FALSE(dpad.down->value());
+    EXPECT_TRUE(dpad.left->value());
+    dpad.hold(false, true, true, true);
+    EXPECT_TRUE(dpad.down->value());
+    EXPECT_FALSE(dpad.left->value());
+    EXPECT_FALSE(dpad.right->value());
 }
 
-TEST_F(ButtonUpdate, RetriesAFullPollThatFoundTheQueueFull) {
-  auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
-  button.input->digital = true;
-  button->update(false, true);
-  ASSERT_EQ(HIDConfigDevice::sent_events.size(), 1u);
-  HIDConfigDevice::queue_full = true;
-  button->update(true, true);
-  HIDConfigDevice::queue_full = false;
-  button->update(false, true);
-  EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
-  button->update(false, true);
-  EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
+TEST_F(ButtonUpdate, SocdUpPriorityKeepsUpAndNeutralsHorizontal)
+{
+    profile->socd_mode = SocdUpPriority;
+    SocdDpad dpad(profile);
+    dpad.hold(false, true, false, false);
+    dpad.hold(true, true, true, true);
+    EXPECT_TRUE(dpad.up->value());
+    EXPECT_FALSE(dpad.down->value());
+    EXPECT_FALSE(dpad.left->value());
+    EXPECT_FALSE(dpad.right->value());
+}
+
+TEST_F(ButtonUpdate, SocdLastInputFollowsTheNewestPress)
+{
+    profile->socd_mode = SocdLastInput;
+    SocdDpad dpad(profile);
+    dpad.hold(false, false, true, false);
+    dpad.hold(false, false, true, true);
+    EXPECT_FALSE(dpad.left->value());
+    EXPECT_TRUE(dpad.right->value());
+    // letting go of the newest goes back to the one still held
+    dpad.hold(false, false, true, false);
+    EXPECT_TRUE(dpad.left->value());
+    // pressing the other again takes over
+    dpad.hold(false, false, true, true);
+    EXPECT_TRUE(dpad.right->value());
+    dpad.hold(false, false, false, true);
+    dpad.hold(false, false, true, true);
+    EXPECT_TRUE(dpad.left->value());
+    EXPECT_FALSE(dpad.right->value());
+}
+
+TEST_F(ButtonUpdate, SocdFirstInputKeepsTheOneHeldFirst)
+{
+    profile->socd_mode = SocdFirstInput;
+    SocdDpad dpad(profile);
+    dpad.hold(true, false, false, false);
+    dpad.hold(true, true, false, false);
+    EXPECT_TRUE(dpad.up->value());
+    EXPECT_FALSE(dpad.down->value());
+}
+
+TEST_F(ButtonUpdate, SocdOppositesPressedTogetherAreNeutral)
+{
+    for (auto mode : {SocdLastInput, SocdFirstInput})
+    {
+        profile = make_profile();
+        profile->socd_mode = mode;
+        SocdDpad dpad(profile);
+        dpad.hold(false, false, true, true);
+        EXPECT_FALSE(dpad.left->value());
+        EXPECT_FALSE(dpad.right->value());
+    }
+}
+
+TEST_F(ButtonUpdate, SocdOnlyCleansGamepadsAndFightSticks)
+{
+    for (auto subtype : {SubType_Dancepad, SubType_GuitarHeroGuitar})
+    {
+        profile = make_profile(subtype);
+        profile->socd_mode = SocdNeutral;
+        SocdDpad dpad(profile);
+        EXPECT_TRUE(profile->socd_mappings.empty());
+    }
+    profile = make_profile(SubType_FightStick);
+    profile->socd_mode = SocdNeutral;
+    SocdDpad dpad(profile);
+    EXPECT_EQ(profile->socd_mappings.size(), 4u);
+}
+
+TEST_F(ButtonUpdate, SendsButtonEventsOnChange)
+{
+    auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
+    button.input->digital = true;
+    button->update(false, true);
+    button->update(false, true);
+    ASSERT_EQ(HIDConfigDevice::sent_events.size(), 1u);
+    EXPECT_EQ(HIDConfigDevice::sent_events[0].which_event,
+              proto_Event_button_tag);
+    button.input->digital = false;
+    button->update(false, true);
+    EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
+}
+
+TEST_F(ButtonUpdate, RetriesAFullPollThatFoundTheQueueFull)
+{
+    auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
+    button.input->digital = true;
+    button->update(false, true);
+    ASSERT_EQ(HIDConfigDevice::sent_events.size(), 1u);
+    HIDConfigDevice::queue_full = true;
+    button->update(true, true);
+    HIDConfigDevice::queue_full = false;
+    button->update(false, true);
+    EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
+    button->update(false, true);
+    EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
 }
 
 // Action mappings run on the controller itself, once per press
 
-namespace {
-proto_Mapping action(ActionType type) {
-  proto_Mapping config = base_config();
-  config.mapping.which_mapping = proto_Output_action_tag;
-  config.mapping.mapping.action = type;
-  return config;
+namespace
+{
+proto_Mapping action(ActionType type)
+{
+    proto_Mapping config = base_config();
+    config.mapping.which_mapping = proto_Output_action_tag;
+    config.mapping.mapping.action = type;
+    return config;
 }
 } // namespace
 
-TEST_F(ButtonUpdate, ActionRunsOnceWhenPressed) {
-  ConfigManager::instance().take_device_stack_restart();
-  auto input = std::make_unique<FakeInput>();
-  FakeInput *raw = input.get();
-  ActionMapping restart(action(ActionRestartDeviceStack), std::move(input), 1,
-                        profile);
-  restart.update_action();
-  EXPECT_FALSE(ConfigManager::instance().take_device_stack_restart());
-  raw->digital = true;
-  restart.update_action();
-  EXPECT_TRUE(ConfigManager::instance().take_device_stack_restart());
-  restart.update_action();
-  EXPECT_FALSE(ConfigManager::instance().take_device_stack_restart());
+TEST_F(ButtonUpdate, ActionRunsOnceWhenPressed)
+{
+    ConfigManager::instance().take_device_stack_restart();
+    auto input = std::make_unique<FakeInput>();
+    FakeInput *raw = input.get();
+    ActionMapping restart(action(ActionRestartDeviceStack), std::move(input), 1,
+                          profile);
+    restart.update_action();
+    EXPECT_FALSE(ConfigManager::instance().take_device_stack_restart());
+    raw->digital = true;
+    restart.update_action();
+    EXPECT_TRUE(ConfigManager::instance().take_device_stack_restart());
+    restart.update_action();
+    EXPECT_FALSE(ConfigManager::instance().take_device_stack_restart());
 }
 
-TEST_F(ButtonUpdate, ActionHeldAtStartNeedsReleasingFirst) {
-  // so a button still held after a restart doesn't restart again
-  ConfigManager::instance().take_device_stack_restart();
-  auto input = std::make_unique<FakeInput>();
-  FakeInput *raw = input.get();
-  raw->digital = true;
-  ActionMapping restart(action(ActionRestartDeviceStack), std::move(input), 1,
-                        profile);
-  restart.update_action();
-  EXPECT_FALSE(ConfigManager::instance().take_device_stack_restart());
-  raw->digital = false;
-  restart.update_action();
-  raw->digital = true;
-  restart.update_action();
-  EXPECT_TRUE(ConfigManager::instance().take_device_stack_restart());
+TEST_F(ButtonUpdate, ActionHeldAtStartNeedsReleasingFirst)
+{
+    // so a button still held after a restart doesn't restart again
+    ConfigManager::instance().take_device_stack_restart();
+    auto input = std::make_unique<FakeInput>();
+    FakeInput *raw = input.get();
+    raw->digital = true;
+    ActionMapping restart(action(ActionRestartDeviceStack), std::move(input), 1,
+                          profile);
+    restart.update_action();
+    EXPECT_FALSE(ConfigManager::instance().take_device_stack_restart());
+    raw->digital = false;
+    restart.update_action();
+    raw->digital = true;
+    restart.update_action();
+    EXPECT_TRUE(ConfigManager::instance().take_device_stack_restart());
 }
 
-TEST_F(ButtonUpdate, BootloaderAction) {
-  int before = fake_bootrom::reset_count;
-  auto input = std::make_unique<FakeInput>();
-  FakeInput *raw = input.get();
-  ActionMapping bootloader(action(ActionBootloader), std::move(input), 1,
-                           profile);
-  bootloader.update_action();
-  raw->digital = true;
-  bootloader.update_action();
-  EXPECT_EQ(fake_bootrom::reset_count, before + 1);
+TEST_F(ButtonUpdate, BootloaderAction)
+{
+    int before = fake_bootrom::reset_count;
+    auto input = std::make_unique<FakeInput>();
+    FakeInput *raw = input.get();
+    ActionMapping bootloader(action(ActionBootloader), std::move(input), 1,
+                             profile);
+    bootloader.update_action();
+    raw->digital = true;
+    bootloader.update_action();
+    EXPECT_EQ(fake_bootrom::reset_count, before + 1);
 }
 
 // Configs from the config tool centre sticks on a raw 32768, but a calibrated
 // stick rests on 32767 (UINT16_MAX / 2). Rest has to be judged on the
 // calibrated value, or the stick never counts as centred.
 
-namespace {
+namespace
+{
 proto_Mapping stick_centred_on(GamepadAxisType axis, int32_t center,
-                               int32_t deadzone = 0) {
-  proto_Mapping config = with_gamepad_axis(stick_config(), axis);
-  config.center = center;
-  config.deadzone = deadzone;
-  return config;
+                               int32_t deadzone = 0)
+{
+    proto_Mapping config = with_gamepad_axis(stick_config(), axis);
+    config.center = center;
+    config.deadzone = deadzone;
+    return config;
 }
 } // namespace
 
-TEST_F(AxisUpdate, StickCentredOnTheRawMidpointIsCentredAtRest) {
-  auto axis =
-      drive<ProbeAxis>(stick_centred_on(Gamepad_LeftStickX, 32768), profile);
-  axis.set_analog(32768);
-  EXPECT_EQ(axis->value(), kStickCentre);
-  EXPECT_TRUE(axis->centered());
+TEST_F(AxisUpdate, StickCentredOnTheRawMidpointIsCentredAtRest)
+{
+    auto axis =
+        drive<ProbeAxis>(stick_centred_on(Gamepad_LeftStickX, 32768), profile);
+    axis.set_analog(32768);
+    EXPECT_EQ(axis->value(), kStickCentre);
+    EXPECT_TRUE(axis->centered());
 }
 
-TEST_F(AxisUpdate, StickInsideItsDeadzoneIsCentred) {
-  auto axis = drive<ProbeAxis>(
-      stick_centred_on(Gamepad_LeftStickX, 32768, 2000), profile);
-  axis.set_analog(33500);
-  EXPECT_TRUE(axis->centered());
+TEST_F(AxisUpdate, StickInsideItsDeadzoneIsCentred)
+{
+    auto axis = drive<ProbeAxis>(
+        stick_centred_on(Gamepad_LeftStickX, 32768, 2000), profile);
+    axis.set_analog(33500);
+    EXPECT_TRUE(axis->centered());
 }
 
-TEST_F(AxisUpdate, RestingStickLeavesTheAxisToAnotherMapping) {
-  // e.g. a dpad mapped onto the stick, alongside the stick itself
-  auto dpad_config = with_gamepad_axis(stick_config(), Gamepad_LeftStickX);
-  dpad_config.has_pressed = true;
-  dpad_config.pressed = UINT16_MAX;
-  auto dpad = drive<ProbeAxis>(dpad_config, profile);
-  auto stick =
-      drive<ProbeAxis>(stick_centred_on(Gamepad_LeftStickX, 32768), profile);
-  dpad.set_digital(true);
-  stick.set_analog(32768);
-  Report<XInputGamepad_Data_t> report;
-  dpad->update_xinput(report.buf());
-  stick->update_xinput(report.buf());
-  EXPECT_EQ(report->leftStickX, INT16_MAX);
+TEST_F(AxisUpdate, RestingStickLeavesTheAxisToAnotherMapping)
+{
+    // e.g. a dpad mapped onto the stick, alongside the stick itself
+    auto dpad_config = with_gamepad_axis(stick_config(), Gamepad_LeftStickX);
+    dpad_config.has_pressed = true;
+    dpad_config.pressed = UINT16_MAX;
+    auto dpad = drive<ProbeAxis>(dpad_config, profile);
+    auto stick =
+        drive<ProbeAxis>(stick_centred_on(Gamepad_LeftStickX, 32768), profile);
+    dpad.set_digital(true);
+    stick.set_analog(32768);
+    Report<XInputGamepad_Data_t> report;
+    dpad->update_xinput(report.buf());
+    stick->update_xinput(report.buf());
+    EXPECT_EQ(report->leftStickX, INT16_MAX);
 }
 
-TEST_F(AxisUpdate, ShortcutMaskOnAStickEndsBackAtCentre) {
-  auto axis =
-      drive<ProbeAxis>(stick_centred_on(Gamepad_LeftStickX, 32768), profile);
-  axis->mask_by_shortcut();
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), kStickCentre);
-  axis.set_analog(32768);
-  axis.set_analog(UINT16_MAX);
-  EXPECT_EQ(axis->value(), UINT16_MAX);
+TEST_F(AxisUpdate, ShortcutMaskOnAStickEndsBackAtCentre)
+{
+    auto axis =
+        drive<ProbeAxis>(stick_centred_on(Gamepad_LeftStickX, 32768), profile);
+    axis->mask_by_shortcut();
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), kStickCentre);
+    axis.set_analog(32768);
+    axis.set_analog(UINT16_MAX);
+    EXPECT_EQ(axis->value(), UINT16_MAX);
 }

@@ -6,7 +6,7 @@
 #include "triggers/mode_triggers.hpp"
 
 std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
-    const proto_ProfileAssignmentInfo& proto_assignment,
+    const proto_ProfileAssignmentInfo &proto_assignment,
     std::shared_ptr<Profile> profile,
     std::unique_ptr<Input> input,
     uint32_t trigger_id,
@@ -16,61 +16,57 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
     switch (proto_assignment.which_assignment)
     {
     case proto_ProfileAssignmentInfo_input_tag:
-        if (!input) return nullptr;
+        if (!input)
+            return nullptr;
         return std::make_unique<InputActivationTrigger>(
             false,
             proto_assignment.assignment.input,
             std::move(input),
             profile,
             trigger_id,
-            list_id
-        );
-        
+            list_id);
+
     case proto_ProfileAssignmentInfo_inputAnyTime_tag:
-        if (!input) return nullptr;
+        if (!input)
+            return nullptr;
         return std::make_unique<InputActivationTrigger>(
             true,
             proto_assignment.assignment.inputAnyTime,
             std::move(input),
             profile,
             trigger_id,
-            list_id
-        );
-        
+            list_id);
+
     case proto_ProfileAssignmentInfo_consoleType_tag:
         return std::make_unique<UsbModeActivationTrigger>(
             proto_assignment.assignment.consoleType,
             profile,
             trigger_id,
-            list_id
-        );
-        
+            list_id);
+
     case proto_ProfileAssignmentInfo_wiiExt_tag:
         return std::make_unique<WiiExtTypeActivationTrigger>(
             proto_assignment.assignment.wiiExt,
             profile,
             trigger_id,
             slot_id,
-            list_id
-        );
-        
+            list_id);
+
     case proto_ProfileAssignmentInfo_ps2Cnt_tag:
         return std::make_unique<PS2ControllerTypeActivationTrigger>(
             proto_assignment.assignment.ps2Cnt,
             profile,
             trigger_id,
             slot_id,
-            list_id
-        );
-        
+            list_id);
+
     case proto_ProfileAssignmentInfo_snesCnt_tag:
         return std::make_unique<SNESControllerTypeActivationTrigger>(
             proto_assignment.assignment.snesCnt,
             profile,
             trigger_id,
             slot_id,
-            list_id
-        );
+            list_id);
 
     case proto_ProfileAssignmentInfo_joybusCnt_tag:
         return std::make_unique<JoybusControllerTypeActivationTrigger>(
@@ -78,8 +74,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             profile,
             trigger_id,
             slot_id,
-            list_id
-        );
+            list_id);
 
     case proto_ProfileAssignmentInfo_usbType_tag:
         return std::make_unique<UsbTypeActivationTrigger>(
@@ -87,36 +82,32 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             profile,
             trigger_id,
             slot_id,
-            list_id
-        );
-        
+            list_id);
+
     case proto_ProfileAssignmentInfo_usbDevice_tag:
         return std::make_unique<SpecificUsbDeviceActivationTrigger>(
             proto_assignment.assignment.usbDevice,
             profile,
             trigger_id,
             slot_id,
-            list_id
-        );
-        
+            list_id);
+
     case proto_ProfileAssignmentInfo_bluetoothType_tag:
         return std::make_unique<BluetoothTypeActivationTrigger>(
             proto_assignment.assignment.bluetoothType,
             profile,
             trigger_id,
             slot_id,
-            list_id
-        );
-        
+            list_id);
+
     case proto_ProfileAssignmentInfo_bluetoothDevice_tag:
         return std::make_unique<SpecificBluetoothDeviceActivationTrigger>(
             proto_assignment.assignment.bluetoothDevice,
             profile,
             trigger_id,
             slot_id,
-            list_id
-        );
-        
+            list_id);
+
     case proto_ProfileAssignmentInfo_midiChannel_tag:
         return std::make_unique<MidiChannelActivationTrigger>(
             proto_assignment.assignment.midiChannel,
@@ -124,9 +115,8 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             profile,
             trigger_id,
             slot_id,
-            list_id
-        );
-        
+            list_id);
+
     case proto_ProfileAssignmentInfo_midiProGuitar_tag:
         return std::make_unique<MidiProGuitarActivationTrigger>(
             proto_assignment.assignment.midiProGuitar,
@@ -134,47 +124,41 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             profile,
             trigger_id,
             slot_id,
-            list_id
-        );
-        
+            list_id);
+
     case proto_ProfileAssignmentInfo_ps2Emulation_tag:
         return std::make_unique<PS2ControllerEmulationActivationTrigger>(
             proto_assignment.assignment.ps2Emulation,
             profile,
             trigger_id,
-            list_id
-        );
-        
+            list_id);
+
     case proto_ProfileAssignmentInfo_joybusEmulation_tag:
         return std::make_unique<JoybusEmulationActivationTrigger>(
             proto_assignment.assignment.joybusEmulation,
             profile,
             trigger_id,
-            list_id
-        );
+            list_id);
 
     case proto_ProfileAssignmentInfo_snesEmulation_tag:
         return std::make_unique<SNESEmulationActivationTrigger>(
             proto_assignment.assignment.snesEmulation,
             profile,
             trigger_id,
-            list_id
-        );
+            list_id);
 
     case proto_ProfileAssignmentInfo_wiiEmulation_tag:
         return std::make_unique<WiiExtensionEmulationActivationTrigger>(
             proto_assignment.assignment.wiiEmulation,
             profile,
             trigger_id,
-            list_id
-        );
-        
+            list_id);
+
     case proto_ProfileAssignmentInfo_localInputs_tag:
         return std::make_unique<LocalInputsActivationTrigger>(
             profile,
             trigger_id,
-            list_id
-        );
+            list_id);
 
     case proto_ProfileAssignmentInfo_xboxOneAuth_tag:
         return std::make_unique<XboxOneAuthActivationTrigger>(
@@ -183,17 +167,15 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
             profile,
             trigger_id,
             slot_id,
-            list_id
-        );
+            list_id);
 
     case proto_ProfileAssignmentInfo_bluetooth_tag:
         return std::make_unique<BluetoothModeActivationTrigger>(
             proto_assignment.assignment.bluetooth,
             profile,
             trigger_id,
-            list_id
-        );
-        
+            list_id);
+
     default:
         return nullptr;
     }

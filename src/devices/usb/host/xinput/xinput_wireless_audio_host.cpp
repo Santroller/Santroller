@@ -7,7 +7,6 @@
 #include "config/config.hpp"
 #include "managers/device_manager.hpp"
 
-
 #if 1
 std::shared_ptr<UsbHostInterface> XInputWirelessAudioHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
@@ -80,11 +79,11 @@ bool XInputWirelessAudioHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uin
     return true;
 }
 
-bool XInputWirelessAudioHost::tick_digital(proto_Output& type)
+bool XInputWirelessAudioHost::tick_digital(proto_Output &type)
 {
     return false;
 }
-uint16_t XInputWirelessAudioHost::tick_analog(proto_Output& type)
+uint16_t XInputWirelessAudioHost::tick_analog(proto_Output &type)
 {
     return 0;
 }

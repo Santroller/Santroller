@@ -7,7 +7,7 @@
 class WiiDevice : public MidiDevice
 {
 public:
-    WiiDevice(const DeviceReloadState* state, proto_WiiDevice device, uint16_t id);
+    WiiDevice(const DeviceReloadState *state, proto_WiiDevice device, uint16_t id);
     ~WiiDevice();
     void begin();
     void end(bool full);
@@ -26,7 +26,7 @@ public:
         return channel == WII_DRUM_MIDI_CHANNEL && m_extension.mType == WiiExtType::WiiGuitarHeroDrums;
     }
     bool using_pin(uint8_t pin);
-    void save_reload_state(DeviceReloadState& state) const override;
+    void save_reload_state(DeviceReloadState &state) const override;
     bool matches_reload_config(const proto_Device &config) const override;
     void set_euphoria_led(bool state) override;
     bool has_euphoria_led() const override;

@@ -5,7 +5,6 @@
 
 #include "tusb.h"
 
-
 class PS5GamepadDevice : public HIDDevice
 {
 public:

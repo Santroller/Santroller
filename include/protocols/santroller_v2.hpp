@@ -8,7 +8,7 @@
 
 // Trailing USB configuration descriptor for each native HID gamepad interface.
 #define SANTROLLER_USB_IDENTITY_DESCRIPTOR_LENGTH 9
-#define SANTROLLER_USB_IDENTITY_DESCRIPTOR(subtype, capabilities) \
+#define SANTROLLER_USB_IDENTITY_DESCRIPTOR(subtype, capabilities)           \
     SANTROLLER_USB_IDENTITY_DESCRIPTOR_LENGTH, 0xFF, 'S', 'A', 'N', 'T', 2, \
         static_cast<uint8_t>(subtype), static_cast<uint8_t>(capabilities)
 
@@ -22,15 +22,33 @@ static inline void santroller_v2_normalize_report(uint8_t *report, uint16_t len,
     uint8_t dpad_bits = 0;
     switch (report[2] & 0x0F)
     {
-    case 0: dpad_bits = 0x01; break; // Up
-    case 1: dpad_bits = 0x09; break; // Up + Right
-    case 2: dpad_bits = 0x08; break; // Right
-    case 3: dpad_bits = 0x0A; break; // Down + Right
-    case 4: dpad_bits = 0x02; break; // Down
-    case 5: dpad_bits = 0x06; break; // Down + Left
-    case 6: dpad_bits = 0x04; break; // Left
-    case 7: dpad_bits = 0x05; break; // Up + Left
-    default: dpad_bits = 0; break;
+    case 0:
+        dpad_bits = 0x01;
+        break; // Up
+    case 1:
+        dpad_bits = 0x09;
+        break; // Up + Right
+    case 2:
+        dpad_bits = 0x08;
+        break; // Right
+    case 3:
+        dpad_bits = 0x0A;
+        break; // Down + Right
+    case 4:
+        dpad_bits = 0x02;
+        break; // Down
+    case 5:
+        dpad_bits = 0x06;
+        break; // Down + Left
+    case 6:
+        dpad_bits = 0x04;
+        break; // Left
+    case 7:
+        dpad_bits = 0x05;
+        break; // Up + Left
+    default:
+        dpad_bits = 0;
+        break;
     }
     report[2] = (report[2] & 0xF0) | dpad_bits;
 }

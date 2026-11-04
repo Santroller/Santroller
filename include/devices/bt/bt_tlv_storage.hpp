@@ -38,4 +38,3 @@ private:
     std::vector<BluetoothTlvData> m_entries;
     btstack_tlv_t m_btstack_tlv;
 };
-

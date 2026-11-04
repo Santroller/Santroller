@@ -49,7 +49,7 @@ class MidiDevice : public Device
     friend class MidiHost;
 
 public:
-    MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased, const MidiBufferConfig &buffer_config);
+    MidiDevice(const DeviceReloadState *state, uint16_t id, bool usbBased, const MidiBufferConfig &buffer_config);
     virtual ~MidiDevice();
     void init_buffers(const MidiBufferConfig &buffer_config);
     void process_midi_data(uint8_t *data, uint16_t len);
@@ -71,7 +71,8 @@ public:
     {
         for (int i = 0; i < 18; i++)
         {
-            if (m_midi.has_midi_channel(i)) return true;
+            if (m_midi.has_midi_channel(i))
+                return true;
         }
         return false;
     }
@@ -79,7 +80,7 @@ public:
     bool is_midi_device() const override { return true; }
     static constexpr DeviceSlotKind SLOT_KIND = DeviceSlotKind::MIDI;
     static bool is_instance(const Device &device) { return device.is_midi_device(); }
-    void save_reload_state(DeviceReloadState& state) const override;
+    void save_reload_state(DeviceReloadState &state) const override;
 
 protected:
     virtual bool mark_channel_seen(uint8_t channel);

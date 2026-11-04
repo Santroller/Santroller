@@ -15,7 +15,10 @@
 
 namespace
 {
-proto_Mapping button(GamepadButtonType type) { return gamepad_button(type); }
+proto_Mapping button(GamepadButtonType type)
+{
+    return gamepad_button(type);
+}
 
 proto_Mapping gh_button(GuitarHeroGuitarButtonType type)
 {
@@ -154,10 +157,18 @@ TEST_F(WiiReport, ClassicButtonsAreActiveLowInEveryFormat)
         uint8_t byte;
         uint8_t bit;
     } buttons[] = {
-        {Gamepad_DpadRight, 0, 7}, {Gamepad_DpadDown, 0, 6},     {Gamepad_Back, 0, 4},
-        {Gamepad_Guide, 0, 3},     {Gamepad_Start, 0, 2},        {Gamepad_LeftShoulder, 1, 7},
-        {Gamepad_B, 1, 6},         {Gamepad_Y, 1, 5},            {Gamepad_A, 1, 4},
-        {Gamepad_X, 1, 3},         {Gamepad_RightShoulder, 1, 2}, {Gamepad_DpadLeft, 1, 1},
+        {Gamepad_DpadRight, 0, 7},
+        {Gamepad_DpadDown, 0, 6},
+        {Gamepad_Back, 0, 4},
+        {Gamepad_Guide, 0, 3},
+        {Gamepad_Start, 0, 2},
+        {Gamepad_LeftShoulder, 1, 7},
+        {Gamepad_B, 1, 6},
+        {Gamepad_Y, 1, 5},
+        {Gamepad_A, 1, 4},
+        {Gamepad_X, 1, 3},
+        {Gamepad_RightShoulder, 1, 2},
+        {Gamepad_DpadLeft, 1, 1},
         {Gamepad_DpadUp, 1, 0},
     };
     const uint8_t first_button_byte[] = {0, 4, 7, 6};
@@ -213,8 +224,12 @@ TEST_F(WiiReport, GuitarFretsAndPedal)
         GuitarHeroGuitarButtonType button;
         uint8_t bit;
     } frets[] = {
-        {GuitarHeroGuitar_Orange, 7}, {GuitarHeroGuitar_Red, 6},    {GuitarHeroGuitar_Blue, 5},
-        {GuitarHeroGuitar_Green, 4},  {GuitarHeroGuitar_Yellow, 3}, {GuitarHeroGuitar_Pedal, 2},
+        {GuitarHeroGuitar_Orange, 7},
+        {GuitarHeroGuitar_Red, 6},
+        {GuitarHeroGuitar_Blue, 5},
+        {GuitarHeroGuitar_Green, 4},
+        {GuitarHeroGuitar_Yellow, 3},
+        {GuitarHeroGuitar_Pedal, 2},
     };
     auto idle = report(GuitarHeroGuitar);
     for (const auto &f : frets)
@@ -233,7 +248,10 @@ TEST_F(WiiReport, GuitarStrumAndPlusMinus)
         uint8_t byte;
         uint8_t bit;
     } buttons[] = {
-        {Gamepad_DpadUp, 5, 0}, {Gamepad_DpadDown, 4, 6}, {Gamepad_Start, 4, 2}, {Gamepad_Back, 4, 4},
+        {Gamepad_DpadUp, 5, 0},
+        {Gamepad_DpadDown, 4, 6},
+        {Gamepad_Start, 4, 2},
+        {Gamepad_Back, 4, 4},
     };
     auto idle = report(GuitarHeroGuitar);
     for (const auto &b : buttons)
@@ -261,8 +279,11 @@ TEST_F(WiiReport, TouchBarFretsUseTheGuitarsCodes)
         GuitarHeroGuitarButtonType button;
         uint8_t code;
     } taps[] = {
-        {GuitarHeroGuitar_TapGreen, 0x04}, {GuitarHeroGuitar_TapRed, 0x0A},  {GuitarHeroGuitar_TapYellow, 0x12},
-        {GuitarHeroGuitar_TapBlue, 0x17},  {GuitarHeroGuitar_TapOrange, 0x1F},
+        {GuitarHeroGuitar_TapGreen, 0x04},
+        {GuitarHeroGuitar_TapRed, 0x0A},
+        {GuitarHeroGuitar_TapYellow, 0x12},
+        {GuitarHeroGuitar_TapBlue, 0x17},
+        {GuitarHeroGuitar_TapOrange, 0x1F},
     };
     for (const auto &t : taps)
     {
@@ -326,7 +347,9 @@ TEST_F(WiiReport, DrumPadsAreActiveLow)
         GuitarHeroDrumsAxisType pad;
         uint8_t bit;
     } pads[] = {
-        {GuitarHeroDrums_RedPad, 6}, {GuitarHeroDrums_YellowPad, 5}, {GuitarHeroDrums_GreenPad, 4},
+        {GuitarHeroDrums_RedPad, 6},
+        {GuitarHeroDrums_YellowPad, 5},
+        {GuitarHeroDrums_GreenPad, 4},
         {GuitarHeroDrums_BluePad, 3},
     };
     auto idle = report(GuitarHeroDrums);
@@ -440,8 +463,12 @@ TEST_F(WiiReport, TurntableButtonsReachTheReport)
         uint8_t byte;
         uint8_t bit;
     } buttons[] = {
-        {DJHTurntable_LeftGreen, 5, 3},  {DJHTurntable_LeftRed, 4, 5},  {DJHTurntable_LeftBlue, 5, 7},
-        {DJHTurntable_RightGreen, 5, 5}, {DJHTurntable_RightRed, 4, 1}, {DJHTurntable_RightBlue, 5, 2},
+        {DJHTurntable_LeftGreen, 5, 3},
+        {DJHTurntable_LeftRed, 4, 5},
+        {DJHTurntable_LeftBlue, 5, 7},
+        {DJHTurntable_RightGreen, 5, 5},
+        {DJHTurntable_RightRed, 4, 1},
+        {DJHTurntable_RightBlue, 5, 2},
     };
     auto idle = report(DjHeroTurntable);
     for (const auto &b : buttons)

@@ -27,7 +27,10 @@ uint8_t frets(int16_t slider, bool wt, WtSliderFilter *filter = nullptr)
     return out;
 }
 
-void advance_ms(uint32_t ms) { fake_time::advance_us(ms * 1000ull); }
+void advance_ms(uint32_t ms)
+{
+    fake_time::advance_us(ms * 1000ull);
+}
 } // namespace
 
 TEST(GuitarHeroSlider, Gh5UsesTheLowByte)
@@ -61,9 +64,7 @@ TEST(GuitarHeroSlider, WorldTourUsesTheHighByte)
 
 TEST(GuitarHeroSlider, WorldTourSegmentsAreCentredOnTheGh5Values)
 {
-    for (auto [ps3, expected] : {std::pair<uint8_t, uint8_t>{0x15, 0b00001}, {0x30, 0b00011}, {0x4D, 0b00010},
-                                 {0x66, 0b00110}, {0x80, 0}, {0x9A, 0b00100}, {0xAF, 0b01100}, {0xC9, 0b01000},
-                                 {0xE6, 0b11000}, {0xFF, 0b10000}})
+    for (auto [ps3, expected] : {std::pair<uint8_t, uint8_t>{0x15, 0b00001}, {0x30, 0b00011}, {0x4D, 0b00010}, {0x66, 0b00110}, {0x80, 0}, {0x9A, 0b00100}, {0xAF, 0b01100}, {0xC9, 0b01000}, {0xE6, 0b11000}, {0xFF, 0b10000}})
         EXPECT_EQ(decode_ghwt_slider(ps3), expected) << std::hex << (int)ps3;
     // YB on a real guitar read around 0xA4 - 0xB7, the old table stopped YB at 0xAF
     EXPECT_EQ(frets(0x3000, true), 0b01100);

@@ -9,104 +9,108 @@
      ((Minor & 0x0F) << 4) |                    \
      (Revision & 0x0F))
 
-enum descriptors_t {
+enum descriptors_t
+{
     DESC_EXTENDED_COMPATIBLE_ID_DESCRIPTOR = 0x0004,
     DESC_EXTENDED_PROPERTIES_DESCRIPTOR = 0x0005,
 };
 
-enum requests_t {
+enum requests_t
+{
     REQ_GET_OS_FEATURE_DESCRIPTOR = 0x20
 };
 
 class UsbDetectionState
 {
 public:
-  static UsbDetectionState& instance()
-  {
-    static UsbDetectionState state;
-    return state;
-  }
-
-  void reset()
-  {
-    m_seen_windows_xb1 = false;
-    m_seen_windows_string = false;
-    restart_enumeration();
-  }
-
-  // Back to how it is at boot, inference included
-  void reboot()
-  {
-    m_console_inference_enabled = true;
-    reset();
-  }
-
-  // For a device stack restart (eg a config reload). The host hasn't changed, so knowing it is windows
-  // is kept: otherwise we'd come back up in ModeHid just to be detected as windows and swap to xinput
-  // again, and windows caches the OS descriptors so it may not even read them a second time.
-  void restart_enumeration()
-  {
-    m_seen_os_descriptor_read = false;
-    m_seen_read_any_device_string = false;
-    m_seen_hid_descriptor_read = false;
-    m_first_device_desc_ms = 0;
-  }
-
-  // Waits from the first device descriptor read rather than from stack init, as a host that is slow to
-  // start enumerating (eg linux after a retry) would otherwise get inferred before it reads any strings
-  bool should_infer_console(uint32_t now) const
-  {
-    return m_console_inference_enabled && m_first_device_desc_ms && (now - m_first_device_desc_ms) > CONSOLE_INFERENCE_DELAY_MS &&
-           !m_seen_windows_xb1 && !m_seen_os_descriptor_read && !m_seen_read_any_device_string;
-  }
-
-  // Config changes can alter enumeration behaviour, so inference stays disabled until reboot.
-  void disable_console_inference() { m_console_inference_enabled = false; }
-
-  bool seen_windows_xb1() const { return m_seen_windows_xb1; }
-  bool seen_windows_string() const { return m_seen_windows_string; }
-  // An xbox one reads the OS descriptors too, but not the strings
-  bool host_is_windows() const { return m_seen_windows_xb1 && m_seen_windows_string; }
-  bool seen_hid_descriptor_read() const { return m_seen_hid_descriptor_read; }
-
-  void mark_windows_xb1_seen() { m_seen_windows_xb1 = true; }
-  void mark_windows_string_seen() { m_seen_windows_string = true; }
-  void mark_os_descriptor_read() { m_seen_os_descriptor_read = true; }
-  void mark_device_string_read() { m_seen_read_any_device_string = true; }
-  void mark_hid_descriptor_read() { m_seen_hid_descriptor_read = true; }
-  void mark_device_descriptor_read(uint32_t now)
-  {
-    if (!m_first_device_desc_ms)
+    static UsbDetectionState &instance()
     {
-      // 0 means not seen yet
-      m_first_device_desc_ms = now ? now : 1;
+        static UsbDetectionState state;
+        return state;
     }
-  }
+
+    void reset()
+    {
+        m_seen_windows_xb1 = false;
+        m_seen_windows_string = false;
+        restart_enumeration();
+    }
+
+    // Back to how it is at boot, inference included
+    void reboot()
+    {
+        m_console_inference_enabled = true;
+        reset();
+    }
+
+    // For a device stack restart (eg a config reload). The host hasn't changed, so knowing it is windows
+    // is kept: otherwise we'd come back up in ModeHid just to be detected as windows and swap to xinput
+    // again, and windows caches the OS descriptors so it may not even read them a second time.
+    void restart_enumeration()
+    {
+        m_seen_os_descriptor_read = false;
+        m_seen_read_any_device_string = false;
+        m_seen_hid_descriptor_read = false;
+        m_first_device_desc_ms = 0;
+    }
+
+    // Waits from the first device descriptor read rather than from stack init, as a host that is slow to
+    // start enumerating (eg linux after a retry) would otherwise get inferred before it reads any strings
+    bool should_infer_console(uint32_t now) const
+    {
+        return m_console_inference_enabled && m_first_device_desc_ms && (now - m_first_device_desc_ms) > CONSOLE_INFERENCE_DELAY_MS &&
+               !m_seen_windows_xb1 && !m_seen_os_descriptor_read && !m_seen_read_any_device_string;
+    }
+
+    // Config changes can alter enumeration behaviour, so inference stays disabled until reboot.
+    void disable_console_inference() { m_console_inference_enabled = false; }
+
+    bool seen_windows_xb1() const { return m_seen_windows_xb1; }
+    bool seen_windows_string() const { return m_seen_windows_string; }
+    // An xbox one reads the OS descriptors too, but not the strings
+    bool host_is_windows() const { return m_seen_windows_xb1 && m_seen_windows_string; }
+    bool seen_hid_descriptor_read() const { return m_seen_hid_descriptor_read; }
+
+    void mark_windows_xb1_seen() { m_seen_windows_xb1 = true; }
+    void mark_windows_string_seen() { m_seen_windows_string = true; }
+    void mark_os_descriptor_read() { m_seen_os_descriptor_read = true; }
+    void mark_device_string_read() { m_seen_read_any_device_string = true; }
+    void mark_hid_descriptor_read() { m_seen_hid_descriptor_read = true; }
+    void mark_device_descriptor_read(uint32_t now)
+    {
+        if (!m_first_device_desc_ms)
+        {
+            // 0 means not seen yet
+            m_first_device_desc_ms = now ? now : 1;
+        }
+    }
 
 private:
-  UsbDetectionState() = default;
+    UsbDetectionState() = default;
 
-  bool m_console_inference_enabled = true;
-  bool m_seen_windows_xb1 = false;
-  bool m_seen_os_descriptor_read = false;
-  bool m_seen_read_any_device_string = false;
-  bool m_seen_windows_string = false;
-  bool m_seen_hid_descriptor_read = false;
-  uint32_t m_first_device_desc_ms = 0;
+    bool m_console_inference_enabled = true;
+    bool m_seen_windows_xb1 = false;
+    bool m_seen_os_descriptor_read = false;
+    bool m_seen_read_any_device_string = false;
+    bool m_seen_windows_string = false;
+    bool m_seen_hid_descriptor_read = false;
+    uint32_t m_first_device_desc_ms = 0;
 
-  static constexpr uint32_t CONSOLE_INFERENCE_DELAY_MS = 5000;
+    static constexpr uint32_t CONSOLE_INFERENCE_DELAY_MS = 5000;
 };
 
-typedef struct {
+typedef struct
+{
     uint8_t bLength;         /**< Size of the descriptor, in bytes. */
     uint8_t bDescriptorType; /**< Type of the descriptor, either a value in \ref TUSB_DescriptorTypes_t or a value
-				                          *   given by the specific class. */
+                              *   given by the specific class. */
     uint16_t Signature[7];
     uint8_t VendorCode;
     uint8_t Reserved;
 } __attribute__((packed)) OS_DESCRIPTOR;
 
-typedef struct {
+typedef struct
+{
     uint8_t FirstInterfaceNumber;
     uint8_t Reserved;
     uint8_t CompatibleID[8];
@@ -114,7 +118,8 @@ typedef struct {
     uint8_t Reserved2[6];
 } __attribute__((packed)) OS_COMPATIBLE_SECTION;
 
-typedef struct {
+typedef struct
+{
     uint32_t TotalLength;
     uint16_t Version;
     uint16_t Index;
@@ -123,7 +128,8 @@ typedef struct {
     OS_COMPATIBLE_SECTION CompatID[];
 } __attribute__((packed)) OS_COMPATIBLE_ID_DESCRIPTOR;
 
-typedef struct {
+typedef struct
+{
     uint32_t PropertyDataType;
     uint16_t PropertyNameLength;
     uint16_t PropertyName[20];
@@ -131,7 +137,8 @@ typedef struct {
     uint16_t PropertyData[39];
 } __attribute__((packed)) OS_EXTENDED_SECTION;
 
-typedef struct {
+typedef struct
+{
     uint32_t TotalLength;
     uint16_t Version;
     uint16_t Index;
@@ -141,20 +148,18 @@ typedef struct {
 } __attribute__((packed)) OS_EXTENDED_COMPATIBLE_ID_DESCRIPTOR;
 enum
 {
-  ITF_NUM_HID,
-  // ITF_NUM_XONE=1,
-  ITF_NUM_XINPUT,
-  ITF_NUM_XINPUT2,
-  ITF_NUM_XINPUT3,
-  ITF_NUM_XINPUT4,
-  ITF_NUM_XINPUT_SECURITY,
-//   ITF_NUM_XINPUT_AUDIO,
-//   ITF_NUM_XINPUT_PLUGIN_MODULE,
-  // ITF_NUM_OGXBOX,
-  ITF_NUM_TOTAL
+    ITF_NUM_HID,
+    // ITF_NUM_XONE=1,
+    ITF_NUM_XINPUT,
+    ITF_NUM_XINPUT2,
+    ITF_NUM_XINPUT3,
+    ITF_NUM_XINPUT4,
+    ITF_NUM_XINPUT_SECURITY,
+    //   ITF_NUM_XINPUT_AUDIO,
+    //   ITF_NUM_XINPUT_PLUGIN_MODULE,
+    // ITF_NUM_OGXBOX,
+    ITF_NUM_TOTAL
 };
-
-
 
 // For turntables, both left and right are set to the same thing
 // For these, left is set to 0, and right to these values
@@ -186,117 +191,92 @@ enum
 #define RUMBLE_SANTROLLER_NOTE_HIT 0x90
 #define RUMBLE_SANTROLLER_EUPHORIA_LED 0xA0
 
-
-
-
 enum
 {
-  STRID_LANGID = 0,
-  STRID_MANUFACTURER,
-  STRID_PRODUCT,
-  STRID_SERIAL,
-  STRID_MSFT,
-  STRID_COUNT
+    STRID_LANGID = 0,
+    STRID_MANUFACTURER,
+    STRID_PRODUCT,
+    STRID_SERIAL,
+    STRID_MSFT,
+    STRID_COUNT
 };
 
-
 // XInput Gamepad Descriptor
-#define TUD_XINPUT_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout, _subtype) \
-  /* Interface */\
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xFF, 0x5D, 0x01, 0,\
-  /* XInput Gamepad descriptor */\
-  17, 0x21, 0x10, 0x01, _subtype, 0x25, _epin, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, _epout, 0x08, 0x03, 0x03,\
-  /* Endpoint In */\
-  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 1,\
-  /* Endpoint Out */\
-  7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 1
+#define TUD_XINPUT_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout, _subtype)                                                                            \
+    /* Interface */                                                                                                                                \
+    9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xFF, 0x5D, 0x01, 0,                                                    /* XInput Gamepad descriptor */ \
+        17, 0x21, 0x10, 0x01, _subtype, 0x25, _epin, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, _epout, 0x08, 0x03, 0x03, /* Endpoint In */               \
+        7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 1,                                 /* Endpoint Out */              \
+        7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 1
 
-#define TUD_XINPUT_GAMEPAD_DESC_LEN    (9 + 17 + 7 + 7)
+#define TUD_XINPUT_GAMEPAD_DESC_LEN (9 + 17 + 7 + 7)
 
 // XInput Audio Descriptor
-#define TUD_XINPUT_AUDIO_DESCRIPTOR(_itfnum, _epin, _epout, _epin2, _epout2) \
-  /* Interface */\
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 4, 0xFF, 0x5D, 0x03, 0,\
-  /* XInput Audio descriptor */\
-  27, 0x21, 0x00, 0x01, 0x01, 0x01, _epin, 0x40, 0x01, _epout, 0x20, 0x16, _epin2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, _epout2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
-  /* Endpoint In (mic) */\
-  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 2,\
-  /* Endpoint Out (audio out)*/\
-  7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 4,\
-  /* Endpoint In 2 (unk 1)*/\
-  7, TUSB_DESC_ENDPOINT, _epin2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 64,\
-  /* Endpoint Out 2 (unk 2)*/\
-  7, TUSB_DESC_ENDPOINT, _epout2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 16
+#define TUD_XINPUT_AUDIO_DESCRIPTOR(_itfnum, _epin, _epout, _epin2, _epout2)                                                                                                                                  \
+    /* Interface */                                                                                                                                                                                           \
+    9, TUSB_DESC_INTERFACE, _itfnum, 0, 4, 0xFF, 0x5D, 0x03, 0,                                                                                                                 /* XInput Audio descriptor */ \
+        27, 0x21, 0x00, 0x01, 0x01, 0x01, _epin, 0x40, 0x01, _epout, 0x20, 0x16, _epin2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, _epout2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* Endpoint In (mic) */       \
+        7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 2,                                                                                              /* Endpoint Out (audio out)*/ \
+        7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 4,                                                                                             /* Endpoint In 2 (unk 1)*/    \
+        7, TUSB_DESC_ENDPOINT, _epin2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 64,                                                                                            /* Endpoint Out 2 (unk 2)*/   \
+        7, TUSB_DESC_ENDPOINT, _epout2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 16
 
-#define TUD_XINPUT_AUDIO_DESC_LEN    (9 + 27 + 7 + 7 + 7 + 7)
+#define TUD_XINPUT_AUDIO_DESC_LEN (9 + 27 + 7 + 7 + 7 + 7)
 
 // XInput Plugin Module Descriptor
-#define TUD_XINPUT_PLUGIN_MODULE_DESCRIPTOR(_itfnum, _epin) \
-  /* Interface */\
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 1, 0xFF, 0x5D, 0x02, 0,\
-  /* XInput plugin module descriptor */\
-  9, 0x21, 0x00, 0x01, 0x01, 0x22, _epin, 0x07, 0x00,\
-  /* Endpoint In */\
-  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 16
+#define TUD_XINPUT_PLUGIN_MODULE_DESCRIPTOR(_itfnum, _epin)                                           \
+    /* Interface */                                                                                   \
+    9, TUSB_DESC_INTERFACE, _itfnum, 0, 1, 0xFF, 0x5D, 0x02, 0, /* XInput plugin module descriptor */ \
+        9, 0x21, 0x00, 0x01, 0x01, 0x22, _epin, 0x07, 0x00,     /* Endpoint In */                     \
+        7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 16
 
-#define TUD_XINPUT_PLUGIN_MODULE_DESC_LEN    (9 + 9 + 7)
+#define TUD_XINPUT_PLUGIN_MODULE_DESC_LEN (9 + 9 + 7)
 
 // XInput Security Descriptor
-#define TUD_XINPUT_SECURITY_DESCRIPTOR(_itfnum, _strnum) \
-  /* Interface */\
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, 0xFF, 0xFD, 0x13, _strnum,\
-  /* XInput Security descriptor */\
-  6, 0x41, 0x00, 0x01, 0x01, 0x03
+#define TUD_XINPUT_SECURITY_DESCRIPTOR(_itfnum, _strnum)                                               \
+    /* Interface */                                                                                    \
+    9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, 0xFF, 0xFD, 0x13, _strnum, /* XInput Security descriptor */ \
+        6, 0x41, 0x00, 0x01, 0x01, 0x03
 
-#define TUD_XINPUT_SECURITY_DESC_LEN    (9 + 6)
+#define TUD_XINPUT_SECURITY_DESC_LEN (9 + 6)
 
 // XInput Gamepad Descriptor
-#define TUD_OGXBOX_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout) \
-  /* Interface */\
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0x58, 0x42, 0x00, 0,\
-  /* Endpoint In */\
-  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 4,\
-  /* Endpoint Out */\
-  7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 4
+#define TUD_OGXBOX_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout)                                         \
+    /* Interface */                                                                                   \
+    9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0x58, 0x42, 0x00, 0,                    /* Endpoint In */  \
+        7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 4, /* Endpoint Out */ \
+        7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 4
 
-#define TUD_OGXBOX_GAMEPAD_DESC_LEN    (9 + 7 + 7)
+#define TUD_OGXBOX_GAMEPAD_DESC_LEN (9 + 7 + 7)
 
 // XOne Gamepad Descriptor
-#define TUD_XONE_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout) \
-  /* Interface */\
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xff, 0x47, 0xd0, 0,\
-  /* Endpoint In */\
-  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1,\
-  /* Endpoint Out */\
-  7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1
+#define TUD_XONE_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout)                                           \
+    /* Interface */                                                                                   \
+    9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xff, 0x47, 0xd0, 0,                    /* Endpoint In */  \
+        7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1, /* Endpoint Out */ \
+        7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1
 
-#define TUD_XONE_GAMEPAD_DESC_LEN    (9 + 7 + 7)
+#define TUD_XONE_GAMEPAD_DESC_LEN (9 + 7 + 7)
 
 // GHArcade Gamepad Descriptor
-#define TUD_GHARCADE_VENDOR_DESCRIPTOR(_itfnum, _epin1, _epout, _epin2, _strnum) \
-  /* Interface */\
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 3, 0xff, 0x01, 0xFF, _strnum,\
-  /* Endpoint In */\
-  7, TUSB_DESC_ENDPOINT, _epin1, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1,\
-  /* Endpoint Out */\
-  7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1, \
-  /* Endpoint In */\
-  7, TUSB_DESC_ENDPOINT, _epin2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1
+#define TUD_GHARCADE_VENDOR_DESCRIPTOR(_itfnum, _epin1, _epout, _epin2, _strnum)                       \
+    /* Interface */                                                                                    \
+    9, TUSB_DESC_INTERFACE, _itfnum, 0, 3, 0xff, 0x01, 0xFF, _strnum,               /* Endpoint In */  \
+        7, TUSB_DESC_ENDPOINT, _epin1, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1, /* Endpoint Out */ \
+        7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1, /* Endpoint In */  \
+        7, TUSB_DESC_ENDPOINT, _epin2, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x40), 1
 
-#define TUD_GHARCADE_VENDOR_DESC_LEN    (9 + 7 + 7 + 7)
+#define TUD_GHARCADE_VENDOR_DESC_LEN (9 + 7 + 7 + 7)
 
 // One controller slot of a 360 wireless receiver, as a genuine receiver describes it
-#define TUD_XINPUT_WIRELESS_CONTROLLER_DESCRIPTOR(_itfnum, _epin, _epout, _strnum) \
-  /* Interface */\
-  9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xFF, 0x5D, 0x81, _strnum,\
-  /* XInput wireless descriptor */\
-  20, 0x22, 0x00, 0x01, 0x13, _epin, 0x1D, 0x00, 0x17, 0x01, 0x02, 0x08, 0x13, _epout, 0x0C, 0x00, 0x0C, 0x01, 0x02, 0x08,\
-  /* Endpoint In */\
-  7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 1,\
-  /* Endpoint Out */\
-  7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 8
+#define TUD_XINPUT_WIRELESS_CONTROLLER_DESCRIPTOR(_itfnum, _epin, _epout, _strnum)                                                                                \
+    /* Interface */                                                                                                                                               \
+    9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xFF, 0x5D, 0x81, _strnum,                                                            /* XInput wireless descriptor */ \
+        20, 0x22, 0x00, 0x01, 0x13, _epin, 0x1D, 0x00, 0x17, 0x01, 0x02, 0x08, 0x13, _epout, 0x0C, 0x00, 0x0C, 0x01, 0x02, 0x08, /* Endpoint In */                \
+        7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 1,                                               /* Endpoint Out */               \
+        7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 8
 
-#define TUD_XINPUT_WIRELESS_CONTROLLER_DESC_LEN   (9 + 20 + 7 + 7)
+#define TUD_XINPUT_WIRELESS_CONTROLLER_DESC_LEN (9 + 20 + 7 + 7)
 
-#define TUD_XINPUT_WIRELESS_AUDIO_DESC_LEN   (9 + 12 + 7 + 7)
+#define TUD_XINPUT_WIRELESS_AUDIO_DESC_LEN (9 + 12 + 7 + 7)
 void build_device_descriptor();

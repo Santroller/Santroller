@@ -2,7 +2,8 @@
 
 #include <stdint.h>
 #include "instance.hpp"
-extern "C" {
+extern "C"
+{
 #include "wiimote.h"
 #include "wiimote_btstack.h"
 }

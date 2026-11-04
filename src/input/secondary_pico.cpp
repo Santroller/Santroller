@@ -25,13 +25,15 @@ PeripheralInput::~PeripheralInput()
 
 bool PeripheralInput::tick_digital_raw()
 {
-    if (!m_device || !m_id) return false;
+    if (!m_device || !m_id)
+        return false;
     return m_device->read_digital_pin(m_id);
 }
 
 uint16_t PeripheralInput::tick_analog()
 {
-    if (!m_device || !m_id) return 0;
+    if (!m_device || !m_id)
+        return 0;
     if (m_input.analog)
     {
         return m_device->read_analog_pin(m_id);
@@ -55,7 +57,8 @@ SecondaryPicoForwardedInput::~SecondaryPicoForwardedInput()
 
 bool SecondaryPicoForwardedInput::tick_digital_raw()
 {
-    if (!m_id) return false;
+    if (!m_id)
+        return false;
     if (has_independent_analog_value())
     {
         // the secondary pico reports these as axes
@@ -66,7 +69,8 @@ bool SecondaryPicoForwardedInput::tick_digital_raw()
 
 uint16_t SecondaryPicoForwardedInput::tick_analog()
 {
-    if (!m_id) return 0;
+    if (!m_id)
+        return 0;
     if (has_independent_analog_value())
     {
         return m_device->read_analog_pin(m_id);

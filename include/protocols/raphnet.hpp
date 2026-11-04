@@ -23,7 +23,8 @@
 #define RNT_TYPE_WII_DRUM 130
 #define RNT_TYPE_WII_TURNTABLE 131
 
-typedef struct {
+typedef struct
+{
     uint8_t reportId;
     uint16_t joyX;
     uint16_t joyY;
@@ -44,7 +45,8 @@ typedef struct {
     uint8_t : 7;
 } __attribute__((packed)) RaphnetTurntable_Data_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t reportId;
     uint16_t joyX;
     uint16_t joyY;
@@ -66,7 +68,8 @@ typedef struct {
 
 } __attribute__((packed)) RaphnetGuitar_Data_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t reportId;
     uint16_t joyX;
     uint16_t joyY;
@@ -81,7 +84,8 @@ typedef struct {
     uint16_t : 9;
 } __attribute__((packed)) RaphnetDrum_Data_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t reportId;
     uint16_t leftJoyX;
     uint16_t leftJoyY;

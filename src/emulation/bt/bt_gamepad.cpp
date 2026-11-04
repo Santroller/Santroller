@@ -42,7 +42,7 @@ static bool s_capabilities_pending = false;
 static BTGamepadDevice *s_instance = nullptr;
 static hids_device_report_t report_storage[6];
 static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size);
-static void get_report_callback(hci_con_handle_t con_hdl, hid_report_type_t report_type, uint16_t report_id, uint16_t max_report_size, uint8_t * out_report);
+static void get_report_callback(hci_con_handle_t con_hdl, hid_report_type_t report_type, uint16_t report_id, uint16_t max_report_size, uint8_t *out_report);
 // Appearance HID - Keyboard (Category 15, Sub-Category 1)
 #define APPEARANCE_KEYBOARD 0x03C1
 // Appearance HID - Gamepad (Category 15, Sub-Category 4)
@@ -128,7 +128,7 @@ void send_report(uint8_t size, uint8_t *report)
         // hids_device_request_can_send_now_event(con_handle);
     }
 }
-static void get_report_callback(hci_con_handle_t con_hdl, hid_report_type_t report_type, uint16_t report_id, uint16_t max_report_size, uint8_t * out_report)
+static void get_report_callback(hci_con_handle_t con_hdl, hid_report_type_t report_type, uint16_t report_id, uint16_t max_report_size, uint8_t *out_report)
 {
     UNUSED(con_hdl);
     UNUSED(report_type);
@@ -364,8 +364,7 @@ void BTGamepadDevice::initialize()
     memset(&m_initial_report, 0, sizeof(m_initial_report));
     switch (subtype)
     {
-    case RockBandDrums:
-    {
+    case RockBandDrums: {
         XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)&m_initial_report;
         report->redVelocity = -1;
         report->blueVelocity = -1;
@@ -373,32 +372,27 @@ void BTGamepadDevice::initialize()
         report->yellowVelocity = 0;
         break;
     }
-    case GuitarHeroGuitar:
-    {
+    case GuitarHeroGuitar: {
         XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
-    case RockBandGuitar:
-    {
+    case RockBandGuitar: {
         XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
-    case LiveGuitar:
-    {
+    case LiveGuitar: {
         XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
-    case GuitarHeroDrums:
-    {
+    case GuitarHeroDrums: {
         XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)&m_initial_report;
         report->leftThumbClick = true;
         break;
     }
-    case Wheel:
-    {
+    case Wheel: {
         // the pedals rest at their minimum, see WheelAxisMapping::update_hid
         PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)&m_initial_report;
         report->leftStickY = INT16_MIN;
@@ -622,15 +616,13 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
     case HCI_EVENT_ENCRYPTION_CHANGE:
         printf("BT: encryption change handle 0x%04x status 0x%02x enabled %u\r\n", hci_event_encryption_change_get_connection_handle(packet), hci_event_encryption_change_get_status(packet), hci_event_encryption_change_get_encryption_enabled(packet));
         break;
-    case SM_EVENT_PAIRING_STARTED:
-    {
+    case SM_EVENT_PAIRING_STARTED: {
         bd_addr_t addr;
         sm_event_pairing_started_get_address(packet, addr);
         printf("BT: pairing started with %s\r\n", bd_addr_to_str(addr));
         break;
     }
-    case SM_EVENT_REENCRYPTION_STARTED:
-    {
+    case SM_EVENT_REENCRYPTION_STARTED: {
         bd_addr_t addr;
         sm_event_reencryption_started_get_address(packet, addr);
         printf("BT: re-encryption started with %s\r\n", bd_addr_to_str(addr));
@@ -640,22 +632,19 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         // a failure here usually means one side lost the bond, remove the device on the host and pair again
         printf("BT: re-encryption complete status 0x%02x\r\n", sm_event_reencryption_complete_get_status(packet));
         break;
-    case SM_EVENT_IDENTITY_RESOLVING_SUCCEEDED:
-    {
+    case SM_EVENT_IDENTITY_RESOLVING_SUCCEEDED: {
         bd_addr_t addr;
         sm_event_identity_resolving_succeeded_get_address(packet, addr);
         printf("BT: resolved bonded identity %s\r\n", bd_addr_to_str(addr));
         break;
     }
-    case SM_EVENT_IDENTITY_RESOLVING_FAILED:
-    {
+    case SM_EVENT_IDENTITY_RESOLVING_FAILED: {
         bd_addr_t addr;
         sm_event_identity_resolving_failed_get_address(packet, addr);
         printf("BT: %s is not bonded\r\n", bd_addr_to_str(addr));
         break;
     }
-    case SM_EVENT_IDENTITY_CREATED:
-    {
+    case SM_EVENT_IDENTITY_CREATED: {
         bd_addr_t addr;
         sm_event_identity_created_get_address(packet, addr);
         printf("BT: bond stored for %s\r\n", bd_addr_to_str(addr));
@@ -708,8 +697,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
     case HCI_EVENT_LE_META:
         switch (hci_event_le_meta_get_subevent_code(packet))
         {
-        case HCI_SUBEVENT_LE_ENHANCED_CONNECTION_COMPLETE_V1:
-        {
+        case HCI_SUBEVENT_LE_ENHANCED_CONNECTION_COMPLETE_V1: {
             // used instead of LE_CONNECTION_COMPLETE when address resolution is enabled
             bd_addr_t addr;
             hci_subevent_le_enhanced_connection_complete_v1_get_peer_addresss(packet, addr);
@@ -721,8 +709,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                    hci_subevent_le_enhanced_connection_complete_v1_get_peer_address_type(packet));
             break;
         }
-        case HCI_SUBEVENT_LE_CONNECTION_COMPLETE:
-        {
+        case HCI_SUBEVENT_LE_CONNECTION_COMPLETE: {
             bd_addr_t addr;
             hci_subevent_le_connection_complete_get_peer_address(packet, addr);
             printf("BT: LE connection status 0x%02x handle 0x%04x role %u peer %s\r\n",
@@ -737,8 +724,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             printf("- Connection Latency: %u\r\n", hci_subevent_le_connection_complete_get_conn_latency(packet));
             break;
         }
-        case HCI_SUBEVENT_LE_CONNECTION_UPDATE_COMPLETE:
-        {
+        case HCI_SUBEVENT_LE_CONNECTION_UPDATE_COMPLETE: {
             // print connection parameters (without using float operations)
             uint16_t conn_interval = hci_subevent_le_connection_update_complete_get_conn_interval(packet);
             printf("LE Connection Update:\r\n");
@@ -774,8 +760,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             protocol_mode = hids_subevent_protocol_mode_get_protocol_mode(packet);
             printf("Protocol Mode: %s mode\r\n", hids_subevent_protocol_mode_get_protocol_mode(packet) ? "Report" : "Boot");
             break;
-        case HIDS_SUBEVENT_SET_REPORT:
-        {
+        case HIDS_SUBEVENT_SET_REPORT: {
             uint8_t report_id = hids_subevent_set_report_get_report_id(packet);
             uint8_t report_type = hids_subevent_set_report_get_report_type(packet);
             uint8_t report_len = hids_subevent_set_report_get_report_length(packet);
@@ -825,8 +810,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             }
             break;
         }
-        case HIDS_SUBEVENT_CAN_SEND_NOW:
-        {
+        case HIDS_SUBEVENT_CAN_SEND_NOW: {
             printf("can send now\r\n");
             if (s_capabilities_pending && s_instance)
             {

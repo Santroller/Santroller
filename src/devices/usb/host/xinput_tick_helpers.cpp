@@ -55,7 +55,7 @@ uint16_t xinput_gh_drum_axis(const uint8_t *ep_in_buf, GuitarHeroDrumsAxisType a
     }
 }
 
-bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_Output &type, bool is_wt, bool rb2, WtSliderFilter *wt_filter)
+bool xinput_tick_digital_impl(const uint8_t *ep_in_buf, SubType subtype, proto_Output &type, bool is_wt, bool rb2, WtSliderFilter *wt_filter)
 {
     if (type.which_mapping == proto_Output_gamepadButton_tag)
     {
@@ -337,10 +337,11 @@ bool xinput_tick_digital_impl(const uint8_t* ep_in_buf, SubType subtype, proto_O
 uint16_t xinput_turntable_velocity(int16_t velocity)
 {
     int32_t value = (int32_t)velocity * XINPUT_TURNTABLE_VELOCITY_SCALE + 32768;
-    return value < 0 ? 0 : value > UINT16_MAX ? UINT16_MAX : value;
+    return value < 0 ? 0 : value > UINT16_MAX ? UINT16_MAX
+                                              : value;
 }
 
-uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtype, proto_Output &type, bool rb2)
+uint16_t xinput_tick_analog_impl(const uint8_t *ep_in_buf, SubType subtype, proto_Output &type, bool rb2)
 {
     if (type.which_mapping == proto_Output_gamepadAxis_tag)
     {
@@ -362,7 +363,6 @@ uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtype, prot
         default:
             return 0;
         }
-
     }
     switch (subtype)
     {
@@ -398,7 +398,6 @@ uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtype, prot
             default:
                 return 0;
             }
-
         }
         break;
     case LiveGuitar:
@@ -414,7 +413,6 @@ uint16_t xinput_tick_analog_impl(const uint8_t* ep_in_buf, SubType subtype, prot
             default:
                 return 0;
             }
-
         }
         break;
     case RockBandGuitar:

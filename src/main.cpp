@@ -116,7 +116,7 @@ class HidConsoleBridge
 public:
     static constexpr size_t max_packets_per_flush = 4;
 
-    static HidConsoleBridge& instance()
+    static HidConsoleBridge &instance()
     {
         static HidConsoleBridge bridge;
         return bridge;
@@ -149,7 +149,7 @@ public:
 
     void flush()
     {
-        auto& config_mgr = ConfigManager::instance();
+        auto &config_mgr = ConfigManager::instance();
         if (!m_initialized || !can_send() || config_mgr.is_reloading() || config_mgr.is_working())
         {
             return;
@@ -241,7 +241,7 @@ static void __noinline send_loaded_event()
 // toggle of a shortcut) recurses through nanopb and needs most of core 0's stack.
 static bool __noinline reload_config()
 {
-    auto& config_mgr = ConfigManager::instance();
+    auto &config_mgr = ConfigManager::instance();
     if (config_mgr.is_working() || !config_mgr.should_reinit(millis()))
     {
         return false;
@@ -273,7 +273,7 @@ static bool __noinline reload_config()
 
 void hid_task(void)
 {
-    auto& config_mgr = ConfigManager::instance();
+    auto &config_mgr = ConfigManager::instance();
     if (config_mgr.is_updating_firmware())
     {
         return;
@@ -401,7 +401,6 @@ void deinitDebug()
 {
     HidConsoleBridge::instance().disable();
 }
-
 
 // Core 1's stack is in main RAM rather than SCRATCH_X, so core 0's stack can use both scratch banks
 static constexpr size_t CORE1_STACK_SIZE = 0x1000;

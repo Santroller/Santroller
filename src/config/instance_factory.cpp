@@ -252,85 +252,86 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
     {
         instance = std::make_shared<UsbMicDevice>();
     }
-    else switch (mode)
-    {
-    case ModeHid:
-        if (subtype == SubType_KeyboardMouse)
+    else
+        switch (mode)
         {
-            instance = std::make_shared<HIDKeyboardDevice>();
+        case ModeHid:
+            if (subtype == SubType_KeyboardMouse)
+            {
+                instance = std::make_shared<HIDKeyboardDevice>();
+            }
+            else if (subtype == SubType_Midi)
+            {
+                instance = std::make_shared<UsbMidiDevice>();
+            }
+            else if (subtype == SubType_KeyboardMania)
+            {
+                instance = std::make_shared<KeyboardManiaDevice>(false);
+            }
+            else
+            {
+                instance = std::make_shared<HIDGamepadDevice>();
+            }
+            break;
+
+        case ModeOgXbox:
+            instance = std::make_shared<OGXboxGamepadDevice>();
+            break;
+
+        case ModeXbox360:
+            instance = std::make_shared<XInputGamepadDevice>();
+            break;
+
+        case ModeXboxOne:
+            instance = std::make_shared<XboxOneGamepadDevice>();
+            break;
+
+        case ModeWiiRb:
+            instance = std::make_shared<PS3GamepadDevice>(true);
+            break;
+
+        case ModePs3:
+            instance = std::make_shared<PS3GamepadDevice>(false);
+            break;
+
+        case ModePs4:
+            instance = std::make_shared<PS4GamepadDevice>();
+            break;
+
+        case ModePs5:
+            instance = std::make_shared<PS5GamepadDevice>();
+            break;
+
+        case ModeSwitch:
+            if (subtype == SubType_ProjectDiva || subtype == SubType_Taiko)
+            {
+                instance = std::make_shared<SwitchArcadeDevice>(subtype == SubType_Taiko);
+            }
+            else
+            {
+                instance = std::make_shared<SwitchGamepadDevice>();
+            }
+            break;
+
+        case ModeSpice2x:
+            instance = std::make_shared<Spice2xDevice>();
+            break;
+
+        case ModePdLoader:
+            instance = std::make_shared<PDLoaderDevice>();
+            break;
+
+        case ModeKeyboardMania:
+            instance = std::make_shared<KeyboardManiaDevice>(true);
+            break;
+
+        case ModeGuitarHeroArcade:
+            instance = std::make_shared<GHArcadeGamepadDevice>();
+            break;
+
+        default:
+            return nullptr;
         }
-        else if (subtype == SubType_Midi)
-        {
-            instance = std::make_shared<UsbMidiDevice>();
-        }
-        else if (subtype == SubType_KeyboardMania)
-        {
-            instance = std::make_shared<KeyboardManiaDevice>(false);
-        }
-        else
-        {
-            instance = std::make_shared<HIDGamepadDevice>();
-        }
-        break;
-
-    case ModeOgXbox:
-        instance = std::make_shared<OGXboxGamepadDevice>();
-        break;
-
-    case ModeXbox360:
-        instance = std::make_shared<XInputGamepadDevice>();
-        break;
-
-    case ModeXboxOne:
-        instance = std::make_shared<XboxOneGamepadDevice>();
-        break;
-
-    case ModeWiiRb:
-        instance = std::make_shared<PS3GamepadDevice>(true);
-        break;
-
-    case ModePs3:
-        instance = std::make_shared<PS3GamepadDevice>(false);
-        break;
-
-    case ModePs4:
-        instance = std::make_shared<PS4GamepadDevice>();
-        break;
-
-    case ModePs5:
-        instance = std::make_shared<PS5GamepadDevice>();
-        break;
-
-    case ModeSwitch:
-        if (subtype == SubType_ProjectDiva || subtype == SubType_Taiko)
-        {
-            instance = std::make_shared<SwitchArcadeDevice>(subtype == SubType_Taiko);
-        }
-        else
-        {
-            instance = std::make_shared<SwitchGamepadDevice>();
-        }
-        break;
-
-    case ModeSpice2x:
-        instance = std::make_shared<Spice2xDevice>();
-        break;
-
-    case ModePdLoader:
-        instance = std::make_shared<PDLoaderDevice>();
-        break;
-
-    case ModeKeyboardMania:
-        instance = std::make_shared<KeyboardManiaDevice>(true);
-        break;
-
-    case ModeGuitarHeroArcade:
-        instance = std::make_shared<GHArcadeGamepadDevice>();
-        break;
-
-    default:
-        return nullptr;
-    }
     if (subtype != SubType_Microphone && !profile_mgr.get_emulated_device(mode))
     {
         profile_mgr.set_emulated_device(mode, instance);

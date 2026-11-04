@@ -25,11 +25,23 @@ public:
     void update(bool full_poll, bool send_events) override;
     void update_pending() override { query_capabilities(); }
     void on_report_written() override { m_write_pending = false; }
-    void set_rumble(uint8_t left, uint8_t right) override { sync_output(); m_output.set_rumble(left, right); }
+    void set_rumble(uint8_t left, uint8_t right) override
+    {
+        sync_output();
+        m_output.set_rumble(left, right);
+    }
     void set_player_led(uint8_t player) override { m_output.set_player(player); }
     void set_lightbar(uint8_t r, uint8_t g, uint8_t b) override { m_output.set_rgb(r, g, b); }
-    void set_euphoria_led(bool state) override { sync_output(); m_output.set_euphoria(state); }
-    void set_stagekit_led(uint8_t param, uint8_t command) override { sync_output(); m_output.set_stagekit(param, command); }
+    void set_euphoria_led(bool state) override
+    {
+        sync_output();
+        m_output.set_euphoria(state);
+    }
+    void set_stagekit_led(uint8_t param, uint8_t command) override
+    {
+        sync_output();
+        m_output.set_stagekit(param, command);
+    }
     bool has_rumble() const override { return m_output.has_rumble(); }
     bool has_player_led() const override { return m_output.supports(CapabilityHasStandardPlayerLeds); }
     bool has_lightbar() const override { return m_output.supports(CapabilityHasRGBIndicatorLed); }

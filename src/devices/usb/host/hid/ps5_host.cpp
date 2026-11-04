@@ -184,11 +184,11 @@ std::shared_ptr<UsbHostInterface> Ps5Host::open(std::shared_ptr<UsbHostDevice> l
             list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
         }
         printf("ps5 host found!\r\n");
-        
+
         // Register as auth provider for P5 general
         if (!auth_broker.has_handler(ModePs5) && auth_only)
         {
-            auth_broker.register_handler(ModePs5, [intf](XGIPProtocol* packet) {
+            auth_broker.register_handler(ModePs5, [intf](XGIPProtocol *packet) {
                 // PS5 doesn't use XGIP, this is just for interface compatibility
             });
             // Also register the device itself for HID feature report auth
@@ -308,7 +308,7 @@ void Ps5Host::update(bool full_poll, bool send_events)
     m_out_pending = m_ep_out != 0;
 }
 
-bool ps5_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output& type)
+bool ps5_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type)
 {
     PS5Dpad_Data_t *report = (PS5Dpad_Data_t *)buf;
     uint8_t dpad = report->dpad >= 0x08 ? 0 : HidHost::dpad_bindings_reverse[report->dpad];
@@ -458,7 +458,7 @@ bool ps5_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
     return false;
 }
 
-uint16_t ps5_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output& type, const PSImuCalibration *imu)
+uint16_t ps5_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, proto_Output &type, const PSImuCalibration *imu)
 {
     if (type.which_mapping == proto_Output_gamepadAxis_tag)
     {
@@ -540,12 +540,12 @@ uint16_t ps5_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
     return 0;
 }
 
-bool Ps5Host::tick_digital(proto_Output& type)
+bool Ps5Host::tick_digital(proto_Output &type)
 {
     return ps5_tick_digital(m_ep_in_buf, m_subtype, false, type);
 }
 
-uint16_t Ps5Host::tick_analog(proto_Output& type)
+uint16_t Ps5Host::tick_analog(proto_Output &type)
 {
     return ps5_tick_analog(m_ep_in_buf, m_subtype, false, type, m_sensors_supported ? &m_imu_calibration : nullptr);
 }

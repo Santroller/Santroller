@@ -9,9 +9,9 @@
 uint8_t wii_extension_format_for_subtype(SubType subtype, uint8_t detected_format);
 uint8_t wii_extension_report_size(SubType subtype, uint8_t format);
 void initialize_wii_extension_report(SubType subtype, uint8_t format,
-                                      uint8_t *report, uint8_t *size,
-                                      uint8_t *buttons_low_offset,
-                                      uint8_t *buttons_high_offset);
+                                     uint8_t *report, uint8_t *size,
+                                     uint8_t *buttons_low_offset,
+                                     uint8_t *buttons_high_offset);
 void finalize_wii_extension_report(SubType subtype, uint8_t *report,
                                    uint8_t buttons_low_offset,
                                    uint8_t buttons_high_offset);

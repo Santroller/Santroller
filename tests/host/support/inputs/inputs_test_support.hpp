@@ -108,9 +108,18 @@ inline std::unique_ptr<Input> pin(uint8_t number)
 
 namespace clock_ms
 {
-inline uint32_t now() { return (uint32_t)(fake_time::now_us / 1000); }
-inline void set(uint64_t ms) { fake_time::set_us(ms * 1000); }
-inline void advance(uint64_t ms) { fake_time::advance_us(ms * 1000); }
+inline uint32_t now()
+{
+    return (uint32_t)(fake_time::now_us / 1000);
+}
+inline void set(uint64_t ms)
+{
+    fake_time::set_us(ms * 1000);
+}
+inline void advance(uint64_t ms)
+{
+    fake_time::advance_us(ms * 1000);
+}
 }
 
 // A device the device type triggers can find, matching whatever a test says it is

@@ -70,7 +70,6 @@ std::optional<uint8_t> XInputChatpadHost::next_command()
     return m_keepalive_toggle ? 0x1F : 0x1E;
 }
 
-
 void XInputWirelessChatpadHost::handle_packet(const uint8_t *buf, uint32_t len)
 {
     // Plug-in module packets carry the chatpad's report at the end

@@ -286,8 +286,7 @@ XboxOneGamepadDevice::XboxOneGamepadDevice()
 
     xbone_led_mode = 0;
     auth_handler_connected = auth_broker.has_handler(ModeXboxOne);
-    auth_broker.register_response_handler(ModeXboxOne, [this](XGIPProtocol *report)
-                                          { send_report_from_controller(report); }, this);
+    auth_broker.register_response_handler(ModeXboxOne, [this](XGIPProtocol *report) { send_report_from_controller(report); }, this);
 }
 
 uint16_t XboxOneGamepadDevice::open(tusb_desc_interface_t const *itf_desc, uint16_t max_len)
@@ -485,8 +484,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             // TODO: handle other states
             switch (in.getData()[0])
             {
-            case GIP_STATE_START:
-            {
+            case GIP_STATE_START: {
                 if (auth_broker.has_handler(ModeXboxOne))
                 {
                     xboneDriverState = XboxOneDriverState::EMU_SETUP_AUTH;
@@ -779,7 +777,8 @@ bool XboxOneGamepadDevice::update_identity()
         instruments_only &= is_guitar_subtype(reporting[i]->subtype) || is_drum_subtype(reporting[i]->subtype);
         legacy_supported &= legacy_adapter_supported(reporting[i]->subtype);
     }
-    SubType native = count ? reporting[0]->subtype : profiles.empty() ? subtype : profiles.front()->subtype;
+    SubType native = count ? reporting[0]->subtype : profiles.empty() ? subtype
+                                                                      : profiles.front()->subtype;
     // The legacy adapter can swap between players without authenticating again, so it stays one while
     // guitars and drums come and go, or always when the config asks for it
     bool always_legacy = ConfigManager::instance().xbox_one_legacy_adapter() && legacy_supported &&
@@ -1273,7 +1272,7 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
     for (const auto &profile : profiles)
     {
         const bool excluded_from_rb4 = legacy_wla_layout() &&
-                                      !is_guitar_subtype(profile->subtype) && !is_drum_subtype(profile->subtype);
+                                       !is_guitar_subtype(profile->subtype) && !is_drum_subtype(profile->subtype);
         if (profile->xbox_one_auth_held || excluded_from_rb4)
         {
             if (!profile->xbox_one_auth_held)
@@ -1348,10 +1347,15 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
             const bool down = guitar.dpadDown && !guitar.dpadUp;
             const bool left = guitar.dpadLeft && !guitar.dpadRight;
             const bool right = guitar.dpadRight && !guitar.dpadLeft;
-            profile_buf[2] = up ? (right ? 1 : left ? 7 : 0) :
-                             down ? (right ? 3 : left ? 5 : 4) :
-                             right ? 2 : left ? 6 : 0x0f;
-            guitar.tilt2 = guitar.tilt == 0 ? 0x00 : guitar.tilt >= 0xff ? 0xff : 0x80;
+            profile_buf[2] = up      ? (right ? 1 : left ? 7
+                                                         : 0)
+                             : down  ? (right ? 3 : left ? 5
+                                                         : 4)
+                             : right ? 2
+                             : left  ? 6
+                                     : 0x0f;
+            guitar.tilt2 = guitar.tilt == 0 ? 0x00 : guitar.tilt >= 0xff ? 0xff
+                                                                         : 0x80;
             guitar.unused4[0] = guitar.tilt2 == 0x80 ? 0x180 : 0x200;
             guitar.unused4[1] = 0x200;
             guitar.unused4[2] = 0x200;
@@ -1390,8 +1394,8 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
             navigation.dpadDown = guitar.dpadDown;
             navigation.dpadLeft = guitar.dpadLeft;
             navigation.dpadRight = guitar.dpadRight;
-            navigation.leftStickY = guitar.strumBar < 0x80 ? INT16_MAX :
-                                   guitar.strumBar > 0x80 ? INT16_MIN : 0;
+            navigation.leftStickY = guitar.strumBar < 0x80 ? INT16_MAX : guitar.strumBar > 0x80 ? INT16_MIN
+                                                                                                : 0;
             static_assert(sizeof(navigation) <= sizeof(profile_buf));
             memset(profile_buf, 0, sizeof(profile_buf));
             memcpy(profile_buf, &navigation, sizeof(navigation));

@@ -85,7 +85,10 @@ proto_Output gamepad_axis(GamepadAxisType axis)
 
 // Somewhere for the decoder to send drum MIDI; the fake process_midi_data never touches it
 alignas(MidiDevice) uint8_t midi_storage[sizeof(MidiDevice)];
-MidiDevice *fake_midi_device() { return reinterpret_cast<MidiDevice *>(midi_storage); }
+MidiDevice *fake_midi_device()
+{
+    return reinterpret_cast<MidiDevice *>(midi_storage);
+}
 } // namespace
 
 // Identification
@@ -282,13 +285,20 @@ std::vector<uint8_t> classic_format1(uint8_t lx, uint8_t ly, uint8_t rx, uint8_t
 }
 
 const std::vector<ButtonBit> classic_buttons_low_high = {
-    {WiiButtonClassicRt, "RT click", 0, 1},  {WiiButtonClassicPlus, "+", 0, 2},
-    {WiiButtonClassicHome, "Home", 0, 3},    {WiiButtonClassicMinus, "-", 0, 4},
-    {WiiButtonClassicLt, "LT click", 0, 5},  {WiiButtonClassicDPadDown, "Down", 0, 6},
-    {WiiButtonClassicDPadRight, "Right", 0, 7}, {WiiButtonClassicDPadUp, "Up", 1, 0},
-    {WiiButtonClassicDPadLeft, "Left", 1, 1}, {WiiButtonClassicZr, "ZR", 1, 2},
-    {WiiButtonClassicX, "X", 1, 3},          {WiiButtonClassicA, "A", 1, 4},
-    {WiiButtonClassicY, "Y", 1, 5},          {WiiButtonClassicB, "B", 1, 6},
+    {WiiButtonClassicRt, "RT click", 0, 1},
+    {WiiButtonClassicPlus, "+", 0, 2},
+    {WiiButtonClassicHome, "Home", 0, 3},
+    {WiiButtonClassicMinus, "-", 0, 4},
+    {WiiButtonClassicLt, "LT click", 0, 5},
+    {WiiButtonClassicDPadDown, "Down", 0, 6},
+    {WiiButtonClassicDPadRight, "Right", 0, 7},
+    {WiiButtonClassicDPadUp, "Up", 1, 0},
+    {WiiButtonClassicDPadLeft, "Left", 1, 1},
+    {WiiButtonClassicZr, "ZR", 1, 2},
+    {WiiButtonClassicX, "X", 1, 3},
+    {WiiButtonClassicA, "A", 1, 4},
+    {WiiButtonClassicY, "Y", 1, 5},
+    {WiiButtonClassicB, "B", 1, 6},
     {WiiButtonClassicZl, "ZL", 1, 7},
 };
 
@@ -466,11 +476,16 @@ std::vector<uint8_t> guitar(uint8_t sx, uint8_t sy, uint8_t tb, uint8_t wb)
     return {(uint8_t)(0xC0 | sx), (uint8_t)(0xC0 | sy), tb, wb, 0xFF, 0xFF};
 }
 const std::vector<ButtonBit> guitar_buttons = {
-    {WiiButtonGuitarStrumDown, "strum down", 4, 6}, {WiiButtonGuitarMinus, "-", 4, 4},
-    {WiiButtonGuitarPlus, "+", 4, 2},               {WiiButtonGuitarOrange, "orange", 5, 7},
-    {WiiButtonGuitarRed, "red", 5, 6},              {WiiButtonGuitarBlue, "blue", 5, 5},
-    {WiiButtonGuitarGreen, "green", 5, 4},          {WiiButtonGuitarYellow, "yellow", 5, 3},
-    {WiiButtonGuitarPedal, "pedal", 5, 2},          {WiiButtonGuitarStrumUp, "strum up", 5, 0},
+    {WiiButtonGuitarStrumDown, "strum down", 4, 6},
+    {WiiButtonGuitarMinus, "-", 4, 4},
+    {WiiButtonGuitarPlus, "+", 4, 2},
+    {WiiButtonGuitarOrange, "orange", 5, 7},
+    {WiiButtonGuitarRed, "red", 5, 6},
+    {WiiButtonGuitarBlue, "blue", 5, 5},
+    {WiiButtonGuitarGreen, "green", 5, 4},
+    {WiiButtonGuitarYellow, "yellow", 5, 3},
+    {WiiButtonGuitarPedal, "pedal", 5, 2},
+    {WiiButtonGuitarStrumUp, "strum up", 5, 0},
 };
 const proto_WiiButtonType taps[] = {WiiButtonGuitarTapGreen, WiiButtonGuitarTapRed, WiiButtonGuitarTapYellow,
                                     WiiButtonGuitarTapBlue, WiiButtonGuitarTapOrange};
@@ -543,7 +558,14 @@ TEST(WiiGuitar, TouchBarSingleFretCodes)
     feed(decoder, guitar(0x20, 0x20, 0x0F, 0));
     ASSERT_TRUE(decoder.hasTapBar);
     const std::pair<uint8_t, uint8_t> codes[] = {
-        {0x0F, 0}, {0x04, 1}, {0x0A, 2}, {0x12, 4}, {0x13, 4}, {0x17, 8}, {0x18, 8}, {0x1F, 16},
+        {0x0F, 0},
+        {0x04, 1},
+        {0x0A, 2},
+        {0x12, 4},
+        {0x13, 4},
+        {0x17, 8},
+        {0x18, 8},
+        {0x1F, 16},
     };
     for (const auto &[code, mask] : codes)
     {
@@ -559,7 +581,12 @@ TEST(WiiGuitar, TouchBarChordCodesPressBothFrets)
     auto decoder = decoder_for({0x00, 0x00, 0xA4, 0x20, 0x01, 0x03});
     feed(decoder, guitar(0x20, 0x20, 0x0F, 0));
     const std::pair<uint8_t, uint8_t> codes[] = {
-        {0x07, 1 | 2}, {0x0C, 2 | 4}, {0x0D, 2 | 4}, {0x14, 4 | 8}, {0x15, 4 | 8}, {0x1A, 8 | 16},
+        {0x07, 1 | 2},
+        {0x0C, 2 | 4},
+        {0x0D, 2 | 4},
+        {0x14, 4 | 8},
+        {0x15, 4 | 8},
+        {0x1A, 8 | 16},
     };
     for (const auto &[code, mask] : codes)
     {
@@ -729,9 +756,7 @@ TEST(WiiDrums, PadHitsMapStraightToDrumOutputs)
     // For hosts that map the whole extension (the Bluetooth Wiimote), with wiibrew's pad notes.
     // The hi-hat pedal (100) has nowhere else to go on a Guitar Hero kit, so it's a kick.
     const std::pair<uint8_t, GuitarHeroDrumsAxisType> pads[] = {
-        {36, GuitarHeroDrums_KickPedal}, {38, GuitarHeroDrums_RedPad}, {45, GuitarHeroDrums_GreenPad},
-        {46, GuitarHeroDrums_YellowPad}, {48, GuitarHeroDrums_BluePad}, {49, GuitarHeroDrums_OrangePad},
-        {100, GuitarHeroDrums_KickPedal}};
+        {36, GuitarHeroDrums_KickPedal}, {38, GuitarHeroDrums_RedPad}, {45, GuitarHeroDrums_GreenPad}, {46, GuitarHeroDrums_YellowPad}, {48, GuitarHeroDrums_BluePad}, {49, GuitarHeroDrums_OrangePad}, {100, GuitarHeroDrums_KickPedal}};
     for (const auto &[note, hit] : pads)
     {
         auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});

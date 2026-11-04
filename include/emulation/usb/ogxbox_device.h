@@ -9,7 +9,8 @@
 #define CFG_TUD_OGXBOX_EPSIZE 64
 #endif
 
-typedef struct {
+typedef struct
+{
     uint8_t bLength;
     uint8_t bDescriptorType;
     uint16_t bcdXid;
@@ -19,8 +20,6 @@ typedef struct {
     uint8_t bMaxOutputReportSize;
     uint16_t wAlternateProductIds[4];
 } __attribute__((packed)) XID_DESCRIPTOR;
-
-
 
 #ifdef __cplusplus
 extern "C"

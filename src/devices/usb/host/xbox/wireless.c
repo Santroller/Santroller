@@ -227,8 +227,7 @@ void wireless_task(struct mt76_dev *dev)
         case MT76_EVENT_CLIENT_LOST:
             wireless_handle_client_lost(dev, &event.wcid, 1);
             break;
-        case MT76_EVENT_CLIENT_COMMAND:
-        {
+        case MT76_EVENT_CLIENT_COMMAND: {
             uint8_t command_data[2] = {XONE_MT_WLAN_RESERVED & 0xFF, event.command};
             wireless_handle_client_command(dev, command_data, sizeof(command_data), event.wcid, event.addr);
             break;

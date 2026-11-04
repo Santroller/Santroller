@@ -228,18 +228,29 @@ static inline bool gamecube_tick_digital(const GameCubePortState &port, proto_Ou
     {
     // by legend. The GameCube's face buttons aren't a rotated Xbox or Nintendo layout, so there is no
     // position based reading of them
-    case Gamepad_A:             return port.buttons & GAMECUBE_BUTTON_A;
-    case Gamepad_B:             return port.buttons & GAMECUBE_BUTTON_B;
-    case Gamepad_X:             return port.buttons & GAMECUBE_BUTTON_X;
-    case Gamepad_Y:             return port.buttons & GAMECUBE_BUTTON_Y;
-    case Gamepad_Start:         return port.buttons & GAMECUBE_BUTTON_START;
+    case Gamepad_A:
+        return port.buttons & GAMECUBE_BUTTON_A;
+    case Gamepad_B:
+        return port.buttons & GAMECUBE_BUTTON_B;
+    case Gamepad_X:
+        return port.buttons & GAMECUBE_BUTTON_X;
+    case Gamepad_Y:
+        return port.buttons & GAMECUBE_BUTTON_Y;
+    case Gamepad_Start:
+        return port.buttons & GAMECUBE_BUTTON_START;
     // Z sits above R, where SDL and Dolphin put it
-    case Gamepad_RightShoulder: return port.buttons & GAMECUBE_BUTTON_Z;
-    case Gamepad_DpadUp:        return port.buttons & GAMECUBE_BUTTON_DPAD_UP;
-    case Gamepad_DpadDown:      return port.buttons & GAMECUBE_BUTTON_DPAD_DOWN;
-    case Gamepad_DpadLeft:      return port.buttons & GAMECUBE_BUTTON_DPAD_LEFT;
-    case Gamepad_DpadRight:     return port.buttons & GAMECUBE_BUTTON_DPAD_RIGHT;
-    default:                    return false;
+    case Gamepad_RightShoulder:
+        return port.buttons & GAMECUBE_BUTTON_Z;
+    case Gamepad_DpadUp:
+        return port.buttons & GAMECUBE_BUTTON_DPAD_UP;
+    case Gamepad_DpadDown:
+        return port.buttons & GAMECUBE_BUTTON_DPAD_DOWN;
+    case Gamepad_DpadLeft:
+        return port.buttons & GAMECUBE_BUTTON_DPAD_LEFT;
+    case Gamepad_DpadRight:
+        return port.buttons & GAMECUBE_BUTTON_DPAD_RIGHT;
+    default:
+        return false;
     }
 }
 
@@ -251,14 +262,21 @@ static inline uint16_t gamecube_tick_analog(const GameCubePortState &port, const
     }
     switch (type.mapping.gamepadAxis)
     {
-    case Gamepad_LeftStickX:   return range.scale(port, GAMECUBE_AXIS_STICK_X);
-    case Gamepad_LeftStickY:   return range.scale(port, GAMECUBE_AXIS_STICK_Y);
-    case Gamepad_RightStickX:  return range.scale(port, GAMECUBE_AXIS_C_STICK_X);
-    case Gamepad_RightStickY:  return range.scale(port, GAMECUBE_AXIS_C_STICK_Y);
+    case Gamepad_LeftStickX:
+        return range.scale(port, GAMECUBE_AXIS_STICK_X);
+    case Gamepad_LeftStickY:
+        return range.scale(port, GAMECUBE_AXIS_STICK_Y);
+    case Gamepad_RightStickX:
+        return range.scale(port, GAMECUBE_AXIS_C_STICK_X);
+    case Gamepad_RightStickY:
+        return range.scale(port, GAMECUBE_AXIS_C_STICK_Y);
     // the click at the bottom of a trigger is all the way in, whatever the analog part says
-    case Gamepad_LeftTrigger:  return port.buttons & GAMECUBE_BUTTON_L ? UINT16_MAX : range.scale(port, GAMECUBE_AXIS_L);
-    case Gamepad_RightTrigger: return port.buttons & GAMECUBE_BUTTON_R ? UINT16_MAX : range.scale(port, GAMECUBE_AXIS_R);
-    default:                   return 0;
+    case Gamepad_LeftTrigger:
+        return port.buttons & GAMECUBE_BUTTON_L ? UINT16_MAX : range.scale(port, GAMECUBE_AXIS_L);
+    case Gamepad_RightTrigger:
+        return port.buttons & GAMECUBE_BUTTON_R ? UINT16_MAX : range.scale(port, GAMECUBE_AXIS_R);
+    default:
+        return 0;
     }
 }
 

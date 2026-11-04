@@ -518,8 +518,7 @@ TEST_F(ConfigLoaderTest, DevicesAreResetBeforeDecodingAndPrunedAfter)
 {
     ASSERT_TRUE(store_and_apply(encode_config(realistic_config()), {}));
     const auto &calls = fake_loader::state.calls;
-    auto index = [&](const std::string &name)
-    {
+    auto index = [&](const std::string &name) {
         for (size_t i = 0; i < calls.size(); i++)
         {
             if (calls[i] == name)
@@ -550,8 +549,7 @@ TEST_F(ConfigLoaderTest, DevicesMissingFromTheConfigAreDroppedBeforeAnyAreBuilt)
 {
     ASSERT_TRUE(store_and_apply(encode_config(realistic_config()), {}));
     const auto &calls = fake_loader::state.calls;
-    auto first = [&](const std::string &name)
-    {
+    auto first = [&](const std::string &name) {
         for (size_t i = 0; i < calls.size(); i++)
         {
             if (calls[i] == name)

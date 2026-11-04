@@ -1,6 +1,6 @@
 #pragma once
 #ifndef BOARD_TUD_RHPORT
-#define BOARD_TUD_RHPORT      0
+#define BOARD_TUD_RHPORT 0
 #endif
 #define CFG_TUSB_MCU OPT_MCU_RP2040
 #define CFG_TUSB_OS OPT_OS_PICO
@@ -12,7 +12,7 @@
 #ifndef BOARD_TUH_MAX_SPEED
 #define BOARD_TUH_MAX_SPEED OPT_MODE_DEFAULT_SPEED
 #endif
-// #define CFG_TUSB_DEBUG 2 
+// #define CFG_TUSB_DEBUG 2
 #define CFG_TUH_RPI_PIO_USB 1
 #define CFG_TUH_HUB 8
 // #define CFG_TUH_XINPUT 8
@@ -20,7 +20,7 @@
 #define CFG_TUH_MIDI 0
 #define CFG_TUH_HID 0
 #ifndef CFG_TUD_ENDPOINT0_SIZE
-#define CFG_TUD_ENDPOINT0_SIZE    64
+#define CFG_TUD_ENDPOINT0_SIZE 64
 #endif
 // HID buffer size Should be sufficient to hold ID (if any) + Data
 #define CFG_TUH_ENUMERATION_BUFSIZE 1024

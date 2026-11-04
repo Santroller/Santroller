@@ -9,7 +9,6 @@
 #include "hidparser.h"
 #include "devices/usb/host/generic_hid_tick_helpers.h"
 
-
 std::shared_ptr<UsbHostInterface> StreamDeckHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
     uint8_t dev_addr = list->dev_addr();
@@ -100,11 +99,11 @@ bool StreamDeckHost::set_config()
     return true;
 }
 // Keys (or pedals) are mapped in order, the same way as buttons on a generic HID gamepad
-bool StreamDeckHost::tick_digital(proto_Output& type)
+bool StreamDeckHost::tick_digital(proto_Output &type)
 {
     return generic_hid_tick_digital_impl(m_data, type);
 }
-uint16_t StreamDeckHost::tick_analog(proto_Output& type)
+uint16_t StreamDeckHost::tick_analog(proto_Output &type)
 {
     return 0;
 }

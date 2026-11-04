@@ -15,7 +15,8 @@
 #include <string.h>
 #include <memory>
 #include <vector>
-extern "C" {
+extern "C"
+{
 #include "wm_reports.h"
 }
 #include "wm_crypto.h"
@@ -108,11 +109,18 @@ TEST(WiimoteReports, IrBasicPacksPairsIntoFiveBytes)
     }
     uint8_t buf[10] = {};
     report_append_ir_10(state.get(), buf);
-    auto high = [](uint16_t y1, uint16_t x1, uint16_t y2, uint16_t x2)
-    { return (uint8_t)((y1 >> 8) << 6 | (x1 >> 8) << 4 | (y2 >> 8) << 2 | (x2 >> 8)); };
+    auto high = [](uint16_t y1, uint16_t x1, uint16_t y2, uint16_t x2) { return (uint8_t)((y1 >> 8) << 6 | (x1 >> 8) << 4 | (y2 >> 8) << 2 | (x2 >> 8)); };
     const uint8_t expected[10] = {
-        0xA1, 0xAA, high(0x2AA, 0x0A1, 0x2AE, 0x399), 0x99, 0xAE,
-        0x9E, 0x78, high(0x078, 0x39E, 0x074, 0x0A7), 0xA7, 0x74,
+        0xA1,
+        0xAA,
+        high(0x2AA, 0x0A1, 0x2AE, 0x399),
+        0x99,
+        0xAE,
+        0x9E,
+        0x78,
+        high(0x078, 0x39E, 0x074, 0x0A7),
+        0xA7,
+        0x74,
     };
     for (int i = 0; i < 10; i++)
     {

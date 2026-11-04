@@ -28,8 +28,7 @@ TEST(WiimoteCalibration, ConsoleReadsTheMappedMotion)
     uint16_t accel[3];
     wiimote_accel_encode(motion, accel);
     // How the console works it out from the calibration
-    auto read = [](uint16_t value)
-    {
+    auto read = [](uint16_t value) {
         return (value - (float)WIIMOTE_EMULATED_ACCEL_ZERO) /
                (WIIMOTE_EMULATED_ACCEL_ONE_G - WIIMOTE_EMULATED_ACCEL_ZERO);
     };

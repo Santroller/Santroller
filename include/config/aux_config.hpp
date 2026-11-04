@@ -25,8 +25,7 @@ inline bool encode_cycle_input_states(pb_ostream_t *stream, const pb_field_t *fi
     proto_CyclingInputState proto_cycle;
     // Stop at the first entry that doesn't fit, so a partial block is never saved
     bool ok = true;
-    DeviceFactory::foreach_cycle_state([&](int32_t id, int32_t state)
-                                       {
+    DeviceFactory::foreach_cycle_state([&](int32_t id, int32_t state) {
         proto_cycle.id = id;
         proto_cycle.state = state;
         ok = ok && pb_encode_tag_for_field(stream, field) &&
@@ -83,8 +82,7 @@ inline bool encode_toggle_input_states(pb_ostream_t *stream, const pb_field_t *f
     proto_ToggleInputState proto_toggle;
     // Stop at the first entry that doesn't fit, so a partial block is never saved
     bool ok = true;
-    DeviceFactory::foreach_toggle_state([&](int32_t id, bool state)
-                                        {
+    DeviceFactory::foreach_toggle_state([&](int32_t id, bool state) {
         proto_toggle.id = id;
         proto_toggle.state = state;
         ok = ok && pb_encode_tag_for_field(stream, field) &&
@@ -96,8 +94,7 @@ inline bool encode_bluetooth_states(pb_ostream_t *stream, const pb_field_t *fiel
 {
     // Stop at the first entry that doesn't fit, so a partial block is never saved
     bool ok = true;
-    DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state)
-                                                   {
+    DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state) {
         proto_BluetoothPairingState proto_bluetooth = proto_BluetoothPairingState_init_zero;
         proto_bluetooth.id = id;
         memcpy(proto_bluetooth.macAddress, state.mac, sizeof(proto_bluetooth.macAddress));
@@ -127,8 +124,7 @@ inline bool encode_bluetooth_tlv_entries(pb_ostream_t *stream, const pb_field_t 
     proto_BluetoothTlvEntry proto_tlv = proto_BluetoothTlvEntry_init_zero;
     // Stop at the first entry that doesn't fit, so a partial block is never saved
     bool ok = true;
-    BtTlvStorage::instance().foreach_entry([&](uint32_t tag, const uint8_t *data, uint8_t length)
-                                           {
+    BtTlvStorage::instance().foreach_entry([&](uint32_t tag, const uint8_t *data, uint8_t length) {
         proto_tlv.tag = tag;
         proto_tlv.value.size = length;
         memcpy(proto_tlv.value.bytes, data, length);

@@ -484,9 +484,12 @@ TEST_F(GipInput, DrumVelocityNibbles)
         uint8_t value;
         proto_RockBandDrumsAxisType pad;
     } table[] = {
-        {2, 0x07, RockBandDrums_YellowPad},   {2, 0x70, RockBandDrums_RedPad},
-        {3, 0x07, RockBandDrums_GreenPad},    {3, 0x70, RockBandDrums_BluePad},
-        {4, 0x07, RockBandDrums_BlueCymbal},  {4, 0x70, RockBandDrums_YellowCymbal},
+        {2, 0x07, RockBandDrums_YellowPad},
+        {2, 0x70, RockBandDrums_RedPad},
+        {3, 0x07, RockBandDrums_GreenPad},
+        {3, 0x70, RockBandDrums_BluePad},
+        {4, 0x07, RockBandDrums_BlueCymbal},
+        {4, 0x70, RockBandDrums_YellowCymbal},
         {5, 0x70, RockBandDrums_GreenCymbal},
     };
     for (auto &row : table)
@@ -570,9 +573,12 @@ TEST_F(GipInput, GhlFretsAndButtons)
         uint8_t bit;
         proto_GuitarHeroLiveGuitarButtonType button;
     } table[] = {
-        {0, 0x01, GuitarHeroLiveGuitar_White1}, {0, 0x02, GuitarHeroLiveGuitar_Black1},
-        {0, 0x04, GuitarHeroLiveGuitar_Black2}, {0, 0x08, GuitarHeroLiveGuitar_Black3},
-        {0, 0x10, GuitarHeroLiveGuitar_White2}, {0, 0x20, GuitarHeroLiveGuitar_White3},
+        {0, 0x01, GuitarHeroLiveGuitar_White1},
+        {0, 0x02, GuitarHeroLiveGuitar_Black1},
+        {0, 0x04, GuitarHeroLiveGuitar_Black2},
+        {0, 0x08, GuitarHeroLiveGuitar_Black3},
+        {0, 0x10, GuitarHeroLiveGuitar_White2},
+        {0, 0x20, GuitarHeroLiveGuitar_White3},
         {1, 0x04, GuitarHeroLiveGuitar_GHTV},
     };
     for (auto &row : table)
@@ -617,8 +623,15 @@ TEST_F(GipInput, GhlDpad)
         uint8_t state;
         bool up, down, left, right;
     } table[] = {
-        {0, 1, 0, 0, 0}, {1, 1, 0, 0, 1}, {2, 0, 0, 0, 1}, {3, 0, 1, 0, 1}, {4, 0, 1, 0, 0},
-        {5, 0, 1, 1, 0}, {6, 0, 0, 1, 0}, {7, 1, 0, 1, 0}, {15, 0, 0, 0, 0},
+        {0, 1, 0, 0, 0},
+        {1, 1, 0, 0, 1},
+        {2, 0, 0, 0, 1},
+        {3, 0, 1, 0, 1},
+        {4, 0, 1, 0, 0},
+        {5, 0, 1, 1, 0},
+        {6, 0, 0, 1, 0},
+        {7, 1, 0, 1, 0},
+        {15, 0, 0, 0, 0},
     };
     for (auto &row : table)
     {

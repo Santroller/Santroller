@@ -1,6 +1,6 @@
 #include "input/crazy_guitar_neck.hpp"
 
-CrazyGuitarNeckButtonInput::CrazyGuitarNeckButtonInput(proto_CrazyGuitarNeckButtonInput input, std::shared_ptr<CrazyGuitarNeckDevice> device, Profile* profile) : m_input(input), m_device(device)
+CrazyGuitarNeckButtonInput::CrazyGuitarNeckButtonInput(proto_CrazyGuitarNeckButtonInput input, std::shared_ptr<CrazyGuitarNeckDevice> device, Profile *profile) : m_input(input), m_device(device)
 {
 }
 bool CrazyGuitarNeckButtonInput::tick_digital_raw()

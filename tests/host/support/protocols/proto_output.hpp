@@ -43,29 +43,29 @@ const uint8_t *raw_bytes(const T &report)
 }
 
 // Sets one bitfield of a zeroed report and checks exactly that bit of the wire format is set
-#define EXPECT_BIT_AT(Type, field, byte, mask)                                       \
-    do                                                                               \
-    {                                                                                \
-        Type report_;                                                                \
-        memset(&report_, 0, sizeof(report_));                                        \
-        report_.field = 1;                                                           \
-        const uint8_t *bytes_ = raw_bytes(report_);                                  \
-        for (size_t i_ = 0; i_ < sizeof(Type); i_++)                                 \
-            EXPECT_EQ(bytes_[i_], i_ == (byte) ? (mask) : 0)                         \
+#define EXPECT_BIT_AT(Type, field, byte, mask)                                         \
+    do                                                                                 \
+    {                                                                                  \
+        Type report_;                                                                  \
+        memset(&report_, 0, sizeof(report_));                                          \
+        report_.field = 1;                                                             \
+        const uint8_t *bytes_ = raw_bytes(report_);                                    \
+        for (size_t i_ = 0; i_ < sizeof(Type); i_++)                                   \
+            EXPECT_EQ(bytes_[i_], i_ == (byte) ? (mask) : 0)                           \
                 << #Type "." #field " should be byte " << (byte) << " mask " << (mask) \
-                << ", differs at byte " << i_;                                       \
+                << ", differs at byte " << i_;                                         \
     } while (0)
 
 // Same for an 8 bit field, which may be a bitfield (so offsetof can't be used)
 #define EXPECT_BYTE_AT(Type, field, byte) EXPECT_BIT_AT_VALUE(Type, field, byte, 0xFF)
-#define EXPECT_BIT_AT_VALUE(Type, field, byte, value)                                \
-    do                                                                               \
-    {                                                                                \
-        Type report_;                                                                \
-        memset(&report_, 0, sizeof(report_));                                        \
-        report_.field = (value);                                                     \
-        const uint8_t *bytes_ = raw_bytes(report_);                                  \
-        for (size_t i_ = 0; i_ < sizeof(Type); i_++)                                 \
-            EXPECT_EQ(bytes_[i_], i_ == (byte) ? (value) : 0)                        \
+#define EXPECT_BIT_AT_VALUE(Type, field, byte, value)                                           \
+    do                                                                                          \
+    {                                                                                           \
+        Type report_;                                                                           \
+        memset(&report_, 0, sizeof(report_));                                                   \
+        report_.field = (value);                                                                \
+        const uint8_t *bytes_ = raw_bytes(report_);                                             \
+        for (size_t i_ = 0; i_ < sizeof(Type); i_++)                                            \
+            EXPECT_EQ(bytes_[i_], i_ == (byte) ? (value) : 0)                                   \
                 << #Type "." #field " should be byte " << (byte) << ", differs at byte " << i_; \
     } while (0)

@@ -48,7 +48,7 @@ typedef struct
 } __attribute__((packed)) BinaryDeviceMetadata;
 typedef struct
 {
-    uint8_t sync : 1; 
+    uint8_t sync : 1;
     uint8_t guide : 1;
     uint8_t start : 1; // menu
     uint8_t back : 1;  // view
@@ -164,7 +164,7 @@ typedef struct
     uint8_t dpadRight : 1;
 
     uint8_t leftShoulder : 1; // orange
-    uint8_t rightShoulder: 1;
+    uint8_t rightShoulder : 1;
     uint8_t solo : 1; // leftThumbClick
     uint8_t : 1;
 
@@ -278,8 +278,7 @@ typedef struct
     uint8_t key18 : 1;
     uint8_t key17 : 1;
 
-    union
-    {
+    union {
         struct
         {
             uint8_t velocity1 : 7;
@@ -481,8 +480,7 @@ typedef struct
     uint16_t buttons;
     uint8_t user_index;
     uint8_t device_type;
-    union
-    {
+    union {
         uint8_t guitar_data[10];
         uint8_t drums_data[6];
         uint8_t raw[10];
@@ -496,7 +494,7 @@ typedef struct
     uint16_t vendor_id; // big-endian
     uint8_t unk;        // 0x00
     uint8_t xinput_subtype;
-    uint16_t name[7];   // wide string: L"guitar" or L"drums"
+    uint16_t name[7]; // wide string: L"guitar" or L"drums"
 } __attribute__((packed)) GipLegacyWirelessDeviceInfo_t;
 
 typedef struct

@@ -10,7 +10,8 @@ static const uint8_t ps4_colors[4][3] = {
     {0x20, 0x00, 0x20}  /* Pink */
 };
 
-typedef struct {
+typedef struct
+{
     uint8_t report_id; /* 0x5 */
     uint8_t valid_flag0;
     uint8_t valid_flag1;
@@ -28,7 +29,8 @@ typedef struct {
     uint8_t reserved[21];
 } __attribute__((packed)) ps4_output_report;
 
-typedef struct {
+typedef struct
+{
     uint8_t report_id;
     uint8_t leftStickX;
     uint8_t leftStickY;
@@ -36,23 +38,23 @@ typedef struct {
     uint8_t rightStickY;
     uint8_t dpad : 4;
     // 14 bits for buttons.
-    uint8_t x : 1;  // square
-    uint8_t a : 1;  // cross
-    uint8_t b : 1;  // circle
-    uint8_t y : 1;  // triangle
+    uint8_t x : 1; // square
+    uint8_t a : 1; // cross
+    uint8_t b : 1; // circle
+    uint8_t y : 1; // triangle
 
-    uint8_t leftShoulder : 1;   // l1
-    uint8_t rightShoulder : 1;  // r1
-    uint8_t l2 : 1;             // l2
-    uint8_t r2 : 1;             // r2
+    uint8_t leftShoulder : 1;  // l1
+    uint8_t rightShoulder : 1; // r1
+    uint8_t l2 : 1;            // l2
+    uint8_t r2 : 1;            // r2
 
-    uint8_t back : 1;             // share
-    uint8_t start : 1;            // options
-    uint8_t leftThumbClick : 1;   // l3
-    uint8_t rightThumbClick : 1;  // r3
+    uint8_t back : 1;            // share
+    uint8_t start : 1;           // options
+    uint8_t leftThumbClick : 1;  // l3
+    uint8_t rightThumbClick : 1; // r3
 
-    uint8_t guide : 1;    // ps
-    uint8_t capture : 1;  // touchpad click
+    uint8_t guide : 1;   // ps
+    uint8_t capture : 1; // touchpad click
     // 6 bit report counter.
     uint8_t reportCounter : 6;
 
@@ -68,7 +70,8 @@ typedef struct {
     uint8_t mystery_2[21];
 } __attribute__((packed)) PS4Dpad_Data_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t report_id;
     uint8_t leftStickX;
     uint8_t leftStickY;
@@ -79,23 +82,23 @@ typedef struct {
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
     // 14 bits for buttons.
-    uint8_t x : 1;  // square
-    uint8_t a : 1;  // cross
-    uint8_t b : 1;  // circle
-    uint8_t y : 1;  // triangle
+    uint8_t x : 1; // square
+    uint8_t a : 1; // cross
+    uint8_t b : 1; // circle
+    uint8_t y : 1; // triangle
 
-    uint8_t leftShoulder : 1;   // l1
-    uint8_t rightShoulder : 1;  // r1
-    uint8_t l2 : 1;             // l2
-    uint8_t r2 : 1;             // r2
+    uint8_t leftShoulder : 1;  // l1
+    uint8_t rightShoulder : 1; // r1
+    uint8_t l2 : 1;            // l2
+    uint8_t r2 : 1;            // r2
 
-    uint8_t back : 1;             // share
-    uint8_t start : 1;            // options
-    uint8_t leftThumbClick : 1;   // l3
-    uint8_t rightThumbClick : 1;  // r3
+    uint8_t back : 1;            // share
+    uint8_t start : 1;           // options
+    uint8_t leftThumbClick : 1;  // l3
+    uint8_t rightThumbClick : 1; // r3
 
-    uint8_t guide : 1;    // ps
-    uint8_t capture : 1;  // touchpad click
+    uint8_t guide : 1;   // ps
+    uint8_t capture : 1; // touchpad click
     // 6 bit report counter.
     uint8_t reportCounter : 6;
 
@@ -111,7 +114,6 @@ typedef struct {
     uint8_t mystery_2[21];
 } __attribute__((packed)) PS4Gamepad_Data_t;
 
-
 typedef struct
 {
 
@@ -125,24 +127,24 @@ typedef struct
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
-    
-    uint8_t x : 1;  // blue
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t y : 1;  // yellow
 
-    uint8_t leftShoulder : 1;   // orange
-    uint8_t rightShoulder: 1;  
-    uint8_t l2: 1;                // l2
-    uint8_t r2: 1;                // r2
+    uint8_t x : 1; // blue
+    uint8_t a : 1; // green
+    uint8_t b : 1; // red
+    uint8_t y : 1; // yellow
 
-    uint8_t back : 1;             // share
-    uint8_t start : 1;           // pause, options
-    uint8_t solo : 1;            // l3, solo
-    uint8_t : 1;            // r3, p1 on riffmaster
+    uint8_t leftShoulder : 1; // orange
+    uint8_t rightShoulder : 1;
+    uint8_t l2 : 1; // l2
+    uint8_t r2 : 1; // r2
 
-    uint8_t guide : 1;    // ps
-    uint8_t capture : 1;  // touchpad click
+    uint8_t back : 1;  // share
+    uint8_t start : 1; // pause, options
+    uint8_t solo : 1;  // l3, solo
+    uint8_t : 1;       // r3, p1 on riffmaster
+
+    uint8_t guide : 1;   // ps
+    uint8_t capture : 1; // touchpad click
     uint8_t : 6;
 
     uint8_t leftTrigger : 8;
@@ -193,16 +195,16 @@ typedef struct
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
-    
-    uint8_t x : 1;  // blue
-    uint8_t a : 1;  // green
-    uint8_t b : 1;  // red
-    uint8_t y : 1;  // yellow
 
-    uint8_t kick1 : 1;   // kick1
-    uint8_t kick2 : 1;  // kick2
-    uint8_t l2: 1;
-    uint8_t r2: 1;
+    uint8_t x : 1; // blue
+    uint8_t a : 1; // green
+    uint8_t b : 1; // red
+    uint8_t y : 1; // yellow
+
+    uint8_t kick1 : 1; // kick1
+    uint8_t kick2 : 1; // kick2
+    uint8_t l2 : 1;
+    uint8_t r2 : 1;
     uint8_t back : 1;
     uint8_t start : 1;
     uint8_t : 2;
@@ -245,23 +247,23 @@ typedef struct
     uint8_t dpadDown : 1;
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
-    uint8_t x : 1;  // square, white1
-    uint8_t a : 1;  // cross, black1
-    uint8_t b : 1;  // circle, black2
-    uint8_t y : 1;  // triangle, black3
+    uint8_t x : 1; // square, white1
+    uint8_t a : 1; // cross, black1
+    uint8_t b : 1; // circle, black2
+    uint8_t y : 1; // triangle, black3
 
-    uint8_t leftShoulder : 1;   // white2, l1
-    uint8_t rightShoulder : 1;  // white3, r1
-    uint8_t : 1;                // l2
-    uint8_t : 1;                // r2
+    uint8_t leftShoulder : 1;  // white2, l1
+    uint8_t rightShoulder : 1; // white3, r1
+    uint8_t : 1;               // l2
+    uint8_t : 1;               // r2
 
-    uint8_t : 1;                 // share
-    uint8_t start : 1;           // pause, options
-    uint8_t leftThumbClick : 1;  // l3, ghtv
-    uint8_t back : 1;            // r3, hero power, map it to back here as then this is like the ps3 and xb1 report
+    uint8_t : 1;                // share
+    uint8_t start : 1;          // pause, options
+    uint8_t leftThumbClick : 1; // l3, ghtv
+    uint8_t back : 1;           // r3, hero power, map it to back here as then this is like the ps3 and xb1 report
 
-    uint8_t guide : 1;    // ps
-    uint8_t capture : 1;  // touchpad click
+    uint8_t guide : 1;   // ps
+    uint8_t capture : 1; // touchpad click
 
     uint8_t unused2[56];
 } __attribute__((packed)) PS4GHLGuitar_Data_t;
@@ -356,39 +358,44 @@ static_assert(offsetof(PS4Wheel_Data_t, wheel) == 43, "G29 steering is PS4 repor
 static_assert(offsetof(PS4Wheel_Data_t, wheel) + offsetof(PSWheel_Data_t, unknown) == 52, "G29 buttons follow its shifter");
 static_assert(sizeof(PS4Wheel_Data_t) == 64, "PS4 reports are 64 bytes");
 
-typedef struct {
+typedef struct
+{
     uint8_t type;
     uint8_t u1;
     uint8_t size_challenge;
     uint8_t size_response;
-    uint8_t u4[4];  // crc32?
+    uint8_t u4[4]; // crc32?
 } __attribute__((packed)) AuthPageSizeReport;
 
-typedef struct {
-    uint8_t type;      // 0
-    uint8_t seq;       // 1
-    uint8_t page;      // 2
-    uint8_t sbz;       // 3
-    uint8_t data[56];  // 4-59
-    uint32_t crc32;    // 60-63
+typedef struct
+{
+    uint8_t type;     // 0
+    uint8_t seq;      // 1
+    uint8_t page;     // 2
+    uint8_t sbz;      // 3
+    uint8_t data[56]; // 4-59
+    uint32_t crc32;   // 60-63
 } __attribute__((packed)) AuthReport;
 
-typedef struct {
-    uint8_t type;        // 0
-    uint8_t seq;         // 1
-    uint8_t status;      // 2  0x10 = not ready, 0x00 = ready
-    uint8_t padding[9];  // 3-11
-    uint32_t crc32;      // 12-15
+typedef struct
+{
+    uint8_t type;       // 0
+    uint8_t seq;        // 1
+    uint8_t status;     // 2  0x10 = not ready, 0x00 = ready
+    uint8_t padding[9]; // 3-11
+    uint32_t crc32;     // 12-15
 } __attribute__((packed)) AuthStatusReport;
 
-enum BackendAuthState {
+enum BackendAuthState
+{
     OK,
     UNKNOWN_ERR,
     COMM_ERR,
     BUSY,
     NO_TRANSACTION,
 };
-enum PS4ReportIds {
+enum PS4ReportIds
+{
     FEATURE_REPORT = 0x0303,
     SET_CHALLENGE = 0x03f0,
     GET_RESPONSE,
@@ -465,8 +472,7 @@ struct PS4FeatureReport
     uint8_t reserved[3];
 
     // depends on device_type
-    union
-    {
+    union {
         struct
         {
             uint8_t selector_switch : 1;

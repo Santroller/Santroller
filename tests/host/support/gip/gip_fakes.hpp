@@ -20,12 +20,12 @@ inline bool device_mounted = true;
 inline bool device_suspended = false;
 inline bool device_in_busy = false;
 inline bool device_in_busy_after_transfer = false;
-inline std::vector<Transfer> device_in;  // reports sent to the console on IN endpoints
-inline int device_out_arms = 0;          // how many times an OUT transfer was queued
+inline std::vector<Transfer> device_in; // reports sent to the console on IN endpoints
+inline int device_out_arms = 0;         // how many times an OUT transfer was queued
 
 // USB host side
-inline std::vector<Transfer> host_out;   // reports sent to the controller (send_intr_xfer)
-inline bool host_out_fail = false;       // make send_intr_xfer fail (endpoint busy)
+inline std::vector<Transfer> host_out;    // reports sent to the controller (send_intr_xfer)
+inline bool host_out_fail = false;        // make send_intr_xfer fail (endpoint busy)
 inline uint8_t *host_in_buffer = nullptr; // buffer the IN endpoint was last armed with
 inline uint16_t host_in_size = 0;
 inline int host_in_arms = 0;

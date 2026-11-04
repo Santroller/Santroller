@@ -5,8 +5,14 @@
 #include "firmware_descriptors.hpp"
 
 // The device stack calls Spice2xDevice::process() makes (never called here)
-extern "C" bool tud_suspended(void) { return false; }
-extern "C" bool tud_mounted(void) { return false; }
+extern "C" bool tud_suspended(void)
+{
+    return false;
+}
+extern "C" bool tud_mounted(void)
+{
+    return false;
+}
 
 namespace hid_desc
 {

@@ -133,13 +133,12 @@ void XboxOneHost::register_auth_handler(std::shared_ptr<XboxOneHost> self)
     }
 
     std::weak_ptr<XboxOneHost> weak_self = self;
-    auth_broker.register_handler(ModeXboxOne, [weak_self](XGIPProtocol *packet)
-                                 {
-                                     if (auto host = weak_self.lock())
-                                     {
-                                         host->send_report_from_host(packet);
-                                     }
-                                 });
+    auth_broker.register_handler(ModeXboxOne, [weak_self](XGIPProtocol *packet) {
+        if (auto host = weak_self.lock())
+        {
+            host->send_report_from_host(packet);
+        }
+    });
     m_auth_registered = true;
 }
 
@@ -196,8 +195,7 @@ std::shared_ptr<UsbHostInterface> XboxOneHost::open(std::shared_ptr<UsbHostDevic
         {
             continue;
         }
-        intf->m_chatpad = std::make_shared<XboxOneChatpadHost>(dev_addr, itf, list->m_id, intf, [](UsbHostInterface &controller, const uint8_t *data, uint16_t len, bool ack)
-                                                               {
+        intf->m_chatpad = std::make_shared<XboxOneChatpadHost>(dev_addr, itf, list->m_id, intf, [](UsbHostInterface &controller, const uint8_t *data, uint16_t len, bool ack) {
                                                                    auto &host = static_cast<XboxOneHost &>(controller);
                                                                    if (ack)
                                                                    {

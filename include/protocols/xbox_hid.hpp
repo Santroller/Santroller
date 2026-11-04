@@ -22,7 +22,6 @@
 // Layouts match SDL's HIDAPI Xbox One Bluetooth driver and Linux hid-microsoft.
 // ---------------------------------------------------------------------------
 
-
 #define XBOX_HID_INPUT_REPORT_ID 0x01
 #define XBOX_HID_GUIDE_REPORT_ID 0x02
 #define XBOX_HID_RUMBLE_REPORT_ID 0x03
@@ -209,23 +208,40 @@ static inline bool xbox_hid_tick_digital(const XboxHidState &state, proto_Output
         return false;
     switch (type.mapping.gamepadButton)
     {
-    case Gamepad_A:               return state.a;
-    case Gamepad_B:               return state.b;
-    case Gamepad_X:               return state.x;
-    case Gamepad_Y:               return state.y;
-    case Gamepad_LeftShoulder:    return state.lb;
-    case Gamepad_RightShoulder:   return state.rb;
-    case Gamepad_Back:            return state.back;
-    case Gamepad_Start:           return state.start;
-    case Gamepad_Guide:           return state.guide;
-    case Gamepad_Capture:         return state.share;
-    case Gamepad_LeftThumbClick:  return state.ls;
-    case Gamepad_RightThumbClick: return state.rs;
-    case Gamepad_DpadUp:          return state.up;
-    case Gamepad_DpadDown:        return state.down;
-    case Gamepad_DpadLeft:        return state.left;
-    case Gamepad_DpadRight:       return state.right;
-    default:                      return xbox_elite_paddle_pressed(state.paddles, type.mapping.gamepadButton);
+    case Gamepad_A:
+        return state.a;
+    case Gamepad_B:
+        return state.b;
+    case Gamepad_X:
+        return state.x;
+    case Gamepad_Y:
+        return state.y;
+    case Gamepad_LeftShoulder:
+        return state.lb;
+    case Gamepad_RightShoulder:
+        return state.rb;
+    case Gamepad_Back:
+        return state.back;
+    case Gamepad_Start:
+        return state.start;
+    case Gamepad_Guide:
+        return state.guide;
+    case Gamepad_Capture:
+        return state.share;
+    case Gamepad_LeftThumbClick:
+        return state.ls;
+    case Gamepad_RightThumbClick:
+        return state.rs;
+    case Gamepad_DpadUp:
+        return state.up;
+    case Gamepad_DpadDown:
+        return state.down;
+    case Gamepad_DpadLeft:
+        return state.left;
+    case Gamepad_DpadRight:
+        return state.right;
+    default:
+        return xbox_elite_paddle_pressed(state.paddles, type.mapping.gamepadButton);
     }
 }
 
@@ -236,13 +252,20 @@ static inline uint16_t xbox_hid_tick_analog(const XboxHidState &state, proto_Out
     // HID axes report down as the maximum, so Y is inverted
     switch (type.mapping.gamepadAxis)
     {
-    case Gamepad_LeftStickX:   return state.lx;
-    case Gamepad_LeftStickY:   return UINT16_MAX - state.ly;
-    case Gamepad_RightStickX:  return state.rx;
-    case Gamepad_RightStickY:  return UINT16_MAX - state.ry;
-    case Gamepad_LeftTrigger:  return state.lt;
-    case Gamepad_RightTrigger: return state.rt;
-    default:                   return 0;
+    case Gamepad_LeftStickX:
+        return state.lx;
+    case Gamepad_LeftStickY:
+        return UINT16_MAX - state.ly;
+    case Gamepad_RightStickX:
+        return state.rx;
+    case Gamepad_RightStickY:
+        return UINT16_MAX - state.ry;
+    case Gamepad_LeftTrigger:
+        return state.lt;
+    case Gamepad_RightTrigger:
+        return state.rt;
+    default:
+        return 0;
     }
 }
 

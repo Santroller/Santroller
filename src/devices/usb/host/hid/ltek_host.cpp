@@ -9,7 +9,6 @@
 #include "hidparser.h"
 #include "protocols/dance_pad.hpp"
 
-
 std::shared_ptr<UsbHostInterface> LTekHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
     uint8_t dev_addr = list->dev_addr();
@@ -91,31 +90,31 @@ bool LTekHost::set_config()
     }
     return true;
 }
-bool LTekHost::tick_digital(proto_Output& type)
+bool LTekHost::tick_digital(proto_Output &type)
 {
     if (type.which_mapping == proto_Output_gamepadButton_tag)
-    switch (type.mapping.gamepadButton)
-    {
-    case Gamepad_A:
-        return m_last_input_report.dpadCenter;
-    case Gamepad_DpadUp:
-        return m_last_input_report.dpadUp;
-    case Gamepad_DpadDown:
-        return m_last_input_report.dpadDown;
-    case Gamepad_DpadLeft:
-        return m_last_input_report.dpadLeft;
-    case Gamepad_DpadRight:
-        return m_last_input_report.dpadRight;
-    case Gamepad_Back:
-        return m_last_input_report.back;
-    case Gamepad_Start:
-        return m_last_input_report.start;
-    default:
-        return false;
-    }
+        switch (type.mapping.gamepadButton)
+        {
+        case Gamepad_A:
+            return m_last_input_report.dpadCenter;
+        case Gamepad_DpadUp:
+            return m_last_input_report.dpadUp;
+        case Gamepad_DpadDown:
+            return m_last_input_report.dpadDown;
+        case Gamepad_DpadLeft:
+            return m_last_input_report.dpadLeft;
+        case Gamepad_DpadRight:
+            return m_last_input_report.dpadRight;
+        case Gamepad_Back:
+            return m_last_input_report.back;
+        case Gamepad_Start:
+            return m_last_input_report.start;
+        default:
+            return false;
+        }
     return false;
 }
-uint16_t LTekHost::tick_analog(proto_Output& type)
+uint16_t LTekHost::tick_analog(proto_Output &type)
 {
     return 0;
 }

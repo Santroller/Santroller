@@ -11,7 +11,7 @@ class PS2Device : public Device
 {
 public:
     ~PS2Device() {}
-    PS2Device(const DeviceReloadState* state, proto_PSXDevice device, uint16_t id);
+    PS2Device(const DeviceReloadState *state, proto_PSXDevice device, uint16_t id);
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);
@@ -25,7 +25,7 @@ public:
     bool is_assignable() const override { return true; }
     void rescan(bool first);
     bool using_pin(uint8_t pin);
-    void save_reload_state(DeviceReloadState& state) const override;
+    void save_reload_state(DeviceReloadState &state) const override;
     bool matches_reload_config(const proto_Device &config) const override;
     void set_rumble(uint8_t left, uint8_t right) override;
     bool has_rumble() const override;

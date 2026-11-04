@@ -62,7 +62,8 @@ void WiiExtensionEmulationDeviceInstance::process(bool full_poll, bool send_even
     WiiExtensionEmulation &controller = wii_dev->get_controller();
     // if the format changed, reinitialize
     uint8_t format = wii_extension_format_for_subtype(subtype, controller.wii_data_format());
-    if (m_last_format != format) {
+    if (m_last_format != format)
+    {
         m_last_format = format;
         initialize();
     }

@@ -75,5 +75,8 @@ struct State
 
 inline State state;
 
-inline void reset() { state = State(); }
+inline void reset()
+{
+    state = State();
+}
 }

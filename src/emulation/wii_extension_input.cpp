@@ -38,9 +38,9 @@ uint8_t wii_extension_report_size(SubType subtype, uint8_t format)
 }
 
 void initialize_wii_extension_report(SubType subtype, uint8_t format,
-                                      uint8_t *report, uint8_t *size,
-                                      uint8_t *buttons_low_offset,
-                                      uint8_t *buttons_high_offset)
+                                     uint8_t *report, uint8_t *size,
+                                     uint8_t *buttons_low_offset,
+                                     uint8_t *buttons_high_offset)
 {
     memset(report, 0, wii_extension_report_size(subtype, format));
     if (subtype == Taiko)
@@ -51,8 +51,10 @@ void initialize_wii_extension_report(SubType subtype, uint8_t format,
         data->staticData[2] = 0x50;
         data->staticData[3] = 0x10;
         data->staticData[4] = 0xFF;
-        if (buttons_low_offset) *buttons_low_offset = offsetof(WiiTaikoData_t, buttons);
-        if (buttons_high_offset) *buttons_high_offset = offsetof(WiiTaikoData_t, buttons);
+        if (buttons_low_offset)
+            *buttons_low_offset = offsetof(WiiTaikoData_t, buttons);
+        if (buttons_high_offset)
+            *buttons_high_offset = offsetof(WiiTaikoData_t, buttons);
     }
     else if (subtype == GuitarHeroGuitar)
     {
@@ -61,8 +63,10 @@ void initialize_wii_extension_report(SubType subtype, uint8_t format,
         data->leftStickY = 32;
         // 0x0F is the touch bar's "not touching" code (wiibrew Wiimote/Extension_Controllers/Guitar_Hero_(Wii)_Guitars)
         data->slider = 0x0F;
-        if (buttons_low_offset) *buttons_low_offset = offsetof(WiiGuitarDataFormat3_t, buttonsLow);
-        if (buttons_high_offset) *buttons_high_offset = offsetof(WiiGuitarDataFormat3_t, buttonsHigh);
+        if (buttons_low_offset)
+            *buttons_low_offset = offsetof(WiiGuitarDataFormat3_t, buttonsLow);
+        if (buttons_high_offset)
+            *buttons_high_offset = offsetof(WiiGuitarDataFormat3_t, buttonsHigh);
     }
     else if (subtype == GuitarHeroDrums)
     {
@@ -72,16 +76,20 @@ void initialize_wii_extension_report(SubType subtype, uint8_t format,
         // the drum data is inverted, so no hit is FF FF in bytes 2 and 3 (wiibrew Wiimote/Extension_Controllers/Guitar_Hero_World_Tour_(Wii)_Drums)
         report[2] = 0xFF;
         report[3] = 0xFF;
-        if (buttons_low_offset) *buttons_low_offset = offsetof(WiiDrumDataFormat3_t, buttonsLow);
-        if (buttons_high_offset) *buttons_high_offset = offsetof(WiiDrumDataFormat3_t, buttonsHigh);
+        if (buttons_low_offset)
+            *buttons_low_offset = offsetof(WiiDrumDataFormat3_t, buttonsLow);
+        if (buttons_high_offset)
+            *buttons_high_offset = offsetof(WiiDrumDataFormat3_t, buttonsHigh);
     }
     else if (subtype == DjHeroTurntable)
     {
         auto *data = reinterpret_cast<WiiTurntableDataFormat3_t *>(report);
         data->leftStickX = 32;
         data->leftStickY = 32;
-        if (buttons_low_offset) *buttons_low_offset = offsetof(WiiTurntableDataFormat3_t, buttonsLow);
-        if (buttons_high_offset) *buttons_high_offset = offsetof(WiiTurntableDataFormat3_t, buttonsHigh);
+        if (buttons_low_offset)
+            *buttons_low_offset = offsetof(WiiTurntableDataFormat3_t, buttonsLow);
+        if (buttons_high_offset)
+            *buttons_high_offset = offsetof(WiiTurntableDataFormat3_t, buttonsHigh);
     }
     else if (format == 1)
     {
@@ -94,8 +102,10 @@ void initialize_wii_extension_report(SubType subtype, uint8_t format,
         data->rightStickX0 = intermediate.rightStickX0;
         data->rightStickX21 = intermediate.rightStickX21;
         data->rightStickX43 = intermediate.rightStickX43;
-        if (buttons_low_offset) *buttons_low_offset = offsetof(WiiClassicDataFormat1_t, buttonsLow);
-        if (buttons_high_offset) *buttons_high_offset = offsetof(WiiClassicDataFormat1_t, buttonsHigh);
+        if (buttons_low_offset)
+            *buttons_low_offset = offsetof(WiiClassicDataFormat1_t, buttonsLow);
+        if (buttons_high_offset)
+            *buttons_high_offset = offsetof(WiiClassicDataFormat1_t, buttonsHigh);
     }
     else if (format == 2)
     {
@@ -104,8 +114,10 @@ void initialize_wii_extension_report(SubType subtype, uint8_t format,
         data->leftStickY92 = 128;
         data->rightStickX92 = 128;
         data->rightStickY92 = 128;
-        if (buttons_low_offset) *buttons_low_offset = offsetof(WiiClassicDataFormat2_t, buttonsLow);
-        if (buttons_high_offset) *buttons_high_offset = offsetof(WiiClassicDataFormat2_t, buttonsHigh);
+        if (buttons_low_offset)
+            *buttons_low_offset = offsetof(WiiClassicDataFormat2_t, buttonsLow);
+        if (buttons_high_offset)
+            *buttons_high_offset = offsetof(WiiClassicDataFormat2_t, buttonsHigh);
     }
     else
     {
@@ -114,8 +126,10 @@ void initialize_wii_extension_report(SubType subtype, uint8_t format,
         data->leftStickY = 128;
         data->rightStickX = 128;
         data->rightStickY = 128;
-        if (buttons_low_offset) *buttons_low_offset = offsetof(WiiClassicDataFormat3_t, buttonsLow);
-        if (buttons_high_offset) *buttons_high_offset = offsetof(WiiClassicDataFormat3_t, buttonsHigh);
+        if (buttons_low_offset)
+            *buttons_low_offset = offsetof(WiiClassicDataFormat3_t, buttonsLow);
+        if (buttons_high_offset)
+            *buttons_high_offset = offsetof(WiiClassicDataFormat3_t, buttonsHigh);
     }
     *size = wii_extension_report_size(subtype, format);
 }

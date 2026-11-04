@@ -7,7 +7,7 @@
 class CrkdDrumInput : public Input
 {
 public:
-    CrkdDrumInput(proto_CrkdDrumAxisInput input, std::shared_ptr<CrkdDrumDevice> device, Profile* profile);
+    CrkdDrumInput(proto_CrkdDrumAxisInput input, std::shared_ptr<CrkdDrumDevice> device, Profile *profile);
     bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }

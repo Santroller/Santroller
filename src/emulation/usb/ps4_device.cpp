@@ -182,7 +182,8 @@ void PS4GamepadDevice::process(bool full_poll, bool send_events)
     send_report(sizeof(PS4Dpad_Data_t), 0, epin_buf);
     PS4Dpad_Data_t *initial = (PS4Dpad_Data_t *)m_initial_report;
     initial->reportCounter++;
-    if (initial->reportCounter == 0) {
+    if (initial->reportCounter == 0)
+    {
         initial->reportCounter = 1;
     }
 }
@@ -200,7 +201,7 @@ size_t PS4GamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     return sizeof(desc);
 }
 
-size_t PS4GamepadDevice::device_name(uint8_t idx, char *desc) 
+size_t PS4GamepadDevice::device_name(uint8_t idx, char *desc)
 {
     return 0;
 }
@@ -262,8 +263,7 @@ uint16_t PS4GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
 
     switch (report_id)
     {
-    case ReportId::ReportIdPs4Feature:
-    {
+    case ReportId::ReportIdPs4Feature: {
         PS4FeatureReport report = ps4_feature_report(subtype);
         memcpy(buffer, &report, sizeof(report));
         return sizeof(report);
@@ -305,8 +305,7 @@ void PS4GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
     }
     switch (report_type)
     {
-    case HID_REPORT_TYPE_FEATURE:
-    {
+    case HID_REPORT_TYPE_FEATURE: {
         switch (report_id)
         {
         case 0:
@@ -320,8 +319,7 @@ void PS4GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
         }
         break;
     }
-    case HID_REPORT_TYPE_OUTPUT:
-    {
+    case HID_REPORT_TYPE_OUTPUT: {
         ps4_output_report *report = (ps4_output_report *)buffer;
         set_rumble(report->motor_left, report->motor_right);
         set_lightbar(report->lightbar_red, report->lightbar_green, report->lightbar_blue);

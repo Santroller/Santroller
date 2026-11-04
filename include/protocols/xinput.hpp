@@ -276,7 +276,7 @@ typedef struct
     uint8_t leftShoulder : 1;
     uint8_t rightShoulder : 1;
     uint8_t guide : 1;
-    uint8_t capture: 1;
+    uint8_t capture : 1;
 
     uint8_t a : 1;
     uint8_t b : 1;
@@ -352,8 +352,7 @@ typedef struct
     uint8_t leftTrigger;
     uint8_t rightTrigger;
     int16_t leftStickX;
-    union
-    {
+    union {
         struct
         {
             uint8_t greenVelocity;
@@ -394,8 +393,7 @@ typedef struct
 
     uint8_t accelZ;
     uint8_t accelX;
-    union
-    {
+    union {
         struct
         {
             int16_t tapGreen : 1;
@@ -479,8 +477,7 @@ typedef struct
     uint16_t highEFret : 5;
     uint16_t soloFlag : 1;
 
-    union
-    {
+    union {
         struct
         {
             uint16_t lowEFretVelocity : 7;
@@ -639,20 +636,23 @@ typedef struct
 // a full axis. Matches santroller v1's +-128, which felt better than the real +-64 in testing.
 #define XINPUT_TURNTABLE_VELOCITY_SCALE 256
 
-typedef struct {
-    uint8_t bLength; // Length of this descriptor.
+typedef struct
+{
+    uint8_t bLength;         // Length of this descriptor.
     uint8_t bDescriptorType; // CONFIGURATION descriptor type (USB_DESCRIPTOR_CONFIGURATION).
     uint8_t reserved[18];
 } __attribute__((packed)) XBOX_ID_W_DESCRIPTOR;
 
-typedef struct {
+typedef struct
+{
     uint8_t id;
     uint8_t type;
     uint8_t unknown;
     uint16_t state;
 } __attribute__((packed)) XBOX_WIRELESS_HEADER;
 
-typedef struct {
+typedef struct
+{
     uint8_t id;
     uint8_t type;
     uint8_t unknown1;
@@ -661,7 +661,7 @@ typedef struct {
     uint8_t headset : 1;
     uint8_t chatpad : 1;
     uint8_t always_0x1 : 4;
-    
+
     // byte 1
     uint8_t unknown : 1;
     uint8_t batteryType : 2;
@@ -670,7 +670,8 @@ typedef struct {
     uint8_t batteryLevel : 2;
 } __attribute__((packed)) XBOX_WIRELESS_STATE;
 
-typedef struct {
+typedef struct
+{
     XBOX_WIRELESS_HEADER header;
     uint8_t always_0xCC;
     uint32_t unk1;
@@ -685,7 +686,8 @@ typedef struct {
     uint8_t unk3[3];
 } __attribute__((packed)) XBOX_WIRELESS_LINK_REPORT;
 
-typedef struct {
+typedef struct
+{
     XBOX_WIRELESS_HEADER header;
     uint8_t always_0x12;
     uint16_t buttons;

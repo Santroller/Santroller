@@ -34,7 +34,8 @@ bool ps4_parse_capabilities(const uint8_t *data, uint16_t len, uint16_t vid, uin
 // (report_id=0x01, leftStickX, …) so we can reuse PS4 tick logic unchanged.
 void BtDs4Host::handle_report(const uint8_t *data, uint16_t len)
 {
-    if (len < 2) return;
+    if (len < 2)
+        return;
 
     // Detect BT-specific framing: first byte is 0x11 when BTstack strips the
     // leading 0xa1, otherwise it arrives as plain report already.

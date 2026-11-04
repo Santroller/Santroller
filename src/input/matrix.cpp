@@ -3,7 +3,7 @@
 #include "hardware/adc.h"
 #include "stdio.h"
 
-MatrixInput::MatrixInput(proto_MatrixInput input, std::shared_ptr<MatrixDevice> device, Profile* profile) : m_input(input), m_device(device)
+MatrixInput::MatrixInput(proto_MatrixInput input, std::shared_ptr<MatrixDevice> device, Profile *profile) : m_input(input), m_device(device)
 {
 }
 bool MatrixInput::tick_digital_raw()

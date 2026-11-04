@@ -51,10 +51,22 @@ constexpr uint16_t kPageButton = 0x09;
 constexpr uint16_t kPageConsumer = 0x0C;
 constexpr uint16_t kPageVendor = 0xFF00;
 
-constexpr uint32_t usage(uint16_t page, uint16_t id) { return (uint32_t(page) << 16) | id; }
-constexpr uint32_t desktop(uint16_t id) { return usage(kPageDesktop, id); }
-constexpr uint32_t button(uint16_t n) { return usage(kPageButton, n); }
-constexpr uint32_t vendor(uint16_t id) { return usage(kPageVendor, id); }
+constexpr uint32_t usage(uint16_t page, uint16_t id)
+{
+    return (uint32_t(page) << 16) | id;
+}
+constexpr uint32_t desktop(uint16_t id)
+{
+    return usage(kPageDesktop, id);
+}
+constexpr uint32_t button(uint16_t n)
+{
+    return usage(kPageButton, n);
+}
+constexpr uint32_t vendor(uint16_t id)
+{
+    return usage(kPageVendor, id);
+}
 
 constexpr uint16_t kDesktopPointer = 0x01;
 constexpr uint16_t kDesktopJoystick = 0x04;
@@ -76,7 +88,7 @@ struct Element
     uint8_t report_id;
     uint32_t bit_offset; // from the start of the report data, not counting the report id byte
     uint32_t bit_size;
-    uint32_t usage;      // extended usage, 0 for padding and for array items
+    uint32_t usage; // extended usage, 0 for padding and for array items
     uint32_t flags;
     int64_t logical_min;
     int64_t logical_max;
@@ -252,7 +264,8 @@ inline Descriptor parse(const uint8_t *desc, size_t len)
             // Main item
             if (tag == 0x8 || tag == 0x9 || tag == 0xB)
             {
-                const ReportType rtype = tag == 0x8 ? ReportType::Input : tag == 0x9 ? ReportType::Output : ReportType::Feature;
+                const ReportType rtype = tag == 0x8 ? ReportType::Input : tag == 0x9 ? ReportType::Output
+                                                                                     : ReportType::Feature;
                 if (l.usage_min.has_value() != l.usage_max.has_value())
                     return fail(at, "usage minimum without a usage maximum (or the reverse)");
                 if (l.usage_min && *l.usage_min > *l.usage_max)
@@ -446,9 +459,15 @@ inline Descriptor parse(const uint8_t *desc, size_t len)
     return out;
 }
 
-inline Descriptor parse(const std::vector<uint8_t> &desc) { return parse(desc.data(), desc.size()); }
+inline Descriptor parse(const std::vector<uint8_t> &desc)
+{
+    return parse(desc.data(), desc.size());
+}
 template <size_t N>
-Descriptor parse(const uint8_t (&desc)[N]) { return parse(desc, N); }
+Descriptor parse(const uint8_t (&desc)[N])
+{
+    return parse(desc, N);
+}
 
 // Data (non constant) elements that overlap another element of the same report
 inline std::vector<std::string> overlaps(const Descriptor &d)

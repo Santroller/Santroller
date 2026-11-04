@@ -17,7 +17,7 @@ public:
     virtual void reset() {};
     virtual int assignedDevices() = 0;
     virtual bool reads_input() const { return false; }
-    virtual bool forcedConsoleMode(ConsoleMode& mode) const { return false; }
+    virtual bool forcedConsoleMode(ConsoleMode &mode) const { return false; }
     virtual bool xinputOnWindows(bool &enabled) const { return false; }
     virtual bool ps4OrPs5Mode(bool &enabled) const { return false; }
     // A "Hold Button at Startup" that can still match, so the list should look at its devices even

@@ -18,7 +18,8 @@ public:
     bool valid() const override { return m_device != nullptr; }
     void link_device(bool claim_devices) override
     {
-        if (m_input) m_input->link_device(claim_devices);
+        if (m_input)
+            m_input->link_device(claim_devices);
     }
     uint32_t linked_device_serial() const override { return m_input ? m_input->linked_device_serial() : 0; }
 

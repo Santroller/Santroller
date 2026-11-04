@@ -4,7 +4,7 @@
 #include "stdio.h"
 #include "protocols/motion.hpp"
 
-AccelerometerInput::AccelerometerInput(proto_AccelerometerInput input, std::shared_ptr<AccelerometerDevice> device, Profile* profile) : m_input(input), m_device(device)
+AccelerometerInput::AccelerometerInput(proto_AccelerometerInput input, std::shared_ptr<AccelerometerDevice> device, Profile *profile) : m_input(input), m_device(device)
 {
 }
 bool AccelerometerInput::tick_digital_raw()
@@ -46,7 +46,7 @@ uint16_t AccelerometerInput::tick_analog()
         return accelerometer.lis3dhAdc[1];
     case AccelerometerAdc3:
         return accelerometer.lis3dhAdc[2];
-    
+
     default:
         break;
     }

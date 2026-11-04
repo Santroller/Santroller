@@ -66,7 +66,6 @@ bool DeviceManager::is_snes_communicating() const
     return fake_devices::snes_communicating;
 }
 
-
 // Same as src/usb/auth_broker.cpp, for the Xbox One auth trigger. Nothing registers a handler, so it never
 // matches
 AuthBroker auth_broker;

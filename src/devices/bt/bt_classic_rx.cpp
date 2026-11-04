@@ -336,8 +336,7 @@ static void btc_sync_reconnect(void)
         btstack_run_loop_remove_timer(&s_classic_reconnect_timer);
         s_classic_reconnect_timer_active = false;
     }
-    DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state)
-                                                   {
+    DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state) {
         // Skip Wii remote emulation ID (when Pico acts as a Wiimote to a console)
         if (static_cast<uint32_t>(id) == 0xFFFFFFFEu) return;
         if (state.ble || btstack_is_null_bd_addr(state.mac)) return;
@@ -657,7 +656,8 @@ static bool upgrade_to_ps4(uint16_t cid, std::shared_ptr<BluetoothHostInterface>
     if (is_inst)
     {
         sub = ((vid == MADCATZ_VID && pid == PS4_MADCATZ_DRUM_PID) || (vid == PDP_VID && pid == PS4_PDP_DRUM_PID))
-              ? RockBandDrums : RockBandGuitar;
+                  ? RockBandDrums
+                  : RockBandGuitar;
     }
     else if (old_host->subtype() != SubType_Gamepad && old_host->subtype() != SubType_Unknown)
     {
@@ -755,8 +755,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
 
         switch (event)
         {
-        case BTSTACK_EVENT_STATE:
-        {
+        case BTSTACK_EVENT_STATE: {
             uint8_t st = btstack_event_state_get_state(packet);
             printf("Classic BTstack state: %d (WORKING=%d)\r\n", st, HCI_STATE_WORKING);
             if (st == HCI_STATE_WORKING)
@@ -885,8 +884,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             continue_remote_names();
             break;
 
-        case HCI_EVENT_CONNECTION_COMPLETE:
-        {
+        case HCI_EVENT_CONNECTION_COMPLETE: {
             status = hci_event_connection_complete_get_status(packet);
             hci_event_connection_complete_get_bd_addr(packet, event_addr);
             if (status == ERROR_CODE_SUCCESS)
@@ -923,8 +921,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                    hci_event_role_change_get_role(packet) == HCI_ROLE_MASTER ? "master" : "slave");
             break;
 
-        case HCI_EVENT_DISCONNECTION_COMPLETE:
-        {
+        case HCI_EVENT_DISCONNECTION_COMPLETE: {
             bd_addr_t link_addr;
             if (untrack_switch_link(hci_event_disconnection_complete_get_connection_handle(packet), link_addr) &&
                 !is_already_connected_or_pending(link_addr))
@@ -939,8 +936,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
         }
 
-        case HCI_EVENT_AUTHENTICATION_COMPLETE_EVENT:
-        {
+        case HCI_EVENT_AUTHENTICATION_COMPLETE_EVENT: {
             status = hci_event_authentication_complete_get_status(packet);
             hci_con_handle_t handle = hci_event_authentication_complete_get_connection_handle(packet);
             printf("Classic authentication complete: handle=0x%04x, status=0x%02x\r\n", handle, status);
@@ -961,8 +957,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
         }
 
-        case GAP_EVENT_SECURITY_LEVEL:
-        {
+        case GAP_EVENT_SECURITY_LEVEL: {
             hci_con_handle_t handle = gap_event_security_level_get_handle(packet);
             gap_security_level_t sec_level = (gap_security_level_t)gap_event_security_level_get_security_level(packet);
             status = gap_event_security_level_get_status(packet);
@@ -970,8 +965,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
         }
 
-        case HCI_EVENT_PIN_CODE_REQUEST:
-        {
+        case HCI_EVENT_PIN_CODE_REQUEST: {
             hci_event_pin_code_request_get_bd_addr(packet, event_addr);
             if (is_wii_device(event_addr))
             {
@@ -990,16 +984,14 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
         }
 
-        case HCI_EVENT_USER_CONFIRMATION_REQUEST:
-        {
+        case HCI_EVENT_USER_CONFIRMATION_REQUEST: {
             hci_event_user_confirmation_request_get_bd_addr(packet, event_addr);
             printf("SSP User Confirmation Auto accept for %s\r\n", bd_addr_to_str(event_addr));
             gap_ssp_confirmation_response(event_addr);
             break;
         }
 
-        case HCI_EVENT_SIMPLE_PAIRING_COMPLETE:
-        {
+        case HCI_EVENT_SIMPLE_PAIRING_COMPLETE: {
             status = hci_event_simple_pairing_complete_get_status(packet);
             hci_event_simple_pairing_complete_get_bd_addr(packet, event_addr);
             printf("Classic SSP pairing complete: %s, status=0x%02x\r\n", bd_addr_to_str(event_addr), status);
@@ -1009,8 +1001,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         case HCI_EVENT_HID_META:
             switch (hci_event_hid_meta_get_subevent_code(packet))
             {
-            case HID_SUBEVENT_INCOMING_CONNECTION:
-            {
+            case HID_SUBEVENT_INCOMING_CONNECTION: {
                 uint16_t cid = hid_subevent_incoming_connection_get_hid_cid(packet);
                 bd_addr_t in_addr = {};
                 hid_subevent_incoming_connection_get_address(packet, in_addr);
@@ -1036,8 +1027,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 break;
             }
 
-            case HID_SUBEVENT_CONNECTION_OPENED:
-            {
+            case HID_SUBEVENT_CONNECTION_OPENED: {
                 uint16_t cid = hid_subevent_connection_opened_get_hid_cid(packet);
                 status = hid_subevent_connection_opened_get_status(packet);
                 if (status != ERROR_CODE_SUCCESS)
@@ -1193,8 +1183,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 break;
             }
 
-            case HID_SUBEVENT_DESCRIPTOR_AVAILABLE:
-            {
+            case HID_SUBEVENT_DESCRIPTOR_AVAILABLE: {
                 uint16_t cid = hid_subevent_descriptor_available_get_hid_cid(packet);
                 status = hid_subevent_descriptor_available_get_status(packet);
                 if (status == ERROR_CODE_SUCCESS)
@@ -1217,8 +1206,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 break;
             }
 
-            case HID_SUBEVENT_REPORT:
-            {
+            case HID_SUBEVENT_REPORT: {
                 uint16_t cid = hid_subevent_report_get_hid_cid(packet);
                 auto slot = bt_slot_by_cid(cid);
                 if (slot)
@@ -1236,7 +1224,8 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     {
                         // Don't clobber a pending action (eg a descriptor that just arrived), the next
                         // report asks for the init packets again
-                        if (!slot->host->init_packets_sent() && slot->action == PendingAction::None) {
+                        if (!slot->host->init_packets_sent() && slot->action == PendingAction::None)
+                        {
                             slot->action = PendingAction::SendInitPackets;
                         }
                         slot->host->handle_report(report, report_len);
@@ -1252,8 +1241,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 break;
             }
 
-            case HID_SUBEVENT_CONNECTION_CLOSED:
-            {
+            case HID_SUBEVENT_CONNECTION_CLOSED: {
                 uint16_t cid = hid_subevent_connection_closed_get_hid_cid(packet);
                 auto slot = bt_slot_by_cid(cid);
                 if (slot)
@@ -1271,8 +1259,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 break;
             }
 
-            case HID_SUBEVENT_GET_REPORT_RESPONSE:
-            {
+            case HID_SUBEVENT_GET_REPORT_RESPONSE: {
                 uint16_t cid = hid_subevent_get_report_response_get_hid_cid(packet);
                 status = hid_subevent_get_report_response_get_handshake_status(packet);
                 auto slot = bt_slot_by_cid(cid);
@@ -1301,8 +1288,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 break;
             }
 
-            case HID_SUBEVENT_SET_PROTOCOL_RESPONSE:
-            {
+            case HID_SUBEVENT_SET_PROTOCOL_RESPONSE: {
                 uint16_t cid = hid_subevent_set_protocol_response_get_hid_cid(packet);
                 status = hid_subevent_set_protocol_response_get_handshake_status(packet);
                 printf("HID Set Protocol Response for cid=0x%04x, status=0x%02x\r\n", cid, status);

@@ -49,12 +49,36 @@ struct Report
         buf[2] = hat;
         buf[3] = buf[4] = buf[5] = buf[6] = 0x80;
     }
-    Report &yellow(uint8_t v) { buf[11] = v; return *this; }
-    Report &red(uint8_t v) { buf[12] = v; return *this; }
-    Report &green(uint8_t v) { buf[13] = v; return *this; }
-    Report &blue(uint8_t v) { buf[14] = v; return *this; }
-    Report &kick(uint8_t v) { buf[15] = v; return *this; }
-    Report &orange(uint8_t v) { buf[16] = v; return *this; }
+    Report &yellow(uint8_t v)
+    {
+        buf[11] = v;
+        return *this;
+    }
+    Report &red(uint8_t v)
+    {
+        buf[12] = v;
+        return *this;
+    }
+    Report &green(uint8_t v)
+    {
+        buf[13] = v;
+        return *this;
+    }
+    Report &blue(uint8_t v)
+    {
+        buf[14] = v;
+        return *this;
+    }
+    Report &kick(uint8_t v)
+    {
+        buf[15] = v;
+        return *this;
+    }
+    Report &orange(uint8_t v)
+    {
+        buf[16] = v;
+        return *this;
+    }
 };
 
 const RockBandDrumsAxisType all_rb_axes[] = {

@@ -2,8 +2,9 @@
 #include <stdint.h>
 #define STEPMANIA_X_REPORT_ID 3
 #define LTEK_REPORT_ID 1
-typedef struct {
-    uint8_t reportId;  // 0x01
+typedef struct
+{
+    uint8_t reportId; // 0x01
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
     uint8_t dpadUp : 1;
@@ -16,7 +17,8 @@ typedef struct {
     uint8_t start : 1;
     uint8_t : 4;
 } __attribute__((packed)) LTEK_Report_With_Id_Data_t;
-typedef struct {
+typedef struct
+{
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
     uint8_t dpadUp : 1;
@@ -29,8 +31,9 @@ typedef struct {
     uint8_t start : 1;
     uint8_t : 4;
 } __attribute__((packed)) LTEK_Report_Data_t;
-typedef struct {
-    uint8_t reportId;  // 0x03
+typedef struct
+{
+    uint8_t reportId; // 0x03
     uint8_t dpadUpLeft : 1;
     uint8_t dpadUp : 1;
     uint8_t dpadUpRight : 1;

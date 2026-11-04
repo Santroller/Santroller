@@ -7,7 +7,7 @@ class WorldTourDrumDevice : public MidiDevice
 {
 public:
     ~WorldTourDrumDevice() {}
-    WorldTourDrumDevice(const DeviceReloadState* state, proto_WorldTourDrumDevice device, uint16_t id);
+    WorldTourDrumDevice(const DeviceReloadState *state, proto_WorldTourDrumDevice device, uint16_t id);
     void begin();
     void end(bool full);
     void update(bool full_poll, bool send_events);

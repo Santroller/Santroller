@@ -337,8 +337,7 @@ void OGXboxGamepadDevice::initialize()
     memset(&m_initial_report, 0, sizeof(m_initial_report));
     switch (subtype)
     {
-    case RockBandDrums:
-    {
+    case RockBandDrums: {
         OGXboxRockBandDrums_Data_t *report = (OGXboxRockBandDrums_Data_t *)&m_initial_report;
         report->redVelocity = -1;
         report->blueVelocity = -1;
@@ -346,26 +345,22 @@ void OGXboxGamepadDevice::initialize()
         report->yellowVelocity = 0;
         break;
     }
-    case GuitarHeroGuitar:
-    {
+    case GuitarHeroGuitar: {
         OGXboxGuitarHeroGuitar_Data_t *report = (OGXboxGuitarHeroGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
-    case RockBandGuitar:
-    {
+    case RockBandGuitar: {
         OGXboxRockBandGuitar_Data_t *report = (OGXboxRockBandGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
-    case LiveGuitar:
-    {
+    case LiveGuitar: {
         OGXboxGHLGuitar_Data_t *report = (OGXboxGHLGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
-    case GuitarHeroDrums:
-    {
+    case GuitarHeroDrums: {
         OGXboxGuitarHeroDrums_Data_t *report = (OGXboxGuitarHeroDrums_Data_t *)&m_initial_report;
         report->leftThumbClick = true;
         break;
@@ -464,7 +459,7 @@ size_t OGXboxGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     return sizeof(desc);
 }
 
-size_t OGXboxGamepadDevice::device_name(uint8_t idx, char *desc) 
+size_t OGXboxGamepadDevice::device_name(uint8_t idx, char *desc)
 {
     return 0;
 }

@@ -69,18 +69,27 @@ const uint8_t *gamepad_button_table(SubType subtype)
 {
     switch (subtype)
     {
-    case GuitarHeroGuitar: return gh_guitar_buttons;
-    case RockBandGuitar: return rb_guitar_buttons;
-    case LiveGuitar: return ghl_guitar_buttons;
-    case GuitarHeroDrums: return gh_drum_buttons;
-    case RockBandDrums: return rb_drum_buttons;
-    case DjHeroTurntable: return turntable_buttons;
+    case GuitarHeroGuitar:
+        return gh_guitar_buttons;
+    case RockBandGuitar:
+        return rb_guitar_buttons;
+    case LiveGuitar:
+        return ghl_guitar_buttons;
+    case GuitarHeroDrums:
+        return gh_drum_buttons;
+    case RockBandDrums:
+        return rb_drum_buttons;
+    case DjHeroTurntable:
+        return turntable_buttons;
     case ProGuitarMustang:
     case ProGuitarSquier:
-    case ProKeys: return pro_buttons;
-    case StageKit: return stage_kit_buttons;
+    case ProKeys:
+        return pro_buttons;
+    case StageKit:
+        return stage_kit_buttons;
     // Gamepad, Dancepad, Taiko and the portals all use the gamepad report
-    default: return gamepad_buttons;
+    default:
+        return gamepad_buttons;
     }
 }
 } // namespace
@@ -94,8 +103,7 @@ bool santroller_v1_tick_digital(const uint8_t *report, SubType subtype, proto_Ou
 
     switch (type.which_mapping)
     {
-    case proto_Output_gamepadButton_tag:
-    {
+    case proto_Output_gamepadButton_tag: {
         // Rock Band kits press the face buttons and d-pad when hitting pads and cymbals,
         // only treat them as navigation when no hit is flagged (byte 1: pad flag, cymbal flag)
         if (subtype == RockBandDrums && (report[1] & 0x30) &&
@@ -103,10 +111,14 @@ bool santroller_v1_tick_digital(const uint8_t *report, SubType subtype, proto_Ou
             return false;
         switch (value)
         {
-        case Gamepad_DpadUp: return up;
-        case Gamepad_DpadDown: return down;
-        case Gamepad_DpadLeft: return hat == 5 || hat == 6 || hat == 7;
-        case Gamepad_DpadRight: return hat == 1 || hat == 2 || hat == 3;
+        case Gamepad_DpadUp:
+            return up;
+        case Gamepad_DpadDown:
+            return down;
+        case Gamepad_DpadLeft:
+            return hat == 5 || hat == 6 || hat == 7;
+        case Gamepad_DpadRight:
+            return hat == 1 || hat == 2 || hat == 3;
         }
         if (value < 1 || value > GAMEPAD_BUTTON_COUNT)
             return false;
@@ -157,15 +169,13 @@ bool santroller_v1_tick_digital(const uint8_t *report, SubType subtype, proto_Ou
         return value >= ProGuitar_Green && value <= ProGuitar_Orange && button(report, value - ProGuitar_Green + 7);
     case proto_Output_proKeyboardButton_tag:
         return subtype == ProKeys && value == ProKeyboardOverdrive && button(report, 7);
-    case proto_Output_proKeySingle_tag:
-    {
+    case proto_Output_proKeySingle_tag: {
         if (subtype != ProKeys)
             return false;
         auto data = (const Santroller1ProKeys_Data_t *)report;
         return pro_keyboard_key_pressed(data->key1, data->key2, data->key3, data->velocities, type.mapping.proKeySingle);
     }
-    case proto_Output_proKeyMultiple_tag:
-    {
+    case proto_Output_proKeyMultiple_tag: {
         if (subtype != ProKeys)
             return false;
         auto data = (const Santroller1ProKeys_Data_t *)report;
@@ -198,8 +208,7 @@ uint16_t santroller_v1_tick_analog(const uint8_t *report, SubType subtype, proto
         case ProGuitarSquier:
         case ProKeys:
             return 0;
-        default:
-        {
+        default: {
             // Gamepad, Dancepad, Taiko, the portals and the stage kit all have the gamepad's axes
             uint16_t result = axis(report, gamepad_axes, value);
             // HID y is down at the max
@@ -232,8 +241,7 @@ uint16_t santroller_v1_tick_analog(const uint8_t *report, SubType subtype, proto
         if (value == ProGuitar_Tilt)
             return report[4] << 9;
         return 0;
-    case proto_Output_proKeyboardAxis_tag:
-    {
+    case proto_Output_proKeyboardAxis_tag: {
         if (subtype != ProKeys)
             return 0;
         auto data = (const Santroller1ProKeys_Data_t *)report;

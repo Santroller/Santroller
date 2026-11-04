@@ -23,11 +23,20 @@ void TaikoButtonMapping::update_wii(uint8_t, uint8_t *buf)
     auto &report = *reinterpret_cast<WiiTaikoData_t *>(buf);
     switch (m_mapping.mapping.mapping.gamepadButton)
     {
-    case Gamepad_DpadLeft: report.buttons |= 1 << 5; break;
-    case Gamepad_DpadDown: report.buttons |= 1 << 6; break;
-    case Gamepad_A: report.buttons |= 1 << 4; break;
-    case Gamepad_B: report.buttons |= 1 << 3; break;
-    default: break;
+    case Gamepad_DpadLeft:
+        report.buttons |= 1 << 5;
+        break;
+    case Gamepad_DpadDown:
+        report.buttons |= 1 << 6;
+        break;
+    case Gamepad_A:
+        report.buttons |= 1 << 4;
+        break;
+    case Gamepad_B:
+        report.buttons |= 1 << 3;
+        break;
+    default:
+        break;
     }
 }
 
@@ -90,10 +99,12 @@ void TaikoAxisMapping::update_wii(uint8_t, uint8_t *buf)
     switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftTrigger:
-        if (m_calibrated_value > 60000) report.buttons |= 1 << 5;
+        if (m_calibrated_value > 60000)
+            report.buttons |= 1 << 5;
         break;
     case Gamepad_RightTrigger:
-        if (m_calibrated_value > 60000) report.buttons |= 1 << 3;
+        if (m_calibrated_value > 60000)
+            report.buttons |= 1 << 3;
         break;
     default:
         break;

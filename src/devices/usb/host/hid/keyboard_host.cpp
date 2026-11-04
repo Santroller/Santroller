@@ -170,7 +170,7 @@ bool KeyboardHost::set_config()
     return true;
 }
 // Inputs picked in the config tool as a USB button carry the key as the type
-bool KeyboardHost::tick_digital(proto_Output& type)
+bool KeyboardHost::tick_digital(proto_Output &type)
 {
     if (type.which_mapping == proto_Output_consumerKey_tag)
     {
@@ -182,7 +182,7 @@ bool KeyboardHost::tick_digital(proto_Output& type)
     }
     return type.which_mapping == proto_Output_keycode_tag && key_pressed(type.mapping.keycode);
 }
-uint16_t KeyboardHost::tick_analog(proto_Output& type)
+uint16_t KeyboardHost::tick_analog(proto_Output &type)
 {
     return tick_digital(type) ? UINT16_MAX : 0;
 }

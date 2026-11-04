@@ -666,7 +666,7 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                 m_link_serial = serial;
                 m_hardware_id = hardware_id_from_serial(serial);
                 m_request_caps_on_input = raw_subtype == XINPUT_GUITAR_ALTERNATE || raw_subtype == XINPUT_PRO_GUITAR ||
-                                           raw_subtype == XINPUT_DRUMS;
+                                          raw_subtype == XINPUT_DRUMS;
                 bool newly_connected = !m_found;
                 if (newly_connected)
                 {

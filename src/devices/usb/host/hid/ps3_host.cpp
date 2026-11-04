@@ -170,7 +170,7 @@ std::shared_ptr<UsbHostInterface> Ps3Host::open(std::shared_ptr<UsbHostDevice> l
     {
         bool dancepad = vid == PS3_DANCEPAD_VID && pid == PS3_DANCEPAD_PID;
         bool switch_arcade = vid == SWITCH_ARCADE_VID &&
-            (pid == SWITCH_ARCADE_PID || pid == SWITCH_TATACON_PID);
+                             (pid == SWITCH_ARCADE_PID || pid == SWITCH_TATACON_PID);
         bool compact_report = dancepad || switch_arcade;
         if (compact_report && (itf_desc->bInterfaceClass != TUSB_CLASS_HID ||
                                itf_desc->bInterfaceSubClass != HID_SUBCLASS_NONE ||
@@ -300,8 +300,8 @@ bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
         if (m_dancepad)
         {
             m_valid_dancepad_report = result == XFER_RESULT_SUCCESS &&
-                xferred_bytes == sizeof(PS3Dpad_Data_t) &&
-                (m_ep_in_buf[2] & 0x0f) <= 8;
+                                      xferred_bytes == sizeof(PS3Dpad_Data_t) &&
+                                      (m_ep_in_buf[2] & 0x0f) <= 8;
             if (!m_valid_dancepad_report)
                 printf("PS3 dancepad: invalid input transfer (result %u, length %lu)\n",
                        static_cast<unsigned>(result), static_cast<unsigned long>(xferred_bytes));
@@ -309,7 +309,7 @@ bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
         if (m_switch_arcade)
         {
             m_valid_switch_arcade_report = result == XFER_RESULT_SUCCESS &&
-                xferred_bytes >= sizeof(SwitchArcadeReport);
+                                           xferred_bytes >= sizeof(SwitchArcadeReport);
             if (m_valid_switch_arcade_report)
             {
                 const uint8_t buttons_low = m_ep_in_buf[0];
@@ -317,10 +317,10 @@ bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
                 // so swap AB and XY
                 const uint8_t face_buttons = buttons_low & 0x0f;
                 m_ep_in_buf[0] = (buttons_low & 0xf0) |
-                    ((face_buttons & 0x01) << 3) |
-                    ((face_buttons & 0x02) << 1) |
-                    ((face_buttons & 0x04) >> 1) |
-                    ((face_buttons & 0x08) >> 3);
+                                 ((face_buttons & 0x01) << 3) |
+                                 ((face_buttons & 0x02) << 1) |
+                                 ((face_buttons & 0x04) >> 1) |
+                                 ((face_buttons & 0x08) >> 3);
                 memset(&m_ep_in_buf[7], 0, sizeof(m_ep_in_buf) - 7);
                 auto *report = reinterpret_cast<PS3Dpad_Data_t *>(m_ep_in_buf);
                 report->leftTrigger = (buttons_low & static_cast<uint8_t>(SwitchArcade_ZL)) ? UINT8_MAX : 0;
@@ -418,9 +418,12 @@ bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
             auto data = (PS3Gamepad_Data_t *)m_ep_in_buf;
             switch (type.mapping.gamepadAxis)
             {
-            case Gamepad_LeftTrigger: return data->l2;
-            case Gamepad_RightTrigger: return data->r2;
-            default: break;
+            case Gamepad_LeftTrigger:
+                return data->l2;
+            case Gamepad_RightTrigger:
+                return data->r2;
+            default:
+                break;
             }
         }
         return false;
@@ -496,9 +499,12 @@ bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
         auto data = (PS3ThirdPartyGamepad_Data_t *)m_ep_in_buf;
         switch (type.mapping.gamepadAxis)
         {
-        case Gamepad_LeftTrigger: return data->l2;
-        case Gamepad_RightTrigger: return data->r2;
-        default: break;
+        case Gamepad_LeftTrigger:
+            return data->l2;
+        case Gamepad_RightTrigger:
+            return data->r2;
+        default:
+            break;
         }
     }
     switch (subtype)
@@ -656,16 +662,16 @@ bool ps3_tick_digital(const uint8_t *buf, SubType subtype, bool third_party, pro
                                                 data->velocities, type.mapping.proKeyMultiple);
         }
         if (type.which_mapping == proto_Output_proKeyboardButton_tag)
+        {
+            const auto *data = reinterpret_cast<const PS3RockBandProKeyboard_Data_t *>(m_ep_in_buf);
+            switch (type.mapping.proKeyboardButton)
             {
-                const auto *data = reinterpret_cast<const PS3RockBandProKeyboard_Data_t *>(m_ep_in_buf);
-                switch (type.mapping.proKeyboardButton)
-                {
-                case ProKeyboardOverdrive:
-                    return data->overdrive;
-                default:
-                    return false;
-                }
+            case ProKeyboardOverdrive:
+                return data->overdrive;
+            default:
+                return false;
             }
+        }
         return false;
     default:
         return false;
@@ -698,17 +704,28 @@ uint16_t ps3_tick_button_pressure(const uint8_t *buf, SubType subtype, bool thir
     const auto *data = (const PS3Gamepad_Data_t *)buf;
     switch (type.mapping.gamepadButton)
     {
-    case Gamepad_A: return data->pressureCross << 8;
-    case Gamepad_B: return data->pressureCircle << 8;
-    case Gamepad_X: return data->pressureSquare << 8;
-    case Gamepad_Y: return data->pressureTriangle << 8;
-    case Gamepad_LeftShoulder: return data->pressureL1 << 8;
-    case Gamepad_RightShoulder: return data->pressureR1 << 8;
-    case Gamepad_DpadUp: return data->pressureDpadUp << 8;
-    case Gamepad_DpadDown: return data->pressureDpadDown << 8;
-    case Gamepad_DpadLeft: return data->pressureDpadLeft << 8;
-    case Gamepad_DpadRight: return data->pressureDpadRight << 8;
-    default: return UINT16_MAX;
+    case Gamepad_A:
+        return data->pressureCross << 8;
+    case Gamepad_B:
+        return data->pressureCircle << 8;
+    case Gamepad_X:
+        return data->pressureSquare << 8;
+    case Gamepad_Y:
+        return data->pressureTriangle << 8;
+    case Gamepad_LeftShoulder:
+        return data->pressureL1 << 8;
+    case Gamepad_RightShoulder:
+        return data->pressureR1 << 8;
+    case Gamepad_DpadUp:
+        return data->pressureDpadUp << 8;
+    case Gamepad_DpadDown:
+        return data->pressureDpadDown << 8;
+    case Gamepad_DpadLeft:
+        return data->pressureDpadLeft << 8;
+    case Gamepad_DpadRight:
+        return data->pressureDpadRight << 8;
+    default:
+        return UINT16_MAX;
     }
 }
 
@@ -793,7 +810,7 @@ uint16_t ps3_tick_analog(const uint8_t *buf, SubType subtype, bool third_party, 
                 }
                 return ((data->whammy - 0x80) * 0xFFFFu) / 0x7F;
             case GuitarHeroGuitar_Tilt:
-                // tilt is inverted on the PS3, so we need to invert it here 
+                // tilt is inverted on the PS3, so we need to invert it here
                 if (data->tilt < 0x180)
                 {
                     return 0xFFFF;

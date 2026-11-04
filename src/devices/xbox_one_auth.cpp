@@ -51,8 +51,7 @@ void XboxOneAuthDevice::update(bool full_poll, bool send_events)
     // Only claim auth once the chip has answered, and never take over from another provider
     if (m_chip.is_ready() && !m_registered && !auth_broker.has_handler(ModeXboxOne))
     {
-        auth_broker.register_handler(ModeXboxOne, [this](XGIPProtocol *packet)
-                                     { handle_auth(packet); });
+        auth_broker.register_handler(ModeXboxOne, [this](XGIPProtocol *packet) { handle_auth(packet); });
         m_registered = true;
     }
     if (m_chip.has_response())

@@ -818,16 +818,35 @@ void GamepadButtonMapping::update_wiimote_core(wiimote_buttons *buttons)
 {
     switch (m_mapping.mapping.mapping.gamepadButton)
     {
-    case Gamepad_A: buttons->a |= m_last_value; break;
-    case Gamepad_B: buttons->b |= m_last_value; break;
-    case Gamepad_Back: buttons->minus |= m_last_value; break;
-    case Gamepad_Start: buttons->plus |= m_last_value; break;
-    case Gamepad_Guide: buttons->home |= m_last_value; break;
-    case Gamepad_DpadUp: buttons->up |= m_last_value; break;
-    case Gamepad_DpadDown: buttons->down |= m_last_value; break;
-    case Gamepad_DpadLeft: buttons->left |= m_last_value; break;
-    case Gamepad_DpadRight: buttons->right |= m_last_value; break;
-    default: break;
+    case Gamepad_A:
+        buttons->a |= m_last_value;
+        break;
+    case Gamepad_B:
+        buttons->b |= m_last_value;
+        break;
+    case Gamepad_Back:
+        buttons->minus |= m_last_value;
+        break;
+    case Gamepad_Start:
+        buttons->plus |= m_last_value;
+        break;
+    case Gamepad_Guide:
+        buttons->home |= m_last_value;
+        break;
+    case Gamepad_DpadUp:
+        buttons->up |= m_last_value;
+        break;
+    case Gamepad_DpadDown:
+        buttons->down |= m_last_value;
+        break;
+    case Gamepad_DpadLeft:
+        buttons->left |= m_last_value;
+        break;
+    case Gamepad_DpadRight:
+        buttons->right |= m_last_value;
+        break;
+    default:
+        break;
     }
 }
 

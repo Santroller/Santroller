@@ -20,7 +20,7 @@ class StandbyLightingInstance;
 class ProfileManager
 {
 public:
-    static ProfileManager& instance()
+    static ProfileManager &instance()
     {
         static ProfileManager manager;
         return manager;
@@ -33,19 +33,18 @@ public:
     std::shared_ptr<Profile> load_tool_profile(uint32_t profile_id, size_t instance_id);
     // Put the profile loaded for the tool back to only its triggers
     void release_tool_profile();
-    
+
     void update_device_assignments(bool full_poll, bool send_events);
     void update(bool full_poll, bool send_events);
     bool assign_profile_to_devices(
         std::shared_ptr<Profile> profile,
         int assigned_devices,
-        ConsoleMode usb_mode
-    );
+        ConsoleMode usb_mode);
     bool changed_types();
-    
+
     void register_instance(std::shared_ptr<Instance> instance, std::shared_ptr<Profile> profile, bool usb_instance);
     void remove_instance(std::shared_ptr<Instance> instance);
-    
+
     bool has_active_instances() const;
     template <typename Func>
     void for_each_active_profile(Func func) const
@@ -77,10 +76,10 @@ public:
             }
         }
     }
-    
+
     void update_all_profile_devices(bool profile_changed, bool send_events);
     void update_profile_components(uint32_t profile_id, size_t instance_id, bool profile_changed, bool send_events);
-    
+
     bool is_profile_active(uint32_t profile_id) const;
     std::vector<std::shared_ptr<Instance>> get_instances_for_profile(uint32_t profile_id) const
     {
@@ -115,7 +114,7 @@ public:
     // For something else taking the bluetooth stack
     void release_previous_bt_gamepad_instance() { m_previous_bt_gamepad_instance.reset(); }
     void release_previous_wiimote_instance() { m_previous_wiimote_instance.reset(); }
-    
+
     void add_instance(std::shared_ptr<Instance> instance);
     // Standby lighting, while other profiles are active. It runs while they're all asleep with their host, for
     // its LEDs (standbyWhileSuspended) and its wake buttons
@@ -192,8 +191,8 @@ private:
 
     ProfileManager() = default;
     ~ProfileManager() = default;
-    ProfileManager(const ProfileManager&) = delete;
-    ProfileManager& operator=(const ProfileManager&) = delete;
+    ProfileManager(const ProfileManager &) = delete;
+    ProfileManager &operator=(const ProfileManager &) = delete;
 
     std::unordered_map<uint32_t, std::vector<std::shared_ptr<Profile>>> m_profiles;
     std::vector<std::shared_ptr<Instance>> m_active_instances;
@@ -208,7 +207,7 @@ private:
     std::unordered_map<uint32_t, std::vector<std::shared_ptr<Instance>>> m_profile_to_instance;
     // The inactive profile load_tool_profile last tried to build, even if that failed
     std::optional<uint32_t> m_tool_profile_id;
-    
+
     std::vector<std::shared_ptr<Instance>> m_instances;
     std::shared_ptr<Instance> m_bt_config_instance;
     std::shared_ptr<StandbyLightingInstance> m_suspended_standby;

@@ -8,7 +8,6 @@
 #include "managers/device_manager.hpp"
 #include "hidparser.h"
 
-
 MouseHost::MouseHost(uint8_t dev_addr, uint8_t interface, uint16_t id, HID_ReportInfo_t *info) : HidHost(dev_addr, interface, id), m_info(info)
 {
     m_subtype = KeyboardMouse;
@@ -119,7 +118,7 @@ uint16_t MouseHost::mouse_axis(MouseAxisType axis)
 }
 
 // Inputs picked in the config tool as a USB button / axis carry a mouse output as the type
-bool MouseHost::tick_digital(proto_Output& type)
+bool MouseHost::tick_digital(proto_Output &type)
 {
     if (type.which_mapping == proto_Output_mouseButton_tag)
     {
@@ -131,7 +130,7 @@ bool MouseHost::tick_digital(proto_Output& type)
     }
     return false;
 }
-uint16_t MouseHost::tick_analog(proto_Output& type)
+uint16_t MouseHost::tick_analog(proto_Output &type)
 {
     if (type.which_mapping == proto_Output_mouseAxis_tag)
     {

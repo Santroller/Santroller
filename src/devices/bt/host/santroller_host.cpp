@@ -81,7 +81,8 @@ void BleSantrollerHost::handle_report(const uint8_t *data, uint16_t len)
 
 void BleSantrollerHost::handle_report_v2(const uint8_t *data, uint16_t len)
 {
-    if (len == 0) return;
+    if (len == 0)
+        return;
 
     if (data[0] == ReportIdSantrollerCapabilities)
     {
@@ -110,7 +111,8 @@ void BleSantrollerHost::handle_report_v2(const uint8_t *data, uint16_t len)
         return;
     }
 
-    if (data[0] != 1 || !m_ready) return;
+    if (data[0] != 1 || !m_ready)
+        return;
 
     uint16_t copy_len = len < sizeof(m_report_buf) ? len : sizeof(m_report_buf);
     memcpy(m_report_buf, data, copy_len);
@@ -119,7 +121,8 @@ void BleSantrollerHost::handle_report_v2(const uint8_t *data, uint16_t len)
 
 void BleSantrollerHost::handle_report_v1(const uint8_t *data, uint16_t len)
 {
-    if (len == 0) return;
+    if (len == 0)
+        return;
     uint16_t copy_len = len < sizeof(m_report_buf) ? len : sizeof(m_report_buf);
     memcpy(m_report_buf, data, copy_len);
 }

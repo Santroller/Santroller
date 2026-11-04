@@ -65,8 +65,7 @@ void StageKitLedMapping::set_stagekit_led(uint8_t fog, uint8_t strobe, uint8_t b
     case StageKitStrobe:
         m_device->set_val(scale8(strobe));
         break;
-    default:
-    {
+    default: {
         // The stage kit LEDs (0 - 7) this mapping shows, none picked means all of them
         const uint8_t selected = m_mapping.index ? m_mapping.index : 0xFF;
         // Which stage kit LEDs light each colour channel, yellow being red and green

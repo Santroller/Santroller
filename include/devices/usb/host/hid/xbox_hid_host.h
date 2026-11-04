@@ -14,8 +14,8 @@ public:
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
     void update(bool full_poll, bool send_events) override;
     static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info);
-    bool tick_digital(proto_Output& type);
-    uint16_t tick_analog(proto_Output& type);
+    bool tick_digital(proto_Output &type);
+    uint16_t tick_analog(proto_Output &type);
     void set_rumble(uint8_t left, uint8_t right) override { m_rumble.set(left, right); }
     bool has_rumble() const override { return true; }
 

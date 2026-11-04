@@ -33,7 +33,8 @@ static_assert(sizeof(keyboardmania_report_descriptor) == 150, "KeyboardMania des
 // The first byte is six always set buttons, then four bytes of seven buttons each and an
 // unused bit, then a 2 bit X / Y pointer the controller never moves.
 constexpr uint8_t KEYBOARDMANIA_HEADER = 0x3f;
-struct KeyboardManiaInputReport {
+struct KeyboardManiaInputReport
+{
     uint8_t header;
     uint32_t buttons;
     uint8_t pointer;

@@ -16,51 +16,47 @@ KeyboardButtonMapping::KeyboardButtonMapping(const proto_Mapping &mapping, std::
 
 void KeyboardButtonMapping::update_hid(uint8_t *buf)
 {
-    if (!m_last_value) {
+    if (!m_last_value)
+    {
         return;
     }
-    if (m_mapping.mapping.which_mapping == proto_Output_consumerKey_tag) {
+    if (m_mapping.mapping.which_mapping == proto_Output_consumerKey_tag)
+    {
         m_profile->consumer_state.set_key(m_mapping.mapping.mapping.consumerKey);
-    } else {
+    }
+    else
+    {
         m_profile->keyboard_state.set_key(m_mapping.mapping.mapping.keycode);
     }
 }
 void KeyboardButtonMapping::update_wii(uint8_t format, uint8_t *buf)
 {
-    
 }
 void KeyboardButtonMapping::update_switch(uint8_t *buf)
 {
-    
 }
 
 void KeyboardButtonMapping::update_ps2(uint8_t *buf)
 {
-    
 }
 
 void KeyboardButtonMapping::update_ps3(uint8_t *buf)
 {
-    
 }
 
 void KeyboardButtonMapping::update_ps4(uint8_t *buf)
 {
-    
 }
 
 void KeyboardButtonMapping::update_ps5(uint8_t *buf)
 {
-    
 }
 
 void KeyboardButtonMapping::update_xinput(uint8_t *buf)
 {
-    
 }
 void KeyboardButtonMapping::update_ogxbox(uint8_t *buf)
 {
-    
 }
 void KeyboardButtonMapping::update_xboxone(uint8_t *buf)
 {
@@ -158,7 +154,6 @@ void MouseAxisMapping::update_xboxone(uint8_t *buf)
 
 MouseButtonMapping::MouseButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
 {
-    
 }
 
 void MouseButtonMapping::update_hid(uint8_t *buf)
@@ -236,7 +231,8 @@ void MidiNoteMapping::update_hid(uint8_t *buf)
     uint8_t velocity;
     if (note.has_velocity)
     {
-        velocity = note.velocity > 0x7F ? 0x7F : note.velocity ? note.velocity : 1;
+        velocity = note.velocity > 0x7F ? 0x7F : note.velocity ? note.velocity
+                                                               : 1;
     }
     else
     {

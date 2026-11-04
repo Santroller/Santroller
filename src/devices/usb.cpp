@@ -129,12 +129,10 @@ void usb_host_add_assignable_interface(std::shared_ptr<UsbHostInterface> device)
     {
         return;
     }
-    erase_usb_interfaces_if(usb_enumerating_interfaces, [&device](const auto &candidate)
-                            { return candidate.get() == device.get() ||
-                                     (candidate->dev_addr() == device->dev_addr() && candidate->interface() == device->interface()); });
-    erase_usb_interfaces_if(usb_assignable_interfaces, [&device](const auto &candidate)
-                            { return candidate.get() == device.get() ||
-                                     (candidate->dev_addr() == device->dev_addr() && candidate->interface() == device->interface()); });
+    erase_usb_interfaces_if(usb_enumerating_interfaces, [&device](const auto &candidate) { return candidate.get() == device.get() ||
+                                                                                                  (candidate->dev_addr() == device->dev_addr() && candidate->interface() == device->interface()); });
+    erase_usb_interfaces_if(usb_assignable_interfaces, [&device](const auto &candidate) { return candidate.get() == device.get() ||
+                                                                                                 (candidate->dev_addr() == device->dev_addr() && candidate->interface() == device->interface()); });
     usb_assignable_interfaces.push_back(device);
 }
 
@@ -152,9 +150,8 @@ void usb_host_add_enumerating_interface(std::shared_ptr<UsbHostInterface> device
             return;
         }
     }
-    erase_usb_interfaces_if(usb_enumerating_interfaces, [&device](const auto &candidate)
-                            { return candidate.get() == device.get() ||
-                                     (candidate->dev_addr() == device->dev_addr() && candidate->interface() == device->interface()); });
+    erase_usb_interfaces_if(usb_enumerating_interfaces, [&device](const auto &candidate) { return candidate.get() == device.get() ||
+                                                                                                  (candidate->dev_addr() == device->dev_addr() && candidate->interface() == device->interface()); });
     usb_enumerating_interfaces.push_back(device);
 }
 
@@ -179,22 +176,18 @@ bool UsbHostInterface::mark_channel_seen(uint8_t channel)
 
 void usb_host_remove_assignable_interface(UsbHostInterface *device)
 {
-    erase_usb_interfaces_if(usb_assignable_interfaces, [device](const auto &candidate)
-                            { return candidate.get() == device; });
+    erase_usb_interfaces_if(usb_assignable_interfaces, [device](const auto &candidate) { return candidate.get() == device; });
 }
 
 void usb_host_remove_enumerating_interface(UsbHostInterface *device)
 {
-    erase_usb_interfaces_if(usb_enumerating_interfaces, [device](const auto &candidate)
-                            { return candidate.get() == device; });
+    erase_usb_interfaces_if(usb_enumerating_interfaces, [device](const auto &candidate) { return candidate.get() == device; });
 }
 
 void usb_host_remove_interfaces_by_address(uint8_t dev_addr)
 {
-    erase_usb_interfaces_if(usb_assignable_interfaces, [dev_addr](const auto &device)
-                            { return device->dev_addr() == dev_addr; });
-    erase_usb_interfaces_if(usb_enumerating_interfaces, [dev_addr](const auto &device)
-                            { return device->dev_addr() == dev_addr; });
+    erase_usb_interfaces_if(usb_assignable_interfaces, [dev_addr](const auto &device) { return device->dev_addr() == dev_addr; });
+    erase_usb_interfaces_if(usb_enumerating_interfaces, [dev_addr](const auto &device) { return device->dev_addr() == dev_addr; });
 }
 
 void usb_host_power_off(uint32_t source_id)
@@ -243,7 +236,7 @@ void usb_host_add_assignable_devices(bool rescan)
 
 void usb_host_update_interfaces(bool full_poll, bool send_events)
 {
-    for (size_t i = 0; i < usb_enumerating_interfaces.size(); )
+    for (size_t i = 0; i < usb_enumerating_interfaces.size();)
     {
         auto device = usb_enumerating_interfaces[i];
         device->update(full_poll, send_events);
@@ -253,7 +246,7 @@ void usb_host_update_interfaces(bool full_poll, bool send_events)
         }
     }
 
-    for (size_t i = 0; i < usb_assignable_interfaces.size(); )
+    for (size_t i = 0; i < usb_assignable_interfaces.size();)
     {
         auto device = usb_assignable_interfaces[i];
         device->update(full_poll, send_events);
@@ -343,7 +336,8 @@ void USBHostHardwareDevice::begin()
 
     m_last_dp_first = m_device.dmFirst;
     m_last_first_pin = m_device.firstPin;
-    if (m_device.enable5v) {
+    if (m_device.enable5v)
+    {
         // Enable 5V power for the USB host for Adafruit feathers
         gpio_init(18);
         gpio_set_dir(18, true);
@@ -509,8 +503,7 @@ void USBHostHardwareDevice::update(bool full_poll, bool send_events)
             gamesir_reset_stage = GameSirResetStage::VerifyPending;
             gamesir_reset_at = millis() + USB_RESET_RECOVERY_MS;
             break;
-        case GameSirResetStage::VerifyPending:
-        {
+        case GameSirResetStage::VerifyPending: {
             bool started = usbh_reenumerate_after_reset(gamesir_reset_dev_addr);
             if (!started)
             {

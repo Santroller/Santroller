@@ -2,8 +2,9 @@
 #include "input.pb.h"
 #include "profiles/profile.hpp"
 #pragma once
-class GPIOInput: public Input {
-   public:
+class GPIOInput : public Input
+{
+public:
     GPIOInput(proto_GPIOInput input);
     bool tick_digital_raw() override;
     uint16_t tick_analog();
@@ -11,7 +12,8 @@ class GPIOInput: public Input {
     bool valid() const override { return !m_floating; }
     void setup();
     uint64_t hardware_id() const override { return (static_cast<uint64_t>(InputHw_GPIO) << 56) | m_pin; }
-   private:
+
+private:
     bool m_analog;
     bool m_invert;
     bool m_valid;

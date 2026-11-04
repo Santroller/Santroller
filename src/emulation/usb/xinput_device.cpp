@@ -71,8 +71,7 @@ void XInputGamepadDevice::initialize()
     m_initial_report.rightStickY = 0;
     switch (subtype)
     {
-    case RockBandDrums:
-    {
+    case RockBandDrums: {
         XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)&m_initial_report;
         report->redVelocity = -1;
         report->blueVelocity = -1;
@@ -80,26 +79,22 @@ void XInputGamepadDevice::initialize()
         report->yellowVelocity = 0;
         break;
     }
-    case GuitarHeroGuitar:
-    {
+    case GuitarHeroGuitar: {
         XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
-    case RockBandGuitar:
-    {
+    case RockBandGuitar: {
         XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
-    case LiveGuitar:
-    {
+    case LiveGuitar: {
         XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&m_initial_report;
         report->whammy = INT16_MIN;
         break;
     }
-    case GuitarHeroDrums:
-    {
+    case GuitarHeroDrums: {
         XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)&m_initial_report;
         report->leftThumbClick = true;
         break;
@@ -586,49 +581,49 @@ bool XInputGamepadDevice::control_transfer(uint8_t stage, tusb_control_request_t
 
 XInputInputCapabilities_t XInputGamepadDevice::input_capabilities() const
 {
-        XInputInputCapabilities_t XInputInputCapabilities = {
-            rid : 0x00,
-            rsize : sizeof(XInputInputCapabilities_t),
-            buttons : 0xf73f,
-            leftTrigger : 0xff,
-            rightTrigger : 0xff,
-            leftThumbX : USB_VID,
-            leftThumbY : USB_PID,
-            rightThumbX : (uint16_t)(USB_VERSION_BCD(subtype, 0, 0)),
-            rightThumbY : 0xffc0,
-            reserved : {0x00, 0x00, 0x00, 0x00},
-            flags : XINPUT_FLAGS_FORCE_FEEDBACK
-        };
-        switch (subtype)
-        {
-        case LiveGuitar:
-            XInputInputCapabilities.flags = XINPUT_FLAGS_NO_NAV;
-            break;
-        case ProGuitarMustang:
-            XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
-            XInputInputCapabilities.leftThumbX = HARMONIX_VID;
-            XInputInputCapabilities.leftThumbY = XBOX_360_MUSTANG_PID;
-            break;
-        case ProGuitarSquier:
-            XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
-            XInputInputCapabilities.leftThumbX = HARMONIX_VID;
-            XInputInputCapabilities.leftThumbY = XBOX_360_SQUIER_PID;
-            break;
-        case GuitarHeroDrums:
-            XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
-            break;
-        case RockBandDrums:
-            // kick 2 and the pad flag, like the MPA
-            XInputInputCapabilities.buttons = 0xf7ff;
-            break;
-        case DjHeroTurntable:
-            XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
-            break;
-        default:
-            break;
-        }
-        XInputInputCapabilities.rightThumbX = USB_VERSION_BCD(subtype, 0, 0);
-        return XInputInputCapabilities;
+    XInputInputCapabilities_t XInputInputCapabilities = {
+        rid : 0x00,
+        rsize : sizeof(XInputInputCapabilities_t),
+        buttons : 0xf73f,
+        leftTrigger : 0xff,
+        rightTrigger : 0xff,
+        leftThumbX : USB_VID,
+        leftThumbY : USB_PID,
+        rightThumbX : (uint16_t)(USB_VERSION_BCD(subtype, 0, 0)),
+        rightThumbY : 0xffc0,
+        reserved : {0x00, 0x00, 0x00, 0x00},
+        flags : XINPUT_FLAGS_FORCE_FEEDBACK
+    };
+    switch (subtype)
+    {
+    case LiveGuitar:
+        XInputInputCapabilities.flags = XINPUT_FLAGS_NO_NAV;
+        break;
+    case ProGuitarMustang:
+        XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
+        XInputInputCapabilities.leftThumbX = HARMONIX_VID;
+        XInputInputCapabilities.leftThumbY = XBOX_360_MUSTANG_PID;
+        break;
+    case ProGuitarSquier:
+        XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
+        XInputInputCapabilities.leftThumbX = HARMONIX_VID;
+        XInputInputCapabilities.leftThumbY = XBOX_360_SQUIER_PID;
+        break;
+    case GuitarHeroDrums:
+        XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
+        break;
+    case RockBandDrums:
+        // kick 2 and the pad flag, like the MPA
+        XInputInputCapabilities.buttons = 0xf7ff;
+        break;
+    case DjHeroTurntable:
+        XInputInputCapabilities.flags = XINPUT_FLAGS_NONE;
+        break;
+    default:
+        break;
+    }
+    XInputInputCapabilities.rightThumbX = USB_VERSION_BCD(subtype, 0, 0);
+    return XInputInputCapabilities;
 }
 
 size_t XInputGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -798,7 +793,7 @@ bool XInputSecurityDevice::control_transfer(uint8_t stage, tusb_control_request_
                 s_security_verified = false;
                 auth_broker.set_auth_completed(ModeXbox360, false);
             }
-                    ConfigManager::instance().host_detected(ModeXbox360);
+            ConfigManager::instance().host_detected(ModeXbox360);
             return true;
         case 0x82:
             if (stage == CONTROL_STAGE_SETUP)

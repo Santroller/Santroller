@@ -16,8 +16,7 @@ void DeviceManager::remove_active_device(std::shared_ptr<Device> device)
 {
     m_active_devices.erase(
         std::remove(m_active_devices.begin(), m_active_devices.end(), device),
-        m_active_devices.end()
-    );
+        m_active_devices.end());
 }
 
 void DeviceManager::clear_active_devices()
@@ -128,22 +127,28 @@ void DeviceManager::set_auth_device(ConsoleMode mode, std::shared_ptr<UsbHostInt
     m_auth_devices[mode] = device;
 }
 
-void DeviceManager::update(bool profile_changed, bool send_events) {
-    for (const auto &device : m_active_devices) {
-        if (ConfigManager::instance().is_updating_firmware()) {
+void DeviceManager::update(bool profile_changed, bool send_events)
+{
+    for (const auto &device : m_active_devices)
+    {
+        if (ConfigManager::instance().is_updating_firmware())
+        {
             return;
         }
         device->update(profile_changed, send_events);
     }
-    for (const auto &device : m_assignable_devices) {
-        if (ConfigManager::instance().is_updating_firmware()) {
+    for (const auto &device : m_assignable_devices)
+    {
+        if (ConfigManager::instance().is_updating_firmware())
+        {
             return;
         }
         device->update(profile_changed, send_events);
     }
 }
 
-void DeviceManager::update_all_devices(bool profile_changed, bool send_events) {
+void DeviceManager::update_all_devices(bool profile_changed, bool send_events)
+{
     update(profile_changed, send_events);
 }
 
@@ -168,9 +173,9 @@ void DeviceManager::remove_device(Device *device)
     m_assignable_devices.erase(std::remove_if(m_assignable_devices.begin(), m_assignable_devices.end(), is_device),
                                m_assignable_devices.end());
 
-    for (auto it = m_auth_devices.begin(); it != m_auth_devices.end(); )
+    for (auto it = m_auth_devices.begin(); it != m_auth_devices.end();)
     {
-        if (reinterpret_cast<void*>(it->second.get()) == reinterpret_cast<void*>(device))
+        if (reinterpret_cast<void *>(it->second.get()) == reinterpret_cast<void *>(device))
         {
             it = m_auth_devices.erase(it);
         }

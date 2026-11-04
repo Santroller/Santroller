@@ -24,7 +24,10 @@ constexpr uint32_t MAX_DATA_SIZE = EEPROM_SIZE_BYTES - FOOTER_SIZE;
 
 void ensure_core1_running();
 
-inline uint8_t *flash_area() { return reinterpret_cast<uint8_t *>(EEPROM_ADDRESS_START); }
+inline uint8_t *flash_area()
+{
+    return reinterpret_cast<uint8_t *>(EEPROM_ADDRESS_START);
+}
 
 inline uint32_t crc32(const std::vector<uint8_t> &data)
 {

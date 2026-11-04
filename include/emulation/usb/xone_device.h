@@ -20,7 +20,8 @@ typedef enum
     EMU_NOT_READY
 } XboxOneDriverState;
 
-typedef struct {
+typedef struct
+{
     uint8_t report[CFG_TUD_XONE_RX_BUFSIZE];
     uint16_t len;
 } report_queue_t;
@@ -41,7 +42,7 @@ public:
     void process_report_queue(uint32_t now);
     bool send_xbone_usb(uint8_t const *report, uint16_t report_size);
     void queue_xbone_report(void *report, uint16_t report_size);
-    void send_report_from_controller(XGIPProtocol* report);
+    void send_report_from_controller(XGIPProtocol *report);
     uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
     void set_ack_wait();
     bool is_legacy_adapter() const { return m_is_legacy_adapter; }

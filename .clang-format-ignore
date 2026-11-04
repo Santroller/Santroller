@@ -1,0 +1,3 @@
+# Vendored and third-party code keeps its own style
+lib/**
+include/config/FlashPROM.h

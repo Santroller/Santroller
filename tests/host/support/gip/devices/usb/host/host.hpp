@@ -33,7 +33,11 @@ public:
     virtual void power_off() {}
     virtual std::optional<uint64_t> hardware_id() const { return std::nullopt; }
     virtual bool is_xbox_one_pad() const { return false; }
-    virtual bool key_pressed(uint8_t keycode) { (void)keycode; return false; }
+    virtual bool key_pressed(uint8_t keycode)
+    {
+        (void)keycode;
+        return false;
+    }
     // Recorded in gip_fake::hotplug_events
     void send_hotplug_event(bool connected);
 

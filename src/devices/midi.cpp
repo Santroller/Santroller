@@ -26,10 +26,11 @@ void MidiDevice::init_buffers(const MidiBufferConfig &buffer_config)
     m_midi.set_max_cables(buffer_config.max_cables);
 }
 
-MidiDevice::MidiDevice(const DeviceReloadState* state, uint16_t id, bool usbBased, const MidiBufferConfig &buffer_config) : Device(id), m_midi(usbBased), usbBased(usbBased)
+MidiDevice::MidiDevice(const DeviceReloadState *state, uint16_t id, bool usbBased, const MidiBufferConfig &buffer_config) : Device(id), m_midi(usbBased), usbBased(usbBased)
 {
     init_buffers(buffer_config);
-    if (state) {
+    if (state)
+    {
         m_midi.load_seen_channels(state->seen_midi_channels);
     }
 }
@@ -41,7 +42,7 @@ MidiDevice::~MidiDevice()
     tu_edpt_stream_deinit(&ep_stream.tx);
 }
 
-void MidiDevice::save_reload_state(DeviceReloadState& state) const
+void MidiDevice::save_reload_state(DeviceReloadState &state) const
 {
     state.valid = true;
     m_midi.save_seen_channels(state.seen_midi_channels);
@@ -96,8 +97,7 @@ void MidiDevice::update(bool full_poll, bool send_events)
     MidiEndpointStream stream = {&ep_stream.rx};
     m_midi.parse(
         stream,
-        [](const uint8_t *data, uint8_t size)
-        {
+        [](const uint8_t *data, uint8_t size) {
             // timing clock and active sensing are sent continuously and would otherwise flood the monitor
             if (data[0] != MIDI_STATUS_SYSREAL_TIMING_CLOCK &&
                 data[0] != MIDI_STATUS_SYSREAL_ACTIVE_SENSING)
@@ -107,8 +107,7 @@ void MidiDevice::update(bool full_poll, bool send_events)
                 HIDConfigDevice::send_event(event, false);
             }
         },
-        [this](uint8_t channel)
-        { mark_channel_seen(channel); });
+        [this](uint8_t channel) { mark_channel_seen(channel); });
 }
 
 bool MidiDevice::consume_midi_note_event(uint8_t channel, uint8_t note, uint16_t &sequence, uint16_t &velocity)
@@ -172,8 +171,7 @@ bool MidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
     case ProGuitarMidi_DpadRight:
         return right;
         // map 5 fret frets based on pressed frets
-    case ProGuitar_Green:
-    {
+    case ProGuitar_Green: {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
             if (midiFrets[i] == 1 || midiFrets[i] == 6 || midiFrets[i] == 13)
@@ -183,8 +181,7 @@ bool MidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
         }
         return false;
     }
-    case ProGuitar_Red:
-    {
+    case ProGuitar_Red: {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
             if (midiFrets[i] == 2 || midiFrets[i] == 7 || midiFrets[i] == 14)
@@ -194,8 +191,7 @@ bool MidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
         }
         return false;
     }
-    case ProGuitar_Yellow:
-    {
+    case ProGuitar_Yellow: {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
             if (midiFrets[i] == 3 || midiFrets[i] == 8 || midiFrets[i] == 15)
@@ -205,8 +201,7 @@ bool MidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
         }
         return false;
     }
-    case ProGuitar_Blue:
-    {
+    case ProGuitar_Blue: {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
             if (midiFrets[i] == 4 || midiFrets[i] == 9 || midiFrets[i] == 16)
@@ -216,8 +211,7 @@ bool MidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
         }
         return false;
     }
-    case ProGuitar_Orange:
-    {
+    case ProGuitar_Orange: {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
             if (midiFrets[i] == 5 || midiFrets[i] == 10 || midiFrets[i] == 17)
@@ -227,8 +221,7 @@ bool MidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
         }
         return false;
     }
-    case ProGuitar_SoloGreen:
-    {
+    case ProGuitar_SoloGreen: {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
             if (midiFrets[i] == 13)
@@ -238,8 +231,7 @@ bool MidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
         }
         return false;
     }
-    case ProGuitar_SoloRed:
-    {
+    case ProGuitar_SoloRed: {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
             if (midiFrets[i] == 14)
@@ -249,8 +241,7 @@ bool MidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
         }
         return false;
     }
-    case ProGuitar_SoloYellow:
-    {
+    case ProGuitar_SoloYellow: {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
             if (midiFrets[i] == 15)
@@ -260,8 +251,7 @@ bool MidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
         }
         return false;
     }
-    case ProGuitar_SoloBlue:
-    {
+    case ProGuitar_SoloBlue: {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
             if (midiFrets[i] == 16)
@@ -271,8 +261,7 @@ bool MidiDevice::read_pro_guitar_button(proto_ProGuitarMidiButtonType button)
         }
         return false;
     }
-    case ProGuitar_SoloOrange:
-    {
+    case ProGuitar_SoloOrange: {
         for (size_t i = 0; i < TU_ARRAY_SIZE(midiFrets); i++)
         {
             if (midiFrets[i] == 17)

@@ -6,12 +6,12 @@
 #include "mappings/taiko_mappings.hpp"
 #include "protocols/wheel.hpp"
 
-static auto& config_mgr = ConfigManager::instance();
+static auto &config_mgr = ConfigManager::instance();
 
 // A gamepad axis on a wheel: the left stick and triggers are its steering and pedals, so they go where
 // the wheel's report has them on every console
 static std::unique_ptr<Mapping> create_wheel_gamepad_axis_mapping(
-    const proto_Mapping& proto_mapping,
+    const proto_Mapping &proto_mapping,
     std::shared_ptr<Profile> profile,
     std::unique_ptr<Input> input,
     uint32_t mapping_id)
@@ -28,7 +28,7 @@ static std::unique_ptr<Mapping> create_wheel_gamepad_axis_mapping(
 // create_mapping runs deep in the config decode on core0's 4k stack
 static __attribute__((noinline)) std::unique_ptr<Mapping> create_converted_mapping(
     void (*convert)(proto_Mapping &),
-    const proto_Mapping& proto_mapping,
+    const proto_Mapping &proto_mapping,
     std::shared_ptr<Profile> profile,
     std::unique_ptr<Input> input,
     uint32_t mapping_id)
@@ -39,48 +39,58 @@ static __attribute__((noinline)) std::unique_ptr<Mapping> create_converted_mappi
 }
 
 std::unique_ptr<Mapping> MappingFactory::create_mapping(
-    const proto_Mapping& proto_mapping,
+    const proto_Mapping &proto_mapping,
     std::shared_ptr<Profile> profile,
     std::unique_ptr<Input> input,
     uint32_t mapping_id)
 {
-    if (!input) {
+    if (!input)
+    {
         return nullptr;
     }
-    
+
     switch (proto_mapping.mapping.which_mapping)
     {
     case proto_Output_gamepadAxis_tag:
-        if (profile->subtype == Wheel) {
+        if (profile->subtype == Wheel)
+        {
             return create_wheel_gamepad_axis_mapping(proto_mapping, profile, std::move(input), mapping_id);
         }
-        if (profile->subtype == Taiko) {
+        if (profile->subtype == Taiko)
+        {
             return std::make_unique<TaikoAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
-        if (config_mgr.get_requested_mode() == ModeSwitch) {
-            if (profile->subtype == ProjectDiva) {
+        if (config_mgr.get_requested_mode() == ModeSwitch)
+        {
+            if (profile->subtype == ProjectDiva)
+            {
                 return std::make_unique<ProjectDivaAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
             }
         }
         if (profile->subtype == Gamepad &&
-            config_mgr.get_requested_mode() == ModePs3) {
+            config_mgr.get_requested_mode() == ModePs3)
+        {
             return std::make_unique<PS3GamepadAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
         // XB1 guitars and drums don't use the same report format as gamepads
-        if (profile->subtype == GuitarHeroGuitar || profile->subtype == RockBandGuitar) {
+        if (profile->subtype == GuitarHeroGuitar || profile->subtype == RockBandGuitar)
+        {
             return std::make_unique<RockBandGuitarGamepadAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
-        if (profile->subtype == RockBandDrums) {
+        if (profile->subtype == RockBandDrums)
+        {
             return std::make_unique<RockBandDrumsGamepadAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
-        if (profile->subtype == GuitarHeroDrums) {
+        if (profile->subtype == GuitarHeroDrums)
+        {
             return std::make_unique<DrumsGamepadAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
-        if (profile->subtype == DjHeroTurntable) {
+        if (profile->subtype == DjHeroTurntable)
+        {
             return std::make_unique<DJHTurntableGamepadAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
         return std::make_unique<GamepadAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_wheelAxis_tag:
         return std::make_unique<WheelAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
 
@@ -89,91 +99,101 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
 
     case proto_Output_ghAxis_tag:
         return std::make_unique<GuitarHeroGuitarAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_ghButton_tag:
         return std::make_unique<GuitarHeroGuitarButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_rbAxis_tag:
-        if (profile->subtype == PowerGigGuitar) {
+        if (profile->subtype == PowerGigGuitar)
+        {
             return std::make_unique<PowerGigGuitarAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
         return std::make_unique<RockBandGuitarAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_rbButton_tag:
-        if (profile->subtype == PowerGigGuitar) {
+        if (profile->subtype == PowerGigGuitar)
+        {
             return std::make_unique<PowerGigGuitarButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
         return std::make_unique<RockBandGuitarButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_gamepadButton_tag:
         // PS3 and GameCube wheels put some buttons elsewhere
-        if (profile->subtype == Wheel) {
+        if (profile->subtype == Wheel)
+        {
             return std::make_unique<WheelGamepadButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
-        if (profile->subtype == Taiko) {
+        if (profile->subtype == Taiko)
+        {
             return std::make_unique<TaikoButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
-        if (config_mgr.get_requested_mode() == ModeSwitch) {
-            if (profile->subtype == ProjectDiva) {
+        if (config_mgr.get_requested_mode() == ModeSwitch)
+        {
+            if (profile->subtype == ProjectDiva)
+            {
                 return std::make_unique<ProjectDivaButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
             }
         }
         // PS2 GH guitars don't use the same report format as gamepads
-        if (profile->subtype == GuitarHeroGuitar) {
+        if (profile->subtype == GuitarHeroGuitar)
+        {
             return std::make_unique<GuitarHeroGuitarGamepadButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
         // PS3 gamepads use a totally different report format
         if (profile->subtype == Gamepad &&
-            config_mgr.get_requested_mode() == ModePs3) {
+            config_mgr.get_requested_mode() == ModePs3)
+        {
             return std::make_unique<PS3GamepadButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
         return std::make_unique<GamepadButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_ghDrumAxis_tag:
         return std::make_unique<GuitarHeroDrumsAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_rbDrumButton_tag:
-        if (profile->subtype == PowerGigDrum) {
+        if (profile->subtype == PowerGigDrum)
+        {
             return std::make_unique<PowerGigDrumsButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
         return std::make_unique<RockBandDrumsButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_rbDrumAxis_tag:
-        if (profile->subtype == PowerGigDrum) {
+        if (profile->subtype == PowerGigDrum)
+        {
             return std::make_unique<PowerGigDrumsAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
         return std::make_unique<RockBandDrumsAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_ghlButton_tag:
         return std::make_unique<LiveGuitarButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_ghlAxis_tag:
         return std::make_unique<LiveGuitarAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_proButton_tag:
         return std::make_unique<ProGuitarButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_proAxis_tag:
         return std::make_unique<ProGuitarAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_djhButton_tag:
         return std::make_unique<DJHTurntableButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_djhAxis_tag:
         return std::make_unique<DJHTurntableAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_djMaxButton_tag:
         return std::make_unique<DJMaxTurntableButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_djMaxAxis_tag:
         return std::make_unique<DJMaxTurntableAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_divaAxis_tag:
         return std::make_unique<ProjectDivaAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
 
     case proto_Output_divaTouch_tag:
         return std::make_unique<ProjectDivaButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_popnButton_tag:
         return create_converted_mapping(popn_as_gamepad, proto_mapping, profile, std::move(input), mapping_id);
     case proto_Output_bmButton_tag:
@@ -184,33 +204,33 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
         return create_converted_mapping(drummania_as_gamepad, proto_mapping, profile, std::move(input), mapping_id);
     case proto_Output_kbmButton_tag:
         return std::make_unique<KeyboardManiaButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_ghaAxis_tag:
         return std::make_unique<GuitarHeroArcadeAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_ghaButton_tag:
         return std::make_unique<GuitarHeroArcadeButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_mouseAxis_tag:
         return std::make_unique<MouseAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_mouseButton_tag:
         return std::make_unique<MouseButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_keycode_tag:
     case proto_Output_consumerKey_tag:
         return std::make_unique<KeyboardButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
 
     case proto_Output_keyboardPassthrough_tag:
         return std::make_unique<KeyboardPassthroughMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_proKeySingle_tag:
     case proto_Output_proKeyMultiple_tag:
         return std::make_unique<ProKeysKeyMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_proKeyboardAxis_tag:
         return std::make_unique<ProKeysAxisMapping>(proto_mapping, std::move(input), mapping_id, profile);
-        
+
     case proto_Output_action_tag:
     case proto_Output_turnOffController_tag:
         return std::make_unique<ActionMapping>(proto_mapping, std::move(input), mapping_id, profile);

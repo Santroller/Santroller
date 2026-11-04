@@ -110,7 +110,8 @@ public:
             return center;
         }
         int32_t value = center + m_movement[axis] * (axis < ScrollX ? MOUSE_MOVE_SCALE : MOUSE_SCROLL_SCALE);
-        return value < 0 ? 0 : value > UINT16_MAX ? UINT16_MAX : value;
+        return value < 0 ? 0 : value > UINT16_MAX ? UINT16_MAX
+                                                  : value;
     }
 
 private:

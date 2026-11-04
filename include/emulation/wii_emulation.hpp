@@ -20,6 +20,7 @@ public:
     WiiExtensionEmulationDeviceInstance(proto_WiiEmulationDevice device);
     void initialize();
     void process(bool full_poll, bool send_events);
+
 private:
     proto_WiiEmulationDevice m_device;
     std::weak_ptr<class WiiExtensionEmulationDevice> m_wii_dev;

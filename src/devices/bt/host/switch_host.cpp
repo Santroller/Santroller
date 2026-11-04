@@ -188,7 +188,8 @@ BleSwitch2Host::BleSwitch2Host(uint16_t id) : BluetoothHostInterface(id)
 
 void BleSwitch2Host::handle_report(const uint8_t *data, uint16_t len)
 {
-    if (len == 0) return;
+    if (len == 0)
+        return;
     uint16_t copy_len = len < sizeof(m_report_buf) ? len : sizeof(m_report_buf);
     memcpy(m_report_buf, data, copy_len);
 

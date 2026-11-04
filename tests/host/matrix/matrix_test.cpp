@@ -4,8 +4,10 @@
 #include <vector>
 #include <utility>
 
-namespace {
-struct Pin {
+namespace
+{
+struct Pin
+{
     bool output = false;
     bool level = false;
     bool up = false;
@@ -17,17 +19,22 @@ bool active_low;
 uint64_t delay_us;
 
 template <typename F>
-void each_pin(uint64_t mask, F fn) {
-    for (unsigned int pin = 0; pin < pins.size(); pin++) {
-        if (mask & (1ull << pin)) {
+void each_pin(uint64_t mask, F fn)
+{
+    for (unsigned int pin = 0; pin < pins.size(); pin++)
+    {
+        if (mask & (1ull << pin))
+        {
             fn(pins[pin]);
         }
     }
 }
 
-class MatrixScan : public testing::Test {
+class MatrixScan : public testing::Test
+{
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         pins = {};
         pressed.clear();
         active_low = true;
@@ -36,41 +43,53 @@ protected:
 };
 }
 
-void gpio_init_mask64(uint64_t mask) {
+void gpio_init_mask64(uint64_t mask)
+{
     each_pin(mask, [](Pin &pin) { pin = {}; });
 }
-void gpio_set_dir_in_masked64(uint64_t mask) {
+void gpio_set_dir_in_masked64(uint64_t mask)
+{
     each_pin(mask, [](Pin &pin) { pin.output = false; });
 }
-void gpio_set_dir_out_masked64(uint64_t mask) {
+void gpio_set_dir_out_masked64(uint64_t mask)
+{
     each_pin(mask, [](Pin &pin) { pin.output = true; });
 }
-void gpio_put_masked64(uint64_t mask, uint64_t value) {
-    for (unsigned int pin = 0; pin < pins.size(); pin++) {
-        if (mask & (1ull << pin)) {
+void gpio_put_masked64(uint64_t mask, uint64_t value)
+{
+    for (unsigned int pin = 0; pin < pins.size(); pin++)
+    {
+        if (mask & (1ull << pin))
+        {
             pins[pin].level = value & (1ull << pin);
         }
     }
 }
-void gpio_set_pulls(unsigned int pin, bool up, bool down) {
+void gpio_set_pulls(unsigned int pin, bool up, bool down)
+{
     pins[pin].up = up;
     pins[pin].down = down;
 }
-bool gpio_get(unsigned int pin) {
-    for (const auto &[out, in] : pressed) {
+bool gpio_get(unsigned int pin)
+{
+    for (const auto &[out, in] : pressed)
+    {
         // Model diodes that only conduct when the row is driven in the wiring's polarity.
-        if (in == pin && pins[out].output && pins[out].level != active_low) {
+        if (in == pin && pins[out].output && pins[out].level != active_low)
+        {
             return pins[out].level;
         }
     }
     EXPECT_NE(pins[pin].up, pins[pin].down);
     return pins[pin].up;
 }
-void sleep_us(uint64_t us) {
+void sleep_us(uint64_t us)
+{
     delay_us += us;
 }
 
-TEST_F(MatrixScan, LegacyUsesPullUpsAndIdleHighOutputs) {
+TEST_F(MatrixScan, LegacyUsesPullUpsAndIdleHighOutputs)
+{
     Matrix matrix((1ull << 14) | (1ull << 15), (1ull << 9) | (1ull << 10), true);
     EXPECT_TRUE(pins[14].up);
     EXPECT_FALSE(pins[14].down);
@@ -85,7 +104,8 @@ TEST_F(MatrixScan, LegacyUsesPullUpsAndIdleHighOutputs) {
     EXPECT_FALSE(pins[10].output);
 }
 
-TEST_F(MatrixScan, RedDoesNotActivateGreenOrTheOtherFretRow) {
+TEST_F(MatrixScan, RedDoesNotActivateGreenOrTheOtherFretRow)
+{
     Matrix matrix((1ull << 14) | (1ull << 15), (1ull << 9) | (1ull << 10), true);
     pressed = {{10, 14}};
     EXPECT_FALSE(matrix.read(10, 15));
@@ -98,7 +118,8 @@ TEST_F(MatrixScan, RedDoesNotActivateGreenOrTheOtherFretRow) {
     EXPECT_FALSE(matrix.read(10, 15));
 }
 
-TEST_F(MatrixScan, ReadsChordsAndHighGpioPins) {
+TEST_F(MatrixScan, ReadsChordsAndHighGpioPins)
+{
     Matrix matrix((1ull << 14) | (1ull << 47), (1ull << 10) | (1ull << 40), true);
     pressed = {{10, 14}, {40, 47}};
     EXPECT_TRUE(matrix.read(10, 14));
@@ -110,7 +131,8 @@ TEST_F(MatrixScan, ReadsChordsAndHighGpioPins) {
     EXPECT_FALSE(pins[40].output);
 }
 
-TEST_F(MatrixScan, DefaultRetainsActiveHighScanningWithPullDowns) {
+TEST_F(MatrixScan, DefaultRetainsActiveHighScanningWithPullDowns)
+{
     active_low = false;
     Matrix matrix((1ull << 14) | (1ull << 15), (1ull << 9) | (1ull << 10));
     EXPECT_FALSE(pins[14].up);

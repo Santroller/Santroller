@@ -15,7 +15,7 @@
 // Called by ble_rx after GATTSERVICE_SUBEVENT_DEVICE_INFORMATION_PNP_ID.
 // ---------------------------------------------------------------------------
 std::shared_ptr<BluetoothHostInterface> ble_create_host(uint16_t vid, uint16_t pid,
-                                                         uint16_t version,
-                                                         uint16_t device_id,
-                                                         HID_ReportInfo_t *info,
-                                                         SubType known_subtype = SubType_Unknown);
+                                                        uint16_t version,
+                                                        uint16_t device_id,
+                                                        HID_ReportInfo_t *info,
+                                                        SubType known_subtype = SubType_Unknown);

@@ -13,6 +13,7 @@ bool InfiniumFaderInput::tick_digital_raw()
 
 uint16_t InfiniumFaderInput::tick_analog()
 {
-    if (!m_device) return 0;
+    if (!m_device)
+        return 0;
     return m_device->fader.position;
 }

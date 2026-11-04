@@ -60,13 +60,16 @@ FieldBits field_bits(Setter set, bool is_signed, const char *name)
 }
 
 // FIELD(Type, member) works for plain members and bitfields alike
-#define FIELD(Type, member)                                                                  \
-    ::hid_desc::field_bits<Type>([](Type &r_, uint64_t v_) { r_.member = v_; },             \
+#define FIELD(Type, member)                                                     \
+    ::hid_desc::field_bits<Type>([](Type &r_, uint64_t v_) { r_.member = v_; }, \
                                  std::is_signed_v<decltype(Type::member)>, #Type "." #member)
 
 // An array member (e.g. vendor bytes): its byte range as one field
-#define ARRAY_FIELD(Type, member)                                                            \
-    ::hid_desc::FieldBits{uint32_t(offsetof(Type, member) * 8), uint32_t(sizeof(Type::member) * 8), false, true, #Type "." #member}
+#define ARRAY_FIELD(Type, member)                                                                                \
+    ::hid_desc::FieldBits                                                                                        \
+    {                                                                                                            \
+        uint32_t(offsetof(Type, member) * 8), uint32_t(sizeof(Type::member) * 8), false, true, #Type "." #member \
+    }
 
 // Checks the descriptor has exactly one data element with this usage in the report, at the field's bit
 // position and with its width, and a logical range the field can hold (signed fields need a negative

@@ -109,4 +109,4 @@
 // Uncomment to use a USB bluetooth adapter on the host port even on a Pico W, for testing adapters
 // #define BT_FORCE_USB_DONGLE
 
-#endif  // _PICO_BTSTACK_BTSTACK_CONFIG_H
+#endif // _PICO_BTSTACK_BTSTACK_CONFIG_H

@@ -12,48 +12,48 @@
 
 namespace
 {
-    struct __attribute__((packed)) ConfigFooter
-    {
-        uint32_t dataSize;
-        uint32_t dataCrc;
-        uint32_t mainSize;
-        uint32_t auxSize;
-        uint32_t magic;
-        uint32_t currentProfile;
-    };
+struct __attribute__((packed)) ConfigFooter
+{
+    uint32_t dataSize;
+    uint32_t dataCrc;
+    uint32_t mainSize;
+    uint32_t auxSize;
+    uint32_t magic;
+    uint32_t currentProfile;
+};
 
-    constexpr uint32_t FOOTER_MAGIC = 0xd2f1e365;
-    // The most data that fits in front of the footer
-    constexpr uint32_t MAX_DATA_SIZE = EEPROM_SIZE_BYTES - sizeof(ConfigFooter);
+constexpr uint32_t FOOTER_MAGIC = 0xd2f1e365;
+// The most data that fits in front of the footer
+constexpr uint32_t MAX_DATA_SIZE = EEPROM_SIZE_BYTES - sizeof(ConfigFooter);
 
-    // Sizes come from the config tool or from flash, so they're added in 64 bits where they can't wrap
-    bool sizes_fit(uint32_t data_size, uint32_t main_size, uint32_t aux_size)
+// Sizes come from the config tool or from flash, so they're added in 64 bits where they can't wrap
+bool sizes_fit(uint32_t data_size, uint32_t main_size, uint32_t aux_size)
+{
+    return data_size <= MAX_DATA_SIZE && uint64_t(main_size) + aux_size <= data_size;
+}
+
+const ConfigFooter *footer_at(const uint8_t *end)
+{
+    return reinterpret_cast<const ConfigFooter *>(end - sizeof(ConfigFooter));
+}
+
+bool read_image(const uint8_t *end, ConfigImage &image)
+{
+    const ConfigFooter *footer = footer_at(end);
+    if (footer->magic != FOOTER_MAGIC ||
+        !sizes_fit(footer->dataSize, footer->mainSize, footer->auxSize) ||
+        CRC32::calculate(end - sizeof(ConfigFooter) - footer->dataSize, footer->dataSize) != footer->dataCrc)
     {
-        return data_size <= MAX_DATA_SIZE && uint64_t(main_size) + aux_size <= data_size;
+        return false;
     }
 
-    const ConfigFooter *footer_at(const uint8_t *end)
-    {
-        return reinterpret_cast<const ConfigFooter *>(end - sizeof(ConfigFooter));
-    }
-
-    bool read_image(const uint8_t *end, ConfigImage &image)
-    {
-        const ConfigFooter *footer = footer_at(end);
-        if (footer->magic != FOOTER_MAGIC ||
-            !sizes_fit(footer->dataSize, footer->mainSize, footer->auxSize) ||
-            CRC32::calculate(end - sizeof(ConfigFooter) - footer->dataSize, footer->dataSize) != footer->dataCrc)
-        {
-            return false;
-        }
-
-        image.data = end - sizeof(ConfigFooter) - footer->dataSize;
-        image.data_size = footer->dataSize;
-        image.main_size = footer->mainSize;
-        image.aux_size = footer->auxSize;
-        image.current_profile = footer->currentProfile;
-        return true;
-    }
+    image.data = end - sizeof(ConfigFooter) - footer->dataSize;
+    image.data_size = footer->dataSize;
+    image.main_size = footer->mainSize;
+    image.aux_size = footer->auxSize;
+    image.current_profile = footer->currentProfile;
+    return true;
+}
 }
 
 bool ConfigStorage::read_flash(ConfigImage &image, bool cached) const
@@ -279,8 +279,7 @@ bool ConfigStorage::update_auxiliary(AuxiliaryWriter writer, void *context, bool
         // onto the config flash has
         ConfigImage saved;
         const bool cache_is_saved = read_flash(saved, false) && saved.main_size == main_size &&
-                                    memcmp(saved.data, EEPROM.writeCache + EEPROM_SIZE_BYTES -
-                                                           sizeof(ConfigFooter) - footer->dataSize,
+                                    memcmp(saved.data, EEPROM.writeCache + EEPROM_SIZE_BYTES - sizeof(ConfigFooter) - footer->dataSize,
                                            main_size) == 0;
         if (cache_is_saved)
         {

@@ -3,7 +3,7 @@
 #include "protocols/wheel.hpp"
 
 BTButtonInput::BTButtonInput(proto_BTButtonInput input,
-                             std::shared_ptr<BluetoothHostInterface> device, Profile* profile)
+                             std::shared_ptr<BluetoothHostInterface> device, Profile *profile)
     : m_input(input), m_device(device), m_profile(profile)
 {
 }
@@ -16,7 +16,8 @@ bool BTButtonInput::by_position() const
 
 bool BTButtonInput::tick_digital_raw()
 {
-    if (!m_device) return false;
+    if (!m_device)
+        return false;
     if (by_position())
     {
         proto_Output button = swap_nintendo_face_button(m_input.button);
@@ -27,7 +28,8 @@ bool BTButtonInput::tick_digital_raw()
 
 uint16_t BTButtonInput::tick_analog()
 {
-    if (!m_device) return 0;
+    if (!m_device)
+        return 0;
     if (by_position())
     {
         proto_Output button = swap_nintendo_face_button(m_input.button);
@@ -41,7 +43,7 @@ void BTButtonInput::setup()
 }
 
 BTAxisInput::BTAxisInput(proto_BTAxisInput input,
-                         std::shared_ptr<BluetoothHostInterface> device, Profile* profile)
+                         std::shared_ptr<BluetoothHostInterface> device, Profile *profile)
     : m_input(input), m_device(device), m_profile(profile)
 {
     // Bluetooth wheels are read as the gamepad axes they send on, see USBAxisInput
@@ -50,13 +52,15 @@ BTAxisInput::BTAxisInput(proto_BTAxisInput input,
 
 bool BTAxisInput::tick_digital_raw()
 {
-    if (!m_device) return false;
+    if (!m_device)
+        return false;
     return m_device->tick_axis_digital(m_input.axis);
 }
 
 uint16_t BTAxisInput::tick_analog()
 {
-    if (!m_device) return 0;
+    if (!m_device)
+        return 0;
     return m_device->tick_analog(m_input.axis);
 }
 

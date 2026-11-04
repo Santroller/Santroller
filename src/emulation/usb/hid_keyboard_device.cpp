@@ -24,97 +24,97 @@ HIDKeyboardDevice::HIDKeyboardDevice()
 }
 void HIDKeyboardDevice::initialize()
 {
-  m_epin = next_epin();
-  m_epout = next_epout();
-  m_strid = next_strid();
-  ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
-  ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
-  memset(&m_initial_report, 0, sizeof(m_initial_report));
-  memset(m_last_report, 0, sizeof(m_last_report));
-  m_sent_first_report = false;
-  m_reports.reset();
+    m_epin = next_epin();
+    m_epout = next_epout();
+    m_strid = next_strid();
+    ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
+    ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
+    memset(&m_initial_report, 0, sizeof(m_initial_report));
+    memset(m_last_report, 0, sizeof(m_last_report));
+    m_sent_first_report = false;
+    m_reports.reset();
 }
 void HIDKeyboardDevice::process(bool full_poll, bool send_events)
 {
-  if (!tud_ready())
-  {
+    if (!tud_ready())
+    {
+        for (const auto &profile : profiles)
+        {
+            for (const auto &led : profile->leds)
+            {
+                led->update(full_poll, send_events);
+            }
+        }
+        return;
+    }
     for (const auto &profile : profiles)
     {
-      for (const auto &led : profile->leds)
-      {
-        led->update(full_poll, send_events);
-      }
+        profile->reset_drum_state();
+        profile->keyboard_state.clear_all();
+        profile->mouse_state.clear_all();
+        profile->consumer_state.clear_all();
+        for (const auto &mapping : profile->mappings)
+        {
+            mapping->update(full_poll, send_events);
+            mapping->update_hid(epin_buf);
+        }
+        for (const auto &led : profile->leds)
+        {
+            led->update(full_poll, send_events);
+        }
     }
-    return;
-  }
-  for (const auto &profile : profiles)
-  {
-    profile->reset_drum_state();
-    profile->keyboard_state.clear_all();
-    profile->mouse_state.clear_all();
-    profile->consumer_state.clear_all();
-    for (const auto &mapping : profile->mappings)
+    m_reports.collect(profiles);
+    if (!ready())
     {
-      mapping->update(full_poll, send_events);
-      mapping->update_hid(epin_buf);
+        return;
     }
-    for (const auto &led : profile->leds)
+    KeyboardReport keyboard;
+    if (m_reports.keyboard_pending(keyboard))
     {
-      led->update(full_poll, send_events);
+        if (send_report(sizeof(keyboard), KEYBOARD_REPORT_ID, &keyboard))
+        {
+            m_reports.keyboard_sent(keyboard);
+        }
+        return;
     }
-  }
-  m_reports.collect(profiles);
-  if (!ready())
-  {
-    return;
-  }
-  KeyboardReport keyboard;
-  if (m_reports.keyboard_pending(keyboard))
-  {
-    if (send_report(sizeof(keyboard), KEYBOARD_REPORT_ID, &keyboard))
+    ConsumerReport consumer;
+    if (m_reports.consumer_pending(consumer))
     {
-      m_reports.keyboard_sent(keyboard);
+        if (send_report(sizeof(consumer), CONSUMER_REPORT_ID, &consumer))
+        {
+            m_reports.consumer_sent(consumer);
+        }
+        return;
     }
-    return;
-  }
-  ConsumerReport consumer;
-  if (m_reports.consumer_pending(consumer))
-  {
-    if (send_report(sizeof(consumer), CONSUMER_REPORT_ID, &consumer))
+    MouseReport mouse;
+    if (m_reports.mouse_pending(mouse) && send_report(sizeof(mouse), MOUSE_REPORT_ID, &mouse))
     {
-      m_reports.consumer_sent(consumer);
+        m_reports.mouse_sent(mouse);
     }
-    return;
-  }
-  MouseReport mouse;
-  if (m_reports.mouse_pending(mouse) && send_report(sizeof(mouse), MOUSE_REPORT_ID, &mouse))
-  {
-    m_reports.mouse_sent(mouse);
-  }
 }
 
 size_t HIDKeyboardDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
 {
-  return 0;
+    return 0;
 }
 
 size_t HIDKeyboardDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-  // the keyboard report (plus its id) is the larger of the two
-  uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_keyboard_report), m_epout, m_epin, sizeof(KeyboardReport) + 1, 1)};
-  assert(sizeof(desc) <= remaining);
-  memcpy(dest, desc, sizeof(desc));
-  return sizeof(desc);
+    // the keyboard report (plus its id) is the larger of the two
+    uint8_t desc[] = {TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_keyboard_report), m_epout, m_epin, sizeof(KeyboardReport) + 1, 1)};
+    assert(sizeof(desc) <= remaining);
+    memcpy(dest, desc, sizeof(desc));
+    return sizeof(desc);
 }
 
 size_t HIDKeyboardDevice::device_name(uint8_t idx, char *desc)
 {
-  if (idx == m_strid)
-  {
-    memcpy(desc, profiles[0]->name, sizeof(profiles[0]->name));
-    return sizeof(profiles[0]->name);
-  }
-  return 0;
+    if (idx == m_strid)
+    {
+        memcpy(desc, profiles[0]->name, sizeof(profiles[0]->name));
+        return sizeof(profiles[0]->name);
+    }
+    return 0;
 }
 
 void HIDKeyboardDevice::device_descriptor(tusb_desc_device_t *desc)
@@ -122,37 +122,37 @@ void HIDKeyboardDevice::device_descriptor(tusb_desc_device_t *desc)
 }
 const uint8_t *HIDKeyboardDevice::report_descriptor()
 {
-  UsbDetectionState::instance().mark_hid_descriptor_read();
-  return desc_hid_keyboard_report;
+    UsbDetectionState::instance().mark_hid_descriptor_read();
+    return desc_hid_keyboard_report;
 }
 
 uint16_t HIDKeyboardDevice::report_desc_len()
 {
-  return sizeof(desc_hid_keyboard_report);
+    return sizeof(desc_hid_keyboard_report);
 }
 
 void HIDKeyboardDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
-  if (report_type != HID_REPORT_TYPE_OUTPUT || !bufsize)
-  {
-    return;
-  }
-  // The lock lights, after the report id (boot protocol hosts leave the id out)
-  if (bufsize >= 2 && buffer[0] == KEYBOARD_REPORT_ID)
-  {
-    set_keyboard_leds(buffer[1]);
-  }
-  else if (bufsize == 1)
-  {
-    set_keyboard_leds(buffer[0]);
-  }
+    if (report_type != HID_REPORT_TYPE_OUTPUT || !bufsize)
+    {
+        return;
+    }
+    // The lock lights, after the report id (boot protocol hosts leave the id out)
+    if (bufsize >= 2 && buffer[0] == KEYBOARD_REPORT_ID)
+    {
+        set_keyboard_leds(buffer[1]);
+    }
+    else if (bufsize == 1)
+    {
+        set_keyboard_leds(buffer[0]);
+    }
 }
 
 uint16_t HIDKeyboardDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
 {
-  (void)report_id;
-  (void)report_type;
-  (void)buffer;
-  (void)reqlen;
-  return 0;
+    (void)report_id;
+    (void)report_type;
+    (void)buffer;
+    (void)reqlen;
+    return 0;
 }

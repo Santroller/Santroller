@@ -1,7 +1,8 @@
 #include "hardware/adc.h"
 #include "hardware/pwm.h"
 #include "config/config.hpp"
-void init() {
+void init()
+{
 
     gpio_init(7);
     gpio_set_dir(7, true);
@@ -15,6 +16,7 @@ void init() {
     pwm_set_gpio_level(6, 600);
 }
 
-void tick(bool strum) {
+void tick(bool strum)
+{
     gpio_put(7, strum);
 }

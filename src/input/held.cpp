@@ -4,7 +4,8 @@
 HeldInput::HeldInput()
 {
 }
-void HeldInput::load(proto_HeldInput config, std::unique_ptr<Input> input) {
+void HeldInput::load(proto_HeldInput config, std::unique_ptr<Input> input)
+{
     m_input = std::move(input);
     m_time = config.time;
 }
@@ -40,7 +41,9 @@ bool HeldInput::tick_digital_raw()
         {
             return true;
         }
-    } else {
+    }
+    else
+    {
         m_last_pressed = 0;
     }
     return false;

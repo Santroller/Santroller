@@ -16,12 +16,12 @@ static bool has_state_report(HID_ReportInfo_t *info)
 }
 
 std::shared_ptr<UsbHostInterface> SteamTritonHost::open(std::shared_ptr<UsbHostDevice> list,
-                                                         tusb_desc_interface_t const *itf_desc,
-                                                         uint16_t max_len,
-                                                         uint16_t vid,
-                                                         uint16_t pid,
-                                                         uint16_t revision,
-                                                         HID_ReportInfo_t *info)
+                                                        tusb_desc_interface_t const *itf_desc,
+                                                        uint16_t max_len,
+                                                        uint16_t vid,
+                                                        uint16_t pid,
+                                                        uint16_t revision,
+                                                        HID_ReportInfo_t *info)
 {
     if (vid != VALVE_USB_VID)
         return nullptr;

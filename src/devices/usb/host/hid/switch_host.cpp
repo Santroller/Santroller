@@ -13,7 +13,7 @@
 std::shared_ptr<UsbHostInterface> SwitchHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
     bool is_switch2 = (vid == NINTENDO_VID && (pid == SWITCH_2_PRO_PID || pid == SWITCH_2_JOY_L_PID ||
-                                              pid == SWITCH_2_JOY_R_PID || pid == SWITCH_2_GC_PID));
+                                               pid == SWITCH_2_JOY_R_PID || pid == SWITCH_2_GC_PID));
     bool is_switch = false;
     if (vid == NINTENDO_VID)
     {
@@ -80,12 +80,12 @@ std::shared_ptr<UsbHostInterface> SwitchHost::open(std::shared_ptr<UsbHostDevice
 
 void SwitchHost::send_handshake_step()
 {
-    if (!m_ep_out) return;
+    if (!m_ep_out)
+        return;
 
     switch (m_handshake_step)
     {
-    case 0:
-    {
+    case 0: {
         // Handshake 80 02
         static const uint8_t cmd_80_02[] = {0x80, 0x02};
         memcpy(m_ep_out_buf, cmd_80_02, sizeof(cmd_80_02));
@@ -102,8 +102,7 @@ void SwitchHost::send_handshake_step()
         }
         break;
     }
-    case 1:
-    {
+    case 1: {
         // Disable USB timeout 80 04
         static const uint8_t cmd_80_04[] = {0x80, 0x04};
         memcpy(m_ep_out_buf, cmd_80_04, sizeof(cmd_80_04));
@@ -120,8 +119,7 @@ void SwitchHost::send_handshake_step()
         }
         break;
     }
-    default:
-    {
+    default: {
         // Then subcommands: full 0x30 reports, turn the IMU on and read its calibration
         if (m_handshake_step >= SWITCH_HANDSHAKE_STEPS)
         {
@@ -251,23 +249,40 @@ bool switch_tick_digital(const uint8_t *buf, proto_Output &type)
         {
             switch (type.mapping.gamepadButton)
             {
-            case Gamepad_A:               return in.a;
-            case Gamepad_B:               return in.b;
-            case Gamepad_X:               return in.x;
-            case Gamepad_Y:               return in.y;
-            case Gamepad_LeftShoulder:    return in.leftShoulder || in.buttonLeftSL;
-            case Gamepad_RightShoulder:   return in.rightShoulder || in.buttonRightSL;
-            case Gamepad_Back:            return in.back;
-            case Gamepad_Start:           return in.start;
-            case Gamepad_LeftThumbClick:  return in.leftThumbClick;
-            case Gamepad_RightThumbClick: return in.rightThumbClick;
-            case Gamepad_Guide:           return in.guide;
-            case Gamepad_Capture:         return in.capture;
-            case Gamepad_DpadUp:          return in.dpadUp;
-            case Gamepad_DpadDown:        return in.dpadDown;
-            case Gamepad_DpadLeft:        return in.dpadLeft;
-            case Gamepad_DpadRight:       return in.dpadRight;
-            default:                      return false;
+            case Gamepad_A:
+                return in.a;
+            case Gamepad_B:
+                return in.b;
+            case Gamepad_X:
+                return in.x;
+            case Gamepad_Y:
+                return in.y;
+            case Gamepad_LeftShoulder:
+                return in.leftShoulder || in.buttonLeftSL;
+            case Gamepad_RightShoulder:
+                return in.rightShoulder || in.buttonRightSL;
+            case Gamepad_Back:
+                return in.back;
+            case Gamepad_Start:
+                return in.start;
+            case Gamepad_LeftThumbClick:
+                return in.leftThumbClick;
+            case Gamepad_RightThumbClick:
+                return in.rightThumbClick;
+            case Gamepad_Guide:
+                return in.guide;
+            case Gamepad_Capture:
+                return in.capture;
+            case Gamepad_DpadUp:
+                return in.dpadUp;
+            case Gamepad_DpadDown:
+                return in.dpadDown;
+            case Gamepad_DpadLeft:
+                return in.dpadLeft;
+            case Gamepad_DpadRight:
+                return in.dpadRight;
+            default:
+                return false;
             }
         }
         return false;
@@ -290,23 +305,40 @@ bool switch_tick_digital(const uint8_t *buf, proto_Output &type)
         {
             switch (type.mapping.gamepadButton)
             {
-            case Gamepad_A:               return (b1 & 0x02) != 0;
-            case Gamepad_B:               return (b1 & 0x01) != 0;
-            case Gamepad_X:               return (b1 & 0x08) != 0;
-            case Gamepad_Y:               return (b1 & 0x04) != 0;
-            case Gamepad_LeftShoulder:    return (b1 & 0x10) != 0;
-            case Gamepad_RightShoulder:   return (b1 & 0x20) != 0;
-            case Gamepad_Back:            return (b2 & 0x01) != 0;
-            case Gamepad_Start:           return (b2 & 0x02) != 0;
-            case Gamepad_LeftThumbClick:  return (b2 & 0x04) != 0;
-            case Gamepad_RightThumbClick: return (b2 & 0x08) != 0;
-            case Gamepad_Guide:           return (b2 & 0x10) != 0;
-            case Gamepad_Capture:         return (b2 & 0x20) != 0;
-            case Gamepad_DpadUp:          return up;
-            case Gamepad_DpadDown:        return down;
-            case Gamepad_DpadLeft:        return left;
-            case Gamepad_DpadRight:       return right;
-            default:                      return false;
+            case Gamepad_A:
+                return (b1 & 0x02) != 0;
+            case Gamepad_B:
+                return (b1 & 0x01) != 0;
+            case Gamepad_X:
+                return (b1 & 0x08) != 0;
+            case Gamepad_Y:
+                return (b1 & 0x04) != 0;
+            case Gamepad_LeftShoulder:
+                return (b1 & 0x10) != 0;
+            case Gamepad_RightShoulder:
+                return (b1 & 0x20) != 0;
+            case Gamepad_Back:
+                return (b2 & 0x01) != 0;
+            case Gamepad_Start:
+                return (b2 & 0x02) != 0;
+            case Gamepad_LeftThumbClick:
+                return (b2 & 0x04) != 0;
+            case Gamepad_RightThumbClick:
+                return (b2 & 0x08) != 0;
+            case Gamepad_Guide:
+                return (b2 & 0x10) != 0;
+            case Gamepad_Capture:
+                return (b2 & 0x20) != 0;
+            case Gamepad_DpadUp:
+                return up;
+            case Gamepad_DpadDown:
+                return down;
+            case Gamepad_DpadLeft:
+                return left;
+            case Gamepad_DpadRight:
+                return right;
+            default:
+                return false;
             }
         }
         return false;
@@ -336,13 +368,20 @@ uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type, const Switch
         {
             switch (type.mapping.gamepadAxis)
             {
-            case Gamepad_LeftStickX:   return (uint16_t)(in.leftStickX  << 4);
-            case Gamepad_LeftStickY:   return (uint16_t)(in.leftStickY  << 4);
-            case Gamepad_RightStickX:  return (uint16_t)(in.rightStickX << 4);
-            case Gamepad_RightStickY:  return (uint16_t)(in.rightStickY << 4);
-            case Gamepad_LeftTrigger:  return (in.leftTrigger || in.buttonLeftSR) ? 0xFFFF : 0;
-            case Gamepad_RightTrigger: return (in.rightTrigger || in.buttonRightSR) ? 0xFFFF : 0;
-            default:                   return 0;
+            case Gamepad_LeftStickX:
+                return (uint16_t)(in.leftStickX << 4);
+            case Gamepad_LeftStickY:
+                return (uint16_t)(in.leftStickY << 4);
+            case Gamepad_RightStickX:
+                return (uint16_t)(in.rightStickX << 4);
+            case Gamepad_RightStickY:
+                return (uint16_t)(in.rightStickY << 4);
+            case Gamepad_LeftTrigger:
+                return (in.leftTrigger || in.buttonLeftSR) ? 0xFFFF : 0;
+            case Gamepad_RightTrigger:
+                return (in.rightTrigger || in.buttonRightSR) ? 0xFFFF : 0;
+            default:
+                return 0;
             }
         }
         return 0;
@@ -354,13 +393,20 @@ uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type, const Switch
         {
             switch (type.mapping.gamepadAxis)
             {
-            case Gamepad_LeftStickX:   return (uint16_t)(buf[4] | (buf[5] << 8));
-            case Gamepad_LeftStickY:   return UINT16_MAX - (uint16_t)(buf[6] | (buf[7] << 8));
-            case Gamepad_RightStickX:  return (uint16_t)(buf[8] | (buf[9] << 8));
-            case Gamepad_RightStickY:  return UINT16_MAX - (uint16_t)(buf[10] | (buf[11] << 8));
-            case Gamepad_LeftTrigger:  return (buf[1] & 0x40) ? 0xFFFF : 0;
-            case Gamepad_RightTrigger: return (buf[1] & 0x80) ? 0xFFFF : 0;
-            default:                   return 0;
+            case Gamepad_LeftStickX:
+                return (uint16_t)(buf[4] | (buf[5] << 8));
+            case Gamepad_LeftStickY:
+                return UINT16_MAX - (uint16_t)(buf[6] | (buf[7] << 8));
+            case Gamepad_RightStickX:
+                return (uint16_t)(buf[8] | (buf[9] << 8));
+            case Gamepad_RightStickY:
+                return UINT16_MAX - (uint16_t)(buf[10] | (buf[11] << 8));
+            case Gamepad_LeftTrigger:
+                return (buf[1] & 0x40) ? 0xFFFF : 0;
+            case Gamepad_RightTrigger:
+                return (buf[1] & 0x80) ? 0xFFFF : 0;
+            default:
+                return 0;
             }
         }
         return 0;
@@ -369,7 +415,7 @@ uint16_t switch_tick_analog(const uint8_t *buf, proto_Output &type, const Switch
     return 0;
 }
 
-bool SwitchHost::tick_digital(proto_Output& type)
+bool SwitchHost::tick_digital(proto_Output &type)
 {
     if (m_is_switch2)
     {
@@ -382,7 +428,7 @@ bool SwitchHost::tick_digital(proto_Output& type)
     return switch_tick_digital(m_ep_in_buf, type);
 }
 
-uint16_t SwitchHost::tick_analog(proto_Output& type)
+uint16_t SwitchHost::tick_analog(proto_Output &type)
 {
     if (m_is_switch2)
     {

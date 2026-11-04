@@ -48,8 +48,7 @@ void ensure_core1_running()
 {
     // flash_core1_loop never returns, like core1 on the Pico, so it gets its own thread for the process
     static std::once_flag started;
-    std::call_once(started, []
-                   { std::thread(flash_core1_loop).detach(); });
+    std::call_once(started, [] { std::thread(flash_core1_loop).detach(); });
 }
 }
 
@@ -68,7 +67,10 @@ static std::map<int32_t, bool> s_toggle_states;
 static std::map<int32_t, DeviceFactory::BluetoothPairingStateData> s_bluetooth_pairing_states;
 static std::vector<uint32_t> s_last_cycle_states;
 
-void DeviceFactory::set_cycle_state(int32_t id, int32_t state) { s_cycle_states[id] = state; }
+void DeviceFactory::set_cycle_state(int32_t id, int32_t state)
+{
+    s_cycle_states[id] = state;
+}
 
 int32_t DeviceFactory::get_cycle_state(int32_t id)
 {
@@ -76,7 +78,10 @@ int32_t DeviceFactory::get_cycle_state(int32_t id)
     return it != s_cycle_states.end() ? it->second : 0;
 }
 
-void DeviceFactory::add_last_cycle_state(uint32_t state) { s_last_cycle_states.push_back(state); }
+void DeviceFactory::add_last_cycle_state(uint32_t state)
+{
+    s_last_cycle_states.push_back(state);
+}
 
 void DeviceFactory::clear_cycle_states()
 {
@@ -92,7 +97,10 @@ void DeviceFactory::foreach_cycle_state(std::function<void(int32_t id, int32_t s
     }
 }
 
-void DeviceFactory::set_toggle_state(int32_t id, bool state) { s_toggle_states[id] = state; }
+void DeviceFactory::set_toggle_state(int32_t id, bool state)
+{
+    s_toggle_states[id] = state;
+}
 
 bool DeviceFactory::get_toggle_state(int32_t id)
 {
@@ -100,12 +108,24 @@ bool DeviceFactory::get_toggle_state(int32_t id)
     return it != s_toggle_states.end() ? it->second : false;
 }
 
-void DeviceFactory::clear_toggle_states() { s_toggle_states.clear(); }
+void DeviceFactory::clear_toggle_states()
+{
+    s_toggle_states.clear();
+}
 
 static uint8_t s_arcade_side = 1;
-void DeviceFactory::set_arcade_side(uint8_t side) { s_arcade_side = side; }
-uint8_t DeviceFactory::get_arcade_side() { return s_arcade_side; }
-void DeviceFactory::clear_arcade_side() { s_arcade_side = 1; }
+void DeviceFactory::set_arcade_side(uint8_t side)
+{
+    s_arcade_side = side;
+}
+uint8_t DeviceFactory::get_arcade_side()
+{
+    return s_arcade_side;
+}
+void DeviceFactory::clear_arcade_side()
+{
+    s_arcade_side = 1;
+}
 
 void DeviceFactory::foreach_toggle_state(std::function<void(int32_t id, bool state)> callback)
 {
@@ -202,7 +222,10 @@ void DeviceFactory::foreach_bluetooth_pairing_state(std::function<void(int32_t i
     }
 }
 
-const std::vector<uint32_t> &DeviceFactory::get_last_cycle_states() { return s_last_cycle_states; }
+const std::vector<uint32_t> &DeviceFactory::get_last_cycle_states()
+{
+    return s_last_cycle_states;
+}
 
 // Stand-ins for config.cpp's callbacks. They decode the same way (default-initialised messages decoded
 // with PB_DECODE_NOINIT so the callbacks set beforehand survive), but only record the result.

@@ -62,8 +62,7 @@ static std::shared_ptr<Device> get_assignable_device(Profile *profile, bool clai
     {
         return device;
     }
-    ProfileManager::instance().for_each_profile([&](uint32_t, const std::shared_ptr<Profile> &other)
-                                                {
+    ProfileManager::instance().for_each_profile([&](uint32_t, const std::shared_ptr<Profile> &other) {
         if (device || !other || other.get() == profile)
         {
             return;
@@ -92,8 +91,7 @@ WiiExtTypeActivationTrigger::WiiExtTypeActivationTrigger(proto_WiiExtType type, 
 
 bool WiiExtTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
-                                        { return device->is_wii_extension(m_type); });
+    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device) { return device->is_wii_extension(m_type); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -129,8 +127,7 @@ PS2ControllerTypeActivationTrigger::PS2ControllerTypeActivationTrigger(proto_PS2
 
 bool PS2ControllerTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
-                                        { return device->is_ps2_device(m_type); });
+    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device) { return device->is_ps2_device(m_type); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -166,8 +163,7 @@ SNESControllerTypeActivationTrigger::SNESControllerTypeActivationTrigger(proto_S
 
 bool SNESControllerTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
-                                        { return device->is_snes_type(m_type); });
+    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device) { return device->is_snes_type(m_type); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -203,8 +199,7 @@ JoybusControllerTypeActivationTrigger::JoybusControllerTypeActivationTrigger(pro
 
 bool JoybusControllerTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
-                                        { return device->is_joybus_type(m_type); });
+    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device) { return device->is_joybus_type(m_type); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -240,8 +235,7 @@ UsbTypeActivationTrigger::UsbTypeActivationTrigger(proto_SubType type, std::shar
 
 bool UsbTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
-                                        { return device->is_usb_type(m_type); });
+    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device) { return device->is_usb_type(m_type); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -277,8 +271,7 @@ SpecificUsbDeviceActivationTrigger::SpecificUsbDeviceActivationTrigger(proto_Spe
 
 bool SpecificUsbDeviceActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
-                                        { return device->is_usb_device(m_device); });
+    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device) { return device->is_usb_device(m_device); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -314,8 +307,7 @@ BluetoothTypeActivationTrigger::BluetoothTypeActivationTrigger(proto_SubType typ
 
 bool BluetoothTypeActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
-                                        { return device->is_bluetooth_type(m_type); });
+    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device) { return device->is_bluetooth_type(m_type); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -351,8 +343,7 @@ SpecificBluetoothDeviceActivationTrigger::SpecificBluetoothDeviceActivationTrigg
 
 bool SpecificBluetoothDeviceActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
-                                        { return device->is_bluetooth_device(m_device); });
+    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device) { return device->is_bluetooth_device(m_device); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -408,8 +399,7 @@ MidiChannelActivationTrigger::MidiChannelActivationTrigger(uint32_t channel, con
 
 bool MidiChannelActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
-                                        { return device->has_midi_channel(m_channel - 1) && (!m_has_source || is_midi_source_device(device, m_source)); });
+    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device) { return device->has_midi_channel(m_channel - 1) && (!m_has_source || is_midi_source_device(device, m_source)); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {
@@ -447,8 +437,7 @@ MidiProGuitarActivationTrigger::MidiProGuitarActivationTrigger(proto_SubType typ
 
 bool MidiProGuitarActivationTrigger::validate(bool claim_device, bool full_poll, bool send_events)
 {
-    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device)
-                                        { return device->has_midi_channel(m_channel) && (!m_has_source || is_midi_source_device(device, m_source)); });
+    auto device = get_assignable_device(m_profile, claim_device, m_reads_claimed, m_matched_claimed, [this](const auto &device) { return device->has_midi_channel(m_channel) && (!m_has_source || is_midi_source_device(device, m_source)); });
     bool matched = device != nullptr;
     if (send_events && (matched != m_last_val || full_poll))
     {

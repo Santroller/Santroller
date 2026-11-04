@@ -92,7 +92,7 @@ TEST(ProfileOptsTest, ANameIsNotCutHalfwayThroughAUtf8Character)
 TEST(ProfileOptsTest, UnknownFieldsAreSkipped)
 {
     auto bytes = opts_bytes("Pad", false);
-    bytes.insert(bytes.end(), {0xF8, 0x07, 0x05,       // field 127, varint
+    bytes.insert(bytes.end(), {0xF8, 0x07, 0x05,         // field 127, varint
                                0xF2, 0x07, 0x02, 1, 2}); // field 126, bytes
     proto_ProfileOpts opts;
     ASSERT_TRUE(decode(bytes, opts));

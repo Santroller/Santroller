@@ -28,6 +28,7 @@ public:
     bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
     bool control_transfer(uint8_t stage, tusb_control_request_t const *request);
     uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
+
 private:
     uint8_t m_strid;
 };

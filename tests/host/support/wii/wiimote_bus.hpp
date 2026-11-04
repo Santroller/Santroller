@@ -69,4 +69,7 @@ struct WiimoteBus
     }
 };
 
-inline std::vector<uint8_t> bytes(std::initializer_list<uint8_t> list) { return std::vector<uint8_t>(list); }
+inline std::vector<uint8_t> bytes(std::initializer_list<uint8_t> list)
+{
+    return std::vector<uint8_t>(list);
+}

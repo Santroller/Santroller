@@ -56,16 +56,14 @@ protected:
     static size_t count_cycles()
     {
         size_t count = 0;
-        DeviceFactory::foreach_cycle_state([&](int32_t, int32_t)
-                                           { count++; });
+        DeviceFactory::foreach_cycle_state([&](int32_t, int32_t) { count++; });
         return count;
     }
 
     static size_t count_toggles()
     {
         size_t count = 0;
-        DeviceFactory::foreach_toggle_state([&](int32_t, bool)
-                                            { count++; });
+        DeviceFactory::foreach_toggle_state([&](int32_t, bool) { count++; });
         return count;
     }
 };

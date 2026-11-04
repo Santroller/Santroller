@@ -76,7 +76,7 @@ public:
     virtual void on_report_written() {}
     // True if a GET_REPORT response belongs to a read that was only sent to switch the report mode
     virtual bool consume_mode_switch_response() { return false; }
-    virtual void send_init_packets() {m_init_packets_sent = true;}
+    virtual void send_init_packets() { m_init_packets_sent = true; }
     bool init_packets_sent() const { return m_init_packets_sent; }
 
     // Readiness: whether this host can be registered as an assignable device immediately.
@@ -152,7 +152,7 @@ public:
     // BT address + transport info set by the Classic/BLE rx code before calling on_connected()
     bt_addr_t m_addr = {};
     bt_addr_type_t m_addr_type = 0; // 0 = public
-    uint16_t m_cid = 0;        // BT Classic: hid_host_cid; BLE: hids_cid
+    uint16_t m_cid = 0;             // BT Classic: hid_host_cid; BLE: hids_cid
     uint16_t m_vid = 0;
     uint16_t m_pid = 0;
 
@@ -167,7 +167,7 @@ protected:
     bool m_init_packets_sent = false;
     uint32_t m_connected_at = 0;
     bool m_sent_type = false;
-    uint8_t m_report_buf[128] = {};  // large enough for any HID report we handle
+    uint8_t m_report_buf[128] = {}; // large enough for any HID report we handle
 
     MidiStaticBuffers<64, 0, 64, 1> m_midi_buffers;
 };

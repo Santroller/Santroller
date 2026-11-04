@@ -157,7 +157,8 @@ bool has_service(const std::vector<Service> &services, const std::string &name)
 
 ReportType report_type(uint8_t type)
 {
-    return type == 1 ? ReportType::Input : type == 2 ? ReportType::Output : ReportType::Feature;
+    return type == 1 ? ReportType::Input : type == 2 ? ReportType::Output
+                                                     : ReportType::Feature;
 }
 
 const char *const kWebConfigService = "53414E54-524F-4C4C-4552-000000000000";
@@ -180,15 +181,9 @@ std::vector<Database> databases()
     return {
         // BTGamepadDevice::process / send_report: the gamepad report through the first input characteristic,
         // the capabilities by id; rumble / commands and the capabilities request come in as output reports
-        {"Gamepad", "src/emulation/bt/bt.gatt", "include/emulation/bt/bt_profile.h",
-         {bytes_of(desc_hid_report_hat), bytes_of(desc_hid_report_buttons)},
-         {uint8_t(ReportIdGamepad), uint8_t(ReportIdSantrollerCapabilities)},
-         {uint8_t(ReportIdGamepad), uint8_t(ReportIdSantrollerCapabilities)}},
+        {"Gamepad", "src/emulation/bt/bt.gatt", "include/emulation/bt/bt_profile.h", {bytes_of(desc_hid_report_hat), bytes_of(desc_hid_report_buttons)}, {uint8_t(ReportIdGamepad), uint8_t(ReportIdSantrollerCapabilities)}, {uint8_t(ReportIdGamepad), uint8_t(ReportIdSantrollerCapabilities)}},
         // BTGamepadDevice::process for KeyboardMouse: keyboard, media keys and mouse by id; lock lights come in
-        {"Keyboard", "src/emulation/bt/bt_keyboard.gatt", "include/emulation/bt/bt_keyboard_profile.h",
-         {std::vector<uint8_t>(desc_hid_report_keyboard, desc_hid_report_keyboard + desc_hid_report_keyboard_len)},
-         {KEYBOARD_REPORT_ID, MOUSE_REPORT_ID, CONSUMER_REPORT_ID},
-         {KEYBOARD_REPORT_ID}},
+        {"Keyboard", "src/emulation/bt/bt_keyboard.gatt", "include/emulation/bt/bt_keyboard_profile.h", {std::vector<uint8_t>(desc_hid_report_keyboard, desc_hid_report_keyboard + desc_hid_report_keyboard_len)}, {KEYBOARD_REPORT_ID, MOUSE_REPORT_ID, CONSUMER_REPORT_ID}, {KEYBOARD_REPORT_ID}},
         {"ConfigOnly", "src/emulation/bt/bt_config.gatt", "include/emulation/bt/bt_config_profile.h", {}, {}, {}},
     };
 }
@@ -197,7 +192,10 @@ class BtGattDatabase : public ::testing::TestWithParam<Database>
 {
 };
 
-std::string database_name(const ::testing::TestParamInfo<Database> &info) { return info.param.name; }
+std::string database_name(const ::testing::TestParamInfo<Database> &info)
+{
+    return info.param.name;
+}
 } // namespace
 
 // The headers have to be regenerated whenever a .gatt file changes, e.g.

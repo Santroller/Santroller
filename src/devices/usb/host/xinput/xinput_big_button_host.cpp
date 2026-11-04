@@ -8,7 +8,6 @@
 #include "config/config.hpp"
 #include "managers/device_manager.hpp"
 
-
 std::shared_ptr<UsbHostInterface> XInputBigButtonHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *desc_itf, uint16_t max_len, uint16_t *out_len)
 {
     TU_VERIFY(TUSB_CLASS_VENDOR_SPECIFIC == desc_itf->bInterfaceClass && desc_itf->bInterfaceSubClass == 0x5D &&
@@ -70,14 +69,14 @@ bool XInputBigButtonHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_
 }
 
 // All four Big Button pads are combined, A / B / Y / X / LB double as the frets like the old firmware
-bool XInputBigButtonHost::tick_digital(proto_Output& type)
+bool XInputBigButtonHost::tick_digital(proto_Output &type)
 {
     XInputGamepad_Data_t report = {};
     uint16_t buttons = m_buttons[0] | m_buttons[1] | m_buttons[2] | m_buttons[3];
     memcpy(((uint8_t *)&report) + 2, &buttons, sizeof(buttons));
     return xinput_tick_digital_impl((const uint8_t *)&report, Gamepad, type);
 }
-uint16_t XInputBigButtonHost::tick_analog(proto_Output& type)
+uint16_t XInputBigButtonHost::tick_analog(proto_Output &type)
 {
     return 0;
 }

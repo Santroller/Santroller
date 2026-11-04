@@ -248,7 +248,7 @@ size_t SwitchGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
     return sizeof(desc);
 }
 
-size_t SwitchGamepadDevice::device_name(uint8_t idx, char *desc) 
+size_t SwitchGamepadDevice::device_name(uint8_t idx, char *desc)
 {
     return 0;
 }
@@ -287,7 +287,8 @@ void SwitchArcadeDevice::initialize()
 
 void SwitchArcadeDevice::process(bool full_poll, bool send_events)
 {
-    if (tud_ready() && !ready()) return;
+    if (tud_ready() && !ready())
+        return;
 
     SwitchArcadeReport next = {0, 0, 8, 128, 128, 128, 128, 0};
     for (const auto &profile : profiles)
@@ -298,11 +299,13 @@ void SwitchArcadeDevice::process(bool full_poll, bool send_events)
             mapping->update(full_poll, send_events);
             mapping->update_switch(reinterpret_cast<uint8_t *>(&next));
         }
-        for (const auto &led : profile->leds) led->update(full_poll, send_events);
+        for (const auto &led : profile->leds)
+            led->update(full_poll, send_events);
     }
     switch_arcade_finish_hat(next);
     m_report = next;
-    if (ready()) send_report(sizeof(m_report), 0, &m_report);
+    if (ready())
+        send_report(sizeof(m_report), 0, &m_report);
 }
 
 size_t SwitchArcadeDevice::compatible_section_descriptor(uint8_t *, size_t)
@@ -314,10 +317,10 @@ size_t SwitchArcadeDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
     const uint8_t descriptor[] = {
         TUD_HID_INOUT_DESCRIPTOR(interface_id, 0, HID_ITF_PROTOCOL_NONE,
-            sizeof(desc_hid_report_switch_arcade), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)
-    };
+                                 sizeof(desc_hid_report_switch_arcade), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1)};
     assert(sizeof(descriptor) <= remaining);
-    if (sizeof(descriptor) > remaining) return 0;
+    if (sizeof(descriptor) > remaining)
+        return 0;
     memcpy(dest, descriptor, sizeof(descriptor));
     return sizeof(descriptor);
 }
@@ -345,9 +348,10 @@ uint16_t SwitchArcadeDevice::report_desc_len()
 }
 
 uint16_t SwitchArcadeDevice::get_report(uint8_t report_id, hid_report_type_t report_type,
-                                       uint8_t *buffer, uint16_t reqlen)
+                                        uint8_t *buffer, uint16_t reqlen)
 {
-    if (report_id != 0 || report_type != HID_REPORT_TYPE_INPUT || !buffer) return 0;
+    if (report_id != 0 || report_type != HID_REPORT_TYPE_INPUT || !buffer)
+        return 0;
     uint16_t size = std::min<uint16_t>(reqlen, sizeof(m_report));
     memcpy(buffer, &m_report, size);
     return size;
@@ -601,11 +605,16 @@ void SwitchGamepadDevice::handleFeatureReport(uint8_t switchReportID, uint8_t sw
         {
             uint8_t p = 0;
             uint8_t mask = playerID & 0x0F;
-            if (mask == 0x01) p = 1;
-            else if (mask == 0x02 || mask == 0x03) p = 2;
-            else if (mask == 0x04 || mask == 0x07) p = 3;
-            else if (mask == 0x08 || mask == 0x0F) p = 4;
-            else if (mask > 0) p = 1;
+            if (mask == 0x01)
+                p = 1;
+            else if (mask == 0x02 || mask == 0x03)
+                p = 2;
+            else if (mask == 0x04 || mask == 0x07)
+                p = 3;
+            else if (mask == 0x08 || mask == 0x0F)
+                p = 4;
+            else if (mask > 0)
+                p = 1;
             set_player_led(p);
         }
         report[13] = 0x80;

@@ -22,7 +22,6 @@ void AccelerometerDevice::end(bool full)
     m_accelerometer.end();
 }
 
-
 void AccelerometerDevice::update(bool full_poll, bool send_events)
 {
     m_accelerometer.tick();

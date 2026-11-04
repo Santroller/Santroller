@@ -38,8 +38,7 @@ static inline bool xbox_elite_gip_paddles(const uint8_t *data, uint16_t len, uin
 {
     switch (len)
     {
-    case 29:
-    {
+    case 29: {
         // Elite Series 1, the raw buttons follow the mapped ones at offset 14
         uint8_t raw = memcmp(data, data + 14, 2) == 0 ? data[28] : 0;
         paddles = ((raw & 0x02) ? XBOX_ELITE_P1 : 0) | ((raw & 0x08) ? XBOX_ELITE_P2 : 0) |
@@ -97,10 +96,15 @@ static inline bool xbox_elite_paddle_pressed(uint8_t paddles, GamepadButtonType 
 {
     switch (button)
     {
-    case Gamepad_RightPaddle1: return paddles & XBOX_ELITE_P1;
-    case Gamepad_RightPaddle2: return paddles & XBOX_ELITE_P2;
-    case Gamepad_LeftPaddle1:  return paddles & XBOX_ELITE_P3;
-    case Gamepad_LeftPaddle2:  return paddles & XBOX_ELITE_P4;
-    default:                   return false;
+    case Gamepad_RightPaddle1:
+        return paddles & XBOX_ELITE_P1;
+    case Gamepad_RightPaddle2:
+        return paddles & XBOX_ELITE_P2;
+    case Gamepad_LeftPaddle1:
+        return paddles & XBOX_ELITE_P3;
+    case Gamepad_LeftPaddle2:
+        return paddles & XBOX_ELITE_P4;
+    default:
+        return false;
     }
 }

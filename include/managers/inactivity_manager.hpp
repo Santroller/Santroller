@@ -7,7 +7,7 @@
 class InactivityManager
 {
 public:
-    static InactivityManager& instance()
+    static InactivityManager &instance()
     {
         static InactivityManager manager;
         return manager;
@@ -22,8 +22,8 @@ public:
 private:
     InactivityManager() = default;
     ~InactivityManager() = default;
-    InactivityManager(const InactivityManager&) = delete;
-    InactivityManager& operator=(const InactivityManager&) = delete;
+    InactivityManager(const InactivityManager &) = delete;
+    InactivityManager &operator=(const InactivityManager &) = delete;
 
     void set_leds_off(bool off);
     void go_to_sleep();

@@ -140,8 +140,7 @@ TEST(MonoFramebuffer, EllipsesMatchTheirPixelCentres)
     {
         for (int h = 1; h <= 40; h++)
         {
-            auto inside = [&](int x, int y)
-            {
+            auto inside = [&](int x, int y) {
                 if (x < 0 || y < 0 || x >= w || y >= h)
                 {
                     return false;
@@ -290,8 +289,7 @@ TEST(MonoFramebuffer, FastPathsMatchDrawingPixelByPixel)
 {
     const int panels[][2] = {{128, 64}, {128, 32}, {64, 128}, {128, 128}};
     uint32_t seed = 12345;
-    auto rand = [&seed](int max)
-    {
+    auto rand = [&seed](int max) {
         seed = seed * 1103515245 + 12345;
         return (int)((seed >> 8) % max);
     };
@@ -373,8 +371,7 @@ TEST(MonoFramebuffer, TextMatchesDrawingPixelByPixelAnywhere)
 {
     const int panels[][2] = {{128, 64}, {128, 32}, {64, 128}, {128, 128}};
     uint32_t seed = 99;
-    auto rand = [&seed](int max)
-    {
+    auto rand = [&seed](int max) {
         seed = seed * 1103515245 + 12345;
         return (int)((seed >> 8) % max);
     };

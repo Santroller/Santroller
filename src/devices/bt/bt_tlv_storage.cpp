@@ -6,26 +6,26 @@
 
 namespace
 {
-    int tlv_get_tag_wrapper(void *context, uint32_t tag, uint8_t *buffer, uint32_t buffer_size)
-    {
-        auto *storage = static_cast<BtTlvStorage *>(context);
-        return storage ? storage->get_tag(tag, buffer, buffer_size) : 0;
-    }
+int tlv_get_tag_wrapper(void *context, uint32_t tag, uint8_t *buffer, uint32_t buffer_size)
+{
+    auto *storage = static_cast<BtTlvStorage *>(context);
+    return storage ? storage->get_tag(tag, buffer, buffer_size) : 0;
+}
 
-    int tlv_store_tag_wrapper(void *context, uint32_t tag, const uint8_t *data, uint32_t data_size)
-    {
-        auto *storage = static_cast<BtTlvStorage *>(context);
-        return storage ? storage->store_tag(tag, data, data_size) : -1;
-    }
+int tlv_store_tag_wrapper(void *context, uint32_t tag, const uint8_t *data, uint32_t data_size)
+{
+    auto *storage = static_cast<BtTlvStorage *>(context);
+    return storage ? storage->store_tag(tag, data, data_size) : -1;
+}
 
-    void tlv_delete_tag_wrapper(void *context, uint32_t tag)
+void tlv_delete_tag_wrapper(void *context, uint32_t tag)
+{
+    auto *storage = static_cast<BtTlvStorage *>(context);
+    if (storage)
     {
-        auto *storage = static_cast<BtTlvStorage *>(context);
-        if (storage)
-        {
-            storage->delete_tag(tag);
-        }
+        storage->delete_tag(tag);
     }
+}
 }
 
 BtTlvStorage::BtTlvStorage()
@@ -210,8 +210,7 @@ void BtTlvStorage::delete_le_bonds_if(const std::function<bool(const uint8_t *ma
 {
     constexpr uint32_t BTD_PREFIX = ('B' << 24) | ('T' << 16) | ('D' << 8);
     auto old_size = m_entries.size();
-    m_entries.erase(std::remove_if(m_entries.begin(), m_entries.end(), [&matches](const BluetoothTlvData &entry)
-                                   { return (entry.tag & 0xFFFFFF00) == BTD_PREFIX && entry.length >= 14 && matches(entry.value + 8); }),
+    m_entries.erase(std::remove_if(m_entries.begin(), m_entries.end(), [&matches](const BluetoothTlvData &entry) { return (entry.tag & 0xFFFFFF00) == BTD_PREFIX && entry.length >= 14 && matches(entry.value + 8); }),
                     m_entries.end());
     if (m_entries.size() != old_size)
     {
@@ -231,4 +230,3 @@ void BtTlvStorage::foreach_entry(const std::function<void(uint32_t tag, const ui
         callback(entry.tag, entry.value, entry.length);
     }
 }
-

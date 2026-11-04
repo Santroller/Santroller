@@ -80,6 +80,7 @@ public:
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
     void update_hid(uint8_t *report);
+
 private:
     bool is_stick() const;
 };

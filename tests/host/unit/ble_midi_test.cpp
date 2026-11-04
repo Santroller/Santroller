@@ -9,8 +9,7 @@ using Bytes = std::vector<uint8_t>;
 Bytes unwrap(const Bytes &packet)
 {
     Bytes out;
-    ble_midi_unwrap(packet.data(), packet.size(), [&](uint8_t byte)
-                    { out.push_back(byte); });
+    ble_midi_unwrap(packet.data(), packet.size(), [&](uint8_t byte) { out.push_back(byte); });
     return out;
 }
 } // namespace

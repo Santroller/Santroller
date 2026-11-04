@@ -90,7 +90,8 @@ void MPR121Device::end(bool full)
 {
     m_mpr121.end();
 }
-void MPR121Device::update(bool full_poll, bool send_events) {
+void MPR121Device::update(bool full_poll, bool send_events)
+{
     // Inputs and LEDs claim their pins after the device has started
     if (m_config_dirty)
     {
@@ -99,7 +100,8 @@ void MPR121Device::update(bool full_poll, bool send_events) {
     }
     m_mpr121.set_outputs(m_outputs);
     m_mpr121.tick();
-    if (m_lastConnected != m_mpr121.is_connected() || full_poll) {
+    if (m_lastConnected != m_mpr121.is_connected() || full_poll)
+    {
         m_lastConnected = m_mpr121.is_connected();
         proto_Event event = {which_event : proto_Event_device_tag, event : {device : {m_id, m_lastConnected}}};
         HIDConfigDevice::send_event(event, true);

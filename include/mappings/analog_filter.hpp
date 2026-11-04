@@ -99,7 +99,8 @@ public:
 private:
     static float clamp(float x, float min, float max)
     {
-        return x < min ? min : x > max ? max : x;
+        return x < min ? min : x > max ? max
+                                       : x;
     }
     // RC time constant for a cutoff in Hz, 0 when the filter is off
     static float rc(bool has, float cutoff)

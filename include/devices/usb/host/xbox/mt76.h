@@ -18,35 +18,40 @@
 #define MT76_RADIO_OFF_DELAY_MS 50
 #define MT76_CHANNEL_SETTLE_DELAY_MS 1000
 
-enum mt76_wireless_event_type {
+enum mt76_wireless_event_type
+{
     MT76_EVENT_ASSOCIATION,
     MT76_EVENT_DISASSOCIATION,
     MT76_EVENT_CLIENT_LOST,
     MT76_EVENT_CLIENT_COMMAND,
 };
 
-enum mt76_pairing_state {
+enum mt76_pairing_state
+{
     MT76_PAIRING_DISABLED,
     MT76_PAIRING_ACTIVE,
     MT76_PAIRING_ENABLING,
     MT76_PAIRING_DISABLING,
 };
 
-struct mt76_client {
+struct mt76_client
+{
     bool used;
     uint8_t addr[MT76_MAC_ADDR_LEN];
     uint8_t key[16];
     bool encryption_enabled;
 };
 
-struct mt76_wireless_event {
+struct mt76_wireless_event
+{
     enum mt76_wireless_event_type type;
     uint8_t wcid;
     uint8_t command;
     uint8_t addr[MT76_MAC_ADDR_LEN];
 };
 
-struct mt76_channel {
+struct mt76_channel
+{
     uint8_t index;
     uint8_t band;
     uint8_t bandwidth;
@@ -56,7 +61,8 @@ struct mt76_channel {
     bool scan;
 };
 
-struct mt76_dev {
+struct mt76_dev
+{
     uint8_t dev_addr;
     uint8_t mac_address[MT76_MAC_ADDR_LEN];
     void *owner;
@@ -138,7 +144,7 @@ int mt76_remove_client(struct mt76_dev *dev, uint8_t wcid);
 int mt76_send_pair_response(struct mt76_dev *dev, const uint8_t *addr);
 int mt76_send_pair_response_async(struct mt76_dev *dev, const uint8_t *addr);
 int mt76_set_client_key(struct mt76_dev *dev, uint8_t wcid, const uint8_t *key, uint16_t key_len);
-int mt76_send_client_command(struct mt76_dev *dev, uint8_t wcid, const uint8_t *addr, 
+int mt76_send_client_command(struct mt76_dev *dev, uint8_t wcid, const uint8_t *addr,
                              uint8_t cmd, const uint8_t *data, uint16_t len);
 
 // Wireless TX

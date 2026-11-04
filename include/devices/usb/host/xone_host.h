@@ -3,7 +3,8 @@
 #include "protocols/xbox_one.hpp"
 #include "devices/usb/host/xone_chatpad_host.h"
 
-extern "C" {
+extern "C"
+{
 #include "gip_device.h"
 #include "gip_report_queue.h"
 }
@@ -16,11 +17,11 @@ public:
     bool set_config();
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
     void disconnect() override;
-    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t* out_len);
-    bool tick_digital(proto_Output& type);
-    uint16_t tick_analog(proto_Output& type);
+    static std::shared_ptr<UsbHostInterface> open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t *out_len);
+    bool tick_digital(proto_Output &type);
+    uint16_t tick_analog(proto_Output &type);
     void update(bool full_poll, bool send_events);
-    void send_report_from_host(XGIPProtocol* report);
+    void send_report_from_host(XGIPProtocol *report);
     void send_power_on_sequence();
     void register_auth_handler(std::shared_ptr<XboxOneHost> self);
     void set_rumble(uint8_t left, uint8_t right) override;
@@ -36,12 +37,12 @@ public:
         auto id = hardware_id_from_mac(m_gip_device.address);
         return id ? id : UsbHostInterface::hardware_id();
     }
-    
-    gip_device_t m_gip_device;  // Shared GIP device state (public for callbacks)
-    gip_report_queue_t* m_report_queue;  // Shared report queue (public for callbacks)
+
+    gip_device_t m_gip_device;          // Shared GIP device state (public for callbacks)
+    gip_report_queue_t *m_report_queue; // Shared report queue (public for callbacks)
     // Also in the device's interface list, under an interface number the controller doesn't use
     std::shared_ptr<XboxOneChatpadHost> m_chatpad;
-    
+
 private:
     void send_feedback_packet(uint8_t command, bool system, const uint8_t *data, uint16_t len);
     uint8_t m_ep_in;

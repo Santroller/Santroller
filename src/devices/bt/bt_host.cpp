@@ -76,8 +76,7 @@ void bt_host_promote_if_ready(std::shared_ptr<BluetoothHostInterface> device)
 
     bt_pending_interfaces.erase(
         std::remove_if(bt_pending_interfaces.begin(), bt_pending_interfaces.end(),
-                       [&device](const auto &d)
-                       { return d.get() == device.get(); }),
+                       [&device](const auto &d) { return d.get() == device.get(); }),
         bt_pending_interfaces.end());
 
     device->set_registered(true);
@@ -96,14 +95,12 @@ void bt_host_remove_interface(BluetoothHostInterface *device)
 {
     bt_pending_interfaces.erase(
         std::remove_if(bt_pending_interfaces.begin(), bt_pending_interfaces.end(),
-                       [device](const auto &d)
-                       { return d.get() == device; }),
+                       [device](const auto &d) { return d.get() == device; }),
         bt_pending_interfaces.end());
 
     bt_assignable_interfaces.erase(
         std::remove_if(bt_assignable_interfaces.begin(), bt_assignable_interfaces.end(),
-                       [device](const auto &d)
-                       { return d.get() == device; }),
+                       [device](const auto &d) { return d.get() == device; }),
         bt_assignable_interfaces.end());
 
     DeviceManager::instance().remove_device(device);
@@ -224,8 +221,7 @@ void bt_forget_hosts()
 {
     printf("BT: forgetting paired hosts\r\n");
     // Bonds for controllers we paired with as a receiver are left for bt_forget_pairing
-    auto is_host = [](const uint8_t *mac)
-    { return DeviceFactory::find_bluetooth_pairing_id_by_mac(mac) < 0; };
+    auto is_host = [](const uint8_t *mac) { return DeviceFactory::find_bluetooth_pairing_id_by_mac(mac) < 0; };
     BtStackLock lock;
     if (!BluetoothStack::instance().initialized())
     {

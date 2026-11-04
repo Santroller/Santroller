@@ -301,8 +301,7 @@ bool BtDongleHost::send(uint8_t packet_type, const uint8_t *packet, uint16_t len
     }
     switch (packet_type)
     {
-    case USB_DONGLE_COMMAND_PACKET:
-    {
+    case USB_DONGLE_COMMAND_PACKET: {
         if (len > sizeof(m_command_buf))
         {
             return false;

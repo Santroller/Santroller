@@ -4,8 +4,7 @@
 
 typedef struct
 {
-    union
-    {
+    union {
         struct
         {
             uint8_t rightStickX0 : 1;
@@ -14,8 +13,7 @@ typedef struct
         };
         uint8_t rightStickX : 5;
     };
-    union
-    {
+    union {
         struct
         {
             uint8_t leftTrigger20 : 3;
@@ -26,8 +24,7 @@ typedef struct
 } __attribute__((packed)) WiiIntermediateClassicDataFormat_t;
 typedef struct
 {
-    union
-    {
+    union {
         struct
         {
             uint16_t leftStickX10 : 2;
@@ -35,8 +32,7 @@ typedef struct
         };
         uint16_t leftStickX : 10;
     };
-    union
-    {
+    union {
         struct
         {
             uint16_t leftStickY10 : 2;
@@ -44,8 +40,7 @@ typedef struct
         };
         uint16_t leftStickY : 10;
     };
-    union
-    {
+    union {
         struct
         {
             uint16_t rightStickX10 : 2;
@@ -53,8 +48,7 @@ typedef struct
         };
         uint16_t rightStickX : 10;
     };
-    union
-    {
+    union {
         struct
         {
             uint16_t rightStickY10 : 2;
@@ -74,8 +68,7 @@ typedef struct
     uint8_t rightStickX0 : 1;
     uint8_t rightTrigger : 5;
     uint8_t leftTrigger20 : 3;
-    union
-    {
+    union {
         struct
         {
             uint8_t : 1;
@@ -89,8 +82,7 @@ typedef struct
         };
         uint8_t buttonsLow;
     };
-    union
-    {
+    union {
         struct
         {
             uint8_t dpadUp : 1;
@@ -118,8 +110,7 @@ typedef struct
     uint8_t leftTrigger;
     uint8_t rightTrigger;
 
-    union
-    {
+    union {
         struct
         {
             uint8_t : 1;
@@ -133,8 +124,7 @@ typedef struct
         };
         uint8_t buttonsLow;
     };
-    union
-    {
+    union {
         struct
         {
             uint8_t dpadUp : 1;
@@ -158,8 +148,7 @@ typedef struct
     uint8_t leftTrigger;
     uint8_t rightTrigger;
 
-    union
-    {
+    union {
         struct
         {
             uint8_t : 1;
@@ -173,8 +162,7 @@ typedef struct
         };
         uint8_t buttonsLow;
     };
-    union
-    {
+    union {
         struct
         {
             uint8_t dpadUp : 1;
@@ -205,8 +193,7 @@ typedef struct
     uint8_t leftStickY : 6;
     uint8_t : 2;
 
-    union
-    {
+    union {
         struct
         {
             uint8_t tapGreen : 1;
@@ -226,8 +213,7 @@ typedef struct
     uint8_t whammy : 5;
     uint8_t : 3;
 
-    union
-    {
+    union {
         struct
         {
             uint8_t : 1;
@@ -241,8 +227,7 @@ typedef struct
         };
         uint8_t buttonsLow;
     };
-    union
-    {
+    union {
         struct
         {
 
@@ -276,8 +261,7 @@ typedef struct
         uint8_t channel : 4;
         uint8_t velocity_6_4 : 3;
     };
-    union
-    {
+    union {
         struct
         {
             uint8_t velocity_0 : 1;
@@ -291,8 +275,7 @@ typedef struct
         };
         uint8_t buttonsLow;
     };
-    union
-    {
+    union {
         struct
         {
 
@@ -315,8 +298,7 @@ typedef struct
     uint8_t : 2;
     uint8_t leftStickY : 6;
     uint8_t : 2;
-    union
-    {
+    union {
         struct
         {
             int8_t leftTableVelocity : 6;
@@ -329,8 +311,7 @@ typedef struct
             uint8_t : 2;
         };
     };
-    union
-    {
+    union {
         struct
         {
             int8_t rightTableVelocity : 6;
@@ -348,8 +329,7 @@ typedef struct
     uint8_t crossfader : 4;
     uint8_t : 4;
 
-    union
-    {
+    union {
         struct
         {
             uint8_t effectsKnob20 : 3;
@@ -359,8 +339,7 @@ typedef struct
     };
     uint8_t : 3;
 
-    union
-    {
+    union {
         struct
         {
             uint8_t : 1;
@@ -374,8 +353,7 @@ typedef struct
         };
         uint8_t buttonsLow;
     };
-    union
-    {
+    union {
         struct
         {
             uint8_t dpadUp : 1;
@@ -404,8 +382,7 @@ typedef struct
     uint8_t leftTableVelocity40 : 5;
     uint8_t effectsKnob20 : 3;
 
-    union
-    {
+    union {
         struct
         {
             uint8_t leftTableVelocity5 : 1;
@@ -419,8 +396,7 @@ typedef struct
         };
         uint8_t buttonsLow;
     };
-    union
-    {
+    union {
         struct
         {
             uint8_t dpadUp : 1;

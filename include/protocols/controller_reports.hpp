@@ -45,8 +45,7 @@ typedef struct
     bool rightShift : 1;
     bool rightAlt : 1;
     bool rWin : 1;
-    union
-    {
+    union {
         struct
         {
             uint8_t : 4;
@@ -212,8 +211,7 @@ typedef struct
     int8_t scrollX; /** Current scroll X delta movement on the mouse */
 } __attribute__((packed)) USB_Mouse_Boot_Data_t;
 
-typedef union
-{
+typedef union {
     struct
     {
         bool x : 1; // square
@@ -247,8 +245,7 @@ typedef struct
     uint8_t dpadLeft : 1;
     uint8_t dpadRight : 1;
 
-    union
-    {
+    union {
         struct
         {
             uint16_t genericButton1 : 1;

@@ -25,5 +25,5 @@ void STP16CPCDevice::update(bool full_poll, bool send_events)
 
 bool STP16CPCDevice::using_pin(uint8_t pin)
 {
-    return pin == m_device.spi.mosi || pin == m_device.spi.miso || pin == m_device.spi.sck  || pin == m_device.le || pin == m_device.oe;
+    return pin == m_device.spi.mosi || pin == m_device.spi.miso || pin == m_device.spi.sck || pin == m_device.le || pin == m_device.oe;
 }

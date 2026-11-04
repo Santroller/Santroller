@@ -8,10 +8,12 @@
 
 inline DeviceSlotKind midi_input_slot_kind(const proto_MidiInput &input)
 {
-    if (!input.has_sourceType) {
+    if (!input.has_sourceType)
+    {
         return DeviceSlotKind::None;
     }
-    switch (input.sourceType) {
+    switch (input.sourceType)
+    {
     case proto_MidiInputSourceType_MidiInputSourceType_MIDI:
         return DeviceSlotKind::MIDI;
     case proto_MidiInputSourceType_MidiInputSourceType_USB:

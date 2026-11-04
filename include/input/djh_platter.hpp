@@ -7,7 +7,7 @@
 class DJHeroPlatterInput : public Input
 {
 public:
-    DJHeroPlatterInput(proto_DJHeroPlatterInput input, std::shared_ptr<DjHeroTurntableDevice> device, Profile* profile);
+    DJHeroPlatterInput(proto_DJHeroPlatterInput input, std::shared_ptr<DjHeroTurntableDevice> device, Profile *profile);
     bool tick_digital_raw() override;
     uint16_t tick_analog();
     uint64_t hardware_id() const override { return (static_cast<uint64_t>(InputHw_DJHeroPlatter) << 56) | (static_cast<uint64_t>(m_input.deviceid) << 16) | static_cast<uint32_t>(m_input.type); }

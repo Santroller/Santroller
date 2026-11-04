@@ -10,13 +10,12 @@
 #define MIDI_RUNNING_STATUS_TIMEOUT_US 250000
 
 // Out only drives TX and In only listens on RX, whatever the other pin was left set to
-MidiSerialDevice::MidiSerialDevice(const DeviceReloadState* state, proto_SerialMidiDevice device, uint16_t id) :
-    MidiDevice(is_output(device) ? nullptr : state, id, false, m_midi_buffers.config()),
-    serial(this, device.uart.block,
-           is_output(device) ? device.uart.tx : -1,
-           is_output(device) ? -1 : device.uart.rx,
-           device.uart.baudrate),
-    m_device(device)
+MidiSerialDevice::MidiSerialDevice(const DeviceReloadState *state, proto_SerialMidiDevice device, uint16_t id) : MidiDevice(is_output(device) ? nullptr : state, id, false, m_midi_buffers.config()),
+                                                                                                                 serial(this, device.uart.block,
+                                                                                                                        is_output(device) ? device.uart.tx : -1,
+                                                                                                                        is_output(device) ? -1 : device.uart.rx,
+                                                                                                                        device.uart.baudrate),
+                                                                                                                 m_device(device)
 {
 }
 bool MidiSerialDevice::matches_reload_config(const proto_Device &config) const
@@ -65,8 +64,7 @@ void MidiSerialDevice::send_output()
 {
     uint64_t now = time_us_64();
     m_state.clear_all();
-    ProfileManager::instance().for_each_instance([this](const std::shared_ptr<Instance> &instance)
-                                                 {
+    ProfileManager::instance().for_each_instance([this](const std::shared_ptr<Instance> &instance) {
                                                      const MidiState *state = instance->midi_output_state();
                                                      if (state)
                                                      {

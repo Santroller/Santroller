@@ -13,7 +13,7 @@ class UsbHostInterface;
 class DeviceManager
 {
 public:
-    static DeviceManager& instance()
+    static DeviceManager &instance()
     {
         static DeviceManager manager;
         return manager;
@@ -31,7 +31,7 @@ public:
             func(device);
         }
     }
-    
+
     // Root devices (by ID)
     std::shared_ptr<Device> get_root_device(uint32_t id);
     void set_root_device(uint32_t id, std::shared_ptr<Device> device);
@@ -40,7 +40,7 @@ public:
     void remove_disconnected_root_devices();
     // End and drop the root devices whose ids aren't in ids, before the new config builds its own
     void remove_root_devices_not_in(const std::vector<uint32_t> &ids);
-    
+
     // Assignable devices
     void add_assignable_device(std::shared_ptr<Device> device);
     void clear_assignable_devices();
@@ -82,13 +82,13 @@ public:
             func(device);
         }
     }
-    
+
     // Auth devices (by console mode)
     std::shared_ptr<UsbHostInterface> get_auth_device(ConsoleMode mode);
     void set_auth_device(ConsoleMode mode, std::shared_ptr<UsbHostInterface> device);
     void clear_auth_devices();
     void remove_device(Device *device);
-    
+
     void update(bool profile_changed, bool send_events);
     void update_all_devices(bool profile_changed, bool send_events);
     void clear_all();
@@ -109,8 +109,8 @@ public:
 private:
     DeviceManager() = default;
     ~DeviceManager() = default;
-    DeviceManager(const DeviceManager&) = delete;
-    DeviceManager& operator=(const DeviceManager&) = delete;
+    DeviceManager(const DeviceManager &) = delete;
+    DeviceManager &operator=(const DeviceManager &) = delete;
 
     std::vector<std::shared_ptr<Device>> m_active_devices;
     std::unordered_map<uint32_t, std::shared_ptr<Device>> m_root_devices;

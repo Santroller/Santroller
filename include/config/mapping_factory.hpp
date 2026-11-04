@@ -8,13 +8,13 @@ class Mapping;
 class Profile;
 class Input;
 
-class MappingFactory {
+class MappingFactory
+{
 public:
     // Create a mapping from protobuf
     static std::unique_ptr<Mapping> create_mapping(
-        const proto_Mapping& proto_mapping,
+        const proto_Mapping &proto_mapping,
         std::shared_ptr<Profile> profile,
         std::unique_ptr<Input> input,
-        uint32_t mapping_id
-    );
+        uint32_t mapping_id);
 };

@@ -316,8 +316,7 @@ struct SwitchImuCalibration
 inline SwitchImuCalibration switch_imu_parse_calibration(const uint8_t *data)
 {
     SwitchImuCalibration cal;
-    auto load = [&](int i)
-    { return (float)(int16_t)(data[i * 2] | (data[i * 2 + 1] << 8)); };
+    auto load = [&](int i) { return (float)(int16_t)(data[i * 2] | (data[i * 2 + 1] << 8)); };
     for (int i = 0; i < 3; i++)
     {
         float accel_origin = load(i);
@@ -394,8 +393,7 @@ struct PSImuCalibration
 // the minus ones. A calibration that looks broken is ignored, as SDL does.
 inline PSImuCalibration ps_imu_parse_calibration(const uint8_t *data, bool plus_then_minus)
 {
-    auto load = [&](int i)
-    { return (float)(int16_t)(data[i] | (data[i + 1] << 8)); };
+    auto load = [&](int i) { return (float)(int16_t)(data[i] | (data[i + 1] << 8)); };
     PSImuCalibration cal;
     PSImuCalibration nominal;
     float plus[3], minus[3];
@@ -435,8 +433,7 @@ inline PSImuCalibration ps_imu_parse_calibration(const uint8_t *data, bool plus_
 // and its 0x21 length byte (0x27 on a PS4, 0x28 on a PS5).
 inline void ps_imu_parse_capability_scale(const uint8_t *caps, PSImuCalibration &cal)
 {
-    auto load = [&](int i)
-    { return (float)(uint16_t)(caps[i] | (caps[i + 1] << 8)); };
+    auto load = [&](int i) { return (float)(uint16_t)(caps[i] | (caps[i + 1] << 8)); };
     float gyro_num = load(8), gyro_den = load(10), accel_num = load(12), accel_den = load(14);
     for (int i = 0; i < 3; i++)
     {
@@ -462,8 +459,7 @@ inline void ps_imu_decode(const PSImuSample &sample, const PSImuCalibration &cal
 // accepts.
 inline void ps_imu_write_calibration(uint8_t *data, bool plus_then_minus, float gyro_per_dps, float accel_per_g)
 {
-    auto store = [&](int i, int16_t v)
-    {
+    auto store = [&](int i, int16_t v) {
         data[i] = v & 0xFF;
         data[i + 1] = (uint16_t)v >> 8;
     };

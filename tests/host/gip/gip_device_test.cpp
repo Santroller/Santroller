@@ -209,9 +209,7 @@ TEST_F(GipDevice, ReplacedEmulatedDeviceTeardownKeepsTheNewRelay)
     int new_owner = 0;
     std::vector<Bytes> relayed;
     auth_broker.register_response_handler(ModeXboxOne, [](XGIPProtocol *) {}, &old_owner);
-    auth_broker.register_response_handler(ModeXboxOne, [&](XGIPProtocol *p) {
-        relayed.emplace_back(p->getData(), p->getData() + p->getDataLength());
-    }, &new_owner);
+    auth_broker.register_response_handler(ModeXboxOne, [&](XGIPProtocol *p) { relayed.emplace_back(p->getData(), p->getData() + p->getDataLength()); }, &new_owner);
     auth_broker.unregister_response_handler(ModeXboxOne, &old_owner);
     ASSERT_TRUE(auth_broker.has_response_handler(ModeXboxOne));
 

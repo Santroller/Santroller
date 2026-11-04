@@ -86,11 +86,20 @@ TEST(SteamController, ButtonBitsMatchHidSteam)
         uint32_t bit;
         GamepadButtonType button;
     } cases[] = {
-        {1u << 2, Gamepad_RightShoulder}, {1u << 3, Gamepad_LeftShoulder}, {1u << 4, Gamepad_Y},
-        {1u << 5, Gamepad_B},             {1u << 6, Gamepad_X},            {1u << 7, Gamepad_A},
-        {1u << 8, Gamepad_DpadUp},        {1u << 9, Gamepad_DpadRight},    {1u << 10, Gamepad_DpadLeft},
-        {1u << 11, Gamepad_DpadDown},     {1u << 12, Gamepad_Back},        {1u << 13, Gamepad_Guide},
-        {1u << 14, Gamepad_Start},        {1u << 22, Gamepad_LeftThumbClick},
+        {1u << 2, Gamepad_RightShoulder},
+        {1u << 3, Gamepad_LeftShoulder},
+        {1u << 4, Gamepad_Y},
+        {1u << 5, Gamepad_B},
+        {1u << 6, Gamepad_X},
+        {1u << 7, Gamepad_A},
+        {1u << 8, Gamepad_DpadUp},
+        {1u << 9, Gamepad_DpadRight},
+        {1u << 10, Gamepad_DpadLeft},
+        {1u << 11, Gamepad_DpadDown},
+        {1u << 12, Gamepad_Back},
+        {1u << 13, Gamepad_Guide},
+        {1u << 14, Gamepad_Start},
+        {1u << 22, Gamepad_LeftThumbClick},
     };
     for (auto c : cases)
     {

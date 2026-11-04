@@ -46,8 +46,7 @@ void Ps2EmulationDeviceInstance::initialize()
     }
     switch (subtype)
     {
-    case Gamepad:
-    {
+    case Gamepad: {
         PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)m_initial_report;
         memset(report, 0, sizeof(PS2Gamepad_Data_t));
         m_size = sizeof(PS2Gamepad_Data_t);
@@ -58,8 +57,7 @@ void Ps2EmulationDeviceInstance::initialize()
 
         break;
     }
-    case GuitarHeroGuitar:
-    {
+    case GuitarHeroGuitar: {
 
         PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)m_initial_report;
         memset(report, 0, sizeof(PS2GuitarHeroGuitar_Data_t));
@@ -72,8 +70,7 @@ void Ps2EmulationDeviceInstance::initialize()
     case PopNMusic:
     case BeatMania:
     case GuitarFreaks:
-    case DrumMania:
-    {
+    case DrumMania: {
         PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)m_initial_report;
         memset(m_initial_report, 0, sizeof(m_initial_report));
         m_size = 2;
@@ -122,7 +119,8 @@ void Ps2EmulationDeviceInstance::process(bool full_poll, bool send_events)
         }
     }
     // guitar hero guitars smashed the dpad into the right stick so we need to convert the bitmasks
-    if (subtype == GuitarHeroGuitar) {
+    if (subtype == GuitarHeroGuitar)
+    {
         PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)m_buffer;
         report->dpad = guitar_dpad_bindings[report->dpad];
     }

@@ -52,58 +52,72 @@ static std::map<int32_t, DeviceFactory::BluetoothPairingStateData> s_bluetooth_p
 static std::vector<uint32_t> s_last_cycle_states;
 
 // Cycle state management
-void DeviceFactory::set_cycle_state(int32_t id, int32_t state) {
+void DeviceFactory::set_cycle_state(int32_t id, int32_t state)
+{
     s_cycle_states[id] = state;
 }
 
-int32_t DeviceFactory::get_cycle_state(int32_t id) {
+int32_t DeviceFactory::get_cycle_state(int32_t id)
+{
     auto it = s_cycle_states.find(id);
     return it != s_cycle_states.end() ? it->second : 0;
 }
 
-void DeviceFactory::add_last_cycle_state(uint32_t state) {
+void DeviceFactory::add_last_cycle_state(uint32_t state)
+{
     s_last_cycle_states.push_back(state);
 }
 
-void DeviceFactory::clear_cycle_states() {
+void DeviceFactory::clear_cycle_states()
+{
     s_cycle_states.clear();
     s_last_cycle_states.clear();
 }
 
-void DeviceFactory::foreach_cycle_state(std::function<void(int32_t id, int32_t state)> callback) {
-    for (auto& state : s_cycle_states) {
+void DeviceFactory::foreach_cycle_state(std::function<void(int32_t id, int32_t state)> callback)
+{
+    for (auto &state : s_cycle_states)
+    {
         callback(state.first, state.second);
     }
 }
 
 // Toggle state management
-void DeviceFactory::set_toggle_state(int32_t id, bool state) {
+void DeviceFactory::set_toggle_state(int32_t id, bool state)
+{
     s_toggle_states[id] = state;
 }
 
-bool DeviceFactory::get_toggle_state(int32_t id) {
+bool DeviceFactory::get_toggle_state(int32_t id)
+{
     auto it = s_toggle_states.find(id);
     return it != s_toggle_states.end() ? it->second : false;
 }
 
-void DeviceFactory::set_arcade_side(uint8_t side) {
+void DeviceFactory::set_arcade_side(uint8_t side)
+{
     s_arcade_side = side;
 }
 
-uint8_t DeviceFactory::get_arcade_side() {
+uint8_t DeviceFactory::get_arcade_side()
+{
     return s_arcade_side;
 }
 
-void DeviceFactory::clear_arcade_side() {
+void DeviceFactory::clear_arcade_side()
+{
     s_arcade_side = 1;
 }
 
-void DeviceFactory::clear_toggle_states() {
+void DeviceFactory::clear_toggle_states()
+{
     s_toggle_states.clear();
 }
 
-void DeviceFactory::foreach_toggle_state(std::function<void(int32_t id, bool state)> callback) {
-    for (auto& state : s_toggle_states) {
+void DeviceFactory::foreach_toggle_state(std::function<void(int32_t id, bool state)> callback)
+{
+    for (auto &state : s_toggle_states)
+    {
         callback(state.first, state.second);
     }
 }
@@ -112,13 +126,17 @@ void DeviceFactory::foreach_toggle_state(std::function<void(int32_t id, bool sta
 void DeviceFactory::set_bluetooth_pairing_state(int32_t id, const uint8_t mac[6], const char *name, bool ble,
                                                 SubType subtype, BtControllerType controller_type,
                                                 uint16_t vid, uint16_t pid,
-                                                const uint8_t *link_key) {
+                                                const uint8_t *link_key)
+{
     BluetoothPairingStateData &state = s_bluetooth_pairing_states[id];
     memcpy(state.mac, mac, sizeof(state.mac));
-    if (name) {
+    if (name)
+    {
         strncpy(state.name, name, sizeof(state.name) - 1);
         state.name[sizeof(state.name) - 1] = '\0';
-    } else {
+    }
+    else
+    {
         state.name[0] = '\0';
     }
     state.ble = ble;
@@ -126,130 +144,151 @@ void DeviceFactory::set_bluetooth_pairing_state(int32_t id, const uint8_t mac[6]
     state.controller_type = controller_type;
     state.vid = vid;
     state.pid = pid;
-    if (link_key) {
+    if (link_key)
+    {
         state.has_link_key = true;
         memcpy(state.link_key, link_key, sizeof(state.link_key));
-    } else if (!state.has_link_key) {
+    }
+    else if (!state.has_link_key)
+    {
         state.has_link_key = false;
         memset(state.link_key, 0, sizeof(state.link_key));
     }
 }
 
-void DeviceFactory::set_bluetooth_pairing_link_key(int32_t id, const uint8_t key[16]) {
+void DeviceFactory::set_bluetooth_pairing_link_key(int32_t id, const uint8_t key[16])
+{
     auto it = s_bluetooth_pairing_states.find(id);
-    if (it != s_bluetooth_pairing_states.end()) {
-        if (key) {
+    if (it != s_bluetooth_pairing_states.end())
+    {
+        if (key)
+        {
             it->second.has_link_key = true;
             memcpy(it->second.link_key, key, 16);
-        } else {
+        }
+        else
+        {
             it->second.has_link_key = false;
             memset(it->second.link_key, 0, sizeof(it->second.link_key));
         }
     }
 }
 
-bool DeviceFactory::get_bluetooth_pairing_state(int32_t id, BluetoothPairingStateData &out) {
+bool DeviceFactory::get_bluetooth_pairing_state(int32_t id, BluetoothPairingStateData &out)
+{
     auto it = s_bluetooth_pairing_states.find(id);
-    if (it == s_bluetooth_pairing_states.end()) {
+    if (it == s_bluetooth_pairing_states.end())
+    {
         return false;
     }
     out = it->second;
     return true;
 }
 
-int32_t DeviceFactory::find_bluetooth_pairing_id_by_mac(const uint8_t mac[6]) {
-    for (const auto &pair : s_bluetooth_pairing_states) {
-        if (memcmp(pair.second.mac, mac, 6) == 0) {
+int32_t DeviceFactory::find_bluetooth_pairing_id_by_mac(const uint8_t mac[6])
+{
+    for (const auto &pair : s_bluetooth_pairing_states)
+    {
+        if (memcmp(pair.second.mac, mac, 6) == 0)
+        {
             return pair.first;
         }
     }
     return -1;
 }
 
-bool DeviceFactory::find_bluetooth_pairing_state_by_mac(const uint8_t mac[6], BluetoothPairingStateData &out) {
+bool DeviceFactory::find_bluetooth_pairing_state_by_mac(const uint8_t mac[6], BluetoothPairingStateData &out)
+{
     int32_t id = find_bluetooth_pairing_id_by_mac(mac);
-    if (id < 0) {
+    if (id < 0)
+    {
         return false;
     }
     return get_bluetooth_pairing_state(id, out);
 }
 
-int32_t DeviceFactory::allocate_bluetooth_pairing_id() {
+int32_t DeviceFactory::allocate_bluetooth_pairing_id()
+{
     int32_t next_id = 0;
-    while (s_bluetooth_pairing_states.find(next_id) != s_bluetooth_pairing_states.end()) {
+    while (s_bluetooth_pairing_states.find(next_id) != s_bluetooth_pairing_states.end())
+    {
         next_id++;
     }
     return next_id;
 }
 
-void DeviceFactory::remove_bluetooth_pairing_state(int32_t id) {
+void DeviceFactory::remove_bluetooth_pairing_state(int32_t id)
+{
     auto it = s_bluetooth_pairing_states.find(id);
-    if (it != s_bluetooth_pairing_states.end()) {
+    if (it != s_bluetooth_pairing_states.end())
+    {
         BtTlvStorage::instance().delete_tags_for_mac(it->second.mac);
         s_bluetooth_pairing_states.erase(it);
     }
 }
 
-void DeviceFactory::clear_bluetooth_pairing_states() {
+void DeviceFactory::clear_bluetooth_pairing_states()
+{
     s_bluetooth_pairing_states.clear();
     BtTlvStorage::instance().clear();
 }
 
-void DeviceFactory::foreach_bluetooth_pairing_state(std::function<void(int32_t id, const BluetoothPairingStateData &state)> callback) {
-    for (auto& state : s_bluetooth_pairing_states) {
+void DeviceFactory::foreach_bluetooth_pairing_state(std::function<void(int32_t id, const BluetoothPairingStateData &state)> callback)
+{
+    for (auto &state : s_bluetooth_pairing_states)
+    {
         callback(state.first, state.second);
     }
 }
 
-const std::vector<uint32_t>& DeviceFactory::get_last_cycle_states() {
+const std::vector<uint32_t> &DeviceFactory::get_last_cycle_states()
+{
     return s_last_cycle_states;
 }
 
 std::shared_ptr<Device> DeviceFactory::create_device(
-    const proto_Device& proto_device,
+    const proto_Device &proto_device,
     uint32_t device_id,
-    const DeviceReloadState* previous_state)
+    const DeviceReloadState *previous_state)
 {
     std::shared_ptr<Device> device;
-    
+
     switch (proto_device.which_device)
     {
     case proto_Device_accelerometer_tag:
         device = std::make_shared<AccelerometerDevice>(proto_device.device.accelerometer, device_id);
         break;
-        
+
     case proto_Device_crkdNeck_tag:
         device = std::make_shared<CrkdDevice>(proto_device.device.crkdNeck, device_id);
         break;
-        
+
     case proto_Device_crkdDrum_tag:
         device = std::make_shared<CrkdDrumDevice>(proto_device.device.crkdDrum, device_id);
         break;
-        
+
     case proto_Device_infiniumFader_tag:
         device = std::make_shared<InfiniumFaderDevice>(proto_device.device.infiniumFader, device_id);
         break;
-        
+
     case proto_Device_wii_tag:
         // Preserve state from previous device
         device = std::make_shared<WiiDevice>(
             previous_state,
             proto_device.device.wii,
-            device_id
-        );
+            device_id);
         break;
     case proto_Device_psx_tag:
         // Preserve state from previous device
         device = std::make_shared<PS2Device>(
             previous_state,
             proto_device.device.psx,
-            device_id
-        );
+            device_id);
         break;
     case proto_Device_psxEmulation_tag:
         device = std::make_shared<PSXEmulationDevice>(previous_state, proto_device.device.psxEmulation, device_id);
         break;
-        
+
     case proto_Device_wiiEmulation_tag:
         device = std::make_shared<WiiExtensionEmulationDevice>(previous_state, proto_device.device.wiiEmulation, device_id);
         break;
@@ -269,47 +308,45 @@ std::shared_ptr<Device> DeviceFactory::create_device(
     case proto_Device_snesEmulation_tag:
         device = std::make_shared<SNESEmulationDevice>(previous_state, proto_device.device.snesEmulation, device_id);
         break;
-        
+
     case proto_Device_peripheral_tag:
         device = std::make_shared<SecondaryPicoDevice>(proto_device.device.peripheral, device_id);
         break;
-        
+
     case proto_Device_protarNeck_tag:
         device = std::make_shared<ProtarNeckDevice>(proto_device.device.protarNeck, device_id);
         break;
-        
+
     case proto_Device_bhDrum_tag:
         device = std::make_shared<BandHeroDrumDevice>(
             previous_state,
             proto_device.device.bhDrum,
-            device_id
-        );
+            device_id);
         break;
-        
+
     case proto_Device_worldTourDrum_tag:
         device = std::make_shared<WorldTourDrumDevice>(
             previous_state,
             proto_device.device.worldTourDrum,
-            device_id
-        );
+            device_id);
         break;
-        
+
     case proto_Device_crazyGuitarNeck_tag:
         device = std::make_shared<CrazyGuitarNeckDevice>(proto_device.device.crazyGuitarNeck, device_id);
         break;
-        
+
     case proto_Device_djhTurntable_tag:
         device = std::make_shared<DjHeroTurntableDevice>(proto_device.device.djhTurntable, device_id);
         break;
-        
+
     case proto_Device_gh5Neck_tag:
         device = std::make_shared<GH5NeckDevice>(proto_device.device.gh5Neck, device_id);
         break;
-        
+
     case proto_Device_max1704x_tag:
         device = std::make_shared<Max1704XDevice>(proto_device.device.max1704x, device_id);
         break;
-        
+
     case proto_Device_xboxOneAuth_tag:
         device = std::make_shared<XboxOneAuthDevice>(proto_device.device.xboxOneAuth, device_id);
         break;
@@ -321,79 +358,76 @@ std::shared_ptr<Device> DeviceFactory::create_device(
     case proto_Device_display_tag:
         device = std::make_shared<DisplayDevice>(proto_device.device.display, device_id);
         break;
-        
+
     case proto_Device_usbHost_tag:
         device = std::make_shared<USBHostHardwareDevice>(proto_device.device.usbHost, device_id);
         break;
-        
+
     case proto_Device_ads1115_tag:
         device = std::make_shared<ADS1115Device>(proto_device.device.ads1115, device_id);
         break;
-        
+
     case proto_Device_debug_tag:
         device = std::make_shared<DebugDevice>(proto_device.device.debug, device_id);
         break;
-        
+
     case proto_Device_midiSerial_tag:
         device = std::make_shared<MidiSerialDevice>(
             previous_state,
             proto_device.device.midiSerial,
-            device_id
-        );
+            device_id);
         break;
-        
+
     case proto_Device_ws2812_tag:
         device = std::make_shared<WS2812Device>(proto_device.device.ws2812, device_id);
         break;
-        
+
     case proto_Device_stp16cpc_tag:
         device = std::make_shared<STP16CPCDevice>(proto_device.device.stp16cpc, device_id);
         break;
-        
+
     case proto_Device_apa102_tag:
         device = std::make_shared<APA102Device>(proto_device.device.apa102, device_id);
         break;
-        
+
     case proto_Device_multiplexer_tag:
         device = std::make_shared<MultiplexerDevice>(proto_device.device.multiplexer, device_id);
         break;
-        
+
     case proto_Device_bt_tag:
         device = std::make_shared<BluetoothDevice>(proto_device.device.bt, device_id);
         break;
-        
+
     case proto_Device_vtechExpander_tag:
         device = std::make_shared<VTechGuitarIOExpanderDevice>(proto_device.device.vtechExpander, device_id);
         break;
-        
+
     case proto_Device_matrix_tag:
         device = std::make_shared<MatrixDevice>(proto_device.device.matrix, device_id);
         break;
-        
+
     case proto_Device_switchNetwork_tag:
         device = std::make_shared<SwitchNetworkDevice>(proto_device.device.switchNetwork, device_id);
         break;
-        
+
     case proto_Device_cycle_tag:
         device = std::make_shared<CycleDevice>(
             previous_state,
             proto_device.device.cycle,
             device_id,
             s_cycle_states[device_id],
-            s_last_cycle_states
-        );
+            s_last_cycle_states);
         s_last_cycle_states.clear();
         break;
-        
+
     case proto_Device_toggle_tag:
         device = std::make_shared<ToggleDevice>(
             previous_state,
             proto_device.device.toggle,
             device_id,
-            s_toggle_states[device_id]
-        );
+            s_toggle_states[device_id]);
         break;
-        
+
     case proto_Device_dmx_tag:
         device = std::make_shared<DMXDevice>(proto_device.device.dmx, device_id);
         break;
@@ -414,6 +448,6 @@ std::shared_ptr<Device> DeviceFactory::create_device(
         device = std::make_shared<AdcBatteryDevice>(proto_device.device.adcBattery, device_id);
         break;
     }
-    
+
     return device;
 }

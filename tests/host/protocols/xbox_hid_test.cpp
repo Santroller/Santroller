@@ -68,8 +68,8 @@ struct ParsedDescriptor
 // A third party controller that puts Share (Consumer Record) at bit 2 of byte 17 instead of byte 16
 const Bytes kShareAtByte17 = {
     0x05, 0x0C, 0x09, 0x01, 0xA1, 0x01, 0x85, 0x01,
-    0x75, 0x08, 0x95, 0x10, 0x81, 0x03,                                     // bytes 1 - 16, constant
-    0x75, 0x02, 0x95, 0x01, 0x81, 0x03,                                     // 2 bits of padding
+    0x75, 0x08, 0x95, 0x10, 0x81, 0x03,                                                       // bytes 1 - 16, constant
+    0x75, 0x02, 0x95, 0x01, 0x81, 0x03,                                                       // 2 bits of padding
     0x05, 0x0C, 0x0A, 0xB2, 0x00, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x01, 0x81, 0x02, // Record
     0x75, 0x05, 0x95, 0x01, 0x81, 0x03,
     0xC0};
@@ -188,10 +188,17 @@ TEST(XboxHid, AndroidLayoutButtons)
         uint8_t b14, b15;
         GamepadButtonType button;
     } cases[] = {
-        {0x01, 0, Gamepad_A},         {0x02, 0, Gamepad_B},          {0x08, 0, Gamepad_X},
-        {0x10, 0, Gamepad_Y},         {0x40, 0, Gamepad_LeftShoulder}, {0x80, 0, Gamepad_RightShoulder},
-        {0, 0x04, Gamepad_Back},      {0, 0x08, Gamepad_Start},      {0, 0x10, Gamepad_Guide},
-        {0, 0x20, Gamepad_LeftThumbClick}, {0, 0x40, Gamepad_RightThumbClick},
+        {0x01, 0, Gamepad_A},
+        {0x02, 0, Gamepad_B},
+        {0x08, 0, Gamepad_X},
+        {0x10, 0, Gamepad_Y},
+        {0x40, 0, Gamepad_LeftShoulder},
+        {0x80, 0, Gamepad_RightShoulder},
+        {0, 0x04, Gamepad_Back},
+        {0, 0x08, Gamepad_Start},
+        {0, 0x10, Gamepad_Guide},
+        {0, 0x20, Gamepad_LeftThumbClick},
+        {0, 0x40, Gamepad_RightThumbClick},
     };
     for (auto c : cases)
     {
@@ -218,9 +225,15 @@ TEST(XboxHid, LegacyOneSLayoutIsPackedInOrder)
         uint8_t b14, b15;
         GamepadButtonType button;
     } cases[] = {
-        {0x01, 0, Gamepad_A},     {0x02, 0, Gamepad_B},     {0x04, 0, Gamepad_X},
-        {0x08, 0, Gamepad_Y},     {0x10, 0, Gamepad_LeftShoulder}, {0x20, 0, Gamepad_RightShoulder},
-        {0x40, 0, Gamepad_Back},  {0x80, 0, Gamepad_Start}, {0, 0x01, Gamepad_LeftThumbClick},
+        {0x01, 0, Gamepad_A},
+        {0x02, 0, Gamepad_B},
+        {0x04, 0, Gamepad_X},
+        {0x08, 0, Gamepad_Y},
+        {0x10, 0, Gamepad_LeftShoulder},
+        {0x20, 0, Gamepad_RightShoulder},
+        {0x40, 0, Gamepad_Back},
+        {0x80, 0, Gamepad_Start},
+        {0, 0x01, Gamepad_LeftThumbClick},
         {0, 0x02, Gamepad_RightThumbClick},
     };
     for (auto c : cases)

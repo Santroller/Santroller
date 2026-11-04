@@ -262,8 +262,7 @@ uint16_t PS5GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
 
     switch (report_id)
     {
-    case ReportId::ReportIdPs5Feature:
-    {
+    case ReportId::ReportIdPs5Feature: {
         PS4FeatureReport report = ps5_feature_report(subtype);
         memcpy(buffer, &report, sizeof(report));
         got_feature = true;
@@ -332,8 +331,7 @@ void PS5GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
     }
     switch (report_type)
     {
-    case HID_REPORT_TYPE_FEATURE:
-    {
+    case HID_REPORT_TYPE_FEATURE: {
         switch (report_id)
         {
         case 0:
@@ -347,8 +345,7 @@ void PS5GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
         }
         break;
     }
-    case HID_REPORT_TYPE_OUTPUT:
-    {
+    case HID_REPORT_TYPE_OUTPUT: {
         ps5_output_report *report = (ps5_output_report *)buffer;
         if (report->light_bar_flag)
         {

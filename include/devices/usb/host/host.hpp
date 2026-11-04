@@ -15,8 +15,7 @@ class UsbHostInterface : public MidiDevice
 public:
     virtual ~UsbHostInterface() { printf("~UsbHostInterface()\r\n"); };
 
-    UsbHostInterface(uint8_t d_addr, uint8_t interface, uint16_t id) :
-        MidiDevice(nullptr, id, true, m_midi_buffers.config()), m_dev_addr(d_addr), m_interface(interface)
+    UsbHostInterface(uint8_t d_addr, uint8_t interface, uint16_t id) : MidiDevice(nullptr, id, true, m_midi_buffers.config()), m_dev_addr(d_addr), m_interface(interface)
     {
         memset(m_name, 0, sizeof(m_name));
     }
@@ -35,14 +34,14 @@ public:
     void send_hotplug_event(bool connected);
     // Read the product string, then send a hotplug event (straight away if there isn't one)
     void request_name();
-    virtual bool tick_digital(proto_Output& type) = 0;
-    virtual uint16_t tick_analog(proto_Output& type) = 0;
-    virtual bool tick_axis_digital(proto_Output& type) { return tick_analog(type) != 0; }
+    virtual bool tick_digital(proto_Output &type) = 0;
+    virtual uint16_t tick_analog(proto_Output &type) = 0;
+    virtual bool tick_axis_digital(proto_Output &type) { return tick_analog(type) != 0; }
     // For USB mice and keyboards plugged into the host port
     virtual bool mouse_button(MouseButtonType button) { return false; }
     virtual uint16_t mouse_axis(MouseAxisType axis) { return UINT16_MAX / 2; }
     virtual bool key_pressed(uint8_t keycode) { return false; }
-    virtual uint16_t tick_button_pressure(proto_Output& type) { return tick_digital(type) ? UINT16_MAX : 0; }
+    virtual uint16_t tick_button_pressure(proto_Output &type) { return tick_digital(type) ? UINT16_MAX : 0; }
     // Whether Gamepad_A / B / X / Y read the legends of a Nintendo style pad (A east, B south, X north, Y west)
     virtual bool nintendo_face_layout() const { return false; }
     // Whether Gamepad_Accel / Gamepad_Gyro read real motion
@@ -95,7 +94,7 @@ public:
     {
         return false;
     }
-    
+
     // Getters for protected members
     uint8_t dev_addr() const { return m_dev_addr; }
     uint8_t interface() const { return m_interface; }
@@ -191,9 +190,9 @@ public:
     {
         return false;
     }
-    std::array<std::shared_ptr<UsbHostInterface>,30> host_devices_by_itf;
-    std::array<std::shared_ptr<UsbHostInterface>,16> host_devices_by_endpoint_in;
-    std::array<std::shared_ptr<UsbHostInterface>,16> host_devices_by_endpoint_out;
+    std::array<std::shared_ptr<UsbHostInterface>, 30> host_devices_by_itf;
+    std::array<std::shared_ptr<UsbHostInterface>, 16> host_devices_by_endpoint_in;
+    std::array<std::shared_ptr<UsbHostInterface>, 16> host_devices_by_endpoint_out;
     // the device's first keyboard interface, which any later ones (e.g. an NKRO interface) report through
     std::weak_ptr<KeyboardHost> keyboard;
     // a hash of the iSerialNumber string, read once by the first interface to be configured

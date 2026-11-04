@@ -4,4 +4,7 @@ namespace fake_config
 {
 inline int update_aux_tlv_calls = 0;
 }
-inline void update_aux_tlv() { fake_config::update_aux_tlv_calls++; }
+inline void update_aux_tlv()
+{
+    fake_config::update_aux_tlv_calls++;
+}

@@ -55,6 +55,7 @@ public:
     bool update_auxiliary(AuxiliaryWriter writer, void *context = nullptr, bool commit = true) const;
     // An explicit Save commits the whole cached config, not just aux onto the previous saved config.
     void save(AuxiliaryWriter writer = nullptr, void *context = nullptr);
+
 private:
     // Write flash's saved config back with the cache's aux block, see update_auxiliary
     void commit_auxiliary() const;

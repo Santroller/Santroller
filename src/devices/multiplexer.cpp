@@ -19,7 +19,8 @@ void MultiplexerDevice::end(bool full)
     m_multiplexer.end();
 }
 
-uint16_t MultiplexerDevice::read(uint8_t channel) {
+uint16_t MultiplexerDevice::read(uint8_t channel)
+{
     return m_multiplexer.read(channel);
 }
 

@@ -10,7 +10,7 @@ public:
     ~UsbModeActivationTrigger() {}
     bool validate(bool claim_device, bool full_poll, bool send_events);
     int assignedDevices() { return AssignUsb; }
-    bool forcedConsoleMode(ConsoleMode& mode) const;
+    bool forcedConsoleMode(ConsoleMode &mode) const;
     bool xinputOnWindows(bool &enabled) const;
     bool ps4OrPs5Mode(bool &enabled) const;
 

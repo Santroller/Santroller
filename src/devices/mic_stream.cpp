@@ -3,22 +3,22 @@
 
 namespace
 {
-    // About 40ms at 48kHz
-    constexpr uint32_t RING_SIZE = 2048;
-    constexpr uint32_t RING_MASK = RING_SIZE - 1;
-    // How far behind the microphone reads are kept, enough to ride out a slow main loop
-    constexpr uint32_t TARGET_MS = 6;
+// About 40ms at 48kHz
+constexpr uint32_t RING_SIZE = 2048;
+constexpr uint32_t RING_MASK = RING_SIZE - 1;
+// How far behind the microphone reads are kept, enough to ride out a slow main loop
+constexpr uint32_t TARGET_MS = 6;
 
-    int16_t s_ring[RING_SIZE];
-    // Free running sample counts, the ring holds write - read of them
-    uint32_t s_write;
-    uint32_t s_read;
-    // Position between s_read and the sample after it, in 1/65536ths of a sample
-    uint32_t s_phase;
-    uint32_t s_rate;
-    // Out of samples, so silence until the buffer has refilled to the target
-    bool s_starved = true;
-    MicStream::Stats s_stats;
+int16_t s_ring[RING_SIZE];
+// Free running sample counts, the ring holds write - read of them
+uint32_t s_write;
+uint32_t s_read;
+// Position between s_read and the sample after it, in 1/65536ths of a sample
+uint32_t s_phase;
+uint32_t s_rate;
+// Out of samples, so silence until the buffer has refilled to the target
+bool s_starved = true;
+MicStream::Stats s_stats;
 }
 
 void MicStream::set_source_rate(uint32_t rate)

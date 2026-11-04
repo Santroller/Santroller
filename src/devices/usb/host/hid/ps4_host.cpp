@@ -192,11 +192,11 @@ std::shared_ptr<UsbHostInterface> Ps4Host::open(std::shared_ptr<UsbHostDevice> l
             list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
         }
         printf("ps4 auth found\r\n");
-        
+
         // Register as auth provider
         if (!auth_broker.has_handler(ModePs4))
         {
-            auth_broker.register_handler(ModePs4, [intf](XGIPProtocol* packet) {
+            auth_broker.register_handler(ModePs4, [intf](XGIPProtocol *packet) {
                 // PS4 doesn't use XGIP, this is just for interface compatibility
             });
             // Also register the device itself for HID feature report auth

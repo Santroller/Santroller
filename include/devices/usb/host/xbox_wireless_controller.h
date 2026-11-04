@@ -11,11 +11,11 @@ class XboxWirelessHost;
 class XboxWirelessController : public UsbHostInterface
 {
 public:
-    XboxWirelessController(XboxWirelessHost* adapter, uint8_t controller_idx, uint8_t dev_addr, uint16_t id);
+    XboxWirelessController(XboxWirelessHost *adapter, uint8_t controller_idx, uint8_t dev_addr, uint16_t id);
     ~XboxWirelessController();
-    
-    bool tick_digital(proto_Output& type) override;
-    uint16_t tick_analog(proto_Output& type) override;
+
+    bool tick_digital(proto_Output &type) override;
+    uint16_t tick_analog(proto_Output &type) override;
     void update(bool full_poll, bool send_events) override;
     bool xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes) override;
     bool set_config() override;
@@ -28,17 +28,17 @@ public:
     void power_off() override;
     // not the adapter's iSerialNumber, which every controller on it shares
     std::optional<uint64_t> hardware_id() const override { return hardware_id_from_mac(m_controller.mac_addr); }
-    
+
     uint8_t get_controller_index() const { return m_controller_idx; }
-    
-    xbox_controller_t* get_controller_data() { return &m_controller; }
-    
+
+    xbox_controller_t *get_controller_data() { return &m_controller; }
+
     void process_gip_data(const uint8_t *data, uint16_t len);
     void send_report_from_host(XGIPProtocol *report);
-    
+
     int send_gip_packet(const uint8_t *data, uint16_t len);
     int send_ack_packet(const uint8_t *data, uint16_t len);
-    
+
     void on_device_descriptor(SubType subtype);
     // Something plugged into the controller, which only a chatpad is looked for in
     uint16_t process_secondary(const uint8_t *data, uint16_t len);
@@ -46,13 +46,13 @@ public:
     void remove_chatpad();
     void on_auth(const uint8_t *data, uint16_t len);
     void on_disconnect();
-    
+
     xbox_controller_t m_controller;
     uint8_t m_controller_idx;
-    
+
 private:
     void send_feedback_packet(uint8_t command, bool system, const uint8_t *data, uint16_t len);
-    XboxWirelessHost* m_adapter;
+    XboxWirelessHost *m_adapter;
     bool m_auth_registered = false;
     std::shared_ptr<XboxOneChatpadHost> m_chatpad;
 };

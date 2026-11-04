@@ -46,7 +46,8 @@ bool ps5_parse_capabilities(const uint8_t *data, uint16_t len,
 
 void BtDs5Host::handle_report(const uint8_t *data, uint16_t len)
 {
-    if (len < 2) return;
+    if (len < 2)
+        return;
 
     if (data[0] == 0x31 && len >= 11)
     {

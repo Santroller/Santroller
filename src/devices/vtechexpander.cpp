@@ -15,7 +15,8 @@ void VTechGuitarIOExpanderDevice::end(bool full)
 {
     m_vtech_expander.end();
 }
-void VTechGuitarIOExpanderDevice::set_led(uint8_t i, uint8_t val) {
+void VTechGuitarIOExpanderDevice::set_led(uint8_t i, uint8_t val)
+{
     m_vtech_expander.set_led(i, val);
 }
 void VTechGuitarIOExpanderDevice::update(bool full_poll, bool send_events)
@@ -28,7 +29,8 @@ void VTechGuitarIOExpanderDevice::update(bool full_poll, bool send_events)
         HIDConfigDevice::send_event(event, true);
     }
 }
-bool VTechGuitarIOExpanderDevice::read_button(uint8_t pin) {
+bool VTechGuitarIOExpanderDevice::read_button(uint8_t pin)
+{
     return m_vtech_expander.read_button(pin);
 }
 bool VTechGuitarIOExpanderDevice::using_pin(uint8_t pin)

@@ -1,0 +1,12 @@
+BasedOnStyle: Microsoft
+IndentWidth: 4
+ColumnLimit: 0
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortBlocksOnASingleLine: Empty
+AllowShortLambdasOnASingleLine: All
+SortIncludes: Never
+IndentCaseLabels: false
+PointerAlignment: Right
+AccessModifierOffset: -4
+NamespaceIndentation: None
+FixNamespaceComments: false

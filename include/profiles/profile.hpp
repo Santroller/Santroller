@@ -92,7 +92,8 @@ public:
         if (!device)
         {
             auto it = devices.find(device_id);
-            if (it != devices.end()) device = it->second;
+            if (it != devices.end())
+                device = it->second;
         }
         return device_cast<T>(device);
     }
@@ -106,19 +107,24 @@ public:
             return device && device->is_midi_device();
         };
 
-        if (source_kind != DeviceSlotKind::None) {
+        if (source_kind != DeviceSlotKind::None)
+        {
             auto device = get_claimed_device(source_kind, slot_id, temporary);
             return supports_midi(device) ? device : nullptr;
         }
 
         std::shared_ptr<Device> matched_device;
-        for (auto kind : {DeviceSlotKind::MIDI, DeviceSlotKind::USB, DeviceSlotKind::Bluetooth, DeviceSlotKind::WiiExtension}) {
+        for (auto kind : {DeviceSlotKind::MIDI, DeviceSlotKind::USB, DeviceSlotKind::Bluetooth, DeviceSlotKind::WiiExtension})
+        {
             auto device = get_claimed_device(kind, slot_id, temporary);
-            if (!supports_midi(device)) continue;
-            if (matched_device && matched_device != device) return nullptr;
+            if (!supports_midi(device))
+                continue;
+            if (matched_device && matched_device != device)
+                return nullptr;
             matched_device = device;
         }
-        if (matched_device) return matched_device;
+        if (matched_device)
+            return matched_device;
 
         auto it = devices.find(slot_id);
         return it != devices.end() && supports_midi(it->second) ? it->second : nullptr;

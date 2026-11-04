@@ -17,12 +17,13 @@ public:
     // Puts input triggers after the rest, once the list has been loaded
     void order_triggers();
     int assignedDevices();
-    bool forcedConsoleMode(ConsoleMode& mode) const;
+    bool forcedConsoleMode(ConsoleMode &mode) const;
     bool xinputOnWindows(bool &enabled) const;
     bool ps4OrPs5Mode(bool &enabled) const;
     // Matched without its controllers, as Xbox One auth held it up
     bool held() const { return m_held; }
     bool claimed() const { return m_claimed; }
+
 private:
     bool validate_triggers(bool claim_devices, bool full_poll, bool send_events, bool held, bool &claimable);
     bool m_claimed = false;

@@ -33,7 +33,6 @@ void BleMidiHost::flush()
 
 void BleMidiHost::handle_report(const uint8_t *data, uint16_t len)
 {
-    ble_midi_unwrap(data, len, [this](uint8_t byte)
-                    { push(byte); });
+    ble_midi_unwrap(data, len, [this](uint8_t byte) { push(byte); });
     flush();
 }

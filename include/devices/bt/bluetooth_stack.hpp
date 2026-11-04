@@ -21,7 +21,7 @@ private:
 class BluetoothStack
 {
 public:
-    static BluetoothStack& instance();
+    static BluetoothStack &instance();
 
     bool begin();
     void power_on();

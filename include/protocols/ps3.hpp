@@ -249,7 +249,7 @@ typedef struct
     uint8_t x : 1; // square
 
     uint8_t guide : 1;
-    uint8_t capture :1;
+    uint8_t capture : 1;
     uint8_t : 6;
     uint8_t : 8;
     uint8_t leftStickX;
@@ -524,8 +524,8 @@ typedef struct
 
     uint8_t kick1 : 1; // kick1, l1
     uint8_t kick2 : 1; // kick2, r1
-    uint8_t l2: 1;
-    uint8_t r2: 1;
+    uint8_t l2 : 1;
+    uint8_t r2 : 1;
 
     uint8_t back : 1; // select
     uint8_t start : 1;
@@ -641,8 +641,7 @@ typedef struct
     uint8_t leftStickX;
     uint8_t leftStickY;
     uint8_t whammy;
-    union
-    {
+    union {
         struct
         {
             uint8_t tapGreen : 1;

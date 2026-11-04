@@ -40,205 +40,199 @@ HIDGamepadDevice::HIDGamepadDevice()
 }
 void HIDGamepadDevice::initialize()
 {
-  m_battery = BatteryManager::instance().present();
-  m_epin = next_epin();
-  m_epout = next_epout();
-  m_strid = next_strid();
-  ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
-  ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
-  memset(&m_initial_report, 0, sizeof(m_initial_report));
-  switch (subtype)
-  {
-  case RockBandDrums:
-  {
-    XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)&m_initial_report;
-    report->redVelocity = -1;
-    report->blueVelocity = -1;
-    report->greenVelocity = 0;
-    report->yellowVelocity = 0;
-    break;
-  }
-  case GuitarHeroGuitar:
-  {
-    XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)&m_initial_report;
-    report->whammy = INT16_MIN;
-    break;
-  }
-  case RockBandGuitar:
-  {
-    XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)&m_initial_report;
-    report->whammy = INT16_MIN;
-    break;
-  }
-  case LiveGuitar:
-  {
-    XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&m_initial_report;
-    report->whammy = INT16_MIN;
-    break;
-  }
-  case GuitarHeroDrums:
-  {
-    XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)&m_initial_report;
-    report->leftThumbClick = true;
-    break;
-  }
-  case Wheel:
-  {
-    // the pedals rest at their minimum, see WheelAxisMapping::update_hid
-    PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)&m_initial_report;
-    report->leftStickY = INT16_MIN;
-    report->rightStickX = INT16_MIN;
-    report->rightStickY = INT16_MIN;
-    break;
-  }
-  default:
-    break;
-  }
-  XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)m_initial_report;
-  gamepad->rsize = sizeof(XInputGamepad_Data_t);
+    m_battery = BatteryManager::instance().present();
+    m_epin = next_epin();
+    m_epout = next_epout();
+    m_strid = next_strid();
+    ProfileManager::instance().map_usb_instance_epin(m_epin, interface_id);
+    ProfileManager::instance().map_usb_instance_epout(m_epout, interface_id);
+    memset(&m_initial_report, 0, sizeof(m_initial_report));
+    switch (subtype)
+    {
+    case RockBandDrums: {
+        XInputRockBandDrums_Data_t *report = (XInputRockBandDrums_Data_t *)&m_initial_report;
+        report->redVelocity = -1;
+        report->blueVelocity = -1;
+        report->greenVelocity = 0;
+        report->yellowVelocity = 0;
+        break;
+    }
+    case GuitarHeroGuitar: {
+        XInputGuitarHeroGuitar_Data_t *report = (XInputGuitarHeroGuitar_Data_t *)&m_initial_report;
+        report->whammy = INT16_MIN;
+        break;
+    }
+    case RockBandGuitar: {
+        XInputRockBandGuitar_Data_t *report = (XInputRockBandGuitar_Data_t *)&m_initial_report;
+        report->whammy = INT16_MIN;
+        break;
+    }
+    case LiveGuitar: {
+        XInputGHLGuitar_Data_t *report = (XInputGHLGuitar_Data_t *)&m_initial_report;
+        report->whammy = INT16_MIN;
+        break;
+    }
+    case GuitarHeroDrums: {
+        XInputGuitarHeroDrums_Data_t *report = (XInputGuitarHeroDrums_Data_t *)&m_initial_report;
+        report->leftThumbClick = true;
+        break;
+    }
+    case Wheel: {
+        // the pedals rest at their minimum, see WheelAxisMapping::update_hid
+        PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)&m_initial_report;
+        report->leftStickY = INT16_MIN;
+        report->rightStickX = INT16_MIN;
+        report->rightStickY = INT16_MIN;
+        break;
+    }
+    default:
+        break;
+    }
+    XInputGamepad_Data_t *gamepad = (XInputGamepad_Data_t *)m_initial_report;
+    gamepad->rsize = sizeof(XInputGamepad_Data_t);
 }
 void HIDGamepadDevice::process(bool full_poll, bool send_events)
 {
-  // Deal with devices that don't have easy detection methods
-  // This has to run before the tud_ready() check, as the PS2 never configures the device
-  auto &detection = UsbDetectionState::instance();
-  if (!mode_recently_changed() && detection.should_infer_console(millis()))
-  {
-    // Switch 2 does read the hid descriptor
-    if (detection.seen_hid_descriptor_read())
+    // Deal with devices that don't have easy detection methods
+    // This has to run before the tud_ready() check, as the PS2 never configures the device
+    auto &detection = UsbDetectionState::instance();
+    if (!mode_recently_changed() && detection.should_infer_console(millis()))
     {
-      ConfigManager::instance().host_detected(ModeSwitch);
+        // Switch 2 does read the hid descriptor
+        if (detection.seen_hid_descriptor_read())
+        {
+            ConfigManager::instance().host_detected(ModeSwitch);
+        }
+        else if (tud_ready() && (subtype == RockBandGuitar || subtype == RockBandDrums))
+        {
+            // PS2 / Wii / WiiU does not read hid descriptor
+            // The wii however will configure the usb device before it stops communicating
+            ConfigManager::instance().host_detected(ModeWiiRb);
+        }
+        else
+        {
+            // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
+            ConfigManager::instance().host_detected(ModePs3);
+        }
     }
-    else if (tud_ready() && (subtype == RockBandGuitar || subtype == RockBandDrums))
+    if (!tud_ready())
     {
-      // PS2 / Wii / WiiU does not read hid descriptor
-      // The wii however will configure the usb device before it stops communicating
-      ConfigManager::instance().host_detected(ModeWiiRb);
+        for (const auto &profile : profiles)
+        {
+            for (const auto &led : profile->leds)
+            {
+                led->update(full_poll, send_events);
+            }
+        }
+        return;
     }
-    else
+    // if usb stack isnt ready, then we want to update inputs
+    // we want to limit updates to usb speed though if it is ready
+    if (tud_ready() && !ready())
     {
-      // But the PS2 does not. We also end up here on the wii/wiiu if a device does not have an explicit wii mode.
-      ConfigManager::instance().host_detected(ModePs3);
+        return;
     }
-  }
-  if (!tud_ready())
-  {
+    if (m_capabilities_pending)
+    {
+        epin_buf[0] = ReportIdSantrollerCapabilities;
+        epin_buf[1] = subtype;
+        epin_buf[2] = capabilities;
+        // only clear once it is actually queued, so a failed send retries next loop
+        if (send_report(3, 0, epin_buf))
+        {
+            m_capabilities_pending = false;
+        }
+        return;
+    }
+    if (m_battery && tud_ready() && BatteryManager::instance().level() != m_sent_battery)
+    {
+        uint8_t level = BatteryManager::instance().level();
+        epin_buf[0] = ReportIdBattery;
+        epin_buf[1] = level;
+        if (send_report(2, 0, epin_buf))
+        {
+            m_sent_battery = level;
+        }
+        return;
+    }
+    update_stagekit();
+    PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
+    memcpy(epin_buf, m_initial_report, sizeof(epin_buf));
+    report->rid = ReportIdGamepad;
+    report->rsize = sizeof(PCGamepadDpad_Data_t);
+
     for (const auto &profile : profiles)
     {
-      for (const auto &led : profile->leds)
-      {
-        led->update(full_poll, send_events);
-      }
+        profile->reset_drum_state();
+        for (const auto &mapping : profile->mappings)
+        {
+            mapping->update(full_poll, send_events);
+            mapping->update_hid(epin_buf);
+        }
+        for (const auto &led : profile->leds)
+        {
+            led->update(full_poll, send_events);
+        }
     }
-    return;
-  }
-  // if usb stack isnt ready, then we want to update inputs
-  // we want to limit updates to usb speed though if it is ready
-  if (tud_ready() && !ready())
-  {
-    return;
-  }
-  if (m_capabilities_pending)
-  {
-    epin_buf[0] = ReportIdSantrollerCapabilities;
-    epin_buf[1] = subtype;
-    epin_buf[2] = capabilities;
-    // only clear once it is actually queued, so a failed send retries next loop
-    if (send_report(3, 0, epin_buf))
+    if (invert_y_axis_hid && subtype == Gamepad)
     {
-      m_capabilities_pending = false;
+        report->leftStickY = static_cast<int16_t>(~static_cast<uint16_t>(report->leftStickY));
+        report->rightStickY = static_cast<int16_t>(~static_cast<uint16_t>(report->rightStickY));
     }
-    return;
-  }
-  if (m_battery && tud_ready() && BatteryManager::instance().level() != m_sent_battery)
-  {
-    uint8_t level = BatteryManager::instance().level();
-    epin_buf[0] = ReportIdBattery;
-    epin_buf[1] = level;
-    if (send_report(2, 0, epin_buf))
+    // dance pads need to report the dpad as buttons, so skip the conversion to hat
+    if (subtype != Dancepad)
     {
-      m_sent_battery = level;
+        // convert bitmask dpad to actual hid dpad
+        report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
     }
-    return;
-  }
-  update_stagekit();
-  PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
-  memcpy(epin_buf, m_initial_report, sizeof(epin_buf));
-  report->rid = ReportIdGamepad;
-  report->rsize = sizeof(PCGamepadDpad_Data_t);
-
-  for (const auto &profile : profiles)
-  {
-    profile->reset_drum_state();
-    for (const auto &mapping : profile->mappings)
+    if (subtype == GuitarHeroGuitar)
     {
-      mapping->update(full_poll, send_events);
-      mapping->update_hid(epin_buf);
+        // convert bitmask slider to actual hid slider
+        XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
+        reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
     }
-    for (const auto &led : profile->leds)
+    if (memcmp(m_last_report, epin_buf, sizeof(XInputGamepad_Data_t)) != 0)
     {
-      led->update(full_poll, send_events);
+        if (!ready())
+        {
+            return;
+        }
+        send_report(sizeof(XInputGamepad_Data_t), 0, epin_buf);
+        memcpy(m_last_report, epin_buf, sizeof(XInputGamepad_Data_t));
     }
-  }
-  if (invert_y_axis_hid && subtype == Gamepad)
-  {
-    report->leftStickY = static_cast<int16_t>(~static_cast<uint16_t>(report->leftStickY));
-    report->rightStickY = static_cast<int16_t>(~static_cast<uint16_t>(report->rightStickY));
-  }
-  // dance pads need to report the dpad as buttons, so skip the conversion to hat
-  if (subtype != Dancepad)
-  {
-    // convert bitmask dpad to actual hid dpad
-    report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
-  }
-  if (subtype == GuitarHeroGuitar)
-  {
-    // convert bitmask slider to actual hid slider
-    XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
-    reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
-  }
-  if (memcmp(m_last_report, epin_buf, sizeof(XInputGamepad_Data_t)) != 0)
-  {
-    if (!ready())
-    {
-      return;
-    }
-    send_report(sizeof(XInputGamepad_Data_t), 0, epin_buf);
-    memcpy(m_last_report, epin_buf, sizeof(XInputGamepad_Data_t));
-  }
 }
 
 size_t HIDGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
 {
-  return 0;
+    return 0;
 }
 
 size_t HIDGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
 {
-  uint8_t desc[] = {
-      TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, report_desc_len(), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1),
-      SANTROLLER_USB_IDENTITY_DESCRIPTOR(subtype, capabilities)};
-  assert(sizeof(desc) <= remaining);
-  memcpy(dest, desc, sizeof(desc));
-  return sizeof(desc);
+    uint8_t desc[] = {
+        TUD_HID_INOUT_DESCRIPTOR(interface_id, m_strid, HID_ITF_PROTOCOL_NONE, report_desc_len(), m_epout, m_epin, CFG_TUD_HID_EP_BUFSIZE, 1),
+        SANTROLLER_USB_IDENTITY_DESCRIPTOR(subtype, capabilities)};
+    assert(sizeof(desc) <= remaining);
+    memcpy(dest, desc, sizeof(desc));
+    return sizeof(desc);
 }
 
 uint16_t HIDGamepadDevice::open(tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
-  uint16_t length = HIDDevice::open(desc_itf, max_len);
-  TU_VERIFY(length && max_len >= length + SANTROLLER_USB_IDENTITY_DESCRIPTOR_LENGTH, 0);
-  // The trailing identity belongs to this interface, not the next class driver.
-  return length + SANTROLLER_USB_IDENTITY_DESCRIPTOR_LENGTH;
+    uint16_t length = HIDDevice::open(desc_itf, max_len);
+    TU_VERIFY(length && max_len >= length + SANTROLLER_USB_IDENTITY_DESCRIPTOR_LENGTH, 0);
+    // The trailing identity belongs to this interface, not the next class driver.
+    return length + SANTROLLER_USB_IDENTITY_DESCRIPTOR_LENGTH;
 }
 
 size_t HIDGamepadDevice::device_name(uint8_t idx, char *desc)
 {
-  if (idx == m_strid)
-  {
-    memcpy(desc, profiles[0]->name, sizeof(profiles[0]->name));
-    return sizeof(profiles[0]->name);
-  }
-  return 0;
+    if (idx == m_strid)
+    {
+        memcpy(desc, profiles[0]->name, sizeof(profiles[0]->name));
+        return sizeof(profiles[0]->name);
+    }
+    return 0;
 }
 
 void HIDGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
@@ -246,101 +240,101 @@ void HIDGamepadDevice::device_descriptor(tusb_desc_device_t *desc)
 }
 const uint8_t *HIDGamepadDevice::report_descriptor()
 {
-  UsbDetectionState::instance().mark_hid_descriptor_read();
-  if (subtype == Dancepad)
-  {
-    return m_battery ? desc_hid_report_buttons_battery : desc_hid_report_buttons;
-  }
-  return m_battery ? desc_hid_report_hat_battery : desc_hid_report_hat;
+    UsbDetectionState::instance().mark_hid_descriptor_read();
+    if (subtype == Dancepad)
+    {
+        return m_battery ? desc_hid_report_buttons_battery : desc_hid_report_buttons;
+    }
+    return m_battery ? desc_hid_report_hat_battery : desc_hid_report_hat;
 }
 
 uint16_t HIDGamepadDevice::report_desc_len()
 {
-  if (subtype == Dancepad)
-  {
-    return m_battery ? sizeof(desc_hid_report_buttons_battery) : sizeof(desc_hid_report_buttons);
-  }
-  return m_battery ? sizeof(desc_hid_report_hat_battery) : sizeof(desc_hid_report_hat);
+    if (subtype == Dancepad)
+    {
+        return m_battery ? sizeof(desc_hid_report_buttons_battery) : sizeof(desc_hid_report_buttons);
+    }
+    return m_battery ? sizeof(desc_hid_report_hat_battery) : sizeof(desc_hid_report_hat);
 }
 
 void HIDGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
-  // printf("set report %d %d %d\r\n", report_id, report_type, bufsize);
-  if (report_type == HID_REPORT_TYPE_OUTPUT)
-  {
-    if (report_id == ReportIdGamepad && santroller_handle_output_command(*this, buffer, bufsize))
+    // printf("set report %d %d %d\r\n", report_id, report_type, bufsize);
+    if (report_type == HID_REPORT_TYPE_OUTPUT)
     {
-      // rumble / player LED / RGB / stage kit command, as sent by SDL and Santroller hosts
+        if (report_id == ReportIdGamepad && santroller_handle_output_command(*this, buffer, bufsize))
+        {
+            // rumble / player LED / RGB / stage kit command, as sent by SDL and Santroller hosts
+        }
+        else if (report_id == ReportIdGamepad)
+        {
+            if (bufsize >= 5)
+            {
+                uint8_t left = buffer[4] ? buffer[4] : buffer[1];
+                uint8_t right = buffer[2];
+                set_rumble(left, right);
+            }
+            else if (bufsize >= 3)
+            {
+                set_rumble(buffer[1], buffer[2]);
+            }
+        }
+        // if the host is asking for capabilities, send them
+        if (report_id == ReportIdSantrollerCapabilities)
+        {
+            // Sent from process() once the endpoint is free, so this packet isn't dropped.
+            // Waiting here would re-enter tud_task() and hang if the host stops polling.
+            m_capabilities_pending = true;
+        }
     }
-    else if (report_id == ReportIdGamepad)
+    if (report_type == HID_REPORT_TYPE_FEATURE)
     {
-      if (bufsize >= 5)
-      {
-        uint8_t left = buffer[4] ? buffer[4] : buffer[1];
-        uint8_t right = buffer[2];
-        set_rumble(left, right);
-      }
-      else if (bufsize >= 3)
-      {
-        set_rumble(buffer[1], buffer[2]);
-      }
+        switch (report_id)
+        {
+        case ReportId::ReportIdPs3F4:
+            ConfigManager::instance().host_detected(ModePs3);
+            break;
+        }
     }
-    // if the host is asking for capabilities, send them
-    if (report_id == ReportIdSantrollerCapabilities)
-    {
-      // Sent from process() once the endpoint is free, so this packet isn't dropped.
-      // Waiting here would re-enter tud_task() and hang if the host stops polling.
-      m_capabilities_pending = true;
-    }
-  }
-  if (report_type == HID_REPORT_TYPE_FEATURE)
-  {
-    switch (report_id)
-    {
-    case ReportId::ReportIdPs3F4:
-      ConfigManager::instance().host_detected(ModePs3);
-      break;
-    }
-  }
 }
 
 uint16_t HIDGamepadDevice::get_report(uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer, uint16_t reqlen)
 {
-  (void)report_id;
-  (void)report_type;
-  (void)buffer;
-  (void)reqlen;
-  if (report_type != HID_REPORT_TYPE_FEATURE)
-  {
-    return 0;
-  }
-  switch (report_id)
-  {
-  case ReportId::ReportIdPs3F2:
-    // RPCS3 sends this when probing the controller
-    if (ProfileManager::instance().usb_gamepad_count() <= 1 &&
-        std::any_of(profiles.begin(), profiles.end(), [](const auto &profile) { return profile->ps3_on_rpcs3; }))
+    (void)report_id;
+    (void)report_type;
+    (void)buffer;
+    (void)reqlen;
+    if (report_type != HID_REPORT_TYPE_FEATURE)
     {
-      ConfigManager::instance().rpcs3_detected();
+        return 0;
+    }
+    switch (report_id)
+    {
+    case ReportId::ReportIdPs3F2:
+        // RPCS3 sends this when probing the controller
+        if (ProfileManager::instance().usb_gamepad_count() <= 1 &&
+            std::any_of(profiles.begin(), profiles.end(), [](const auto &profile) { return profile->ps3_on_rpcs3; }))
+        {
+            ConfigManager::instance().rpcs3_detected();
+        }
+        return 0;
+    case ReportId::ReportIdPs4Feature:
+        if (supports_ps4 && reqlen == 0x30)
+        {
+            if (auth_broker.has_handler(ModePs5))
+            {
+                ConfigManager::instance().host_detected(ModePs5);
+            }
+            else
+            {
+                ConfigManager::instance().host_detected(ModePs4);
+            }
+        }
+        else
+        {
+            ConfigManager::instance().host_detected(ModePs3);
+        }
+        return 0;
     }
     return 0;
-  case ReportId::ReportIdPs4Feature:
-    if (supports_ps4 && reqlen == 0x30)
-    {
-      if (auth_broker.has_handler(ModePs5))
-      {
-        ConfigManager::instance().host_detected(ModePs5);
-      }
-      else
-      {
-        ConfigManager::instance().host_detected(ModePs4);
-      }
-    }
-    else
-    {
-      ConfigManager::instance().host_detected(ModePs3);
-    }
-    return 0;
-  }
-  return 0;
 }

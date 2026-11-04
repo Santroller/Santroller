@@ -2,7 +2,7 @@
 #include "base.hpp"
 #include "device.pb.h"
 #include "vtech_guitar_ioexpander.hpp"
-class VTechGuitarIOExpanderDevice: public Device
+class VTechGuitarIOExpanderDevice : public Device
 {
 public:
     ~VTechGuitarIOExpanderDevice() {}

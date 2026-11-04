@@ -18,7 +18,10 @@ i2c_slave_handler_t slave_handler[NUM_I2CS] = {};
 uint8_t slave_address[NUM_I2CS] = {};
 }
 
-uint i2c_init(i2c_inst_t *, uint baudrate) { return baudrate; }
+uint i2c_init(i2c_inst_t *, uint baudrate)
+{
+    return baudrate;
+}
 uint8_t i2c_read_byte_raw(i2c_inst_t *)
 {
     if (fake_i2c::rx.empty())
@@ -29,14 +32,20 @@ uint8_t i2c_read_byte_raw(i2c_inst_t *)
     fake_i2c::rx.pop_front();
     return value;
 }
-void i2c_write_byte_raw(i2c_inst_t *, uint8_t value) { fake_i2c::tx.push_back(value); }
+void i2c_write_byte_raw(i2c_inst_t *, uint8_t value)
+{
+    fake_i2c::tx.push_back(value);
+}
 
 void i2c_slave_init(i2c_inst_t *i2c, uint8_t address, i2c_slave_handler_t handler)
 {
     fake_i2c::slave_handler[i2c->index] = handler;
     fake_i2c::slave_address[i2c->index] = address;
 }
-void i2c_slave_deinit(i2c_inst_t *i2c) { fake_i2c::slave_handler[i2c->index] = nullptr; }
+void i2c_slave_deinit(i2c_inst_t *i2c)
+{
+    fake_i2c::slave_handler[i2c->index] = nullptr;
+}
 
 namespace fake_gpio
 {
@@ -46,7 +55,10 @@ void gpio_init(unsigned int) {}
 void gpio_set_function(unsigned int, enum gpio_function) {}
 void gpio_pull_up(unsigned int) {}
 void gpio_set_dir(unsigned int, bool) {}
-void gpio_put(unsigned int gpio, bool value) { fake_gpio::level[gpio] = value; }
+void gpio_put(unsigned int gpio, bool value)
+{
+    fake_gpio::level[gpio] = value;
+}
 
 namespace fake_alarm
 {

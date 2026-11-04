@@ -89,46 +89,78 @@ inline uint8_t decode_gh5_slider(uint8_t slider)
     switch (slider)
     {
     // Single frets
-    case 0x15: return 0b00001; // G
-    case 0x4D: return 0b00010; // R
-    case 0x9A: return 0b00100; // Y
-    case 0xC9: return 0b01000; // B
-    case 0xFF: return 0b10000; // O
+    case 0x15:
+        return 0b00001; // G
+    case 0x4D:
+        return 0b00010; // R
+    case 0x9A:
+        return 0b00100; // Y
+    case 0xC9:
+        return 0b01000; // B
+    case 0xFF:
+        return 0b10000; // O
 
     // 2-fret combinations
-    case 0x30: return 0b00011; // GR
-    case 0x99: return 0b00101; // GY
-    case 0xC7: return 0b01001; // GB
-    case 0xFB: return 0b10001; // GO
-    case 0x66: return 0b00110; // RY
-    case 0xC8: return 0b01010; // RB
-    case 0xFD: return 0b10010; // RO
-    case 0xAF: return 0b01100; // YB
-    case 0xFE: return 0b10100; // YO
-    case 0xE6: return 0b11000; // BO
+    case 0x30:
+        return 0b00011; // GR
+    case 0x99:
+        return 0b00101; // GY
+    case 0xC7:
+        return 0b01001; // GB
+    case 0xFB:
+        return 0b10001; // GO
+    case 0x66:
+        return 0b00110; // RY
+    case 0xC8:
+        return 0b01010; // RB
+    case 0xFD:
+        return 0b10010; // RO
+    case 0xAF:
+        return 0b01100; // YB
+    case 0xFE:
+        return 0b10100; // YO
+    case 0xE6:
+        return 0b11000; // BO
 
     // 3-fret combinations
-    case 0x65: return 0b00111; // GRY
-    case 0xC6: return 0b01011; // GRB
-    case 0xF9: return 0b10011; // GRO
-    case 0xAD: return 0b01101; // GYB
-    case 0xFA: return 0b10101; // GYO
-    case 0xE2: return 0b11001; // GBO
-    case 0xAE: return 0b01110; // RYB
-    case 0xFC: return 0b10110; // RYO
-    case 0xE4: return 0b11010; // RBO
-    case 0xE5: return 0b11100; // YBO
+    case 0x65:
+        return 0b00111; // GRY
+    case 0xC6:
+        return 0b01011; // GRB
+    case 0xF9:
+        return 0b10011; // GRO
+    case 0xAD:
+        return 0b01101; // GYB
+    case 0xFA:
+        return 0b10101; // GYO
+    case 0xE2:
+        return 0b11001; // GBO
+    case 0xAE:
+        return 0b01110; // RYB
+    case 0xFC:
+        return 0b10110; // RYO
+    case 0xE4:
+        return 0b11010; // RBO
+    case 0xE5:
+        return 0b11100; // YBO
 
     // 4-fret combinations
-    case 0xAC: return 0b01111; // GRYB
-    case 0xF8: return 0b10111; // GRYO
-    case 0xE0: return 0b11011; // GRBO
-    case 0xE1: return 0b11101; // GYBO
-    case 0xE3: return 0b11110; // RYBO
+    case 0xAC:
+        return 0b01111; // GRYB
+    case 0xF8:
+        return 0b10111; // GRYO
+    case 0xE0:
+        return 0b11011; // GRBO
+    case 0xE1:
+        return 0b11101; // GYBO
+    case 0xE3:
+        return 0b11110; // RYBO
 
     // 5-fret combination
-    case 0xDF: return 0b11111; // GRYBO
+    case 0xDF:
+        return 0b11111; // GRYBO
 
-    default:   return 0;       // None (0x80)
+    default:
+        return 0; // None (0x80)
     }
 }

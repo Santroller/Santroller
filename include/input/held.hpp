@@ -16,15 +16,17 @@ public:
     {
         m_waiting_for_release = true;
         m_last_pressed = 0;
-        if (m_input) m_input->require_release();
+        if (m_input)
+            m_input->require_release();
     }
-    ShortcutInput* as_shortcut() override { return m_input ? m_input->as_shortcut() : nullptr; }
+    ShortcutInput *as_shortcut() override { return m_input ? m_input->as_shortcut() : nullptr; }
     uint64_t hardware_id() const override { return m_input ? m_input->hardware_id() : 0; }
-    Input* get_inner_input() const { return m_input.get(); }
+    Input *get_inner_input() const { return m_input.get(); }
     bool valid() const override { return m_input ? m_input->valid() : false; }
     void link_device(bool claim_devices) override
     {
-        if (m_input) m_input->link_device(claim_devices);
+        if (m_input)
+            m_input->link_device(claim_devices);
     }
     uint32_t linked_device_serial() const override { return m_input ? m_input->linked_device_serial() : 0; }
 

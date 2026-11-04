@@ -4,7 +4,8 @@
 
 // In ModeHid this keeps our VID / PID so the tool can still find it, ModeKeyboardMania is
 // the real controller as the PS2 expects it, with nothing else on the bus.
-class KeyboardManiaDevice : public HIDDevice {
+class KeyboardManiaDevice : public HIDDevice
+{
 public:
     explicit KeyboardManiaDevice(bool native) : m_native(native) {}
     void initialize() override;
@@ -17,6 +18,7 @@ public:
     uint16_t report_desc_len() override;
     uint16_t get_report(uint8_t id, hid_report_type_t type, uint8_t *buffer, uint16_t len) override;
     void set_report(uint8_t id, hid_report_type_t type, uint8_t const *buffer, uint16_t len) override;
+
 private:
     bool m_native;
     uint8_t m_manufacturer_strid = 0;

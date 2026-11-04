@@ -187,21 +187,21 @@ bool BluetoothDevice::using_pin(uint8_t pin)
 
 namespace
 {
-    enum ScanPhase
-    {
-        SCAN_PHASE_IDLE,
-        SCAN_PHASE_BLE,
-        SCAN_PHASE_CLASSIC_GIAC,
-        SCAN_PHASE_CLASSIC_LIAC,
-    };
+enum ScanPhase
+{
+    SCAN_PHASE_IDLE,
+    SCAN_PHASE_BLE,
+    SCAN_PHASE_CLASSIC_GIAC,
+    SCAN_PHASE_CLASSIC_LIAC,
+};
 
-    static ScanPhase s_scan_phase = SCAN_PHASE_IDLE;
-    static btstack_timer_source_t s_scan_timer;
+static ScanPhase s_scan_phase = SCAN_PHASE_IDLE;
+static btstack_timer_source_t s_scan_timer;
 
-    static void scan_timer_callback(btstack_timer_source_t *ts)
-    {
-        bt_discovery_stop();
-    }
+static void scan_timer_callback(btstack_timer_source_t *ts)
+{
+    bt_discovery_stop();
+}
 }
 
 void bt_discovery_stop()

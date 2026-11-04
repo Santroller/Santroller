@@ -2,7 +2,8 @@
 #include "emulation/usb/device.hpp"
 #include "protocols/pdloader.hpp"
 
-class PDLoaderDevice : public UsbDevice {
+class PDLoaderDevice : public UsbDevice
+{
 public:
     void initialize() override;
     void process(bool full_poll, bool send_events) override;

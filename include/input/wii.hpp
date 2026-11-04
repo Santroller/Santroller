@@ -7,7 +7,7 @@
 class WiiAxisInput : public Input
 {
 public:
-    WiiAxisInput(proto_WiiAxisInput input, std::shared_ptr<WiiDevice> device, Profile* profile);
+    WiiAxisInput(proto_WiiAxisInput input, std::shared_ptr<WiiDevice> device, Profile *profile);
     bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
@@ -27,7 +27,7 @@ private:
 class WiiButtonInput : public Input
 {
 public:
-    WiiButtonInput(proto_WiiButtonInput input, std::shared_ptr<WiiDevice> device, Profile* profile);
+    WiiButtonInput(proto_WiiButtonInput input, std::shared_ptr<WiiDevice> device, Profile *profile);
     bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }

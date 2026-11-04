@@ -85,7 +85,7 @@ bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
     return eligible;
 }
 
-bool UsbModeActivationTrigger::forcedConsoleMode(ConsoleMode& mode) const
+bool UsbModeActivationTrigger::forcedConsoleMode(ConsoleMode &mode) const
 {
     if (!m_config.has_forcedType)
     {
@@ -271,8 +271,7 @@ bool XboxOneAuthActivationTrigger::validate(bool claim_device, bool full_poll, b
     std::shared_ptr<Device> pad;
     if (xbox_one)
     {
-        auto is_pad = [](const auto &device)
-        { return device && device->still_connected && device->is_xbox_one_pad(); };
+        auto is_pad = [](const auto &device) { return device && device->still_connected && device->is_xbox_one_pad(); };
         pad = m_profile->get_claimed_device(DeviceSlotKind::USB, m_slot_id);
         if (!is_pad(pad))
         {
@@ -293,8 +292,7 @@ bool XboxOneAuthActivationTrigger::validate(bool claim_device, bool full_poll, b
         if (claim_device)
         {
             if (pad && m_profile->get_claimed_device(DeviceSlotKind::USB, m_slot_id) != pad &&
-                DeviceManager::instance().claim_assignable_device_if([&pad](const auto &device)
-                                                                     { return device == pad; }))
+                DeviceManager::instance().claim_assignable_device_if([&pad](const auto &device) { return device == pad; }))
             {
                 m_profile->claimed_devices[{DeviceSlotKind::USB, m_slot_id}] = pad;
             }

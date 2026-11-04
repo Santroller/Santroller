@@ -307,16 +307,14 @@ void PS3GamepadDevice::initialize()
     {
     case ProKeys:
     case ProGuitarMustang:
-    case ProGuitarSquier:
-    {
+    case ProGuitarSquier: {
         // the pro instruments use the right stick bytes for keys / frets
         gamepad->rightStickX = 0;
         gamepad->rightStickY = 0;
         break;
     }
 
-    case RockBandDrums:
-    {
+    case RockBandDrums: {
         PS3RockBandDrums_Data_t *report = (PS3RockBandDrums_Data_t *)m_initial_report;
         report->redVelocity = 0;
         report->blueVelocity = 0;
@@ -324,15 +322,13 @@ void PS3GamepadDevice::initialize()
         report->yellowVelocity = 0;
         break;
     }
-    case RockBandGuitar:
-    {
+    case RockBandGuitar: {
         PS3RockBandGuitar_Data_t *report = (PS3RockBandGuitar_Data_t *)m_initial_report;
         report->whammy = 0;
         break;
     }
     case PowerGigDrum:
-    case PowerGigGuitar:
-    {
+    case PowerGigGuitar: {
         // powergig has the bytes swapped, much like the ds3
         gamepad->gyro = __builtin_bswap16(PS3_ACCEL_CENTER);
         gamepad->accelX = __builtin_bswap16(PS3_ACCEL_CENTER);
@@ -710,8 +706,7 @@ uint16_t PS3GamepadDevice::get_report(uint8_t report_id, hid_report_type_t repor
         // PS3 requests this for a gamepad
         memcpy(buffer, ps3_feature_01, sizeof(ps3_feature_01));
         return sizeof(ps3_feature_01);
-    case ReportId::ReportIdPs3Feature:
-    {
+    case ReportId::ReportIdPs3Feature: {
         PS3FeatureReport report = ps3_feature_report(subtype);
         memcpy(buffer, &report, sizeof(report));
         switch (subtype)
@@ -792,8 +787,7 @@ void PS3GamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_ty
             return;
         }
         break;
-    case HID_REPORT_TYPE_OUTPUT:
-    {
+    case HID_REPORT_TYPE_OUTPUT: {
         // rumble / led packets will be here
 
         uint8_t id = buffer[0];

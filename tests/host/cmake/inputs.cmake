@@ -3,6 +3,7 @@
 # triggers). The real sources are compiled against the fakes in support/inputs, which sit in front
 # of the mappings area's fakes (Pico clock, TinyUSB, HID config device events, bootrom) reused here.
 set(INPUTS_SOURCES
+  ${SANTROLLER_ROOT}/src/config/input_decoder.cpp
   ${SANTROLLER_ROOT}/src/input/shortcut.cpp
   ${SANTROLLER_ROOT}/src/input/held.cpp
   ${SANTROLLER_ROOT}/src/input/toggle.cpp

@@ -23,7 +23,11 @@ void ToggleInput::setup()
 }
 bool ToggleInput::tick_digital()
 {
-     if (m_input)
+    if (!m_device)
+    {
+        return false;
+    }
+    if (m_input)
     {
         if (m_input->tick_digital() && !m_last_state)
         {

@@ -114,6 +114,7 @@
 #include <array>
 #include "utils.h"
 #include "config/slot_ids.hpp"
+#include "config/input_decoder.hpp"
 #include "hci.h"
 
 static auto &profile_mgr = ProfileManager::instance();
@@ -135,8 +136,7 @@ ConsoleMode newMode = mode;
 struct ConfigDecodeContext
 {
     std::shared_ptr<Profile> profile;
-    ShortcutInput *last_shortcut = nullptr;
-    Input *last_special = nullptr;
+    InputDecoder input_decoder;
     bool matched = false;
     bool changed = false;
     // Building an inactive profile for the config tool: load everything, but never activate it
@@ -287,193 +287,16 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
 }
 std::unique_ptr<Input> make_input(proto_Input input, ConfigDecodeContext &context, pb_istream_t *stream)
 {
-    if (input.which_input == proto_Input_held_tag ||
-        input.which_input == proto_Input_cycle_tag ||
-        input.which_input == proto_Input_toggle_tag ||
-        input.which_input == proto_Input_shortcut_tag ||
-        input.which_input == proto_Input_shifted_tag ||
-        input.which_input == 0)
-    {
-        auto ret = context.last_special;
-        context.last_special = nullptr;
-        context.last_shortcut = nullptr;
-        return std::unique_ptr<Input>(ret);
-    }
-
-    return InputFactory::create_input(input, context.profile);
-}
-
-bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg);
-bool load_shortcut_input(pb_istream_t *stream, const pb_field_t *field, void **arg)
-{
-    auto *context = static_cast<ConfigDecodeContext *>(*arg);
-    // Decoding a special input (cycle, held, toggle, nested shortcut) clears or replaces
-    // last_shortcut, so keep hold of this one
-    auto *shortcut = context->last_shortcut;
-    proto_Input input = proto_Input_init_default;
-    input.cb_input.funcs.decode = &load_input_dev;
-    input.cb_input.arg = *arg;
-    if (!pb_decode_ex(stream, proto_Input_fields, &input, PB_DECODE_NOINIT))
-    {
-        // printf("couldnt decode shortcut input?\r\n");
-        return false;
-    }
-    auto inputPtr = make_input(input, *context, stream);
-    context->last_shortcut = shortcut;
-    if (!inputPtr || !shortcut)
-    {
-        return true;
-    }
-    shortcut->inputs.push_back(std::move(inputPtr));
-    // printf("shortcut added: %d\r\n", context->last_shortcut->inputs.size());
-    return true;
-}
-bool load_shortcut(pb_istream_t *stream, const pb_field_t *field, void **arg)
-{
-    auto *context = static_cast<ConfigDecodeContext *>(*arg);
-    // printf("found shortcut!\r\n");
-    context->last_shortcut = new ShortcutInput();
-    context->last_special = context->last_shortcut;
-    proto_ShortcutInput input = proto_ShortcutInput_init_default;
-    input.inputs.funcs.decode = &load_shortcut_input;
-    input.inputs.arg = *arg;
-    if (!pb_decode_ex(stream, proto_ShortcutInput_fields, &input, PB_DECODE_NOINIT))
-    {
-        // printf("couldnt decode shortcut input?\r\n");
-        return false;
-    }
-    // printf("loaded shortcut\r\n");
-    return true;
-}
-bool load_held(pb_istream_t *stream, const pb_field_t *field, void **arg)
-{
-    auto *context = static_cast<ConfigDecodeContext *>(*arg);
-    auto profile = context->profile;
-    // printf("found held!\r\n");
-    auto last_held = new HeldInput();
-    context->last_special = last_held;
-    proto_HeldInput input = proto_HeldInput_init_default;
-    input.input.cb_input.funcs.decode = load_input_dev;
-    input.input.cb_input.arg = *arg;
-    if (!pb_decode_ex(stream, proto_HeldInput_fields, &input, PB_DECODE_NOINIT))
-    {
-        // printf("couldnt decode held input?\r\n");
-        return false;
-    }
-    last_held->load(input, make_input(input.input, *context, stream));
-    return true;
-}
-bool load_cycle(pb_istream_t *stream, const pb_field_t *field, void **arg)
-{
-    auto *context = static_cast<ConfigDecodeContext *>(*arg);
-    auto profile = context->profile;
-    // printf("found cycle! %p\r\n", profile.get());
-    auto last_cycle = new CycleInput();
-    context->last_special = last_cycle;
-    proto_CycleInput input = proto_CycleInput_init_default;
-    input.input.cb_input.funcs.decode = load_input_dev;
-    input.input.cb_input.arg = *arg;
-    input.inputReverse.cb_input.funcs.decode = load_input_dev;
-    input.inputReverse.cb_input.arg = *arg;
-    if (!pb_decode_ex(stream, proto_CycleInput_fields, &input, PB_DECODE_NOINIT))
-    {
-        // printf("couldnt decode cycle input?\r\n");
-        return false;
-    }
-
-    // printf("check %d %d\r\n", input.deviceid, profile->devices.size());
-    if (profile->devices.find(input.deviceid) == profile->devices.end())
-    {
-        // printf("why tho\r\n");
-        return true;
-    }
-    // printf("loading cycle\r\n");
-    last_cycle->load(input, std::static_pointer_cast<CycleDevice>(profile->devices[input.deviceid]), input.has_input ? make_input(input.input, *context, stream) : nullptr, input.has_inputReverse ? make_input(input.inputReverse, *context, stream) : nullptr);
-    // printf("loaded cycle\r\n");
-    return true;
-}
-bool load_toggle(pb_istream_t *stream, const pb_field_t *field, void **arg)
-{
-    auto *context = static_cast<ConfigDecodeContext *>(*arg);
-    auto profile = context->profile;
-    // printf("found toggle! %p\r\n", profile.get());
-    auto last_toggle = new ToggleInput();
-    context->last_special = last_toggle;
-    proto_ToggleInput input = proto_ToggleInput_init_default;
-    input.input.cb_input.funcs.decode = load_input_dev;
-    input.input.cb_input.arg = *arg;
-    if (!pb_decode_ex(stream, proto_ToggleInput_fields, &input, PB_DECODE_NOINIT))
-    {
-        // printf("couldnt decode toggle input?\r\n");
-        return false;
-    }
-
-    // printf("check %d %d\r\n", input.deviceid, profile->devices.size());
-    if (profile->devices.find(input.deviceid) == profile->devices.end())
-    {
-        // printf("why tho\r\n");
-        return true;
-    }
-    // printf("loading toggle\r\n");
-    last_toggle->load(input, std::static_pointer_cast<ToggleDevice>(profile->devices[input.deviceid]), input.has_input ? make_input(input.input, *context, stream) : nullptr);
-    // printf("loaded toggle\r\n");
-    return true;
-}
-
-bool load_shifted(pb_istream_t *stream, const pb_field_t *field, void **arg)
-{
-    auto *context = static_cast<ConfigDecodeContext *>(*arg);
-    auto last_shifted = new ShiftedInput();
-    context->last_special = last_shifted;
-    proto_ShiftedInput input = proto_ShiftedInput_init_default;
-    input.input.cb_input.funcs.decode = load_input_dev;
-    input.input.cb_input.arg = *arg;
-    input.shift.cb_input.funcs.decode = load_input_dev;
-    input.shift.cb_input.arg = *arg;
-    if (!pb_decode_ex(stream, proto_ShiftedInput_fields, &input, PB_DECODE_NOINIT))
-    {
-        return false;
-    }
-
-    last_shifted->load(input, input.has_input ? make_input(input.input, *context, stream) : nullptr, input.has_shift ? make_input(input.shift, *context, stream) : nullptr);
-    return true;
+    context.input_decoder.profile = context.profile;
+    return context.input_decoder.take(input);
 }
 
 bool load_input_dev(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
-    // //printf("input_dev: %d %p\r\n", field->tag, profile.get());
-
-    if (field->tag == proto_Input_cycle_tag)
-    {
-        pb_callback_t *msg = (pb_callback_t *)field->pData;
-        msg->funcs.decode = &load_cycle;
-        msg->arg = *arg;
-    }
-    if (field->tag == proto_Input_toggle_tag)
-    {
-        pb_callback_t *msg = (pb_callback_t *)field->pData;
-        msg->funcs.decode = &load_toggle;
-        msg->arg = *arg;
-    }
-    if (field->tag == proto_Input_held_tag)
-    {
-        pb_callback_t *msg = (pb_callback_t *)field->pData;
-        msg->funcs.decode = &load_held;
-        msg->arg = *arg;
-    }
-    if (field->tag == proto_Input_shortcut_tag)
-    {
-        pb_callback_t *msg = (pb_callback_t *)field->pData;
-        msg->funcs.decode = &load_shortcut;
-        msg->arg = *arg;
-    }
-    if (field->tag == proto_Input_shifted_tag)
-    {
-        pb_callback_t *msg = (pb_callback_t *)field->pData;
-        msg->funcs.decode = &load_shifted;
-        msg->arg = *arg;
-    }
-    return true;
+    auto &context = *static_cast<ConfigDecodeContext *>(*arg);
+    context.input_decoder.profile = context.profile;
+    void *decoder = &context.input_decoder;
+    return InputDecoder::prepare(stream, field, &decoder);
 }
 bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
 {
@@ -491,7 +314,11 @@ bool load_mapping(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_mapping = default_mapping;
     proto_mapping.input.cb_input.funcs.decode = load_input_dev;
     proto_mapping.input.cb_input.arg = *arg;
-    pb_decode_ex(stream, proto_Mapping_fields, &proto_mapping, PB_DECODE_NOINIT);
+    if (!pb_decode_ex(stream, proto_Mapping_fields, &proto_mapping, PB_DECODE_NOINIT))
+    {
+        printf("couldn't decode mapping: %s\r\n", PB_GET_ERROR(stream));
+        return false;
+    }
 
     std::unique_ptr<Input> input = make_input(proto_mapping.input, *context, stream);
     size_t mapping_id = profile->mappings.size();
@@ -557,7 +384,11 @@ bool load_assignment_info(pb_istream_t *stream, const pb_field_t *field, void **
     proto_ProfileAssignmentInfo proto_assignment = proto_ProfileAssignmentInfo_init_default;
     proto_assignment.cb_assignment.funcs.decode = load_assignment_dev;
     proto_assignment.cb_assignment.arg = *arg;
-    pb_decode_ex(stream, proto_ProfileAssignmentInfo_fields, &proto_assignment, PB_DECODE_NOINIT);
+    if (!pb_decode_ex(stream, proto_ProfileAssignmentInfo_fields, &proto_assignment, PB_DECODE_NOINIT))
+    {
+        printf("couldn't decode assignment: %s\r\n", PB_GET_ERROR(stream));
+        return false;
+    }
 
     // Get input for input-based triggers
     std::unique_ptr<Input> input;
@@ -772,7 +603,11 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     std::vector<uint8_t> image;
     proto_led.device.cb_device.funcs.decode = load_led_device_dev;
     proto_led.device.cb_device.arg = &image;
-    pb_decode_ex(stream, proto_Led_fields, &proto_led, PB_DECODE_NOINIT);
+    if (!pb_decode_ex(stream, proto_Led_fields, &proto_led, PB_DECODE_NOINIT))
+    {
+        printf("couldn't decode LED: %s\r\n", PB_GET_ERROR(stream));
+        return false;
+    }
 
     auto device = LedFactory::create_led_device(proto_led.device, profile, std::move(image));
     if (!device)

@@ -45,6 +45,11 @@ default 1000 ms clears latched startup selections and opens the startup window b
 Only currently held startup triggers match; normal reloads still preserve their selections.
 Held actions require release when loaded with their button down, preventing a reload loop.
 
+Input-decoder tests use real nanopb messages to cover shortcuts nested in cycling, toggle, held
+and shifted inputs, including independent forward/reverse children in either wire order.
+Each nested field owns its decoded result, preventing lost modifiers, self-ownership and reload
+crashes. Missing devices remain inert, and failed decodes release their partially built trees.
+
 Firmware-upload state tests in `inputs/firmware_update_test.cpp` cover deferred config reloads,
 mode changes and device-stack restarts, and the upload inactivity timeout (including clock wrap).
 During configurator-driven firmware uploads, normal device/profile processing and config flash

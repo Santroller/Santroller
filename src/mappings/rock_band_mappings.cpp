@@ -2033,6 +2033,10 @@ ProKeysKeyMapping::ProKeysKeyMapping(const proto_Mapping &mapping, std::unique_p
 
 void ProKeysKeyMapping::update(bool full_poll, bool send_events)
 {
+    if (send_events)
+    {
+        full_poll = full_poll || m_full_poll_pending;
+    }
     if (m_is_multiple)
     {
         m_active_keys = 0;
@@ -2082,10 +2086,12 @@ void ProKeysKeyMapping::update(bool full_poll, bool send_events)
         if (send_events && (any_pressed != m_last_sent_pressed || full_poll))
         {
             proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, any_pressed, any_pressed}}};
-            if (HIDConfigDevice::send_event(event, false))
+            bool queued = HIDConfigDevice::send_event(event, false);
+            if (queued)
             {
                 m_last_sent_pressed = any_pressed;
             }
+            m_full_poll_pending = full_poll && !queued;
         }
     }
     else
@@ -2140,10 +2146,12 @@ void ProKeysKeyMapping::update(bool full_poll, bool send_events)
         if (send_events && (m_single_pressed != m_last_sent_pressed || full_poll))
         {
             proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, m_single_pressed, m_single_pressed}}};
-            if (HIDConfigDevice::send_event(event, false))
+            bool queued = HIDConfigDevice::send_event(event, false);
+            if (queued)
             {
                 m_last_sent_pressed = m_single_pressed;
             }
+            m_full_poll_pending = full_poll && !queued;
         }
     }
 }

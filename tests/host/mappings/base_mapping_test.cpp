@@ -332,6 +332,23 @@ TEST_F(AxisUpdate, SendsCalibratedValueToConfigTool) {
   EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
 }
 
+// The tool clears every value when it selects a profile, and a selector switch
+// can sit unchanged, so a full poll that found the queue full is retried
+TEST_F(AxisUpdate, RetriesAFullPollThatFoundTheQueueFull) {
+  auto axis = drive<ProbeAxis>(
+      with_gamepad_axis(trigger_config(), Gamepad_LeftTrigger), profile);
+  axis.input->analog = 40000;
+  axis->update(false, true);
+  ASSERT_EQ(HIDConfigDevice::sent_events.size(), 1u);
+  HIDConfigDevice::queue_full = true;
+  axis->update(true, true);
+  HIDConfigDevice::queue_full = false;
+  axis->update(false, true);
+  EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
+  axis->update(false, true);
+  EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
+}
+
 TEST_F(ButtonUpdate, DigitalPressIsFullPressure) {
   auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
   button.set_digital(true);
@@ -839,6 +856,20 @@ TEST_F(ButtonUpdate, SendsButtonEventsOnChange) {
   EXPECT_EQ(HIDConfigDevice::sent_events[0].which_event,
             proto_Event_button_tag);
   button.input->digital = false;
+  button->update(false, true);
+  EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
+}
+
+TEST_F(ButtonUpdate, RetriesAFullPollThatFoundTheQueueFull) {
+  auto button = drive<ProbeButton>(gamepad_button(Gamepad_A), profile);
+  button.input->digital = true;
+  button->update(false, true);
+  ASSERT_EQ(HIDConfigDevice::sent_events.size(), 1u);
+  HIDConfigDevice::queue_full = true;
+  button->update(true, true);
+  HIDConfigDevice::queue_full = false;
+  button->update(false, true);
+  EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
   button->update(false, true);
   EXPECT_EQ(HIDConfigDevice::sent_events.size(), 2u);
 }

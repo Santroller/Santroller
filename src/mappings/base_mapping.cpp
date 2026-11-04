@@ -124,6 +124,8 @@ void ButtonMapping::sample(bool full_poll, bool send_events) {
   m_suppressed = false;
 
   if (send_events) {
+    full_poll = full_poll || m_full_poll_pending;
+    bool queued = true;
     if (analog_trigger) {
       if (pressure != m_last_sent_pressure || calcVal != m_last_sent_value ||
           full_poll) {
@@ -137,6 +139,8 @@ void ButtonMapping::sample(bool full_poll, bool send_events) {
         if (HIDConfigDevice::send_event(event, false)) {
           m_last_sent_pressure = pressure;
           m_last_sent_value = calcVal;
+        } else {
+          queued = false;
         }
       }
     } else {
@@ -147,6 +151,8 @@ void ButtonMapping::sample(bool full_poll, bool send_events) {
         };
         if (HIDConfigDevice::send_event(event, false)) {
           m_last_sent_value = calcVal;
+        } else {
+          queued = false;
         }
       }
       if (m_input->has_independent_analog_value() &&
@@ -158,9 +164,12 @@ void ButtonMapping::sample(bool full_poll, bool send_events) {
         };
         if (HIDConfigDevice::send_event(event, false)) {
           m_last_sent_pressure = pressure;
+        } else {
+          queued = false;
         }
       }
     }
+    m_full_poll_pending = full_poll && !queued;
   }
   // With combined strum debounce, a new strum can't start while the other
   // direction is still held or debouncing, so a bouncing strum switch can't
@@ -294,6 +303,9 @@ void ButtonMapping::update_value(bool full_poll, bool send_events) {
 void AxisMapping::update(bool full_poll, bool send_events) {
   uint16_t event_value = 0;
   bool event_driven = m_input->consumes_events();
+  if (send_events) {
+    full_poll = full_poll || m_full_poll_pending;
+  }
   if (send_events && event_driven) {
     event_value = sample_ui_event();
     uint32_t val = event_value;
@@ -311,10 +323,12 @@ void AxisMapping::update(bool full_poll, bool send_events) {
         which_event : proto_Event_axis_tag,
         event : {axis : {m_id, event_value, val}}
       };
-      if (HIDConfigDevice::send_event(event, false)) {
+      bool queued = HIDConfigDevice::send_event(event, false);
+      if (queued) {
         m_last_sent_value = event_value;
         m_last_sent_calibrated_value = val;
       }
+      m_full_poll_pending = full_poll && !queued;
     }
     return;
   }
@@ -437,9 +451,11 @@ void AxisMapping::update(bool full_poll, bool send_events) {
       which_event : proto_Event_axis_tag,
       event : {axis : {m_id, uncalibrated, m_calibrated_value}}
     };
-    if (HIDConfigDevice::send_event(event, false)) {
+    bool queued = HIDConfigDevice::send_event(event, false);
+    if (queued) {
       m_last_sent_value = uncalibrated;
       m_last_sent_calibrated_value = m_calibrated_value;
     }
+    m_full_poll_pending = full_poll && !queued;
   }
 }

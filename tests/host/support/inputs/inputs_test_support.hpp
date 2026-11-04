@@ -212,6 +212,7 @@ protected:
     {
         clock_ms::set(START_MS);
         HIDConfigDevice::sent_events.clear();
+        HIDConfigDevice::queue_full = false;
         fake_config::reset();
         fake_devices::reset();
         fake_bootrom::reset_count = 0;

@@ -130,5 +130,6 @@ protected:
   void SetUp() override {
     fake_time::set_us(1000000);
     HIDConfigDevice::sent_events.clear();
+    HIDConfigDevice::queue_full = false;
   }
 };

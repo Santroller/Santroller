@@ -52,22 +52,29 @@ bool InputActivationTrigger::validate(bool claim_device, bool full_poll, bool se
 {
     m_input->link_device(claim_device);
     auto val = calc_val();
+    if (send_events)
+    {
+        full_poll = full_poll || m_full_poll_pending;
+    }
     if (m_activation_trigger.has_trigger)
     {
         auto analog_val = m_input->tick_analog();
         if (send_events && (analog_val != m_last_analog_val || full_poll))
         {
             proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, analog_val, val}}};
-            if (HIDConfigDevice::send_event(event, false))
+            bool queued = HIDConfigDevice::send_event(event, false);
+            if (queued)
             {
                 m_last_analog_val = analog_val;
             }
+            m_full_poll_pending = full_poll && !queued;
         }
     }
     else if (send_events && (val != m_last_val || full_poll))
     {
         proto_Event event = {which_event : proto_Event_trigger_tag, event : {trigger : {m_id, m_list_id, m_last_analog_val, val}}};
-        HIDConfigDevice::send_event(event, false);
+        bool queued = HIDConfigDevice::send_event(event, false);
+        m_full_poll_pending = full_poll && !queued;
     }
     if (!m_initialised)
     {

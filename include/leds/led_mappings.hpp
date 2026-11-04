@@ -173,6 +173,8 @@ protected:
 private:
     uint16_t m_last_val = 0;
     uint32_t m_last_poll = 0;
+    // A full poll's event can find the queue full, keep it until it is queued
+    bool m_full_poll_pending = false;
     // the input range that drives the LED from off to fully on, min can be above max to invert it
     int32_t m_min = 0;
     int32_t m_max = UINT16_MAX;

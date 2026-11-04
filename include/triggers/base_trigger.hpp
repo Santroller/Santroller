@@ -38,6 +38,8 @@ protected:
     bool m_initialised = false;
     bool m_last_val = false;
     uint16_t m_last_analog_val = 0;
+    // A full poll's event can find the queue full, keep it until it is queued
+    bool m_full_poll_pending = false;
     uint16_t m_id;
     uint16_t m_slot_id = 0;
     uint16_t m_list_id;

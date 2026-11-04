@@ -199,9 +199,6 @@ TEST_F(ToggleTest, StateAndBounceSurviveAReload) {
 
 TEST_F(ToggleTest, PassesThroughTheInnerInput) {
   EXPECT_EQ(toggle.hardware_id(), pin_id(7));
-  EXPECT_TRUE(toggle.valid());
-  button->is_valid = false;
-  EXPECT_FALSE(toggle.valid());
   toggle.setup();
   EXPECT_EQ(button->setups, 1);
 }
@@ -210,7 +207,16 @@ TEST_F(ToggleTest, WithoutAnInputItJustReportsTheDevice) {
   ToggleInput bare;
   bare.load(proto_ToggleInput_init_default, toggle_device(4, true), nullptr);
   EXPECT_TRUE(bare.tick_digital());
-  EXPECT_FALSE(bare.valid());
+  EXPECT_TRUE(bare.valid());
+}
+
+TEST_F(ToggleTest, StaysValidWhileItsInputIsMissing) {
+  // The state lives on the toggle device, so a mapping on it must keep
+  // reporting it while whatever flips it (a USB host input, say) is missing
+  button->is_valid = false;
+  EXPECT_TRUE(toggle.valid());
+  ToggleInput unloaded;
+  EXPECT_FALSE(unloaded.valid());
 }
 
 TEST_F(ToggleTest, WithoutAnInputSetupDoesNotCrash) {
@@ -462,10 +468,19 @@ TEST_F(CycleTest, BackwardOnlyCycleSetupDoesNotCrash) {
       ::testing::ExitedWithCode(0), "");
 }
 
+TEST_F(CycleTest, StaysValidWhileItsInputsAreMissing) {
+  // The position lives on the cycle device. A pickup axis on a selector stepped
+  // by a USB host input read as the first notch whenever nothing was plugged in.
+  forward->is_valid = false;
+  backward->is_valid = false;
+  EXPECT_TRUE(cycle.valid());
+  CycleInput unloaded;
+  EXPECT_FALSE(unloaded.valid());
+}
+
 TEST_F(CycleTest, BackwardOnlyCycleIsValid) {
-  // Without a forward input valid() and hardware_id() fall back to the reverse
-  // input, so a backwards only cycle isn't treated as invalid (an axis on it
-  // would always be "centered") and can still be masked by a shortcut.
+  // Without a forward input hardware_id() falls back to the reverse input, so a
+  // backwards only cycle can still be masked by a shortcut.
   auto device = cycle_device(6, 0, {1, 2, 3});
   CycleInput reverse_only;
   reverse_only.load(proto_CycleInput_init_default, device, nullptr,

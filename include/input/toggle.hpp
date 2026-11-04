@@ -14,7 +14,8 @@ public:
     bool has_independent_analog_value() const override { return m_input ? m_input->has_independent_analog_value() : false; }
     void setup();
     uint64_t hardware_id() const override { return m_input ? m_input->hardware_id() : 0; }
-    bool valid() const override { return m_input ? m_input->valid() : false; }
+    // The value comes from the toggle device, which keeps its state even when whatever flips it is missing
+    bool valid() const override { return m_device != nullptr; }
     void link_device(bool claim_devices) override
     {
         if (m_input) m_input->link_device(claim_devices);

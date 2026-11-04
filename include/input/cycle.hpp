@@ -20,11 +20,9 @@ public:
            : m_input_reverse ? m_input_reverse->hardware_id()
                              : 0;
   }
-  bool valid() const override {
-    return m_input           ? m_input->valid()
-           : m_input_reverse ? m_input_reverse->valid()
-                             : false;
-  }
+  // The value comes from the cycle device, which keeps its position even when
+  // whatever steps it is missing
+  bool valid() const override { return m_device != nullptr; }
   void link_device(bool claim_devices) override {
     if (m_input)
       m_input->link_device(claim_devices);

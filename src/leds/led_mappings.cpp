@@ -251,14 +251,25 @@ void InputLedMapping::update(bool full_poll, bool send_events)
     }
     uint16_t raw = m_input->tick_analog();
     uint16_t curr = scale(raw);
+    if (send_events)
+    {
+        full_poll = full_poll || m_full_poll_pending;
+    }
     if (send_events && ((full_poll || (raw != m_last_val)) && (millis() - m_last_poll) > 10))
     {
         proto_Event event = {which_event : proto_Event_led_tag, event : {led : {m_id, raw, curr}}};
-        if (HIDConfigDevice::send_event(event, false))
+        bool queued = HIDConfigDevice::send_event(event, false);
+        if (queued)
         {
             m_last_val = raw;
             m_last_poll = millis();
         }
+        m_full_poll_pending = full_poll && !queued;
+    }
+    else if (send_events && full_poll)
+    {
+        // rate limited, send it next time
+        m_full_poll_pending = true;
     }
     if (m_mapping.has_pattern && m_mapping.pattern == PatternHeatmap)
     {

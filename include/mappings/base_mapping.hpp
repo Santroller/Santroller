@@ -141,6 +141,9 @@ protected:
   uint32_t m_last_sent_value = 0;
   uint32_t m_last_sent_calibrated_value = 0;
   uint32_t m_last_send = 0;
+  // A full poll's events can find the queue full, and an unchanged value
+  // wouldn't be sent again, so keep it until everything is queued
+  bool m_full_poll_pending = false;
   std::unique_ptr<Input> m_input;
   std::vector<Mapping *> m_masked_mappings;
   bool m_suppressed = false;

@@ -332,6 +332,22 @@ TEST_F(InputTriggerTest, ReportsDigitalChangesToTheTool)
     EXPECT_EQ(events_of(proto_Event_trigger_tag).size(), 2u);
 }
 
+TEST_F(InputTriggerTest, RetriesAFullPollThatFoundTheQueueFull)
+{
+    auto trigger = make(true);
+    button->set(true);
+    trigger->validate(false, false, true);
+    ASSERT_EQ(events_of(proto_Event_trigger_tag).size(), 1u);
+    HIDConfigDevice::queue_full = true;
+    trigger->validate(false, true, true);
+    HIDConfigDevice::queue_full = false;
+    // Nothing changed, but the full poll's event never made it out
+    trigger->validate(false, false, true);
+    EXPECT_EQ(events_of(proto_Event_trigger_tag).size(), 2u);
+    trigger->validate(false, false, true);
+    EXPECT_EQ(events_of(proto_Event_trigger_tag).size(), 2u);
+}
+
 TEST_F(InputTriggerTest, ReportsAnalogChangesToTheTool)
 {
     auto trigger = make(true, analog_trigger(AnalogToDigitalTriggerType_JoyHigh, 30000));

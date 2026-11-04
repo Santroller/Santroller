@@ -35,7 +35,7 @@ public:
     int linked = 0;
     int linked_claimed = 0;
 
-    bool tick_digital() override
+    bool tick_digital_raw() override
     {
         digital_reads++;
         return digital;
@@ -92,7 +92,7 @@ class PinInput : public Input
 {
 public:
     explicit PinInput(uint8_t pin) : m_pin(pin) {}
-    bool tick_digital() override { return fake_pins::state[m_pin]; }
+    bool tick_digital_raw() override { return fake_pins::state[m_pin]; }
     uint16_t tick_analog() override { return fake_pins::state[m_pin] ? UINT16_MAX : 0; }
     void setup() override {}
     uint64_t hardware_id() const override { return pin_id(m_pin); }

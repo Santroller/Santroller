@@ -6,7 +6,7 @@
 MatrixInput::MatrixInput(proto_MatrixInput input, std::shared_ptr<MatrixDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
-bool MatrixInput::tick_digital()
+bool MatrixInput::tick_digital_raw()
 {
     if (m_input.pin == -1 || m_input.outputPin == -1)
         return false;

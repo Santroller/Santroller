@@ -10,7 +10,7 @@ void ShortcutInput::setup()
         input->setup();
     }
 }
-bool ShortcutInput::tick_digital()
+bool ShortcutInput::tick_digital_raw()
 {
     if (inputs.empty())
     {

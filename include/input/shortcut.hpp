@@ -6,7 +6,7 @@
 class ShortcutInput: public Input {
    public:
     ShortcutInput();
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     void setup();
     ShortcutInput* as_shortcut() override { return this; }

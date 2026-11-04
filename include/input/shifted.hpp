@@ -8,7 +8,7 @@ class ShiftedInput : public Input
 public:
     ShiftedInput();
     void load(proto_ShiftedInput config, std::unique_ptr<Input> input, std::unique_ptr<Input> shift);
-    bool tick_digital() override;
+    bool tick_digital_raw() override;
     uint16_t tick_analog() override;
     bool has_independent_analog_value() const override { return m_input ? m_input->has_independent_analog_value() : false; }
     void setup() override;

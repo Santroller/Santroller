@@ -10,7 +10,7 @@ class USBAxisInput : public Input
 {
 public:
     USBAxisInput(proto_USBAxisInput input, std::shared_ptr<UsbHostInterface> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
     void link_device(bool claim_devices) override
@@ -38,7 +38,7 @@ class USBButtonInput : public Input
 {
 public:
     USBButtonInput(proto_USBButtonInput input, std::shared_ptr<UsbHostInterface> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool tick_pro_key_range(uint32_t &active_keys, uint8_t *velocities, uint8_t key_count) override;
     bool has_independent_analog_value() const override { return true; }
@@ -68,7 +68,7 @@ class KeyboardKeyInput : public Input
 {
 public:
     KeyboardKeyInput(proto_KeyboardKeyInput input, std::shared_ptr<UsbHostInterface> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     uint64_t hardware_id() const override { return (static_cast<uint64_t>(InputHw_KeyboardKey) << 56) | (static_cast<uint64_t>(m_input.deviceid) << 16) | static_cast<uint32_t>(m_input.key); }
     void link_device(bool claim_devices) override
@@ -88,7 +88,7 @@ class MouseButtonInput : public Input
 {
 public:
     MouseButtonInput(proto_MouseButtonInput input, std::shared_ptr<UsbHostInterface> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     void link_device(bool claim_devices) override
     {
@@ -107,7 +107,7 @@ class MouseAxisInput : public Input
 {
 public:
     MouseAxisInput(proto_MouseAxisInput input, std::shared_ptr<UsbHostInterface> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
     void link_device(bool claim_devices) override

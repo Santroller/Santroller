@@ -8,7 +8,7 @@ class PS2AxisInput : public Input
 {
 public:
     PS2AxisInput(proto_PS2AxisInput input, std::shared_ptr<PS2Device> device, Profile* profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
@@ -28,7 +28,7 @@ class PS2ButtonInput : public Input
 {
 public:
     PS2ButtonInput(proto_PS2ButtonInput input, std::shared_ptr<PS2Device> device, Profile* profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
     bool valid() const override { return m_device != nullptr && m_device->valid(); }

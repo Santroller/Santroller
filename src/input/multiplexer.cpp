@@ -9,7 +9,7 @@ MultiplexerInput::MultiplexerInput(proto_MultiplexerInput input, std::shared_ptr
 void MultiplexerInput::setup()
 {
 }
-bool MultiplexerInput::tick_digital()
+bool MultiplexerInput::tick_digital_raw()
 {
     // the ADC is never exactly 0, so treat it as pressed past half way
     return m_device->read(m_channel) > UINT16_MAX / 2;

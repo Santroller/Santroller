@@ -12,7 +12,7 @@ class PeripheralInput : public Input
 public:
     PeripheralInput(proto_PeripheralInput input, std::shared_ptr<SecondaryPicoDevice> device, Profile *profile);
     ~PeripheralInput();
-    bool tick_digital() override;
+    bool tick_digital_raw() override;
     uint16_t tick_analog() override;
     void setup() override {}
     bool has_independent_analog_value() const override { return m_input.analog; }
@@ -33,7 +33,7 @@ class SecondaryPicoForwardedInput : public Input
 public:
     SecondaryPicoForwardedInput(const proto_Input &input, std::shared_ptr<SecondaryPicoDevice> device, std::unique_ptr<Input> local);
     ~SecondaryPicoForwardedInput();
-    bool tick_digital() override;
+    bool tick_digital_raw() override;
     uint16_t tick_analog() override;
     void setup() override {}
     bool has_independent_analog_value() const override { return m_local && m_local->has_independent_analog_value(); }

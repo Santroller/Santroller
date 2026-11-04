@@ -29,7 +29,7 @@ class MidiNoteInput : public Input
 {
 public:
     MidiNoteInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool consumes_events() const override { return true; }
     bool consume_event(uint16_t &value) override;
@@ -61,7 +61,7 @@ class MidiControlChangeInput : public Input
 {
 public:
     MidiControlChangeInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
     void link_device(bool claim_devices) override
@@ -84,7 +84,7 @@ class MidiPitchBendInput : public Input
 {
 public:
     MidiPitchBendInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
     void link_device(bool claim_devices) override
@@ -107,7 +107,7 @@ class MidiProGuitarButtonInput : public Input
 {
 public:
     MidiProGuitarButtonInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     void link_device(bool claim_devices) override
     {
@@ -129,7 +129,7 @@ class MidiProGuitarAxisInput : public Input
 {
 public:
     MidiProGuitarAxisInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
     void link_device(bool claim_devices) override

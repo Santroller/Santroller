@@ -6,7 +6,7 @@
 WiiAxisInput::WiiAxisInput(proto_WiiAxisInput input, std::shared_ptr<WiiDevice> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
-bool WiiAxisInput::tick_digital()
+bool WiiAxisInput::tick_digital_raw()
 {
     if (!m_device)
         return false;
@@ -26,7 +26,7 @@ void WiiAxisInput::setup()
 WiiButtonInput::WiiButtonInput(proto_WiiButtonInput input, std::shared_ptr<WiiDevice> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
-bool WiiButtonInput::tick_digital()
+bool WiiButtonInput::tick_digital_raw()
 {
     return m_device && m_device->read_button(m_input.button) > 0;
 }

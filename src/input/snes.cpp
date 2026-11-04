@@ -3,7 +3,7 @@
 SNESAxisInput::SNESAxisInput(proto_SNESAxisInput input, std::shared_ptr<SNESDevice> device, Profile *profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
-bool SNESAxisInput::tick_digital()
+bool SNESAxisInput::tick_digital_raw()
 {
     return m_device && m_device->read_axis(m_input.axis) > 0;
 }
@@ -17,7 +17,7 @@ void SNESAxisInput::setup()
 SNESButtonInput::SNESButtonInput(proto_SNESButtonInput input, std::shared_ptr<SNESDevice> device, Profile *profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
-bool SNESButtonInput::tick_digital()
+bool SNESButtonInput::tick_digital_raw()
 {
     return m_device && m_device->read_button(m_input.button);
 }

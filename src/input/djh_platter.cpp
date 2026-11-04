@@ -3,7 +3,7 @@
 DJHeroPlatterInput::DJHeroPlatterInput(proto_DJHeroPlatterInput input, std::shared_ptr<DjHeroTurntableDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
-bool DJHeroPlatterInput::tick_digital()
+bool DJHeroPlatterInput::tick_digital_raw()
 {
     const auto &platter = m_device->m_turntable;
     switch (m_input.type)

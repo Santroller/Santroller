@@ -8,7 +8,7 @@ MidiNoteInput::MidiNoteInput(proto_MidiInput input, std::shared_ptr<MidiDevice> 
 {
     printf("MidiNoteInput: %d\r\n", m_input.note);
 }
-bool MidiNoteInput::tick_digital()
+bool MidiNoteInput::tick_digital_raw()
 {
     return tick_analog() > 0;
 }
@@ -41,7 +41,7 @@ void MidiNoteInput::setup()
 MidiControlChangeInput::MidiControlChangeInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile* profile) : m_input(input.input.midiControlChange), m_device(device), m_profile(profile), m_device_id(input.deviceid), m_slot_kind(midi_input_slot_kind(input))
 {
 }
-bool MidiControlChangeInput::tick_digital()
+bool MidiControlChangeInput::tick_digital_raw()
 {
     if (!m_device) return false;
     return m_device->read_midi_control_change(m_input.channel - 1, m_input.cc) > 0;
@@ -57,7 +57,7 @@ void MidiControlChangeInput::setup()
 MidiPitchBendInput::MidiPitchBendInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile* profile) : m_input(input.input.midiPitchBend), m_device(device), m_profile(profile), m_device_id(input.deviceid), m_slot_kind(midi_input_slot_kind(input))
 {
 }
-bool MidiPitchBendInput::tick_digital()
+bool MidiPitchBendInput::tick_digital_raw()
 {
     if (!m_device) return false;
     return m_device->read_midi_pitch_bend(m_input.channel - 1) != MIDI_PITCH_BEND_CENTER;
@@ -75,7 +75,7 @@ void MidiPitchBendInput::setup()
 MidiProGuitarButtonInput::MidiProGuitarButtonInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile* profile) : m_input(input.input.midiProGuitarButton), m_device(device), m_profile(profile), m_device_id(input.deviceid), m_slot_kind(midi_input_slot_kind(input))
 {
 }
-bool MidiProGuitarButtonInput::tick_digital()
+bool MidiProGuitarButtonInput::tick_digital_raw()
 {
     if (!m_device) return false;
     return m_device->read_pro_guitar_button(m_input.button);
@@ -92,7 +92,7 @@ void MidiProGuitarButtonInput::setup()
 MidiProGuitarAxisInput::MidiProGuitarAxisInput(proto_MidiInput input, std::shared_ptr<MidiDevice> device, Profile* profile) : m_input(input.input.midiProGuitarAxis), m_device(device), m_profile(profile), m_device_id(input.deviceid), m_slot_kind(midi_input_slot_kind(input))
 {
 }
-bool MidiProGuitarAxisInput::tick_digital()
+bool MidiProGuitarAxisInput::tick_digital_raw()
 {
     if (!m_device) return false;
     return m_device->read_pro_guitar_axis(m_input.axis) > 0;

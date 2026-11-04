@@ -88,7 +88,7 @@ class SlotInput : public Input
 {
 public:
     SlotInput(Profile *profile, uint16_t slot, const std::vector<Device *> *held, DeviceSlotKind kind = DeviceSlotKind::USB) : m_profile(profile), m_slot(slot), m_held(held), m_kind(kind) {}
-    bool tick_digital() override
+    bool tick_digital_raw() override
     {
         return m_device && std::find(m_held->begin(), m_held->end(), m_device.get()) != m_held->end();
     }

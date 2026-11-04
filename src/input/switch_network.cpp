@@ -7,7 +7,7 @@ SwitchNetworkInput::SwitchNetworkInput(proto_SwitchNetworkInput input, std::shar
     setup();
 }
 
-bool SwitchNetworkInput::tick_digital()
+bool SwitchNetworkInput::tick_digital_raw()
 {
     if (!m_device || m_input.button < 0)
         return false;

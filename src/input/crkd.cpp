@@ -6,7 +6,7 @@
 CrkdButtonInput::CrkdButtonInput(proto_CrkdNeckButtonInput input, std::shared_ptr<CrkdDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
-bool CrkdButtonInput::tick_digital()
+bool CrkdButtonInput::tick_digital_raw()
 {
     switch (m_input.button)
     {

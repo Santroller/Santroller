@@ -1,505 +1,445 @@
-#include "mappings/mapping.hpp"
-#include "mappings/calibration.hpp"
-#include "tusb.h"
+#include "devices/bt/bt_host.hpp"
+#include "devices/usb/host/host.hpp"
+#include "emulation/usb/hid_device.h"
 #include "emulation/usb/usb_descriptors.h"
 #include "events.pb.h"
-#include "main.hpp"
-#include <pb_encode.h>
-#include <utils.h>
-#include <stdint.h>
-#include "emulation/usb/hid_device.h"
 #include "input/shortcut.hpp"
-#include "managers/inactivity_manager.hpp"
+#include "main.hpp"
 #include "managers/config_manager.hpp"
+#include "managers/inactivity_manager.hpp"
+#include "mappings/calibration.hpp"
+#include "mappings/mapping.hpp"
 #include "pico/bootrom.h"
-#include "devices/usb/host/host.hpp"
-#include "devices/bt/bt_host.hpp"
+#include "tusb.h"
+#include <pb_encode.h>
+#include <stdint.h>
+#include <utils.h>
 
-uint16_t Mapping::sample_ui_event()
-{
-    uint16_t value = 0;
-    if (m_input->peek_event(value))
-    {
-        m_ui_event_value = value;
-        m_ui_event_time = millis();
-    }
-    const uint32_t hold = (m_mapping.has_debounce && m_mapping.debounce_us >= 1000) ? m_mapping.debounce_us / 1000 : 100;
-    return (millis() - m_ui_event_time <= hold) ? m_ui_event_value : 0;
+uint16_t Mapping::sample_ui_event() {
+  uint16_t value = 0;
+  if (m_input->peek_event(value)) {
+    m_ui_event_value = value;
+    m_ui_event_time = millis();
+  }
+  const uint32_t hold =
+      (m_mapping.has_debounce && m_mapping.debounce_us >= 1000)
+          ? m_mapping.debounce_us / 1000
+          : 100;
+  return (millis() - m_ui_event_time <= hold) ? m_ui_event_value : 0;
 }
 
-void Mapping::mask_shortcut_members(bool pressed, bool queued_only)
-{
-    if (m_masked_mappings.empty())
-    {
-        return;
+void Mapping::mask_shortcut_members(bool pressed, bool queued_only) {
+  if (m_masked_mappings.empty()) {
+    return;
+  }
+  auto *shortcut = m_input ? m_input->as_shortcut() : nullptr;
+  bool chord_active = shortcut ? shortcut->tick_digital() : pressed;
+  if (!chord_active) {
+    return;
+  }
+  for (auto *masked : m_masked_mappings) {
+    auto *button = masked->as_button_mapping();
+    if (!queued_only || (button && button->queue_bit() >= 0)) {
+      masked->mask_by_shortcut();
     }
-    auto *shortcut = m_input ? m_input->as_shortcut() : nullptr;
-    bool chord_active = shortcut ? shortcut->tick_digital() : pressed;
-    if (!chord_active)
-    {
-        return;
-    }
-    for (auto *masked : m_masked_mappings)
-    {
-        auto *button = masked->as_button_mapping();
-        if (!queued_only || (button && button->queue_bit() >= 0))
-        {
-            masked->mask_by_shortcut();
-        }
-    }
+  }
 }
 
-uint16_t Mapping::calibrate(float val, float max, float min, float deadzone, float center, bool trigger)
-{
-    return calibrate_axis(val, max, min, deadzone, center, trigger);
+uint16_t Mapping::calibrate(float val, float max, float min, float deadzone,
+                            float center, bool trigger) {
+  return calibrate_axis(val, max, min, deadzone, center, trigger);
 }
 
-uint16_t Mapping::tick_filtered_analog()
-{
-    uint16_t raw = m_input->tick_analog();
-    return m_filter ? m_filter->update(raw, time_us_64()) : raw;
+uint16_t Mapping::tick_filtered_analog() {
+  uint16_t raw = m_input->tick_analog();
+  return m_filter ? m_filter->update(raw, time_us_64()) : raw;
 }
 
-void ButtonMapping::sample(bool full_poll, bool send_events)
-{
-    uint16_t event_value = 0;
-    uint16_t trigger_value = 0;
-    bool event_driven = m_input->consumes_events();
-    if (event_driven && !send_events)
-    {
-        m_input->consume_event(event_value);
-    }
-    if (event_driven && send_events)
-    {
-        event_value = sample_ui_event();
-    }
-    auto calcVal = event_driven ? event_value > 0 : m_input->tick_digital();
-    if (!event_driven && m_mapping.inverted) {
+void ButtonMapping::sample(bool full_poll, bool send_events) {
+  uint16_t event_value = 0;
+  uint16_t trigger_value = 0;
+  bool event_driven = m_input->consumes_events();
+  if (event_driven && !send_events) {
+    m_input->consume_event(event_value);
+  }
+  if (event_driven && send_events) {
+    event_value = sample_ui_event();
+  }
+  auto calcVal = event_driven ? event_value > 0 : m_input->tick_digital();
+  if (!event_driven && m_mapping.inverted) {
+    calcVal = !calcVal;
+  }
+  bool analog_trigger = m_input->has_digital_trigger() || m_rapid_trigger;
+  if (analog_trigger) {
+    auto val = event_driven ? event_value : tick_filtered_analog();
+    trigger_value = val;
+    if (m_rapid_trigger) {
+      // without a calibrated range, the travel is the raw value
+      bool calibrated = m_mapping.min != m_mapping.max;
+      uint16_t travel = calibrate(val, calibrated ? m_mapping.max : UINT16_MAX,
+                                  calibrated ? m_mapping.min : 0,
+                                  m_mapping.deadzone, 0, true);
+      calcVal = m_rapid_trigger->update(travel);
+    } else {
+      calcVal = m_input->tick_digital_from_analog(val);
+      if (!event_driven && m_mapping.inverted) {
         calcVal = !calcVal;
+      }
     }
-    bool analog_trigger = m_mapping.has_trigger || m_rapid_trigger;
-    if (analog_trigger)
-    {
-        auto val = event_driven ? event_value : tick_filtered_analog();
-        trigger_value = val;
-        if (m_rapid_trigger)
-        {
-            // without a calibrated range, the travel is the raw value
-            bool calibrated = m_mapping.min != m_mapping.max;
-            uint16_t travel = calibrate(val, calibrated ? m_mapping.max : UINT16_MAX, calibrated ? m_mapping.min : 0, m_mapping.deadzone, 0, true);
-            calcVal = m_rapid_trigger->update(travel);
+  }
+
+  // an input with nothing behind it can read anything, including past a low
+  // trigger
+  if (!m_input->valid()) {
+    calcVal = false;
+    trigger_value = 0;
+  }
+
+  bool physical_pressed = calcVal;
+
+  // Release latching: if previously suppressed by a shortcut, remain suppressed
+  // until the physical input is released.
+  if (m_waiting_for_release) {
+    if (!physical_pressed) {
+      m_waiting_for_release = false;
+    }
+  }
+
+  // If this mapping is a shortcut that masks other mappings:
+  mask_shortcut_members(physical_pressed);
+
+  uint16_t pressure = analog_trigger ? trigger_value
+                      : event_driven ? event_value
+                      : m_input->has_independent_analog_value()
+                          ? m_input->tick_analog()
+                      : calcVal ? UINT16_MAX
+                                : 0;
+
+  if (m_suppressed || m_waiting_for_release) {
+    calcVal = false;
+    m_live_value = false;
+    m_live_pressure = 0;
+  }
+
+  m_suppressed = false;
+
+  if (send_events) {
+    if (analog_trigger) {
+      if (pressure != m_last_sent_pressure || calcVal != m_last_sent_value ||
+          full_poll) {
+        proto_Event event = {
+          which_event : proto_Event_axis_tag,
+          event :
+              {axis : {m_id, pressure, calcVal ? (uint32_t)65535 : (uint32_t)0}}
+        };
+        // only mark as sent once it is queued, so a full queue retries next
+        // tick instead of losing a release
+        if (HIDConfigDevice::send_event(event, false)) {
+          m_last_sent_pressure = pressure;
+          m_last_sent_value = calcVal;
         }
-        else
-        {
-            calcVal = analog_trigger_pressed(m_mapping.trigger, val, m_mapping.triggerValue, m_mapping.maxTriggerValue);
-            if (!event_driven && m_mapping.inverted) {
-                calcVal = !calcVal;
-            }
+      }
+    } else {
+      if (calcVal != m_last_sent_value || full_poll) {
+        proto_Event event = {
+          which_event : proto_Event_button_tag,
+          event : {button : {m_id, calcVal, calcVal}}
+        };
+        if (HIDConfigDevice::send_event(event, false)) {
+          m_last_sent_value = calcVal;
         }
-    }
-
-    // an input with nothing behind it can read anything, including past a low trigger
-    if (!m_input->valid())
-    {
-        calcVal = false;
-        trigger_value = 0;
-    }
-
-    bool physical_pressed = calcVal;
-
-    // Release latching: if previously suppressed by a shortcut, remain suppressed
-    // until the physical input is released.
-    if (m_waiting_for_release)
-    {
-        if (!physical_pressed)
-        {
-            m_waiting_for_release = false;
+      }
+      if (m_input->has_independent_analog_value() &&
+          (pressure != m_last_sent_pressure || full_poll)) {
+        proto_Event event = {
+          which_event : proto_Event_axis_tag,
+          event :
+              {axis : {m_id, pressure, calcVal ? (uint32_t)65535 : (uint32_t)0}}
+        };
+        if (HIDConfigDevice::send_event(event, false)) {
+          m_last_sent_pressure = pressure;
         }
+      }
     }
-
-    // If this mapping is a shortcut that masks other mappings:
-    mask_shortcut_members(physical_pressed);
-
-    uint16_t pressure = analog_trigger ? trigger_value
-        : event_driven ? event_value
-        : m_input->has_independent_analog_value() ? m_input->tick_analog()
-        : calcVal ? UINT16_MAX : 0;
-
-    if (m_suppressed || m_waiting_for_release)
-    {
-        calcVal = false;
+  }
+  // With combined strum debounce, a new strum can't start while the other
+  // direction is still held or debouncing, so a bouncing strum switch can't
+  // register both ways
+  if (calcVal && !m_live_value && m_strum_bit >= 0 &&
+      m_profile->combined_strum_debounce &&
+      m_profile->other_strum_live(m_strum_bit)) {
+    calcVal = false;
+  }
+  bool was_live = m_live_value;
+  uint64_t now = time_us_64();
+  if (m_mapping.has_debounce && m_mapping.debounce_mode == DebouncePress) {
+    if (calcVal && !m_was_pressed) {
+      m_last_poll = now;
+    }
+    m_was_pressed = calcVal;
+    if (calcVal &&
+        (m_live_value || (now - m_last_poll) >= m_mapping.debounce_us)) {
+      m_live_value = true;
+      m_live_pressure =
+          m_mapping.inverted && !analog_trigger ? UINT16_MAX : pressure;
+    } else if (!calcVal) {
+      m_live_value = false;
+      m_live_pressure = 0;
+    }
+  } else if (m_mapping.has_debounce &&
+             m_mapping.debounce_mode == DebounceImpulse) {
+    if (calcVal) {
+      if (!m_was_pressed) {
+        m_last_poll = now;
+        m_was_pressed = true;
+      }
+      if ((now - m_last_poll) < m_mapping.debounce_us) {
+        m_live_value = true;
+        m_live_pressure =
+            m_mapping.inverted && !analog_trigger ? UINT16_MAX : pressure;
+      } else {
         m_live_value = false;
         m_live_pressure = 0;
-    }
-
-    m_suppressed = false;
-
-    if (send_events)
-    {
-        if (analog_trigger)
-        {
-            if (pressure != m_last_sent_pressure || calcVal != m_last_sent_value || full_poll)
-            {
-                proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, pressure, calcVal ? (uint32_t)65535 : (uint32_t)0}}};
-                // only mark as sent once it is queued, so a full queue retries next tick instead of losing a release
-                if (HIDConfigDevice::send_event(event, false))
-                {
-                    m_last_sent_pressure = pressure;
-                    m_last_sent_value = calcVal;
-                }
-            }
-        }
-        else
-        {
-            if (calcVal != m_last_sent_value || full_poll)
-            {
-                proto_Event event = {which_event : proto_Event_button_tag, event : {button : {m_id, calcVal, calcVal}}};
-                if (HIDConfigDevice::send_event(event, false))
-                {
-                    m_last_sent_value = calcVal;
-                }
-            }
-            if (m_input->has_independent_analog_value() && (pressure != m_last_sent_pressure || full_poll))
-            {
-                proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, pressure, calcVal ? (uint32_t)65535 : (uint32_t)0}}};
-                if (HIDConfigDevice::send_event(event, false))
-                {
-                    m_last_sent_pressure = pressure;
-                }
-            }
-        }
-    }
-    // With combined strum debounce, a new strum can't start while the other direction is
-    // still held or debouncing, so a bouncing strum switch can't register both ways
-    if (calcVal && !m_live_value && m_strum_bit >= 0 && m_profile->combined_strum_debounce &&
-        m_profile->other_strum_live(m_strum_bit))
-    {
-        calcVal = false;
-    }
-    bool was_live = m_live_value;
-    uint64_t now = time_us_64();
-    if (m_mapping.has_debounce && m_mapping.debounce_mode == DebouncePress)
-    {
-        if (calcVal && !m_was_pressed)
-        {
-            m_last_poll = now;
-        }
-        m_was_pressed = calcVal;
-        if (calcVal && (m_live_value || (now - m_last_poll) >= m_mapping.debounce_us))
-        {
-            m_live_value = true;
-            m_live_pressure = m_mapping.inverted && !analog_trigger ? UINT16_MAX : pressure;
-        }
-        else if (!calcVal)
-        {
-            m_live_value = false;
-            m_live_pressure = 0;
-        }
-    }
-    else if (m_mapping.has_debounce && m_mapping.debounce_mode == DebounceImpulse)
-    {
-        if (calcVal)
-        {
-            if (!m_was_pressed)
-            {
-                m_last_poll = now;
-                m_was_pressed = true;
-            }
-            if ((now - m_last_poll) < m_mapping.debounce_us)
-            {
-                m_live_value = true;
-                m_live_pressure = m_mapping.inverted && !analog_trigger ? UINT16_MAX : pressure;
-            }
-            else
-            {
-                m_live_value = false;
-                m_live_pressure = 0;
-            }
-        }
-        else
-        {
-            if ((now - m_last_poll) < m_mapping.debounce_us)
-            {
-                m_live_value = true;
-            }
-            else
-            {
-                m_was_pressed = false;
-                m_live_value = false;
-                m_live_pressure = 0;
-            }
-        }
-    }
-    else if (calcVal)
-    {
-        m_last_poll = now;
-        m_live_value = calcVal;
-        m_live_pressure = m_mapping.inverted && !analog_trigger ? UINT16_MAX : pressure;
-    }
-    else if (!m_mapping.has_debounce || (now - m_last_poll) > m_mapping.debounce_us)
-    {
-        m_live_value = calcVal;
+      }
+    } else {
+      if ((now - m_last_poll) < m_mapping.debounce_us) {
+        m_live_value = true;
+      } else {
+        m_was_pressed = false;
+        m_live_value = false;
         m_live_pressure = 0;
+      }
     }
-    // Changes rather than held buttons count, so an input stuck on (like a toggle) can't keep the controller awake
-    if (m_live_value != was_live)
-    {
-        InactivityManager::instance().input_activity(millis());
-    }
+  } else if (calcVal) {
+    m_last_poll = now;
+    m_live_value = calcVal;
+    m_live_pressure =
+        m_mapping.inverted && !analog_trigger ? UINT16_MAX : pressure;
+  } else if (!m_mapping.has_debounce ||
+             (now - m_last_poll) > m_mapping.debounce_us) {
+    m_live_value = calcVal;
+    m_live_pressure = 0;
+  }
+  // Changes rather than held buttons count, so an input stuck on (like a
+  // toggle) can't keep the controller awake
+  if (m_live_value != was_live) {
+    InactivityManager::instance().input_activity(millis());
+  }
 }
-void ActionMapping::turn_off_controller(const proto_TurnOffControllerOutput &output)
-{
-    std::shared_ptr<Device> device;
-    if (output.which_slot == proto_TurnOffControllerOutput_usb_tag)
-    {
-        device = m_profile->find_slot_device<UsbHostInterface>(output.slot.usb, true);
-    }
-    else if (output.which_slot == proto_TurnOffControllerOutput_bluetooth_tag)
-    {
-        device = m_profile->find_slot_device<BluetoothHostInterface>(output.slot.bluetooth, true);
-    }
-    if (device && device->can_power_off())
-    {
-        device->power_off();
-    }
-}
-
-void ActionMapping::update_action()
-{
-    sample(false, false);
-    bool pressed = live_value();
-    bool was_pressed = m_was_pressed;
-    m_was_pressed = pressed;
-    if (!pressed || was_pressed)
-    {
-        return;
-    }
-    if (m_mapping.mapping.which_mapping == proto_Output_turnOffController_tag)
-    {
-        turn_off_controller(m_mapping.mapping.mapping.turnOffController);
-        return;
-    }
-    switch (m_mapping.mapping.mapping.action)
-    {
-    case ActionRestartDeviceStack:
-        ConfigManager::instance().request_device_stack_restart();
-        break;
-    case ActionReloadProfiles:
-        printf("reloading profiles from held buttons\r\n");
-        ConfigManager::instance().request_profile_reload(millis());
-        break;
-    case ActionBootloader:
-        reset_usb_boot(0, 0);
-        break;
-    }
+void ActionMapping::turn_off_controller(
+    const proto_TurnOffControllerOutput &output) {
+  std::shared_ptr<Device> device;
+  if (output.which_slot == proto_TurnOffControllerOutput_usb_tag) {
+    device =
+        m_profile->find_slot_device<UsbHostInterface>(output.slot.usb, true);
+  } else if (output.which_slot == proto_TurnOffControllerOutput_bluetooth_tag) {
+    device = m_profile->find_slot_device<BluetoothHostInterface>(
+        output.slot.bluetooth, true);
+  }
+  if (device && device->can_power_off()) {
+    device->power_off();
+  }
 }
 
-void ButtonMapping::update(bool full_poll, bool send_events)
-{
-    // SOCD cleaned mappings all update with the first one, so every direction is known before
-    // any of them write a report
-    if (m_socd_bit)
-    {
-        if (m_profile->socd_mappings.front() == this)
-        {
-            m_profile->update_socd(full_poll, send_events);
-        }
-        return;
-    }
-    update_value(full_poll, send_events);
+void ActionMapping::update_action() {
+  sample(false, false);
+  bool pressed = live_value();
+  bool was_pressed = m_was_pressed;
+  m_was_pressed = pressed;
+  if (!pressed || was_pressed) {
+    return;
+  }
+  if (m_mapping.mapping.which_mapping == proto_Output_turnOffController_tag) {
+    turn_off_controller(m_mapping.mapping.mapping.turnOffController);
+    return;
+  }
+  switch (m_mapping.mapping.mapping.action) {
+  case ActionRestartDeviceStack:
+    ConfigManager::instance().request_device_stack_restart();
+    break;
+  case ActionReloadProfiles:
+    printf("reloading profiles from held buttons\r\n");
+    ConfigManager::instance().request_profile_reload(millis());
+    break;
+  case ActionBootloader:
+    reset_usb_boot(0, 0);
+    break;
+  }
 }
 
-void ButtonMapping::update_value(bool full_poll, bool send_events)
-{
-    sample(full_poll, send_events);
-    if (m_queue_bit >= 0)
-    {
-        bool pressed = m_profile->input_queue.presented(m_queue_bit);
-        m_last_value = pressed;
-        m_last_pressure = pressed ? (m_live_value ? m_live_pressure : UINT16_MAX) : 0;
-        return;
+void ButtonMapping::update(bool full_poll, bool send_events) {
+  // SOCD cleaned mappings all update with the first one, so every direction is
+  // known before any of them write a report
+  if (m_socd_bit) {
+    if (m_profile->socd_mappings.front() == this) {
+      m_profile->update_socd(full_poll, send_events);
     }
-    m_last_value = m_live_value;
-    m_last_pressure = m_live_pressure;
+    return;
+  }
+  update_value(full_poll, send_events);
 }
-void AxisMapping::update(bool full_poll, bool send_events)
-{
-    uint16_t event_value = 0;
-    bool event_driven = m_input->consumes_events();
-    if (send_events && event_driven)
-    {
-        event_value = sample_ui_event();
-        uint32_t val = event_value;
-        if (m_mapping.has_pressed)
-        {
-            val = event_value ? m_mapping.pressed : (m_mapping.has_released ? m_mapping.released : m_mapping.center);
-        }
-        else
-        {
-            val = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
-        }
-        if (event_value != m_last_sent_value || val != m_last_sent_calibrated_value || full_poll)
-        {
-            proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, event_value, val}}};
-            if (HIDConfigDevice::send_event(event, false))
-            {
-                m_last_sent_value = event_value;
-                m_last_sent_calibrated_value = val;
-            }
-        }
-        return;
-    }
 
-    bool event_received = event_driven && m_input->consume_event(event_value);
-    uint32_t uncalibrated = event_driven ? (event_received ? event_value : 0) : tick_filtered_analog();
-    uint32_t val = uncalibrated;
-    if (m_mapping.has_pressed)
-    {
-        if (event_driven ? event_received : m_input->tick_digital())
-        {
-            val = m_mapping.pressed;
-        }
-        else if (m_mapping.has_released)
-        {
-            val = m_mapping.released;
-        }
-        else
-        {
-            val = m_mapping.center;
-        }
+void ButtonMapping::update_value(bool full_poll, bool send_events) {
+  sample(full_poll, send_events);
+  if (m_queue_bit >= 0) {
+    bool pressed = m_profile->input_queue.presented(m_queue_bit);
+    m_last_value = pressed;
+    m_last_pressure =
+        pressed ? (m_live_value ? m_live_pressure : UINT16_MAX) : 0;
+    return;
+  }
+  m_last_value = m_live_value;
+  m_last_pressure = m_live_pressure;
+}
+void AxisMapping::update(bool full_poll, bool send_events) {
+  uint16_t event_value = 0;
+  bool event_driven = m_input->consumes_events();
+  if (send_events && event_driven) {
+    event_value = sample_ui_event();
+    uint32_t val = event_value;
+    if (m_mapping.has_pressed) {
+      val = event_value ? m_mapping.pressed
+                        : (m_mapping.has_released ? m_mapping.released
+                                                  : m_mapping.center);
+    } else {
+      val = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone,
+                      m_mapping.center, m_trigger);
     }
-    else if (m_mapping.section != AxisSectionFull)
-    {
-        // calibrate like a trigger, then use that to move the axis from the section start to its end
-        int64_t amount = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, true);
-        int64_t start = m_mapping.section_start;
-        val = start + ((int64_t)m_mapping.section_end - start) * amount / UINT16_MAX;
+    if (event_value != m_last_sent_value ||
+        val != m_last_sent_calibrated_value || full_poll) {
+      proto_Event event = {
+        which_event : proto_Event_axis_tag,
+        event : {axis : {m_id, event_value, val}}
+      };
+      if (HIDConfigDevice::send_event(event, false)) {
+        m_last_sent_value = event_value;
+        m_last_sent_calibrated_value = val;
+      }
     }
-    else
-    {
-        val = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone, m_mapping.center, m_trigger);
-    }
-    // A section rests at its start (the axis centre for a half), so it can leave the axis to
-    // another mapping. A calibrated axis rests where calibrate leaves it, whatever its raw centre is.
-    uint32_t rest = (uint32_t)m_mapping.center;
-    if (m_mapping.section != AxisSectionFull && !m_mapping.has_pressed)
-    {
-        rest = m_mapping.section_start;
-    }
-    else if (m_mapping.section != AxisSectionFull || (!m_mapping.has_pressed && !m_trigger))
-    {
-        rest = UINT16_MAX / 2;
-    }
-    else if (!m_mapping.has_pressed)
-    {
-        rest = 0;
-    }
+    return;
+  }
 
-    // whatever an input with nothing behind it reads would calibrate to some deflection
-    if (!m_input->valid())
-    {
-        val = rest;
+  bool event_received = event_driven && m_input->consume_event(event_value);
+  uint32_t uncalibrated = event_driven ? (event_received ? event_value : 0)
+                                       : tick_filtered_analog();
+  uint32_t val = uncalibrated;
+  if (m_mapping.has_pressed) {
+    if (event_driven ? event_received : m_input->tick_digital()) {
+      val = m_mapping.pressed;
+    } else if (m_mapping.has_released) {
+      val = m_mapping.released;
+    } else {
+      val = m_mapping.center;
     }
+  } else if (m_mapping.section != AxisSectionFull) {
+    // calibrate like a trigger, then use that to move the axis from the section
+    // start to its end
+    int64_t amount = calibrate(val, m_mapping.max, m_mapping.min,
+                               m_mapping.deadzone, m_mapping.center, true);
+    int64_t start = m_mapping.section_start;
+    val =
+        start + ((int64_t)m_mapping.section_end - start) * amount / UINT16_MAX;
+  } else {
+    val = calibrate(val, m_mapping.max, m_mapping.min, m_mapping.deadzone,
+                    m_mapping.center, m_trigger);
+  }
+  // A section rests at its start (the axis centre for a half), so it can leave
+  // the axis to another mapping. A calibrated axis rests where calibrate leaves
+  // it, whatever its raw centre is.
+  uint32_t rest = (uint32_t)m_mapping.center;
+  if (m_mapping.section != AxisSectionFull && !m_mapping.has_pressed) {
+    rest = m_mapping.section_start;
+  } else if (m_mapping.section != AxisSectionFull ||
+             (!m_mapping.has_pressed && !m_trigger)) {
+    rest = UINT16_MAX / 2;
+  } else if (!m_mapping.has_pressed) {
+    rest = 0;
+  }
 
-    bool physical_pressed = (val != rest);
-    if (m_waiting_for_release)
-    {
-        if (!physical_pressed)
-        {
-            m_waiting_for_release = false;
-        }
-    }
+  // whatever an input with nothing behind it reads would calibrate to some
+  // deflection
+  if (!m_input->valid()) {
+    val = rest;
+  }
 
-    if (m_suppressed || m_waiting_for_release)
-    {
-        val = rest;
-        m_calibrated_value = rest;
+  bool physical_pressed = (val != rest);
+  if (m_waiting_for_release) {
+    if (!physical_pressed) {
+      m_waiting_for_release = false;
     }
-    m_suppressed = false;
+  }
 
-    uint64_t now = time_us_64();
-    if (m_mapping.has_debounce && m_mapping.debounce_mode == DebounceImpulse)
-    {
-        if (val != rest)
-        {
-            if (!m_was_pressed)
-            {
-                m_last_poll = now;
-                m_was_pressed = true;
-            }
-            if ((now - m_last_poll) < m_mapping.debounce_us)
-            {
-                if (!(m_mapping.has_peakBased && m_mapping.peakBased) || val > m_calibrated_value)
-                {
-                    m_calibrated_value = val;
-                }
-            }
-            else
-            {
-                m_calibrated_value = rest;
-            }
-        }
-        else
-        {
-            if ((now - m_last_poll) < m_mapping.debounce_us)
-            {
-                // within impulse window, keep outputting m_calibrated_value
-            }
-            else
-            {
-                m_was_pressed = false;
-                m_calibrated_value = rest;
-            }
-        }
-    }
-    else if (m_mapping.has_debounce && m_mapping.debounce_mode == DebouncePress)
-    {
-        if (val != rest)
-        {
-            if (!m_was_pressed)
-            {
-                m_last_poll = now;
-            }
-            m_was_pressed = true;
-            if (m_calibrated_value != rest || (now - m_last_poll) >= m_mapping.debounce_us)
-            {
-                if (!(m_mapping.has_peakBased && m_mapping.peakBased) || val > m_calibrated_value)
-                {
-                    m_calibrated_value = val;
-                }
-            }
-            else
-            {
-                m_calibrated_value = rest;
-            }
-        }
-        else
-        {
-            m_was_pressed = false;
-            m_calibrated_value = rest;
-        }
-    }
-    else if (val != rest)
-    {
+  if (m_suppressed || m_waiting_for_release) {
+    val = rest;
+    m_calibrated_value = rest;
+  }
+  m_suppressed = false;
+
+  uint64_t now = time_us_64();
+  if (m_mapping.has_debounce && m_mapping.debounce_mode == DebounceImpulse) {
+    if (val != rest) {
+      if (!m_was_pressed) {
         m_last_poll = now;
-        if (!(m_mapping.has_peakBased && m_mapping.peakBased) || val > m_calibrated_value)
-        {
-            m_calibrated_value = val;
+        m_was_pressed = true;
+      }
+      if ((now - m_last_poll) < m_mapping.debounce_us) {
+        if (!(m_mapping.has_peakBased && m_mapping.peakBased) ||
+            val > m_calibrated_value) {
+          m_calibrated_value = val;
         }
+      } else {
+        m_calibrated_value = rest;
+      }
+    } else {
+      if ((now - m_last_poll) < m_mapping.debounce_us) {
+        // within impulse window, keep outputting m_calibrated_value
+      } else {
+        m_was_pressed = false;
+        m_calibrated_value = rest;
+      }
     }
-    else if (!m_mapping.has_debounce || (now - m_last_poll) > m_mapping.debounce_us)
-    {
-        m_calibrated_value = val;
+  } else if (m_mapping.has_debounce &&
+             m_mapping.debounce_mode == DebouncePress) {
+    if (val != rest) {
+      if (!m_was_pressed) {
+        m_last_poll = now;
+      }
+      m_was_pressed = true;
+      if (m_calibrated_value != rest ||
+          (now - m_last_poll) >= m_mapping.debounce_us) {
+        if (!(m_mapping.has_peakBased && m_mapping.peakBased) ||
+            val > m_calibrated_value) {
+          m_calibrated_value = val;
+        }
+      } else {
+        m_calibrated_value = rest;
+      }
+    } else {
+      m_was_pressed = false;
+      m_calibrated_value = rest;
     }
-    m_centered = m_calibrated_value == rest || !m_input->valid();
+  } else if (val != rest) {
+    m_last_poll = now;
+    if (!(m_mapping.has_peakBased && m_mapping.peakBased) ||
+        val > m_calibrated_value) {
+      m_calibrated_value = val;
+    }
+  } else if (!m_mapping.has_debounce ||
+             (now - m_last_poll) > m_mapping.debounce_us) {
+    m_calibrated_value = val;
+  }
+  m_centered = m_calibrated_value == rest || !m_input->valid();
 
-    if (send_events && (uncalibrated != m_last_sent_value || m_calibrated_value != m_last_sent_calibrated_value || full_poll))
-    {
-        proto_Event event = {which_event : proto_Event_axis_tag, event : {axis : {m_id, uncalibrated, m_calibrated_value}}};
-        if (HIDConfigDevice::send_event(event, false))
-        {
-            m_last_sent_value = uncalibrated;
-            m_last_sent_calibrated_value = m_calibrated_value;
-        }
+  if (send_events &&
+      (uncalibrated != m_last_sent_value ||
+       m_calibrated_value != m_last_sent_calibrated_value || full_poll)) {
+    proto_Event event = {
+      which_event : proto_Event_axis_tag,
+      event : {axis : {m_id, uncalibrated, m_calibrated_value}}
+    };
+    if (HIDConfigDevice::send_event(event, false)) {
+      m_last_sent_value = uncalibrated;
+      m_last_sent_calibrated_value = m_calibrated_value;
     }
+  }
 }

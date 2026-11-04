@@ -3,7 +3,7 @@
 JoybusAxisInput::JoybusAxisInput(proto_JoybusAxisInput input, std::shared_ptr<JoybusDevice> device, Profile *profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
-bool JoybusAxisInput::tick_digital()
+bool JoybusAxisInput::tick_digital_raw()
 {
     return m_device && m_device->read_axis(m_input.axis) > 0;
 }
@@ -17,7 +17,7 @@ void JoybusAxisInput::setup()
 JoybusButtonInput::JoybusButtonInput(proto_JoybusButtonInput input, std::shared_ptr<JoybusDevice> device, Profile *profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
-bool JoybusButtonInput::tick_digital()
+bool JoybusButtonInput::tick_digital_raw()
 {
     return m_device && m_device->read_button(m_input.button);
 }

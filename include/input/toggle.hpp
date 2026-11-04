@@ -9,7 +9,7 @@ class ToggleInput : public Input
 public:
     ToggleInput();
     void load(proto_ToggleInput config, std::shared_ptr<ToggleDevice> device, std::unique_ptr<Input> input);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return m_input ? m_input->has_independent_analog_value() : false; }
     void setup();

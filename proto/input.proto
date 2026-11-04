@@ -7,7 +7,7 @@ message CycleInput {
   required int32 deviceid = 1;
   optional Input input = 2;
   optional Input inputReverse = 3;
-  // For when it is used as a digital input, like inside a shortcut: which values count as pressed
+  // Legacy digital trigger fields; migrated to Input.digitalTrigger fields when loading configs.
   optional AnalogToDigitalTriggerType trigger = 4;
   optional int32 triggerValue = 5;
   optional int32 maxTriggerValue = 6;
@@ -272,6 +272,10 @@ message Input {
     JoybusButtonInput joybusButton = 45;
     JoybusAxisInput joybusAxis = 46;
   }
+  // Overrides the source's digital state when this input is used as a digital input.
+  optional AnalogToDigitalTriggerType digitalTrigger = 60;
+  optional int32 digitalTriggerValue = 61;
+  optional int32 digitalMaxTriggerValue = 62;
 }
 message InfiniumFaderInput {
   required int32 deviceid = 1;
@@ -369,6 +373,7 @@ message Mapping {
   optional bool inverted = 51;
   reserved 52;
   reserved "pressureInput";
+  // Legacy mapping-level digital trigger fields; migrated to the mapping input.
   optional AnalogToDigitalTriggerType trigger = 53;
   optional int32 pressed = 54;
   optional int32 released = 55;
@@ -376,6 +381,7 @@ message Mapping {
   optional int32 max = 57;
   optional int32 center = 58;
   optional int32 deadzone = 59;
+  // Legacy mapping trigger threshold. For rapidTrigger this remains a fallback actuation value.
   optional int32 triggerValue = 60;
   optional uint32 debounce = 61;
   optional int32 maxTriggerValue = 62;
@@ -428,4 +434,6 @@ message RapidTrigger {
   // Keep rapid trigger going until the input is fully released, instead of releasing whenever it
   // goes back past the actuation point
   optional bool continuous = 3;
+  // Actuation point in calibrated travel (0 - 65535)
+  optional uint32 actuationValue = 4;
 }

@@ -23,7 +23,7 @@ PeripheralInput::~PeripheralInput()
     }
 }
 
-bool PeripheralInput::tick_digital()
+bool PeripheralInput::tick_digital_raw()
 {
     if (!m_device || !m_id) return false;
     return m_device->read_digital_pin(m_id);
@@ -53,7 +53,7 @@ SecondaryPicoForwardedInput::~SecondaryPicoForwardedInput()
     }
 }
 
-bool SecondaryPicoForwardedInput::tick_digital()
+bool SecondaryPicoForwardedInput::tick_digital_raw()
 {
     if (!m_id) return false;
     if (has_independent_analog_value())

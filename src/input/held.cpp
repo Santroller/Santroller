@@ -15,7 +15,7 @@ void HeldInput::setup()
         m_input->setup();
     }
 }
-bool HeldInput::tick_digital()
+bool HeldInput::tick_digital_raw()
 {
     if (!m_input)
     {

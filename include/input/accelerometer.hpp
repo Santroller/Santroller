@@ -7,7 +7,7 @@
 class AccelerometerInput: public Input {
    public:
     AccelerometerInput(proto_AccelerometerInput input, std::shared_ptr<AccelerometerDevice> device, Profile* profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return true; }
     bool valid() const override

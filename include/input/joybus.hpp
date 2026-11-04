@@ -8,7 +8,7 @@ class JoybusAxisInput : public Input
 {
 public:
     JoybusAxisInput(proto_JoybusAxisInput input, std::shared_ptr<JoybusDevice> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
     void link_device(bool claim_devices) override
@@ -27,7 +27,7 @@ class JoybusButtonInput : public Input
 {
 public:
     JoybusButtonInput(proto_JoybusButtonInput input, std::shared_ptr<JoybusDevice> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
     void link_device(bool claim_devices) override

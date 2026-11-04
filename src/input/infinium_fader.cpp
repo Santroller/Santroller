@@ -6,7 +6,7 @@ InfiniumFaderInput::InfiniumFaderInput(proto_InfiniumFaderInput input, std::shar
 {
 }
 
-bool InfiniumFaderInput::tick_digital()
+bool InfiniumFaderInput::tick_digital_raw()
 {
     return false;
 }

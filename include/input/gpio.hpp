@@ -5,7 +5,7 @@
 class GPIOInput: public Input {
    public:
     GPIOInput(proto_GPIOInput input);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool has_independent_analog_value() const override { return m_analog; }
     bool valid() const override { return !m_floating; }

@@ -9,7 +9,7 @@ class InfiniumFaderInput : public Input
 {
 public:
     InfiniumFaderInput(proto_InfiniumFaderInput input, std::shared_ptr<InfiniumFaderDevice> device, Profile *profile);
-    bool tick_digital() override;
+    bool tick_digital_raw() override;
     uint16_t tick_analog() override;
     void setup() override {}
     bool has_independent_analog_value() const override { return true; }

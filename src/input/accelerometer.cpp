@@ -7,7 +7,7 @@
 AccelerometerInput::AccelerometerInput(proto_AccelerometerInput input, std::shared_ptr<AccelerometerDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
-bool AccelerometerInput::tick_digital()
+bool AccelerometerInput::tick_digital_raw()
 {
     return false;
 }

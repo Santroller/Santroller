@@ -6,7 +6,7 @@
 EncoderInput::EncoderInput(proto_EncoderInput input, std::shared_ptr<EncoderDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
-bool EncoderInput::tick_digital()
+bool EncoderInput::tick_digital_raw()
 {
     return false;
 }

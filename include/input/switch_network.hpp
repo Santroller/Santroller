@@ -9,7 +9,7 @@ class SwitchNetworkInput : public Input
 {
 public:
     SwitchNetworkInput(proto_SwitchNetworkInput input, std::shared_ptr<SwitchNetworkDevice> device, Profile* profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     uint64_t hardware_id() const override {
         return (static_cast<uint64_t>(InputHw_SwitchNetwork) << 56) |

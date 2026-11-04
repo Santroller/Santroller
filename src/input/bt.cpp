@@ -14,7 +14,7 @@ bool BTButtonInput::by_position() const
     return m_profile && m_profile->position_based_face_buttons && m_device->nintendo_face_layout();
 }
 
-bool BTButtonInput::tick_digital()
+bool BTButtonInput::tick_digital_raw()
 {
     if (!m_device) return false;
     if (by_position())
@@ -48,7 +48,7 @@ BTAxisInput::BTAxisInput(proto_BTAxisInput input,
     wheel_axis_as_gamepad(m_input.axis);
 }
 
-bool BTAxisInput::tick_digital()
+bool BTAxisInput::tick_digital_raw()
 {
     if (!m_device) return false;
     return m_device->tick_axis_digital(m_input.axis);

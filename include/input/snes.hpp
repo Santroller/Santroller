@@ -8,7 +8,7 @@ class SNESAxisInput : public Input
 {
 public:
     SNESAxisInput(proto_SNESAxisInput input, std::shared_ptr<SNESDevice> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
     void link_device(bool claim_devices) override
@@ -27,7 +27,7 @@ class SNESButtonInput : public Input
 {
 public:
     SNESButtonInput(proto_SNESButtonInput input, std::shared_ptr<SNESDevice> device, Profile *profile);
-    bool tick_digital();
+    bool tick_digital_raw() override;
     uint16_t tick_analog();
     bool valid() const override { return m_device != nullptr && m_device->valid(); }
     void link_device(bool claim_devices) override

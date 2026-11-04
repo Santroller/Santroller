@@ -1,193 +1,240 @@
 #pragma once
+#include "input_enums.pb.h"
 #include <stdint.h>
 #include <string.h>
-#include "input_enums.pb.h"
 class MidiNoteInput;
 class ShortcutInput;
 
 enum InputHardwareType : uint8_t {
-    InputHw_None = 0,
-    InputHw_GPIO = 1,
-    InputHw_WiiButton = 2,
-    InputHw_PS2Button = 3,
-    InputHw_Matrix = 4,
-    InputHw_MPR121 = 5,
-    InputHw_USBButton = 6,
-    InputHw_KeyboardKey = 7,
-    InputHw_Crkd = 8,
-    InputHw_VTechExpander = 9,
-    InputHw_Gh5Neck = 10,
-    InputHw_ProtarNeck = 11,
-    InputHw_MidiNote = 12,
-    InputHw_Multiplexer = 13,
-    InputHw_BTButton = 14,
-    InputHw_BTAxis = 15,
-    InputHw_Encoder = 16,
-    InputHw_SwitchNetwork = 17,
-    InputHw_InfiniumFader = 18,
-    InputHw_Peripheral = 19,
-    InputHw_CrazyGuitarNeck = 20,
-    InputHw_DJHeroPlatter = 21,
-    InputHw_SNESButton = 22,
-    InputHw_JoybusButton = 23,
+  InputHw_None = 0,
+  InputHw_GPIO = 1,
+  InputHw_WiiButton = 2,
+  InputHw_PS2Button = 3,
+  InputHw_Matrix = 4,
+  InputHw_MPR121 = 5,
+  InputHw_USBButton = 6,
+  InputHw_KeyboardKey = 7,
+  InputHw_Crkd = 8,
+  InputHw_VTechExpander = 9,
+  InputHw_Gh5Neck = 10,
+  InputHw_ProtarNeck = 11,
+  InputHw_MidiNote = 12,
+  InputHw_Multiplexer = 13,
+  InputHw_BTButton = 14,
+  InputHw_BTAxis = 15,
+  InputHw_Encoder = 16,
+  InputHw_SwitchNetwork = 17,
+  InputHw_InfiniumFader = 18,
+  InputHw_Peripheral = 19,
+  InputHw_CrazyGuitarNeck = 20,
+  InputHw_DJHeroPlatter = 21,
+  InputHw_SNESButton = 22,
+  InputHw_JoybusButton = 23,
 };
 
-class Input
-{
+class Input {
 public:
-    Input(){}
-    virtual ~Input(){}
-    virtual bool tick_digital() = 0;
-    virtual uint16_t tick_analog() = 0;
-    virtual void setup() = 0;
-    // Action inputs must not finish a hold that started before their mapping was loaded.
-    virtual void require_release() {}
-    virtual bool valid() const { return true; }
-    virtual bool has_independent_analog_value() const { return false; }
-    virtual bool consumes_events() const { return false; }
-    virtual bool consume_event(uint16_t &value) { (void)value; return false; }
-    virtual bool peek_event(uint16_t &value) { (void)value; return false; }
-    virtual MidiNoteInput* as_midi_note() { return nullptr; }
-    virtual ShortcutInput* as_shortcut() { return nullptr; }
-    virtual bool tick_pro_key_range(uint32_t &active_keys, uint8_t *velocities, uint8_t key_count)
-    {
-        (void)active_keys;
-        (void)velocities;
-        (void)key_count;
-        return false;
+  Input() {}
+  virtual ~Input() {}
+  bool tick_digital() {
+    return m_has_digital_trigger ? tick_digital_from_analog(tick_analog())
+                                 : tick_digital_raw();
+  }
+  virtual bool tick_digital_raw() = 0;
+  bool tick_digital_from_analog(uint16_t value) const {
+    if (!m_has_digital_trigger) {
+      return value > 0;
     }
-    virtual uint64_t hardware_id() const { return 0; }
-    // For a keyboard passthrough, whether a key is held on the keyboard the input reads from
-    virtual bool key_pressed(uint8_t keycode) { (void)keycode; return false; }
-    virtual void link_device(bool claim_devices) {}
-    // The Device::m_serial of what link_device() picked out of the profile's slots, or 0 for none
-    virtual uint32_t linked_device_serial() const { return 0; }
+    switch (m_digital_trigger) {
+    case AnalogToDigitalTriggerType_JoyHigh:
+      return value > m_digital_trigger_value;
+    case AnalogToDigitalTriggerType_JoyLow:
+      return value < m_digital_trigger_value;
+    case AnalogToDigitalTriggerType_Exact:
+      return value == m_digital_trigger_value;
+    case AnalogToDigitalTriggerType_Range:
+      return value > m_digital_trigger_value &&
+             value < m_digital_max_trigger_value;
+    default:
+      return false;
+    }
+  }
+  bool has_digital_trigger() const { return m_has_digital_trigger; }
+  void configure_digital_trigger(bool has_trigger,
+                                 proto_AnalogToDigitalTriggerType trigger,
+                                 bool has_trigger_value, int32_t trigger_value,
+                                 bool has_max_trigger_value,
+                                 int32_t max_trigger_value) {
+    m_has_digital_trigger =
+        has_trigger || has_trigger_value || has_max_trigger_value;
+    m_digital_trigger =
+        has_trigger ? trigger : AnalogToDigitalTriggerType_JoyHigh;
+    m_digital_trigger_value = has_trigger_value ? trigger_value : 32767;
+    m_digital_max_trigger_value =
+        has_max_trigger_value ? max_trigger_value : UINT16_MAX;
+  }
+  virtual uint16_t tick_analog() = 0;
+  virtual void setup() = 0;
+  // Action inputs must not finish a hold that started before their mapping was
+  // loaded.
+  virtual void require_release() {}
+  virtual bool valid() const { return true; }
+  virtual bool has_independent_analog_value() const { return false; }
+  virtual bool consumes_events() const { return false; }
+  virtual bool consume_event(uint16_t &value) {
+    (void)value;
+    return false;
+  }
+  virtual bool peek_event(uint16_t &value) {
+    (void)value;
+    return false;
+  }
+  virtual MidiNoteInput *as_midi_note() { return nullptr; }
+  virtual ShortcutInput *as_shortcut() { return nullptr; }
+  virtual bool tick_pro_key_range(uint32_t &active_keys, uint8_t *velocities,
+                                  uint8_t key_count) {
+    (void)active_keys;
+    (void)velocities;
+    (void)key_count;
+    return false;
+  }
+  virtual uint64_t hardware_id() const { return 0; }
+  // For a keyboard passthrough, whether a key is held on the keyboard the input
+  // reads from
+  virtual bool key_pressed(uint8_t keycode) {
+    (void)keycode;
+    return false;
+  }
+  virtual void link_device(bool claim_devices) {}
+  // The Device::m_serial of what link_device() picked out of the profile's
+  // slots, or 0 for none
+  virtual uint32_t linked_device_serial() const { return 0; }
 
 protected:
-    // For inputs that wrap several others, folds an inner input's device into one serial
-    static uint32_t mix_serial(uint32_t serial, const Input *input)
-    {
-        uint32_t inner = input ? input->linked_device_serial() : 0;
-        return inner ? serial * 31 + inner : serial;
-    }
-};
+  // For inputs that wrap several others, folds an inner input's device into one
+  // serial
+  static uint32_t mix_serial(uint32_t serial, const Input *input) {
+    uint32_t inner = input ? input->linked_device_serial() : 0;
+    return inner ? serial * 31 + inner : serial;
+  }
 
+private:
+  bool m_has_digital_trigger = false;
+  proto_AnalogToDigitalTriggerType m_digital_trigger =
+      AnalogToDigitalTriggerType_JoyHigh;
+  int32_t m_digital_trigger_value = 32767;
+  int32_t m_digital_max_trigger_value = UINT16_MAX;
+};
 
 class DrumState {
 public:
-    uint32_t red_pad = 0;
-    uint32_t yellow_cymbal = 0;
-    uint32_t yellow_pad = 0;
-    uint32_t blue_cymbal = 0;
-    uint32_t blue_pad = 0;
-    uint32_t green_cymbal = 0;
-    uint32_t green_pad = 0;
+  uint32_t red_pad = 0;
+  uint32_t yellow_cymbal = 0;
+  uint32_t yellow_pad = 0;
+  uint32_t blue_cymbal = 0;
+  uint32_t blue_pad = 0;
+  uint32_t green_cymbal = 0;
+  uint32_t green_pad = 0;
 
-    // Cymbal glitch fix state (as in Santroller 1), which lasts across reports. A cymbal stays on
-    // until a report goes out with no cymbal at all, and the green pad until one goes out with no
-    // pad at all, then the next conflicting hit waits a debounce from that point.
-    bool green_cymbal_on = false;
-    bool yellow_cymbal_on = false;
-    bool blue_cymbal_on = false;
-    bool green_pad_on = false;
-    bool cymbal_this_report = false;
-    bool pad_this_report = false;
-    uint64_t last_cymbal_off = 0;
-    uint64_t last_green_off = 0;
+  // Cymbal glitch fix state (as in Santroller 1), which lasts across reports. A
+  // cymbal stays on until a report goes out with no cymbal at all, and the
+  // green pad until one goes out with no pad at all, then the next conflicting
+  // hit waits a debounce from that point.
+  bool green_cymbal_on = false;
+  bool yellow_cymbal_on = false;
+  bool blue_cymbal_on = false;
+  bool green_pad_on = false;
+  bool cymbal_this_report = false;
+  bool pad_this_report = false;
+  uint64_t last_cymbal_off = 0;
+  uint64_t last_green_off = 0;
 
-    // Call before building each report, to account for the one before it
-    void end_report(uint64_t now)
-    {
-        if (!cymbal_this_report && (green_cymbal_on || yellow_cymbal_on || blue_cymbal_on))
-        {
-            if (green_cymbal_on)
-            {
-                last_green_off = now;
-            }
-            green_cymbal_on = yellow_cymbal_on = blue_cymbal_on = false;
-            last_cymbal_off = now;
-        }
-        if (!pad_this_report && green_pad_on)
-        {
-            green_pad_on = false;
-            last_green_off = now;
-        }
-        cymbal_this_report = pad_this_report = false;
+  // Call before building each report, to account for the one before it
+  void end_report(uint64_t now) {
+    if (!cymbal_this_report &&
+        (green_cymbal_on || yellow_cymbal_on || blue_cymbal_on)) {
+      if (green_cymbal_on) {
+        last_green_off = now;
+      }
+      green_cymbal_on = yellow_cymbal_on = blue_cymbal_on = false;
+      last_cymbal_off = now;
     }
-
-    void reset()
-    {
-        blue_cymbal = 0;
-        blue_pad = 0;
-        yellow_cymbal = 0;
-        yellow_pad = 0;
-        green_cymbal = 0;
-        green_pad = 0;
-        red_pad = 0;
+    if (!pad_this_report && green_pad_on) {
+      green_pad_on = false;
+      last_green_off = now;
     }
+    cymbal_this_report = pad_this_report = false;
+  }
 
-    bool has_hits() const
-    {
-        return red_pad || yellow_cymbal || yellow_pad || blue_cymbal || blue_pad || green_cymbal || green_pad;
-    }
+  void reset() {
+    blue_cymbal = 0;
+    blue_pad = 0;
+    yellow_cymbal = 0;
+    yellow_pad = 0;
+    green_cymbal = 0;
+    green_pad = 0;
+    red_pad = 0;
+  }
+
+  bool has_hits() const {
+    return red_pad || yellow_cymbal || yellow_pad || blue_cymbal || blue_pad ||
+           green_cymbal || green_pad;
+  }
 };
 
 // What the mouse mappings want this report, gathered like KeyboardState
 class MouseState {
-    public:
-    enum Axis { X, Y, Wheel, Pan, AxisCount };
-    uint8_t buttons = 0;
-    // signed deflection, -32768 to 32767, which the keyboard device turns into movement
-    int32_t axes[AxisCount] = {0};
+public:
+  enum Axis { X, Y, Wheel, Pan, AxisCount };
+  uint8_t buttons = 0;
+  // signed deflection, -32768 to 32767, which the keyboard device turns into
+  // movement
+  int32_t axes[AxisCount] = {0};
 
-    void clear_all() {
-        buttons = 0;
-        memset(axes, 0, sizeof(axes));
-    }
+  void clear_all() {
+    buttons = 0;
+    memset(axes, 0, sizeof(axes));
+  }
 };
 
 // Media keys (consumer control usages) the mappings want held this report
 class ConsumerState {
-    public:
-    static constexpr uint8_t MAX_KEYS = 4;
-    uint16_t keys[MAX_KEYS] = {0};
-    uint8_t count = 0;
+public:
+  static constexpr uint8_t MAX_KEYS = 4;
+  uint16_t keys[MAX_KEYS] = {0};
+  uint8_t count = 0;
 
-    void set_key(uint16_t usage) {
-        for (uint8_t i = 0; i < count; i++) {
-            if (keys[i] == usage) {
-                return;
-            }
-        }
-        if (count < MAX_KEYS) {
-            keys[count++] = usage;
-        }
+  void set_key(uint16_t usage) {
+    for (uint8_t i = 0; i < count; i++) {
+      if (keys[i] == usage) {
+        return;
+      }
     }
+    if (count < MAX_KEYS) {
+      keys[count++] = usage;
+    }
+  }
 
-    void clear_all() {
-        count = 0;
-    }
+  void clear_all() { count = 0; }
 };
 
 class KeyboardState {
-    public:
-    uint8_t pressed_keys[32] = {0};
-    // as many as the keyboard report holds
-    uint8_t last_seen_keys[10] = {0};
+public:
+  uint8_t pressed_keys[32] = {0};
+  // as many as the keyboard report holds
+  uint8_t last_seen_keys[10] = {0};
 
-    void set_key(uint8_t keycode) {
-        pressed_keys[keycode / 8] |= (1 << (keycode % 8));
-    }
+  void set_key(uint8_t keycode) {
+    pressed_keys[keycode / 8] |= (1 << (keycode % 8));
+  }
 
-    void clear_key(uint8_t keycode) {
-        pressed_keys[keycode / 8] &= ~(1 << (keycode % 8));
-    }
+  void clear_key(uint8_t keycode) {
+    pressed_keys[keycode / 8] &= ~(1 << (keycode % 8));
+  }
 
-    bool is_key_pressed(uint8_t keycode) const {
-        return (pressed_keys[keycode / 8] & (1 << (keycode % 8))) != 0;
-    }
+  bool is_key_pressed(uint8_t keycode) const {
+    return (pressed_keys[keycode / 8] & (1 << (keycode % 8))) != 0;
+  }
 
-    void clear_all() {
-        memset(pressed_keys, 0, sizeof(pressed_keys));
-    }
+  void clear_all() { memset(pressed_keys, 0, sizeof(pressed_keys)); }
 };

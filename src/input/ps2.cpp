@@ -6,7 +6,7 @@
 PS2AxisInput::PS2AxisInput(proto_PS2AxisInput input, std::shared_ptr<PS2Device> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
-bool PS2AxisInput::tick_digital()
+bool PS2AxisInput::tick_digital_raw()
 {
     return m_device && m_device->read_axis(m_input.axis) > 0;
 }
@@ -20,7 +20,7 @@ void PS2AxisInput::setup()
 PS2ButtonInput::PS2ButtonInput(proto_PS2ButtonInput input, std::shared_ptr<PS2Device> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
-bool PS2ButtonInput::tick_digital()
+bool PS2ButtonInput::tick_digital_raw()
 {
     return m_device && m_device->read_button(m_input.button);
 }

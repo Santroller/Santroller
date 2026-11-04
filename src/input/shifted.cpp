@@ -23,7 +23,7 @@ void ShiftedInput::setup()
     }
 }
 
-bool ShiftedInput::tick_digital()
+bool ShiftedInput::tick_digital_raw()
 {
     if (!m_input || !m_shift)
     {

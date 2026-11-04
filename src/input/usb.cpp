@@ -14,7 +14,7 @@ proto_Output &USBAxisInput::axis()
 {
     return m_device->decodes_wheel() ? m_input.axis : m_gamepad_axis;
 }
-bool USBAxisInput::tick_digital()
+bool USBAxisInput::tick_digital_raw()
 {
     if (!m_device) return false;
     return m_device->tick_axis_digital(axis());
@@ -35,7 +35,7 @@ bool USBButtonInput::by_position() const
 {
     return m_profile && m_profile->position_based_face_buttons && m_device->nintendo_face_layout();
 }
-bool USBButtonInput::tick_digital()
+bool USBButtonInput::tick_digital_raw()
 {
     if (!m_device) return false;
     if (by_position())
@@ -98,7 +98,7 @@ void USBButtonInput::setup()
 KeyboardKeyInput::KeyboardKeyInput(proto_KeyboardKeyInput input, std::shared_ptr<UsbHostInterface> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
-bool KeyboardKeyInput::tick_digital()
+bool KeyboardKeyInput::tick_digital_raw()
 {
     if (!m_device) return false;
     return m_device->key_pressed(m_input.key);
@@ -113,7 +113,7 @@ void KeyboardKeyInput::setup()
 MouseButtonInput::MouseButtonInput(proto_MouseButtonInput input, std::shared_ptr<UsbHostInterface> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
-bool MouseButtonInput::tick_digital()
+bool MouseButtonInput::tick_digital_raw()
 {
     if (!m_device) return false;
     return m_device->mouse_button(m_input.button);
@@ -128,7 +128,7 @@ void MouseButtonInput::setup()
 MouseAxisInput::MouseAxisInput(proto_MouseAxisInput input, std::shared_ptr<UsbHostInterface> device, Profile* profile) : m_input(input), m_device(device), m_profile(profile)
 {
 }
-bool MouseAxisInput::tick_digital()
+bool MouseAxisInput::tick_digital_raw()
 {
     return tick_analog() != UINT16_MAX / 2;
 }

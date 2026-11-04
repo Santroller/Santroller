@@ -17,7 +17,7 @@ MPR121Input::MPR121Input(proto_MPR121Input input, std::shared_ptr<MPR121Device> 
 void MPR121Input::setup()
 {
 }
-bool MPR121Input::tick_digital()
+bool MPR121Input::tick_digital_raw()
 {
     if (m_input.mode == Digital)
     {

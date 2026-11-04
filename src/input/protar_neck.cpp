@@ -6,7 +6,7 @@
 ProtarNeckAxisInput::ProtarNeckAxisInput(proto_ProtarNeckAxisInput input, std::shared_ptr<ProtarNeckDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
-bool ProtarNeckAxisInput::tick_digital()
+bool ProtarNeckAxisInput::tick_digital_raw()
 {
     return m_device->read_axis(m_input.axis) != 0;
 }
@@ -21,7 +21,7 @@ void ProtarNeckAxisInput::setup()
 ProtarNeckButtonInput::ProtarNeckButtonInput(proto_ProtarNeckButtonInput input, std::shared_ptr<ProtarNeckDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
-bool ProtarNeckButtonInput::tick_digital()
+bool ProtarNeckButtonInput::tick_digital_raw()
 {
     return m_device->read_button(m_input.button);
 }

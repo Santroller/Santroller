@@ -6,7 +6,7 @@
 VTechExpanderInput::VTechExpanderInput(proto_VTechGuitarIOExpanderInput input, std::shared_ptr<VTechGuitarIOExpanderDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
-bool VTechExpanderInput::tick_digital()
+bool VTechExpanderInput::tick_digital_raw()
 {
     return m_device->read_button(m_input.button);
 }

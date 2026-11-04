@@ -6,7 +6,7 @@
 CrkdDrumInput::CrkdDrumInput(proto_CrkdDrumAxisInput input, std::shared_ptr<CrkdDrumDevice> device, Profile* profile) : m_input(input), m_device(device)
 {
 }
-bool CrkdDrumInput::tick_digital()
+bool CrkdDrumInput::tick_digital_raw()
 {
     return tick_analog() > 0;
 }

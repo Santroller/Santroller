@@ -9,7 +9,7 @@ GPIOInput::GPIOInput(proto_GPIOInput input) : m_analog(input.analog), m_invert(i
 {
     setup();
 }
-bool GPIOInput::tick_digital()
+bool GPIOInput::tick_digital_raw()
 {
     if (!m_valid)
     {

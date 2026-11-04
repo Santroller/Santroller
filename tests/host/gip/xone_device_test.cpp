@@ -362,6 +362,145 @@ TEST_F(XoneDevice, ForcedModeUsesNativeGuitarIdentityEvenWithWlaEnabledAndMultip
     EXPECT_EQ(payload_of(reports[0])[0], 0x10);
 }
 
+TEST_F(XoneDevice, Rb4IgnoresGamepadsButQuiesceRestoresTheirNavigation)
+{
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    plug(Gamepad);
+    run(600);
+    start();
+    from_console(packet(GIP_LEGACY_REQUEST_DEVICE_INFO, 0, next_seq()));
+    mapping->bytes = {0x12}; // A and Guide.
+    const size_t updates = mapping->updates;
+    auto sent = run(400);
+    EXPECT_GT(mapping->updates, updates);
+    EXPECT_TRUE(of_type(sent, GIP_LEGACY_DEVICE_INFO).empty());
+    EXPECT_TRUE(of_type(sent, GIP_INPUT_REPORT).empty());
+    EXPECT_TRUE(of_type(sent, GIP_VIRTUAL_KEYCODE).empty());
+    EXPECT_TRUE(of_type(sent, GIP_LEGACY_DISCONNECT).empty());
+
+    from_console(packet(GIP_SET_STATE, FLAG_SYSTEM, next_seq(), {GIP_STATE_QUIESCE}));
+    sent = run(100);
+    auto reports = of_type(sent, GIP_INPUT_REPORT);
+    ASSERT_EQ(reports.size(), 1u);
+    EXPECT_EQ(payload_of(reports[0])[0], 0x10);
+    EXPECT_FALSE(of_type(sent, GIP_VIRTUAL_KEYCODE).empty());
+}
+
+TEST_F(XoneDevice, Rb4FiltersUnsupportedProfilesBeforeAllocatingAllFourSlots)
+{
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    plug(Gamepad);
+    for (SubType subtype : {LiveGuitar, Wheel, ProKeys})
+    {
+        auto profile = std::make_shared<Profile>();
+        profile->subtype = subtype;
+        dev->profiles.push_back(profile);
+    }
+    auto auth_holder = std::make_shared<Profile>();
+    auth_holder->subtype = RockBandGuitar;
+    auth_holder->xbox_one_auth_held = true;
+    dev->profiles.push_back(auth_holder);
+    for (SubType subtype : {RockBandGuitar, RockBandDrums, GuitarHeroGuitar, GuitarHeroDrums})
+    {
+        auto profile = std::make_shared<Profile>();
+        profile->subtype = subtype;
+        auto instrument_mapping = std::make_shared<FakeXboxOneMapping>();
+        instrument_mapping->bytes = {0x10};
+        profile->mappings.push_back(instrument_mapping);
+        dev->profiles.push_back(profile);
+    }
+    run(600);
+    start();
+    from_console(packet(GIP_LEGACY_REQUEST_DEVICE_INFO, 0, next_seq()));
+    auto sent = run(400);
+    auto infos = of_type(sent, GIP_LEGACY_DEVICE_INFO);
+    ASSERT_EQ(infos.size(), 4u);
+    for (size_t i = 0; i < infos.size(); ++i)
+    {
+        auto info = payload_of(infos[i]);
+        ASSERT_GE(info.size(), 6u);
+        EXPECT_EQ(info[0], i);
+        EXPECT_EQ(info[1], i % 2 == 0 ? 0x01 : 0x02);
+        EXPECT_EQ(info[5], i % 2 == 0 ? 0x87 : 0x88);
+    }
+    auto reports = of_type(sent, GIP_INPUT_REPORT);
+    ASSERT_EQ(reports.size(), 4u);
+    bool seen[4] = {};
+    for (const auto &report : reports)
+    {
+        auto payload = payload_of(report);
+        ASSERT_EQ(payload.size(), 14u);
+        EXPECT_EQ(payload[0], 0x10);
+        ASSERT_LT(payload[2], 4u);
+        seen[payload[2]] = true;
+        EXPECT_EQ(payload[3], payload[2] % 2 == 0 ? 0x01 : 0x02);
+    }
+    for (bool player_seen : seen)
+        EXPECT_TRUE(player_seen);
+    EXPECT_TRUE(of_type(sent, GIP_LEGACY_DISCONNECT).empty());
+}
+
+class Rb4Instrument : public XoneDevice, public ::testing::WithParamInterface<SubType>
+{
+};
+
+TEST_P(Rb4Instrument, AnnouncesAndReportsOnlyAnInstrumentDeviceType)
+{
+    const SubType subtype = GetParam();
+    const bool drums = subtype == GuitarHeroDrums || subtype == RockBandDrums || subtype == PowerGigDrum;
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    plug(subtype);
+    run(600);
+    start();
+    from_console(packet(GIP_LEGACY_REQUEST_DEVICE_INFO, 0, next_seq()));
+    mapping->bytes = {0x10};
+    auto sent = run(100);
+    auto infos = of_type(sent, GIP_LEGACY_DEVICE_INFO);
+    ASSERT_EQ(infos.size(), 1u);
+    EXPECT_EQ(payload_of(infos[0])[1], drums ? 0x02 : 0x01);
+    auto reports = of_type(sent, GIP_INPUT_REPORT);
+    ASSERT_EQ(reports.size(), 1u);
+    EXPECT_EQ(payload_of(reports[0])[3], drums ? 0x02 : 0x01);
+}
+
+INSTANTIATE_TEST_SUITE_P(Supported, Rb4Instrument, ::testing::Values(
+    GuitarHeroGuitar, RockBandGuitar, PowerGigGuitar, ProGuitarMustang, ProGuitarSquier,
+    RockRevolutionGuitar, GuitarHeroDrums, RockBandDrums, PowerGigDrum));
+
+TEST_F(XoneDevice, Rb4DisconnectsAnInstrumentReplacedByAGamepadAndAcceptsNewDrums)
+{
+    ConfigManager::instance().set_xbox_one_legacy_adapter(true);
+    plug(RockBandGuitar);
+    run(600);
+    start();
+    from_console(packet(GIP_LEGACY_REQUEST_DEVICE_INFO, 0, next_seq()));
+    run(100);
+
+    dev->profiles[0]->subtype = Gamepad;
+    mapping->bytes = {0x10};
+    auto sent = run(100);
+    auto disconnects = of_type(sent, GIP_LEGACY_DISCONNECT);
+    ASSERT_EQ(disconnects.size(), 1u);
+    EXPECT_EQ(payload_of(disconnects[0]), (Bytes{0}));
+    EXPECT_TRUE(of_type(sent, GIP_LEGACY_DEVICE_INFO).empty());
+    EXPECT_TRUE(of_type(sent, GIP_INPUT_REPORT).empty());
+
+    from_console(packet(GIP_LEGACY_REQUEST_DEVICE_INFO, 0, next_seq()));
+    sent = run(100);
+    EXPECT_TRUE(of_type(sent, GIP_LEGACY_DEVICE_INFO).empty());
+    EXPECT_TRUE(of_type(sent, GIP_INPUT_REPORT).empty());
+    EXPECT_TRUE(of_type(sent, GIP_LEGACY_DISCONNECT).empty());
+
+    dev->profiles[0]->subtype = RockBandDrums;
+    sent = run(100);
+    auto infos = of_type(sent, GIP_LEGACY_DEVICE_INFO);
+    ASSERT_EQ(infos.size(), 1u);
+    EXPECT_EQ(payload_of(infos[0])[1], 0x02);
+    auto reports = of_type(sent, GIP_INPUT_REPORT);
+    ASSERT_EQ(reports.size(), 1u);
+    EXPECT_EQ(payload_of(reports[0])[3], 0x02);
+}
+
 TEST_F(XoneDevice, ForcedModeOverridesStickyWlaAndConsoleAuthState)
 {
     ConfigManager::instance().set_xbox_one_legacy_adapter(true);
@@ -498,8 +637,8 @@ TEST_F(XoneDevice, LegacyGhlSwitchesOnOutputAndQuiescesToGamepad)
     from_console(packet(GIP_LEGACY_REQUEST_DEVICE_INFO, 0, next_seq()));
     sent = run(400);
     EXPECT_TRUE(of_type(sent, GHL_HID_REPORT).empty());
-    EXPECT_FALSE(of_type(sent, GIP_LEGACY_DEVICE_INFO).empty());
-    EXPECT_FALSE(of_type(sent, GIP_INPUT_REPORT).empty());
+    EXPECT_TRUE(of_type(sent, GIP_LEGACY_DEVICE_INFO).empty());
+    EXPECT_TRUE(of_type(sent, GIP_INPUT_REPORT).empty());
 }
 
 TEST_F(XoneDevice, LegacyGhlResendsNeutralInputAfterReset)

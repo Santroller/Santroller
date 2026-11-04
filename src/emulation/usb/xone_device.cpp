@@ -54,11 +54,10 @@ static bool is_guitar_subtype(SubType subtype)
 {
     // pro guitars don't exist on Xbox One, so they are reported as a standard Rock Band guitar
     return subtype == GuitarHeroGuitar || subtype == RockBandGuitar || subtype == PowerGigGuitar ||
-           subtype == ProGuitarMustang || subtype == ProGuitarSquier;
+           subtype == ProGuitarMustang || subtype == ProGuitarSquier || subtype == RockRevolutionGuitar;
 }
 
-// The legacy adapter reports everything else as a guitar, drums or a gamepad, and Guitar Hero Live guitars
-// through Activision.Xbox.Input.GH7, which its descriptor also has
+// These profiles can use the adapter's gamepad navigation or GH7 interface, even if RB4 cannot use them.
 static bool legacy_adapter_supported(SubType subtype)
 {
     return subtype != Skylanders && subtype != DisneyInfinity && subtype != LegoDimensions;
@@ -66,15 +65,12 @@ static bool legacy_adapter_supported(SubType subtype)
 
 static GipLegacyWirelessDeviceType get_legacy_wireless_device_type(SubType subtype)
 {
+    assert(is_guitar_subtype(subtype) || is_drum_subtype(subtype));
     if (is_drum_subtype(subtype))
     {
         return GipLegacyWirelessDeviceType::Drums;
     }
-    if (is_guitar_subtype(subtype))
-    {
-        return GipLegacyWirelessDeviceType::Guitar;
-    }
-    return GipLegacyWirelessDeviceType::Gamepad;
+    return GipLegacyWirelessDeviceType::Guitar;
 }
 
 const uint8_t announce_legacy_adapter[] = {
@@ -620,7 +616,7 @@ bool XboxOneGamepadDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result,
             legacy_info_requested = true;
             legacy_info_request_time = now;
             Profile *legacy_players[MAX_LEGACY_PLAYERS];
-            size_t count = players(legacy_players, MAX_LEGACY_PLAYERS);
+            size_t count = players(legacy_players, MAX_LEGACY_PLAYERS, true);
             for (size_t i = 0; !repeated && i < MAX_LEGACY_PLAYERS; i++)
             {
                 if (i < count)
@@ -757,12 +753,13 @@ void XboxOneGamepadDevice::process_auth_device_connection(uint32_t now)
     config_mgr.schedule_reinit(now);
 }
 
-size_t XboxOneGamepadDevice::players(Profile **out, size_t max) const
+size_t XboxOneGamepadDevice::players(Profile **out, size_t max, bool instruments_only) const
 {
     size_t count = 0;
     for (const auto &profile : profiles)
     {
-        if (count < max && !profile->xbox_one_auth_held)
+        if (count < max && !profile->xbox_one_auth_held &&
+            (!instruments_only || is_guitar_subtype(profile->subtype) || is_drum_subtype(profile->subtype)))
         {
             out[count++] = profile.get();
         }
@@ -993,7 +990,7 @@ void XboxOneGamepadDevice::process(bool full_poll, bool send_events)
         // Rock Band 4 asks for device info and disconnects whenever it gains focus, so
         // they would otherwise only reach whatever else does have focus, eg Guitar Hero Live
         bool wla_layout = legacy_wla_layout();
-        size_t count = wla_layout ? players(legacy_players, MAX_LEGACY_PLAYERS) : 0;
+        size_t count = wla_layout ? players(legacy_players, MAX_LEGACY_PLAYERS, true) : 0;
         for (size_t i = 0; wla_layout && i < MAX_LEGACY_PLAYERS; i++)
         {
             bool should_be_connected = (i < count);
@@ -1212,14 +1209,6 @@ void XboxOneGamepadDevice::send_legacy_device_info(uint8_t user_index, GipLegacy
         data_len = 16; // 6 header bytes + 10 name bytes
         info.vendor_id = __builtin_bswap16(HARMONIX_VID);
     }
-    else if (dev_type == GipLegacyWirelessDeviceType::Gamepad)
-    {
-        info.xinput_subtype = 0x81;
-        const uint16_t name[] = {'g', 'a', 'm', 'e', 'p', 'a', 'd'};
-        memcpy(info.name, name, sizeof(name));
-        data_len = 20; // 6 header bytes + 14 name bytes
-        info.vendor_id = __builtin_bswap16(XBOX_VID);
-    }
 
     global_sequence++;
     if (global_sequence == 0)
@@ -1283,8 +1272,17 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
 
     for (const auto &profile : profiles)
     {
-        if (profile->xbox_one_auth_held)
+        const bool excluded_from_rb4 = legacy_wla_layout() &&
+                                      !is_guitar_subtype(profile->subtype) && !is_drum_subtype(profile->subtype);
+        if (profile->xbox_one_auth_held || excluded_from_rb4)
         {
+            if (!profile->xbox_one_auth_held)
+            {
+                for (const auto &mapping : profile->mappings)
+                {
+                    mapping->update(full_poll, send_events);
+                }
+            }
             for (const auto &led : profile->leds)
             {
                 led->update(full_poll, send_events);
@@ -1292,7 +1290,7 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
         }
     }
     Profile *legacy_players[MAX_LEGACY_PLAYERS];
-    size_t num_profiles = players(legacy_players, MAX_LEGACY_PLAYERS);
+    size_t num_profiles = players(legacy_players, MAX_LEGACY_PLAYERS, legacy_wla_layout());
     if (num_profiles == 0)
     {
         return;
@@ -1306,7 +1304,7 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
         size_t i = (legacy_poll_start_player + p) % num_profiles;
         Profile *profile = legacy_players[i];
         bool is_drums = is_drum_subtype(profile->subtype);
-        bool is_gamepad = get_legacy_wireless_device_type(profile->subtype) == GipLegacyWirelessDeviceType::Gamepad;
+        bool is_gamepad = !is_drums && !is_guitar_subtype(profile->subtype);
         bool ghl_navigation = profile->subtype == LiveGuitar;
 
         // Buffer to accumulate mapping outputs for this profile
@@ -1447,11 +1445,10 @@ void XboxOneGamepadDevice::process_legacy_adapter(bool full_poll, bool send_even
             {
                 memcpy(legacy_report.drums_data, profile_buf, sizeof(legacy_report.drums_data));
             }
-            else if (!is_gamepad)
+            else
             {
                 memcpy(legacy_report.guitar_data, profile_buf, sizeof(legacy_report.guitar_data));
             }
-            // RB4 ignores gamepads, so they only send their buttons
         }
 
         // Send report if inputs changed. Device info and disconnects are queued, and input mustn't overtake them,

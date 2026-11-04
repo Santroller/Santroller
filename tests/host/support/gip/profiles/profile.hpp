@@ -15,9 +15,11 @@ public:
     std::vector<uint8_t> bytes;
     size_t offset = 0;
     size_t ps3_writes = 0;
+    size_t updates = 0;
     std::optional<uint8_t> strum;
     void update(bool full_poll, bool send_events)
     {
+        updates++;
         (void)full_poll;
         (void)send_events;
     }

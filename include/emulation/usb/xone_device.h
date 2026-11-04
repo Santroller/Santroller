@@ -61,8 +61,8 @@ private:
     // Cleared while the identity is kept for want of something to authenticate, and the profile that would
     // report is a different type, so its inputs aren't sent in the wrong format
     bool m_player_matches_identity = true;
-    // The profiles that report, leaving out ones only held up by Xbox One auth
-    size_t players(Profile **out, size_t max) const;
+    // The profiles that report, leaving out auth holders and, for RB4, non-instruments.
+    size_t players(Profile **out, size_t max, bool instruments_only = false) const;
     uint8_t last_report[CFG_TUD_XONE_RX_BUFSIZE] = {};
     uint8_t last_report_counter;
     uint32_t keep_alive_timer;

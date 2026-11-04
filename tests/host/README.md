@@ -27,6 +27,9 @@ The Xbox One legacy adapter always supports gamepads and uses GH7 output (`0x22`
 QUIESCE stops guitar reports while keeping gamepad navigation; Rock Band 4 device-info
 requests select the legacy layout instead. GIP device tests cover these transitions and unchanged-input
 resends. Guitar reports are polled even without input changes; navigation reports are change-only.
+Only five-fret/pro guitars and drums occupy RB4 legacy slots or send legacy device-info/input reports;
+gamepads, six-fret guitars and other unsupported profiles are excluded before the four-player limit.
+Gamepad navigation and six-fret GH7 reports remain available outside the RB4 legacy layout.
 The navigation layout follows PlasticBand's Xbox One six-fret documentation: White 2/3 and GHTV are
 excluded, and strum uses signed left-stick Y. Older configs' retired gamepad-support option is ignored;
 the adapter always advertises the gamepad-capable descriptor.

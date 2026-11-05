@@ -83,7 +83,14 @@ void ConfigManager::rpcs3_detected()
     m_rpcs3_detected = true;
     if (HIDConfigDevice::tool_may_be_open())
     {
+        bool already = m_forced_mode_deferred && m_deferred_mode == ModePs3;
         defer_forced_mode(ModePs3);
+        // Nothing reloads here, so the tool would only see the deferral on its next connect. This runs
+        // from a control request, so leave the main loop to send the loaded event that has it re-read it.
+        if (!already)
+        {
+            HIDConfigDevice::reload_missed();
+        }
         return;
     }
     m_requested_mode = ModePs3;

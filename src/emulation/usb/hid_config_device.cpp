@@ -452,6 +452,17 @@ void HIDConfigDevice::handle_command(proto_Command command)
         bt_forget_hosts();
         return;
     }
+    case proto_Command_rpcs3Mode_tag: {
+        if (!ProfileManager::instance().ps3_on_rpcs3())
+        {
+            return;
+        }
+        // The tool closes its connection after sending this. Forget it first, so PS3 mode applies
+        // right away instead of being deferred until the tool's keepalive lapses.
+        reset_keepalive();
+        ConfigManager::instance().rpcs3_detected();
+        return;
+    }
     case proto_Command_scan_tag: {
         DeviceManager::instance().for_each_active_device([&command](const auto &device) {
             device->handle_command(command);

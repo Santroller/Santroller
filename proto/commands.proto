@@ -74,6 +74,12 @@ message SetCycleCommand {
   optional uint32 state = 2;
   optional bool forward = 3;
 }
+// Switch to PS3 mode now, as if RPCS3 had probed the controller, so its pad settings can see it
+// before a game is booted. Drops the tool's connection, as PS3 mode has no config interface.
+// Ignored unless a loaded profile has ps3_on_rpcs3. Unplugging the controller goes back.
+message Rpcs3ModeCommand {
+
+}
 message Command {
     oneof command {
         SetProfileCommand setProfile = 1;
@@ -89,5 +95,6 @@ message Command {
         SetCycleCommand setCycle = 11;
         ForgetBluetoothHostsCommand forgetBluetoothHosts = 12;
         TurnOffControllerCommand turnOffController = 13;
+        Rpcs3ModeCommand rpcs3Mode = 14;
     }
 }

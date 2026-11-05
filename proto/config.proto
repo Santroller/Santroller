@@ -427,6 +427,8 @@ message ConfigInfo {
   // SHA256 is checked before installing OTA images. Older firmware omits this; the configurator
   // requires a one-time UF2 update rather than uploading through an unverified receiver.
   optional bool firmwareVerification = 13;
+  // Takes Rpcs3ModeCommand
+  optional bool rpcs3ModeCommand = 14;
 }
 
 message GetActiveProfiles {

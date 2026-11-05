@@ -128,6 +128,21 @@ TEST(WiiExtensionId, EveryDocumentedIdDecodesToItsType)
     }
 }
 
+// The buttons are active low, so before the first report the zeroed buffer would read as every
+// button held, which latched startup triggers like "hold + for this profile" on every plug in
+TEST(WiiExtensionId, NoButtonsReadBeforeTheFirstReport)
+{
+    WiiExtensionDecoder decoder = decoder_for({0x00, 0x00, 0xA4, 0x20, 0x01, 0x03});
+    EXPECT_FALSE(decoder.read_button(WiiButtonGuitarPlus));
+    EXPECT_FALSE(decoder.read_button(WiiButtonGuitarGreen));
+    EXPECT_EQ(decoder.read_button_pressure(WiiButtonGuitarPlus), 0);
+    feed(decoder, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
+    EXPECT_TRUE(decoder.read_button(WiiButtonGuitarPlus));
+    decoder.reset();
+    decoder.mType = WiiGuitarHeroGuitar;
+    EXPECT_FALSE(decoder.read_button(WiiButtonGuitarPlus));
+}
+
 TEST(WiiExtensionId, DecodingAnIdClearsPerExtensionState)
 {
     WiiExtensionDecoder decoder;

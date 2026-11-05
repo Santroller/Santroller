@@ -131,6 +131,7 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
             if (verifyData(bufferRx, WII_ID_LEN))
             {
                 mType = static_cast<WiiExtType>(bufferRx[0] << 8 | bufferRx[5]);
+                hasData = false;
                 packetIssueCount = 0;
                 wiiPointer = 0;
                 wiiBytes = 6;
@@ -418,6 +419,9 @@ void WiiExtension::load_state(const DeviceReloadState *state)
     mFound = state->wii_mFound;
     mType = state->wii_mType;
     hiRes = state->wii_hiRes;
+    hasTapBar = state->wii_hasTapBar;
+    hasData = state->wii_hasData;
+    memcpy(mBuffer, state->wii_mBuffer, sizeof(mBuffer));
     packetIssueCount = state->wii_packetIssueCount;
     mBufferIndex = state->wii_mBufferIndex;
     lastTick = state->wii_lastTick;
@@ -433,6 +437,9 @@ void WiiExtension::save_state(DeviceReloadState &state) const
     state.wii_mFound = mFound;
     state.wii_mType = mType;
     state.wii_hiRes = hiRes;
+    state.wii_hasTapBar = hasTapBar;
+    state.wii_hasData = hasData;
+    memcpy(state.wii_mBuffer, mBuffer, sizeof(mBuffer));
     state.wii_packetIssueCount = packetIssueCount;
     state.wii_mBufferIndex = mBufferIndex;
     state.wii_lastTick = lastTick;

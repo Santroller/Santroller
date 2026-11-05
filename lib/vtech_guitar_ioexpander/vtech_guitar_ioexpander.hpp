@@ -57,7 +57,8 @@ class VTechGuitarIOExpander {
     int missing;
     bool connected;
     bool attention = false;
-    uint8_t button_data = 0;
+    // Active low, so idle is all bits set, and nothing reads as held before the first poll
+    uint8_t button_data = 0xFF;
     uint8_t led_data = 0;
     VTechGuitarIOExpanderState status;
     alarm_id_t timeout_alarm_id = 0;

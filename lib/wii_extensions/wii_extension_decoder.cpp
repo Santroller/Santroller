@@ -11,6 +11,7 @@ void WiiExtensionDecoder::reset()
 {
     mType = WiiExtType::WiiNoExtension;
     memset(mBuffer, 0, sizeof(mBuffer));
+    hasData = false;
     hiRes = false;
     hasTapBar = false;
     s_box = 0;
@@ -20,6 +21,7 @@ void WiiExtensionDecoder::reset()
 void WiiExtensionDecoder::decode_id(const uint8_t *id_bytes)
 {
     mType = static_cast<WiiExtType>((id_bytes[0] << 8) | id_bytes[5]);
+    hasData = false;
     hiRes = false;
     hasTapBar = false;
     s_box = 0;
@@ -54,6 +56,7 @@ void WiiExtensionDecoder::update_data(const uint8_t *data, uint8_t len, MidiDevi
 {
     uint8_t copy_len = len < sizeof(mBuffer) ? len : sizeof(mBuffer);
     memcpy(mBuffer, data, copy_len);
+    hasData = true;
 
     if (s_box)
     {
@@ -325,6 +328,10 @@ uint16_t WiiExtensionDecoder::read_button_pressure(proto_WiiButtonType type) con
 
 bool WiiExtensionDecoder::read_button(proto_WiiButtonType type) const
 {
+    if (!hasData)
+    {
+        return false;
+    }
     auto lastTap = hasTapBar ? (mBuffer[2] & 0x1f) : 0x0F;
     auto wiiButtonsLow = ~mBuffer[4];
     auto wiiButtonsHigh = ~mBuffer[5];

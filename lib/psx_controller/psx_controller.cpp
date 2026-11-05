@@ -999,6 +999,10 @@ void PSXController::process_data(bool ack, bool timeout)
             break;
         case SECOND_INPUTS:
             status = ENUMERATED;
+            // The type is known from here, so take the inputs from this reply too. The buttons are
+            // active low, so the zeroed or previous controller's inputs would otherwise read as held
+            // (and latch startup triggers) until the next poll.
+            memcpy(lastInputs, ps2Data, BUFFER_SIZE);
             // Left over from the previous connection otherwise, so one bad poll would drop it again
             missing = 0;
             packet_delay = 5000;

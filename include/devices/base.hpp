@@ -65,6 +65,10 @@ struct DeviceReloadState
     bool wii_mFound = false;
     WiiExtType wii_mType = WiiExtType::WiiNoExtension;
     bool wii_hiRes = false;
+    bool wii_hasTapBar = false;
+    // The last report, so buttons held through a reload still read as held
+    bool wii_hasData = false;
+    uint8_t wii_mBuffer[8] = {};
     uint32_t wii_packetIssueCount = 0;
     uint8_t wii_mBufferIndex = 0;
     uint32_t wii_lastTick = 0;

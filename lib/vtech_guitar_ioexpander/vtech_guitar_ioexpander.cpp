@@ -57,6 +57,7 @@ void VTechGuitarIOExpander::begin()
 
     status = INIT_SOFT_RESET;
     connected = false;
+    button_data = 0xFF;
     attention = false;
     process_data(false, false);
 };
@@ -116,6 +117,8 @@ void VTechGuitarIOExpander::process_data(bool ack, bool timeout)
         {
             status = INIT_SOFT_RESET;
             connected = false;
+            // Don't hold the last inputs of an expander that's gone
+            button_data = 0xFF;
         }
         break;
     case POLL_INPUTS:

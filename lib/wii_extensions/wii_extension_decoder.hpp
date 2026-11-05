@@ -14,6 +14,9 @@ class WiiExtensionDecoder
 public:
     WiiExtType mType = WiiExtType::WiiNoExtension;
     uint8_t mBuffer[8] = {};
+    // Set once a report has been decoded since the ID was read. The buttons are active low, so the
+    // zeroed buffer before that would read as every button held.
+    bool hasData = false;
     bool hiRes = false;
     bool hasTapBar = false;
     uint8_t s_box = 0;

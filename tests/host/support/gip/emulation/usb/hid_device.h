@@ -5,4 +5,5 @@ class HIDConfigDevice
 {
 public:
     static bool tool_may_be_open() { return false; }
+    static void reload_missed() {}
 };

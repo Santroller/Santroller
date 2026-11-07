@@ -19,6 +19,7 @@ public:
         return true;
     }
     // Whether the config tool looks open, which defers modes being forced on the device
+    static void reload_missed() {}
     static inline bool tool_open = false;
     static bool tool_may_be_open() { return tool_open; }
 };

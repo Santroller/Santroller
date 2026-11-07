@@ -45,6 +45,7 @@ void BluetoothDevice::begin()
 {
     m_sync.begin();
     BluetoothStack::instance().set_device_id(m_id);
+    ConfigManager::instance().set_bluetooth_config_only_allowed(!m_device.disableConfigOnly);
     // TODO: if we add support for swapping pins, then we gotta deinit here if the pins change
     if (BluetoothStack::instance().initialized())
     {
@@ -90,6 +91,7 @@ void BluetoothDevice::end(bool full)
         m_timed_out = false;
         BluetoothStack::instance().power_on();
     }
+    ConfigManager::instance().set_bluetooth_config_only_allowed(true);
     if (full)
     {
         BluetoothStack::instance().power_off();

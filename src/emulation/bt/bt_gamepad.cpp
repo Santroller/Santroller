@@ -16,6 +16,7 @@
 #include "emulation/bt/bt_gamepad.h"
 #include "emulation/bt/bt_config_service.h"
 #include "emulation/bt/bt_gatt_changes.h"
+#include "emulation/bt/bt_identity.h"
 
 // bt_gatt_changes relies on the Generic Attribute service being at the same handles in every database
 static_assert(ATT_SERVICE_GATT_SERVICE_START_HANDLE == BT_GATT_SERVICE_START_HANDLE, "GATT service moved");
@@ -280,6 +281,24 @@ void BTGamepadDevice::initialize()
         db = bt_keyboard_profile(&config_start, &config_end);
     }
     update_name();
+    // Each database / report map is advertised from its own address, as hosts don't reliably notice either
+    // changing under the same one (bt_identity.h). Before the ATT server, as it changes which hosts are bonded.
+    if (m_config_only)
+    {
+        bt_identity_set(BtIdentityConfigOnly);
+    }
+    else if (subtype == SubType_KeyboardMouse)
+    {
+        bt_identity_set(BtIdentityKeyboard);
+    }
+    else if (subtype == SubType_Dancepad)
+    {
+        bt_identity_set(BtIdentityDancepad);
+    }
+    else
+    {
+        bt_identity_set(BtIdentityGamepad);
+    }
     att_server_init(db, att_read_callback, NULL);
     att_server_register_packet_handler(packet_handler);
     bt_gatt_changes_init();
@@ -343,7 +362,8 @@ void BTGamepadDevice::initialize()
     gap_advertisements_enable(1);
     {
         bd_addr_t local_addr;
-        gap_local_bd_addr(local_addr);
+        uint8_t local_addr_type;
+        gap_le_get_own_advertisements_address(&local_addr_type, local_addr);
         printf("BT: advertising as %s from %s, %s %d\r\n", s_name, bd_addr_to_str(local_addr), m_config_only ? "config only, subtype" : "subtype", subtype);
     }
 

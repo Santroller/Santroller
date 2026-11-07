@@ -16,7 +16,8 @@ public:
                config.device.bt.has_syncPin == m_device.has_syncPin &&
                (!m_device.has_syncPin || config.device.bt.syncPin == m_device.syncPin) &&
                config.device.bt.has_timeoutSec == m_device.has_timeoutSec &&
-               (!m_device.has_timeoutSec || config.device.bt.timeoutSec == m_device.timeoutSec);
+               (!m_device.has_timeoutSec || config.device.bt.timeoutSec == m_device.timeoutSec) &&
+               config.device.bt.disableConfigOnly == m_device.disableConfigOnly;
     }
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);

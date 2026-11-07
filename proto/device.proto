@@ -118,6 +118,9 @@ message BluetoothDevice {
   // Turn bluetooth off after this many seconds without input, while acting as a bluetooth
   // controller and with no controllers connected to it (0 disables). Any input turns it back on.
   optional uint32 timeoutSec = 2;
+  // Don't advertise just for the configurator while no profile uses bluetooth. Then it can only be configured over
+  // bluetooth while a profile is emulating a bluetooth controller.
+  optional bool disableConfigOnly = 3;
 }
 message MultiplexerDevice {
   required int32 inputPin = 1;

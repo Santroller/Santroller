@@ -420,7 +420,7 @@ void ProfileManager::update_bt_config_instance(bool full_poll, bool send_events)
     {
         release_previous_wiimote_instance();
     }
-    bool wanted = config_mgr.has_bluetooth() &&
+    bool wanted = config_mgr.has_bluetooth() && config_mgr.bluetooth_config_only_allowed() &&
                   !config_mgr.has_seen_assignment(ProfileAssignMask_AssignBluetoothGamepad) &&
                   !config_mgr.has_seen_assignment(ProfileAssignMask_AssignBluetoothWiimote);
     if (!wanted)

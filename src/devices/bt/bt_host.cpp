@@ -14,6 +14,7 @@
 #include "gap.h"
 #include "btstack_util.h"
 #include "ble/le_device_db.h"
+#include "emulation/bt/bt_identity.h"
 #include "CRC32.h"
 
 #include <vector>
@@ -231,6 +232,8 @@ void bt_forget_hosts()
     }
     // it would otherwise stay connected with the keys it has
     bt_peripheral_disconnect();
+    // hosts bonded with the other kinds of peripheral we can be are hidden from btstack
+    bt_identity_filter_bonds(false);
     for (int i = 0; i < le_device_db_max_count(); i++)
     {
         int addr_type = BD_ADDR_TYPE_UNKNOWN;
@@ -238,9 +241,11 @@ void bt_forget_hosts()
         le_device_db_info(i, &addr_type, addr, nullptr);
         if (addr_type != BD_ADDR_TYPE_UNKNOWN && is_host(addr))
         {
-            gap_delete_bonding((bd_addr_type_t)addr_type, addr);
+            // by index, the same host can be bonded once per identity
+            le_device_db_remove(i);
         }
     }
+    bt_identity_filter_bonds(true);
 }
 
 void bt_host_subtype_changed(BluetoothHostInterface *device)

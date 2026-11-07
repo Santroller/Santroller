@@ -20,6 +20,7 @@
 #include "devices/bt/usb_dongle.hpp"
 #include "classic/btstack_link_key_db_tlv.h"
 #include "ble/le_device_db_tlv.h"
+#include "emulation/bt/bt_identity.h"
 extern "C"
 {
 #include "wiimote_btstack.h"
@@ -164,6 +165,8 @@ bool BluetoothStack::begin()
     const btstack_link_key_db_t *link_key_db = btstack_link_key_db_tlv_get_instance(tlv_impl, tlv_context);
     hci_set_link_key_db(link_key_db);
     le_device_db_tlv_configure(tlv_impl, tlv_context);
+    // keeps the bonds made as each kind of peripheral apart
+    bt_identity_init();
 
     ble_main();
     btstack_classic_main(true);

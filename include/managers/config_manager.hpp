@@ -87,6 +87,9 @@ public:
     void set_xbox_one_legacy_adapter(bool legacy) { m_xbox_one_legacy_adapter = legacy; }
     bool has_bluetooth() const { return m_has_bluetooth; }
     void set_bluetooth_available(bool available) { m_has_bluetooth = available; }
+    // Whether to advertise just for the configurator while no profile uses bluetooth (BluetoothDevice.disableConfigOnly)
+    bool bluetooth_config_only_allowed() const { return m_bluetooth_config_only_allowed; }
+    void set_bluetooth_config_only_allowed(bool allowed) { m_bluetooth_config_only_allowed = allowed; }
     bool is_reloading() const { return m_reloading; }
     void set_reloading(bool reloading) { m_reloading = reloading; }
     bool should_reinit(uint32_t now) const;
@@ -196,6 +199,7 @@ private:
     uint32_t m_last_firmware_update = 0;
     bool m_loaded_any;
     bool m_has_bluetooth;
+    bool m_bluetooth_config_only_allowed = true;
     bool m_reloading;
     bool m_full_reload;
     bool m_reinitialize_device_stack;

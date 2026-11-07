@@ -78,6 +78,28 @@ TEST_P(MidiProGuitar, MustangMarksItsChannel)
     EXPECT_FALSE(h.midi.has_midi_channel(0));
 }
 
+// Each string plays on its own channel, but the guitar must stay a single assignable device
+TEST_P(MidiProGuitar, StringChannelsDontAddDevices)
+{
+    // a note before the guitar has been identified is still a regular channel
+    send({0x94, 0x40, 0x40});
+    EXPECT_TRUE(h.midi.has_midi_channel(4));
+    send({0xF0, 0x08, 0x40, MIDI_SYSEX_ID_PROGUITAR_SQUIER, 0x01, 0x01, 0x40, 0xF7});
+    EXPECT_TRUE(h.midi.has_midi_channel(MIDI_CHANNEL_PROGUITAR_SQUIER));
+    EXPECT_FALSE(h.midi.has_midi_channel(4));
+    h.newly_seen.clear();
+    for (uint8_t channel = 0; channel < 6; channel++)
+    {
+        send({static_cast<uint8_t>(0x90 | channel), 0x40, 0x40});
+        send({static_cast<uint8_t>(0x80 | channel), 0x40, 0x00});
+    }
+    EXPECT_TRUE(h.newly_seen.empty());
+    for (uint8_t channel = 0; channel < 16; channel++)
+    {
+        EXPECT_FALSE(h.midi.has_midi_channel(channel)) << int(channel);
+    }
+}
+
 TEST_P(MidiProGuitar, OtherSysexIsIgnored)
 {
     // different manufacturer / device bytes

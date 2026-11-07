@@ -503,7 +503,11 @@ private:
         default:
             break;
         }
-        if (data[0] < MIDI_STATUS_SYSEX_START)
+        // A Pro Guitar plays each string on its own channel, but it is one controller. Each seen channel
+        // becomes another assignable copy of the device (and a reload), so once the guitar is identified its
+        // note channels are dropped and only its pseudo channel is kept.
+        bool is_pro_guitar = seenChannels[MIDI_CHANNEL_PROGUITAR_SQUIER] || seenChannels[MIDI_CHANNEL_PROGUITAR_MUSTANG];
+        if (data[0] < MIDI_STATUS_SYSEX_START && !is_pro_guitar)
         {
             mark_channel_seen(channel);
         }
@@ -514,10 +518,12 @@ private:
             {
                 if (data[3] == MIDI_SYSEX_ID_PROGUITAR_SQUIER && !seenChannels[MIDI_CHANNEL_PROGUITAR_SQUIER])
                 {
+                    memset(seenChannels, 0, 16 * sizeof(seenChannels[0]));
                     mark_channel_seen(MIDI_CHANNEL_PROGUITAR_SQUIER);
                 }
                 if (data[3] == MIDI_SYSEX_ID_PROGUITAR_MUSTANG && !seenChannels[MIDI_CHANNEL_PROGUITAR_MUSTANG])
                 {
+                    memset(seenChannels, 0, 16 * sizeof(seenChannels[0]));
                     mark_channel_seen(MIDI_CHANNEL_PROGUITAR_MUSTANG);
                 }
                 if (data[4] == 0x08)

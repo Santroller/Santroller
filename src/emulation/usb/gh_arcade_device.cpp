@@ -123,7 +123,7 @@ void GHArcadeGamepadDevice::process(bool full_poll, bool send_events)
         }
         return;
     }
-    if (!ready())
+    if (!ready() || skip_report_this_frame())
         return;
     ArcadeGuitarHeroGuitar_Data_t *report = (ArcadeGuitarHeroGuitar_Data_t *)epin_buf;
     memset(epin_buf, 0, sizeof(epin_buf));
@@ -145,7 +145,7 @@ void GHArcadeGamepadDevice::process(bool full_poll, bool send_events)
             led->update(full_poll, send_events);
         }
     }
-    send_report(sizeof(ArcadeGuitarHeroGuitar_Data_t), 0, epin_buf);
+    send_report_if_changed(sizeof(ArcadeGuitarHeroGuitar_Data_t), epin_buf);
 }
 
 size_t GHArcadeGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)

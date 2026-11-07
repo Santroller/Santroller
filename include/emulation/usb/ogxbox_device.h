@@ -57,6 +57,7 @@ public:
     // Real controllers NAK when nothing has changed, so only send a report when it differs from the last one
     OGXboxGamepad_Data_t m_last_report;
     bool m_has_last_report = false;
+    uint32_t m_last_report_us = 0;
     uint16_t m_unchanged_frame = 0;
     bool m_has_unchanged_frame = false;
 };

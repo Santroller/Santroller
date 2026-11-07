@@ -155,6 +155,10 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
         }
         return;
     }
+    if (skip_report_this_frame())
+    {
+        return;
+    }
     update_stagekit();
     PCGamepadDpad_Data_t *report = (PCGamepadDpad_Data_t *)epin_buf;
     memcpy(epin_buf, m_initial_report, sizeof(epin_buf));
@@ -191,15 +195,7 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
         XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
         reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
     }
-    if (memcmp(m_last_report, epin_buf, sizeof(XInputGamepad_Data_t)) != 0)
-    {
-        if (!ready())
-        {
-            return;
-        }
-        send_report(sizeof(XInputGamepad_Data_t), 0, epin_buf);
-        memcpy(m_last_report, epin_buf, sizeof(XInputGamepad_Data_t));
-    }
+    send_report_if_changed(sizeof(XInputGamepad_Data_t), epin_buf);
 }
 
 size_t HIDGamepadDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)

@@ -493,6 +493,16 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
 
 volatile uint32_t UsbDevice::suspend_generation = 0;
 
+uint32_t UsbDevice::min_report_interval_us() const
+{
+    uint32_t interval = 0;
+    for (const auto &profile : profiles)
+    {
+        interval = std::max(interval, profile->min_report_interval_us);
+    }
+    return interval;
+}
+
 void UsbDevice::disconnect_bluetooth_controllers()
 {
     auto disconnect = [](const std::shared_ptr<Device> &device) {

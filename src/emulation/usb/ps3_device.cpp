@@ -348,7 +348,6 @@ void PS3GamepadDevice::initialize()
     }
 }
 #define PS3_TURNTABLE_REPORT_INTERVAL_US 10000
-
 void PS3GamepadDevice::process(bool full_poll, bool send_events)
 {
     if (!ready())
@@ -379,6 +378,8 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
         }
         return;
     }
+    if (skip_report_this_frame())
+        return;
     memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     update_stagekit();
     MotionState motion;
@@ -400,7 +401,7 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
     {
         // convert bitmask dpad to actual hid dpad
         epin_buf[0] = (epin_buf[0] & 0xF0) | GamepadButtonMapping::dpad_bindings[epin_buf[0] & 0x0F];
-        send_report(sizeof(PS3G27_Data_t), 0, epin_buf);
+        send_report_if_changed(sizeof(PS3G27_Data_t), epin_buf);
         return;
     }
     if (subtype != PowerGigGuitar && subtype != PowerGigDrum)
@@ -422,7 +423,7 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
             // the Taiko drum reports like a DualShock 3, which only says charging or charged on USB
             ((PS3Gamepad_Data_t *)epin_buf)->battery_status = BatteryManager::instance().ps3_status();
         }
-        send_report(sizeof(PS3Gamepad_Data_t), 0, epin_buf);
+        send_report_if_changed(sizeof(PS3Gamepad_Data_t), epin_buf);
     }
     else
     {
@@ -455,10 +456,7 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
             PS3GuitarHeroGuitar_Data_t *reportGh = (PS3GuitarHeroGuitar_Data_t *)epin_buf;
             reportGh->slider = GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider];
         }
-        if (send_report(sizeof(PS3Dpad_Data_t), 0, epin_buf))
-        {
-            m_last_report_us = time_us_32();
-        }
+        send_report_if_changed(sizeof(PS3Dpad_Data_t), epin_buf);
     }
 }
 

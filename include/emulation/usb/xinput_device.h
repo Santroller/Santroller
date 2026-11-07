@@ -89,6 +89,7 @@ private:
     XInputGamepad_Data_t m_initial_report;
     XInputGamepad_Data_t m_last_report;
     bool m_has_last_report = false;
+    uint32_t m_last_report_us = 0;
     uint32_t m_report_generation = 0;
     // the frame an unchanged report was skipped in, so the next isn't built until a new frame
     uint16_t m_unchanged_frame = 0;

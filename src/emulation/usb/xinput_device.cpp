@@ -217,6 +217,8 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
     uint16_t frame = usb_hw->sof_rd & USB_SOF_RD_BITS;
     if (m_has_unchanged_frame && frame == m_unchanged_frame)
         return;
+    if (m_has_last_report && time_us_32() - m_last_report_us < min_report_interval_us())
+        return;
     update_stagekit();
     memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     XInputGamepad_Data_t *report = (XInputGamepad_Data_t *)epin_buf;
@@ -305,6 +307,7 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
     }
     // m_last_report already holds this report, so it only counts as sent if the transfer started
     m_has_last_report = usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, len, false);
+    m_last_report_us = time_us_32();
     if (!m_has_last_report)
     {
         usbd_edpt_release(TUD_OPT_RHPORT, m_epin);

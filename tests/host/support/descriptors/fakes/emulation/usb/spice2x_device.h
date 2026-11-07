@@ -44,6 +44,8 @@ public:
     void process_suspended(bool, bool) {}
     bool ready() { return false; }
     bool send_report(uint8_t, uint8_t, void const *) { return false; }
+    bool send_report_if_changed(uint8_t, void const *) { return false; }
+    bool skip_report_this_frame() { return false; }
     uint8_t interface_id = 0;
     std::vector<std::shared_ptr<FakeSpiceProfile>> profiles;
     uint8_t m_epin = 0;

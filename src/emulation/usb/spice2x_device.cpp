@@ -66,7 +66,7 @@ void Spice2xDevice::process(bool full_poll, bool send_events)
                 led->update(full_poll, send_events);
         return;
     }
-    if (!ready())
+    if (!ready() || skip_report_this_frame())
         return;
     XInputGamepad_Data_t gamepad = {};
     for (auto const &profile : profiles)
@@ -93,7 +93,7 @@ void Spice2xDevice::process(bool full_poll, bool send_events)
                   (gamepad.leftThumbClick ? SpiceCenter : 0) | (gamepad.dpadRight ? SpiceRight : 0) |
                   (gamepad.a ? SpiceDownLeft : 0) | (gamepad.dpadDown ? SpiceDown : 0) |
                   (gamepad.b ? SpiceDownRight : 0);
-    send_report(sizeof(m_input), 0, &m_input);
+    send_report_if_changed(sizeof(m_input), &m_input);
 }
 
 size_t Spice2xDevice::config_descriptor(uint8_t *dest, size_t remaining)

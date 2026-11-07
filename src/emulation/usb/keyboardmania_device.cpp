@@ -33,7 +33,7 @@ void KeyboardManiaDevice::process(bool full_poll, bool send_events)
                 led->update(full_poll, send_events);
         return;
     }
-    if (!ready())
+    if (!ready() || skip_report_this_frame())
         return;
     m_input.buttons = 0;
     for (auto const &profile : profiles)
@@ -46,7 +46,7 @@ void KeyboardManiaDevice::process(bool full_poll, bool send_events)
         for (auto const &led : profile->leds)
             led->update(full_poll, send_events);
     }
-    send_report(sizeof(m_input), 0, &m_input);
+    send_report_if_changed(sizeof(m_input), &m_input);
 }
 
 size_t KeyboardManiaDevice::config_descriptor(uint8_t *dest, size_t remaining)

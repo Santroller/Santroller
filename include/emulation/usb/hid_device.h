@@ -37,6 +37,14 @@ public:
     bool control_transfer(uint8_t stage, tusb_control_request_t const *request);
     uint16_t open(tusb_desc_interface_t const *itf_desc, uint16_t max_len);
     bool send_report(uint8_t len, uint8_t report_id, void const *report);
+    // Sends a report (without a report id) only if it changed since the last one sent, or the idle
+    // interval passed, so the host still sees the current state if it missed one
+    bool send_report_if_changed(uint8_t len, void const *report);
+    // True once an unchanged report was skipped this frame. The host polls every frame, so building
+    // another report before the next one would just run the mappings every loop instead of once per
+    // poll, which time based logic like the cymbal glitch fix isn't written for. Also true until the
+    // profiles' minimum report interval has passed since the last report.
+    bool skip_report_this_frame();
     bool ready();
 
 protected:
@@ -55,6 +63,10 @@ protected:
     CFG_TUSB_MEM_ALIGN uint8_t ctrl_buf[CFG_TUD_HID_EP_BUFSIZE];
     uint8_t m_initial_report[CFG_TUD_HID_EP_BUFSIZE];
     uint8_t m_last_report[CFG_TUD_HID_EP_BUFSIZE];
+    bool m_has_last_report = false;
+    uint32_t m_last_report_us = 0;
+    uint16_t m_unchanged_frame = 0;
+    bool m_has_unchanged_frame = false;
 };
 
 // Where the configurator is talking to us from

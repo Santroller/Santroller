@@ -421,6 +421,8 @@ void OGXboxGamepadDevice::process(bool full_poll, bool send_events)
     uint16_t frame = usb_hw->sof_rd & USB_SOF_RD_BITS;
     if (m_has_unchanged_frame && frame == m_unchanged_frame)
         return;
+    if (m_has_last_report && time_us_32() - m_last_report_us < min_report_interval_us())
+        return;
     build_report(epin_buf, full_poll, send_events);
 
     if (m_has_last_report && memcmp(&m_last_report, epin_buf, sizeof(OGXboxGamepad_Data_t)) == 0)
@@ -439,6 +441,7 @@ void OGXboxGamepadDevice::process(bool full_poll, bool send_events)
     {
         memcpy(&m_last_report, epin_buf, sizeof(OGXboxGamepad_Data_t));
         m_has_last_report = true;
+        m_last_report_us = time_us_32();
     }
     else
     {

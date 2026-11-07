@@ -146,7 +146,9 @@ void PS4GamepadDevice::process(bool full_poll, bool send_events)
         }
         return;
     }
-    if (!ready())
+    // Every report differs (the counter, and the gamepad's motion timestamp), so only the minimum
+    // report interval applies
+    if (!ready() || skip_report_this_frame())
         return;
     memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     MotionState motion;
@@ -179,7 +181,11 @@ void PS4GamepadDevice::process(bool full_poll, bool send_events)
     gamepad->dpad = GamepadButtonMapping::dpad_bindings[gamepad->dpad];
     // every PS4 report puts the battery and cable state at the same byte as a DualShock 4
     epin_buf[PS4_STATUS_BYTE] = BatteryManager::instance().ps4_status();
-    send_report(sizeof(PS4Dpad_Data_t), 0, epin_buf);
+    if (send_report(sizeof(PS4Dpad_Data_t), 0, epin_buf))
+    {
+        m_has_last_report = true;
+        m_last_report_us = time_us_32();
+    }
     PS4Dpad_Data_t *initial = (PS4Dpad_Data_t *)m_initial_report;
     initial->reportCounter++;
     if (initial->reportCounter == 0)

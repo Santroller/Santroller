@@ -14,6 +14,11 @@
 #include "device/usbd_pvt.h"
 #include "pico/bootrom.h"
 #include "utils.h"
+#include "hardware/structs/usb.h"
+#include "pico/time.h"
+
+// Unchanged reports are skipped, but one still goes out this often
+#define HID_IDLE_REPORT_INTERVAL_US 10000
 
 uint16_t HIDDevice::open(tusb_desc_interface_t const *desc_itf, uint16_t max_len)
 {
@@ -65,7 +70,41 @@ bool HIDDevice::send_report(uint8_t len, uint8_t report_id, void const *report)
     {
         return false;
     }
-    return usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, len, false);
+    if (!usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, len, false))
+    {
+        // Otherwise the endpoint stays claimed and nothing can be sent on it again
+        usbd_edpt_release(TUD_OPT_RHPORT, m_epin);
+        return false;
+    }
+    return true;
+}
+bool HIDDevice::skip_report_this_frame()
+{
+    if (m_has_last_report && time_us_32() - m_last_report_us < min_report_interval_us())
+    {
+        return true;
+    }
+    return m_has_unchanged_frame && (usb_hw->sof_rd & USB_SOF_RD_BITS) == m_unchanged_frame;
+}
+bool HIDDevice::send_report_if_changed(uint8_t len, void const *report)
+{
+    uint32_t now = time_us_32();
+    if (m_has_last_report && now - m_last_report_us < HID_IDLE_REPORT_INTERVAL_US &&
+        memcmp(m_last_report, report, len) == 0)
+    {
+        m_unchanged_frame = usb_hw->sof_rd & USB_SOF_RD_BITS;
+        m_has_unchanged_frame = true;
+        return false;
+    }
+    m_has_unchanged_frame = false;
+    // report may be epin_buf, which send_report writes over, so keep a copy first
+    memcpy(m_last_report, report, len);
+    m_has_last_report = send_report(len, 0, report);
+    if (m_has_last_report)
+    {
+        m_last_report_us = now;
+    }
+    return m_has_last_report;
 }
 bool HIDDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {

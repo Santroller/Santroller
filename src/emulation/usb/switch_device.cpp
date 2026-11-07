@@ -287,7 +287,8 @@ void SwitchArcadeDevice::initialize()
 
 void SwitchArcadeDevice::process(bool full_poll, bool send_events)
 {
-    if (tud_ready() && !ready())
+    // Inputs still update while there's no host, which never polls, so only skip frames with one
+    if (tud_ready() && (!ready() || skip_report_this_frame()))
         return;
 
     SwitchArcadeReport next = {0, 0, 8, 128, 128, 128, 128, 0};
@@ -305,7 +306,7 @@ void SwitchArcadeDevice::process(bool full_poll, bool send_events)
     switch_arcade_finish_hat(next);
     m_report = next;
     if (ready())
-        send_report(sizeof(m_report), 0, &m_report);
+        send_report_if_changed(sizeof(m_report), &m_report);
 }
 
 size_t SwitchArcadeDevice::compatible_section_descriptor(uint8_t *, size_t)

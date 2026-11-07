@@ -782,6 +782,8 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
     profile->select_to_dpad_left =
         opts.has_selectToDpadLeft && opts.selectToDpadLeft;
     profile->socd_mode = opts.has_socdMode ? opts.socdMode : SocdOff;
+    profile->min_report_interval_us =
+        opts.has_minReportIntervalMs ? opts.minReportIntervalMs * 1000 : 0;
     profile->position_based_face_buttons =
         opts.faceButtonMappingMode == PositionBased;
     profile->combined_strum_debounce =

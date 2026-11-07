@@ -44,6 +44,8 @@ public:
     bool ps3_on_rpcs3 = true;
     bool disconnect_bluetooth_on_suspend = false;
     bool select_to_dpad_left = false;
+    // The least time between reports sent over USB, 0 for no limit, see minReportIntervalMs
+    uint32_t min_report_interval_us = 0;
     uint8_t socd_held = 0;
     // Per axis (vertical, horizontal), the direction pressed most recently, 0 if both were pressed at once
     uint8_t socd_newest[2] = {0, 0};

@@ -54,6 +54,8 @@ public:
     static bool mounted_since_init;
     // Disconnects the bluetooth controllers of profiles that ask for it, once per suspend
     void disconnect_bluetooth_controllers();
+    // The longest minimum report interval of this device's profiles, 0 for no limit
+    uint32_t min_report_interval_us() const;
     static inline uint8_t next_epin()
     {
         return m_last_epin++;

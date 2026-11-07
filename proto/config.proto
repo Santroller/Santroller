@@ -51,6 +51,9 @@ message ProfileOpts {
   // Config tool only: whether the profile has been through its setup wizard (or skipped it). Profiles from
   // before this was added don't have it, and count as set up once they have mappings.
   optional bool setUp = 26;
+  // The least time between reports sent over USB, unset or 0 for no limit. Many controllers sending every 1ms
+  // through one hub can tie it up, and slowing them down fixes it.
+  optional uint32 minReportIntervalMs = 27;
 }
 
 message Profile {

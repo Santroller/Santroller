@@ -113,6 +113,7 @@ if(SANTROLLER_VARIANT_DRIVER AND NOT SANTROLLER_VARIANT_BUILD)
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SANTROLLER_VARIANT_BINARY_DIR}/santroller.uf2" "${CMAKE_BINARY_DIR}/santroller_${SANTROLLER_VARIANT}.uf2"
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SANTROLLER_VARIANT_BINARY_DIR}/santroller_fota.uf2" "${CMAKE_BINARY_DIR}/santroller_${SANTROLLER_VARIANT}_fota.uf2"
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SANTROLLER_VARIANT_BINARY_DIR}/santroller_fota_image.bin" "${CMAKE_BINARY_DIR}/santroller_${SANTROLLER_VARIANT}.bin"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${SANTROLLER_VARIANT_BINARY_DIR}/santroller_layout.json" "${CMAKE_BINARY_DIR}/santroller_${SANTROLLER_VARIANT}_layout.json"
     )
     add_dependencies(build_${SANTROLLER_VARIANT} prepare_board_variants)
   endforeach()
@@ -642,6 +643,21 @@ target_link_libraries(
 pfb_compile_with_bootloader(${TARGET})
 
 pico_add_extra_outputs(${TARGET})
+
+# The config tool builds UF2s with a config in them (the seller tool), so it needs to know where the
+# firmware reads the config from: the last EEPROM_SIZE_BYTES of flash (FlashPROM.h)
+file(STRINGS "${CMAKE_SOURCE_DIR}/include/config/FlashPROM.h" SANTROLLER_CONFIG_SIZE_LINE
+  REGEX "^#define EEPROM_SIZE_BYTES[ \t]+")
+if(NOT SANTROLLER_CONFIG_SIZE_LINE MATCHES "^#define EEPROM_SIZE_BYTES[ \t]+(0x[0-9A-Fa-f]+|[0-9]+)")
+  message(FATAL_ERROR "Couldn't find EEPROM_SIZE_BYTES in FlashPROM.h")
+endif()
+math(EXPR SANTROLLER_CONFIG_SIZE "${CMAKE_MATCH_1}")
+if(NOT DEFINED PICO_FLASH_SIZE_BYTES)
+  message(FATAL_ERROR "The board doesn't set PICO_FLASH_SIZE_BYTES")
+endif()
+math(EXPR SANTROLLER_FLASH_SIZE "${PICO_FLASH_SIZE_BYTES}")
+file(WRITE "${CMAKE_BINARY_DIR}/santroller_layout.json"
+  "{\"board\":\"${PICO_BOARD}\",\"flashSize\":${SANTROLLER_FLASH_SIZE},\"configSize\":${SANTROLLER_CONFIG_SIZE}}\n")
 
 add_custom_target(build_combined ALL
     DEPENDS pico_fota_bootloader ${TARGET}

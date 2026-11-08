@@ -13,11 +13,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      # Only BTstack and TinyUSB are needed by host tests, not every submodule
+      # Only BTstack, TinyUSB and uzlib (the radio tests' crc32) are needed by host tests, not every submodule
       - name: Checkout BTstack
         run: git submodule update --init --depth 1 lib/btstack
       - name: Checkout TinyUSB
         run: git submodule update --init --depth 1 lib/tinyusb
+      - name: Checkout uzlib
+        run: git submodule update --init --depth 1 lib/uzlib
       - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get install -y ninja-build python3-venv
       - name: Configure

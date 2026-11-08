@@ -3,8 +3,6 @@
 ## Emulation
 - [ ] Emulation of fight sticks
 - [ ] Emulation of flight sticks
-- [ ] Emulation of wheels
-- [ ] Emulation of microphones
 - [ ] Emulation of drawing tablets
 
 ## Led / rumble features

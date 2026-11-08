@@ -447,6 +447,9 @@ message ConfigInfo {
   optional bool rpcs3ModeCommand = 14;
   // How many GPIOs the chip has: 48 on an RP2350B, 30 otherwise. Older firmware omits this (30).
   optional uint32 gpioCount = 15;
+  // Set when the radio firmware area can be written over the config interface (FirmwareUpdate with
+  // radioFirmware). The content version of what's in it, 0 when it's missing or predates versioning.
+  optional uint32 radioFirmwareVersion = 16;
 }
 
 message GetActiveProfiles {
@@ -468,6 +471,9 @@ message FirmwareUpdate {
   required int32 chunkOffset = 3;
   required int32 chunkSize = 4;
   optional uint32 deviceId = 5;
+  // Writes the radio firmware area (Xbox adapter, CYW43...) instead of the app. firmwareSize is the whole
+  // area. Only send it when ConfigInfo has radioFirmwareVersion: older firmware ignores this field.
+  optional bool radioFirmware = 6;
 }
 message CyclingInputState {
   required int32 id = 1;

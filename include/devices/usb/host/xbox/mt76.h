@@ -94,6 +94,8 @@ uint32_t mt76_read_register(struct mt76_dev *dev, uint32_t addr);
 void mt76_write_register(struct mt76_dev *dev, uint32_t addr, uint32_t val);
 bool mt76_poll(struct mt76_dev *dev, uint32_t offset, uint32_t mask, uint32_t val);
 
+// A firmware load is streaming from flash, so the radio firmware area can't be rewritten
+bool mt76_firmware_stream_active(void);
 int mt76_begin_firmware_compressed(struct mt76_dev *dev, const uint8_t *compressed_data,
                                    uint32_t compressed_len, uint32_t decompressed_len);
 int mt76_step_firmware_compressed(struct mt76_dev *dev);

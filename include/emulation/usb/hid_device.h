@@ -159,6 +159,8 @@ private:
     uint8_t fw_update_tmp[4096];
     proto_FirmwareUpdate update_state;
     std::shared_ptr<class SecondaryPicoDevice> m_target_secondary_pico = nullptr;
+    // The upload is going to the radio firmware area rather than the app's download slot
+    bool m_radio_update = false;
 };
 class HIDGamepadDevice : public HIDDevice
 {

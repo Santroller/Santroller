@@ -106,7 +106,7 @@
 #include "triggers/input_trigger.hpp"
 #include "tusb.h"
 #include "utils.h"
-#include "xbox_dongle_firmware.h"
+#include "radio_firmware.h"
 #include <algorithm>
 #include <array>
 #include <cstring>
@@ -1198,11 +1198,19 @@ uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload,
     info.gpioCount = gpio_count();
     bool needs_uf2 = false;
 #if defined(ENABLE_XBOX_WIRELESS) && ENABLE_XBOX_WIRELESS
-    bool missing = (xbox_get_static_firmware_header() == NULL);
+    RadioFirmwareBlob xbox_firmware;
+    bool missing = !radio_fw_find(RADIO_FW_XBOX_02E6, &xbox_firmware) ||
+                   !radio_fw_find(RADIO_FW_XBOX_02FE, &xbox_firmware);
     info.has_missingStaticFirmware = true;
     info.missingStaticFirmware = missing;
+    // Configurators that know radioFirmwareVersion write it over OTA instead
     needs_uf2 |= missing;
 #endif
+    if (radio_fw_area_size())
+    {
+        info.has_radioFirmwareVersion = true;
+        info.radioFirmwareVersion = radio_fw_content_version();
+    }
     const bool bootloader_outdated = !pfb_bootloader_layout_matches();
     info.has_bootloaderOutdated = true;
     info.bootloaderOutdated = bootloader_outdated;

@@ -23,6 +23,7 @@
 #include "classic/btstack_link_key_db_tlv.h"
 #include "ble/le_device_db_tlv.h"
 #include "emulation/bt/bt_identity.h"
+#include "radio_firmware.h"
 extern "C"
 {
 #include "wiimote_btstack.h"
@@ -134,7 +135,13 @@ bool BluetoothStack::begin()
     bool use_cyw43 = false;
 #ifndef BT_FORCE_USB_DONGLE
     int cyw43_err = PICO_ERROR_INVALID_ARG;
-    if (m_pins.valid())
+    bool cyw43_tried = false;
+    if (m_pins.valid() && !radio_fw_cyw43_present())
+    {
+        // Missing, or the configurator's write of it didn't finish. It can be written again over USB
+        printf("BT: no CYW43 firmware, not starting the CYW43\r\n");
+    }
+    else if (m_pins.valid())
     {
         uint wl_pins[CYW43_PIN_INDEX_WL_COUNT];
         wl_pins[CYW43_PIN_INDEX_WL_REG_ON] = m_pins.reg_on;
@@ -145,6 +152,7 @@ bool BluetoothStack::begin()
         wl_pins[CYW43_PIN_INDEX_WL_CS] = m_pins.cs;
         printf("BT: CYW43 on GP%d (on) GP%d (data) GP%d (cs) GP%d (clock)\r\n", m_pins.reg_on, m_pins.data, m_pins.cs,
                m_pins.clock);
+        cyw43_tried = true;
         cyw43_err = cyw43_set_pins_wl(wl_pins);
         if (cyw43_err == 0)
         {
@@ -174,7 +182,7 @@ bool BluetoothStack::begin()
             s_context = nullptr;
         }
     }
-    else
+    else if (cyw43_tried)
     {
         printf("BT: CYW43 initialization failed (%d)\r\n", cyw43_err);
     }

@@ -148,6 +148,11 @@ static int mt76_stream_output(struct mt76_dev *dev, struct mt76_firmware_stream 
     return 0;
 }
 
+bool mt76_firmware_stream_active(void)
+{
+    return firmware_stream_active;
+}
+
 int mt76_begin_firmware_compressed(struct mt76_dev *dev, const uint8_t *compressed_data,
                                    uint32_t compressed_len, uint32_t decompressed_len)
 {

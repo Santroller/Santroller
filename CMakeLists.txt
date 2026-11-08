@@ -464,6 +464,7 @@ add_executable(
   src/devices/bluetooth.cpp
   src/devices/stp16cpc.cpp
   src/config/FlashPROM.cpp
+  src/radio_firmware.cpp
   src/config/config.cpp
   src/config/config_loader.cpp
   src/config/config_storage.cpp
@@ -529,6 +530,13 @@ if(ENABLE_XBOX_WIRELESS)
     
     message(STATUS "Xbox Wireless Adapter integration complete")
 endif()
+
+# Radio firmware area (src/radio_firmware.cpp): the generated layout, and uzlib's crc32
+target_include_directories(${TARGET} PRIVATE
+    ${CMAKE_BINARY_DIR}/generated
+    ${SANTROLLER_GENERATED_DIR}
+)
+target_link_libraries(${TARGET} uzlib)
 
 if((ENABLE_WIFI OR ENABLE_XBOX_WIRELESS) AND NOT DEFINED SANTROLLER_SHARED_GENERATED_DIR)
   include(cmake/ConvertFirmware.cmake)

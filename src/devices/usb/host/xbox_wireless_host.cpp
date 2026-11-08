@@ -15,7 +15,7 @@ extern "C"
 #include "devices/usb/host/xbox/mt76.h"
 #include "devices/usb/host/xbox/xbox_adapter.h"
 #include "devices/usb/host/xbox/wireless.h"
-#include "xbox_dongle_firmware.h"
+#include "radio_firmware.h"
 #include "gip_button_mapping.h"
 #include "gip_packet_handler.h"
 #include "gip_device_mappings.h"
@@ -395,35 +395,23 @@ void XboxWirelessHost::update(bool full_poll, bool send_events)
     }
     if (m_init_stage == InitStage::LoadFirmware && (now - m_init_start_time) > 500)
     {
-        const XboxStaticFirmwareHeader *header = xbox_get_static_firmware_header();
-        if (!header)
+        RadioFirmwareBlob blob;
+        RadioFirmwareType type = m_adapter_pid == XBOX_WIRELESS_ADAPTER_PID_02FE ? RADIO_FW_XBOX_02FE : RADIO_FW_XBOX_02E6;
+        if (!radio_fw_find(type, &blob) || blob.compression != RADIO_FW_COMPRESSION_GZIP)
         {
+            // Also while the configurator is writing it
             static uint32_t last_warn_time = 0;
             if (now - last_warn_time > 5000)
             {
-                printf("XboxWirelessHost: Static firmware image not found or invalid at 0x%08lx\r\n", (unsigned long)XBOX_STATIC_FIRMWARE_ADDRESS);
+                printf("XboxWirelessHost: adapter firmware %s\r\n", radio_fw_writing() ? "is being written" : "is missing");
                 last_warn_time = now;
             }
             return;
         }
 
-        const uint8_t *base = reinterpret_cast<const uint8_t *>(header);
-        const uint8_t *firmware_data;
-        uint32_t firmware_len;
-        uint32_t firmware_compressed_len;
-
-        if (m_adapter_pid == XBOX_WIRELESS_ADAPTER_PID_02FE)
-        {
-            firmware_data = base + header->fw_02fe_offset;
-            firmware_len = header->fw_02fe_len;
-            firmware_compressed_len = header->fw_02fe_compressed_len;
-        }
-        else
-        {
-            firmware_data = base + header->fw_02e6_offset;
-            firmware_len = header->fw_02e6_len;
-            firmware_compressed_len = header->fw_02e6_compressed_len;
-        }
+        const uint8_t *firmware_data = blob.data;
+        uint32_t firmware_len = blob.raw_len;
+        uint32_t firmware_compressed_len = blob.stored_len;
 
         if (!m_firmware_loading)
         {

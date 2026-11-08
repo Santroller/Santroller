@@ -30,6 +30,13 @@
 #include "config/input_detector.hpp"
 #include "math.h"
 #include <pico_fota_bootloader/core.h>
+#include "radio_firmware.h"
+#if defined(ENABLE_XBOX_WIRELESS) && ENABLE_XBOX_WIRELESS
+extern "C"
+{
+#include "devices/usb/host/xbox/mt76.h"
+}
+#endif
 #include <algorithm>
 #include <string.h>
 #include <vector>
@@ -794,6 +801,32 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
                         memset(fw_update_tmp, 0, sizeof(fw_update_tmp));
                     }
                 }
+                else if (m_radio_update)
+                {
+                    uint32_t write_size =
+                        uploaded >= firmware_size
+                            ? ((chunk_offset + firmware_write_alignment - 1) / firmware_write_alignment) * firmware_write_alignment
+                            : firmware_write_block_size;
+                    bool ok = radio_fw_write_block(firmware_offset, fw_update_tmp, write_size);
+                    if (ok && uploaded >= firmware_size)
+                    {
+                        ok = radio_fw_write_finish();
+                        printf(ok ? "radio fw update done\r\n" : "radio fw update failed its checks\r\n");
+                        m_radio_update = false;
+                        finish_firmware_update();
+                        // Nothing reboots, the configurator reads radioFirmwareVersion back to check it
+                        return ok;
+                    }
+                    if (!ok)
+                    {
+                        printf("failed to write radio fw at 0x%lx\r\n", (unsigned long)firmware_offset);
+                        finish_firmware_update();
+                        return false;
+                    }
+                    update_state.offset = uploaded;
+                    update_state.chunkOffset = 0;
+                    memset(fw_update_tmp, 0, sizeof(fw_update_tmp));
+                }
                 else
                 {
                     flash_write_begin();
@@ -877,6 +910,19 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
                 printf("fw update at 0x%lx, expected 0x%lx\r\n", (unsigned long)decoded.offset, (unsigned long)update_state.offset);
                 return false;
             }
+            bool radio = decoded.has_radioFirmware && decoded.radioFirmware;
+            if (radio && decoded.has_deviceId && decoded.deviceId > 0)
+            {
+                printf("radio fw updates can't go to another device\r\n");
+                finish_firmware_update();
+                return false;
+            }
+            if (decoded.offset > 0 && radio != m_radio_update)
+            {
+                printf("fw update switched between app and radio fw\r\n");
+                finish_firmware_update();
+                return false;
+            }
             update_state = decoded;
             // printf("fw update offset: %02x\r\n", update_state.offset);
             tool_seen = true;
@@ -903,8 +949,26 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
                         return false;
                     }
                 }
+                else if (radio)
+                {
+#if defined(ENABLE_XBOX_WIRELESS) && ENABLE_XBOX_WIRELESS
+                    if (mt76_firmware_stream_active())
+                    {
+                        printf("radio fw update refused while the xbox adapter loads its firmware\r\n");
+                        finish_firmware_update();
+                        return false;
+                    }
+#endif
+                    if (!radio_fw_write_begin(update_state.firmwareSize))
+                    {
+                        finish_firmware_update();
+                        return false;
+                    }
+                    m_radio_update = true;
+                }
                 else
                 {
+                    m_radio_update = false;
                     flash_write_begin();
                     int result = pfb_initialize_download_slot();
                     flash_write_end();
@@ -964,6 +1028,12 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
 
 void HIDConfigDevice::finish_firmware_update()
 {
+    if (m_radio_update)
+    {
+        // Didn't get to the end, so the area stays marked as interrupted
+        radio_fw_write_abort();
+        m_radio_update = false;
+    }
     if (m_target_secondary_pico)
     {
         m_target_secondary_pico->cancel_host_ota();

@@ -1,4 +1,5 @@
 #include "leds/leds.hpp"
+#include "leds/player_leds.hpp"
 #include "instance.hpp"
 #include "utils.h"
 #include "hardware/pwm.h"
@@ -162,7 +163,16 @@ void PlayerLedMapping::update(bool full_poll, bool send_events)
 }
 void PlayerLedMapping::set_player_led(uint8_t player)
 {
-    m_device->set_val(player == m_mapping.playerId ? UINT16_MAX : 0);
+    if (!m_mapping.has_style)
+    {
+        m_device->set_val(player == m_mapping.playerId ? UINT16_MAX : 0);
+        return;
+    }
+    uint8_t pattern = player_led_pattern(m_mapping.style, player);
+    for (uint8_t i = 0; i < m_device->led_count(); i++)
+    {
+        m_device->set_val_at(i, i < 8 && (pattern & (1 << i)) ? UINT16_MAX : 0);
+    }
 }
 
 void PlayerLedMapping::reload()
@@ -342,9 +352,10 @@ uint16_t InputLedMapping::scale(uint16_t raw) const
     }
     return amount * UINT16_MAX;
 }
-PatternLedMapping::PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping), m_speed(mapping.speed ? mapping.speed : 1), m_brightness(mapping.brightness ? mapping.brightness : 1)
+// The old Pattern Based mode: always on, with the effect it now is
+PatternLedMapping::PatternLedMapping(std::unique_ptr<LedMappingDevice> device, proto_PatternLedMapping mapping, std::shared_ptr<Profile> profile, uint32_t id) : LedMapping(std::move(device), profile, id), m_mapping(mapping)
 {
-    m_speed = 21 - m_speed;
+    m_device->set_effect(m_mapping.pattern == PatternRainbow ? EffectRainbow : EffectBreathing, m_mapping.speed ? m_mapping.speed : 1);
 }
 void PatternLedMapping::update(bool full_poll, bool send_events)
 {
@@ -352,75 +363,24 @@ void PatternLedMapping::update(bool full_poll, bool send_events)
     {
         return;
     }
-    // Paused while the host has the LEDs. A profile the tool is only testing leaves its pattern off, as it
-    // would fight the active profile's LEDs
-    if (m_profile->preview || millis() < m_next_poll || overridden())
+    // A profile the tool is only testing leaves its pattern off, as it would fight the active profile's LEDs
+    if (m_profile->preview || overridden())
     {
         return;
     }
-    uint32_t speed = m_speed;
-    uint8_t leds = m_device->led_count();
-    // If the led doesn't support brightness, then we just stop each channel at a lower brightness
-    uint8_t pos_per_chan = m_device->supports_brightness() ? 255 : m_brightness;
-    if (m_mapping.pattern == PatternRainbow)
+    if (m_mapping.pattern != PatternRainbow)
     {
-        uint8_t section = pos_per_chan / 3;
-        uint8_t section2 = section * 2;
-        for (int i = 0; i < leds; i++)
-        {
-            auto pos = (i * pos_per_chan / leds + m_pos) % pos_per_chan;
-            if (pos < section)
-            {
-                auto g = 0;
-                auto r = pos;
-                auto b = pos_per_chan - r;
-                m_device->set_val_raw(i, r, g, b, m_brightness);
-            }
-            else if (pos < section2)
-            {
-                auto g = pos - section;
-                auto r = pos_per_chan - g;
-                auto b = 0;
-                m_device->set_val_raw(i, r, g, b, m_brightness);
-            }
-            else if (pos)
-            {
-                auto b = pos - section2;
-                auto g = pos_per_chan - b;
-                auto r = 0;
-                m_device->set_val_raw(i, r, g, b, m_brightness);
-            }
-        }
-        m_pos++;
-
-        if (!m_device->supports_brightness())
-        {
-            // Speed needs to be scaled in this scenario, as there are less values being looped over
-            speed *= 255 / m_brightness;
-        }
+        m_device->set_val(UINT16_MAX);
+        return;
     }
-    else if (m_mapping.pattern == PatternFade)
+    // The rainbow was as bright as its brightness, rather than the LED's colours
+    uint8_t brightness = m_mapping.brightness ? m_mapping.brightness : 1;
+    bool global = m_device->supports_brightness();
+    uint8_t level = global ? 255 : brightness;
+    for (uint8_t i = 0; i < m_device->led_count(); i++)
     {
-        m_device->set_val(m_pos);
-        if (m_dir)
-        {
-            m_pos -= 127;
-        }
-        else
-        {
-            m_pos += 127;
-        }
-        if (m_pos >= UINT16_MAX && !m_dir)
-        {
-            m_dir = true;
-            m_pos -= 127;
-        }
-        if (m_pos == 0 && m_dir)
-        {
-            m_dir = false;
-        }
+        m_device->set_val_raw(i, level, level, level, brightness);
     }
-    m_next_poll = millis() + speed;
 }
 void StaticLedMapping::update(bool full_poll, bool send_events)
 {

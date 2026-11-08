@@ -20,6 +20,7 @@ set(INPUTS_SOURCES
   ${SANTROLLER_ROOT}/src/triggers/mode_triggers.cpp
   ${SANTROLLER_ROOT}/src/mappings/base_mapping.cpp
   ${SANTROLLER_ROOT}/src/mappings/peripheral_mappings.cpp
+  ${SANTROLLER_ROOT}/src/leds/base_led.cpp
   ${SANTROLLER_ROOT}/src/leds/led_mapping.cpp
   ${SANTROLLER_ROOT}/src/managers/config_manager.cpp
 )

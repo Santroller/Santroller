@@ -29,6 +29,9 @@ std::shared_ptr<KeyboardHost> KeyboardHost::open_common(std::shared_ptr<UsbHostD
         return nullptr;
     }
 
+    // the HID descriptor sits between the interface and its endpoints
+    p_desc = tu_desc_next(p_desc);
+    TU_VERIFY(HID_DESC_TYPE_HID == tu_desc_type(p_desc), nullptr);
     uint8_t endpoints = itf_desc->bNumEndpoints;
     while (endpoints--)
     {

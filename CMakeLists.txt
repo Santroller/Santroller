@@ -357,6 +357,7 @@ add_executable(
   src/input/crazy_guitar_neck.cpp
   src/input/djh_platter.cpp
   src/emulation/keyboard_mouse.cpp
+  src/leds/base_led.cpp
   src/leds/led_devices.cpp
   src/leds/led_mapping.cpp
   src/leds/led_mappings.cpp

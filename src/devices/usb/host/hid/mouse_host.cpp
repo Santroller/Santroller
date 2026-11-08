@@ -41,25 +41,37 @@ std::shared_ptr<UsbHostInterface> MouseHost::open(std::shared_ptr<UsbHostDevice>
     if (itf_desc->bInterfaceProtocol == HID_ITF_PROTOCOL_MOUSE)
     {
         auto intf = std::make_shared<MouseHost>(dev_addr, itf_desc->bInterfaceNumber, list->m_id, info);
+        // the HID descriptor sits between the interface and its endpoints
+        p_desc = tu_desc_next(p_desc);
+        bool ok = HID_DESC_TYPE_HID == tu_desc_type(p_desc);
         uint8_t endpoints = itf_desc->bNumEndpoints;
-        while (endpoints--)
+        while (ok && endpoints--)
         {
             p_desc = tu_desc_next(p_desc);
             tusb_desc_endpoint_t const *desc_ep =
                 (tusb_desc_endpoint_t const *)p_desc;
-            TU_VERIFY(TUSB_DESC_ENDPOINT == desc_ep->bDescriptorType, nullptr);
+            if (TUSB_DESC_ENDPOINT != desc_ep->bDescriptorType || !tuh_edpt_open(dev_addr, desc_ep))
+            {
+                ok = false;
+                break;
+            }
             if (desc_ep->bEndpointAddress & 0x80)
             {
                 intf->m_ep_in = desc_ep->bEndpointAddress;
                 intf->m_ep_in_size = desc_ep->wMaxPacketSize;
-                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
             }
             else
             {
                 intf->m_ep_out = desc_ep->bEndpointAddress;
                 intf->m_ep_out_size = desc_ep->wMaxPacketSize;
-                TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
             }
+        }
+        if (!ok)
+        {
+            // the caller still owns info and hands it to the next matcher, so don't free it with intf
+            intf->m_info = nullptr;
+            intf->m_decoder.set_report_info(nullptr);
+            return nullptr;
         }
         if (intf->m_ep_out)
         {

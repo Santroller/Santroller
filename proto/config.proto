@@ -73,6 +73,7 @@ message InputLedMapping {
   optional int32 max = 3;
   optional ReactiveRgbPatternType pattern = 4;
 }
+// The old Pattern Based mode, loaded as Static with an effect
 message PatternLedMapping {
   required RgbPatternType pattern = 1;
   required int32 speed = 2;
@@ -96,7 +97,11 @@ message PlaystationLedMapping {
 
 }
 message PlayerLedMapping {
+  // Without a style: lit while the host sets this player
   required int32 playerId = 1;
+  // The mapping's LEDs show the player number together in this style, so one mapping covers all of
+  // them. playerId isn't used.
+  optional PlayerLedStyle style = 2;
 }
 message KeyboardLedMapping {
   required KeyboardLedType type = 1;
@@ -198,9 +203,17 @@ message LedMapping {
     StatusLedMapping statusMapping = 11;
   }
 }
+// Drawn over what the mapping shows while it lights the LED, so an input LED can breathe while held. A
+// released colour shows as it is.
+message LedEffect {
+  required LedEffectType type = 1;
+  // 1 (slowest) to 20 (fastest)
+  required uint32 speed = 2;
+}
 message Led {
     required LedDevice device = 1;
     required LedMapping mapping = 2;
+    optional LedEffect effect = 3;
 }
 
 message SpecificUsbDevice {

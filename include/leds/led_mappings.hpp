@@ -196,6 +196,7 @@ private:
     uint32_t m_last_decay = 0;
 };
 
+// The old Pattern Based mode, now Static with an effect
 class PatternLedMapping : public LedMapping
 {
 public:
@@ -205,11 +206,6 @@ public:
 
 protected:
     proto_PatternLedMapping m_mapping;
-    uint32_t m_pos = 0;
-    bool m_dir = false;
-    uint32_t m_next_poll = 0;
-    uint32_t m_speed = 0;
-    uint32_t m_brightness = 0;
 };
 
 class StaticLedMapping : public LedMapping

@@ -6,6 +6,7 @@
 
 void LedMapping::off()
 {
+    m_device->forget_written();
     m_device->off();
 }
 
@@ -58,6 +59,11 @@ bool LedMapping::tick_test(bool send_events)
             }
             return false;
         }
+    }
+    // The effect's next frame, unless the host has the LED
+    if (m_device && m_device->has_effect() && !overridden())
+    {
+        m_device->redraw_effect();
     }
     return false;
 }

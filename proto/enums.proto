@@ -339,9 +339,30 @@ enum InputDetectMidiType {
     DetectMidiPitchBend=3;
 }
 
+// Only used by the old Pattern Based mode, which now loads as Static with the matching LedEffectType
 enum RgbPatternType {
     PatternRainbow=1;
     PatternFade=2;
+}
+// How a player LED mapping's LEDs show the player number together, in the order they are listed
+enum PlayerLedStyle {
+    // One LED for each player, the first for player 1 (Xbox 360, Wii)
+    PlayerLedSequential=1;
+    // One LED for each of players 1 - 4, then the fourth with others for players 5 - 10 (PS3)
+    PlayerLedPlayStation3=2;
+    // 1, 1 - 2, 1 - 3, all four, then 1 + 4, 1 + 3, 1 + 3 + 4 and 2 + 3 for players 5 - 8 (Switch)
+    PlayerLedSwitch=3;
+    // Five LEDs: the centre, the inner two, the centre and outer two, the inner and outer two, all (PS5)
+    PlayerLedPlayStation5=4;
+}
+// Drawn over what any LED mapping shows, while it shows something
+enum LedEffectType {
+    // Fades the LED down to off and back up
+    EffectBreathing=1;
+    // Turns the LED off and on
+    EffectBlink=2;
+    // RGB only: cycles the colour through the rainbow, at the brightness the mapping shows
+    EffectRainbow=3;
 }
 enum ReactiveRgbPatternType {
     PatternStatic=1;

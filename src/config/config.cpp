@@ -686,6 +686,10 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     {
         return false;
     }
+    if (proto_led.has_effect)
+    {
+        device->set_effect(proto_led.effect.type, proto_led.effect.speed);
+    }
 
     // Get input for input-based LED mappings
     std::unique_ptr<Input> input;

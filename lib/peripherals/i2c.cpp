@@ -282,7 +282,7 @@ static void __not_in_flash_func(i2c_dma_rx_channel_configure)(
         rx_channel, &rx_config, rx_buf, &i2c_get_hw(i2c)->data_cmd, len, true);
 }
 
-int64_t __not_in_flash_func(timeout_handler)(__unused alarm_id_t id, void *user_data)
+int64_t __not_in_flash_func(timeout_handler)(alarm_id_t, void *user_data)
 {
     i2c_dma_t *i2c_dma = (i2c_dma_t *)user_data;
     i2c_dma->timeout_alarm_id = 0;

@@ -8,11 +8,6 @@
 #include <vector>
 #include "pico/time.h"
 
-// The Pico SDK defines this in pico/platform
-#ifndef __unused
-#define __unused __attribute__((unused))
-#endif
-
 typedef unsigned int uint;
 typedef void (*irq_handler_t)(void);
 typedef struct i2c_inst

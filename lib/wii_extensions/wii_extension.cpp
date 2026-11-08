@@ -10,7 +10,7 @@
 #include "hardware/dma.h"
 #include "hardware/irq.h"
 #include "hardware/clocks.h"
-static int64_t restart_handler(__unused alarm_id_t id, void *user_data)
+static int64_t restart_handler(alarm_id_t, void *user_data)
 {
     WiiExtension *inst = (WiiExtension *)user_data;
     inst->process_data(WII_ADDR, false, false, false, false);

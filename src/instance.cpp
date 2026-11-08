@@ -227,7 +227,8 @@ void Instance::update_feedback(bool force)
         }
         for (const auto &led_pair : profile->leds)
         {
-            if (led_pair)
+            // Put back once the test is over
+            if (led_pair && !led_pair->held_by_test())
             {
                 led_pair->begin_feedback();
                 led_pair->set_rumble(rumble_left, rumble_right);

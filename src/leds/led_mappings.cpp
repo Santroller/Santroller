@@ -246,7 +246,8 @@ void StatusLedMapping::update(bool full_poll, bool send_events)
         on = m_mapping.has_mode && mode == m_mapping.mode;
         break;
     }
-    if (!overridden())
+    // Status LEDs are indicators like always on ones, so a profile the tool is only testing leaves them off
+    if (!m_profile->preview && !overridden())
     {
         m_device->set_val(on ? UINT16_MAX : 0);
     }

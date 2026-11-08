@@ -152,6 +152,8 @@ struct ConfigDecodeContext
     // it is loaded
     bool profile_wide_slot_ids = false;
     ProfileSlotIds slot_ids;
+    // The position of the next LED in the profile's config, which the tool knows it by
+    uint32_t next_led_id = 0;
 };
 
 bool load_cycle_state(pb_istream_t *stream, const pb_field_t *field,
@@ -667,6 +669,7 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
         return true;
     }
     auto profile = context->profile;
+    uint32_t led_id = context->next_led_id++;
     proto_Led proto_led = proto_Led_init_default;
     proto_led.mapping.led.inputMapping.input.cb_input.funcs.decode =
         load_input_dev;
@@ -684,7 +687,8 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
                                                 std::move(image));
     if (!device)
     {
-        return false;
+        // Its device is missing, which only loses this LED
+        return true;
     }
     if (proto_led.has_effect)
     {
@@ -701,7 +705,7 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
 
     auto led_mapping = LedFactory::create_led_mapping(
         proto_led.mapping, profile, std::move(device), std::move(input),
-        profile->leds.size());
+        led_id);
 
     if (led_mapping)
     {

@@ -11,6 +11,53 @@
 #define INTEL_VID 0x8087
 #define BROADCOM_VID 0x0a5c
 
+// Realtek adapters sold under other vendor IDs, from the BTUSB_REALTEK entries in Linux's btusb.c.
+// Only the plug-in USB dongle chips are listed, the rest are laptop modules.
+static const struct
+{
+    uint16_t vid;
+    uint16_t pid;
+} rebadged_realtek[] = {
+    // 8761BUV
+    {0x2c4e, 0x0115},
+    {0x2357, 0x0604}, // TP-Link UB500 (and some later UB400s)
+    {0x2357, 0x0607},
+    {0x0b05, 0x190e}, // ASUS USB-BT500
+    {0x2550, 0x8761},
+    {0x6655, 0x8771},
+    {0x7392, 0xc611}, // Edimax
+    {0x2b89, 0x8761}, // UGREEN
+    {0x2b89, 0x6275},
+    {0x37ad, 0x0600},
+    // 8761CU
+    {0x0b05, 0x1bef},
+    {0x0b05, 0x1d70},
+    // 8851BU
+    {0x3625, 0x010b},
+    {0x2001, 0x332a},
+    {0x7392, 0xe611},
+    {0x2c4e, 0x0128},
+    // 8723BU
+    {0x7392, 0xa611},
+    {0x2c0a, 0x8761},
+};
+
+static bool needs_firmware(uint16_t vid, uint16_t pid)
+{
+    if (vid == REALTEK_VID || vid == INTEL_VID)
+    {
+        return true;
+    }
+    for (const auto &id : rebadged_realtek)
+    {
+        if (id.vid == vid && id.pid == pid)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 // only one adapter is used at a time
 static BtDongleHost *s_dongle = nullptr;
 
@@ -59,10 +106,11 @@ std::shared_ptr<UsbHostInterface> BtDongleHost::open(std::shared_ptr<UsbHostDevi
         return nullptr;
     }
     printf("BT dongle: found bluetooth adapter %04x:%04x\r\n", vid, pid);
-    if (vid == REALTEK_VID || vid == INTEL_VID)
+    if (needs_firmware(vid, pid))
     {
-        // these need firmware uploaded before they will work, which isn't supported yet
-        printf("BT dongle: Realtek and Intel adapters need firmware we don't load yet, this adapter probably won't work.\r\n");
+        // these need firmware uploaded before they will work, which isn't supported yet.
+        // Without it they still come up and accept commands, but never actually transmit.
+        printf("BT dongle: this is a Realtek or Intel adapter, which needs firmware we don't load yet. It will come up but won't be visible to other devices, use a CSR8510 or Broadcom adapter instead.\r\n");
     }
     else if (broadcom_interface)
     {

@@ -37,6 +37,14 @@ public:
     void test(uint32_t duration_ms = 2000);
     bool is_testing() const;
     bool tick_test(bool send_events);
+    // Whether this mapping, or another sharing one of its LEDs, is being tested, which then keeps the LED
+    // to itself
+    bool held_by_test() const;
+    // Whether a test has ended since this was last called, so what the host last sent can be put back on
+    // the LEDs it drives, as they were turned off for the test
+    static bool take_test_ended();
+    // Its position in the profile's LEDs in the config, which the tool knows it by
+    uint32_t id() const { return m_id; }
     // the Capability bits this mapping lets the host drive
     virtual uint8_t capabilities() const { return 0; }
     // Around each pass of the host's feedback through the set_ functions, to notice when it changes
@@ -61,6 +69,10 @@ private:
     uint32_t m_commanded_at = 0;
     bool m_was_commanded = false;
     uint32_t m_test_until = 0;
+    // The tool hasn't been told the test is over yet
+    bool m_test_end_unsent = false;
+    void end_test(bool send_events);
+    static bool s_test_ended;
 };
 class RumbleLedMapping : public LedMapping
 {

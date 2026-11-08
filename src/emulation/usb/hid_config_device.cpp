@@ -89,6 +89,13 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
     {
         return;
     }
+    // A test turned off LEDs that only change when the host sends something, so put back what it last sent
+    if (LedMapping::take_test_ended())
+    {
+        ProfileManager::instance().for_each_instance([](const std::shared_ptr<Instance> &instance) {
+            instance->update_feedback(true);
+        });
+    }
     // Before the tool checks below: a hotkey tool only sends commands, never keepalives
     if (!pending_cycle_commands.empty())
     {
@@ -477,11 +484,8 @@ void HIDConfigDevice::handle_command(proto_Command command)
     case proto_Command_testLed_tag: {
         uint32_t prof_id = command.command.testLed.has_profileId ? command.command.testLed.profileId : selected_profile;
         uint32_t duration = command.command.testLed.has_durationMs ? command.command.testLed.durationMs : 2000;
-        auto prof = ProfileManager::instance().get_profile(prof_id, selected_instance);
-        if (!prof)
-        {
-            prof = ProfileManager::instance().load_tool_profile(prof_id, selected_instance);
-        }
+        // An inactive profile is only loaded for its triggers, without its LEDs, so it's loaded fully here
+        auto prof = ProfileManager::instance().load_tool_profile(prof_id, selected_instance);
         if (prof)
         {
             uint32_t led_id = command.command.testLed.has_id ? command.command.testLed.id : UINT32_MAX;
@@ -495,9 +499,17 @@ void HIDConfigDevice::handle_command(proto_Command command)
                     }
                 }
             }
-            else if (led_id < prof->leds.size() && prof->leds[led_id])
+            else
             {
-                prof->leds[led_id]->test(duration);
+                // Its position in the config, which differs from its position here once an LED before it
+                // couldn't be built
+                for (const auto &led : prof->leds)
+                {
+                    if (led && led->id() == led_id)
+                    {
+                        led->test(duration);
+                    }
+                }
             }
         }
         break;

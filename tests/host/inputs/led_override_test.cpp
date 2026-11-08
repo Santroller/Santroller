@@ -184,3 +184,61 @@ TEST_F(LedOverrideTest, LedMappingTestModeCanBeCancelledImmediately)
     EXPECT_EQ(pin1, 0);
     EXPECT_FALSE(button->is_testing());
 }
+
+TEST_F(LedOverrideTest, TestingAnLedKeepsOtherMappingsOnItAway)
+{
+    // The button comes after the host mapping, so it would paint over the host mapping's test every update
+    button->held = false;
+    host->test(500);
+    button->update(false, false);
+    EXPECT_EQ(pin1, UINT16_MAX);
+    EXPECT_TRUE(button->held_by_test());
+
+    clock_ms::advance(501);
+    host->update(false, false);
+    button->update(false, false);
+    EXPECT_FALSE(button->held_by_test());
+    button->held = true;
+    button->update(false, false);
+    EXPECT_EQ(pin1, UINT16_MAX);
+}
+
+TEST_F(LedOverrideTest, OtherLedsAreNotHeldByATest)
+{
+    auto b = std::make_unique<ButtonLedMapping>(std::make_unique<PinLedDevice>(2, &pin2), profile, 2);
+    auto *other = b.get();
+    profile->leds.push_back(std::move(b));
+    host->test(500);
+    EXPECT_FALSE(other->held_by_test());
+}
+
+TEST_F(LedOverrideTest, AnEndedTestAsksForTheHostsLedsBack)
+{
+    LedMapping::take_test_ended();
+    button->test(500);
+    EXPECT_FALSE(LedMapping::take_test_ended());
+    clock_ms::advance(501);
+    button->update(false, false);
+    EXPECT_TRUE(LedMapping::take_test_ended());
+    EXPECT_FALSE(LedMapping::take_test_ended());
+
+    button->test(500);
+    button->test(0);
+    EXPECT_TRUE(LedMapping::take_test_ended());
+}
+
+TEST_F(LedOverrideTest, TheToolHearsTheTestEndedFromALaterUpdateWithEvents)
+{
+    button->test(500);
+    HIDConfigDevice::sent_events.clear();
+    clock_ms::advance(501);
+    // An active profile's console emulation updates it without events
+    button->update(false, false);
+    EXPECT_TRUE(HIDConfigDevice::sent_events.empty());
+    button->update(false, true);
+    ASSERT_EQ(HIDConfigDevice::sent_events.size(), 1u);
+    EXPECT_EQ(HIDConfigDevice::sent_events[0].event.led.id, 1u);
+    EXPECT_EQ(HIDConfigDevice::sent_events[0].event.led.state, 0u);
+    button->update(false, true);
+    EXPECT_EQ(HIDConfigDevice::sent_events.size(), 1u);
+}

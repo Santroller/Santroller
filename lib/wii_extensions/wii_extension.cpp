@@ -365,17 +365,20 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
         mInterface.dmaWriteRead(WII_ADDR, nullptr, 0, bufferRx, WII_ID_LEN);
         break;
     case WII_INPUTS_WRITE_PTR:
-        if (mType == WiiDjHeroTurntable && m_turntable_poll_interval_us)
+        // Clone extensions (eg the Rage guitar) only refresh their data registers while the bus is
+        // left alone, so back to back reads would keep returning the same report. A Wii remote polls
+        // every few ms too. The turntable also needs it, as its velocities are movement since the last read
+        if (m_poll_interval_us)
         {
             const uint32_t now = time_us_32();
-            const uint32_t elapsed = now - m_last_turntable_poll_us;
-            if (m_has_turntable_poll && elapsed < m_turntable_poll_interval_us)
+            const uint32_t elapsed = now - m_last_poll_us;
+            if (m_has_polled && elapsed < m_poll_interval_us)
             {
-                schedule(m_turntable_poll_interval_us - elapsed);
+                schedule(m_poll_interval_us - elapsed);
                 return;
             }
-            m_last_turntable_poll_us = now;
-            m_has_turntable_poll = true;
+            m_last_poll_us = now;
+            m_has_polled = true;
         }
         bufferTx[0] = wiiPointer;
         mInterface.dmaWriteRead(WII_ADDR, bufferTx, 1, nullptr, 0);
@@ -395,11 +398,11 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
 }
 
 WiiExtension::WiiExtension(MidiDevice *midiDevice, uint8_t block, uint8_t sda, uint8_t scl,
-                           uint32_t clock, uint32_t turntable_poll_interval_ms)
+                           uint32_t clock, uint32_t poll_interval_ms)
     : mInterface(block, sda, scl, clock),
       mFound(false),
       m_block(block),
-      m_turntable_poll_interval_us((turntable_poll_interval_ms < WII_TURNTABLE_MIN_POLL_INTERVAL_MS ? WII_TURNTABLE_MIN_POLL_INTERVAL_MS : turntable_poll_interval_ms) * 1000),
+      m_poll_interval_us((poll_interval_ms < WII_MIN_POLL_INTERVAL_MS ? WII_MIN_POLL_INTERVAL_MS : poll_interval_ms) * 1000),
       m_device(midiDevice)
 {
     printf("WiiExtension::WiiExtension\r\n");
@@ -474,13 +477,12 @@ void WiiExtension::tick()
 {
     mInterface.tick();
     const uint32_t now = to_ms_since_boot(get_absolute_time());
-    const bool waiting_for_turntable_poll =
-        mType == WiiDjHeroTurntable &&
-        m_turntable_poll_interval_us &&
+    const bool waiting_for_poll =
+        m_poll_interval_us &&
         status == WII_INPUTS_WRITE_PTR &&
-        m_has_turntable_poll &&
-        time_us_32() - m_last_turntable_poll_us < m_turntable_poll_interval_us;
-    if (lastPoll && !restart_alarm_id && now - lastPoll > 500 && !waiting_for_turntable_poll)
+        m_has_polled &&
+        time_us_32() - m_last_poll_us < m_poll_interval_us;
+    if (lastPoll && !restart_alarm_id && now - lastPoll > 500 && !waiting_for_poll)
     {
         // Masked so the I2C interrupt can't schedule a poll between process_data cancelling the old
         // alarm and storing the new one, which would leave an alarm that end() can't cancel

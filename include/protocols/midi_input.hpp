@@ -215,34 +215,35 @@ public:
     // and https://github.com/jessecrossen/vst-stangin (string numbering and open notes)
     uint16_t pro_guitar_axis(ProGuitarAxisType axis) const
     {
-        // we want fret inputs to stay at the standard range
-        // but then everything else needs to be scaled up
+        // scaled the same way the USB hosts read a real pro guitar, so ProGuitarAxisMapping's >> 11 (frets)
+        // and >> 9 (velocities) get the raw values back. Velocities must keep their lowest bit, which is
+        // what the repeated-pick toggle below flips.
         switch (axis)
         {
         case ProGuitar_LowEFret:
-            return midiFrets[5];
+            return midiFrets[5] << 11;
         case ProGuitar_AFret:
-            return midiFrets[4];
+            return midiFrets[4] << 11;
         case ProGuitar_DFret:
-            return midiFrets[3];
+            return midiFrets[3] << 11;
         case ProGuitar_GFret:
-            return midiFrets[2];
+            return midiFrets[2] << 11;
         case ProGuitar_BFret:
-            return midiFrets[1];
+            return midiFrets[1] << 11;
         case ProGuitar_HighEFret:
-            return midiFrets[0];
+            return midiFrets[0] << 11;
         case ProGuitar_LowEFretVelocity:
-            return midiStringVelocities[5] << 8;
+            return midiStringVelocities[5] << 9;
         case ProGuitar_AFretVelocity:
-            return midiStringVelocities[4] << 8;
+            return midiStringVelocities[4] << 9;
         case ProGuitar_DFretVelocity:
-            return midiStringVelocities[3] << 8;
+            return midiStringVelocities[3] << 9;
         case ProGuitar_GFretVelocity:
-            return midiStringVelocities[2] << 8;
+            return midiStringVelocities[2] << 9;
         case ProGuitar_BFretVelocity:
-            return midiStringVelocities[1] << 8;
+            return midiStringVelocities[1] << 9;
         case ProGuitar_HighEFretVelocity:
-            return midiStringVelocities[0] << 8;
+            return midiStringVelocities[0] << 9;
         case ProGuitar_Tilt:
             return midiButtons.tilt ? 65535 : 32767;
         case ProGuitar_AutoCalibrationMicrophone:

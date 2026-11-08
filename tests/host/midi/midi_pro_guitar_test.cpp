@@ -119,7 +119,7 @@ TEST_P(MidiProGuitar, FretsAreTheNoteAboveTheOpenString)
         EXPECT_EQ(h.midi.pro_guitar_frets()[string - 1], 0) << int(string);
         fret(string, open + 7);
         EXPECT_EQ(h.midi.pro_guitar_frets()[string - 1], 7) << int(string);
-        // 22 frets on the Mustang
+        // 22 frets on the Squier
         fret(string, open + 22);
         EXPECT_EQ(h.midi.pro_guitar_frets()[string - 1], 22) << int(string);
     }
@@ -243,7 +243,7 @@ TEST_P(MidiProGuitar, FretAxesFollowTheirStrings)
     }
     for (uint8_t string = 1; string <= 6; string++)
     {
-        EXPECT_EQ(h.midi.pro_guitar_axis(axes[string - 1]), string) << "string " << int(string);
+        EXPECT_EQ(h.midi.pro_guitar_axis(axes[string - 1]), string << 11) << "string " << int(string);
     }
 }
 
@@ -251,7 +251,7 @@ TEST_P(MidiProGuitar, LowEFretIsTheLowEString)
 {
     // fifth fret on the low E string (E2 + 5 = A2)
     fret(6, 45);
-    EXPECT_EQ(h.midi.pro_guitar_axis(ProGuitar_LowEFret), 5);
+    EXPECT_EQ(h.midi.pro_guitar_axis(ProGuitar_LowEFret), 5 << 11);
     EXPECT_EQ(h.midi.pro_guitar_axis(ProGuitar_HighEFret), 0);
 }
 
@@ -265,12 +265,26 @@ TEST_P(MidiProGuitar, VelocityAxesFollowTheirStrings)
     }
     for (uint8_t string = 1; string <= 6; string++)
     {
-        // velocities scale up to the top byte of the axis
-        EXPECT_EQ(h.midi.pro_guitar_axis(axes[string - 1]), (0x10 * string) << 8) << "string " << int(string);
+        // velocities are 7 bit, scaled to the top of the axis
+        EXPECT_EQ(h.midi.pro_guitar_axis(axes[string - 1]), (0x10 * string) << 9) << "string " << int(string);
     }
 }
 
 TEST_P(MidiProGuitar, TiltAxis)
 {
     EXPECT_EQ(h.midi.pro_guitar_axis(ProGuitar_Tilt), 32767);
+}
+
+// ProGuitarAxisMapping writes frets as axis >> 11 and velocities as axis >> 9, so the raw values have to come
+// back out of that, including the low bit a repeated pick flips.
+TEST_P(MidiProGuitar, AxesSurviveTheReportScaling)
+{
+    fret(6, kOpenStrings[5] + 22);
+    EXPECT_EQ(h.midi.pro_guitar_axis(ProGuitar_LowEFret) >> 11, 22);
+    pick(6, 0x40);
+    const uint16_t first = h.midi.pro_guitar_axis(ProGuitar_LowEFretVelocity) >> 9;
+    pick(6, 0x40);
+    const uint16_t second = h.midi.pro_guitar_axis(ProGuitar_LowEFretVelocity) >> 9;
+    EXPECT_EQ(first, 0x40);
+    EXPECT_NE(first, second);
 }

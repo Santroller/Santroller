@@ -22,10 +22,11 @@
 #define FIRST_PARTY_SBOX 0x97
 #define THIRD_PARTY_SBOX 0x4D
 
-// Minimum poll interval for a DJ Hero turntable when the config does not set one
-#define WII_TURNTABLE_DEFAULT_POLL_INTERVAL_MS 5
-// The table velocities are movement since the last read, so polling too often shrinks them towards nothing
-#define WII_TURNTABLE_MIN_POLL_INTERVAL_MS 1
+// Time between input polls of an extension when the config does not set one
+#define WII_DEFAULT_POLL_INTERVAL_MS 5
+// The least time between input polls. The turntable velocities are movement since the last read, so
+// polling too often shrinks them towards nothing, and clones need the bus left idle to refresh their data
+#define WII_MIN_POLL_INTERVAL_MS 1
 // How many invalid packets in a row before the extension is set up again
 #define WII_MAX_INVALID_PACKETS 100
 
@@ -34,7 +35,7 @@ class WiiExtension: public I2CDMAInterface, public WiiExtensionDecoder
 
 public:
     WiiExtension(MidiDevice* midiDevice, uint8_t block, uint8_t sda, uint8_t scl,
-                 uint32_t clock, uint32_t turntable_poll_interval_ms);
+                 uint32_t clock, uint32_t poll_interval_ms);
     ~WiiExtension();
     void begin();
     void end();
@@ -60,9 +61,9 @@ private:
     uint8_t wiiPointer = 0;
     uint8_t m_block = 0;
     // in us, so the interval is steady rather than jittering by up to a ms
-    uint32_t m_turntable_poll_interval_us = 0;
-    uint32_t m_last_turntable_poll_us = 0;
-    bool m_has_turntable_poll = false;
+    uint32_t m_poll_interval_us = 0;
+    uint32_t m_last_poll_us = 0;
+    bool m_has_polled = false;
     MidiDevice *m_device;
     alarm_id_t restart_alarm_id = 0;
     void schedule(uint64_t delay_us);

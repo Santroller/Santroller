@@ -424,3 +424,13 @@ enum DisplayElementType {
   // The ellipse that fits its width and height
   DisplayElementCircle = 6;
 }
+
+// How a board wires its CYW43 wireless chip
+enum WirelessPins {
+  // Raspberry Pi Pico W / Pico 2 W: power GP23, data GP24, chip select GP25, clock GP29
+  WirelessPinsPicoW = 0;
+  // Waveshare RP2350B-Plus-W: power GP36, data GP37, chip select GP38, clock GP39
+  WirelessPinsWaveshareRp2350bPlusW = 1;
+  // wlOnPin / wlDataPin / wlCsPin / wlClockPin
+  WirelessPinsCustom = 2;
+}

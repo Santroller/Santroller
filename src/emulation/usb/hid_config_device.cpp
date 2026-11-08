@@ -24,6 +24,7 @@
 #include "utils.h"
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
+#include "devices/pins.hpp"
 #include "devices/secondary_pico.hpp"
 #include "secondary_pico.hpp"
 #include "config/input_detector.hpp"
@@ -217,7 +218,7 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
                 break;
             }
             case DetectAnalog:
-                for (uint8_t i = 0; i < NUM_ADC_CHANNELS; i++)
+                for (uint8_t i = 0; i < adc_pin_count(); i++)
                 {
                     if (m_valid_pins & (1ull << i))
                     {
@@ -225,11 +226,11 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
                         if (abs(last_adc_vals[i] - adc_read()) > 100)
                         {
                             // found!
-                            printf("detected adc: %d %d %d\r\n", last_adc_vals[i], adc_read(), i + ADC_BASE_PIN);
+                            printf("detected adc: %d %d %d\r\n", last_adc_vals[i], adc_read(), i + adc_base_pin());
                             detect_done = 0;
                             proto_Event evt;
                             evt.which_event = proto_Event_pin_tag;
-                            evt.event.pin.pin = i + ADC_BASE_PIN;
+                            evt.event.pin.pin = i + adc_base_pin();
                             send_event(evt, true);
                             break;
                         }
@@ -258,12 +259,12 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
                     }
                     break;
                 case DetectAnalog:
-                    for (uint8_t i = 0; i < NUM_ADC_CHANNELS; i++)
+                    for (uint8_t i = 0; i < adc_pin_count(); i++)
                     {
                         if (m_valid_pins & (1ull << i))
                         {
-                            adc_gpio_init(i + ADC_BASE_PIN);
-                            gpio_set_pulls(i + ADC_BASE_PIN, false, false);
+                            adc_gpio_init(i + adc_base_pin());
+                            gpio_set_pulls(i + adc_base_pin(), false, false);
                         }
                     }
                     break;
@@ -529,7 +530,7 @@ void HIDConfigDevice::handle_command(proto_Command command)
         switch (command.command.detectPin.detectType)
         {
         case DetectDigital:
-            for (uint8_t i = 0; i < NUM_BANK0_GPIOS; i++)
+            for (uint8_t i = 0; i < gpio_count(); i++)
             {
                 if (i == 23)
                 {
@@ -553,19 +554,19 @@ void HIDConfigDevice::handle_command(proto_Command command)
             }
             break;
         case DetectAnalog:
-            for (uint8_t i = 0; i < NUM_ADC_CHANNELS; i++)
+            for (uint8_t i = 0; i < adc_pin_count(); i++)
             {
                 bool found = false;
                 DeviceManager::instance().for_each_active_device([&found, i](const auto &device) {
-          if (device->using_pin(i + ADC_BASE_PIN))
+          if (device->using_pin(i + adc_base_pin()))
           {
             found = true;
           } });
                 if (!found)
                 {
                     m_valid_pins |= 1ull << i;
-                    adc_gpio_init(i + ADC_BASE_PIN);
-                    gpio_set_pulls(i + ADC_BASE_PIN, true, false);
+                    adc_gpio_init(i + adc_base_pin());
+                    gpio_set_pulls(i + adc_base_pin(), true, false);
                     adc_select_input(i);
                     sleep_us(10);
                     last_adc_vals[i] = adc_read();

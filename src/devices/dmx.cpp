@@ -1,4 +1,5 @@
 #include "devices/dmx.hpp"
+#include "pio_pins.hpp"
 #include "events.pb.h"
 #include "main.hpp"
 #include "config/config.hpp"
@@ -11,7 +12,16 @@ void DMXDevice::begin()
     prev_led_state = new uint32_t[m_device.channelCount];
     memset(led_state, 0, sizeof(uint32_t) * m_device.channelCount);
     memset(prev_led_state, 0, sizeof(uint32_t) * m_device.channelCount);
-    m_started = m_device.pin >= 0 && m_device.pin < (int)NUM_BANK0_GPIOS && m_dmx.begin(m_device.pin) == DmxOutput::SUCCESS;
+    m_started = false;
+    if (m_device.pin >= 0 && m_device.pin < (int)NUM_BANK0_GPIOS)
+    {
+        // Any PIO that can reach the pin (on an RP2350B, a PIO reaches GP0 - GP31 or GP16 - GP47)
+        for (uint i = 0; i < NUM_PIOS && !m_started; i++)
+        {
+            PIO pio = pio_get_instance(i);
+            m_started = pio_try_reach_pins(pio, {(uint)m_device.pin}) && m_dmx.begin(m_device.pin, pio) == DmxOutput::SUCCESS;
+        }
+    }
 }
 void DMXDevice::end(bool full)
 {

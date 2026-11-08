@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "pico.h"
 
 // BTstack runs from the CYW43 background IRQ (threadsafe_background), so any BTstack
 // call made from the main loop must hold the async context lock. Recursive, so it is
@@ -16,6 +17,23 @@ public:
 
 private:
     struct async_context *m_context;
+};
+
+// The pins a CYW43 wireless chip is wired to. Its SPI is half duplex, with data in, data out and the IRQ on one pin.
+struct Cyw43Pins
+{
+    uint8_t reg_on;
+    uint8_t data;
+    uint8_t cs;
+    uint8_t clock;
+    bool operator==(const Cyw43Pins &other) const
+    {
+        return reg_on == other.reg_on && data == other.data && cs == other.cs && clock == other.clock;
+    }
+    bool operator!=(const Cyw43Pins &other) const { return !(*this == other); }
+    // Whether the chip could be driven on these pins: they exist on this chip, are all different, and the data
+    // and clock pins are in reach of one PIO (on an RP2350B, GP0 - GP31 or GP16 - GP47)
+    bool valid() const;
 };
 
 class BluetoothStack
@@ -37,9 +55,13 @@ public:
     // Whether there is a controller to use: the CYW43, or a USB adapter that is actually plugged in.
     // The stack runs without an adapter, waiting for one, but nothing can be done over it until then
     bool controller_available() const;
-    // The pins a Pico W's CYW43 is wired to. Only claimed while the CYW43 is in use: on a board without
-    // one the probe gives them back, so they're free for anything else
-    static bool is_cyw43_pin(uint8_t pin);
+    // The pins the CYW43 is wired to (a Pico W's unless set otherwise). Only claimed while the CYW43 is in use: on
+    // a board without one the probe gives them back, so they're free for anything else
+    bool is_cyw43_pin(uint8_t pin) const;
+    const Cyw43Pins &cyw43_pins() const { return m_pins; }
+    // Sets the pins the CYW43 is probed on. Only works before begin(), as the stack can't be moved once it is up:
+    // returns false if it is already running on other pins (or a failed probe on them gave up on the CYW43).
+    bool set_cyw43_pins(const Cyw43Pins &pins);
     bool using_cyw43_pin(uint8_t pin) const { return m_initialized && !m_usb_dongle && is_cyw43_pin(pin); }
     // True once, after a failed CYW43 probe handed its pins back. Devices set up before the probe had
     // those pins changed under them
@@ -76,4 +98,7 @@ private:
     uint16_t m_device_id = 0;
     bool m_vbus = false;
     uint32_t m_vbus_read_ms = 0;
+    Cyw43Pins m_pins = {CYW43_DEFAULT_PIN_WL_REG_ON, CYW43_DEFAULT_PIN_WL_DATA_OUT, CYW43_DEFAULT_PIN_WL_CS,
+                        CYW43_DEFAULT_PIN_WL_CLOCK};
+    void release_cyw43_pins();
 };

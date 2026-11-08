@@ -27,7 +27,7 @@ uint16_t GPIOInput::tick_analog()
     {
         return (gpio_get(m_pin) != m_invert) ? 65535 : 0;
     }
-    adc_select_input(m_pin - ADC_BASE_PIN);
+    adc_select_input(adc_input_for_pin(m_pin));
     return adc_read() << 4;
 }
 void GPIOInput::setup()

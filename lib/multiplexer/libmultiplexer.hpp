@@ -12,7 +12,7 @@ public:
     uint16_t read(uint8_t channel);
 
 private:
-    uint32_t select_mask() const;
+    uint64_t select_mask() const;
     uint8_t s0Pin;
     uint8_t s1Pin;
     uint8_t s2Pin;

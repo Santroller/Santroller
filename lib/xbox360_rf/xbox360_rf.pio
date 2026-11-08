@@ -31,7 +31,7 @@ static inline void xbox360_rf_program_init(PIO pio, uint sm, uint offset, uint d
     pio_gpio_init(pio, clock_pin);
     gpio_pull_up(data_pin);
     gpio_pull_up(clock_pin);
-    pio_sm_set_pins_with_mask(pio, sm, 1u << data_pin, 1u << data_pin);
+    pio_sm_set_pins_with_mask64(pio, sm, 1ull << data_pin, 1ull << data_pin);
     pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 1, false);
     pio_sm_set_consecutive_pindirs(pio, sm, clock_pin, 1, false);
 

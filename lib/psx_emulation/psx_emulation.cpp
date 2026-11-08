@@ -1,4 +1,5 @@
 #include "psx_emulation.hpp"
+#include "pio_pins.hpp"
 #include <hardware/gpio.h>
 #include <pico/time.h>
 #include "hardware/sync.h"
@@ -117,6 +118,12 @@ void PSXEmulation::start(SubType type, bool console_present)
         .ack_pin = ackPin,
         .type = type};
 
+    // Its state machines all share PIO1, so it has to reach every pin (on an RP2350B, GP0 - GP31 or GP16 - GP47)
+    if (!pio_try_reach_pins(pio1, {(uint)attPin, (uint)sck, (uint)cmd, (uint)dat, (uint)ackPin}))
+    {
+        printf("PSXEmulation: PIO1 can't reach these pins\r\n");
+        return;
+    }
     spi = pio_spi_init(&config);
     pio_spi_start(spi);
     if (console_present)

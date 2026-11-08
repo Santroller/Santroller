@@ -18,5 +18,9 @@ public:
     bool read_button(uint8_t button);
 
 private:
+    // Every pin in the network, from pins and pinsHigh
+    uint64_t pin_mask() const { return m_device.pins | (uint64_t)m_device.pinsHigh << 32; }
+    // Puts every pin in the network back to an input with its pull up
+    void idle_pins();
     proto_SwitchNetworkDevice m_device;
 };

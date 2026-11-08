@@ -16,4 +16,13 @@
 #undef PICO_RP2040_B1_SUPPORTED
 #define PICO_RP2040_B1_SUPPORTED 1
 
+// One build for the RP2350A (Pico 2 W) and RP2350B (eg Waveshare RP2350B-Plus-W): GPIO 30 - 47 only exist on
+// the B, which is told apart at runtime (rp2350b() in devices/pins.hpp). The ADC's base pin and channel count
+// are runtime too, as the SDK's ADC_BASE_PIN / NUM_ADC_CHANNELS are the B's here.
+#undef PICO_RP2350A
+#define PICO_RP2350A 0
+
+// The wireless chip's pins are set at runtime (BluetoothStack::set_cyw43_pins), as boards wire it differently
+#define CYW43_PIN_WL_DYNAMIC 1
+
 #endif

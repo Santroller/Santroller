@@ -1,4 +1,5 @@
 #include "libjoybus_emulation.hpp"
+#include "pio_pins.hpp"
 #include <string.h>
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
@@ -85,7 +86,8 @@ bool JoybusEmulation::begin()
             continue;
         }
         PIO pio = pio_get_instance(idx);
-        if (irq_get_exclusive_handler(pio_get_irq_num(pio, 0)) || !pio_can_add_program(pio, &joybus_program))
+        if (irq_get_exclusive_handler(pio_get_irq_num(pio, 0)) || !pio_can_add_program(pio, &joybus_program) ||
+            !pio_try_reach_pins(pio, {m_pin}))
         {
             continue;
         }

@@ -7,21 +7,40 @@ SwitchNetworkDevice::SwitchNetworkDevice(proto_SwitchNetworkDevice device, uint1
 {
 }
 
-void SwitchNetworkDevice::begin()
+void SwitchNetworkDevice::idle_pins()
 {
-    gpio_init_mask(m_device.pins);
-    gpio_set_dir_in_masked(m_device.pins);
-    for (uint8_t pin = 0; pin < 32; ++pin)
+    for (uint8_t pin = 0; pin < NUM_BANK0_GPIOS; ++pin)
     {
         if (using_pin(pin))
+        {
+            gpio_set_dir(pin, GPIO_IN);
             gpio_pull_up(pin);
+        }
     }
+}
+
+void SwitchNetworkDevice::begin()
+{
+    for (uint8_t pin = 0; pin < NUM_BANK0_GPIOS; ++pin)
+    {
+        if (using_pin(pin))
+        {
+            gpio_init(pin);
+        }
+    }
+    idle_pins();
 }
 
 void SwitchNetworkDevice::end(bool full)
 {
     (void)full;
-    gpio_set_dir_in_masked(m_device.pins);
+    for (uint8_t pin = 0; pin < NUM_BANK0_GPIOS; ++pin)
+    {
+        if (using_pin(pin))
+        {
+            gpio_set_dir(pin, GPIO_IN);
+        }
+    }
 }
 
 void SwitchNetworkDevice::update(bool full_poll, bool send_events)
@@ -32,38 +51,32 @@ void SwitchNetworkDevice::update(bool full_poll, bool send_events)
 
 bool SwitchNetworkDevice::using_pin(uint8_t pin)
 {
-    return (m_device.pins & (1u << pin)) != 0;
+    return pin < 64 && (pin_mask() & (1ull << pin)) != 0;
 }
 
 bool SwitchNetworkDevice::read_switch(uint8_t pin, uint8_t other_pin)
 {
-    const uint32_t pin_mask = 1u << pin;
-    const uint32_t other_mask = 1u << other_pin;
-
     if (!using_pin(pin) || !using_pin(other_pin) || pin == other_pin)
         return false;
 
-    gpio_set_dir_in_masked(m_device.pins);
-    for (uint8_t pin = 0; pin < 32; ++pin)
+    // Everything else floats, so only this pair is in the circuit
+    for (uint8_t other = 0; other < NUM_BANK0_GPIOS; ++other)
     {
-        if (using_pin(pin))
-            gpio_set_pulls(pin, false, false);
+        if (using_pin(other))
+        {
+            gpio_set_dir(other, GPIO_IN);
+            gpio_set_pulls(other, false, false);
+        }
     }
 
-    gpio_put_masked(pin_mask, 0);
+    gpio_put(pin, 0);
     gpio_pull_up(other_pin);
-    gpio_set_dir_out_masked(pin_mask);
+    gpio_set_dir(pin, GPIO_OUT);
 
     sleep_us(1);
     const bool pressed = gpio_get(other_pin) == 0;
 
-    gpio_set_dir_in_masked(pin_mask | other_mask);
-    for (uint8_t pin = 0; pin < 32; ++pin)
-    {
-        if (using_pin(pin))
-            gpio_pull_up(pin);
-    }
-
+    idle_pins();
     return pressed;
 }
 

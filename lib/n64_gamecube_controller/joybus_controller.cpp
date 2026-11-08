@@ -1,4 +1,5 @@
 #include "joybus_controller.hpp"
+#include "pio_pins.hpp"
 #include <string.h>
 #include "hardware/dma.h"
 #include "hardware/gpio.h"
@@ -31,7 +32,7 @@ bool JoybusController::begin()
     {
         return false;
     }
-    if (!pio_claim_free_sm_and_add_program(&controller_program, &m_pio, &m_sm, &m_offset))
+    if (!pio_claim_for_pins(&controller_program, &m_pio, &m_sm, &m_offset, {m_pin}))
     {
         m_pio = nullptr;
         return false;

@@ -26,6 +26,7 @@
 */
 
 #include "SNESpad.h"
+#include "pio_pins.hpp"
 
 #include <cstring>
 #include <cstdio>
@@ -52,7 +53,7 @@ void SNESpad::begin() {
     }
     started = true;
     initGpio();
-    if (!pio_claim_free_sm_and_add_program(&snes_pad_program, &pio, &sm, &offset)) {
+    if (!pio_claim_for_pins(&snes_pad_program, &pio, &sm, &offset, {clockPin, latchPin, dataPin})) {
         // no free state machine, so poll() bit-bangs instead
         pio = nullptr;
 #if SNES_PAD_DEBUG==true

@@ -5,15 +5,46 @@
 #include "hardware/structs/io_bank0.h"
 #include "hardware/structs/pads_bank0.h"
 #include "pico/time.h"
+#if PICO_RP2350
+#include "hardware/structs/sysinfo.h"
+#endif
 
-// The last ADC channel is the temperature sensor rather than a pin
-static constexpr uint32_t ADC_PINS = NUM_ADC_CHANNELS - 1;
 // The ADC's reference, as on a Pico
 static constexpr uint32_t ADC_VREF_MV = 3300;
 
+bool rp2350b()
+{
+#if PICO_RP2350
+    // 0 = QFN80 (RP2350B), 1 = QFN60 (RP2350A)
+    return !(sysinfo_hw->package_sel & SYSINFO_PACKAGE_SEL_BITS);
+#else
+    return false;
+#endif
+}
+
+uint32_t gpio_count()
+{
+    return rp2350b() ? 48 : 30;
+}
+
+uint32_t adc_base_pin()
+{
+    return rp2350b() ? 40 : 26;
+}
+
+uint32_t adc_pin_count()
+{
+    return rp2350b() ? 8 : 4;
+}
+
 bool is_adc_pin(uint32_t pin)
 {
-    return pin >= ADC_BASE_PIN && pin < ADC_BASE_PIN + ADC_PINS;
+    return pin >= adc_base_pin() && pin < adc_base_pin() + adc_pin_count();
+}
+
+uint32_t adc_input_for_pin(uint32_t pin)
+{
+    return pin - adc_base_pin();
 }
 
 void gpio_set_pin_mode(uint32_t pin, PinMode mode)
@@ -47,7 +78,7 @@ uint32_t adc_read_pin_mv(uint32_t pin, uint32_t samples)
     const uint32_t pad = pads_bank0_hw->io[pin];
     const uint32_t ctrl = io_bank0_hw->io[pin].ctrl;
     adc_gpio_init(pin);
-    adc_select_input(pin - ADC_BASE_PIN);
+    adc_select_input(adc_input_for_pin(pin));
     // the first readings after switching inputs can be low
     adc_read();
     for (uint32_t i = 0; i < samples; i++)
@@ -93,7 +124,7 @@ bool adc_pin_floating(uint32_t pin)
     // adc_gpio_init turns the digital input off, which also keeps the RP2350 E9 pull-down latch
     // from holding the pin up
     adc_gpio_init(pin);
-    adc_select_input(pin - ADC_BASE_PIN);
+    adc_select_input(adc_input_for_pin(pin));
     const uint32_t up = adc_read_with_pull(pin, true);
     const uint32_t down = adc_read_with_pull(pin, false);
     io_bank0_hw->io[pin].ctrl = ctrl;

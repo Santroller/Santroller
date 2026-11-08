@@ -123,6 +123,13 @@ message BluetoothDevice {
   // Don't advertise just for the configurator while no profile uses bluetooth. Then it can only be configured over
   // bluetooth while a profile is emulating a bluetooth controller.
   optional bool disableConfigOnly = 3;
+  // Which pins the board's wireless chip is on. Changing them restarts the device, as the stack can't move.
+  optional WirelessPins wirelessPins = 4;
+  // The pins with WirelessPinsCustom: power (WL_ON), data (shared data in / out and IRQ), chip select, clock
+  optional int32 wlOnPin = 5;
+  optional int32 wlDataPin = 6;
+  optional int32 wlCsPin = 7;
+  optional int32 wlClockPin = 8;
 }
 message MultiplexerDevice {
   required int32 inputPin = 1;
@@ -250,8 +257,11 @@ message SwitchNetworkButton {
 }
 
 message SwitchNetworkDevice {
+  // A bit for each of GP0 - GP31 in the network
   required uint32 pins = 1;
   repeated SwitchNetworkButton buttons = 2;
+  // A bit for each of GP32 - GP47 (bit 0 is GP32), only on an RP2350B
+  optional uint32 pinsHigh = 3;
 }
 
 message CycleDevice {

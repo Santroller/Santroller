@@ -1,4 +1,5 @@
 #include "config/config.hpp"
+#include "devices/pins.hpp"
 #if PICO_RP2040
 #include "hardware/structs/ssi.h"
 #endif
@@ -1185,6 +1186,8 @@ uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload,
 #endif
     info.has_rpcs3ModeCommand = true;
     info.rpcs3ModeCommand = true;
+    info.has_gpioCount = true;
+    info.gpioCount = gpio_count();
     bool needs_uf2 = false;
 #if defined(ENABLE_XBOX_WIRELESS) && ENABLE_XBOX_WIRELESS
     bool missing = (xbox_get_static_firmware_header() == NULL);

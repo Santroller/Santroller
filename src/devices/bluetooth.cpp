@@ -1,5 +1,6 @@
 #include "devices/bluetooth.hpp"
 #include <pico/cyw43_arch.h>
+#include "hardware/watchdog.h"
 #include "events.pb.h"
 #include "emulation/usb/hid_device.h"
 #include "config/config.hpp"
@@ -27,7 +28,7 @@ void BluetoothDevice::set_up_cyw43_pin_users_again()
     DeviceManager::instance().for_each_active_device([&](const std::shared_ptr<Device> &device) {
         for (uint8_t pin = 0; pin < NUM_BANK0_GPIOS; pin++)
         {
-            if (device.get() != this && BluetoothStack::is_cyw43_pin(pin) && device->using_pin(pin))
+            if (device.get() != this && BluetoothStack::instance().is_cyw43_pin(pin) && device->using_pin(pin))
             {
                 clash = true;
             }
@@ -41,12 +42,36 @@ void BluetoothDevice::set_up_cyw43_pin_users_again()
     }
 }
 
+Cyw43Pins BluetoothDevice::wireless_pins(const proto_BluetoothDevice &device)
+{
+    switch (device.has_wirelessPins ? device.wirelessPins : WirelessPinsPicoW)
+    {
+    case WirelessPinsWaveshareRp2350bPlusW:
+        return {36, 37, 38, 39};
+    case WirelessPinsCustom:
+        // An unset pin is out of range, so the probe is skipped rather than driving GP0
+        return {(uint8_t)(device.has_wlOnPin ? device.wlOnPin : 0xFF), (uint8_t)(device.has_wlDataPin ? device.wlDataPin : 0xFF),
+                (uint8_t)(device.has_wlCsPin ? device.wlCsPin : 0xFF), (uint8_t)(device.has_wlClockPin ? device.wlClockPin : 0xFF)};
+    case WirelessPinsPicoW:
+    default:
+        return {CYW43_DEFAULT_PIN_WL_REG_ON, CYW43_DEFAULT_PIN_WL_DATA_OUT, CYW43_DEFAULT_PIN_WL_CS, CYW43_DEFAULT_PIN_WL_CLOCK};
+    }
+}
+
 void BluetoothDevice::begin()
 {
     m_sync.begin();
     BluetoothStack::instance().set_device_id(m_id);
     ConfigManager::instance().set_bluetooth_config_only_allowed(!m_device.disableConfigOnly);
-    // TODO: if we add support for swapping pins, then we gotta deinit here if the pins change
+    if (!BluetoothStack::instance().set_cyw43_pins(wireless_pins(m_device)))
+    {
+        // The stack is already up on the old pins (or gave up on a CYW43 there), and BTstack can't be torn down
+        // and started again, so restart with the new pins. The delay lets the tool's save finish first.
+        printf("bt: wireless chip pins changed, restarting\r\n");
+        ConfigManager::instance().set_bluetooth_available(false);
+        watchdog_reboot(0, 0, 200);
+        return;
+    }
     if (BluetoothStack::instance().initialized())
     {
         if (!BluetoothStack::instance().is_powered())

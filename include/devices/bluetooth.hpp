@@ -2,6 +2,7 @@
 #include "base.hpp"
 #include "device.pb.h"
 #include "sync_button.hpp"
+#include "devices/bt/bluetooth_stack.hpp"
 class BluetoothDevice : public Device
 {
 public:
@@ -17,8 +18,11 @@ public:
                (!m_device.has_syncPin || config.device.bt.syncPin == m_device.syncPin) &&
                config.device.bt.has_timeoutSec == m_device.has_timeoutSec &&
                (!m_device.has_timeoutSec || config.device.bt.timeoutSec == m_device.timeoutSec) &&
-               config.device.bt.disableConfigOnly == m_device.disableConfigOnly;
+               config.device.bt.disableConfigOnly == m_device.disableConfigOnly &&
+               wireless_pins(config.device.bt) == wireless_pins(m_device);
     }
+    // The CYW43 pins the config picks
+    static Cyw43Pins wireless_pins(const proto_BluetoothDevice &device);
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
     void handle_command(proto_Command command);

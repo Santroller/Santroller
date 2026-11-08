@@ -1,4 +1,5 @@
 #include "libmultiplexer.hpp"
+#include "devices/pins.hpp"
 
 #define MULTIPLEXER_SLOW_SETTLE_US 50
 
@@ -7,17 +8,40 @@ Multiplexer::Multiplexer(uint8_t s0Pin, uint8_t s1Pin, uint8_t s2Pin, uint8_t s3
     // Unset pins (-1) arrive here as 255
     m_valid = s0Pin < NUM_BANK0_GPIOS && s1Pin < NUM_BANK0_GPIOS && s2Pin < NUM_BANK0_GPIOS &&
               (!sixteenChannel || s3Pin < NUM_BANK0_GPIOS) &&
-              inputPin >= ADC_BASE_PIN && inputPin < ADC_BASE_PIN + NUM_ADC_CHANNELS - 1;
+              is_adc_pin(inputPin);
 }
 
-uint32_t Multiplexer::select_mask() const
+// 64 bit, as the select pins may be above GP31 on an RP2350B
+uint64_t Multiplexer::select_mask() const
 {
-    uint32_t mask = 1 << s0Pin | 1 << s1Pin | 1 << s2Pin;
+    uint64_t mask = 1ull << s0Pin | 1ull << s1Pin | 1ull << s2Pin;
     if (sixteenChannel)
     {
-        mask |= 1 << s3Pin;
+        mask |= 1ull << s3Pin;
     }
     return mask;
+}
+
+static void select_pins_init(uint64_t mask)
+{
+    for (uint pin = 0; pin < NUM_BANK0_GPIOS; pin++)
+    {
+        if (mask & (1ull << pin))
+        {
+            gpio_init(pin);
+        }
+    }
+}
+
+static void select_pins_set_dir(uint64_t mask, bool out)
+{
+    for (uint pin = 0; pin < NUM_BANK0_GPIOS; pin++)
+    {
+        if (mask & (1ull << pin))
+        {
+            gpio_set_dir(pin, out);
+        }
+    }
 }
 
 void Multiplexer::begin()
@@ -26,8 +50,8 @@ void Multiplexer::begin()
     {
         return;
     }
-    gpio_init_mask(select_mask());
-    gpio_set_dir_out_masked(select_mask());
+    select_pins_init(select_mask());
+    select_pins_set_dir(select_mask(), true);
     adc_gpio_init(inputPin);
 }
 
@@ -37,7 +61,7 @@ void Multiplexer::end()
     {
         return;
     }
-    gpio_set_dir_in_masked(select_mask());
+    select_pins_set_dir(select_mask(), false);
     gpio_deinit(inputPin);
 }
 
@@ -58,7 +82,6 @@ uint16_t Multiplexer::read(uint8_t channel)
     {
         sleep_us(MULTIPLEXER_SLOW_SETTLE_US);
     }
-    // the ADC is numbered by channel, starting from GPIO 26
-    adc_select_input(inputPin - 26);
+    adc_select_input(adc_input_for_pin(inputPin));
     return adc_read() << 4;
 }

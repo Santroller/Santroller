@@ -432,6 +432,8 @@ message ConfigInfo {
   optional bool firmwareVerification = 13;
   // Takes Rpcs3ModeCommand
   optional bool rpcs3ModeCommand = 14;
+  // How many GPIOs the chip has: 48 on an RP2350B, 30 otherwise. Older firmware omits this (30).
+  optional uint32 gpioCount = 15;
 }
 
 message GetActiveProfiles {

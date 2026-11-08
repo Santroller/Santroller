@@ -1,4 +1,5 @@
 #include "psx_controller.hpp"
+#include "pio_pins.hpp"
 #include <hardware/gpio.h>
 #include <hardware/spi.h>
 #include <hardware/dma.h>
@@ -196,22 +197,16 @@ void PSXBus::init(uint32_t clock)
         gpio_set_pulls(m_misoPin, true, false);
     }
 
-    // Initialize PIO ACK Pacer (try pio0 first, fallback to pio1)
-    pio = pio0;
-    if (pio_can_add_program(pio, &psx_ack_pacer_program) && (sm = pio_claim_unused_sm(pio, false)) != (uint)-1)
+    // Initialize PIO ACK Pacer (try pio0 first, fallback to pio1), on one that can reach the ack pin
+    pio = nullptr;
+    for (PIO candidate : {pio0, pio1})
     {
-        pio_offset = pio_add_program(pio, &psx_ack_pacer_program);
-    }
-    else
-    {
-        pio = pio1;
-        if (pio_can_add_program(pio, &psx_ack_pacer_program) && (sm = pio_claim_unused_sm(pio, false)) != (uint)-1)
+        if (pio_can_add_program(candidate, &psx_ack_pacer_program) && pio_try_reach_pins(candidate, {(uint)m_ackPin}) &&
+            (sm = pio_claim_unused_sm(candidate, false)) != (uint)-1)
         {
+            pio = candidate;
             pio_offset = pio_add_program(pio, &psx_ack_pacer_program);
-        }
-        else
-        {
-            pio = nullptr;
+            break;
         }
     }
 

@@ -1,4 +1,5 @@
 #include "libsnes_emulation.hpp"
+#include "pio_pins.hpp"
 #include "hardware/gpio.h"
 #include "pico/time.h"
 #include "snes_device.pio.h"
@@ -50,7 +51,7 @@ bool SnesEmulation::start()
     {
         return true;
     }
-    if (!pio_claim_free_sm_and_add_program(&snes_device_program, &m_pio, &m_sm, &m_offset))
+    if (!pio_claim_for_pins(&snes_device_program, &m_pio, &m_sm, &m_offset, {m_data_pin, m_clock_pin, m_latch_pin}))
     {
         m_pio = nullptr;
         return false;

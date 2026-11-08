@@ -16,4 +16,7 @@
 #undef PICO_RP2040_B1_SUPPORTED
 #define PICO_RP2040_B1_SUPPORTED 1
 
+// The wireless chip's pins are set at runtime (BluetoothStack::set_cyw43_pins), as boards wire it differently
+#define CYW43_PIN_WL_DYNAMIC 1
+
 #endif

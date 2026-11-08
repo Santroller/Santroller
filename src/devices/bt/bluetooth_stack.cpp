@@ -3,6 +3,8 @@
 
 #include <pico/cyw43_arch.h>
 #include "hardware/gpio.h"
+#include "devices/pins.hpp"
+#include "pico/cyw43_driver.h"
 #include "hardware/structs/pads_bank0.h"
 #include <pico/async_context_poll.h>
 #include "pico/btstack_run_loop_async_context.h"
@@ -57,28 +59,58 @@ BtStackLock::~BtStackLock()
     }
 }
 
-static const uint8_t s_cyw43_pins[] = {CYW43_DEFAULT_PIN_WL_REG_ON, CYW43_DEFAULT_PIN_WL_DATA_OUT,
-                                       CYW43_DEFAULT_PIN_WL_CS, CYW43_DEFAULT_PIN_WL_CLOCK};
-
-bool BluetoothStack::is_cyw43_pin(uint8_t pin)
+bool Cyw43Pins::valid() const
 {
-    for (uint8_t cyw43_pin : s_cyw43_pins)
+    const uint8_t pins[] = {reg_on, data, cs, clock};
+    for (size_t i = 0; i < 4; i++)
     {
-        if (pin == cyw43_pin)
+        if (pins[i] >= gpio_count())
         {
-            return true;
+            return false;
+        }
+        for (size_t j = i + 1; j < 4; j++)
+        {
+            if (pins[i] == pins[j])
+            {
+                return false;
+            }
         }
     }
-    return false;
+    // As cyw43_pins_valid checks (with an assert in debug builds), so bad pins never reach the driver
+    return (data < 32 && clock < 32) || (data >= 16 && clock >= 16);
+}
+
+bool BluetoothStack::is_cyw43_pin(uint8_t pin) const
+{
+    return pin == m_pins.reg_on || pin == m_pins.data || pin == m_pins.cs || pin == m_pins.clock;
+}
+
+bool BluetoothStack::set_cyw43_pins(const Cyw43Pins &pins)
+{
+    if (pins == m_pins)
+    {
+        return true;
+    }
+    if (m_initialized)
+    {
+        return false;
+    }
+    m_pins = pins;
+    return true;
 }
 
 // The CYW43 driver's deinit frees its PIO and DMA but leaves the pins as it set them up: power and
 // chip select driven high, the clock on the PIO with a pull-down and a stronger drive. Put them back
 // to how they come out of reset
-static void release_cyw43_pins()
+void BluetoothStack::release_cyw43_pins()
 {
-    for (uint8_t pin : s_cyw43_pins)
+    const uint8_t pins[] = {m_pins.reg_on, m_pins.data, m_pins.cs, m_pins.clock};
+    for (uint8_t pin : pins)
     {
+        if (pin >= NUM_BANK0_GPIOS)
+        {
+            continue;
+        }
         gpio_set_function(pin, GPIO_FUNC_NULL);
         gpio_set_dir(pin, GPIO_IN);
         gpio_put(pin, false);
@@ -101,7 +133,28 @@ bool BluetoothStack::begin()
 
     bool use_cyw43 = false;
 #ifndef BT_FORCE_USB_DONGLE
-    int cyw43_err = cyw43_arch_init();
+    int cyw43_err = PICO_ERROR_INVALID_ARG;
+    if (m_pins.valid())
+    {
+        uint wl_pins[CYW43_PIN_INDEX_WL_COUNT];
+        wl_pins[CYW43_PIN_INDEX_WL_REG_ON] = m_pins.reg_on;
+        wl_pins[CYW43_PIN_INDEX_WL_DATA_OUT] = m_pins.data;
+        wl_pins[CYW43_PIN_INDEX_WL_DATA_IN] = m_pins.data;
+        wl_pins[CYW43_PIN_INDEX_WL_HOST_WAKE] = m_pins.data;
+        wl_pins[CYW43_PIN_INDEX_WL_CLOCK] = m_pins.clock;
+        wl_pins[CYW43_PIN_INDEX_WL_CS] = m_pins.cs;
+        printf("BT: CYW43 on GP%d (on) GP%d (data) GP%d (cs) GP%d (clock)\r\n", m_pins.reg_on, m_pins.data, m_pins.cs,
+               m_pins.clock);
+        cyw43_err = cyw43_set_pins_wl(wl_pins);
+        if (cyw43_err == 0)
+        {
+            cyw43_err = cyw43_arch_init();
+        }
+    }
+    else
+    {
+        printf("BT: CYW43 pins GP%d GP%d GP%d GP%d aren't usable\r\n", m_pins.reg_on, m_pins.data, m_pins.cs, m_pins.clock);
+    }
     if (cyw43_err == 0)
     {
         s_context = cyw43_arch_async_context();
@@ -125,7 +178,7 @@ bool BluetoothStack::begin()
     {
         printf("BT: CYW43 initialization failed (%d)\r\n", cyw43_err);
     }
-    if (!use_cyw43)
+    if (!use_cyw43 && m_pins.valid())
     {
         release_cyw43_pins();
         m_cyw43_pins_released = true;

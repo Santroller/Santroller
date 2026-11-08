@@ -978,6 +978,7 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
                         finish_firmware_update();
                         return false;
                     }
+                    m_teardown_pending = true;
                 }
             }
             break;
@@ -1041,6 +1042,33 @@ void HIDConfigDevice::finish_firmware_update()
     }
     ConfigManager::instance().finish_firmware_update();
     lastKeepAlive = millis();
+    m_teardown_pending = false;
+    if (m_torn_down)
+    {
+        // The update didn't happen, so bring the devices back
+        m_torn_down = false;
+        printf("fw update abandoned, loading the config again\r\n");
+        reload();
+    }
+}
+
+void HIDConfigDevice::tear_down_for_firmware_update()
+{
+    if (!instance || !instance->m_teardown_pending)
+    {
+        return;
+    }
+    instance->m_teardown_pending = false;
+    if (!ConfigManager::instance().is_updating_firmware())
+    {
+        return;
+    }
+    bool over_bluetooth = instance->m_transport == ConfigTransport::Bluetooth;
+    printf("fw update started, ending devices (over bluetooth: %d)\r\n", over_bluetooth);
+    instance->m_torn_down = true;
+    DeviceManager::instance().end_devices_for_firmware_update(over_bluetooth);
+    // Ending them can take a while (a USB host shutting down), which shouldn't count as the upload stalling
+    ConfigManager::instance().touch_firmware_update(millis());
 }
 
 void HIDConfigDevice::check_firmware_update_timeout()

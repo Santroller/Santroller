@@ -40,6 +40,8 @@ public:
     void remove_disconnected_root_devices();
     // End and drop the root devices whose ids aren't in ids, before the new config builds its own
     void remove_root_devices_not_in(const std::vector<uint32_t> &ids);
+    // End and drop every root device an app firmware update doesn't need (see Device::needed_for_firmware_update)
+    void end_devices_for_firmware_update(bool over_bluetooth);
 
     // Assignable devices
     void add_assignable_device(std::shared_ptr<Device> device);

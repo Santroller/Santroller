@@ -93,6 +93,9 @@ public:
     // The config reloaded while the tool's keepalive had lapsed, so it gets told once it's back
     static void reload_missed();
     static void check_firmware_update_timeout();
+    // From the main loop: once an app firmware update starts, end every device it doesn't need. Nothing
+    // else gets to stall or crash the controller partway through, and it reboots into the update anyway
+    static void tear_down_for_firmware_update();
     size_t compatible_section_descriptor(uint8_t *desc, size_t remaining);
     size_t config_descriptor(uint8_t *desc, size_t remaining);
     size_t device_name(uint8_t idx, char *desc);
@@ -161,6 +164,10 @@ private:
     std::shared_ptr<class SecondaryPicoDevice> m_target_secondary_pico = nullptr;
     // The upload is going to the radio firmware area rather than the app's download slot
     bool m_radio_update = false;
+    // An app update started, so the devices get ended from the main loop (not from inside a USB callback)
+    bool m_teardown_pending = false;
+    // The devices were ended for an app update, so if it doesn't finish the config has to load again
+    bool m_torn_down = false;
 };
 class HIDGamepadDevice : public HIDDevice
 {

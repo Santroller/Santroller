@@ -20,6 +20,8 @@ public:
     bool matches_reload_config(const proto_Device &config) const override;
     bool using_pin(uint8_t pin);
     bool is_assignable() const override { return false; }
+    // A bluetooth dongle on this host may be what the update is arriving over
+    bool needed_for_firmware_update(bool over_bluetooth) const override;
     bool is_usb_type(SubType type) override { return false; }
     bool is_usb_device(proto_SpecificUsbDevice type) override { return false; }
     bool tick_digital(proto_Output &type) { return false; }

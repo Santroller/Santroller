@@ -460,6 +460,7 @@ int main()
         tuh_task();
         bt_config_service_handle_requests();
         HIDConfigDevice::check_firmware_update_timeout();
+        HIDConfigDevice::tear_down_for_firmware_update();
         if (ConfigManager::instance().is_updating_firmware())
         {
             HidConsoleBridge::instance().flush();

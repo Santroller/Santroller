@@ -129,6 +129,13 @@ public:
     virtual bool is_joybus_device() const { return false; }
     virtual bool has_midi_channel(uint8_t channel);
     virtual bool is_assignable() const { return false; }
+    // Whether an app firmware update needs this device kept running (everything else is ended for it,
+    // the controller reboots afterwards anyway). over_bluetooth is whether the update is arriving over bluetooth
+    virtual bool needed_for_firmware_update(bool over_bluetooth) const
+    {
+        (void)over_bluetooth;
+        return false;
+    }
     // For a device that runs others (a secondary pico), whether device_id is one of them
     virtual bool owns_sub_device(uint32_t device_id) const
     {

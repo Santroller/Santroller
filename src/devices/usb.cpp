@@ -24,6 +24,7 @@
 #include <vector>
 #include "utils.h"
 #include "devices/usb/host/bt_dongle_host.h"
+#include "devices/bt/bluetooth_stack.hpp"
 #include "devices/usb/host/switch2_command_host.h"
 #include "devices/usb/host/gamecube_adapter_host.h"
 
@@ -441,6 +442,11 @@ void USBHostHardwareDevice::end(bool full)
         // we are part way through a reload so we don't need to trigger a second one
         m_devices_changed = 0;
     }
+}
+
+bool USBHostHardwareDevice::needed_for_firmware_update(bool over_bluetooth) const
+{
+    return over_bluetooth && BluetoothStack::instance().uses_usb_dongle();
 }
 
 void USBHostHardwareDevice::update(bool full_poll, bool send_events)

@@ -65,6 +65,28 @@ void DeviceManager::remove_root_devices_not_in(const std::vector<uint32_t> &ids)
     }
 }
 
+void DeviceManager::end_devices_for_firmware_update(bool over_bluetooth)
+{
+    m_active_devices.clear();
+    m_assignable_devices.clear();
+    m_auth_devices.clear();
+    auto it = m_root_devices.begin();
+    while (it != m_root_devices.end())
+    {
+        if (it->second->needed_for_firmware_update(over_bluetooth))
+        {
+            ++it;
+            continue;
+        }
+        it->second->end(true);
+        it = m_root_devices.erase(it);
+    }
+    m_psx_emulation_device.reset();
+    m_wii_emulation_device.reset();
+    m_joybus_emulation_device.reset();
+    m_snes_emulation_device.reset();
+}
+
 void DeviceManager::remove_disconnected_root_devices()
 {
     auto it = m_root_devices.begin();

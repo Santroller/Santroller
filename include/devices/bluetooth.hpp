@@ -26,6 +26,7 @@ public:
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
     void handle_command(proto_Command command);
+    bool needed_for_firmware_update(bool over_bluetooth) const override { return over_bluetooth; }
     bool valid()
     {
         return false;

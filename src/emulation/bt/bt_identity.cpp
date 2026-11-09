@@ -15,7 +15,7 @@ static uint32_t tag_for_device(int index)
 // Bonds made while we were the central (with controllers), visible to every identity
 static constexpr uint8_t SHARED_IDENTITY = 0xfe;
 
-static BtIdentity s_identity = BtIdentityGamepad;
+static uint8_t s_identity = BtIdentityGamepad;
 static bool s_initialized = false;
 static btstack_packet_callback_registration_t s_hci_registration;
 static btstack_packet_callback_registration_t s_sm_registration;
@@ -55,11 +55,21 @@ static bool bond_visible(int index, int addr_type, const bd_addr_t addr)
 }
 
 // A random static address for the identity: the controller's public address, with the top bits of the first byte
-// replaced by the static marker (0b11) and the identity, so each identity of each controller gets its own
-static void random_address_for(BtIdentity identity, bd_addr_t out)
+// replaced by the static marker (0b11) and the identity, so each identity of each controller gets its own.
+// The fixed identities use 1-3 in those bits (the plain gamepad is public), and gamepad subtypes use 0 with the
+// subtype mixed into the next byte.
+static void random_address_for(uint8_t identity, bd_addr_t out)
 {
     gap_local_bd_addr(out);
-    out[0] = (uint8_t)(0xc0 | ((uint8_t)identity << 4) | (out[0] & 0x0f));
+    if (identity & BT_IDENTITY_SUBTYPE)
+    {
+        out[0] = (uint8_t)(0xc0 | (out[0] & 0x0f));
+        out[1] ^= (uint8_t)(identity & ~BT_IDENTITY_SUBTYPE);
+    }
+    else
+    {
+        out[0] = (uint8_t)(0xc0 | (identity << 4) | (out[0] & 0x0f));
+    }
 }
 
 // Has to be redone whenever the controller starts, which forgets it (and could be a different USB adapter)
@@ -97,7 +107,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         }
         hci_con_handle_t handle = sm_event_pairing_complete_get_handle(packet);
         // a host bonded with the identity it connected to, a controller with all of them
-        uint8_t identity = gap_get_role(handle) == HCI_ROLE_MASTER ? SHARED_IDENTITY : (uint8_t)s_identity;
+        uint8_t identity = gap_get_role(handle) == HCI_ROLE_MASTER ? SHARED_IDENTITY : s_identity;
         store_identity(sm_le_device_index(handle), identity);
         break;
     }
@@ -126,8 +136,29 @@ void bt_identity_init()
     le_device_db_tlv_set_filter(bond_visible);
 }
 
-void bt_identity_set(BtIdentity identity)
+static uint8_t identity_for(SubType subtype, bool config_only)
 {
+    if (config_only)
+    {
+        return BtIdentityConfigOnly;
+    }
+    switch (subtype)
+    {
+    case SubType_KeyboardMouse:
+        return BtIdentityKeyboard;
+    case SubType_Dancepad:
+        return BtIdentityDancepad;
+    case SubType_Gamepad:
+    case SubType_Unknown:
+        return BtIdentityGamepad;
+    default:
+        return (uint8_t)(BT_IDENTITY_SUBTYPE | ((uint8_t)subtype & ~BT_IDENTITY_SUBTYPE));
+    }
+}
+
+void bt_identity_set(SubType subtype, bool config_only)
+{
+    uint8_t identity = identity_for(subtype, config_only);
     if (identity == s_identity)
     {
         return;

@@ -281,24 +281,10 @@ void BTGamepadDevice::initialize()
         db = bt_keyboard_profile(&config_start, &config_end);
     }
     update_name();
-    // Each database / report map is advertised from its own address, as hosts don't reliably notice either
-    // changing under the same one (bt_identity.h). Before the ATT server, as it changes which hosts are bonded.
-    if (m_config_only)
-    {
-        bt_identity_set(BtIdentityConfigOnly);
-    }
-    else if (subtype == SubType_KeyboardMouse)
-    {
-        bt_identity_set(BtIdentityKeyboard);
-    }
-    else if (subtype == SubType_Dancepad)
-    {
-        bt_identity_set(BtIdentityDancepad);
-    }
-    else
-    {
-        bt_identity_set(BtIdentityGamepad);
-    }
+    // Each database / report map, and each subtype (the PnP ID version), is advertised from its own address, as
+    // hosts don't reliably notice any of them changing under the same one (bt_identity.h). Before the ATT server,
+    // as it changes which hosts are bonded.
+    bt_identity_set(subtype, m_config_only);
     att_server_init(db, att_read_callback, NULL);
     att_server_register_packet_handler(packet_handler);
     bt_gatt_changes_init();
@@ -308,10 +294,11 @@ void BTGamepadDevice::initialize()
 
     // setup device information service
     device_information_service_server_init();
-    // the version carries what the USB identity descriptor does (subtype << 8 | capabilities), as hosts that
-    // can't send the capabilities report (Wine's SDL backend) still get the version
+    // the version carries the subtype (subtype << 8, as Santroller 1 did), as hosts that can't send the capabilities
+    // report (Wine's SDL backend) still get the version. Only the subtype, as hosts only read it when they pair,
+    // and each subtype has its own identity (bt_identity.h)
     device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, 0x1209, 0x2883,
-                                                 m_config_only ? 0 : (uint16_t)((subtype << 8) | capabilities));
+                                                 m_config_only ? 0 : (uint16_t)(subtype << 8));
     // btstack keeps the pointer, so this has to outlive init
     static char id[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
     pico_get_unique_board_id_string(id, sizeof(id));

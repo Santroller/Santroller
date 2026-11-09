@@ -450,6 +450,10 @@ message ConfigInfo {
   // Set when the radio firmware area can be written over the config interface (FirmwareUpdate with
   // radioFirmware). The content version of what's in it, 0 when it's missing or predates versioning.
   optional uint32 radioFirmwareVersion = 16;
+  // Set when the flash chip is smaller than the flash the firmware is laid out for, so an OTA update would
+  // write over the firmware itself: the device refuses them, and only a UF2 can update it. Firmware from
+  // before build 3526 omits this.
+  optional bool flashTooSmallForOta = 17;
 }
 
 message GetActiveProfiles {

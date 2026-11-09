@@ -3,6 +3,7 @@
 #include "managers/device_manager.hpp"
 #include "config/config.hpp"
 #include "config/FlashPROM.h"
+#include "config/flash_chip.h"
 #include "managers/profile_manager.hpp"
 #include "leds/led_mappings.hpp"
 
@@ -969,6 +970,13 @@ bool HIDConfigDevice::handle_set_report(uint8_t report_id, hid_report_type_t rep
                 else
                 {
                     m_radio_update = false;
+                    // The download slot is past the end of the chip, so it would wrap around onto the firmware
+                    if (flash_chip_smaller_than_layout())
+                    {
+                        printf("flash chip is %lu bytes, too small for an OTA update\r\n", (unsigned long)flash_chip_size());
+                        finish_firmware_update();
+                        return false;
+                    }
                     flash_write_begin();
                     int result = pfb_initialize_download_slot();
                     flash_write_end();

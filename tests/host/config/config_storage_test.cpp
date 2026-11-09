@@ -910,3 +910,90 @@ TEST_F(ConfigStorageTest, AnUploadAfterTheFallbackCanBeSavedAgain)
     ASSERT_TRUE(storage.update_auxiliary(write_aux, &pairings));
     EXPECT_NE(EEPROM.should_commit_at, 0u);
 }
+
+// Adopting a config from an older layout --------------------------------------------------------------
+// RP2350 builds before 3526 were laid out for 4MB of flash, with the config at its end. A config found
+// there is copied into the current area once, as long as the current area has never had one.
+
+namespace
+{
+struct OldLayoutArea
+{
+    alignas(FLASH_SECTOR_SIZE) uint8_t bytes[EEPROM_SIZE_BYTES];
+    OldLayoutArea() { memset(bytes, 0xFF, sizeof(bytes)); }
+};
+}
+
+TEST_F(ConfigStorageTest, AValidConfigInTheOldLayoutIsCopiedIntoAnAreaThatNeverHadOne)
+{
+    OldLayoutArea old;
+    const std::vector<uint8_t> main = pattern(300, 11);
+    const std::vector<uint8_t> aux = pattern(40, 99);
+    write_raw_image(old.bytes, concat(main, aux), valid_footer(main, aux));
+
+    ConfigStorage storage;
+    EXPECT_TRUE(storage.adopt_from(old.bytes));
+
+    EXPECT_EQ(memcmp(flash_area(), old.bytes, EEPROM_SIZE_BYTES), 0);
+    EXPECT_EQ(memcmp(cache(), old.bytes, EEPROM_SIZE_BYTES), 0);
+    ConfigImage image;
+    ASSERT_TRUE(storage.read_flash(image, false));
+    EXPECT_EQ(image_bytes(image), concat(main, aux));
+    EXPECT_EQ(image.main_size, main.size());
+    // Only once: the area has a config now
+    EXPECT_FALSE(storage.adopt_from(old.bytes));
+}
+
+TEST_F(ConfigStorageTest, AConfigAlreadyInTheAreaIsKeptOverTheOldLayouts)
+{
+    const std::vector<uint8_t> current = pattern(64, 5);
+    boot_with_flash_image(current, {});
+    OldLayoutArea old;
+    const std::vector<uint8_t> stale = pattern(128, 6);
+    write_raw_image(old.bytes, stale, valid_footer(stale, {}));
+    const std::vector<uint8_t> before(flash_area(), flash_area() + EEPROM_SIZE_BYTES);
+
+    ConfigStorage storage;
+    EXPECT_FALSE(storage.adopt_from(old.bytes));
+    EXPECT_EQ(std::vector<uint8_t>(flash_area(), flash_area() + EEPROM_SIZE_BYTES), before);
+}
+
+TEST_F(ConfigStorageTest, AConfigInTheAreaThatFailsItsCrcStillKeepsTheOldLayoutsOut)
+{
+    // Written for this layout, so it's this layout's to deal with (eg newer firmware's config)
+    const std::vector<uint8_t> current = pattern(64, 5);
+    Footer footer = valid_footer(current, {});
+    footer.data_crc ^= 1;
+    write_raw_image(flash_area(), current, footer);
+    OldLayoutArea old;
+    const std::vector<uint8_t> stale = pattern(128, 6);
+    write_raw_image(old.bytes, stale, valid_footer(stale, {}));
+
+    ConfigStorage storage;
+    EXPECT_FALSE(storage.adopt_from(old.bytes));
+    EXPECT_EQ(read_raw_footer(flash_area()).data_crc, footer.data_crc);
+}
+
+TEST_F(ConfigStorageTest, AnOldLayoutWithoutAValidConfigIsIgnored)
+{
+    OldLayoutArea erased;
+    ConfigStorage storage;
+    EXPECT_FALSE(storage.adopt_from(erased.bytes));
+
+    OldLayoutArea corrupt;
+    const std::vector<uint8_t> data = pattern(128, 6);
+    Footer footer = valid_footer(data, {});
+    footer.data_crc ^= 1;
+    write_raw_image(corrupt.bytes, data, footer);
+    EXPECT_FALSE(storage.adopt_from(corrupt.bytes));
+
+    EXPECT_EQ(fake_flash::erase_count, 0u);
+    EXPECT_EQ(fake_flash::program_count, 0u);
+}
+
+TEST_F(ConfigStorageTest, AnOldLayoutAtTheCurrentAreaIsLeftAlone)
+{
+    // A chip only as big as the current layout wraps the old address onto the current area
+    ConfigStorage storage;
+    EXPECT_FALSE(storage.adopt_from(flash_area()));
+}

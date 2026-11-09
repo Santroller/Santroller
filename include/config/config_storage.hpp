@@ -55,6 +55,10 @@ public:
     bool update_auxiliary(AuxiliaryWriter writer, void *context = nullptr, bool commit = true) const;
     // An explicit Save commits the whole cached config, not just aux onto the previous saved config.
     void save(AuxiliaryWriter writer = nullptr, void *context = nullptr);
+    // Copy the config area at old_area (EEPROM_SIZE_BYTES, where an older flash layout kept it) into this
+    // layout's, into both the cache and flash. Only if old_area holds a valid config and this layout's area
+    // has never had one, so it happens once. Returns whether it copied.
+    bool adopt_from(const uint8_t *old_area);
 
 private:
     // Write flash's saved config back with the cache's aux block, see update_auxiliary

@@ -6,6 +6,14 @@
 #ifndef _BOARDS_PICO2_W_COMPAT_H
 #define _BOARDS_PICO2_W_COMPAT_H
 
+// Lay flash out for 2MB like the RP2040 build, not the Pico 2's 4MB: plenty of RP2350 boards have a 2MB chip
+// (eg W25Q16JV), and addresses past the end of the chip wrap around to its start, so a 4MB layout's download
+// slot lands on the static firmware and the running app (and the swap on the bootloader). Set before
+// boards/pico2_w.h, which only sets its 4MB if nothing has yet (CMake reads these lines in order too).
+// Builds before 3526 kept the config at the end of 4MB, see adopt_config_from_old_layout.
+pico_board_cmake_set(PICO_FLASH_SIZE_BYTES, (2 * 1024 * 1024))
+#define PICO_FLASH_SIZE_BYTES (2 * 1024 * 1024)
+
 #include "boards/pico2_w.h"
 
 #define PICO_XOSC_STARTUP_DELAY_MULTIPLIER 64

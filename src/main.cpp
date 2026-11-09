@@ -14,6 +14,7 @@
 #include "config.pb.h"
 #include "pico/stdlib.h"
 #include "config/FlashPROM.h"
+#include "config/flash_chip.h"
 #include "CRC32.h"
 #include "pico/multicore.h"
 #include "hardware/clocks.h"
@@ -425,6 +426,8 @@ int main()
         // handle performed rollback if needed
     }
     pfb_firmware_commit();
+    // Before core1 starts, as it takes flash out of XIP
+    detect_flash_chip_size();
     ConfigManager::instance().sync_requested_mode_to_current();
     // 1.15V is what the SDK uses for its 200MHz RP2040 preset, so this keeps us inside the rated range
     vreg_set_voltage(VREG_VOLTAGE_1_15);
@@ -437,6 +440,7 @@ int main()
     adc_init();
     HidConsoleBridge::instance().init();
     EEPROM.start();
+    adopt_config_from_old_layout();
     if (!load())
     {
         // Run from an empty config, without writing it over what's stored

@@ -23,6 +23,9 @@ bool load_empty();
 // Build a profile that isn't currently active so the config tool can poll it
 std::shared_ptr<Profile> load_preview_profile(uint32_t profile_id);
 bool load();
+// RP2350 builds before 3526 were laid out for 4MB of flash, with the config at its end. Bring a config
+// from there into this layout's area, once. Call after EEPROM.start() and before load()
+void adopt_config_from_old_layout();
 uint32_t copy_config(uint8_t *buffer, uint32_t start, bool cached, uint32_t max_size);
 // streamed_upload: tell the configurator to stream firmware uploads (see bt_config_service.cpp)
 // in_use_by_other_tool: another configurator has the device open, see HIDConfigDevice::in_use_elsewhere

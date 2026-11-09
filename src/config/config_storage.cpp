@@ -81,6 +81,29 @@ uint32_t ConfigStorage::read_chunk(uint8_t *buffer, uint32_t start, uint32_t max
     return size;
 }
 
+bool ConfigStorage::adopt_from(const uint8_t *old_area)
+{
+    const uint8_t *area = reinterpret_cast<const uint8_t *>(EEPROM_ADDRESS_START);
+    // On a chip only as big as this layout, the old area wraps around onto this one
+    if (old_area == area)
+    {
+        return false;
+    }
+    // Anything with a footer here was written for this layout, even a config that fails its CRC
+    if (footer_at(area + EEPROM_SIZE_BYTES)->magic == FOOTER_MAGIC)
+    {
+        return false;
+    }
+    ConfigImage image;
+    if (!read_image(old_area + EEPROM_SIZE_BYTES, image))
+    {
+        return false;
+    }
+    memcpy(EEPROM.writeCache, old_area, EEPROM_SIZE_BYTES);
+    EEPROM.commit_now();
+    return true;
+}
+
 bool ConfigStorage::initialize_empty()
 {
     ConfigFooter *footer = reinterpret_cast<ConfigFooter *>(

@@ -4,6 +4,7 @@
 #include "hardware/structs/ssi.h"
 #endif
 #include "config/FlashPROM.h"
+#include "config/flash_chip.h"
 #include "config/aux_config.hpp"
 #include "config/config_loader.hpp"
 #include "config/config_storage.hpp"
@@ -1211,6 +1212,8 @@ uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload,
         info.has_radioFirmwareVersion = true;
         info.radioFirmwareVersion = radio_fw_content_version();
     }
+    info.has_flashTooSmallForOta = true;
+    info.flashTooSmallForOta = flash_chip_smaller_than_layout();
     const bool bootloader_outdated = !pfb_bootloader_layout_matches();
     info.has_bootloaderOutdated = true;
     info.bootloaderOutdated = bootloader_outdated;
@@ -1449,6 +1452,18 @@ uint32_t copy_config(uint8_t *buffer, uint32_t start, bool cached,
 {
     return config_storage.read_chunk(buffer, start, max_size, cached);
 }
+void adopt_config_from_old_layout()
+{
+#if PICO_RP2350
+    // On a 2MB chip this wraps around onto the current area, which adopt_from leaves alone
+    const uint8_t *old_area = reinterpret_cast<const uint8_t *>(XIP_BASE + 4 * 1024 * 1024 - EEPROM_SIZE_BYTES);
+    if (config_storage.adopt_from(old_area))
+    {
+        printf("moved the config from the old 4MB layout\r\n");
+    }
+#endif
+}
+
 bool load()
 {
     ConfigImage image;

@@ -88,12 +88,14 @@ bool BluetoothStack::is_cyw43_pin(uint8_t pin) const
 
 bool BluetoothStack::set_cyw43_pins(const Cyw43Pins &pins)
 {
+    m_cyw43_pins_pending = false;
     if (pins == m_pins)
     {
         return true;
     }
     if (m_initialized)
     {
+        m_cyw43_pins_pending = true;
         return false;
     }
     m_pins = pins;

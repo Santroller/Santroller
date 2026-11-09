@@ -130,6 +130,8 @@ static bool aux_commit_pending = false;
 // Unlike an automatic aux update, an explicit Save must also commit the
 // uploaded main config.
 static bool config_commit_pending = false;
+// A saved config may move the CYW43, which needs a restart once it has loaded
+static bool check_pins_after_save = false;
 
 ConsoleMode mode = ModeHid;
 ConsoleMode newMode = mode;
@@ -1313,7 +1315,17 @@ static void save_bluetooth_aux()
 
 void flush_pending_aux()
 {
-    if (!aux_pending || !can_write_aux())
+    if (!can_write_aux())
+    {
+        return;
+    }
+    if (check_pins_after_save)
+    {
+        // The saved config has loaded by now
+        check_pins_after_save = false;
+        BluetoothDevice::restart_if_pins_saved();
+    }
+    if (!aux_pending)
     {
         return;
     }
@@ -1333,7 +1345,11 @@ void flush_pending_aux()
     }
     aux_pending = false;
     aux_commit_pending = false;
-    config_commit_pending = false;
+    if (config_commit_pending)
+    {
+        config_commit_pending = false;
+        BluetoothDevice::restart_if_pins_saved();
+    }
 }
 
 void remove_aux_bluetooth_pairing(int32_t id)
@@ -1393,6 +1409,7 @@ void save_config()
     else
     {
         config_storage.save();
+        check_pins_after_save = true;
     }
     config_mgr.set_full_reload(true);
     reload();

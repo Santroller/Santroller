@@ -60,8 +60,13 @@ public:
     bool is_cyw43_pin(uint8_t pin) const;
     const Cyw43Pins &cyw43_pins() const { return m_pins; }
     // Sets the pins the CYW43 is probed on. Only works before begin(), as the stack can't be moved once it is up:
-    // returns false if it is already running on other pins (or a failed probe on them gave up on the CYW43).
+    // returns false if it is already running on other pins (or a failed probe on them gave up on the CYW43), and
+    // the new pins are left pending until a restart.
     bool set_cyw43_pins(const Cyw43Pins &pins);
+    // The config in use wants the CYW43 on other pins than the stack is running on. They only take effect after a
+    // restart, which waits for the config to be saved: restarting on the tool's unsaved edit would lose it
+    bool cyw43_pins_pending() const { return m_cyw43_pins_pending; }
+    void clear_cyw43_pins_pending() { m_cyw43_pins_pending = false; }
     bool using_cyw43_pin(uint8_t pin) const { return m_initialized && !m_usb_dongle && is_cyw43_pin(pin); }
     // True once, after a failed CYW43 probe handed its pins back. Devices set up before the probe had
     // those pins changed under them
@@ -90,6 +95,7 @@ private:
     bool m_powered = false;
     bool m_usb_dongle = false;
     bool m_cyw43_pins_released = false;
+    bool m_cyw43_pins_pending = false;
     // What the CYW43's LED was last set to, so only changes are sent
     bool m_led_known = false;
     bool m_led = false;

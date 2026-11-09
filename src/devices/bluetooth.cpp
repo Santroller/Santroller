@@ -42,6 +42,18 @@ void BluetoothDevice::set_up_cyw43_pin_users_again()
     }
 }
 
+void BluetoothDevice::restart_if_pins_saved()
+{
+    if (!BluetoothStack::instance().cyw43_pins_pending())
+    {
+        return;
+    }
+    // The delay lets the tool's save request finish first
+    printf("bt: saved new wireless chip pins, restarting\r\n");
+    ConfigManager::instance().set_bluetooth_available(false);
+    watchdog_reboot(0, 0, 200);
+}
+
 Cyw43Pins BluetoothDevice::wireless_pins(const proto_BluetoothDevice &device)
 {
     switch (device.has_wirelessPins ? device.wirelessPins : WirelessPinsPicoW)
@@ -66,11 +78,9 @@ void BluetoothDevice::begin()
     if (!BluetoothStack::instance().set_cyw43_pins(wireless_pins(m_device)))
     {
         // The stack is already up on the old pins (or gave up on a CYW43 there), and BTstack can't be torn down
-        // and started again, so restart with the new pins. The delay lets the tool's save finish first.
-        printf("bt: wireless chip pins changed, restarting\r\n");
-        ConfigManager::instance().set_bluetooth_available(false);
-        watchdog_reboot(0, 0, 200);
-        return;
+        // and started again. The tool applies edits before they're saved, and restarting now would drop the
+        // unsaved config, so keep going on the old pins: saving restarts onto the new ones
+        printf("bt: wireless chip pins changed, restarting once saved\r\n");
     }
     if (BluetoothStack::instance().initialized())
     {
@@ -110,6 +120,8 @@ void BluetoothDevice::rescan(bool first)
 void BluetoothDevice::end(bool full)
 {
     m_sync.end();
+    // Whatever replaces this device decides whether the pins still need a restart
+    BluetoothStack::instance().clear_cyw43_pins_pending();
     if (m_timed_out)
     {
         // Whatever replaces this device decides whether bluetooth stays off

@@ -23,6 +23,8 @@ public:
     }
     // The CYW43 pins the config picks
     static Cyw43Pins wireless_pins(const proto_BluetoothDevice &device);
+    // Restarts onto the CYW43 pins of a config that was just saved, if the stack is running on others
+    static void restart_if_pins_saved();
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
     void handle_command(proto_Command command);

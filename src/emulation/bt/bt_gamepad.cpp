@@ -308,7 +308,10 @@ void BTGamepadDevice::initialize()
 
     // setup device information service
     device_information_service_server_init();
-    device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, 0x1209, 0x2883, 0);
+    // the version carries what the USB identity descriptor does (subtype << 8 | capabilities), as hosts that
+    // can't send the capabilities report (Wine's SDL backend) still get the version
+    device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, 0x1209, 0x2883,
+                                                 m_config_only ? 0 : (uint16_t)((subtype << 8) | capabilities));
     // btstack keeps the pointer, so this has to outlive init
     static char id[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
     pico_get_unique_board_id_string(id, sizeof(id));

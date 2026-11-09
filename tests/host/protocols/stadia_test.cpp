@@ -54,6 +54,7 @@ TEST(Stadia, EachButtonMapsToItsOwnOutput)
     };
     const Case cases[] = {
         {2, 0x01, Gamepad_Capture},
+        {2, 0x02, Gamepad_Misc},
         {2, 0x10, Gamepad_Guide},
         {2, 0x20, Gamepad_Start},
         {2, 0x40, Gamepad_Back},
@@ -68,7 +69,7 @@ TEST(Stadia, EachButtonMapsToItsOwnOutput)
     };
     const GamepadButtonType all[] = {Gamepad_A, Gamepad_B, Gamepad_X, Gamepad_Y, Gamepad_Back, Gamepad_Start,
                                      Gamepad_Guide, Gamepad_Capture, Gamepad_LeftShoulder, Gamepad_RightShoulder,
-                                     Gamepad_LeftThumbClick, Gamepad_RightThumbClick};
+                                     Gamepad_LeftThumbClick, Gamepad_RightThumbClick, Gamepad_Misc};
     for (const auto &c : cases)
     {
         auto data = parse(report(8, c.byte == 2 ? c.mask : 0, c.byte == 3 ? c.mask : 0));
@@ -79,10 +80,28 @@ TEST(Stadia, EachButtonMapsToItsOwnOutput)
     }
 }
 
-TEST(Stadia, AssistantAndDigitalTriggersPressNothing)
+TEST(Stadia, DigitalTriggersAreReadThroughTheTriggerAxes)
 {
-    auto data = parse(report(8, 0x02 | 0x04 | 0x08, 0));
-    for (int b = Gamepad_A; b <= Gamepad_DpadRight; b++)
+    auto none = parse(report(8, 0, 0));
+    auto lt = gamepad_axis(Gamepad_LeftTrigger);
+    auto rt = gamepad_axis(Gamepad_RightTrigger);
+    auto lx = gamepad_axis(Gamepad_LeftStickX);
+    EXPECT_FALSE(stadia_tick_digital(none, lt));
+    EXPECT_FALSE(stadia_tick_digital(none, rt));
+    auto left = parse(report(8, 0x08, 0));
+    EXPECT_TRUE(stadia_tick_digital(left, lt));
+    EXPECT_FALSE(stadia_tick_digital(left, rt));
+    auto right = parse(report(8, 0x04, 0));
+    EXPECT_FALSE(stadia_tick_digital(right, lt));
+    EXPECT_TRUE(stadia_tick_digital(right, rt));
+    auto both = parse(report(8, 0x0C, 0));
+    EXPECT_FALSE(stadia_tick_digital(both, lx));
+}
+
+TEST(Stadia, DigitalTriggersPressNoButtons)
+{
+    auto data = parse(report(8, 0x04 | 0x08, 0));
+    for (int b = Gamepad_A; b <= Gamepad_Misc; b++)
     {
         EXPECT_FALSE(pressed(data, GamepadButtonType(b))) << b;
     }

@@ -31,6 +31,8 @@ enum GamepadButtonType {
   Gamepad_RightPaddle2 = 20;
   Gamepad_LeftGripTouch = 21;
   Gamepad_RightGripTouch = 22;
+  // An extra system button with no standard equivalent, such as the Stadia Google Assistant button
+  Gamepad_Misc = 23;
 }
 enum GamepadAxisType {
   Gamepad_LeftStickX = 1;

@@ -71,6 +71,19 @@ inline bool stadia_parse_report(const uint8_t *buf, uint16_t len, Stadia_Data_t 
 
 inline bool stadia_tick_digital(const Stadia_Data_t &data, proto_Output &type)
 {
+    // The controller's own digital trigger bits, for outputs that send both a digital and analog trigger
+    if (type.which_mapping == proto_Output_gamepadAxis_tag)
+    {
+        switch (type.mapping.gamepadAxis)
+        {
+        case Gamepad_LeftTrigger:
+            return data.l2;
+        case Gamepad_RightTrigger:
+            return data.r2;
+        default:
+            return false;
+        }
+    }
     if (type.which_mapping != proto_Output_gamepadButton_tag)
     {
         return false;
@@ -104,6 +117,8 @@ inline bool stadia_tick_digital(const Stadia_Data_t &data, proto_Output &type)
         return data.guide;
     case Gamepad_Capture:
         return data.capture;
+    case Gamepad_Misc:
+        return data.assistant;
     case Gamepad_DpadUp:
         return !centered && (hat == 7 || hat <= 1);
     case Gamepad_DpadRight:

@@ -7,6 +7,8 @@
 #include "config/config.hpp"
 #include "managers/device_manager.hpp"
 #include "hidparser.h"
+#include "utils.h"
+#include "protocols/stadia.hpp"
 
 std::shared_ptr<UsbHostInterface> StadiaHost::open(std::shared_ptr<UsbHostDevice> list, tusb_desc_interface_t const *itf_desc, uint16_t max_len, uint16_t vid, uint16_t pid, uint16_t revision, HID_ReportInfo_t *info)
 {
@@ -32,7 +34,7 @@ std::shared_ptr<UsbHostInterface> StadiaHost::open(std::shared_ptr<UsbHostDevice
         if (desc_ep->bEndpointAddress & 0x80)
         {
             intf->m_ep_in = desc_ep->bEndpointAddress;
-            intf->m_ep_in_size = desc_ep->wMaxPacketSize;
+            intf->m_ep_in_size = tu_min16(tu_edpt_packet_size(desc_ep), sizeof(intf->m_ep_in_buf));
             TU_VERIFY(tuh_edpt_open(dev_addr, desc_ep), nullptr);
         }
         else
@@ -57,11 +59,17 @@ std::shared_ptr<UsbHostInterface> StadiaHost::open(std::shared_ptr<UsbHostDevice
 
 bool StadiaHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes)
 {
+    if (ep_addr == m_ep_out)
+    {
+        m_out_result = result;
+        m_out_done.store(true, std::memory_order_release);
+    }
     if (ep_addr & 0x80)
     {
-        if (m_ep_in_buf[0] == STADIA_REPORT_ID)
+        // m_ep_in_buf holds a full packet, but only the report itself fits in m_last_input_report
+        if (result == XFER_RESULT_SUCCESS)
         {
-            memcpy(&m_last_input_report, m_ep_in_buf, m_ep_in_size);
+            stadia_parse_report(m_ep_in_buf, xferred_bytes, m_last_input_report);
         }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
@@ -79,76 +87,50 @@ bool StadiaHost::set_config()
 }
 bool StadiaHost::tick_digital(proto_Output &type)
 {
-    uint8_t dpad = m_last_input_report.dpad >= 0x08 ? 0 : dpad_bindings_reverse[m_last_input_report.dpad];
-    asm volatile("" ::
-                     : "memory");
-    bool up = dpad & UP;
-    bool left = dpad & LEFT;
-    bool down = dpad & DOWN;
-    bool right = dpad & RIGHT;
-    if (type.which_mapping == proto_Output_gamepadButton_tag)
-    {
-        auto data = &m_last_input_report;
-        switch (type.mapping.gamepadButton)
-        {
-        case Gamepad_A:
-            return data->a;
-        case Gamepad_B:
-            return data->b;
-        case Gamepad_X:
-            return data->x;
-        case Gamepad_Y:
-            return data->y;
-        case Gamepad_LeftShoulder:
-            return data->leftShoulder;
-        case Gamepad_RightShoulder:
-            return data->rightShoulder;
-        case Gamepad_Back:
-            return data->back;
-        case Gamepad_Start:
-            return data->start;
-        case Gamepad_LeftThumbClick:
-            return data->leftThumbClick;
-        case Gamepad_RightThumbClick:
-            return data->rightThumbClick;
-        case Gamepad_Guide:
-            return data->guide;
-        case Gamepad_DpadUp:
-            return up;
-        case Gamepad_DpadDown:
-            return down;
-        case Gamepad_DpadLeft:
-            return left;
-        case Gamepad_DpadRight:
-            return right;
-        default:
-            return false;
-        }
-    }
-    return false;
+    return stadia_tick_digital(m_last_input_report, type);
 }
+
 uint16_t StadiaHost::tick_analog(proto_Output &type)
 {
-    if (type.which_mapping == proto_Output_gamepadAxis_tag)
+    return stadia_tick_analog(m_last_input_report, type);
+}
+
+void StadiaHost::update(bool full_poll, bool send_events)
+{
+    UsbHostInterface::update(full_poll, send_events);
+    if (m_out_done.exchange(false, std::memory_order_acquire))
     {
-        auto data = &m_last_input_report;
-        switch (type.mapping.gamepadAxis)
+        m_out_pending = false;
+        if (m_out_result != XFER_RESULT_SUCCESS)
         {
-        case Gamepad_LeftTrigger:
-            return data->leftTrigger << 8;
-        case Gamepad_RightTrigger:
-            return data->rightTrigger << 8;
-        case Gamepad_LeftStickX:
-            return data->leftStickX << 8;
-        case Gamepad_LeftStickY:
-            return (UINT8_MAX - data->leftStickY) * 0x101u;
-        case Gamepad_RightStickX:
-            return data->rightStickX << 8;
-        case Gamepad_RightStickY:
-            return (UINT8_MAX - data->rightStickY) * 0x101u;
-        default:
-            return 0;
+            m_rumble.dirty = true;
+            printf("Stadia output failed: dev=%u ep=%u result=%u\r\n", m_dev_addr, m_ep_out, unsigned(m_out_result));
         }
     }
-    return 0;
+
+    uint32_t now = millis();
+    if (m_out_pending || (m_ep_out && usbh_edpt_busy(m_dev_addr, m_ep_out)) || !m_rumble.should_send(now))
+        return;
+    if (!send_rumble())
+    {
+        if (!m_out_submit_failed)
+            printf("Stadia output submission failed: dev=%u ep=%u\r\n", m_dev_addr, m_ep_out);
+        m_out_submit_failed = true;
+        return;
+    }
+    m_out_submit_failed = false;
+    m_rumble.sent(now);
+    m_out_pending = m_ep_out != 0;
+}
+
+bool StadiaHost::send_rumble()
+{
+    m_ep_out_buf[0] = STADIA_RUMBLE_REPORT_ID;
+    stadia_build_rumble(m_rumble.left, m_rumble.right, m_ep_out_buf + 1);
+    if (m_ep_out)
+    {
+        return send_intr_xfer(m_ep_out, m_ep_out_buf, sizeof(m_ep_out_buf));
+    }
+    return set_report(STADIA_RUMBLE_REPORT_ID, HID_REPORT_TYPE_OUTPUT,
+                      m_ep_out_buf, sizeof(m_ep_out_buf)) == sizeof(m_ep_out_buf);
 }

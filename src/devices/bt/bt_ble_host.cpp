@@ -67,6 +67,19 @@ std::shared_ptr<BluetoothHostInterface> ble_create_host(uint16_t vid, uint16_t p
         return host;
     }
 
+    // Stadia controller, its report descriptor numbers buttons out of order
+    if (vid == STADIA_VID && pid == STADIA_PID)
+    {
+        auto host = std::make_shared<BleStadiaHost>(device_id);
+        host->m_vid = vid;
+        host->m_pid = pid;
+        if (info)
+        {
+            USB_FreeReportInfo(info);
+        }
+        return host;
+    }
+
     // Any other standard HID-over-GATT gamepad uses report parsing via fill_generic_report.
     auto host = std::make_shared<BleGenericHost>(device_id, info);
     if (known_subtype != SubType_Unknown)

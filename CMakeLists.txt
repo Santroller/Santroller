@@ -411,6 +411,7 @@ add_executable(
   src/devices/bt/host/switch_host.cpp
   src/devices/bt/host/xbox_host.cpp
   src/devices/bt/host/generic_host.cpp
+  src/devices/bt/host/stadia_host.cpp
   src/devices/bt/host/wii_host.cpp
   src/devices/bt/host/ghl_ios_host.cpp
   src/devices/bt/host/midi_host.cpp

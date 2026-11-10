@@ -22,3 +22,9 @@ std::shared_ptr<UsbHostInterface> XInputSecurityHost::open(std::shared_ptr<UsbHo
     *out_len = TUD_XINPUT_SECURITY_DESC_LEN;
     return intf;
 }
+
+bool XInputSecurityHost::set_config()
+{
+    usbh_driver_set_config_complete(m_dev_addr, m_interface);
+    return true;
+}

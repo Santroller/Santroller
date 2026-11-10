@@ -138,6 +138,14 @@ message MidiEvent {
     required bytes data = 1;  
 }
 
+// From a ScanPinPairsCommand: driving drivenPin low pulled sensedPin low with it (connected),
+// or no longer does. A plain switch shows up both ways round, one with a diode only one way.
+message PinPairEvent {
+    required int32 drivenPin = 1;
+    required int32 sensedPin = 2;
+    required bool connected = 3;
+}
+
 message ReloadEvent {
 
 }
@@ -173,6 +181,7 @@ message Event {
         JoybusDeviceHotplugEvent joybus = 21;
         LoadedEvent loaded = 22;
         InputDetectionEvent inputDetection = 23;
+        PinPairEvent pinPair = 24;
     };
 }
 

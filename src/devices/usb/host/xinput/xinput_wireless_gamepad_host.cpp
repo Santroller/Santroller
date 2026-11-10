@@ -431,7 +431,9 @@ std::shared_ptr<UsbHostInterface> XInputWirelessGamepadHost::open(std::shared_pt
         list->host_devices_by_itf[chatpad_itf] = intf->m_chatpad;
     }
 
-    *out_len = TUD_XINPUT_WIRELESS_CONTROLLER_DESC_LEN;
+    // measured rather than TUD_XINPUT_WIRELESS_CONTROLLER_DESC_LEN, which would bind the voice interface on a
+    // receiver with a shorter descriptor
+    *out_len = (uint16_t)(tu_desc_next(p_desc) - (uint8_t const *)desc_itf);
     return intf;
 }
 

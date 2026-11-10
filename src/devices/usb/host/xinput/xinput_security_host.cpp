@@ -12,7 +12,7 @@ std::shared_ptr<UsbHostInterface> XInputSecurityHost::open(std::shared_ptr<UsbHo
               nullptr);
 
     uint8_t dev_addr = list->dev_addr();
-    uint8_t const *p_desc = (uint8_t const *)desc_itf;
+    uint8_t const *p_desc = (uint8_t const *)desc_itf; 
     p_desc = tu_desc_next(p_desc);
     XBOX_ID_DESCRIPTOR *x_desc =
         (XBOX_ID_DESCRIPTOR *)p_desc;

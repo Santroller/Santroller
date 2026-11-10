@@ -138,6 +138,10 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
             tool_lapsed = true;
         }
         ProfileManager::instance().release_tool_profile();
+        if (m_pair_pins)
+        {
+            stop_pair_scan();
+        }
         // A forced mode was held off while the tool was open, apply it now that the tool is gone
         auto &config_mgr = ConfigManager::instance();
         if (config_mgr.is_forced_mode_deferred() && !config_mgr.is_working() && !tool_may_be_open())
@@ -160,6 +164,10 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
         tool_missed_reload = false;
         proto_Event event = {which_event : proto_Event_loaded_tag, event : {loaded : {}}};
         send_event(event, false);
+    }
+    if (m_pair_pins)
+    {
+        pair_scan_tick();
     }
     bool profile_just_changed = profile_changed;
     if (profile_changed)
@@ -529,6 +537,15 @@ void HIDConfigDevice::handle_command(proto_Command command)
             pending_cycle_commands.push_back(command);
         }
         return;
+    }
+    case proto_Command_scanPinPairs_tag: {
+        const auto &scan = command.command.scanPinPairs;
+        stop_pair_scan();
+        if (scan.enabled)
+        {
+            start_pair_scan(scan.pins | (scan.has_pinsHigh ? (uint64_t)scan.pinsHigh << 32 : 0));
+        }
+        break;
     }
     case proto_Command_detectInput_tag: {
         // only detect for 10 seconds, like pins
@@ -1210,6 +1227,102 @@ bool HIDConfigDevice::tool_closed()
         return true;
     }
     return millis() - dev->lastKeepAlive > 1000;
+}
+
+void HIDConfigDevice::start_pair_scan(uint64_t requested)
+{
+    uint64_t pins = 0;
+    for (uint8_t pin = 0; pin < gpio_count() && pin < 64; pin++)
+    {
+        // Left alone like pin detection does, and anything a device is using
+        if (pin == 23 || !(requested & (1ull << pin)))
+        {
+            continue;
+        }
+        bool used = false;
+        DeviceManager::instance().for_each_active_device([&used, pin](const auto &device) {
+            if (device->using_pin(pin))
+            {
+                used = true;
+            }
+        });
+        if (used)
+        {
+            continue;
+        }
+        pins |= 1ull << pin;
+        gpio_init(pin);
+        gpio_set_dir(pin, GPIO_IN);
+        gpio_pull_up(pin);
+    }
+    memset(m_pair_last, 0, sizeof(m_pair_last));
+    memset(m_pair_reported, 0, sizeof(m_pair_reported));
+    m_pair_last_scan = millis();
+    m_pair_pins = pins;
+    printf("pair scan: %08lx%08lx\r\n", (uint32_t)(pins >> 32), (uint32_t)pins);
+}
+
+void HIDConfigDevice::stop_pair_scan()
+{
+    for (uint8_t pin = 0; pin < NUM_BANK0_GPIOS; pin++)
+    {
+        if (m_pair_pins & (1ull << pin))
+        {
+            gpio_set_dir(pin, GPIO_IN);
+            gpio_set_pulls(pin, false, false);
+        }
+    }
+    m_pair_pins = 0;
+}
+
+void HIDConfigDevice::pair_scan_tick()
+{
+    uint32_t now = millis();
+    if (now - m_pair_last_scan < 2)
+    {
+        return;
+    }
+    m_pair_last_scan = now;
+    // A pin that is already low with nothing driven (tied to ground, say) would pair with everything
+    const uint64_t idle_low = ~gpio_get_all64() & m_pair_pins;
+    for (uint8_t driven = 0; driven < NUM_BANK0_GPIOS; driven++)
+    {
+        const uint64_t bit = 1ull << driven;
+        if (!(m_pair_pins & bit))
+        {
+            continue;
+        }
+        gpio_put(driven, 0);
+        gpio_set_dir(driven, GPIO_OUT);
+        busy_wait_us(3);
+        const uint64_t low = ~gpio_get_all64() & m_pair_pins & ~bit & ~idle_low;
+        // Drive it high for a moment so it is back up before the next pin is driven, rather than
+        // waiting on the pull up to charge the matrix lines
+        gpio_put(driven, 1);
+        busy_wait_us(1);
+        gpio_set_dir(driven, GPIO_IN);
+        // Only report a pair once it reads the same on two scans in a row, which rides out contact bounce
+        const uint64_t stable = ~(low ^ m_pair_last[driven]);
+        uint64_t changed = (low ^ m_pair_reported[driven]) & stable;
+        m_pair_last[driven] = low;
+        while (changed)
+        {
+            const uint8_t sensed = __builtin_ctzll(changed);
+            const uint64_t sensed_bit = 1ull << sensed;
+            changed &= ~sensed_bit;
+            proto_Event evt;
+            evt.which_event = proto_Event_pinPair_tag;
+            evt.event.pinPair.drivenPin = driven;
+            evt.event.pinPair.sensedPin = sensed;
+            evt.event.pinPair.connected = (low & sensed_bit) != 0;
+            if (!send_event(evt, true))
+            {
+                // Try again on the next scan
+                continue;
+            }
+            m_pair_reported[driven] ^= sensed_bit;
+        }
+    }
 }
 
 bool HIDConfigDevice::tool_may_be_open()

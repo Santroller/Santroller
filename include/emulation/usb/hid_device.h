@@ -159,6 +159,15 @@ private:
     uint32_t m_detect_changed_at[NUM_BANK0_GPIOS];
     uint8_t m_detect_transitions[NUM_BANK0_GPIOS];
     InputDetector m_input_detector;
+    // Pin pair scan (ScanPinPairsCommand): the pins being scanned, and for each driven pin the pins
+    // it pulled low on the last scan and the ones last reported to the tool
+    void start_pair_scan(uint64_t requested);
+    void stop_pair_scan();
+    void pair_scan_tick();
+    uint64_t m_pair_pins = 0;
+    uint32_t m_pair_last_scan = 0;
+    uint64_t m_pair_last[NUM_BANK0_GPIOS];
+    uint64_t m_pair_reported[NUM_BANK0_GPIOS];
     uint8_t fw_update_tmp[4096];
     proto_FirmwareUpdate update_state;
     std::shared_ptr<class SecondaryPicoDevice> m_target_secondary_pico = nullptr;

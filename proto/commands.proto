@@ -80,6 +80,16 @@ message SetCycleCommand {
 message Rpcs3ModeCommand {
 
 }
+// Diagnostic for working out how an unknown button matrix is wired. Each pin in turn is driven low
+// with the rest pulled up, and any that follow it low are reported as a PinPairEvent, as are pairs
+// letting go. Runs until a command with enabled false, or the tool closing. Pins a device is using
+// are left alone.
+message ScanPinPairsCommand {
+  required bool enabled = 1;
+  // Pin masks for GPIO 0-31, with GPIO 32-63 in pinsHigh
+  optional uint32 pins = 2;
+  optional uint32 pinsHigh = 3;
+}
 message Command {
     oneof command {
         SetProfileCommand setProfile = 1;
@@ -96,5 +106,6 @@ message Command {
         ForgetBluetoothHostsCommand forgetBluetoothHosts = 12;
         TurnOffControllerCommand turnOffController = 13;
         Rpcs3ModeCommand rpcs3Mode = 14;
+        ScanPinPairsCommand scanPinPairs = 15;
     }
 }

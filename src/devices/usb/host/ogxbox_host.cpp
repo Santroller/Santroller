@@ -45,7 +45,9 @@ std::shared_ptr<UsbHostInterface> OGXboxHost::open(std::shared_ptr<UsbHostDevice
         list->host_devices_by_endpoint_in[intf->m_ep_in & (~0x80)] = intf;
     }
     usb_host_add_assignable_interface(intf);
-    *out_len = TUD_OGXBOX_GAMEPAD_DESC_LEN;
+    // measured rather than TUD_OGXBOX_GAMEPAD_DESC_LEN, which would run into the next interface on a device
+    // with fewer endpoints
+    *out_len = (uint16_t)(tu_desc_next(p_desc) - (uint8_t const *)desc_itf);
     return intf;
 }
 

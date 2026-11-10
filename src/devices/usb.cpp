@@ -801,9 +801,18 @@ uint16_t usbh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const
 
 bool usbh_set_config(uint8_t dev_addr, uint8_t itf_num)
 {
-    if (!host_devices[dev_addr] || !host_devices[dev_addr]->host_devices_by_itf[itf_num])
+    if (!host_devices[dev_addr])
     {
         return false;
+    }
+    if (!host_devices[dev_addr]->host_devices_by_itf[itf_num])
+    {
+        // Bound by an open() whose length ran into this interface without taking it. Hand on to the next
+        // interface anyway, as the device never finishes enumerating otherwise, and the hub it is on stops
+        // reporting plugs and unplugs until then
+        printf("usbh: no driver for bound interface %d on %d\r\n", itf_num, dev_addr);
+        usbh_driver_set_config_complete(dev_addr, itf_num);
+        return true;
     }
     bool reenumerating_after_reset = usbh_reenumeration_active(dev_addr);
     bool configured = host_devices[dev_addr]->host_devices_by_itf[itf_num]->set_config();

@@ -569,6 +569,25 @@ void SecondaryPicoDevice::update(bool full_poll, bool send_events)
     if (full_poll)
     {
         m_config_dirty = true;
+        // Connecting is only reported when it changes, which is usually right after boot while the tool
+        // isn't open to hear it, so the tool is told again whenever it asks for everything
+        if (m_ota_in_progress)
+        {
+            send_ota_event(m_connected, true, m_last_ota_percent, false);
+        }
+        else
+        {
+            proto_Event event = proto_Event_init_zero;
+            event.which_event = proto_Event_device_tag;
+            event.event.device.id = m_id;
+            event.event.device.connected = m_connected;
+            if (m_rebooting)
+            {
+                event.event.device.has_rebooting = true;
+                event.event.device.rebooting = true;
+            }
+            HIDConfigDevice::send_event(event, true);
+        }
         send_sub_device_status();
     }
 

@@ -49,7 +49,8 @@ void bootsel_pairing_update()
         return;
     }
     last_poll = now;
-    // A matching profile may be using whatever BOOTSEL would pair, and the tool has its own pair button
+    // Reading BOOTSEL stalls everything for a moment, which only doesn't matter while nothing is active. The tool
+    // has its own pair button.
     if (ProfileManager::instance().has_active_instances() || HIDConfigDevice::tool_may_be_open())
     {
         was_pressed = true;

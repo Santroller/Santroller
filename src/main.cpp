@@ -1,3 +1,4 @@
+#include "bootsel_pairing.h"
 #include <pb_decode.h>
 #include <pb_encode.h>
 #include <stdint.h>
@@ -390,6 +391,7 @@ void update()
     {
         return;
     }
+    bootsel_pairing_update();
     InactivityManager::instance().tick();
 }
 

@@ -8,6 +8,7 @@
 #include "config/config.hpp"
 #include "enums.pb.h"
 #include "emulation/usb/usb_devices.h"
+#include "devices/usb/host/gh_slider_helpers.h"
 
 static const char str_powergig_guitar[] = "Seven45 Guitar Controller";
 static const char str_powergig_drums[] = "Seven45 Drum Controller";
@@ -454,7 +455,7 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
         {
             // convert bitmask slider to actual hid slider
             PS3GuitarHeroGuitar_Data_t *reportGh = (PS3GuitarHeroGuitar_Data_t *)epin_buf;
-            reportGh->slider = GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider];
+            reportGh->slider = encode_gh5_slider(reportGh->slider);
         }
         send_report_if_changed(sizeof(PS3Dpad_Data_t), epin_buf);
     }

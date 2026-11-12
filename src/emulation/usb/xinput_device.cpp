@@ -22,6 +22,7 @@ static bool s_security_verified = false;
 #include "config/config.hpp"
 #include "hardware/structs/usb.h"
 #include "utils.h"
+#include "devices/usb/host/gh_slider_helpers.h"
 static const char str_xb360_auth[] = "Xbox Security Method 3, Version 1.00, \xa9 2005 Microsoft Corporation. All rights reserved.";
 static const uint8_t xbox_players[] = {
     0, // 0x00	 All off
@@ -270,7 +271,7 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
     {
         // convert bitmask slider to actual hid slider
         XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
-        reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
+        reportGh->slider = -((int8_t)(encode_gh5_slider(reportGh->slider) ^ 0x80) * -257);
     }
 
     if (m_report_generation != report_generation)

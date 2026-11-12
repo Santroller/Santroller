@@ -484,13 +484,6 @@ void GuitarHeroGuitarGamepadButtonMapping::update_ps2(uint8_t *buf)
     }
 }
 
-const uint8_t GuitarHeroGuitarAxisMapping::gh5_slider_mapping[] = {
-    0x80, 0x15, 0x4D, 0x30, 0x9A, 0x99, 0x66,
-    0x65, 0xC9, 0xC7, 0xC8, 0xC6, 0xAF, 0xAD,
-    0xAE, 0xAC, 0xFF, 0xFB, 0xFD, 0xF9, 0xFE,
-    0xFA, 0xFC, 0xF8, 0xE6, 0xE2, 0xE4, 0xE0,
-    0xE5, 0xE1, 0xE3, 0xDF};
-
 GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghAxis == GuitarHeroGuitar_Whammy), m_supports_slider(profile->supports_slider)
 {
 }

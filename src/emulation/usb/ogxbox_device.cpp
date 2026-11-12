@@ -10,6 +10,7 @@
 #include "config/config.hpp"
 #include "hardware/structs/usb.h"
 #include "pico/time.h"
+#include "devices/usb/host/gh_slider_helpers.h"
 
 // Debug only: replaces the sticks and triggers with counters showing how the console is talking to us.
 // Build with -DOGXBOX_DEBUG_STATS=1, never ship it.
@@ -393,7 +394,7 @@ void OGXboxGamepadDevice::build_report(uint8_t *buf, bool full_poll, bool send_e
     {
         // convert bitmask slider to actual hid slider
         OGXboxGuitarHeroGuitar_Data_t *reportGh = (OGXboxGuitarHeroGuitar_Data_t *)buf;
-        reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
+        reportGh->slider = -((int8_t)(encode_gh5_slider(reportGh->slider) ^ 0x80) * -257);
     }
 #if OGXBOX_DEBUG_STATS
     debug_apply(buf);

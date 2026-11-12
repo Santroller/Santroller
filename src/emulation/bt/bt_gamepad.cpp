@@ -29,6 +29,7 @@ static_assert(ATT_CHARACTERISTIC_GAP_DEVICE_NAME_01_VALUE_HANDLE == BT_GAP_DEVIC
 #include "btstack.h"
 #include "utils.h"
 #include "enums.pb.h"
+#include "devices/usb/host/gh_slider_helpers.h"
 #define SIZE_OF_BD_ADDRESS 18
 // static btstack_timer_source_t heartbeat;
 static btstack_packet_callback_registration_t hci_event_callback_registration;
@@ -576,7 +577,7 @@ void BTGamepadDevice::process(bool full_poll, bool send_events)
         {
             // convert bitmask slider to actual hid slider
             XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
-            reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
+            reportGh->slider = -((int8_t)(encode_gh5_slider(reportGh->slider) ^ 0x80) * -257);
         }
         if (memcmp(m_last_report, m_epin_buffer, sizeof(XInputGamepad_Data_t)) != 0)
         {

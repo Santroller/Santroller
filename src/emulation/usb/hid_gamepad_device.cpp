@@ -20,6 +20,7 @@
 #include "utils.h"
 #include "managers/battery_manager.hpp"
 #include "protocols/santroller_v2.hpp"
+#include "devices/usb/host/gh_slider_helpers.h"
 
 // Dance pads really need simultaneous directions, so they emulate buttons instead of hats
 static uint8_t const desc_hid_report_buttons[] =
@@ -193,7 +194,7 @@ void HIDGamepadDevice::process(bool full_poll, bool send_events)
     {
         // convert bitmask slider to actual hid slider
         XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
-        reportGh->slider = -((int8_t)((GuitarHeroGuitarAxisMapping::gh5_slider_mapping[reportGh->slider]) ^ 0x80) * -257);
+        reportGh->slider = -((int8_t)(encode_gh5_slider(reportGh->slider) ^ 0x80) * -257);
     }
     send_report_if_changed(sizeof(XInputGamepad_Data_t), epin_buf);
 }

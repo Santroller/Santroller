@@ -132,3 +132,39 @@ TEST(GuitarHeroSlider, WorldTourSlideFollowsOnceItHolds)
     EXPECT_EQ(report(filter, 0x3124, 177), 0b01100);
     EXPECT_EQ(report(filter, 0x4ADA, 100), 0b01000);
 }
+
+// PlasticBand's General Notes, indexed by the GRYBO bitmask
+const uint8_t plasticband_gh5[32] = {
+    0x80, 0x15, 0x4D, 0x30, 0x9A, 0x99, 0x66, 0x65, 0xC9, 0xC7, 0xC8, 0xC6, 0xAF, 0xAD, 0xAE, 0xAC,
+    0xFF, 0xFB, 0xFD, 0xF9, 0xFE, 0xFA, 0xFC, 0xF8, 0xE6, 0xE2, 0xE4, 0xE0, 0xE5, 0xE1, 0xE3, 0xDF};
+
+TEST(GuitarHeroSlider, Gh5EncodingMatchesPlasticBand)
+{
+    for (uint8_t frets = 0; frets < 32; frets++)
+    {
+        EXPECT_EQ(encode_gh5_slider(frets), plasticband_gh5[frets]) << (int)frets;
+        EXPECT_EQ(decode_gh5_slider(plasticband_gh5[frets]), frets) << (int)frets;
+    }
+}
+
+TEST(GuitarHeroSlider, Gh5RejectsEverythingElse)
+{
+    for (int value = 0; value < 256; value++)
+    {
+        uint8_t frets = decode_gh5_slider(value);
+        if (frets)
+        {
+            EXPECT_EQ(encode_gh5_slider(frets), value) << std::hex << value;
+        }
+    }
+}
+
+TEST(GuitarHeroSlider, Gh5ReadsAsItsTopFretsOnWorldTour)
+{
+    for (uint8_t frets = 1; frets < 32; frets++)
+    {
+        uint8_t top = 1 << (31 - __builtin_clz(frets));
+        uint8_t expected = top | (frets & (top >> 1));
+        EXPECT_EQ(decode_ghwt_slider(plasticband_gh5[frets]), expected) << (int)frets;
+    }
+}

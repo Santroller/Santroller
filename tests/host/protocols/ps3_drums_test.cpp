@@ -164,6 +164,11 @@ TEST(PS3Drums, Rb2PadAndCymbalOfTheSameColour)
     expect_only(r, true, {RockBandDrums_YellowPad, RockBandDrums_YellowCymbal});
     EXPECT_EQ(rb(r, RockBandDrums_YellowPad), 0xDFDF);
     EXPECT_EQ(rb(r, RockBandDrums_YellowCymbal), 0x9F9F);
+
+    // An extremely hard cymbal hit reads as 0 in red, which must still count as both
+    Report hard = Report(Yellow, PadFlag | CymbalFlag, HatUp).yellow(0x20).red(0);
+    expect_only(hard, true, {RockBandDrums_YellowPad, RockBandDrums_YellowCymbal});
+    EXPECT_EQ(rb(hard, RockBandDrums_YellowCymbal), UINT16_MAX);
 }
 
 TEST(PS3Drums, Rb2PadAndCymbalOfDifferentColours)

@@ -197,6 +197,12 @@ TEST(XInputDrums, Rb2PadAndCymbalOfTheSameColour)
     Report g(PadFlag, CymbalFlag | Green);
     g.red(0x4000).green(0xFFFF);
     expect_only(g, true, {RockBandDrums_GreenPad, RockBandDrums_GreenCymbal});
+
+    // An extremely hard cymbal hit reads as 0 in red, which must still count as both
+    Report hard(PadFlag | Up, CymbalFlag | Yellow);
+    hard.red(0).yellow(0xFFFF);
+    expect_only(hard, true, {RockBandDrums_YellowPad, RockBandDrums_YellowCymbal});
+    EXPECT_EQ(rb(hard, RockBandDrums_YellowCymbal, true), UINT16_MAX);
 }
 
 TEST(XInputDrums, Kicks)

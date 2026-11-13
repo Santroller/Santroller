@@ -20,7 +20,6 @@ XInputRockBandDrumHits xinput_decode_rb_drums(const XInputRockBandDrums_Data_t *
     report.cymbal = data->cymbalFlag;
     report.up = data->dpadUp;
     report.down = data->dpadDown;
-    report.red_velocity_set = data->redVelocity != 0;
     report.red_velocity = xinput_rb_drum_velocity(data->redVelocity);
     report.yellow_velocity = xinput_rb_drum_velocity(data->yellowVelocity);
     report.blue_velocity = xinput_rb_drum_velocity(data->blueVelocity);

@@ -37,7 +37,6 @@ inline RockBandDrumHits ps3_decode_rb_drums(const uint8_t *buf, bool rb2)
     report.cymbal = data->cymbalFlag;
     report.up = ps3_hat_up(buf);
     report.down = ps3_hat_down(buf);
-    report.red_velocity_set = data->redVelocity != 0;
     report.red_velocity = ps3_rb_drum_velocity(data->redVelocity);
     report.yellow_velocity = ps3_rb_drum_velocity(data->yellowVelocity);
     report.blue_velocity = ps3_rb_drum_velocity(data->blueVelocity);

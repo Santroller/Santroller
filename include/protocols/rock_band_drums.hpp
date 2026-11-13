@@ -22,9 +22,6 @@ struct RockBandDrumReport
     bool green, red, yellow, blue;
     bool pad, cymbal;
     bool up, down;
-    // Whether the raw red velocity is set at all, as a pad and cymbal of the same colour hit
-    // together put the cymbal velocity in red without red being pressed
-    bool red_velocity_set;
     // Velocities scaled to 0 - 65535, only meaningful while the matching colour is hit
     uint16_t red_velocity, yellow_velocity, blue_velocity, green_velocity;
 };
@@ -52,9 +49,17 @@ inline RockBandDrumHits rb_decode_drum_hits(const RockBandDrumReport &report, bo
     bool down = report.down;
     if (pad && cymbal)
     {
-        // Only the d-pad is checked to resolve a pad+cymbal hit, as the colour flag can be
-        // released before the d-pad is (particularly at high polling rates)
-        if (!red && report.red_velocity_set)
+        // Count the colours involved to tell a pad and cymbal of the same colour apart from
+        // two different colours. Red is included for simplicity, and the d-pad is checked
+        // alongside the colour flags as the colour flag can be released before the d-pad is
+        // (particularly at high polling rates). The raw red velocity can't be used for this,
+        // as an extremely hard hit can read as 0
+        int colorCount = 0;
+        colorCount += red ? 1 : 0;
+        colorCount += (yellow || up) ? 1 : 0;
+        colorCount += (blue || down) ? 1 : 0;
+        colorCount += (green || !(up || down)) ? 1 : 0;
+        if (colorCount <= 1)
         {
             // Pad and cymbal of the same colour hit together: the cymbal velocity goes in
             // red, without red being pressed

@@ -151,6 +151,7 @@ void SecondaryPicoDevice::begin()
     m_digital_inputs.clear();
     m_analog_inputs.clear();
     m_version_checked = false;
+    m_wrong_chip = false;
     m_ota_in_progress = false;
     m_auto_ota_attempts = 0;
     m_ota_offset = 0;
@@ -256,6 +257,25 @@ void SecondaryPicoDevice::send_ota_event(bool connected, bool updating, uint32_t
     HIDConfigDevice::send_event(evt, true);
 }
 
+void SecondaryPicoDevice::send_status_event()
+{
+    proto_Event event = proto_Event_init_zero;
+    event.which_event = proto_Event_device_tag;
+    event.event.device.id = m_id;
+    event.event.device.connected = m_connected;
+    if (m_rebooting)
+    {
+        event.event.device.has_rebooting = true;
+        event.event.device.rebooting = true;
+    }
+    if (m_connected)
+    {
+        event.event.device.has_wrongChip = true;
+        event.event.device.wrongChip = m_wrong_chip;
+    }
+    HIDConfigDevice::send_event(event, true);
+}
+
 void SecondaryPicoDevice::transfer_failed(Transfer transfer)
 {
     m_last_failed = true;
@@ -280,6 +300,7 @@ void SecondaryPicoDevice::transfer_failed(Transfer transfer)
         sub_devices_lost();
         // Whatever comes back may have rebooted, so check its version and send its config again
         m_version_checked = false;
+        m_wrong_chip = false;
         proto_Event event = proto_Event_init_zero;
         event.which_event = proto_Event_device_tag;
         event.event.device.id = m_id;
@@ -347,10 +368,24 @@ void SecondaryPicoDevice::version_received()
 {
     m_version_checked = true;
     static const char main_ver[] = GIT_HASH;
-    bool mismatch = memcmp(m_version_rx_buf, main_ver, std::min<size_t>(8, strlen(main_ver))) != 0;
+    bool mismatch = memcmp(m_version_rx_buf, main_ver, std::min<size_t>(SECONDARY_PICO_VERSION_HASH_SIZE, strlen(main_ver))) != 0;
+    // Older firmware doesn't say which chip it's on, and is updated as before
+    const uint8_t chip = m_version_rx_buf[SECONDARY_PICO_VERSION_HASH_SIZE];
+    const bool wrong_chip = (chip == SECONDARY_PICO_CHIP_RP2040 || chip == SECONDARY_PICO_CHIP_RP2350) &&
+                            chip != SECONDARY_PICO_OWN_CHIP;
+    if (wrong_chip != m_wrong_chip)
+    {
+        m_wrong_chip = wrong_chip;
+        send_status_event();
+    }
     if (!mismatch)
     {
         m_auto_ota_attempts = 0;
+    }
+    else if (m_wrong_chip)
+    {
+        // This firmware would never boot on it, so it's left as it is
+        printf("Secondary Pico is on a different chip, not updating it\n");
     }
     else if (m_auto_ota_attempts >= max_auto_ota_attempts)
     {
@@ -577,16 +612,7 @@ void SecondaryPicoDevice::update(bool full_poll, bool send_events)
         }
         else
         {
-            proto_Event event = proto_Event_init_zero;
-            event.which_event = proto_Event_device_tag;
-            event.event.device.id = m_id;
-            event.event.device.connected = m_connected;
-            if (m_rebooting)
-            {
-                event.event.device.has_rebooting = true;
-                event.event.device.rebooting = true;
-            }
-            HIDConfigDevice::send_event(event, true);
+            send_status_event();
         }
         send_sub_device_status();
     }
@@ -626,7 +652,7 @@ void SecondaryPicoDevice::update(bool full_poll, bool send_events)
     if (!m_version_checked)
     {
         m_version_cmd_buf[0] = SLAVE_CMD_GET_VERSION;
-        start_transfer(Transfer::Version, m_version_cmd_buf, 1, m_version_rx_buf, 8);
+        start_transfer(Transfer::Version, m_version_cmd_buf, 1, m_version_rx_buf, SECONDARY_PICO_VERSION_SIZE);
         return;
     }
 

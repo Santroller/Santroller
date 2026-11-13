@@ -88,6 +88,9 @@ message DeviceHotplugEvent {
     optional uint32 battery = 6;
     // Bluetooth: whether a host (PC, phone or console) is connected to this controller
     optional bool hostConnected = 7;
+    // Secondary Pico: it runs on a different chip to this one, so it can't be kept up to date from
+    // here and has to be flashed by hand
+    optional bool wrongChip = 8;
 }
 
 message UsbDeviceHotplugEvent {

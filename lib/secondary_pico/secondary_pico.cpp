@@ -35,6 +35,17 @@
 #define SLAVE_CMD_OTA_FINISH          0x82
 // How many bytes the master reads for each GET_EVENTS, keep in sync with include/devices/secondary_pico.hpp
 #define SECONDARY_PICO_EVENTS_SIZE    256
+// GET_VERSION answers with the first 8 characters of the git hash, then the chip it runs on, keep in
+// sync with include/devices/secondary_pico.hpp
+#define SECONDARY_PICO_VERSION_HASH_SIZE 8
+#define SECONDARY_PICO_VERSION_SIZE   (SECONDARY_PICO_VERSION_HASH_SIZE + 1)
+#define SECONDARY_PICO_CHIP_RP2040    0x01
+#define SECONDARY_PICO_CHIP_RP2350    0x02
+#if PICO_RP2350
+#define SECONDARY_PICO_OWN_CHIP SECONDARY_PICO_CHIP_RP2350
+#else
+#define SECONDARY_PICO_OWN_CHIP SECONDARY_PICO_CHIP_RP2040
+#endif
 
 #define EVENT_QUEUE_MAX 32
 // Inputs configured on the secondary pico report with their index from here, keep in sync with
@@ -264,11 +275,14 @@ static void i2c_slave_handler(i2c_inst_t *i2c, i2c_slave_event_t event)
             }
             else if (cmd == SLAVE_CMD_GET_VERSION)
             {
+                // The master only sends this firmware on to a secondary with the same chip
                 static const char version_hash[] = GIT_HASH;
                 size_t len = strlen(version_hash);
-                if (len > sizeof(g_tx_buf)) len = sizeof(g_tx_buf);
+                if (len > SECONDARY_PICO_VERSION_HASH_SIZE) len = SECONDARY_PICO_VERSION_HASH_SIZE;
+                memset(g_tx_buf, 0, SECONDARY_PICO_VERSION_HASH_SIZE);
                 memcpy(g_tx_buf, version_hash, len);
-                g_tx_len = len;
+                g_tx_buf[SECONDARY_PICO_VERSION_HASH_SIZE] = SECONDARY_PICO_OWN_CHIP;
+                g_tx_len = SECONDARY_PICO_VERSION_SIZE;
             }
             g_tx_ptr = 0;
         }

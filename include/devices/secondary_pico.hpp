@@ -18,6 +18,18 @@
 #define SLAVE_CMD_OTA_CHUNK 0x81
 #define SLAVE_CMD_OTA_FINISH 0x82
 
+// GET_VERSION answers with the first 8 characters of the git hash, then the chip it runs on. Older
+// firmware sends only the hash, so the chip byte reads as 0 (or a hash character) from those
+#define SECONDARY_PICO_VERSION_HASH_SIZE 8
+#define SECONDARY_PICO_VERSION_SIZE (SECONDARY_PICO_VERSION_HASH_SIZE + 1)
+#define SECONDARY_PICO_CHIP_RP2040 0x01
+#define SECONDARY_PICO_CHIP_RP2350 0x02
+#if PICO_RP2350
+#define SECONDARY_PICO_OWN_CHIP SECONDARY_PICO_CHIP_RP2350
+#else
+#define SECONDARY_PICO_OWN_CHIP SECONDARY_PICO_CHIP_RP2040
+#endif
+
 #define SECONDARY_PICO_CONFIG_SIZE 512
 #define SECONDARY_PICO_OTA_CHUNK_SIZE 256
 // How many bytes are read for each GET_EVENTS, the secondary pico only sends what fits in this
@@ -105,6 +117,8 @@ private:
     void version_received();
     void decode_events();
     void send_sub_device_status();
+    // Whether it's connected (and on the wrong chip), for the configurator
+    void send_status_event();
     void sub_devices_lost();
     void send_ota_event(bool connected, bool updating, uint32_t progress, bool rebooting);
 
@@ -132,6 +146,8 @@ private:
     uint8_t rx_buf[SECONDARY_PICO_EVENTS_SIZE];
     uint8_t m_version_cmd_buf[1] = {SLAVE_CMD_GET_VERSION};
     uint8_t m_version_rx_buf[16] = {0};
+    // The secondary runs on a different chip, so it can't be sent this firmware
+    bool m_wrong_chip = false;
 
     Transfer m_transfer = Transfer::None;
     volatile bool m_transfer_pending = false;

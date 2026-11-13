@@ -46,6 +46,8 @@ public:
     void remove_instance(std::shared_ptr<Instance> instance);
 
     bool has_active_instances() const;
+    // Any active instance besides the standby lighting one, which outputs nothing
+    bool has_output_instances() const;
     template <typename Func>
     void for_each_active_profile(Func func) const
     {

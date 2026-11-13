@@ -483,6 +483,21 @@ bool ProfileManager::has_active_instances() const
     return !m_active_instances.empty();
 }
 
+bool ProfileManager::has_output_instances() const
+{
+    for (const auto &instance : m_active_instances)
+    {
+        for (const auto &profile : instance->profiles)
+        {
+            if (!profile->standby_lighting)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void ProfileManager::prepare_for_config_reload()
 {
     m_last_subtypes = m_current_subtypes;

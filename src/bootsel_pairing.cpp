@@ -49,9 +49,9 @@ void bootsel_pairing_update()
         return;
     }
     last_poll = now;
-    // Reading BOOTSEL stalls everything for a moment, which only doesn't matter while nothing is active. The tool
-    // has its own pair button.
-    if (ProfileManager::instance().has_active_instances() || HIDConfigDevice::tool_may_be_open())
+    // Reading BOOTSEL stalls everything for a moment, which only doesn't matter while nothing is active (standby
+    // lighting only runs LEDs and wake buttons, so it doesn't count). The tool has its own pair button.
+    if (ProfileManager::instance().has_output_instances() || HIDConfigDevice::tool_may_be_open())
     {
         was_pressed = true;
         return;

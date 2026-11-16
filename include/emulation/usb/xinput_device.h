@@ -68,6 +68,11 @@ public:
     static uint8_t lastIntfSerial;
     static uint32_t last_serial_query_time;
     static volatile uint32_t report_generation;
+    // Bumped when xusb22 starts a receiver (it reads the receiver id), so every slot reports its controller
+    // again. Presence is otherwise only sent once per SET_CONFIGURATION, and a host can swallow it: with USB
+    // passthrough to a VM, the Linux host's xpad reads it before the guest takes over, and the guest's own
+    // SET_CONFIGURATION repeats the same config, so tinyusb doesn't reopen the interface
+    static volatile uint32_t announce_generation;
     // A press woke a sleeping 360, which only powers on for the guide button. So once it resumes, the pads
     // hold guide for a moment, whichever button it was
     static void hold_guide_for_wake();
@@ -91,6 +96,7 @@ private:
     bool m_has_last_report = false;
     uint32_t m_last_report_us = 0;
     uint32_t m_report_generation = 0;
+    uint32_t m_announce_generation = 0;
     // the frame an unchanged report was skipped in, so the next isn't built until a new frame
     uint16_t m_unchanged_frame = 0;
     bool m_has_unchanged_frame = false;

@@ -66,6 +66,7 @@ void XInputGamepadDevice::initialize()
     m_has_last_report = false;
     m_has_unchanged_frame = false;
     m_report_generation = report_generation;
+    m_announce_generation = announce_generation;
     m_initial_report.leftStickX = 0;
     m_initial_report.leftStickY = 0;
     m_initial_report.rightStickX = 0;
@@ -210,6 +211,12 @@ void XInputGamepadDevice::process(bool full_poll, bool send_events)
     }
     if (!tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin))
         return;
+    if (m_wireless && m_announce_generation != announce_generation)
+    {
+        m_announce_generation = announce_generation;
+        m_send_presence = true;
+        m_send_link = true;
+    }
     if (m_wireless && send_wireless_reply())
         return;
     // Build at most one report per frame (the host polls every frame), even when an unchanged
@@ -880,3 +887,4 @@ uint32_t XInputGamepadDevice::last_caps_query_time = 0;
 uint8_t XInputGamepadDevice::lastIntfSerial = 0;
 uint32_t XInputGamepadDevice::last_serial_query_time = 0;
 volatile uint32_t XInputGamepadDevice::report_generation = 0;
+volatile uint32_t XInputGamepadDevice::announce_generation = 0;

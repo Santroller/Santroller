@@ -365,6 +365,7 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
                     {
                         static uint8_t id[7];
                         XInputGamepadDevice::receiver_id(id);
+                        ++XInputGamepadDevice::announce_generation;
                         tud_control_xfer(rhport, request, id, sizeof(id));
                     }
                     return true;

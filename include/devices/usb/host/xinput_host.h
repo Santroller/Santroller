@@ -262,6 +262,9 @@ private:
     // RB2+ drum kit, from the capabilities. Only RB2+ kits are wireless, so assume one until
     // the capabilities arrive
     bool m_rb2 = true;
+    // Force feedback, from bit 7 of the link report's subtype. Wireless caps reports carry
+    // voice in their flags byte instead, so this is the only place it shows up
+    bool m_force_feedback = false;
     bool m_out_pending = false;
     uint32_t m_out_submit_failures = 0;
     uint32_t m_input_count = 0;

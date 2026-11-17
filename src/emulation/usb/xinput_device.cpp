@@ -404,7 +404,7 @@ bool XInputGamepadDevice::send_wireless_reply()
                                 receiver[0], receiver[1], receiver[2], receiver[3],
                                 (uint8_t)serial, (uint8_t)(serial >> 8), (uint8_t)(serial >> 16), (uint8_t)(serial >> 24),
                                 0x00, 0x00, 0x13, 0xe3, 0x20, 0x1d, 0x30, 0x03, 0x44, 0x30, 0x51,
-                                get_xinput_subtype(subtype) | ((caps.flags & XINPUT_FLAGS_FORCE_FEEDBACK) ? 0x80 : 0x00), 0xff, 0xff, 0xff};
+                                (uint8_t)(get_xinput_subtype(subtype) | ((caps.flags & XINPUT_FLAGS_FORCE_FEEDBACK) ? 0x80 : 0x00)), 0xff, 0xff, 0xff};
         static_assert(sizeof(link) == XINPUT_WIRELESS_PACKET_SIZE);
         memcpy(epin_buf, link, sizeof(link));
     }

@@ -58,9 +58,12 @@ bool radio_fw_write_finish(void);
 void radio_fw_write_abort(void);
 bool radio_fw_writing(void);
 
-// Whether there's CYW43 firmware to start it with. Without it (nothing in the table of contents, or a write
-// that didn't finish) the driver would be handed whatever is where the older layout kept it.
+// Whether there's CYW43 firmware to start it with: found, and passing the driver's own check. Without it
+// (nothing in the table of contents, a write that didn't finish, or an older layout area that never got it)
+// the driver would be handed whatever is where the older layout kept it.
 bool radio_fw_cyw43_present(void);
+// Whether this build's area is meant to hold CYW43 firmware
+bool radio_fw_cyw43_expected(void);
 // For cyw43-driver, through cyw43_static_firmware.h
 uintptr_t radio_fw_cyw43_address(void);
 uint32_t radio_fw_cyw43_wifi_len(void);

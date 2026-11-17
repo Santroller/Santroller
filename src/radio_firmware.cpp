@@ -408,12 +408,48 @@ void radio_fw_write_abort(void)
     s_state = AreaState::Unknown;
 }
 
+namespace
+{
+// The check cyw43-driver makes before loading it (cyw43_check_valid_chipset_firmware): a trailer before the
+// last 16 bytes of the final 800, holding "Version: ". The older layout has nothing else to go on, so an
+// empty or overwritten area would otherwise pass and only fail once the driver tried to load it.
+bool cyw43_wifi_valid(const RadioFirmwareBlob &wifi)
+{
+    constexpr uint32_t tail_len = 800;
+    if (wifi.compression != RADIO_FW_COMPRESSION_NONE || wifi.raw_len < tail_len ||
+        wifi.stored_len != wifi.raw_len)
+    {
+        return false;
+    }
+    const uint8_t *tail = wifi.data + wifi.raw_len - tail_len;
+    uint32_t end = tail_len - 16;
+    uint32_t trailer_len = tail[end - 2] | tail[end - 1] << 8;
+    if (trailer_len >= 500 || tail[end - 3] != '\0')
+    {
+        return false;
+    }
+    for (uint32_t i = 80; i < trailer_len; i++)
+    {
+        if (memcmp(&tail[end - 3 - i], "Version: ", 9) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+} // namespace
+
+bool radio_fw_cyw43_expected(void)
+{
+    return RADIO_FW_LEGACY_CYW43_WIFI_LEN != 0;
+}
+
 bool radio_fw_cyw43_present(void)
 {
     RadioFirmwareBlob wifi;
     RadioFirmwareBlob clm;
     return radio_fw_find(RADIO_FW_CYW43_WIFI, &wifi) && radio_fw_find(RADIO_FW_CYW43_CLM, &clm) &&
-           wifi.raw_len && radio_fw_cyw43_clm_len();
+           cyw43_wifi_valid(wifi) && radio_fw_cyw43_clm_len();
 }
 
 uintptr_t radio_fw_cyw43_address(void)

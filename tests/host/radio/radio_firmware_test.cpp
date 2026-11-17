@@ -77,6 +77,23 @@ std::vector<uint8_t> blob(size_t len, uint8_t seed)
     return out;
 }
 
+// Firmware with the trailer cyw43-driver looks for: "Version: ..." then a NUL and a 16-bit length,
+// 16 bytes from the end
+std::vector<uint8_t> cyw43_wifi_blob(size_t len)
+{
+    std::vector<uint8_t> out = blob(len, 3);
+    const char text[] = "wl0: Nov 17 2026 version 7.95.61 (abcd CY) FWID 01-12345678 Version: 7.95.61";
+    std::vector<uint8_t> trailer(200, ' ');
+    memcpy(trailer.data(), text, sizeof(text) - 1);
+    size_t end = len - 16;
+    size_t text_at = end - 3 - trailer.size();
+    memcpy(out.data() + text_at, trailer.data(), trailer.size());
+    out[end - 3] = 0;
+    out[end - 2] = trailer.size() + 3;
+    out[end - 1] = 0;
+    return out;
+}
+
 std::vector<Entry> default_entries()
 {
     uint32_t wifi_len = 0x2345;
@@ -84,7 +101,7 @@ std::vector<Entry> default_entries()
     return {
         {RADIO_FW_XBOX_02E6, RADIO_FW_COMPRESSION_GZIP, 0x40, blob(0x1800, 1), 0x3000},
         {RADIO_FW_XBOX_02FE, RADIO_FW_COMPRESSION_GZIP, 0x1840, blob(0x1900, 2), 0x3100},
-        {RADIO_FW_CYW43_WIFI, RADIO_FW_COMPRESSION_NONE, 0x4000, blob(wifi_len, 3), wifi_len},
+        {RADIO_FW_CYW43_WIFI, RADIO_FW_COMPRESSION_NONE, 0x4000, cyw43_wifi_blob(wifi_len), wifi_len},
         {RADIO_FW_CYW43_CLM, RADIO_FW_COMPRESSION_NONE, clm_offset, blob(0x100, 4), 0x100},
     };
 }
@@ -339,8 +356,22 @@ TEST_F(RadioFirmware, ImageWithoutXboxFirmware)
 
 TEST_F(RadioFirmware, Cyw43PresentOnlyWithItsFirmware)
 {
-    // The older layout: wherever the build put it
+    // The older layout, empty (eg only ever updated over OTA): nothing for the driver to load
+    EXPECT_TRUE(radio_fw_cyw43_expected());
+    EXPECT_FALSE(radio_fw_cyw43_present());
+
+    // and with the firmware where the build put it
+    auto legacy = cyw43_wifi_blob(RADIO_FW_LEGACY_CYW43_WIFI_LEN);
+    memcpy(area() + RADIO_FW_LEGACY_CYW43_OFFSET, legacy.data(), legacy.size());
+    reload();
     EXPECT_TRUE(radio_fw_cyw43_present());
+
+    // Something else there fails the driver's check
+    memset(area() + RADIO_FW_LEGACY_CYW43_OFFSET + RADIO_FW_LEGACY_CYW43_WIFI_LEN - 800, 0x5A, 800);
+    reload();
+    EXPECT_FALSE(radio_fw_cyw43_present());
+    memset(area(), 0xFF, RADIO_FW_SIZE);
+    reload();
 
     ASSERT_TRUE(write_image(make_image(default_entries(), 1)));
     EXPECT_TRUE(radio_fw_cyw43_present());

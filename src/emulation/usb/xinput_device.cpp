@@ -395,6 +395,7 @@ bool XInputGamepadDevice::send_wireless_reply()
     }
     else if (m_send_link)
     {
+        const auto caps = input_capabilities();
         uint8_t receiver[7];
         receiver_id(receiver);
         const uint32_t serial = controller_serial(interface_id);
@@ -403,7 +404,7 @@ bool XInputGamepadDevice::send_wireless_reply()
                                 receiver[0], receiver[1], receiver[2], receiver[3],
                                 (uint8_t)serial, (uint8_t)(serial >> 8), (uint8_t)(serial >> 16), (uint8_t)(serial >> 24),
                                 0x00, 0x00, 0x13, 0xe3, 0x20, 0x1d, 0x30, 0x03, 0x44, 0x30, 0x51,
-                                get_xinput_subtype(subtype), 0xff, 0xff, 0xff};
+                                get_xinput_subtype(subtype) | ((caps.flags & XINPUT_FLAGS_FORCE_FEEDBACK) ? 0x80 : 0x00), 0xff, 0xff, 0xff};
         static_assert(sizeof(link) == XINPUT_WIRELESS_PACKET_SIZE);
         memcpy(epin_buf, link, sizeof(link));
     }
@@ -416,7 +417,10 @@ bool XInputGamepadDevice::send_wireless_reply()
         memcpy(epin_buf + sizeof(header), &caps.buttons, 12);
         epin_buf[18] = 0xff; // left motor
         epin_buf[19] = 0xff; // right motor
-        memcpy(epin_buf + 20, &caps.flags, sizeof(caps.flags));
+        // Wireless caps flags differ from wired: bits 0-1 are voice, bit 3 is PMD and bit 4 is
+        // no-nav. Force feedback is instead bit 7 of the subtype byte in the link packet.
+        const uint16_t wireless_flags = caps.flags & XINPUT_FLAGS_NO_NAV;
+        memcpy(epin_buf + 20, &wireless_flags, sizeof(wireless_flags));
     }
     if (!usbd_edpt_claim(TUD_OPT_RHPORT, m_epin))
     {

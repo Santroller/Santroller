@@ -1211,6 +1211,13 @@ uint32_t copy_config_info(uint8_t *buffer, bool cached, bool streamed_upload,
 #endif
     if (radio_fw_area_size())
     {
+        // So the configurator offers to write the area. Not a reason to need a UF2: plain Picos
+        // run this build too, and they're fine without it
+        if (radio_fw_cyw43_expected() && !radio_fw_cyw43_present())
+        {
+            info.has_missingStaticFirmware = true;
+            info.missingStaticFirmware = true;
+        }
         info.has_radioFirmwareVersion = true;
         info.radioFirmwareVersion = radio_fw_content_version();
     }

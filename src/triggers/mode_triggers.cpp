@@ -13,6 +13,8 @@
 #include "profiles/profile.hpp"
 #include "triggers/input_trigger.hpp"
 #include "usb/auth_broker.h"
+#include <cstring>
+#include <type_traits>
 
 UsbModeActivationTrigger::UsbModeActivationTrigger(proto_UsbDeviceAssignment config, std::shared_ptr<Profile> profile, uint32_t id, uint32_t list_id) : ActivationTrigger(profile, id, list_id), m_config(config)
 {
@@ -93,7 +95,12 @@ bool UsbModeActivationTrigger::forcedConsoleMode(ConsoleMode &mode) const
         return false;
     }
 
-    switch (m_config.forcedType)
+    // Read the raw value: nanopb stores whatever number the config holds, and
+    // loading an out-of-range value as the enum type is undefined behaviour
+    std::underlying_type_t<ConsoleMode> raw;
+    static_assert(sizeof(raw) == sizeof(m_config.forcedType));
+    memcpy(&raw, &m_config.forcedType, sizeof(raw));
+    switch (raw)
     {
     case ModeHid:
     case ModeOgXbox:
@@ -111,11 +118,11 @@ bool UsbModeActivationTrigger::forcedConsoleMode(ConsoleMode &mode) const
     case ModeGameCubeAdapter:
         break;
     default:
-        printf("Ignoring invalid forced console mode: %d\r\n", m_config.forcedType);
+        printf("Ignoring invalid forced console mode: %d\r\n", (int)raw);
         return false;
     }
 
-    mode = m_config.forcedType;
+    mode = static_cast<ConsoleMode>(raw);
     return true;
 }
 

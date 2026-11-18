@@ -174,6 +174,11 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
         {
             str = index == STRID_MANUFACTURER ? "USB Multipurpose Controller" : "";
         }
+        else if (ConfigManager::instance().get_requested_mode() == ModeGameCubeAdapter &&
+                 (index == STRID_MANUFACTURER || index == STRID_PRODUCT))
+        {
+            str = index == STRID_MANUFACTURER ? "Nintendo" : "WUP-028";
+        }
         else if (index == STRID_MANUFACTURER && ConfigManager::instance().get_manufacturer_name())
         {
             str = ConfigManager::instance().get_manufacturer_name();

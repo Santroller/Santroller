@@ -54,6 +54,9 @@ message ProfileOpts {
   // The least time between reports sent over USB, unset or 0 for no limit. Many controllers sending every 1ms
   // through one hub can tie it up, and slowing them down fixes it.
   optional uint32 minReportIntervalMs = 27;
+  // GameCube adapter mode only: ask Windows for WinUSB instead of HID, so Dolphin can use it without
+  // Zadig. SDL games then only see it if libusb is around, which it usually isn't.
+  optional bool gameCubeAdapterWinUsb = 28;
 }
 
 message Profile {

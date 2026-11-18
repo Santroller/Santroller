@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "input.pb.h"
+#include "protocols/nintendo.hpp"
 
 // ---------------------------------------------------------------------------
 // USB GameCube controller adapters, following SDL's HIDAPI GameCube driver
@@ -295,4 +296,59 @@ static inline void gamecube_adapter_rumble_report(const bool rumble[GAMECUBE_ADA
 static inline void evoretro_rumble_report(bool rumble, uint8_t out[EVORETRO_RUMBLE_REPORT_LEN])
 {
     out[0] = out[1] = rumble ? 0xFF : 0x00;
+}
+
+// ---------------------------------------------------------------------------
+// Emulating the Nintendo adapter
+// ---------------------------------------------------------------------------
+
+// A wired controller, with the power cable plugged in so hosts will rumble it
+#define GAMECUBE_ADAPTER_STATUS_EMULATED (GAMECUBE_ADAPTER_STATUS_WIRED | GAMECUBE_ADAPTER_STATUS_RUMBLE_POWER)
+
+// The adapter's descriptors.
+// Every report is vendor defined bytes. 0x21 says 37 bytes after its ID though the adapter only sends 37
+// with it, which is what the real one does too.
+#define GAMECUBE_ADAPTER_EP_IN_SIZE GAMECUBE_ADAPTER_INPUT_REPORT_LEN
+#define GAMECUBE_ADAPTER_EP_OUT_SIZE GAMECUBE_ADAPTER_RUMBLE_REPORT_LEN
+#define GAMECUBE_ADAPTER_REPORT(id, count, dir) \
+    0xA1, 0x01, 0x85, id, 0x19, 0x00, 0x2A, 0xFF, 0x00, 0x15, 0x00, 0x26, 0xFF, 0x00, 0x75, 0x08, 0x95, count, dir, 0x00, 0xC0
+static const uint8_t desc_hid_report_gamecube_adapter[] = {
+    0x05, 0x05, 0x09, 0x00,
+    GAMECUBE_ADAPTER_REPORT(0x11, 0x05, 0x91),
+    GAMECUBE_ADAPTER_REPORT(0x21, 0x25, 0x81),
+    GAMECUBE_ADAPTER_REPORT(0x12, 0x01, 0x91),
+    GAMECUBE_ADAPTER_REPORT(0x22, 0x19, 0x81),
+    GAMECUBE_ADAPTER_REPORT(0x13, 0x01, 0x91),
+    GAMECUBE_ADAPTER_REPORT(0x23, 0x02, 0x81),
+    GAMECUBE_ADAPTER_REPORT(0x14, 0x01, 0x91),
+    GAMECUBE_ADAPTER_REPORT(0x24, 0x02, 0x81),
+    GAMECUBE_ADAPTER_REPORT(0x15, 0x01, 0x91),
+    GAMECUBE_ADAPTER_REPORT(0x25, 0x02, 0x81),
+};
+
+// A joybus GameCube report into one port of report 0x21, the reverse of gamecube_adapter_parse
+static inline void gamecube_adapter_pack_port(const GameCubeGamepad_Data_t &in, uint8_t status, uint8_t out[9])
+{
+    out[0] = status;
+    out[1] = (in.a << 0) | (in.b << 1) | (in.x << 2) | (in.y << 3) |
+             (in.dpadLeft << 4) | (in.dpadRight << 5) | (in.dpadDown << 6) | (in.dpadUp << 7);
+    out[2] = (in.start << 0) | (in.z << 1) | (in.r << 2) | (in.l << 3);
+    out[3] = in.leftStickX;
+    out[4] = in.leftStickY;
+    out[5] = in.cStickX;
+    out[6] = in.cStickY;
+    out[7] = in.leftTrigger;
+    out[8] = in.rightTrigger;
+}
+
+// Report 0x21 with controllers in the first count ports and the rest empty
+static inline void gamecube_adapter_build_report(const GameCubeGamepad_Data_t *ports, uint8_t count,
+                                                 uint8_t out[GAMECUBE_ADAPTER_INPUT_REPORT_LEN])
+{
+    memset(out, 0, GAMECUBE_ADAPTER_INPUT_REPORT_LEN);
+    out[0] = GAMECUBE_ADAPTER_INPUT_REPORT_ID;
+    for (uint8_t i = 0; i < count && i < GAMECUBE_ADAPTER_PORTS; i++)
+    {
+        gamecube_adapter_pack_port(ports[i], GAMECUBE_ADAPTER_STATUS_EMULATED, out + 1 + i * 9);
+    }
 }

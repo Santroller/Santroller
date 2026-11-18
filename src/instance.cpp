@@ -197,17 +197,21 @@ void Instance::set_euphoria_led(uint8_t val)
 
 void Instance::update_feedback(bool force)
 {
-    for (const auto &profile : profiles)
+    for (size_t i = 0; i < profiles.size(); i++)
     {
+        const auto &profile = profiles[i];
         if (!profile)
         {
             continue;
         }
+        uint8_t left = rumble_left;
+        uint8_t right = rumble_right;
+        profile_rumble(i, left, right);
         for (const auto &dev_pair : profile->devices)
         {
             if (dev_pair.second)
             {
-                dev_pair.second->set_rumble(rumble_left, rumble_right);
+                dev_pair.second->set_rumble(left, right);
                 dev_pair.second->set_player_led(player_led);
                 dev_pair.second->set_lightbar(lightbar_red, lightbar_green, lightbar_blue);
                 dev_pair.second->set_euphoria_led(euphoria_led > 0);
@@ -218,7 +222,7 @@ void Instance::update_feedback(bool force)
         {
             if (dev_pair.second)
             {
-                dev_pair.second->set_rumble(rumble_left, rumble_right);
+                dev_pair.second->set_rumble(left, right);
                 dev_pair.second->set_player_led(player_led);
                 dev_pair.second->set_lightbar(lightbar_red, lightbar_green, lightbar_blue);
                 dev_pair.second->set_euphoria_led(euphoria_led > 0);
@@ -231,7 +235,7 @@ void Instance::update_feedback(bool force)
             if (led_pair && !led_pair->held_by_test())
             {
                 led_pair->begin_feedback();
-                led_pair->set_rumble(rumble_left, rumble_right);
+                led_pair->set_rumble(left, right);
                 led_pair->set_player_led(player_led);
                 led_pair->set_lightbar(lightbar_red, lightbar_green, lightbar_blue);
                 led_pair->set_euphoria_led(euphoria_led);

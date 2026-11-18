@@ -56,6 +56,9 @@ protected:
     bool clearedOut = false;
     uint8_t m_epin = 0;
     uint8_t m_epout = 0;
+    // How much one OUT transfer waits for. A transfer only ends early on a short packet, so a device whose
+    // OUT endpoint is smaller than this has to wait for exactly its reports
+    uint16_t m_epout_xfer_len = CFG_TUD_HID_EP_BUFSIZE;
     uint8_t m_strid = 0;
     bool m_sent_first_report = false;
     CFG_TUSB_MEM_ALIGN uint8_t epin_buf[CFG_TUD_HID_EP_BUFSIZE];

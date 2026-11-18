@@ -567,14 +567,23 @@ bool load_assignments(pb_istream_t *stream, const pb_field_t *field,
         list->validate(context->standby_claims, false, false);
         return true;
     }
+    ConsoleMode forced_usb_mode;
+    bool is_mode_forced = list->forcedConsoleMode(forced_usb_mode);
+    // Only rules forcing the GameCube adapter go on it over USB. Any other would just be another port
+    // nobody asked for, so it doesn't match, and doesn't claim the controllers its inputs read either.
+    // A reload starts back in the detected host's mode until a profile forces another, so a profile
+    // listed before the one forcing the adapter only knows from the mode the stack is running in. If
+    // nothing forces it any more, the mode changes back and they all load again after the reinit.
+    bool adapter = config_mgr.get_requested_mode() == ModeGameCubeAdapter ||
+                   config_mgr.get_current_mode() == ModeGameCubeAdapter;
+    bool off_adapter = adapter && (list->assignedDevices() & ProfileAssignMask_AssignUsb) &&
+                       !(is_mode_forced && forced_usb_mode == ModeGameCubeAdapter);
     // Assign triggers before building the profile
-    if (!context->matched && list->validate(true, false, false))
+    if (!context->matched && !off_adapter && list->validate(true, false, false))
     {
         context->matched = true;
         int assignedDevices = list->assignedDevices();
         ConsoleMode usb_mode = config_mgr.get_requested_mode();
-        ConsoleMode forced_usb_mode;
-        bool is_mode_forced = list->forcedConsoleMode(forced_usb_mode);
         if (is_mode_forced)
         {
             if (HIDConfigDevice::tool_may_be_open())
@@ -791,6 +800,7 @@ bool load_opts(pb_istream_t *stream, const pb_field_t *field, void **arg)
         opts.has_fullRangeTurntableOnPc && opts.fullRangeTurntableOnPc;
     profile->ps3_on_rpcs3 = rpcs3_passthrough_supported(opts.deviceToEmulate) &&
                             (!opts.has_ps3OnRpcs3 || opts.ps3OnRpcs3);
+    profile->gamecube_adapter_winusb = opts.has_gameCubeAdapterWinUsb && opts.gameCubeAdapterWinUsb;
     profile->select_to_dpad_left =
         opts.has_selectToDpadLeft && opts.selectToDpadLeft;
     profile->socd_mode = opts.has_socdMode ? opts.socdMode : SocdOff;

@@ -58,6 +58,7 @@ bool UsbModeActivationTrigger::validate(bool claim_device, bool full_poll, bool 
             matched = m_config.consoleType == ConsolePS2;
             break;
         case ModeSwitch:
+        case ModeGameCubeAdapter:
             matched = m_config.consoleType == ConsoleSwitch_Switch2;
             break;
         default:
@@ -107,6 +108,7 @@ bool UsbModeActivationTrigger::forcedConsoleMode(ConsoleMode &mode) const
     case ModePdLoader:
     case ModeGuitarHeroArcade:
     case ModeKeyboardMania:
+    case ModeGameCubeAdapter:
         break;
     default:
         printf("Ignoring invalid forced console mode: %d\r\n", m_config.forcedType);

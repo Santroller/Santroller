@@ -205,6 +205,7 @@ bool ConfigLoader::apply(const ConfigImage &image, ConsoleMode current_mode)
     case ModePs5:
     case ModeSwitch:
     case ModeSpice2x:
+    case ModeGameCubeAdapter:
     case ModePdLoader:
     case ModeKeyboardMania:
         break;

@@ -42,6 +42,7 @@ public:
     bool cymbal_glitch_fix;
     bool full_range_turntable_on_pc = false;
     bool ps3_on_rpcs3 = true;
+    bool gamecube_adapter_winusb = false;
     bool disconnect_bluetooth_on_suspend = false;
     bool select_to_dpad_left = false;
     // The least time between reports sent over USB, 0 for no limit, see minReportIntervalMs

@@ -45,7 +45,7 @@ uint16_t HIDDevice::open(tusb_desc_interface_t const *desc_itf, uint16_t max_len
 
     if (m_epout)
     {
-        TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE, false), drv_len);
+        TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, m_epout_xfer_len, false), drv_len);
     }
 
     return drv_len;
@@ -118,7 +118,7 @@ bool HIDDevice::interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t x
         set_report(epout_buf[0], HID_REPORT_TYPE_OUTPUT, epout_buf, (uint16_t)xferred_bytes);
     }
 
-    TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, CFG_TUD_HID_EP_BUFSIZE, false));
+    TU_VERIFY(usbd_edpt_xfer(TUD_OPT_RHPORT, m_epout, epout_buf, m_epout_xfer_len, false));
     return true;
 }
 bool HIDDevice::control_transfer(uint8_t stage, tusb_control_request_t const *request)

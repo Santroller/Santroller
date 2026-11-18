@@ -66,5 +66,13 @@ public:
     void set_keyboard_leds(uint8_t leds);
     void update_stagekit();
     void update_feedback(bool force = false);
+    // The rumble for one of the profiles, by its index in profiles. All of them share the instance's,
+    // except where one instance is several controllers (a GameCube adapter's ports)
+    virtual void profile_rumble(size_t index, uint8_t &left, uint8_t &right) const
+    {
+        (void)index;
+        (void)left;
+        (void)right;
+    }
     void update_capabilities();
 };

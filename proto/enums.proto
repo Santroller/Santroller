@@ -302,6 +302,8 @@ enum ConsoleMode {
     ModeSpice2x = 11;
     ModePdLoader = 12;
     ModeKeyboardMania = 13;
+    // A Wii U GameCube adapter (WUP-028) with the controller in port 1. Never detected, a profile has to force it
+    ModeGameCubeAdapter = 14;
 };
 
 enum ConsoleType {

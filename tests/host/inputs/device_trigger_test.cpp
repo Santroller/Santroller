@@ -291,7 +291,7 @@ TEST_F(DeviceTriggerTest, ReportsChangesToTheTool)
 TEST_F(DeviceTriggerTest, UsbModeWithoutAConsoleAlwaysMatches)
 {
     UsbModeActivationTrigger trigger(usb_assignment(), profile, 1, 0);
-    for (int mode = ModeHid; mode <= ModeKeyboardMania; mode++)
+    for (int mode = ModeHid; mode <= ModeGameCubeAdapter; mode++)
     {
         ConfigManager::instance().host_detected(ConsoleMode(mode));
         EXPECT_TRUE(trigger.validate(false, false, false)) << mode;
@@ -314,7 +314,7 @@ TEST_F(DeviceTriggerTest, UsbModeForASpecificConsole)
         {ConsolePS3, {ModePs3}},
         {ConsolePS4_PS5, {ModePs4, ModePs5}},
         {ConsoleWii_WiiU, {ModeWiiRb}},
-        {ConsoleSwitch_Switch2, {ModeSwitch}},
+        {ConsoleSwitch_Switch2, {ModeSwitch, ModeGameCubeAdapter}},
         {ConsolePS2, {ModeKeyboardMania}},
     };
     for (const auto &c : cases)
@@ -323,7 +323,7 @@ TEST_F(DeviceTriggerTest, UsbModeForASpecificConsole)
         config.has_consoleType = true;
         config.consoleType = c.console;
         UsbModeActivationTrigger trigger(config, profile, 1, 0);
-        for (int mode = ModeHid; mode <= ModeKeyboardMania; mode++)
+        for (int mode = ModeHid; mode <= ModeGameCubeAdapter; mode++)
         {
             ConfigManager::instance().host_detected(ConsoleMode(mode));
             bool expected = std::find(c.modes.begin(), c.modes.end(), ConsoleMode(mode)) != c.modes.end();
@@ -368,7 +368,7 @@ TEST_F(DeviceTriggerTest, PlayStationKeyboardKeepsMatchingAfterSwitchingToHid)
 
 TEST_F(DeviceTriggerTest, HidOnlySubtypesResolveBeforeCreatingUsbDevices)
 {
-    for (int mode = ModeHid; mode <= ModeKeyboardMania; ++mode)
+    for (int mode = ModeHid; mode <= ModeGameCubeAdapter; ++mode)
     {
         auto console_mode = ConsoleMode(mode);
         EXPECT_EQ(InstanceFactory::usb_mode_for_subtype(console_mode, SubType_KeyboardMouse), ModeHid);
@@ -405,8 +405,14 @@ TEST_F(DeviceTriggerTest, UsbModeForcedModeAndOptions)
     EXPECT_TRUE(forced.ps4OrPs5Mode(enabled));
     EXPECT_TRUE(enabled);
 
+    // Nothing detects the GameCube adapter, so forcing is the only way to get it
+    config.forcedType = ModeGameCubeAdapter;
+    UsbModeActivationTrigger adapter(config, profile, 1, 0);
+    EXPECT_TRUE(adapter.forcedConsoleMode(mode));
+    EXPECT_EQ(mode, ModeGameCubeAdapter);
+
     // A mode number the firmware doesn't know is ignored rather than forced
-    config.forcedType = ConsoleMode(14);
+    config.forcedType = ConsoleMode(99);
     UsbModeActivationTrigger bad(config, profile, 1, 0);
     mode = ModeHid;
     EXPECT_FALSE(bad.forcedConsoleMode(mode));

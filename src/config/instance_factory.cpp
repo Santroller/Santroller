@@ -21,6 +21,7 @@
 #include "emulation/usb/ps4_device.h"
 #include "emulation/usb/ps5_device.h"
 #include "emulation/usb/switch_device.h"
+#include "emulation/usb/gamecube_adapter_device.h"
 #include "emulation/usb/gh_arcade_device.h"
 #include "emulation/usb/spice2x_device.h"
 #include "emulation/usb/keyboardmania_device.h"
@@ -173,6 +174,23 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
                 return existing_dev;
             }
         }
+        // One adapter, with each profile on it a port
+        if (usb_mode == ModeGameCubeAdapter && !microphone)
+        {
+            auto existing_dev = profile_mgr.get_emulated_device(ModeGameCubeAdapter);
+            if (existing_dev)
+            {
+                if (existing_dev->profiles.size() >= GAMECUBE_ADAPTER_PORTS)
+                {
+                    printf("A GameCube adapter only has %d ports\r\n", GAMECUBE_ADAPTER_PORTS);
+                    return nullptr;
+                }
+                existing_dev->profiles.push_back(profile);
+                profile_mgr.register_instance(existing_dev, profile, true);
+                printf("Profile on GameCube adapter port %zu\r\n", existing_dev->profiles.size());
+                return existing_dev;
+            }
+        }
         if (usb_mode == ModePs5 && !microphone)
         {
             auto existing_dev = profile_mgr.get_emulated_device(ModePs5);
@@ -311,6 +329,10 @@ std::shared_ptr<UsbDevice> InstanceFactory::create_usb_instance(
             {
                 instance = std::make_shared<SwitchGamepadDevice>();
             }
+            break;
+
+        case ModeGameCubeAdapter:
+            instance = std::make_shared<GameCubeAdapterDevice>();
             break;
 
         case ModeSpice2x:

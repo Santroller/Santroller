@@ -252,4 +252,100 @@ TEST(GameCubeAdapter, EvoretroRumbleIsOnOrOff)
     EXPECT_EQ(out[0], 0x00);
     EXPECT_EQ(out[1], 0x00);
 }
+
+// The emulated adapter's report has to read back as the controller it was built from
+TEST(GameCubeAdapter, EmulatedReportParsesBack)
+{
+    GameCubeGamepad_Data_t in = {};
+    in.a = in.y = in.start = in.z = in.l = in.dpadUp = in.dpadRight = 1;
+    in.alwaysOne = 1;
+    in.leftStickX = 1;
+    in.leftStickY = 2;
+    in.cStickX = 3;
+    in.cStickY = 4;
+    in.leftTrigger = 5;
+    in.rightTrigger = 6;
+    uint8_t report[GAMECUBE_ADAPTER_INPUT_REPORT_LEN];
+    gamecube_adapter_build_report(&in, 1, report);
+
+    GameCubePortState ports[GAMECUBE_ADAPTER_PORTS];
+    ASSERT_TRUE(gamecube_adapter_parse(report, sizeof(report), ports));
+    EXPECT_TRUE(ports[0].connected);
+    EXPECT_FALSE(ports[0].wireless);
+    EXPECT_TRUE(ports[0].rumble_power);
+    EXPECT_EQ(ports[0].buttons, GAMECUBE_BUTTON_A | GAMECUBE_BUTTON_Y | GAMECUBE_BUTTON_START | GAMECUBE_BUTTON_Z |
+                                    GAMECUBE_BUTTON_L | GAMECUBE_BUTTON_DPAD_UP | GAMECUBE_BUTTON_DPAD_RIGHT);
+    for (uint8_t i = 0; i < GAMECUBE_AXIS_COUNT; i++)
+    {
+        EXPECT_EQ(ports[0].axes[i], i + 1);
+    }
+    for (int port = 1; port < GAMECUBE_ADAPTER_PORTS; port++)
+    {
+        EXPECT_FALSE(ports[port].connected) << port;
+    }
+}
+
+TEST(GameCubeAdapter, EmulatedPortsFillInOrder)
+{
+    GameCubeGamepad_Data_t in[2] = {};
+    in[0].a = 1;
+    in[1].b = 1;
+    in[1].leftStickX = 99;
+    uint8_t report[GAMECUBE_ADAPTER_INPUT_REPORT_LEN];
+    gamecube_adapter_build_report(in, 2, report);
+
+    GameCubePortState ports[GAMECUBE_ADAPTER_PORTS];
+    ASSERT_TRUE(gamecube_adapter_parse(report, sizeof(report), ports));
+    EXPECT_TRUE(ports[0].connected);
+    EXPECT_EQ(ports[0].buttons, GAMECUBE_BUTTON_A);
+    EXPECT_TRUE(ports[1].connected);
+    EXPECT_EQ(ports[1].buttons, GAMECUBE_BUTTON_B);
+    EXPECT_EQ(ports[1].axes[GAMECUBE_AXIS_STICK_X], 99);
+    EXPECT_FALSE(ports[2].connected);
+    EXPECT_FALSE(ports[3].connected);
+}
+
+TEST(GameCubeAdapter, EmulatedButtonsLandOnTheirOwnBits)
+{
+    // Each button alone, so a swapped pair shows up
+    struct Case
+    {
+        void (*set)(GameCubeGamepad_Data_t &);
+        uint16_t button;
+    };
+    const Case cases[] = {
+        {[](GameCubeGamepad_Data_t &r) { r.a = 1; }, GAMECUBE_BUTTON_A},
+        {[](GameCubeGamepad_Data_t &r) { r.b = 1; }, GAMECUBE_BUTTON_B},
+        {[](GameCubeGamepad_Data_t &r) { r.x = 1; }, GAMECUBE_BUTTON_X},
+        {[](GameCubeGamepad_Data_t &r) { r.y = 1; }, GAMECUBE_BUTTON_Y},
+        {[](GameCubeGamepad_Data_t &r) { r.start = 1; }, GAMECUBE_BUTTON_START},
+        {[](GameCubeGamepad_Data_t &r) { r.z = 1; }, GAMECUBE_BUTTON_Z},
+        {[](GameCubeGamepad_Data_t &r) { r.l = 1; }, GAMECUBE_BUTTON_L},
+        {[](GameCubeGamepad_Data_t &r) { r.r = 1; }, GAMECUBE_BUTTON_R},
+        {[](GameCubeGamepad_Data_t &r) { r.dpadUp = 1; }, GAMECUBE_BUTTON_DPAD_UP},
+        {[](GameCubeGamepad_Data_t &r) { r.dpadDown = 1; }, GAMECUBE_BUTTON_DPAD_DOWN},
+        {[](GameCubeGamepad_Data_t &r) { r.dpadLeft = 1; }, GAMECUBE_BUTTON_DPAD_LEFT},
+        {[](GameCubeGamepad_Data_t &r) { r.dpadRight = 1; }, GAMECUBE_BUTTON_DPAD_RIGHT},
+    };
+    for (const auto &c : cases)
+    {
+        GameCubeGamepad_Data_t in = {};
+        c.set(in);
+        uint8_t report[GAMECUBE_ADAPTER_INPUT_REPORT_LEN];
+        gamecube_adapter_build_report(&in, 1, report);
+        GameCubePortState ports[GAMECUBE_ADAPTER_PORTS];
+        ASSERT_TRUE(gamecube_adapter_parse(report, sizeof(report), ports));
+        EXPECT_EQ(ports[0].buttons, c.button);
+    }
+}
+
+TEST(GameCubeAdapter, EmulatedReportDescriptorMatchesTheAdapter)
+{
+    // Four bytes of usage, then ten reports of 21 bytes: the real adapter's 214
+    EXPECT_EQ(sizeof(desc_hid_report_gamecube_adapter), 214u);
+    // Report 0x21 is the second, an input
+    const uint8_t *input = desc_hid_report_gamecube_adapter + 4 + 21;
+    EXPECT_EQ(input[3], GAMECUBE_ADAPTER_INPUT_REPORT_ID);
+    EXPECT_EQ(input[18], 0x81);
+}
 } // namespace

@@ -20,9 +20,19 @@ TEST(XInput, SubtypeValues)
 
 TEST(XInput, SubtypesRoundTrip)
 {
-    for (SubType t : {Gamepad, Wheel, FightStick, FlightStick, Dancepad, RockBandGuitar, GuitarHeroGuitar, RockBandDrums,
+    for (SubType t : {Gamepad, Wheel, FightStick, FlightStick, Dancepad, RockBandGuitar, GuitarHeroGuitar, GuitarHeroDrums,
                       StageKit, ProKeys, DjHeroTurntable, ProGuitarMustang, DisneyInfinity, Skylanders})
         EXPECT_EQ(get_subtype_from_xinput(get_xinput_subtype(t)), t) << t;
+}
+
+TEST(XInput, ForceFeedbackFlagTellsDrumKitsApart)
+{
+    // Both kits are the drum subtype, and only Rock Band kits set force feedback (0x80)
+    EXPECT_EQ(get_subtype_from_xinput(XINPUT_DRUMS), GuitarHeroDrums);
+    EXPECT_EQ(get_subtype_from_xinput(XINPUT_DRUMS | 0x80), RockBandDrums);
+    // Everything else is the same with or without it
+    for (SubType t : {Gamepad, Wheel, RockBandGuitar, GuitarHeroGuitar, DjHeroTurntable, ProKeys})
+        EXPECT_EQ(get_subtype_from_xinput(get_xinput_subtype(t) | 0x80), t) << t;
 }
 
 TEST(XInput, SubtypesXInputCantTellApart)

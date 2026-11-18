@@ -381,33 +381,8 @@ static inline uint8_t decode_switch_rumble(const uint8_t *data)
     return (hf_amp > lf_amp) ? hf_amp : lf_amp;
 }
 
-// DEBUG ONLY, not to be committed: the last output reports from the host, read over SWD
-struct SwitchDebugEntry
-{
-    uint32_t ms;
-    uint8_t type;
-    uint8_t len;
-    uint8_t data[18];
-};
-volatile SwitchDebugEntry g_switch_dbg[128];
-volatile uint32_t g_switch_dbg_count;
-volatile uint32_t g_switch_dbg_rumble;
 void SwitchGamepadDevice::set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize)
 {
-    if (bufsize && buffer[0] == SwitchReportID::REPORT_OUTPUT_10)
-    {
-        g_switch_dbg_rumble++;
-    }
-    else
-    {
-        volatile SwitchDebugEntry &e = g_switch_dbg[g_switch_dbg_count % 128];
-        e.ms = to_ms_since_boot(get_absolute_time());
-        e.type = report_type;
-        e.len = bufsize;
-        for (uint16_t i = 0; i < sizeof(e.data); i++)
-            e.data[i] = i < bufsize ? buffer[i] : 0;
-        g_switch_dbg_count++;
-    }
     if (report_type != HID_REPORT_TYPE_OUTPUT)
         return;
 

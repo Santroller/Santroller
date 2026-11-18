@@ -581,39 +581,6 @@ void ProfileManager::update_xbox_one_identity()
     m_xbox_one_identity_changed = dev && std::static_pointer_cast<XboxOneGamepadDevice>(dev)->update_identity();
 }
 
-uint32_t ProfileManager::usb_layout_hash() const
-{
-    // XInput and HID gamepads share the VID/PID and interface numbers, so the mode has to be part of it too
-    bool has_xinput = false;
-    for (const auto &identity : m_usb_reload_identities)
-    {
-        if (identity.valid && !identity.auxiliary && identity.mode == ModeXbox360)
-        {
-            has_xinput = true;
-        }
-    }
-    if (m_current_subtypes.size() < 2 && !has_xinput)
-    {
-        return 0;
-    }
-    // FNV-1a
-    uint32_t hash = 2166136261u;
-    for (const auto subtype : m_current_subtypes)
-    {
-        hash = (hash ^ static_cast<uint8_t>(subtype)) * 16777619u;
-    }
-    for (const auto &identity : m_usb_reload_identities)
-    {
-        if (identity.valid && !identity.auxiliary)
-        {
-            hash = (hash ^ static_cast<uint8_t>(identity.mode)) * 16777619u;
-        }
-    }
-    // the receiver slots bind a different driver (XUSB20) to the same interfaces
-    hash = (hash ^ static_cast<uint8_t>(m_xinput_receiver)) * 16777619u;
-    return hash;
-}
-
 void ProfileManager::finish_usb_instance_initialization(uint8_t id)
 {
     if (id < std::size(m_usb_reload_identities) && m_usb_reload_identities[id].valid)

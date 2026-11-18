@@ -137,9 +137,6 @@ public:
     size_t usb_instance_count() const;
     // Gamepads profiles are emulating over USB, not counting auxiliary interfaces (eg xinput security)
     size_t usb_gamepad_count() const { return m_current_subtypes.size(); }
-    // Identifies the USB layout for windows, which keys driver bindings on the serial. 0 for a single HID
-    // gamepad (or nothing), which keeps the plain serial
-    uint32_t usb_layout_hash() const;
     // Windows with several XInput gamepads gets them as the slots of a 360 wireless receiver, as Steam's xbox
     // driver only takes one wired controller per USB device. Decided once a config has loaded, so the
     // descriptors can't change partway through an enumeration

@@ -111,24 +111,15 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
     return descriptor_buffer;
 }
 
-// Room for the board id, and a layout suffix ("-" and 8 hex digits)
-static char serial[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 10];
+// Windows rebinds each interface's driver when its compatible id changes, so the serial can stay the same
+// across layouts (a different one per layout made WebHID treat each as a new device needing permission).
+// Old multi-pad layouts got a serial suffix when they used wired XInput pads, but those are receiver slots now.
+static char serial[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
 
-// Windows keys devices on the serial, both for Steam's cache (which kept showing the previous set of gamepads
-// after a reload added or removed one) and for each interface's driver binding (so switching a gamepad between
-// XInput and HID kept the old driver on it). A layout gets its own serial instead. A single HID gamepad keeps
-// the plain board id, as that's what every board enumerates as before it knows the host is windows.
 static void update_serial()
 {
     // Only fits 15 of the id's 16 digits, kept that way so existing serials don't change
     pico_get_unique_board_id_string(serial, PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2);
-    const uint32_t hash = ProfileManager::instance().usb_layout_hash();
-    if (!hash)
-    {
-        return;
-    }
-    const size_t len = strlen(serial);
-    snprintf(serial + len, sizeof(serial) - len, "-%08lx", static_cast<unsigned long>(hash));
 }
 // array of pointer to string descriptors
 char const *string_desc_arr[STRID_COUNT] =

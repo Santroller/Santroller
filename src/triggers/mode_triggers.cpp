@@ -100,24 +100,10 @@ bool UsbModeActivationTrigger::forcedConsoleMode(ConsoleMode &mode) const
     std::underlying_type_t<ConsoleMode> raw;
     static_assert(sizeof(raw) == sizeof(m_config.forcedType));
     memcpy(&raw, &m_config.forcedType, sizeof(raw));
-    switch (raw)
+    // The nanopb limits follow the proto, so new modes are accepted without touching this.
+    // Assumes ConsoleMode stays contiguous
+    if (raw < _ConsoleMode_MIN || raw > _ConsoleMode_MAX)
     {
-    case ModeHid:
-    case ModeOgXbox:
-    case ModeXbox360:
-    case ModeXboxOne:
-    case ModePs3:
-    case ModePs4:
-    case ModePs5:
-    case ModeWiiRb:
-    case ModeSwitch:
-    case ModeSpice2x:
-    case ModePdLoader:
-    case ModeGuitarHeroArcade:
-    case ModeKeyboardMania:
-    case ModeGameCubeAdapter:
-        break;
-    default:
         printf("Ignoring invalid forced console mode: %d\r\n", (int)raw);
         return false;
     }

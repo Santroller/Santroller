@@ -668,8 +668,8 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                 m_link_serial = serial;
                 m_hardware_id = hardware_id_from_serial(serial);
                 m_force_feedback = linkReport->subtype & 0x80;
-                m_request_caps_on_input = raw_subtype == XINPUT_GUITAR_ALTERNATE || raw_subtype == XINPUT_PRO_GUITAR ||
-                                          raw_subtype == XINPUT_DRUMS;
+                m_request_caps_on_input = raw_subtype == XINPUT_GUITAR_ALTERNATE || raw_subtype == XINPUT_PRO_GUITAR;
+
                 bool newly_connected = !m_found;
                 if (newly_connected)
                 {
@@ -727,15 +727,6 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
                     printf("w %u GH guitar: wt=%u caps lx=%04x rx=%04x\r\n",
                            m_interface, m_wt, caps->leftStickX, caps->rightStickX);
                 }
-                // Rock Band and Guitar Hero kits share a subtype. As with wired kits, GH kits don't set
-                // force feedback (RB2 wireless kits report 0x0007, GH WT / Band Hero kits 0x0006). There
-                // are no wireless RB1 kits, so every wireless RB kit is RB2+
-                if (m_subtype == RockBandDrums || m_subtype == GuitarHeroDrums)
-                {
-                    m_subtype = m_force_feedback ? RockBandDrums : GuitarHeroDrums;
-                    m_rb2 = m_subtype == RockBandDrums;
-                }
-
                 // Pro guitars we have to identify by vid+pid
                 if ((m_subtype == ProGuitarMustang || m_subtype == ProGuitarSquier) && caps->leftStickX == HARMONIX_VID)
                 {

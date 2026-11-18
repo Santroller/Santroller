@@ -66,7 +66,7 @@ typedef enum
 
 inline SubType get_subtype_from_xinput(uint8_t subtype)
 {
-    switch (subtype)
+    switch (subtype & ~0x80)
     {
     case XINPUT_ARCADE_PAD:
     case XINPUT_GAMEPAD:
@@ -84,7 +84,7 @@ inline SubType get_subtype_from_xinput(uint8_t subtype)
     case XINPUT_GUITAR_ALTERNATE:
         return GuitarHeroGuitar;
     case XINPUT_DRUMS:
-        return RockBandDrums;
+        return subtype & 0x80 ? RockBandDrums : GuitarHeroDrums;
     case XINPUT_STAGE_KIT:
         return StageKit;
     case XINPUT_GUITAR_BASS:

@@ -18,6 +18,10 @@
 #include "devices/bt/bt_classic_host.hpp"
 #include "devices/bt/ble_rx.hpp"
 #include "devices/bt/bt_classic_rx.hpp"
+extern "C"
+{
+#include "wiimote_btstack.h"
+}
 #include "managers/device_manager.hpp"
 #include "config/device_factory.hpp"
 #include "devices/bluetooth.hpp"
@@ -966,6 +970,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         }
 
         case HCI_EVENT_PIN_CODE_REQUEST: {
+            // While emulating a Wiimote, its handler answers with the console's reversed address.
+            // BTstack only takes the first reply, and this handler is registered first.
+            if (wiimote_emulator_active())
+                break;
             hci_event_pin_code_request_get_bd_addr(packet, event_addr);
             if (is_wii_device(event_addr))
             {

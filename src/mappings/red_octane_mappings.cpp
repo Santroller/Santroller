@@ -1026,6 +1026,9 @@ void LiveGuitarButtonMapping::update_ps3(uint8_t *buf)
     case GuitarHeroLiveGuitar_Black3:
         report->y |= m_last_value;
         break;
+    case GuitarHeroLiveGuitar_GHTV:
+        report->leftThumbClick |= m_last_value;
+        break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_last_value;
         if (m_last_value)
@@ -1067,6 +1070,9 @@ void LiveGuitarButtonMapping::update_ps4(uint8_t *buf)
         break;
     case GuitarHeroLiveGuitar_Black3:
         report->y |= m_last_value;
+        break;
+    case GuitarHeroLiveGuitar_GHTV:
+        report->leftThumbClick |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_last_value;
@@ -1110,6 +1116,9 @@ void LiveGuitarButtonMapping::update_ps5(uint8_t *buf)
     case GuitarHeroLiveGuitar_Black3:
         report->y |= m_last_value;
         break;
+    case GuitarHeroLiveGuitar_GHTV:
+        report->p1 |= m_last_value;
+        break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_last_value;
         if (m_last_value)
@@ -1151,6 +1160,9 @@ void LiveGuitarButtonMapping::update_xinput(uint8_t *buf)
         break;
     case GuitarHeroLiveGuitar_Black3:
         report->y |= m_last_value;
+        break;
+    case GuitarHeroLiveGuitar_GHTV:
+        report->leftThumbClick |= m_last_value;
         break;
     case GuitarHeroLiveGuitar_StrumUp:
         report->dpadUp |= m_last_value;

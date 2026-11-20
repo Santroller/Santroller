@@ -377,9 +377,16 @@ void wiimote_emulator_update_report(void *report){
     input_report = report;
 }
 
+static bool emulator_active = false;
+
+bool wiimote_emulator_active(void){
+    return emulator_active;
+}
+
 void wiimote_emulator(void *report){
 
     printf("Init Wiimote Emulator\n");
+    emulator_active = true;
 
     // Data from gamepad
     input_report = report;
@@ -422,8 +429,10 @@ void wiimote_emulator(void *report){
     sdp_init();
     memset(hid_service_buffer, 0, sizeof(hid_service_buffer));
 
+    // Matches a real RVL-CNT-01's record: subclass 0x04, country 0x33, no virtual cable,
+    // remote wake and reconnect initiate set, supervision timeout 0x0C80.
     hid_sdp_record_t hid_sdp_record = {
-        0x2504, 33, 1, 1, 1, 0, 0, 0xFFFF, 0xFFFF, 3200,
+        0x04, 0x33, 0, 1, 1, 0, 0, 0xFFFF, 0xFFFF, 0x0C80,
         wiimote_report_descriptor, sizeof(wiimote_report_descriptor), hid_device_name
     };
     hid_service_handle = sdp_create_service_record_handle();
@@ -432,9 +441,11 @@ void wiimote_emulator(void *report){
     sdp_register_service(hid_service_buffer);
 
     pnp_service_handle = sdp_create_service_record_handle();
+    // Hosts (BlueZ's hid-wiimote, Windows, Dolphin) identify a Wiimote by this record,
+    // so it has to carry Nintendo's USB VID/PID like the real thing, not BTstack's.
     device_id_create_sdp_record(pnp_service_buffer, pnp_service_handle,
-                                DEVICE_ID_VENDOR_ID_SOURCE_BLUETOOTH,
-                                BLUETOOTH_COMPANY_ID_BLUEKITCHEN_GMBH, 1, 1);
+                                DEVICE_ID_VENDOR_ID_SOURCE_USB,
+                                0x057E, 0x0306, 0x0600);
     btstack_assert(de_get_len(pnp_service_buffer) <= sizeof(pnp_service_buffer));
     sdp_register_service(pnp_service_buffer);
     hid_device_register_packet_handler(&hci_packet_handler);
@@ -452,6 +463,7 @@ void wiimote_emulator(void *report){
 
 void wiimote_emulator_shutdown(void)
 {
+    emulator_active = false;
     btstack_run_loop_remove_timer(&loop_wii);
     btstack_run_loop_remove_timer(&led_state);
 

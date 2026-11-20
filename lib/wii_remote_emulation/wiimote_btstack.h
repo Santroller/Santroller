@@ -19,6 +19,8 @@ void wiimote_emulator(void *report);
 // wiimote_emulator() this does not redo connection/SSP setup.
 void wiimote_emulator_update_report(void *report);
 void wiimote_emulator_shutdown(void);
+// Whether the emulator owns the classic radio (between wiimote_emulator() and shutdown)
+bool wiimote_emulator_active(void);
 // Whether a console is connected
 bool wiimote_emulator_connected(void);
 

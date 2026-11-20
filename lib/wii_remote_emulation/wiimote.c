@@ -9,6 +9,12 @@
 #include "protocols/wiimote_calibration.h"
 #include "wii_extension_backend.h"
 
+// Advertise a Motion Plus in the 0xA6 register block. Hosts that find one switch to
+// passthrough mode, interleaving Motion Plus and (repacked) extension frames.
+#ifndef WIIMOTE_EMULATE_MOTIONPLUS
+#define WIIMOTE_EMULATE_MOTIONPLUS 1
+#endif
+
 static uint8_t *eeprom_bin;
 int tries = 0;
 
@@ -39,6 +45,8 @@ int process_report(struct wiimote_state *state, const uint8_t * buf, int len)
 
       state->sys.reporting_continuous = rpt->continuous;
       state->sys.reporting_mode = rpt->mode;
+      // always follow a mode change with a report, even if the data hasn't changed
+      state->sys.report_changed = true;
 
       report_queue_push_ack(state, data->type, 0x00);
       break;
@@ -128,10 +136,9 @@ int generate_report(struct wiimote_state * state, uint8_t * buf)
     }
   }
 
-  if (!state->sys.reporting_continuous && !state->sys.report_changed && state->sys.queue == NULL)
-    return 0;
+  bool regular_report = (state->sys.queue == NULL);
 
-  if (state->sys.queue == NULL)
+  if (regular_report)
   {
     //regular report
     memset(data, 0, sizeof(struct report_data));
@@ -210,6 +217,21 @@ int generate_report(struct wiimote_state * state, uint8_t * buf)
     default: // special output report (acknowledgement, status, or memory read)
       report_append_buttons(state, contents);
       break;
+  }
+
+  if (regular_report)
+  {
+    // A real Wiimote in non-continuous mode still reports whenever its data changes; only
+    // identical reports are held back. Hosts like Linux's hid-wiimote never ask for continuous.
+    if (len > (int)sizeof(state->sys.last_report))
+      len = sizeof(state->sys.last_report);
+    bool changed = state->sys.report_changed || len != state->sys.last_report_len ||
+                   memcmp(state->sys.last_report, buf, len) != 0;
+    if (!state->sys.reporting_continuous && !changed)
+      return 0;
+    memcpy(state->sys.last_report, buf, len);
+    state->sys.last_report_len = len;
+    state->sys.report_changed = false;
   }
 
   return len;
@@ -336,7 +358,7 @@ void read_register(struct wiimote_state *state, uint32_t offset, uint16_t size)
 
       break;
     case 0xa6: //motionplus
-      if (state->sys.wmp_state == 1)
+      if (!WIIMOTE_EMULATE_MOTIONPLUS || state->sys.wmp_state == 1)
       {
          rpt = report_queue_push(state);
          report_format_mem_resp(state, rpt, 0x10, 0x7, offset, NULL, false);
@@ -524,6 +546,12 @@ void write_register(struct wiimote_state *state, uint32_t offset, uint8_t size, 
 
       break;
     case 0xa6: //motionplus
+      if (!WIIMOTE_EMULATE_MOTIONPLUS)
+      {
+        // no Motion Plus attached: the block doesn't answer, like a plain remote
+        report_queue_push_ack(state, 0x16, 0x07);
+        return;
+      }
       reg = state->sys.register_a6;
       memcpy(reg + (offset & 0xff), buf, size);
 

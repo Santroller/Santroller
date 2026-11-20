@@ -48,6 +48,7 @@ public:
     ~GuitarHeroGuitarGamepadButtonMapping() {}
     GuitarHeroGuitarGamepadButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_ps2(uint8_t *report);
+    void update_wii(uint8_t format, uint8_t *buf);
 };
 
 class GuitarHeroDrumsButtonMapping : public ButtonMapping

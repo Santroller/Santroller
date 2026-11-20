@@ -143,6 +143,9 @@ struct wiimote_state_sys
   uint8_t reporting_mode;
   bool reporting_continuous;
   bool report_changed;
+  // last regular input report sent, so non-continuous mode only sends when the data changes
+  uint8_t last_report[23];
+  uint8_t last_report_len;
 
   struct queued_report * queue;
   struct queued_report * queue_end;

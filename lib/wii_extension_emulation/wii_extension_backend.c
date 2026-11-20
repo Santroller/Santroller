@@ -69,6 +69,12 @@ uint8_t wii_extension_backend_read(const uint8_t *registers, bool encrypted,
     return value;
 }
 
+uint8_t wii_extension_backend_encrypt(const struct ext_crypto_state *crypto, uint8_t offset,
+                                      uint8_t value)
+{
+    return (value - crypto->ft[offset % 8]) ^ crypto->sb[offset % 8];
+}
+
 uint8_t wii_extension_backend_write(uint8_t *registers, bool *encrypted,
                                     struct ext_crypto_state *crypto, uint8_t offset,
                                     uint8_t value)

@@ -22,6 +22,9 @@ extern "C" {
 void wii_extension_backend_init(uint8_t *registers, bool *encrypted, uint8_t extension_type);
 uint8_t wii_extension_backend_read(const uint8_t *registers, bool encrypted,
                                    const struct ext_crypto_state *crypto, uint8_t offset);
+// Encrypts one byte read from register offset, for data built outside the register file
+uint8_t wii_extension_backend_encrypt(const struct ext_crypto_state *crypto, uint8_t offset,
+                                      uint8_t value);
 uint8_t wii_extension_backend_write(uint8_t *registers, bool *encrypted,
                                     struct ext_crypto_state *crypto, uint8_t offset,
                                     uint8_t value);

@@ -234,6 +234,34 @@ void report_append_interleaved(struct wiimote_state * state, uint8_t * buf)
   }
 }
 
+// A Motion Plus in passthrough mode squeezes the extension's 6 bytes so byte 5 bits 1-0 can
+// mark the frame as extension data (bit 1 clear) and byte 4 bit 0 can flag the extension as
+// connected. The bits that displaces move elsewhere (wiibrew Wiimote/Extension_Controllers/
+// Wii_Motion_Plus, matching Linux hid-wiimote's decoding):
+//  0x05 nunchuk: the accelerometer LSBs are dropped, AZ<2:1> AY<1> AX<1> BC BZ fill byte 5 bits 7-2
+//  0x07 classic: BDU and BDL move to bit 0 of bytes 0 and 1, replacing the left stick LSBs
+static void repack_passthrough(uint8_t mode, uint8_t *ext)
+{
+  if (mode == 0x05)
+  {
+    uint8_t in4 = ext[4], in5 = ext[5];
+    ext[5] = (uint8_t)(((in4 & 0x01) << 7) |        // AZ<2>
+                       (((in5 >> 7) & 0x01) << 6) | // AZ<1>
+                       (((in5 >> 5) & 0x01) << 5) | // AY<1>
+                       (((in5 >> 3) & 0x01) << 4) | // AX<1>
+                       (((in5 >> 1) & 0x01) << 3) | // BC
+                       ((in5 & 0x01) << 2));        // BZ
+  }
+  else
+  {
+    uint8_t in5 = ext[5];
+    ext[0] = (uint8_t)((ext[0] & 0xfe) | (in5 & 0x01));        // BDU
+    ext[1] = (uint8_t)((ext[1] & 0xfe) | ((in5 >> 1) & 0x01)); // BDL
+    ext[5] = (uint8_t)(in5 & 0xfc);
+  }
+  ext[4] |= 0x01; // extension connected
+}
+
 void report_append_extension(struct wiimote_state * state, uint8_t * buf, uint8_t bytes)
 {
   bool interleaved_motionplus = state->sys.extension_report_type == 0x05 ||
@@ -245,11 +273,17 @@ void report_append_extension(struct wiimote_state * state, uint8_t * buf, uint8_
     uint8_t count = bytes;
     if (count > state->sys.extension_stream_size)
       count = state->sys.extension_stream_size;
+    // plain bytes first, as passthrough repacking happens before encryption
     for (uint8_t i = 0; i < count; i++)
-      buf[i] = wii_extension_backend_read(
-          state->sys.register_a4, state->sys.extension_encrypted,
-          &state->sys.extension_crypto_state, (uint8_t)(0x08 + i));
+      buf[i] = state->sys.register_a4[0x08 + i];
     memset(buf + count, 0, bytes - count);
+    if (interleaved_motionplus && count >= 6)
+      repack_passthrough(state->sys.extension_report_type, buf);
+    if (state->sys.extension_encrypted)
+    {
+      for (uint8_t i = 0; i < count; i++)
+        buf[i] = wii_extension_backend_encrypt(&state->sys.extension_crypto_state, (uint8_t)(0x08 + i), buf[i]);
+    }
     if (interleaved_motionplus)
       state->sys.extension_report = 1;
     return;

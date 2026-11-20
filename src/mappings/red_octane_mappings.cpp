@@ -483,6 +483,55 @@ void GuitarHeroGuitarGamepadButtonMapping::update_ps2(uint8_t *buf)
         break;
     }
 }
+void GuitarHeroGuitarGamepadButtonMapping::update_wii(uint8_t format, uint8_t *buf)
+{
+    (void)format;
+    WiiGuitarDataFormat3_t *report = (WiiGuitarDataFormat3_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadButton)
+    {
+    case Gamepad_A:
+        report->a |= m_last_value;
+        break;
+    case Gamepad_B:
+        report->b |= m_last_value;
+        break;
+    case Gamepad_Y:
+        report->y |= m_last_value;
+        break;
+    case Gamepad_X:
+        report->x |= m_last_value;
+        break;
+    case Gamepad_LeftShoulder:
+        report->leftShoulder |= m_last_value;
+        break;
+    case Gamepad_RightShoulder:
+        report->rightShoulder |= m_last_value;
+        break;
+    case Gamepad_Start:
+        report->start |= m_last_value;
+        break;
+    case Gamepad_Back:
+        report->back |= m_last_value;
+        break;
+    case Gamepad_Guide:
+        report->guide |= m_last_value;
+        break;
+    case Gamepad_DpadUp:
+        report->dpadUp |= m_last_value;
+        break;
+    case Gamepad_DpadDown:
+        report->dpadDown |= m_last_value;
+        break;
+    case Gamepad_DpadLeft:
+        report->dpadLeft |= m_last_value;
+        break;
+    case Gamepad_DpadRight:
+        report->dpadRight |= m_last_value;
+        break;
+    default:
+        break;
+    }
+}
 
 GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghAxis == GuitarHeroGuitar_Whammy), m_supports_slider(profile->supports_slider)
 {
@@ -503,7 +552,7 @@ void GuitarHeroGuitarAxisMapping::update_wii(uint8_t format, uint8_t *buf)
     switch (m_mapping.mapping.mapping.ghAxis)
     {
     case GuitarHeroGuitar_Whammy:
-        report->whammy = m_calibrated_value >> 11;
+        report->whammy =  0x10 + (m_calibrated_value >> 12);
         break;
     case GuitarHeroGuitar_Tilt:
         // report->tilt = m_calibrated_value >> 8;

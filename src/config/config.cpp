@@ -241,8 +241,11 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     // Console links must survive even full reloads when their wiring is
     // unchanged. So must the USB host, since restarting it disconnects everything
     // plugged into it. SNES and joybus pads are kept too: rebuilding them forgets
-    // the controller type, and finding it again reloads.
+    // the controller type, and finding it again reloads. A secondary pico would
+    // have to connect and be configured again, forgetting what is held on it, so
+    // an input there picking a profile would never be seen held.
     const bool keep_on_full_reload =
+        proto_device.which_device == proto_Device_peripheral_tag ||
         proto_device.which_device == proto_Device_psxEmulation_tag ||
         proto_device.which_device == proto_Device_wiiEmulation_tag ||
         proto_device.which_device == proto_Device_joybusEmulation_tag ||

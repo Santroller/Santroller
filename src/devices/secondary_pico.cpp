@@ -92,12 +92,14 @@ uint32_t SecondaryPicoDevice::register_input(const proto_Input &input)
     size_t free_slot = m_inputs.size();
     for (size_t i = 0; i < m_inputs.size(); i++)
     {
-        if (m_inputs[i].users && m_inputs[i].encoded == encoded)
+        // A slot nothing uses keeps its input until update() prunes it, so a reload rebuilding the
+        // profiles gets the same id back, along with whatever the secondary pico last said was held
+        if (!m_inputs[i].encoded.empty() && m_inputs[i].encoded == encoded)
         {
             m_inputs[i].users++;
             return SECONDARY_PICO_INPUT_ID_BASE + i;
         }
-        if (!m_inputs[i].users && free_slot == m_inputs.size())
+        if (m_inputs[i].encoded.empty() && free_slot == m_inputs.size())
         {
             free_slot = i;
         }
@@ -119,15 +121,47 @@ void SecondaryPicoDevice::unregister_input(uint32_t id)
     SecondaryPicoInputSlot &slot = m_inputs[id - SECONDARY_PICO_INPUT_ID_BASE];
     if (!slot.users || --slot.users)
         return;
-    slot.encoded.clear();
+    // Left for update() to free. A reload releases every profile before building them again, and an
+    // input that comes straight back should keep its slot and state, eg one picking a profile
+    m_prune_inputs = true;
+}
+
+void SecondaryPicoDevice::prune_inputs()
+{
+    m_prune_inputs = false;
+    bool changed = false;
+    for (size_t i = 0; i < m_inputs.size(); i++)
+    {
+        auto &slot = m_inputs[i];
+        if (slot.users || slot.encoded.empty())
+            continue;
+        slot.encoded.clear();
+        m_digital_inputs.erase(SECONDARY_PICO_INPUT_ID_BASE + i);
+        m_analog_inputs.erase(SECONDARY_PICO_INPUT_ID_BASE + i);
+        changed = true;
+    }
     // Empty slots at the end don't need to be sent at all
-    while (!m_inputs.empty() && !m_inputs.back().users)
+    while (!m_inputs.empty() && m_inputs.back().encoded.empty())
     {
         m_inputs.pop_back();
     }
-    m_digital_inputs.erase(id);
-    m_analog_inputs.erase(id);
-    m_config_dirty = true;
+    if (changed)
+        m_config_dirty = true;
+}
+
+bool SecondaryPicoDevice::matches_reload_config(const proto_Device &config) const
+{
+    if (config.which_device != proto_Device_peripheral_tag)
+        return false;
+    const auto &device = config.device.peripheral;
+    if (m_device.i2c.block != device.i2c.block || m_device.i2c.sda != device.i2c.sda ||
+        m_device.i2c.scl != device.i2c.scl || m_device.i2c.clock != device.i2c.clock ||
+        m_device.address != device.address)
+        return false;
+    // load_device_dev collected the new config's sub-devices, which the secondary pico would have to
+    // build again
+    const auto *sub_devices = static_cast<const SecondaryPicoSubDevices *>(device.devices.arg);
+    return sub_devices && sub_devices->encoded == m_sub_devices.encoded;
 }
 
 // A slave that stops answering is reported disconnected after this long
@@ -601,9 +635,16 @@ void SecondaryPicoDevice::ota_step()
 
 void SecondaryPicoDevice::update(bool full_poll, bool send_events)
 {
+    if (m_prune_inputs)
+    {
+        prune_inputs();
+    }
+
     if (full_poll)
     {
-        m_config_dirty = true;
+        // The config isn't sent again, register_input and prune_inputs already queue it when the
+        // inputs change. Sending it resets what the secondary pico reports, so whatever is held would
+        // read as released until it reported again, and a held input picking a profile would flicker.
         // Connecting is only reported when it changes, which is usually right after boot while the tool
         // isn't open to hear it, so the tool is told again whenever it asks for everything
         if (m_ota_in_progress)

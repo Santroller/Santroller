@@ -74,6 +74,9 @@ public:
     // can't be). Inputs that are the same share one, and each register needs an unregister_input
     uint32_t register_input(const proto_Input &input);
     void unregister_input(uint32_t id);
+    // Kept over a reload when nothing the secondary pico would have to set up again changed, so it
+    // stays connected and what it reports as held survives, eg for an input that picks a profile
+    bool matches_reload_config(const proto_Device &config) const override;
     // Whether this is one of the devices running on the secondary pico
     bool owns_sub_device(uint32_t device_id) const override;
 
@@ -113,6 +116,7 @@ private:
     void transfer_failed(Transfer transfer);
     void transfer_succeeded(Transfer transfer);
     void send_config();
+    void prune_inputs();
     void ota_step();
     void version_received();
     void decode_events();
@@ -155,6 +159,8 @@ private:
     volatile bool m_transfer_ok = false;
     bool m_last_failed = false;
     bool m_config_dirty = false;
+    // Some slot lost its last user, see unregister_input
+    bool m_prune_inputs = false;
     bool m_host_ota = false;
 
     uint32_t m_last_poll = 0;

@@ -533,6 +533,113 @@ void GuitarHeroGuitarGamepadButtonMapping::update_wii(uint8_t format, uint8_t *b
     }
 }
 
+GuitarHeroDrumsGamepadButtonMapping::GuitarHeroDrumsGamepadButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadButtonMapping(mapping, std::move(input), id, profile)
+{
+}
+// The drums' report has no d-pad bits (velocity uses them), so the d-pad drives the stick,
+// which is how the kit navigates menus. Face buttons are the pads, as in GuitarHeroDrumsAxisMapping.
+void GuitarHeroDrumsGamepadButtonMapping::update_wii(uint8_t format, uint8_t *buf)
+{
+    (void)format;
+    if (!m_last_value)
+    {
+        return;
+    }
+    WiiDrumDataFormat3_t *report = (WiiDrumDataFormat3_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadButton)
+    {
+    case Gamepad_A:
+        report->a = true;
+        break;
+    case Gamepad_B:
+        report->b = true;
+        break;
+    case Gamepad_Y:
+        report->y = true;
+        break;
+    case Gamepad_X:
+        report->x = true;
+        break;
+    case Gamepad_LeftShoulder:
+        report->leftShoulder = true;
+        break;
+    case Gamepad_RightShoulder:
+        report->rightShoulder = true;
+        break;
+    case Gamepad_Start:
+        report->start = true;
+        break;
+    case Gamepad_Back:
+        report->back = true;
+        break;
+    case Gamepad_Guide:
+        report->guide = true;
+        break;
+    case Gamepad_DpadUp:
+        report->leftStickY = 63;
+        break;
+    case Gamepad_DpadDown:
+        report->leftStickY = 0;
+        break;
+    case Gamepad_DpadLeft:
+        report->leftStickX = 0;
+        break;
+    case Gamepad_DpadRight:
+        report->leftStickX = 63;
+        break;
+    default:
+        break;
+    }
+}
+
+DJHTurntableGamepadButtonMapping::DJHTurntableGamepadButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadButtonMapping(mapping, std::move(input), id, profile)
+{
+}
+// A/B/X go to the right table's buttons, Y is euphoria
+void DJHTurntableGamepadButtonMapping::update_wii(uint8_t format, uint8_t *buf)
+{
+    (void)format;
+    WiiTurntableDataFormat3_t *report = (WiiTurntableDataFormat3_t *)buf;
+    switch (m_mapping.mapping.mapping.gamepadButton)
+    {
+    case Gamepad_A:
+        report->rightGreen |= m_last_value;
+        break;
+    case Gamepad_B:
+        report->rightRed |= m_last_value;
+        break;
+    case Gamepad_X:
+        report->rightBlue |= m_last_value;
+        break;
+    case Gamepad_Y:
+        report->y |= m_last_value;
+        break;
+    case Gamepad_Start:
+        report->start |= m_last_value;
+        break;
+    case Gamepad_Back:
+        report->back |= m_last_value;
+        break;
+    case Gamepad_Guide:
+        report->guide |= m_last_value;
+        break;
+    case Gamepad_DpadUp:
+        report->dpadUp |= m_last_value;
+        break;
+    case Gamepad_DpadDown:
+        report->dpadDown |= m_last_value;
+        break;
+    case Gamepad_DpadLeft:
+        report->dpadLeft |= m_last_value;
+        break;
+    case Gamepad_DpadRight:
+        report->dpadRight |= m_last_value;
+        break;
+    default:
+        break;
+    }
+}
+
 GuitarHeroGuitarAxisMapping::GuitarHeroGuitarAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : AxisMapping(mapping, std::move(input), id, profile, mapping.mapping.mapping.ghAxis == GuitarHeroGuitar_Whammy), m_supports_slider(profile->supports_slider)
 {
 }

@@ -51,6 +51,22 @@ public:
     void update_wii(uint8_t format, uint8_t *buf);
 };
 
+class GuitarHeroDrumsGamepadButtonMapping : public GamepadButtonMapping
+{
+public:
+    ~GuitarHeroDrumsGamepadButtonMapping() {}
+    GuitarHeroDrumsGamepadButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    void update_wii(uint8_t format, uint8_t *buf);
+};
+
+class DJHTurntableGamepadButtonMapping : public GamepadButtonMapping
+{
+public:
+    ~DJHTurntableGamepadButtonMapping() {}
+    DJHTurntableGamepadButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
+    void update_wii(uint8_t format, uint8_t *buf);
+};
+
 class GuitarHeroDrumsButtonMapping : public ButtonMapping
 {
 public:

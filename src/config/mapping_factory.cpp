@@ -139,6 +139,15 @@ std::unique_ptr<Mapping> MappingFactory::create_mapping(
         {
             return std::make_unique<GuitarHeroGuitarGamepadButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
         }
+        // Wii GH drums and turntables have their own, shorter, extension reports
+        if (profile->subtype == GuitarHeroDrums)
+        {
+            return std::make_unique<GuitarHeroDrumsGamepadButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
+        }
+        if (profile->subtype == DjHeroTurntable)
+        {
+            return std::make_unique<DJHTurntableGamepadButtonMapping>(proto_mapping, std::move(input), mapping_id, profile);
+        }
         // PS3 gamepads use a totally different report format
         if (profile->subtype == Gamepad &&
             config_mgr.get_requested_mode() == ModePs3)

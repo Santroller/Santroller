@@ -12,7 +12,7 @@
 // Advertise a Motion Plus in the 0xA6 register block. Hosts that find one switch to
 // passthrough mode, interleaving Motion Plus and (repacked) extension frames.
 #ifndef WIIMOTE_EMULATE_MOTIONPLUS
-#define WIIMOTE_EMULATE_MOTIONPLUS 1
+#define WIIMOTE_EMULATE_MOTIONPLUS 0
 #endif
 
 static uint8_t *eeprom_bin;

@@ -47,6 +47,7 @@ static inline i2c_dma_slot_t *alloc_slot(i2c_dma_t *i2c_dma, uint8_t addr)
         free_slot->owner = nullptr;
         free_slot->queuedBy = nullptr;
         free_slot->hasWaitingTransfer = false;
+        free_slot->clock = 0;
         memset((void *)&free_slot->waitingTransfer, 0, sizeof(free_slot->waitingTransfer));
         return free_slot;
     }
@@ -217,10 +218,13 @@ static int i2c_dma_init_intern(i2c_dma_t *i2c_dma)
 
     i2c_init(i2c_dma->i2c, i2c_dma->baudrate);
 
+    i2c_dma->baud_pending = false;
+
     gpio_set_function(i2c_dma->sda_gpio, GPIO_FUNC_I2C);
     gpio_set_function(i2c_dma->scl_gpio, GPIO_FUNC_I2C);
     gpio_pull_up(i2c_dma->sda_gpio);
     gpio_pull_up(i2c_dma->scl_gpio);
+    i2c_dma->pins_claimed = true;
 
     i2c_get_hw(i2c_dma->i2c)->intr_mask =
         I2C_IC_INTR_MASK_M_STOP_DET_BITS |
@@ -251,11 +255,78 @@ static int i2c_dma_init_intern(i2c_dma_t *i2c_dma)
     return PICO_OK;
 }
 
-static void __not_in_flash_func(i2c_dma_set_target_addr)(i2c_inst_t *i2c, uint8_t addr)
+// Points the bus at the transfer's device, and moves it to a new clock if one is waiting, as both
+// need the block disabled. Matches i2c_set_baudrate, with its sums done beforehand in
+// i2c_dma_update_baudrate as this runs from interrupts
+static void __not_in_flash_func(i2c_dma_set_target_addr)(i2c_dma_t *i2c_dma, uint8_t addr)
 {
-    i2c_get_hw(i2c)->enable = 0;
-    i2c_get_hw(i2c)->tar = addr;
-    i2c_get_hw(i2c)->enable = 1;
+    i2c_hw_t *hw = i2c_get_hw(i2c_dma->i2c);
+    hw->enable = 0;
+    if (i2c_dma->baud_pending)
+    {
+        i2c_dma->baud_pending = false;
+        hw_write_masked(&hw->con, I2C_IC_CON_SPEED_VALUE_FAST << I2C_IC_CON_SPEED_LSB, I2C_IC_CON_SPEED_BITS);
+        hw->fs_scl_hcnt = i2c_dma->fs_scl_hcnt;
+        hw->fs_scl_lcnt = i2c_dma->fs_scl_lcnt;
+        hw->fs_spklen = i2c_dma->fs_spklen;
+        hw_write_masked(&hw->sda_hold, i2c_dma->sda_tx_hold << I2C_IC_SDA_HOLD_IC_SDA_TX_HOLD_LSB,
+                        I2C_IC_SDA_HOLD_IC_SDA_TX_HOLD_BITS);
+    }
+    hw->tar = addr;
+    hw->enable = 1;
+}
+
+// Moves the bus to the slowest clock its devices asked for, as one that can't keep up with a faster
+// clock may answer to the wrong address or hold SDA in the middle of another device's transfer
+static void i2c_dma_update_baudrate(i2c_dma_t *i2c_dma)
+{
+    uint32_t clock = 0;
+    for (size_t i = 0; i < I2C_MAX_DEVICES; i++)
+    {
+        const i2c_dma_slot_t &slot = i2c_dma->slots[i];
+        if (slot.in_use && slot.clock && (!clock || slot.clock < clock))
+        {
+            clock = slot.clock;
+        }
+    }
+    if (!clock || clock == i2c_dma->baudrate)
+    {
+        return;
+    }
+    const uint32_t freq_in = clock_get_hz(clk_sys);
+    const uint32_t period = (freq_in + clock / 2) / clock;
+    const uint32_t lcnt = period * 3 / 5;
+    const uint32_t hcnt = period - lcnt;
+    const uint32_t hold = clock < 1000000 ? ((freq_in * 3) / 10000000) + 1 : ((freq_in * 3) / 25000000) + 1;
+    printf("i2c: bus clock %u -> %u\r\n", (unsigned)i2c_dma->baudrate, (unsigned)clock);
+    const uint32_t irq_status = save_and_disable_interrupts();
+    i2c_dma->fs_scl_hcnt = hcnt;
+    i2c_dma->fs_scl_lcnt = lcnt;
+    i2c_dma->fs_spklen = lcnt < 16 ? 1 : lcnt / 16;
+    i2c_dma->sda_tx_hold = hold;
+    i2c_dma->baudrate = clock;
+    i2c_dma->baud_pending = true;
+    restore_interrupts(irq_status);
+}
+
+// Hands the bus pins back once nothing is on the bus, so a config whose gates picked a device on other
+// pins doesn't leave them on the I2C block too. Pins something else has taken over are left alone
+static void i2c_dma_release_pins(i2c_dma_t *i2c_dma)
+{
+    if (!i2c_dma->pins_claimed)
+    {
+        return;
+    }
+    i2c_dma->pins_claimed = false;
+    const uint pins[] = {i2c_dma->sda_gpio, i2c_dma->scl_gpio};
+    for (uint gpio : pins)
+    {
+        if (gpio_get_function(gpio) == GPIO_FUNC_I2C)
+        {
+            gpio_disable_pulls(gpio);
+            gpio_set_function(gpio, GPIO_FUNC_NULL);
+        }
+    }
 }
 
 static void __not_in_flash_func(i2c_dma_tx_channel_configure)(
@@ -360,7 +431,7 @@ static void __not_in_flash_func(i2c_dma_next_queued)(
     data_cmds[wbuf_len + rbuf_len - 1] |= I2C_IC_DATA_CMD_STOP_BITS;
 
     // Tell the I2C peripheral the adderss of the device for the transfer.
-    i2c_dma_set_target_addr(i2c_dma->i2c, addr);
+    i2c_dma_set_target_addr(i2c_dma, addr);
 
     i2c_dma->stop_detected = false;
     i2c_dma->abort_detected = false;
@@ -413,6 +484,14 @@ void I2CMasterInterface::dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface)
         i2c_dma->irq_num = I2C1_IRQ;
         i2c_dma->irq_handler = i2c1_dma_irq_handler;
     }
+    // The block can only be on one set of pins. Taking it over would cut off the devices already on it
+    if (i2c_dma->device_count && (i2c_dma->sda_gpio != m_sda || i2c_dma->scl_gpio != m_scl))
+    {
+        printf("i2c: %02x wants GP%d / GP%d, but the bus is already on GP%d / GP%d\r\n", addr, m_sda, m_scl,
+               i2c_dma->sda_gpio, i2c_dma->scl_gpio);
+        i2c_dma = nullptr;
+        return;
+    }
     // device_count counts slots, so a deinit only gives back what an init took. An address that
     // already has a slot just gets a new owner
     i2c_dma_slot_t *slot = find_slot(i2c_dma, addr);
@@ -428,20 +507,25 @@ void I2CMasterInterface::dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface)
     }
     slot->dmaInterface = dmaInterface;
     slot->owner = this;
+    slot->clock = m_clock;
     if (!new_slot)
     {
+        i2c_dma_update_baudrate(i2c_dma);
         return;
     }
-    if (!i2c_dma->device_count)
+    if (i2c_dma->device_count)
     {
-        // Only while the bus is idle, these are live state while it is running transfers
-        i2c_dma->baudrate = m_clock;
-        i2c_dma->sda_gpio = m_sda;
-        i2c_dma->scl_gpio = m_scl;
-        i2c_dma->timeout = false;
-        i2c_dma->abort_detected = false;
-        i2c_dma->stop_detected = false;
+        i2c_dma_init_intern(i2c_dma);
+        i2c_dma_update_baudrate(i2c_dma);
+        return;
     }
+    // The first device on the bus. Only set while the bus is idle, these are live state while it runs
+    i2c_dma->baudrate = m_clock;
+    i2c_dma->sda_gpio = m_sda;
+    i2c_dma->scl_gpio = m_scl;
+    i2c_dma->timeout = false;
+    i2c_dma->abort_detected = false;
+    i2c_dma->stop_detected = false;
     i2c_dma_init_intern(i2c_dma);
 }
 I2CMasterInterface::I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, uint32_t clock) : m_sda(sda), m_scl(scl), m_clock(clock)
@@ -460,17 +544,8 @@ I2CMasterInterface::I2CMasterInterface(uint8_t block, int8_t sda, int8_t scl, ui
             return;
         }
     }
-    // if we have already set up DMA, then we do not want to set it up again
-    if ((i2c == i2c0 && i2c_dma_list[0].device_count == 0) || (i2c == i2c1 && i2c_dma_list[1].device_count == 0))
-    {
-        i2c_init(i2c, clock);
-        gpio_set_function(sda, GPIO_FUNC_I2C);
-        gpio_set_function(scl, GPIO_FUNC_I2C);
-
-        gpio_pull_up(sda);
-        gpio_pull_up(scl);
-        printf("setup!\r\n");
-    }
+    // The bus is set up by the first device's dmaInit. Setting the block up here would put it on every
+    // device's pins, before dmaInit can refuse the ones on different pins to the bus
 }
 I2CMasterInterface::~I2CMasterInterface()
 {
@@ -550,6 +625,8 @@ void I2CMasterInterface::dmaDeinit(uint8_t addr)
     }
     if (i2c_dma->device_count)
     {
+        // The device going may have been the slowest
+        i2c_dma_update_baudrate(i2c_dma);
         // Another device may have queued a transfer while this one was draining
         i2c_dma_next_queued(i2c_dma);
     }
@@ -578,6 +655,8 @@ void I2CMasterInterface::dmaDeinit(uint8_t addr)
         i2c_dma->processing = false;
         i2c_dma->timeout = false;
         i2c_dma->currentSlot = -1;
+        i2c_dma->baud_pending = false;
+        i2c_dma_release_pins(i2c_dma);
     }
 }
 bool __not_in_flash_func(I2CMasterInterface::dmaWriteRead)(uint8_t addr,

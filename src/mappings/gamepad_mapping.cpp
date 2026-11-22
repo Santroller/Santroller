@@ -1220,6 +1220,12 @@ void GamepadButtonMapping::update_ps4(uint8_t *buf)
             report->dpadLeft |= m_last_value;
             break;
         }
+        if (m_profile->subtype == LiveGuitar)
+        {
+            // GHL guitars report hero power (their select) on R3 rather than share; see PS4GHLGuitar_Data_t
+            report->rightThumbClick |= m_last_value;
+            break;
+        }
         report->back |= m_last_value;
         break;
     case Gamepad_Guide:

@@ -43,6 +43,8 @@ typedef struct
     const void *volatile queuedBy;
     volatile i2c_dma_transfer_t waitingTransfer;
     volatile bool hasWaitingTransfer;
+    // The clock the device asked for. The bus runs at the slowest of its devices' clocks
+    uint32_t clock;
 } i2c_dma_slot_t;
 
 typedef struct i2c_dma_s
@@ -52,9 +54,18 @@ typedef struct i2c_dma_s
     uint irq_num;
     irq_handler_t irq_handler;
 
+    // The clock the bus runs at, the slowest its devices asked for. Changing it is left to the next
+    // transfer to apply (with the register values worked out here), as it would garble one running
     uint baudrate;
+    volatile bool baud_pending;
+    uint32_t fs_scl_hcnt;
+    uint32_t fs_scl_lcnt;
+    uint32_t fs_spklen;
+    uint32_t sda_tx_hold;
+    // The bus has one set of pins, the first device's. Others asking for different pins are refused
     uint sda_gpio;
     uint scl_gpio;
+    bool pins_claimed;
     int tx_chan;
     int rx_chan;
     bool reading;

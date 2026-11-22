@@ -17,6 +17,10 @@ public:
     void update_xinput(uint8_t *report);
     void update_ogxbox(uint8_t *report);
     void update_xboxone(uint8_t *report);
+
+private:
+    // Taps only write the slider (as tap bits or touch bar codes) when the profile supports one
+    bool m_supports_slider;
 };
 
 class GuitarHeroGuitarAxisMapping : public AxisMapping

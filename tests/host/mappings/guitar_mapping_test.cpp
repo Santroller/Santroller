@@ -207,13 +207,14 @@ TEST_F(Guitar, GHXboxOneWhammyAndTilt)
     EXPECT_EQ(report->tilt, 0xFF);
 }
 
-TEST_F(Guitar, GHWiiWhammyIsFiveBit)
+// Real GH Wii guitars rest their whammy at 0x10, so pushing it only uses the top half of the five bits
+TEST_F(Guitar, GHWiiWhammyRestsAt0x10)
 {
     Report<WiiGuitarDataFormat3_t> report;
+    at<GuitarHeroGuitarAxisMapping>(gh_axis(GuitarHeroGuitar_Whammy), 0x8000)->update_wii(3, report.buf());
+    EXPECT_EQ(report->whammy, 0x18);
     at<GuitarHeroGuitarAxisMapping>(gh_axis(GuitarHeroGuitar_Whammy), UINT16_MAX)->update_wii(3, report.buf());
     EXPECT_EQ(report->whammy, 0x1F);
-    at<GuitarHeroGuitarAxisMapping>(gh_axis(GuitarHeroGuitar_Whammy), 0x8000)->update_wii(3, report.buf());
-    EXPECT_EQ(report->whammy, 0x10);
 }
 
 // A guitar on a Switch is a Pro controller: whammy is the right stick, from its centre at rest down to

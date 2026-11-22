@@ -42,7 +42,7 @@ static uint8_t wii_touch_bar_add_fret(uint8_t code, int fret)
     return wii_touch_bar_single[high];
 }
 
-GuitarHeroGuitarButtonMapping::GuitarHeroGuitarButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile)
+GuitarHeroGuitarButtonMapping::GuitarHeroGuitarButtonMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : ButtonMapping(mapping, std::move(input), id, profile), m_supports_slider(profile->supports_slider)
 {
 }
 
@@ -80,7 +80,7 @@ void GuitarHeroGuitarButtonMapping::update_wii(uint8_t format, uint8_t *buf)
     case GuitarHeroGuitar_TapYellow:
     case GuitarHeroGuitar_TapBlue:
     case GuitarHeroGuitar_TapOrange:
-        if (m_last_value)
+        if (m_last_value && m_supports_slider)
         {
             report->slider = wii_touch_bar_add_fret(report->slider, m_mapping.mapping.mapping.ghButton - GuitarHeroGuitar_TapGreen);
         }
@@ -145,19 +145,24 @@ void GuitarHeroGuitarButtonMapping::update_ps2(uint8_t *buf)
         // report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_TapGreen:
-        report->tapGreen |= m_last_value;
+        if (m_supports_slider)
+            report->tapGreen |= m_last_value;
         break;
     case GuitarHeroGuitar_TapRed:
-        report->tapRed |= m_last_value;
+        if (m_supports_slider)
+            report->tapRed |= m_last_value;
         break;
     case GuitarHeroGuitar_TapYellow:
-        report->tapYellow |= m_last_value;
+        if (m_supports_slider)
+            report->tapYellow |= m_last_value;
         break;
     case GuitarHeroGuitar_TapBlue:
-        report->tapBlue |= m_last_value;
+        if (m_supports_slider)
+            report->tapBlue |= m_last_value;
         break;
     case GuitarHeroGuitar_TapOrange:
-        report->tapOrange |= m_last_value;
+        if (m_supports_slider)
+            report->tapOrange |= m_last_value;
         break;
     default:
         break;
@@ -188,19 +193,24 @@ void GuitarHeroGuitarButtonMapping::update_ps3(uint8_t *buf)
         report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_TapGreen:
-        report->tapGreen |= m_last_value;
+        if (m_supports_slider)
+            report->tapGreen |= m_last_value;
         break;
     case GuitarHeroGuitar_TapRed:
-        report->tapRed |= m_last_value;
+        if (m_supports_slider)
+            report->tapRed |= m_last_value;
         break;
     case GuitarHeroGuitar_TapYellow:
-        report->tapYellow |= m_last_value;
+        if (m_supports_slider)
+            report->tapYellow |= m_last_value;
         break;
     case GuitarHeroGuitar_TapBlue:
-        report->tapBlue |= m_last_value;
+        if (m_supports_slider)
+            report->tapBlue |= m_last_value;
         break;
     case GuitarHeroGuitar_TapOrange:
-        report->tapOrange |= m_last_value;
+        if (m_supports_slider)
+            report->tapOrange |= m_last_value;
         break;
     default:
         break;
@@ -317,19 +327,24 @@ void GuitarHeroGuitarButtonMapping::update_xinput(uint8_t *buf)
         report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_TapGreen:
-        report->tapGreen |= m_last_value;
+        if (m_supports_slider)
+            report->tapGreen |= m_last_value;
         break;
     case GuitarHeroGuitar_TapRed:
-        report->tapRed |= m_last_value;
+        if (m_supports_slider)
+            report->tapRed |= m_last_value;
         break;
     case GuitarHeroGuitar_TapYellow:
-        report->tapYellow |= m_last_value;
+        if (m_supports_slider)
+            report->tapYellow |= m_last_value;
         break;
     case GuitarHeroGuitar_TapBlue:
-        report->tapBlue |= m_last_value;
+        if (m_supports_slider)
+            report->tapBlue |= m_last_value;
         break;
     case GuitarHeroGuitar_TapOrange:
-        report->tapOrange |= m_last_value;
+        if (m_supports_slider)
+            report->tapOrange |= m_last_value;
         break;
     default:
         break;
@@ -359,19 +374,24 @@ void GuitarHeroGuitarButtonMapping::update_ogxbox(uint8_t *buf)
         report->rightShoulder |= m_last_value;
         break;
     case GuitarHeroGuitar_TapGreen:
-        report->tapGreen |= m_last_value;
+        if (m_supports_slider)
+            report->tapGreen |= m_last_value;
         break;
     case GuitarHeroGuitar_TapRed:
-        report->tapRed |= m_last_value;
+        if (m_supports_slider)
+            report->tapRed |= m_last_value;
         break;
     case GuitarHeroGuitar_TapYellow:
-        report->tapYellow |= m_last_value;
+        if (m_supports_slider)
+            report->tapYellow |= m_last_value;
         break;
     case GuitarHeroGuitar_TapBlue:
-        report->tapBlue |= m_last_value;
+        if (m_supports_slider)
+            report->tapBlue |= m_last_value;
         break;
     case GuitarHeroGuitar_TapOrange:
-        report->tapOrange |= m_last_value;
+        if (m_supports_slider)
+            report->tapOrange |= m_last_value;
         break;
     default:
         break;

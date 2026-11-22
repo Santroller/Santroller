@@ -123,22 +123,28 @@ void RockBandGuitarButtonMapping::update_ps3(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_ps4(uint8_t *buf)
 {
     PS4RockBandGuitar_Data_t *report = (PS4RockBandGuitar_Data_t *)buf;
+    // RB4 guitars report frets both as face buttons and in their own fret/solo fret bitmasks
     switch (m_mapping.mapping.mapping.rbButton)
     {
     case RockBandGuitar_Green:
         report->a |= m_last_value;
+        report->green |= m_last_value;
         break;
     case RockBandGuitar_Red:
         report->b |= m_last_value;
+        report->red |= m_last_value;
         break;
     case RockBandGuitar_Yellow:
         report->y |= m_last_value;
+        report->yellow |= m_last_value;
         break;
     case RockBandGuitar_Blue:
         report->x |= m_last_value;
+        report->blue |= m_last_value;
         break;
     case RockBandGuitar_Orange:
         report->leftShoulder |= m_last_value;
+        report->orange |= m_last_value;
         break;
     case RockBandGuitar_Pedal:
         report->rightShoulder |= m_last_value;
@@ -146,22 +152,27 @@ void RockBandGuitarButtonMapping::update_ps4(uint8_t *buf)
     case RockBandGuitar_SoloGreen:
         report->a |= m_last_value;
         report->solo |= m_last_value;
+        report->soloGreen |= m_last_value;
         break;
     case RockBandGuitar_SoloRed:
         report->b |= m_last_value;
         report->solo |= m_last_value;
+        report->soloRed |= m_last_value;
         break;
     case RockBandGuitar_SoloYellow:
         report->y |= m_last_value;
         report->solo |= m_last_value;
+        report->soloYellow |= m_last_value;
         break;
     case RockBandGuitar_SoloBlue:
         report->x |= m_last_value;
         report->solo |= m_last_value;
+        report->soloBlue |= m_last_value;
         break;
     case RockBandGuitar_SoloOrange:
         report->leftShoulder |= m_last_value;
         report->solo |= m_last_value;
+        report->soloOrange |= m_last_value;
         break;
     }
 }
@@ -169,22 +180,28 @@ void RockBandGuitarButtonMapping::update_ps4(uint8_t *buf)
 void RockBandGuitarButtonMapping::update_ps5(uint8_t *buf)
 {
     PS5RockBandGuitar_Data_t *report = (PS5RockBandGuitar_Data_t *)buf;
+    // RB4 guitars report frets both as face buttons and in their own fret/solo fret bitmasks
     switch (m_mapping.mapping.mapping.rbButton)
     {
     case RockBandGuitar_Green:
         report->a |= m_last_value;
+        report->green |= m_last_value;
         break;
     case RockBandGuitar_Red:
         report->b |= m_last_value;
+        report->red |= m_last_value;
         break;
     case RockBandGuitar_Yellow:
         report->y |= m_last_value;
+        report->yellow |= m_last_value;
         break;
     case RockBandGuitar_Blue:
         report->x |= m_last_value;
+        report->blue |= m_last_value;
         break;
     case RockBandGuitar_Orange:
         report->leftShoulder |= m_last_value;
+        report->orange |= m_last_value;
         break;
     case RockBandGuitar_Pedal:
         report->rightShoulder |= m_last_value;
@@ -192,22 +209,27 @@ void RockBandGuitarButtonMapping::update_ps5(uint8_t *buf)
     case RockBandGuitar_SoloGreen:
         report->a |= m_last_value;
         report->solo |= m_last_value;
+        report->soloGreen |= m_last_value;
         break;
     case RockBandGuitar_SoloRed:
         report->b |= m_last_value;
         report->solo |= m_last_value;
+        report->soloRed |= m_last_value;
         break;
     case RockBandGuitar_SoloYellow:
         report->y |= m_last_value;
         report->solo |= m_last_value;
+        report->soloYellow |= m_last_value;
         break;
     case RockBandGuitar_SoloBlue:
         report->x |= m_last_value;
         report->solo |= m_last_value;
+        report->soloBlue |= m_last_value;
         break;
     case RockBandGuitar_SoloOrange:
         report->leftShoulder |= m_last_value;
         report->solo |= m_last_value;
+        report->soloOrange |= m_last_value;
         break;
     }
 }

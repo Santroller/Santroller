@@ -384,8 +384,11 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
     memcpy(epin_buf, &m_initial_report, sizeof(m_initial_report));
     update_stagekit();
     MotionState motion;
+    // Profiles are attached after construction, so this can't be cached in the constructor
+    bool has_slider = false;
     for (const auto &profile : profiles)
     {
+        has_slider |= profile->supports_slider;
         profile->reset_drum_state();
         for (const auto &mapping : profile->mappings)
         {
@@ -451,7 +454,7 @@ void PS3GamepadDevice::process(bool full_poll, bool send_events)
             reportGh->pressure_red = reportGh->b ? 0xFF : 0x00;
         }
         report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
-        if (subtype == GuitarHeroGuitar)
+        if (subtype == GuitarHeroGuitar && has_slider)
         {
             // convert bitmask slider to actual hid slider
             PS3GuitarHeroGuitar_Data_t *reportGh = (PS3GuitarHeroGuitar_Data_t *)epin_buf;

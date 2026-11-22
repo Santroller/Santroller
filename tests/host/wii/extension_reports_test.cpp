@@ -274,6 +274,8 @@ TEST_F(WiiReport, GuitarWhammyIsFiveBitInByteThree)
 // (wii_extension_decoder.cpp) expects.
 TEST_F(WiiReport, TouchBarFretsUseTheGuitarsCodes)
 {
+    // Taps only reach the touch bar when the profile says the guitar has one
+    profile->supports_slider = true;
     const struct
     {
         GuitarHeroGuitarButtonType button;
@@ -297,6 +299,7 @@ TEST_F(WiiReport, TouchBarFretsUseTheGuitarsCodes)
 // other can't be shown, so the higher one is sent
 TEST_F(WiiReport, TouchBarChordsUseTheGuitarsCodes)
 {
+    profile->supports_slider = true;
     const struct
     {
         GuitarHeroGuitarButtonType first, second;
@@ -315,6 +318,14 @@ TEST_F(WiiReport, TouchBarChordsUseTheGuitarsCodes)
         pressed<GuitarHeroGuitarButtonMapping>(gh_button(c.second));
         EXPECT_EQ(report(GuitarHeroGuitar)[2] & 0x1F, c.code) << int(c.first) << " " << int(c.second);
     }
+}
+
+// Without a touch bar in the profile, taps leave it at its resting code
+TEST_F(WiiReport, TouchBarStaysAtRestWithoutSliderSupport)
+{
+    profile->supports_slider = false;
+    pressed<GuitarHeroGuitarButtonMapping>(gh_button(GuitarHeroGuitar_TapGreen));
+    EXPECT_EQ(report(GuitarHeroGuitar)[2] & 0x1F, 0x0F);
 }
 
 // GHWT drums: 5: O R Y G B Bass 1 1, all active low

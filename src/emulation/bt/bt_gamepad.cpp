@@ -549,8 +549,11 @@ void BTGamepadDevice::process(bool full_poll, bool send_events)
         report->rid = ReportIdGamepad;
         report->rsize = sizeof(PCGamepadDpad_Data_t);
 
+        // Profiles are attached after construction, so this can't be cached in the constructor
+        bool has_slider = false;
         for (const auto &profile : profiles)
         {
+            has_slider |= profile->supports_slider;
             profile->reset_drum_state();
             for (const auto &mapping : profile->mappings)
             {
@@ -573,7 +576,7 @@ void BTGamepadDevice::process(bool full_poll, bool send_events)
             // convert bitmask dpad to actual hid dpad
             report->dpad = GamepadButtonMapping::dpad_bindings[report->dpad];
         }
-        if (subtype == GuitarHeroGuitar)
+        if (subtype == GuitarHeroGuitar && has_slider)
         {
             // convert bitmask slider to actual hid slider
             XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;

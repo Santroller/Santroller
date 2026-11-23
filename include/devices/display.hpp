@@ -23,6 +23,10 @@ public:
     void end(bool full);
     void update(bool full_poll, bool send_events);
     bool using_pin(uint8_t pin);
+    // Kept across reloads while its wiring and settings stay the same. Rebuilding it starts the panel
+    // over from dark with a whole frame, which is a flash on every profile change and a burst of
+    // traffic on a bus it may share with a device that is still being set up
+    bool matches_reload_config(const proto_Device &config) const override;
     // Elements are drawn in the order they were added, later ones over the top
     void add_element(DisplayElement *element);
     void remove_element(DisplayElement *element);

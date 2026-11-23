@@ -114,6 +114,8 @@ I2CMasterInterface::~I2CMasterInterface() {}
 void I2CMasterInterface::dmaInit(uint8_t, I2CDMAInterface *) {}
 void I2CMasterInterface::dmaDeinit(uint8_t) {}
 void I2CMasterInterface::tick() {}
+bool I2CMasterInterface::claimBus(uint8_t, uint32_t) { return true; }
+void I2CMasterInterface::releaseBus(uint8_t) {}
 bool I2CMasterInterface::dmaWriteRead(uint8_t addr, const uint8_t *wbuf, size_t wbuf_len, uint8_t *rbuf,
                                       size_t rbuf_len)
 {

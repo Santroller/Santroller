@@ -77,11 +77,15 @@ typedef struct i2c_dma_s
     volatile bool abort_detected;
     volatile bool timeout;
     volatile bool running;
-    volatile bool queuing;
     volatile bool processing;
     alarm_id_t timeout_alarm_id;
     // The I2CMasterInterface whose transfer is running, its buffers are in use until it finishes
     const void *volatile runningFor;
+    // A device in the middle of a sequence that has to run back to back (eg a Wii extension's init) can
+    // hold the bus, so only its transfers run until it lets go or claimUntilUs passes
+    volatile bool claimed;
+    volatile int claimedSlot;
+    volatile uint32_t claimUntilUs;
 
     uint16_t data_cmds[I2C_MAX_TRANSFER_SIZE];
     i2c_dma_slot_t slots[I2C_MAX_DEVICES];
@@ -95,6 +99,11 @@ public:
     void dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface);
     void dmaDeinit(uint8_t addr);
     void tick();
+    // Only this address's transfers run until releaseBus, or until max_ms passes so a device that never
+    // lets go can't starve the rest of the bus. Takes effect once the running transfer finishes. Returns
+    // false if another device holds the bus
+    bool claimBus(uint8_t addr, uint32_t max_ms);
+    void releaseBus(uint8_t addr);
     // Returns false if the transfer was not queued, in which case process_data will not be called for it
     bool dmaWriteRead(
         uint8_t addr,

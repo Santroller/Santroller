@@ -29,6 +29,9 @@
 #define WII_MIN_POLL_INTERVAL_MS 1
 // How many invalid packets in a row before the extension is set up again
 #define WII_MAX_INVALID_PACKETS 100
+// Init holds the bus so nothing else's transfers land between its steps. The whole sequence is about
+// 20 transfers 200us apart, a few ms even at 100kHz, so this only cuts in when something goes wrong
+#define WII_INIT_CLAIM_MS 50
 
 class WiiExtension: public I2CDMAInterface, public WiiExtensionDecoder
 {

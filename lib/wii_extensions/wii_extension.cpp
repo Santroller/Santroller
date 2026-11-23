@@ -60,6 +60,8 @@ void WiiExtension::restart_init()
 {
     status = WII_INIT_FINISH_ENC;
     packetIssueCount = 0;
+    // The bus is free for the others while this waits to try again
+    mInterface.releaseBus(WII_ADDR);
     reset();
 }
 
@@ -287,6 +289,9 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
     switch (status)
     {
     case WII_INIT_FINISH_ENC:
+        // Some extensions (clones especially) lose track of the init if other devices' transfers land
+        // between its steps, so the bus is held until polling starts or init starts over
+        mInterface.claimBus(WII_ADDR, WII_INIT_CLAIM_MS);
         bufferTx[0] = WII_ENCRYPTION_STATE_ID;
         bufferTx[1] = WII_ENCRYPTION_FINISH_ID;
         mInterface.dmaWriteRead(WII_ADDR, bufferTx, 2, nullptr, 0);
@@ -365,6 +370,8 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
         mInterface.dmaWriteRead(WII_ADDR, nullptr, 0, bufferRx, WII_ID_LEN);
         break;
     case WII_INPUTS_WRITE_PTR:
+        // Init is done, and the gap before the next poll belongs to the rest of the bus
+        mInterface.releaseBus(WII_ADDR);
         // Clone extensions (eg the Rage guitar) only refresh their data registers while the bus is
         // left alone, so back to back reads would keep returning the same report. A Wii remote polls
         // every few ms too. The turntable also needs it, as its velocities are movement since the last read
@@ -413,6 +420,12 @@ void WiiExtension::begin()
     memset(bufferRx, 0, sizeof(bufferRx));
     started = true;
     mInterface.dmaInit(WII_ADDR, this);
+    // Picking up from a previous instance partway through init skips the step that takes the bus, so
+    // take it here
+    if (status < WII_INPUTS_WRITE_PTR)
+    {
+        mInterface.claimBus(WII_ADDR, WII_INIT_CLAIM_MS);
+    }
     process_data(WII_ADDR, false, false, false, false);
 }
 void WiiExtension::load_state(const DeviceReloadState *state)

@@ -145,6 +145,40 @@ void DisplayDevice::update(bool full_poll, bool send_events)
     }
 }
 
+// An optional field matches if both leave it unset, or both set it to the same value
+template <typename T>
+static bool same_optional(bool has_a, T a, bool has_b, T b)
+{
+    return has_a == has_b && (!has_a || a == b);
+}
+
+bool DisplayDevice::matches_reload_config(const proto_Device &config) const
+{
+    if (config.which_device != proto_Device_display_tag)
+    {
+        return false;
+    }
+    // Compared field by field, as the callbacks in the struct differ from one decode to the next
+    const proto_DisplayDevice &a = m_device;
+    const proto_DisplayDevice &b = config.device.display;
+    const bool same_i2c = a.has_i2c == b.has_i2c &&
+                          (!a.has_i2c || (a.i2c.block == b.i2c.block && a.i2c.sda == b.i2c.sda &&
+                                          a.i2c.scl == b.i2c.scl && a.i2c.clock == b.i2c.clock));
+    const bool same_spi = a.has_spi == b.has_spi &&
+                          (!a.has_spi || (a.spi.block == b.spi.block && a.spi.mosi == b.spi.mosi &&
+                                          a.spi.miso == b.spi.miso && a.spi.sck == b.spi.sck &&
+                                          a.spi.clock == b.spi.clock));
+    return same_i2c && same_spi && a.controller == b.controller &&
+           same_optional(a.has_address, a.address, b.has_address, b.address) &&
+           same_optional(a.has_height, a.height, b.has_height, b.height) &&
+           same_optional(a.has_rotation, a.rotation, b.has_rotation, b.rotation) &&
+           same_optional(a.has_contrast, a.contrast, b.has_contrast, b.contrast) &&
+           same_optional(a.has_width, a.width, b.has_width, b.width) &&
+           same_optional(a.has_dc_pin, a.dc_pin, b.has_dc_pin, b.dc_pin) &&
+           same_optional(a.has_cs_pin, a.cs_pin, b.has_cs_pin, b.cs_pin) &&
+           same_optional(a.has_reset_pin, a.reset_pin, b.has_reset_pin, b.reset_pin);
+}
+
 bool DisplayDevice::using_pin(uint8_t pin)
 {
     if (m_device.has_spi)

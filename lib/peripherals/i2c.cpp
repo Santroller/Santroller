@@ -192,6 +192,7 @@ static int i2c_dma_init_intern(i2c_dma_t *i2c_dma)
         memset((void *)&i2c_dma->slots[i].waitingTransfer, 0, sizeof(i2c_dma->slots[i].waitingTransfer));
     }
     i2c_dma->currentSlot = -1;
+    i2c_dma->claimed = false;
     irq_set_enabled(i2c_dma->irq_num, false);
 
     i2c_dma->stop_detected = false;
@@ -361,45 +362,68 @@ int64_t __not_in_flash_func(timeout_handler)(alarm_id_t, void *user_data)
     process_dma(i2c_dma);
     return 0;
 }
-static void __not_in_flash_func(i2c_dma_next_queued)(
-    i2c_dma_t *i2c_dma)
+// Whether a device holds the bus. A claim that has run out, or whose device has gone, is dropped here
+static bool __not_in_flash_func(i2c_dma_claim_active)(i2c_dma_t *i2c_dma)
 {
-    i2c_dma->queuing = true;
+    if (!i2c_dma->claimed)
+    {
+        return false;
+    }
+    const int slot = i2c_dma->claimedSlot;
+    if (slot < 0 || slot >= (int)I2C_MAX_DEVICES || !i2c_dma->slots[slot].in_use ||
+        (int32_t)(time_us_32() - i2c_dma->claimUntilUs) >= 0)
+    {
+        i2c_dma->claimed = false;
+        return false;
+    }
+    return true;
+}
+
+// Picks the next transfer and marks the bus running. Runs from the main loop as well as the I2C and alarm
+// interrupts, so the caller masks interrupts: one queueing between the check that the bus is free and
+// marking it running would otherwise start its own transfer, which this one then overwrites. Kept to just
+// the pick, as masking also holds off the PIO-USB SOF interrupt
+static bool __not_in_flash_func(i2c_dma_pick_locked)(i2c_dma_t *i2c_dma, i2c_dma_transfer_t &out)
+{
     if (i2c_dma->running || i2c_dma->processing || i2c_dma->tx_chan < 0 || i2c_dma->rx_chan < 0)
     {
-        return;
+        return false;
     }
-    volatile i2c_dma_transfer_t *transfer = nullptr;
-    int next_slot = -1;
-    int start_slot = (i2c_dma->currentSlot >= 0) ? (i2c_dma->currentSlot + 1) : 0;
-    for (size_t count = 0; count < I2C_MAX_DEVICES; count++)
+    // While a device holds the bus, only its slot is looked at. The others keep what they queued
+    const bool claim = i2c_dma_claim_active(i2c_dma);
+    int start_slot = claim ? i2c_dma->claimedSlot : (i2c_dma->currentSlot >= 0) ? (i2c_dma->currentSlot + 1) : 0;
+    for (size_t count = 0; count < (claim ? 1 : I2C_MAX_DEVICES); count++)
     {
         int idx = (start_slot + count) % I2C_MAX_DEVICES;
-        if (i2c_dma->running || i2c_dma->processing)
+        i2c_dma_slot_t &slot = i2c_dma->slots[idx];
+        if (slot.in_use && slot.hasWaitingTransfer)
         {
-            return;
-        }
-        if (i2c_dma->slots[idx].in_use && i2c_dma->slots[idx].hasWaitingTransfer)
-        {
+            // Copied out, as once the slot's flag is cleared its device may queue its next transfer
+            out.addr = slot.waitingTransfer.addr;
+            out.wbuf = slot.waitingTransfer.wbuf;
+            out.wbuf_len = slot.waitingTransfer.wbuf_len;
+            out.rbuf = slot.waitingTransfer.rbuf;
+            out.rbuf_len = slot.waitingTransfer.rbuf_len;
+            out.cmds = slot.waitingTransfer.cmds;
             i2c_dma->running = true;
-            next_slot = idx;
-            transfer = &i2c_dma->slots[idx].waitingTransfer;
-            i2c_dma->runningFor = i2c_dma->slots[idx].queuedBy;
-            i2c_dma->slots[idx].hasWaitingTransfer = false;
-            break;
+            i2c_dma->currentSlot = idx;
+            i2c_dma->runningFor = slot.queuedBy;
+            slot.hasWaitingTransfer = false;
+            return true;
         }
     }
-    if (next_slot < 0 || !transfer)
-    {
-        return;
-    }
-    i2c_dma->currentSlot = next_slot;
-    uint8_t addr = transfer->addr;
-    const uint8_t *wbuf = transfer->wbuf;
-    size_t wbuf_len = transfer->wbuf_len;
-    uint8_t *rbuf = transfer->rbuf;
-    size_t rbuf_len = transfer->rbuf_len;
-    uint16_t *data_cmds = transfer->cmds ? transfer->cmds : i2c_dma->data_cmds;
+    return false;
+}
+
+static void __not_in_flash_func(i2c_dma_start)(i2c_dma_t *i2c_dma, const i2c_dma_transfer_t &transfer)
+{
+    // Nothing else can start a transfer now the bus is marked running, so this runs with interrupts on
+    uint8_t addr = transfer.addr;
+    const uint8_t *wbuf = transfer.wbuf;
+    size_t wbuf_len = transfer.wbuf_len;
+    uint8_t *rbuf = transfer.rbuf;
+    size_t rbuf_len = transfer.rbuf_len;
+    uint16_t *data_cmds = transfer.cmds ? transfer.cmds : i2c_dma->data_cmds;
     i2c_dma->writing = (wbuf_len > 0);
     i2c_dma->reading = (rbuf_len > 0);
 
@@ -437,6 +461,14 @@ static void __not_in_flash_func(i2c_dma_next_queued)(
     i2c_dma->abort_detected = false;
     i2c_dma->timeout = false;
 
+    // The timeout is armed before the transfer starts. Armed after, an interrupt delaying this (eg SOF)
+    // could let the transfer finish first, and its completion would cancel the previous alarm, leaving
+    // this one to fire into a later transfer
+    const uint32_t baudrate = i2c_dma->baudrate ? i2c_dma->baudrate : 100000;
+    const uint64_t byte_us = (9ull * 1000000ull + baudrate - 1) / baudrate + I2C_TRANSFER_STRETCH_US_PER_BYTE;
+    const uint64_t timeout_us = 2 * byte_us * (wbuf_len + rbuf_len) + I2C_TRANSFER_TIMEOUT_MARGIN_US;
+    i2c_dma->timeout_alarm_id = add_alarm_in_us(timeout_us, timeout_handler, i2c_dma, true);
+
     // Start the I2C transfer on required DMA channels.
     if (i2c_dma->reading)
     {
@@ -444,10 +476,19 @@ static void __not_in_flash_func(i2c_dma_next_queued)(
     }
     i2c_dma_tx_channel_configure(
         i2c_dma->i2c, i2c_dma->tx_chan, data_cmds, wbuf_len + rbuf_len);
-    const uint32_t baudrate = i2c_dma->baudrate ? i2c_dma->baudrate : 100000;
-    const uint64_t byte_us = (9ull * 1000000ull + baudrate - 1) / baudrate + I2C_TRANSFER_STRETCH_US_PER_BYTE;
-    const uint64_t timeout_us = 2 * byte_us * (wbuf_len + rbuf_len) + I2C_TRANSFER_TIMEOUT_MARGIN_US;
-    i2c_dma->timeout_alarm_id = add_alarm_in_us(timeout_us, timeout_handler, i2c_dma, true);
+}
+
+static void __not_in_flash_func(i2c_dma_next_queued)(
+    i2c_dma_t *i2c_dma)
+{
+    i2c_dma_transfer_t transfer;
+    const uint32_t irq_status = save_and_disable_interrupts();
+    const bool picked = i2c_dma_pick_locked(i2c_dma, transfer);
+    restore_interrupts(irq_status);
+    if (picked)
+    {
+        i2c_dma_start(i2c_dma, transfer);
+    }
 }
 
 void I2CMasterInterface::tick()
@@ -457,10 +498,50 @@ void I2CMasterInterface::tick()
         return;
     }
 
-    if (i2c_dma->running || i2c_dma->processing)
+    // A claim that ran out while the bus sat idle leaves the others' transfers waiting with nothing to
+    // start them
+    if (i2c_dma->claimed && !i2c_dma->running && !i2c_dma->processing)
+    {
+        i2c_dma_next_queued(i2c_dma);
+    }
+}
+
+bool I2CMasterInterface::claimBus(uint8_t addr, uint32_t max_ms)
+{
+    if (!i2c_dma)
+    {
+        return false;
+    }
+    const uint32_t irq_status = save_and_disable_interrupts();
+    i2c_dma_slot_t *slot = find_slot(i2c_dma, addr);
+    const int idx = slot ? (int)(slot - i2c_dma->slots) : -1;
+    bool ok = false;
+    if (slot && slot->owner == this && (!i2c_dma_claim_active(i2c_dma) || i2c_dma->claimedSlot == idx))
+    {
+        i2c_dma->claimedSlot = idx;
+        i2c_dma->claimUntilUs = time_us_32() + max_ms * 1000;
+        i2c_dma->claimed = true;
+        ok = true;
+    }
+    restore_interrupts(irq_status);
+    return ok;
+}
+
+void I2CMasterInterface::releaseBus(uint8_t addr)
+{
+    if (!i2c_dma || !i2c_dma->claimed)
     {
         return;
     }
+    const uint32_t irq_status = save_and_disable_interrupts();
+    i2c_dma_slot_t *slot = find_slot(i2c_dma, addr);
+    if (slot && slot->owner == this && i2c_dma->claimedSlot == (int)(slot - i2c_dma->slots))
+    {
+        i2c_dma->claimed = false;
+    }
+    restore_interrupts(irq_status);
+    // The others' transfers may have been waiting on this
+    i2c_dma_next_queued(i2c_dma);
 }
 
 void I2CMasterInterface::dmaInit(uint8_t addr, I2CDMAInterface *dmaInterface)
@@ -616,6 +697,10 @@ void I2CMasterInterface::dmaDeinit(uint8_t addr)
     {
         // A replacement device has taken the address over, the slot is its now
         return;
+    }
+    if (i2c_dma->claimed && i2c_dma->claimedSlot == (int)(slot - i2c_dma->slots))
+    {
+        i2c_dma->claimed = false;
     }
     slot->in_use = false;
     memset((void *)&slot->waitingTransfer, 0, sizeof(slot->waitingTransfer));

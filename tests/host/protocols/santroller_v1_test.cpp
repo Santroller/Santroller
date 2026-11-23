@@ -45,7 +45,7 @@ uint16_t analog(const Report &r, SubType subtype, proto_Output o)
 }
 } // namespace
 
-TEST(SantrollerV1, SubtypeUsesTheOldNumbering)
+TEST(SantrollerV1, SubtypeMatchesSubType)
 {
     EXPECT_EQ(santroller_v1_subtype(0x0100), Gamepad);
     EXPECT_EQ(santroller_v1_subtype(0x0200), Dancepad);
@@ -55,11 +55,11 @@ TEST(SantrollerV1, SubtypeUsesTheOldNumbering)
     EXPECT_EQ(santroller_v1_subtype(0x1000), ProKeys);
     EXPECT_EQ(santroller_v1_subtype(0x1100), ProGuitarMustang);
     EXPECT_EQ(santroller_v1_subtype(0x1200), ProGuitarSquier);
-    // these moved when the subtypes were renumbered
-    EXPECT_EQ(santroller_v1_subtype(0x1500), DisneyInfinity);
-    EXPECT_EQ(santroller_v1_subtype(0x1600), Skylanders);
-    EXPECT_EQ(santroller_v1_subtype(0x1700), LegoDimensions);
     EXPECT_EQ(santroller_v1_subtype(0x1800), Taiko);
+    // the toy portals, which neither firmware supports, send the gamepad report
+    EXPECT_EQ(santroller_v1_subtype(0x1500), Gamepad);
+    EXPECT_EQ(santroller_v1_subtype(0x1600), Gamepad);
+    EXPECT_EQ(santroller_v1_subtype(0x1700), Gamepad);
     // keyboard / mouse reports 0, and anything unknown sends the gamepad report
     EXPECT_EQ(santroller_v1_subtype(0x0000), Gamepad);
     EXPECT_EQ(santroller_v1_subtype(0x1300), Gamepad);

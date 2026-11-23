@@ -1,3 +1,4 @@
+#include "subtype_numbering.hpp"
 #include "emulation/bt/bt_identity.h"
 #include "btstack.h"
 #include "btstack_tlv.h"
@@ -152,7 +153,8 @@ static uint8_t identity_for(SubType subtype, bool config_only)
     case SubType_Unknown:
         return BtIdentityGamepad;
     default:
-        return (uint8_t)(BT_IDENTITY_SUBTYPE | ((uint8_t)subtype & ~BT_IDENTITY_SUBTYPE));
+        // the old numbering's value, so each subtype keeps the address (and bonds) it had before the renumbering
+        return (uint8_t)(BT_IDENTITY_SUBTYPE | (subtype_old_value(subtype) & ~BT_IDENTITY_SUBTYPE));
     }
 }
 

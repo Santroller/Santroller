@@ -8,6 +8,7 @@
 #include <pb_encode.h>
 #include "config.pb.h"
 #include "config/device_factory.hpp"
+#include "subtype_numbering.hpp"
 #include "devices/bt/bt_tlv_storage.hpp"
 
 inline bool decode_cycle_input_states(pb_istream_t *stream, const pb_field_t *field, void **arg)
@@ -55,7 +56,7 @@ inline bool decode_bluetooth_states(pb_istream_t *stream, const pb_field_t *fiel
             // wider than a byte. Every SubType fits in the low byte, so only that is read.
             uint8_t raw;
             memcpy(&raw, &proto_bluetooth.subtype, sizeof(raw));
-            subtype = (SubType)raw;
+            subtype = subtype_from_stored(raw);
         }
         BtControllerType ctrl_type = proto_bluetooth.has_controllerType ? proto_bluetooth.controllerType : BtControllerType_BtControllerTypeGeneric;
         uint16_t vid = proto_bluetooth.has_vid ? proto_bluetooth.vid : 0;

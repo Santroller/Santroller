@@ -78,6 +78,14 @@ static inline bool santroller_v2_is_xinput_instrument(SubType subtype)
     }
 }
 
+// Whether HID reports keep stick Y axes in XInput's convention (up at the max) rather than HID's
+// (down at the max): instrument reports, and gamepads with invertYAxisHid set. Such subtypes report
+// CapabilityXInputYAxis.
+static inline bool santroller_v2_uses_xinput_y_axis(SubType subtype, bool invert_y_axis_hid)
+{
+    return santroller_v2_is_xinput_instrument(subtype) || (invert_y_axis_hid && subtype == Gamepad);
+}
+
 // Santroller 2 sends the gamepad stick Y axes flipped to the HID convention, down at the max
 // (GamepadAxisMapping::update_hid), where the rest of its XInput style report has up at the
 // max, unless it reports CapabilityXInputYAxis. Flips a value the xinput tick helpers read from

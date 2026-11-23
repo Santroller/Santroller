@@ -1,3 +1,4 @@
+#include "subtype_numbering.hpp"
 #include "config/trigger_factory.hpp"
 #include "profiles/profile.hpp"
 #include "triggers/activation_trigger.hpp"
@@ -78,7 +79,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
 
     case proto_ProfileAssignmentInfo_usbType_tag:
         return std::make_unique<UsbTypeActivationTrigger>(
-            proto_assignment.assignment.usbType,
+            subtype_from_stored(proto_assignment.assignment.usbType),
             profile,
             trigger_id,
             slot_id,
@@ -94,7 +95,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
 
     case proto_ProfileAssignmentInfo_bluetoothType_tag:
         return std::make_unique<BluetoothTypeActivationTrigger>(
-            proto_assignment.assignment.bluetoothType,
+            subtype_from_stored(proto_assignment.assignment.bluetoothType),
             profile,
             trigger_id,
             slot_id,
@@ -119,7 +120,7 @@ std::unique_ptr<ActivationTrigger> TriggerFactory::create_trigger(
 
     case proto_ProfileAssignmentInfo_midiProGuitar_tag:
         return std::make_unique<MidiProGuitarActivationTrigger>(
-            proto_assignment.assignment.midiProGuitar,
+            subtype_from_stored(proto_assignment.assignment.midiProGuitar),
             proto_assignment.has_midiDevice ? &proto_assignment.midiDevice : nullptr,
             profile,
             trigger_id,

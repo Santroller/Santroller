@@ -137,6 +137,10 @@ enum WiiExtType {
     WiiNotInitialised = 0xFFFF;
 };
 
+// Every value is valid BCD as it is (no hex digit above 9), as it goes into revisions as is (the BLE PnP ID version
+// is subtype << 8), and matches Santroller 1's numbering for the subtypes it had (1-9, 16-18, 24). New subtypes
+// take the next free value with no hex digit above 9. 10-15 and 26-31 were used before this rule, and mean their
+// replacements when they turn up in old configs (subtype_numbering.hpp), so they must never be reused.
 enum SubType {
   Gamepad = 1;
   Dancepad = 2;
@@ -147,12 +151,6 @@ enum SubType {
   LiveGuitar = 7;
   DjHeroTurntable = 8;
   StageKit = 9;
-  DisneyInfinity = 10;
-  Skylanders = 11;
-  LegoDimensions = 12;
-  ProjectDiva = 13;
-  GuitarFreaks = 14;
-  Wheel = 15;
   ProKeys = 16;
   ProGuitarMustang = 17;
   ProGuitarSquier = 18;
@@ -163,13 +161,19 @@ enum SubType {
   DJMax = 23;
   Taiko = 24;
   PowerGigDrum = 25;
-  PowerGigGuitar = 26;
-  RockRevolutionGuitar = 27;
-  Midi = 28;
-  BeatMania = 29;
-  DrumMania = 30;
-  KeyboardMania = 31;
   Microphone = 32;
+  DisneyInfinity = 33;
+  Skylanders = 34;
+  LegoDimensions = 35;
+  ProjectDiva = 36;
+  GuitarFreaks = 37;
+  Wheel = 38;
+  PowerGigGuitar = 39;
+  RockRevolutionGuitar = 40;
+  Midi = 41;
+  BeatMania = 48;
+  DrumMania = 49;
+  KeyboardMania = 50;
   Unknown = 255;
 }
 

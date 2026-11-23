@@ -1,3 +1,4 @@
+#include "subtype_numbering.hpp"
 #include "tusb_option.h"
 #include "devices/usb/host/hid/santroller_host.h"
 #include "class/hid/hid.h"
@@ -126,7 +127,7 @@ void SantrollerHost::handle_report(const uint8_t *data, uint16_t len)
     {
         if (len < 2)
             return;
-        SubType subtype = (SubType)data[1];
+        SubType subtype = subtype_from_stored(data[1]);
         m_capabilities = len >= 3 ? data[2] : 0;
         bool changed = m_ready && subtype != m_subtype;
         m_subtype = subtype;

@@ -1,3 +1,4 @@
+#include "subtype_numbering.hpp"
 #include "devices/bt/host/santroller_host.hpp"
 #include "devices/bt/bluetooth_stack.hpp"
 #include "managers/device_manager.hpp"
@@ -89,7 +90,7 @@ void BleSantrollerHost::handle_report_v2(const uint8_t *data, uint16_t len)
         if (len >= 2)
         {
             const SubType previous = m_subtype;
-            m_subtype = (SubType)data[1];
+            m_subtype = subtype_from_stored(data[1]);
             if (len >= 3)
             {
                 m_capabilities = data[2];

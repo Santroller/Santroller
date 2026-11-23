@@ -17,6 +17,7 @@
 #include "emulation/bt/bt_config_service.h"
 #include "emulation/bt/bt_gatt_changes.h"
 #include "emulation/bt/bt_identity.h"
+#include "subtype_numbering.hpp"
 
 // bt_gatt_changes relies on the Generic Attribute service being at the same handles in every database
 static_assert(ATT_SERVICE_GATT_SERVICE_START_HANDLE == BT_GATT_SERVICE_START_HANDLE, "GATT service moved");
@@ -143,6 +144,17 @@ static void get_report_callback(hci_con_handle_t con_hdl, hid_report_type_t repo
         }
     }
 }
+// The PnP ID version for a subtype: 0xSS00. Versions are BCD (0xJJMN), and every subtype is valid BCD as it is
+// (subtype_numbering.hpp), and matches Santroller 1's for the subtypes it had. Unknown isn't, so it sends 0.
+static constexpr uint16_t pnp_version_for(SubType subtype)
+{
+    return subtype_is_bcd(subtype) ? (uint16_t)(subtype << 8) : 0;
+}
+static_assert(pnp_version_for(GuitarHeroGuitar) == 0x0300, "PnP version encoding");
+static_assert(pnp_version_for(ProKeys) == 0x1000, "PnP version encoding");
+static_assert(pnp_version_for(KeyboardMania) == 0x3200, "PnP version encoding");
+static_assert(pnp_version_for(Unknown) == 0, "PnP version encoding");
+
 void set_battery_state(uint8_t state)
 {
     BtStackLock lock;
@@ -295,11 +307,11 @@ void BTGamepadDevice::initialize()
 
     // setup device information service
     device_information_service_server_init();
-    // the version carries the subtype (subtype << 8, as Santroller 1 did), as hosts that can't send the capabilities
-    // report (Wine's SDL backend) still get the version. Only the subtype, as hosts only read it when they pair,
-    // and each subtype has its own identity (bt_identity.h)
+    // the version carries the subtype, as hosts that can't send the capabilities report (Wine's SDL backend) still get
+    // the version. Only the subtype, as hosts only read it when they pair, and each subtype has its own identity
+    // (bt_identity.h)
     device_information_service_server_set_pnp_id(DEVICE_ID_VENDOR_ID_SOURCE_USB, 0x1209, 0x2883,
-                                                 m_config_only ? 0 : (uint16_t)(subtype << 8));
+                                                 m_config_only ? 0 : pnp_version_for(subtype));
     // btstack keeps the pointer, so this has to outlive init
     static char id[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
     pico_get_unique_board_id_string(id, sizeof(id));
@@ -564,11 +576,6 @@ void BTGamepadDevice::process(bool full_poll, bool send_events)
             {
                 led->update(full_poll, send_events);
             }
-        }
-        if (invert_y_axis_hid && subtype == Gamepad)
-        {
-            report->leftStickY = static_cast<int16_t>(~static_cast<uint16_t>(report->leftStickY));
-            report->rightStickY = static_cast<int16_t>(~static_cast<uint16_t>(report->rightStickY));
         }
         // dance pads need to report the dpad as buttons, so skip the conversion to hat
         if (subtype != Dancepad)

@@ -11,6 +11,7 @@
 #include "triggers/activation_trigger_list.hpp"
 #include "profiles/input_queue.hpp"
 #include "protocols/midi_output.hpp"
+#include "protocols/santroller_v2.hpp"
 
 // Forward declarations to avoid circular dependencies
 class Mapping;
@@ -37,6 +38,11 @@ public:
     SubType subtype;
     bool xinput_on_windows;
     bool invert_y_axis_hid;
+    // HID reports send stick Y axes up at the max (XInput's convention), see CapabilityXInputYAxis
+    bool hid_uses_xinput_y_axis() const
+    {
+        return santroller_v2_uses_xinput_y_axis(subtype, invert_y_axis_hid);
+    }
     bool supports_ps4;
     bool supports_slider;
     bool cymbal_glitch_fix;

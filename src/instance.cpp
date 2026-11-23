@@ -335,7 +335,7 @@ void Instance::update_capabilities()
     // HID sends stick Y axes down at the max, except in instrument reports, which keep XInput's
     // convention (GamepadAxisMapping::update_hid), and on a gamepad that flips them back
     // (HIDGamepadDevice::process, bt_gamepad)
-    if (santroller_v2_is_xinput_instrument(subtype) || (invert_y_axis_hid && subtype == Gamepad))
+    if (santroller_v2_uses_xinput_y_axis(subtype, invert_y_axis_hid))
     {
         caps |= CapabilityXInputYAxis;
     }

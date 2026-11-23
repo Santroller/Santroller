@@ -17,6 +17,7 @@ add_executable(config_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/config/configurator_fixture_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/config/profile_opts_test.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/config/slot_ids_test.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/config/subtype_numbering_test.cpp
 )
 # The fakes come first so they shadow the firmware's own headers
 target_include_directories(config_tests BEFORE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/support/config)
@@ -25,6 +26,7 @@ target_include_directories(config_tests PRIVATE
 )
 target_compile_definitions(config_tests PRIVATE
   SANTROLLER_CONFIG_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/config/fixtures"
+  SANTROLLER_PROTO_DIR="${SANTROLLER_ROOT}/proto"
 )
 target_compile_options(config_tests PRIVATE -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter)
 target_link_libraries(config_tests PRIVATE santroller_headers GTest::gtest_main)

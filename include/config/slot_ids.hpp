@@ -1,6 +1,7 @@
 #pragma once
 #include "config.pb.h"
 #include "profiles/profile.hpp"
+#include "subtype_numbering.hpp"
 #include <cstdint>
 #include <map>
 #include <tuple>
@@ -11,6 +12,14 @@ constexpr uint16_t SLOT_UNTYPED = 0xffff;
 
 // The newest deviceSlotIdVersion
 constexpr uint32_t SLOT_ID_VERSION_LATEST = 3;
+
+// A slot's subtype as its type. Slots are numbered in order of type, so this is the subtype's value in the old
+// numbering (subtype_numbering.hpp), which keeps every slot's id where it was before the renumbering. The
+// configurator mirrors this (getSlotSubtype).
+inline uint16_t slot_subtype(SubType stored)
+{
+    return subtype_old_value(subtype_from_stored(stored));
+}
 
 // The slot kind and subtype of an assignment, or DeviceSlotKind::None for assignments that aren't
 // slots
@@ -27,23 +36,23 @@ inline std::pair<DeviceSlotKind, uint16_t> slot_kind_and_type(const proto_Profil
     case proto_ProfileAssignmentInfo_joybusCnt_tag:
         return {DeviceSlotKind::Joybus, static_cast<uint16_t>(info.assignment.joybusCnt)};
     case proto_ProfileAssignmentInfo_usbType_tag:
-        return {DeviceSlotKind::USB, static_cast<uint16_t>(info.assignment.usbType)};
+        return {DeviceSlotKind::USB, slot_subtype(info.assignment.usbType)};
     case proto_ProfileAssignmentInfo_usbDevice_tag:
         return {DeviceSlotKind::USB, info.assignment.usbDevice.has_subtype
-                                         ? static_cast<uint16_t>(info.assignment.usbDevice.subtype)
+                                         ? slot_subtype(info.assignment.usbDevice.subtype)
                                          : SLOT_UNTYPED};
     case proto_ProfileAssignmentInfo_bluetoothType_tag:
-        return {DeviceSlotKind::Bluetooth, static_cast<uint16_t>(info.assignment.bluetoothType)};
+        return {DeviceSlotKind::Bluetooth, slot_subtype(info.assignment.bluetoothType)};
     case proto_ProfileAssignmentInfo_bluetoothDevice_tag:
         return {DeviceSlotKind::Bluetooth, info.assignment.bluetoothDevice.has_subtype
-                                               ? static_cast<uint16_t>(info.assignment.bluetoothDevice.subtype)
+                                               ? slot_subtype(info.assignment.bluetoothDevice.subtype)
                                                : SLOT_UNTYPED};
     case proto_ProfileAssignmentInfo_midiChannel_tag:
         return {DeviceSlotKind::MIDI, SLOT_UNTYPED};
     case proto_ProfileAssignmentInfo_midiProGuitar_tag:
-        return {DeviceSlotKind::MIDI, static_cast<uint16_t>(info.assignment.midiProGuitar)};
+        return {DeviceSlotKind::MIDI, slot_subtype(info.assignment.midiProGuitar)};
     case proto_ProfileAssignmentInfo_xboxOneAuth_tag:
-        return {DeviceSlotKind::USB, static_cast<uint16_t>(SubType_Gamepad)};
+        return {DeviceSlotKind::USB, slot_subtype(SubType_Gamepad)};
     default:
         return {DeviceSlotKind::None, SLOT_UNTYPED};
     }

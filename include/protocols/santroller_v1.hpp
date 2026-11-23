@@ -301,48 +301,18 @@ typedef struct
 #include "enums.pb.h"
 #include "input.pb.h"
 
-// Santroller 1 encodes its subtype in the high byte of bcdDevice, using the old firmware's
-// numbering, which drifts from SubType past StageKit.
+// Santroller 1 encodes its subtype in the high byte of bcdDevice. SubType keeps Santroller 1's numbering for every
+// subtype it had (subtype_numbering.hpp), apart from the toy portals (21-23), which neither supports.
 static inline SubType santroller_v1_subtype(uint16_t version)
 {
-    switch ((version >> 8) & 0xFF)
+    uint8_t subtype = (version >> 8) & 0xFF;
+    if ((subtype >= Gamepad && subtype <= StageKit) || subtype == ProKeys || subtype == ProGuitarMustang ||
+        subtype == ProGuitarSquier || subtype == Taiko)
     {
-    case 1:
-        return Gamepad;
-    case 2:
-        return Dancepad;
-    case 3:
-        return GuitarHeroGuitar;
-    case 4:
-        return RockBandGuitar;
-    case 5:
-        return GuitarHeroDrums;
-    case 6:
-        return RockBandDrums;
-    case 7:
-        return LiveGuitar;
-    case 8:
-        return DjHeroTurntable;
-    case 9:
-        return StageKit;
-    case 16:
-        return ProKeys;
-    case 17:
-        return ProGuitarMustang;
-    case 18:
-        return ProGuitarSquier;
-    case 21:
-        return DisneyInfinity;
-    case 22:
-        return Skylanders;
-    case 23:
-        return LegoDimensions;
-    case 24:
-        return Taiko;
-    default:
-        // 0 (keyboard / mouse), and types that never had a PC report, all send the gamepad report
-        return Gamepad;
+        return (SubType)subtype;
     }
+    // 0 (keyboard / mouse), and types that never had a PC report, all send the gamepad report
+    return Gamepad;
 }
 
 // Santroller 1 report decoding (report id 1, layout depends on subtype), shared by the

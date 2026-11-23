@@ -6,6 +6,7 @@
 #include <pb_decode.h>
 #include <pb_encode.h>
 #include "config.pb.h"
+#include "subtype_numbering.hpp"
 
 // Decode a profile's ProfileOpts. The firmware only holds sizeof(opts->name) - 1 bytes of the name, and
 // nanopb fails the whole message on a longer one, which would leave the profile without its uid or type.
@@ -107,5 +108,11 @@ inline bool decode_profile_opts(pb_istream_t *stream, proto_ProfileOpts *opts)
         }
     }
     pb_istream_t shortened = pb_istream_from_buffer(buffer, out.bytes_written);
-    return pb_decode_ex(&shortened, proto_ProfileOpts_fields, opts, PB_DECODE_NOINIT);
+    if (!pb_decode_ex(&shortened, proto_ProfileOpts_fields, opts, PB_DECODE_NOINIT))
+    {
+        return false;
+    }
+    // older configs can have a subtype in the old numbering
+    opts->deviceToEmulate = subtype_from_stored(opts->deviceToEmulate);
+    return true;
 }

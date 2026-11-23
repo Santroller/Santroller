@@ -34,9 +34,7 @@ void GamepadAxisMapping::update_hid(uint8_t *buf)
     }
     // santroller hid uses an xinput style report descriptor for compatibility reasons
     update_xinput(buf);
-    // instrument reports keep XInput's convention throughout (CapabilityXInputYAxis), everything
-    // else uses the HID convention for its Y axes, down at the max
-    if (m_profile && santroller_v2_is_xinput_instrument(m_profile->subtype))
+    if (m_profile && m_profile->hid_uses_xinput_y_axis())
     {
         return;
     }

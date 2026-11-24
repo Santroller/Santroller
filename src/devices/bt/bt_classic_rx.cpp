@@ -478,6 +478,21 @@ static bool is_wii_device(const bd_addr_t addr)
     return false;
 }
 
+// Whether a classic address belongs to a controller we host, rather than a console connecting to the
+// Wiimote emulator. Both share the radio, and so their pairing events.
+static bool is_host_peer(const uint8_t *addr)
+{
+    if (is_already_connected_or_pending(addr) || getDeviceIndexForAddress(const_cast<uint8_t *>(addr)) >= 0)
+        return true;
+    bool stored = false;
+    DeviceFactory::foreach_bluetooth_pairing_state([&](int32_t id, const DeviceFactory::BluetoothPairingStateData &state) {
+        // the console the emulator bonded with is kept under its own ID
+        if (static_cast<uint32_t>(id) != 0xFFFFFFFEu && !state.ble && bd_addr_cmp(state.mac, addr) == 0)
+            stored = true;
+    });
+    return stored;
+}
+
 // A DS3 never authenticates (a PS3 doesn't ask it to), so requiring LEVEL_2 on the HID
 // PSMs makes us demand a PIN it can't give and the connection dies. Let known DS3s in
 // without security; everything else keeps the configured level.
@@ -501,11 +516,15 @@ static gap_security_level_t hid_incoming_security_level(const bd_addr_t address,
 // BTstack sends the accept with the current policy straight after this filter runs, so set it per link.
 static int classic_connection_filter(bd_addr_t addr, hci_link_type_t link_type)
 {
-    bool wii = link_type == HCI_LINK_TYPE_ACL && is_wii_device(addr);
-    hci_set_master_slave_policy(wii ? HCI_ROLE_MASTER : HCI_ROLE_SLAVE);
-    if (wii)
+    // A Switch controller reconnecting by itself also tends to hang up just after opening HID control,
+    // and a Switch console is master too, so take master for those as well.
+    bool acl = link_type == HCI_LINK_TYPE_ACL;
+    bool wii = acl && is_wii_device(addr);
+    bool switch_pad = acl && !wii && is_stored_switch_controller(addr);
+    hci_set_master_slave_policy((wii || switch_pad) ? HCI_ROLE_MASTER : HCI_ROLE_SLAVE);
+    if (wii || switch_pad)
     {
-        printf("Accepting Wii device %s as master\r\n", bd_addr_to_str(addr));
+        printf("Accepting %s device %s as master\r\n", wii ? "Wii" : "Switch", bd_addr_to_str(addr));
     }
     return 1;
 }
@@ -523,6 +542,7 @@ static void hid_host_setup(void)
     hid_host_init(hid_descriptor_storage, sizeof(hid_descriptor_storage));
     hid_host_register_packet_handler(packet_handler);
     l2cap_set_classic_incoming_security_level_override(&hid_incoming_security_level);
+    wiimote_emulator_set_host_peer_filter(&is_host_peer);
 
     gap_set_default_link_policy_settings(LM_LINK_POLICY_ENABLE_SNIFF_MODE |
                                          LM_LINK_POLICY_ENABLE_ROLE_SWITCH);
@@ -1031,11 +1051,12 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
         }
 
         case HCI_EVENT_PIN_CODE_REQUEST: {
-            // While emulating a Wiimote, its handler answers with the console's reversed address.
-            // BTstack only takes the first reply, and this handler is registered first.
-            if (wiimote_emulator_active())
-                break;
+            // While emulating a Wiimote, its handler answers the console with the console's reversed address.
+            // It skips controllers we host, so those still get answered here. With the emulator up SSP is
+            // off, so controllers that normally use SSP (Joy-Cons) come through here as well.
             hci_event_pin_code_request_get_bd_addr(packet, event_addr);
+            if (wiimote_emulator_active() && !is_host_peer(event_addr))
+                break;
             if (is_wii_device(event_addr))
             {
                 printf("Pin code request for Nintendo Wii device %s - using reversed host BD_ADDR\r\n", bd_addr_to_str(event_addr));

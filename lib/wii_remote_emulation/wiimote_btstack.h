@@ -14,6 +14,10 @@ void wiimote_emulator_set_reconnect_address(const uint8_t *mac);
 // caller can persist it (e.g. to reconnect after a reboot).
 void wiimote_emulator_set_connection_callback(void (*callback)(const uint8_t *mac));
 
+// Pairing events for addresses this returns true for belong to the Bluetooth host side (controllers
+// we connect to while emulating), so the emulator leaves them alone instead of treating them as the console.
+void wiimote_emulator_set_host_peer_filter(bool (*filter)(const uint8_t *addr));
+
 void wiimote_emulator(void *report);
 // Atomically republishes the report pointer for double-buffered producers; unlike
 // wiimote_emulator() this does not redo connection/SSP setup.

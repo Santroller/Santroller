@@ -34,6 +34,18 @@ static int set_iac_lap = 0;
 static bd_addr_t pending_reconnect_addr;
 static bool has_pending_reconnect = false;
 static void (*connection_established_callback)(const uint8_t *mac) = NULL;
+static bool (*host_peer_filter)(const uint8_t *addr) = NULL;
+
+// Pairing events for controllers the Bluetooth host side connects to come through here too
+static bool is_host_peer(const uint8_t *addr)
+{
+    return host_peer_filter && host_peer_filter(addr);
+}
+
+void wiimote_emulator_set_host_peer_filter(bool (*filter)(const uint8_t *addr))
+{
+    host_peer_filter = filter;
+}
 
 void wiimote_emulator_set_reconnect_address(const uint8_t *mac)
 {
@@ -183,26 +195,32 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t* p
             if (hci_event_command_complete_get_command_opcode(packet) == hci_link_key_request_negative_reply.opcode) {
             }
             break;
-            case HCI_EVENT_PIN_CODE_REQUEST:
-                uint8_t pin_code[6];
-                hci_event_pin_code_request_get_bd_addr(packet, wii_baddr);
-                reverse_bd_addr(wii_baddr, pin_code);
-                    gap_pin_code_response_binary(wii_baddr, pin_code, sizeof(pin_code));
-                    break;
-            case HCI_EVENT_AUTHENTICATION_COMPLETE:
-                break;
+        case HCI_EVENT_PIN_CODE_REQUEST: {
+            // BTstack keeps the pointer until the reply is sent, so it can't be on the stack
+            static uint8_t pin_code[6];
+            bd_addr_t addr;
+            hci_event_pin_code_request_get_bd_addr(packet, addr);
+            if (is_host_peer(addr)) break;
+            memcpy(wii_baddr, addr, sizeof(bd_addr_t));
+            reverse_bd_addr(wii_baddr, pin_code);
+            gap_pin_code_response_binary(wii_baddr, pin_code, sizeof(pin_code));
+            break;
+        }
+        case HCI_EVENT_AUTHENTICATION_COMPLETE:
+            break;
         case HCI_EVENT_LINK_KEY_REQUEST:
-            hci_event_link_key_request_get_bd_addr(packet, wii_baddr);
-            break;
         case HCI_EVENT_IO_CAPABILITY_REQUEST:
-            hci_event_io_capability_request_get_bd_addr(packet, wii_baddr);
-            break;
         case HCI_EVENT_USER_CONFIRMATION_REQUEST:
-            hci_event_user_confirmation_request_get_bd_addr(packet, wii_baddr);
+        case HCI_EVENT_SIMPLE_PAIRING_COMPLETE: {
+            bd_addr_t addr;
+            if (hci_event_packet_get_type(packet) == HCI_EVENT_SIMPLE_PAIRING_COMPLETE)
+                hci_event_simple_pairing_complete_get_bd_addr(packet, addr);
+            else
+                hci_event_link_key_request_get_bd_addr(packet, addr); // the others have it at the same offset
+            if (!is_host_peer(addr))
+                memcpy(wii_baddr, addr, sizeof(bd_addr_t));
             break;
-        case HCI_EVENT_SIMPLE_PAIRING_COMPLETE:
-            hci_event_simple_pairing_complete_get_bd_addr(packet, wii_baddr);
-            break;
+        }
         case L2CAP_EVENT_CHANNEL_OPENED: {
             uint16_t cid = l2cap_event_channel_opened_get_local_cid(packet);
             uint8_t status = l2cap_event_channel_opened_get_status(packet);

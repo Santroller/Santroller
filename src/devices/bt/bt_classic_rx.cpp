@@ -495,6 +495,26 @@ static gap_security_level_t hid_incoming_security_level(const bd_addr_t address,
     return required_level;
 }
 
+// A Wii Remote reconnecting pages us, so it starts the link as master. A Wii console always takes
+// master on those links, and the remote only seems to open its HID channels once it is slave; staying
+// slave (the default below, for the DS3) leaves it re-paging until a role switch happens to go through.
+// BTstack sends the accept with the current policy straight after this filter runs, so set it per link.
+static int classic_connection_filter(bd_addr_t addr, hci_link_type_t link_type)
+{
+    bool wii = link_type == HCI_LINK_TYPE_ACL && is_wii_device(addr);
+    hci_set_master_slave_policy(wii ? HCI_ROLE_MASTER : HCI_ROLE_SLAVE);
+    if (wii)
+    {
+        printf("Accepting Wii device %s as master\r\n", bd_addr_to_str(addr));
+    }
+    return 1;
+}
+
+// Wii device links where we're still slave after connecting: switch role before authenticating,
+// so the two LMP procedures don't collide.
+static bd_addr_t s_wii_role_pending_addr;
+static bool s_wii_role_pending = false;
+
 static void hid_host_setup(void)
 {
 #ifdef ENABLE_BLE
@@ -510,6 +530,7 @@ static void hid_host_setup(void)
     // only transmitting when polled, which with the CYW43 meant one report every ~33ms
     // instead of streaming. Connections we make ourselves (pairing) still make us master.
     hci_set_master_slave_policy(HCI_ROLE_SLAVE);
+    gap_register_classic_connection_filter(&classic_connection_filter);
     gap_ssp_set_io_capability(SSP_IO_CAPABILITY_DISPLAY_YES_NO);
     gap_set_page_timeout(CLASSIC_PAGE_TIMEOUT);
     // Controllers turned off just stop transmitting, so this is how long it takes to notice.
@@ -764,6 +785,12 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             printf("Classic BTstack state: %d (WORKING=%d)\r\n", st, HCI_STATE_WORKING);
             if (st == HCI_STATE_WORKING)
             {
+                // Controllers reconnecting by themselves (a Wii Remote after a button press) only page for a
+                // short burst. The default (standard scan, 11.25ms every 1.28s) misses most of them, so scan like
+                // BlueZ's fast connectable mode: interlaced, every 160ms. Set here rather than at setup: the
+                // HCI reset on every power on clears pending page scan writes.
+                gap_set_page_scan_type(PAGE_SCAN_MODE_INTERLACED);
+                gap_set_page_scan_activity(0x0100, 0x0012);
                 gap_connectable_control(1);
                 btc_sync_reconnect();
             }
@@ -901,8 +928,21 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 gap_request_all_acl_packet_types(handle);
                 if (is_wii_device(event_addr))
                 {
-                    printf("Requesting security LEVEL_2 for Wii device %s\r\n", bd_addr_to_str(event_addr));
-                    gap_request_security_level(handle, LEVEL_2);
+                    hci_connection_t *conn = hci_connection_for_handle(handle);
+                    printf("Wii device %s connected, role=%s\r\n", bd_addr_to_str(event_addr),
+                           conn && conn->role == HCI_ROLE_MASTER ? "master" : "slave");
+                    if (conn && conn->role == HCI_ROLE_SLAVE &&
+                        gap_request_role(event_addr, HCI_ROLE_MASTER) == ERROR_CODE_SUCCESS)
+                    {
+                        // security is requested once the role change event arrives
+                        memcpy(s_wii_role_pending_addr, event_addr, sizeof(bd_addr_t));
+                        s_wii_role_pending = true;
+                    }
+                    else
+                    {
+                        printf("Requesting security LEVEL_2 for Wii device %s\r\n", bd_addr_to_str(event_addr));
+                        gap_request_security_level(handle, LEVEL_2);
+                    }
                 }
                 // Only links the controller opened: our own page already has its pending connection here,
                 // and paging back after one of those failed (e.g. the controller lost our link key) would loop
@@ -923,9 +963,30 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             printf("Classic BT: role change for %s, status 0x%02x, now %s\r\n", bd_addr_to_str(event_addr),
                    hci_event_role_change_get_status(packet),
                    hci_event_role_change_get_role(packet) == HCI_ROLE_MASTER ? "master" : "slave");
+            if (s_wii_role_pending && bd_addr_cmp(s_wii_role_pending_addr, event_addr) == 0)
+            {
+                // authenticate whether or not the switch worked, the link still needs it
+                s_wii_role_pending = false;
+                hci_connection_t *conn = hci_connection_for_bd_addr_and_type(event_addr, BD_ADDR_TYPE_ACL);
+                if (conn)
+                {
+                    printf("Requesting security LEVEL_2 for Wii device %s\r\n", bd_addr_to_str(event_addr));
+                    gap_request_security_level(conn->con_handle, LEVEL_2);
+                }
+            }
             break;
 
         case HCI_EVENT_DISCONNECTION_COMPLETE: {
+            printf("Classic BT: disconnection complete, handle=0x%04x, status=0x%02x, reason=0x%02x\r\n",
+                   hci_event_disconnection_complete_get_connection_handle(packet),
+                   hci_event_disconnection_complete_get_status(packet),
+                   hci_event_disconnection_complete_get_reason(packet));
+            if (s_wii_role_pending)
+            {
+                hci_connection_t *conn = hci_connection_for_bd_addr_and_type(s_wii_role_pending_addr, BD_ADDR_TYPE_ACL);
+                if (!conn || conn->con_handle == hci_event_disconnection_complete_get_connection_handle(packet))
+                    s_wii_role_pending = false;
+            }
             bd_addr_t link_addr;
             if (untrack_switch_link(hci_event_disconnection_complete_get_connection_handle(packet), link_addr) &&
                 !is_already_connected_or_pending(link_addr))

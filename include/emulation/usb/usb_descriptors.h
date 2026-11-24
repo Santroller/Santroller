@@ -202,9 +202,9 @@ enum
 };
 
 // XInput Gamepad Descriptor
-#define TUD_XINPUT_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout, _subtype)                                                                            \
+#define TUD_XINPUT_GAMEPAD_DESCRIPTOR(_itfnum, _epin, _epout, _subtype, _strid)                                                                            \
     /* Interface */                                                                                                                                \
-    9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xFF, 0x5D, 0x01, 0,                                                    /* XInput Gamepad descriptor */ \
+    9, TUSB_DESC_INTERFACE, _itfnum, 0, 2, 0xFF, 0x5D, 0x01, _strid,                                                    /* XInput Gamepad descriptor */ \
         17, 0x21, 0x10, 0x01, _subtype, 0x25, _epin, 0x14, 0x03, 0x03, 0x03, 0x04, 0x13, _epout, 0x08, 0x03, 0x03, /* Endpoint In */               \
         7, TUSB_DESC_ENDPOINT, _epin, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 1,                                 /* Endpoint Out */              \
         7, TUSB_DESC_ENDPOINT, _epout, TUSB_XFER_INTERRUPT, U16_TO_U8S_LE(0x20), 1

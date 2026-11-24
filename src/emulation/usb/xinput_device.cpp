@@ -673,7 +673,7 @@ size_t XInputGamepadDevice::config_descriptor(uint8_t *dest, size_t remaining)
         memcpy(dest, desc, sizeof(desc));
         return sizeof(desc);
     }
-    uint8_t desc[] = {TUD_XINPUT_GAMEPAD_DESCRIPTOR(interface_id, m_epin, m_epout, get_xinput_subtype(subtype))};
+    uint8_t desc[] = {TUD_XINPUT_GAMEPAD_DESCRIPTOR(interface_id, m_epin, m_epout, get_xinput_subtype(subtype), m_strid)};
     assert(sizeof(desc) <= remaining);
     memcpy(dest, desc, sizeof(desc));
     return sizeof(desc);

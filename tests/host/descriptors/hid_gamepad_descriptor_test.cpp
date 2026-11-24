@@ -99,8 +99,11 @@ TEST(HidGamepadDescriptor, HatLayoutMatchesTheReportStruct)
         expect_common_layout(d);
         // the hat goes where the dpad bits were (dpad_bindings turns them into 0 - 7, 8 for neutral)
         expect_field(d, ReportType::Input, kGamepad, desktop(kDesktopHat), FIELD(PCGamepadDpad_Data_t, dpad), true);
-        EXPECT_EQ(d.find(ReportType::Input, kGamepad, desktop(kDesktopHat))->logical_max, 7);
-        EXPECT_EQ(d.find(ReportType::Input, kGamepad, desktop(kDesktopHat))->logical_min, 0);
+        const Element *hat = d.find(ReportType::Input, kGamepad, desktop(kDesktopHat));
+        ASSERT_NE(hat, nullptr);
+        EXPECT_EQ(hat->logical_max, 7);
+        EXPECT_EQ(hat->logical_min, 0);
+        EXPECT_TRUE(hat->null_state());
         EXPECT_EQ(d.find(ReportType::Input, kGamepad, button(BTN_UP)), nullptr);
     }
 }

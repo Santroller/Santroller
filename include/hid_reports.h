@@ -812,7 +812,7 @@
         HID_PHYSICAL_MAX_N(315, 2),                        \
         HID_REPORT_COUNT(1),                               \
         HID_REPORT_SIZE(4),                                \
-        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE), \
+        HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE | HID_NULL_STATE), \
         HID_USAGE_PAGE(HID_USAGE_PAGE_BUTTON),             \
         HID_LOGICAL_MIN(0),                                \
         HID_LOGICAL_MAX(1),                                \

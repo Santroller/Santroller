@@ -5,6 +5,35 @@
 #include <stdbool.h>
 #include "wm_crypto.h"
 
+// A real Wiimote in continuous mode reports every 10ms
+#define WIIMOTE_CONTINUOUS_INTERVAL_MS 10
+
+struct report_data
+{
+  uint8_t io;
+  uint8_t type;
+  uint8_t buf[21];
+  uint8_t padding;
+} __attribute__((packed));
+
+struct report
+{
+  uint32_t len;  //data (packet) length
+  struct report_data data;
+};
+
+// Reports waiting to go out (acks, status, memory reads), in a fixed ring: they're queued from BTstack,
+// which runs in an IRQ, so they can't be malloc'd. A memory read of up to 16 bytes per response takes
+// a slot per response, except EEPROM reads (up to 0x16FF bytes), which stream from one slot.
+#define REPORT_QUEUE_SIZE 32
+
+struct queued_report
+{
+  struct report rpt;
+  uint16_t eeprom_offset;
+  uint16_t eeprom_remaining; // nonzero for a streaming EEPROM read
+};
+
 enum wiimote_connected_extension_type
 {
   Nunchuk = 0x0,
@@ -146,9 +175,11 @@ struct wiimote_state_sys
   // last regular input report sent, so non-continuous mode only sends when the data changes
   uint8_t last_report[23];
   uint8_t last_report_len;
+  uint32_t last_report_ms;
 
-  struct queued_report * queue;
-  struct queued_report * queue_end;
+  struct queued_report queue[REPORT_QUEUE_SIZE];
+  uint8_t queue_head;
+  uint8_t queue_count;
 
   uint8_t register_a2[10]; //speaker
   uint8_t register_a4[256]; //extension
@@ -235,7 +266,8 @@ void wiimote_destroy(struct wiimote_state *state);
 void wiimote_reset(struct wiimote_state *state);
 
 int process_report(struct wiimote_state *state, const uint8_t *buf, int len);
-int generate_report(struct wiimote_state * state, uint8_t * buf);
+// now_ms paces continuous mode's repeats of unchanged reports
+int generate_report(struct wiimote_state * state, uint8_t * buf, uint32_t now_ms);
 
 void read_eeprom(struct wiimote_state * state, uint32_t offset, uint16_t size);
 void write_eeprom(struct wiimote_state * state, uint32_t offset, uint8_t size, const uint8_t * buf);

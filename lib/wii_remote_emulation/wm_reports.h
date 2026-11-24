@@ -8,26 +8,6 @@
 
 #define OFFSET24(offset32) ((offset32)<<8)
 
-struct report_data
-{
-  uint8_t io;
-  uint8_t type;
-  uint8_t buf[21];
-  uint8_t padding;
-} __attribute__((packed));
-
-struct report
-{
-  uint32_t len;  //data (packet) length
-  struct report_data data;
-};
-
-struct queued_report
-{
-  struct queued_report * next;
-  struct report rpt;
-};
-
 /* Output reports (from controller) */
 
 struct report_buttons
@@ -364,6 +344,11 @@ struct report_mem_write
 struct report * report_queue_push(struct wiimote_state * state);
 struct report * report_queue_peek(struct wiimote_state * state);
 void report_queue_pop(struct wiimote_state * state);
+// Queues a read of the emulated EEPROM, sent as one 16-byte response after another
+void report_queue_push_eeprom_read(struct wiimote_state * state, uint16_t offset, uint16_t size);
+void report_queue_clear(struct wiimote_state * state);
+// The emulated EEPROM's contents (wiimote.c)
+const uint8_t *wiimote_eeprom_data(void);
 
 void report_queue_push_ack(struct wiimote_state *state, uint8_t report, uint8_t result);
 void report_queue_push_status(struct wiimote_state * state);

@@ -29,6 +29,10 @@ static void get_data_wii(uint16_t cid, hid_report_type_t report_type, uint16_t r
 // Set once the stack reaches HCI_STATE_WORKING; enable_wiimote_discovery() is then
 // run from hci_packet_handler as soon as a command slot is free.
 static int set_iac_lap = 0;
+// The console link only allows sniff (no role switch), which kept stick input from lagging on it. Set on
+// that connection alone: as the stack's default it also applied to the controllers the host side connects
+// to, and those slowly stopped getting their reports through.
+static hci_con_handle_t console_link_policy_handle = HCI_CON_HANDLE_INVALID;
 
 // Address of a previously-bonded console to actively reconnect to once the stack is up.
 static bd_addr_t pending_reconnect_addr;
@@ -69,12 +73,13 @@ static void enable_wiimote_discovery(void)
     gap_discoverable_control(1);
 
     // It's weird but this fix the lag on sticks
-    gap_set_default_link_policy_settings(LM_LINK_POLICY_ENABLE_SNIFF_MODE);
 
     hid_device_init(1, sizeof(wiimote_report_descriptor), wiimote_report_descriptor);
     hid_device_register_report_data_callback(&get_data_wii);
 
-    if (has_pending_reconnect) {
+    // hid_cid is set while connected or already connecting: a second page would only hold the radio
+    // (up to the page timeout, starving the controllers we host) for nothing
+    if (has_pending_reconnect && hid_cid == 0) {
         has_pending_reconnect = false;
         memcpy(wii_baddr, pending_reconnect_addr, sizeof(wii_baddr));
         // Actively seek out the last-known host, like a real Wiimote does on power-on.
@@ -106,7 +111,7 @@ static void send_data(){
                                    (wiimote.sys.led_4 ? 0x08 : 0);
         input_report->rumble = wiimote.sys.rumble;
     }
-    len = generate_report(&wiimote, buf);
+    len = generate_report(&wiimote, buf, btstack_run_loop_get_time_ms());
     if (len > 0){
         hid_device_send_interrupt_message(hid_cid, &buf[0], len);
     }
@@ -252,6 +257,7 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t* p
                         }
                         hid_cid = hid_subevent_connection_opened_get_hid_cid(packet);
                         hid_subevent_connection_opened_get_bd_addr(packet, wii_baddr);
+                        console_link_policy_handle = hid_subevent_connection_opened_get_con_handle(packet);
                         printf("Connected to %s\n", bd_addr_to_str(wii_baddr));
                         if (connection_established_callback) {
                             connection_established_callback(wii_baddr);
@@ -283,6 +289,11 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t* p
             break;
         default:
             break;
+    }
+
+    if (console_link_policy_handle != HCI_CON_HANDLE_INVALID && hci_can_send_command_packet_now()) {
+        hci_send_cmd(&hci_write_link_policy_settings, console_link_policy_handle, LM_LINK_POLICY_ENABLE_SNIFF_MODE);
+        console_link_policy_handle = HCI_CON_HANDLE_INVALID;
     }
 
     // Write IAC LAP when ready
@@ -402,6 +413,14 @@ bool wiimote_emulator_active(void){
 }
 
 void wiimote_emulator(void *report){
+
+    // Both the stack coming up and the profile asking for the emulator call this, and a profile switch
+    // can ask again while it's running. Setting up again re-registered SDP records and paged the stored
+    // host each time, so once it's up just take the new report.
+    if (emulator_active) {
+        input_report = report;
+        return;
+    }
 
     printf("Init Wiimote Emulator\n");
     emulator_active = true;

@@ -15,7 +15,13 @@
 #define WIIMOTE_EMULATE_MOTIONPLUS 0
 #endif
 
-static uint8_t *eeprom_bin;
+// Hosts can write to it (Miis), so it's a RAM copy, built from eeprom.bin.h by wiimote_init
+static uint8_t eeprom_bin[TOTAL_SIZE_EEPROM];
+
+const uint8_t *wiimote_eeprom_data(void)
+{
+  return eeprom_bin;
+}
 int tries = 0;
 
 int process_report(struct wiimote_state *state, const uint8_t * buf, int len)
@@ -109,7 +115,7 @@ int process_report(struct wiimote_state *state, const uint8_t * buf, int len)
   return 0;
 }
 
-int generate_report(struct wiimote_state * state, uint8_t * buf)
+int generate_report(struct wiimote_state * state, uint8_t * buf, uint32_t now_ms)
 {
   int len;
 
@@ -136,7 +142,7 @@ int generate_report(struct wiimote_state * state, uint8_t * buf)
     }
   }
 
-  bool regular_report = (state->sys.queue == NULL);
+  bool regular_report = (state->sys.queue_count == 0);
 
   if (regular_report)
   {
@@ -229,6 +235,11 @@ int generate_report(struct wiimote_state * state, uint8_t * buf)
                    memcmp(state->sys.last_report, buf, len) != 0;
     if (!state->sys.reporting_continuous && !changed)
       return 0;
+    // Continuous mode repeats unchanged data at a real Wiimote's rate rather than every chance we get,
+    // which kept the radio busy enough to delay every other link. Changes still go out straight away.
+    if (!changed && now_ms - state->sys.last_report_ms < WIIMOTE_CONTINUOUS_INTERVAL_MS)
+      return 0;
+    state->sys.last_report_ms = now_ms;
     memcpy(state->sys.last_report, buf, len);
     state->sys.last_report_len = len;
     state->sys.report_changed = false;
@@ -239,10 +250,7 @@ int generate_report(struct wiimote_state * state, uint8_t * buf)
 
 void read_eeprom(struct wiimote_state * state, uint32_t offset, uint16_t size)
 {
-  uint8_t *file;
-  uint8_t *buffer;
   struct report * rpt;
-  int i;
 
   offset = offset & 0xFFFF;
 
@@ -254,39 +262,11 @@ void read_eeprom(struct wiimote_state * state, uint32_t offset, uint16_t size)
     return;
   }
 
-  //fseek
-  file = &eeprom_bin[0 + offset];
-
-  buffer = (uint8_t *)malloc(size);
-  if (!buffer)
+  if (size == 0)
   {
     return;
   }
-
-  //fread
-  memcpy(buffer, file, size);
-
-  //equivalent to ceil(size / 0x10)
-  int total_packets = (size + 0x10 - 1) / 0x10;
-
-  //allocate all the needed reports
-  for (i = 0; i < total_packets; i++)
-  {
-    report_queue_push(state);
-  }
-
-  //copy packet data
-  struct queued_report * queue_item = state->sys.queue;
-
-  for (i = 0; i < total_packets; i++)
-  {
-    rpt = &queue_item->rpt;
-    int packet_size = (i == total_packets - 1) ? (size - i * 0x10) : 0x10;
-    report_format_mem_resp(state, rpt, packet_size, 0x0, offset + i*0x10, &buffer[i*0x10], false);
-    queue_item = queue_item->next;
-  }
-
-  free(buffer);
+  report_queue_push_eeprom_read(state, (uint16_t)offset, size);
 }
 
 void write_eeprom(struct wiimote_state * state, uint32_t offset, uint8_t size, const uint8_t * buf)
@@ -377,20 +357,12 @@ void read_register(struct wiimote_state *state, uint32_t offset, uint16_t size)
   //equivalent to ceil(size / 0x10)
   int total_packets = (size + 0x10 - 1) / 0x10;
 
-  //allocate all the needed reports
+  // fill the reports this read pushes, not whatever was already at the front of the queue
   for (i = 0; i < total_packets; i++)
   {
-    report_queue_push(state);
-  }
-
-  struct queued_report * queue_item = state->sys.queue;
-
-  for (i = 0; i < total_packets; i++)
-  {
-    rpt = &queue_item->rpt;
+    rpt = report_queue_push(state);
     int packet_size = (i == total_packets - 1) ? (size - i * 0x10) : 0x10;
     report_format_mem_resp(state, rpt, packet_size, 0x0, offset + i*0x10, &buffer[i*0x10], encrypt);
-    queue_item = queue_item->next;
   }
 }
 
@@ -844,20 +816,14 @@ void init_extension(struct wiimote_state * state)
 
 void wiimote_destroy(struct wiimote_state *state)
 {
-  while (state->sys.queue != NULL)
-  {
-    struct queued_report * rpt = state->sys.queue;
-    state->sys.queue = rpt->next;
-    free(rpt);
-  }
+  report_queue_clear(state);
 }
 
 void wiimote_init(struct wiimote_state *state)
 {
 
   /*INIT EEPROM*/
-  //eeprom allocate memory
-  eeprom_bin = (uint8_t*)malloc(TOTAL_SIZE_EEPROM * sizeof(uint8_t));
+  memset(eeprom_bin, 0, sizeof(eeprom_bin));
   //Copy the first data
   memcpy(eeprom_bin, &eeprom_bin_1[0], sizeof(eeprom_bin_1));
   //Copy the last data

@@ -4,53 +4,81 @@
 #include "wii_extension_backend.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+
+static struct queued_report *queue_push_slot(struct wiimote_state * state)
+{
+  if (state->sys.queue_count >= REPORT_QUEUE_SIZE)
+  {
+    return NULL;
+  }
+  struct queued_report *item = &state->sys.queue[(state->sys.queue_head + state->sys.queue_count) % REPORT_QUEUE_SIZE];
+  state->sys.queue_count++;
+  memset(item, 0, sizeof(*item));
+  return item;
+}
 
 struct report * report_queue_push(struct wiimote_state * state)
 {
-  struct queued_report * rpt;
-
-  //allocate new report
-  rpt = (struct queued_report *)malloc(sizeof(struct queued_report));
-  memset(rpt, 0, sizeof(struct queued_report));
-
-  //append to the end of the queue
-  if (state->sys.queue_end != NULL)
+  struct queued_report *item = queue_push_slot(state);
+  if (!item)
   {
-    state->sys.queue_end->next = rpt;
+    // A host flooding requests faster than we answer them; it'll time out on this one.
+    // Callers always fill in what they get back, so hand them somewhere harmless.
+    static struct report discarded;
+    printf("Wiimote: report queue full, dropping a report\n");
+    return &discarded;
   }
-  else
-  {
-    state->sys.queue = rpt;
-  }
-  state->sys.queue_end = rpt;
+  return &item->rpt;
+}
 
-  return &(rpt->rpt);
+void report_queue_push_eeprom_read(struct wiimote_state * state, uint16_t offset, uint16_t size)
+{
+  struct queued_report *item = queue_push_slot(state);
+  if (!item)
+  {
+    printf("Wiimote: report queue full, dropping an EEPROM read\n");
+    return;
+  }
+  item->eeprom_offset = offset;
+  item->eeprom_remaining = size;
 }
 
 struct report * report_queue_peek(struct wiimote_state * state)
 {
-  if (state->sys.queue == NULL) return NULL; //empty queue
+  if (state->sys.queue_count == 0) return NULL; //empty queue
 
-  return &(state->sys.queue->rpt);
+  struct queued_report *item = &state->sys.queue[state->sys.queue_head];
+  if (item->eeprom_remaining)
+  {
+    int chunk = item->eeprom_remaining > 0x10 ? 0x10 : item->eeprom_remaining;
+    report_format_mem_resp(state, &item->rpt, chunk, 0x0, item->eeprom_offset,
+                           (uint8_t *)wiimote_eeprom_data() + item->eeprom_offset, false);
+  }
+  return &item->rpt;
 }
 
 void report_queue_pop(struct wiimote_state * state)
 {
-  struct queued_report * rpt;
+  if (state->sys.queue_count == 0) return; //nothing to remove
 
-  if (state->sys.queue == NULL) return; //nothing to remove
-
-  //remove from the queue
-  rpt = state->sys.queue;
-  if (state->sys.queue_end == rpt)
+  struct queued_report *item = &state->sys.queue[state->sys.queue_head];
+  if (item->eeprom_remaining > 0x10)
   {
-    state->sys.queue_end = NULL;
+    // more of this read to send
+    item->eeprom_offset += 0x10;
+    item->eeprom_remaining -= 0x10;
+    return;
   }
-  state->sys.queue = rpt->next;
+  state->sys.queue_head = (state->sys.queue_head + 1) % REPORT_QUEUE_SIZE;
+  state->sys.queue_count--;
+}
 
-  //free report mem
-  free(rpt);
+void report_queue_clear(struct wiimote_state * state)
+{
+  state->sys.queue_head = 0;
+  state->sys.queue_count = 0;
 }
 
 void report_queue_push_ack(struct wiimote_state *state, uint8_t report, uint8_t result)

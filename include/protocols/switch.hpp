@@ -58,6 +58,9 @@ static const uint8_t SWITCH_READ_IMU_USER_CALIBRATION[] = {SWITCH_PRO_CON_SUBCMD
 // every 50ms or the motors stop
 #define SWITCH_OUTPUT_MIN_INTERVAL_MS 30
 #define SWITCH_RUMBLE_REFRESH_MS 50
+// Over Bluetooth a Joy-Con that hears nothing from the host slows its reports down over ~20s until it
+// almost stops, so send it a neutral rumble packet when nothing else has gone out for this long
+#define SWITCH_BT_KEEPALIVE_MS 50
 
 enum class SwitchOutputKind : uint8_t
 {
@@ -77,6 +80,8 @@ struct SwitchOutput
     bool player_dirty = true;
     uint8_t counter = 0;
     uint32_t last_sent_ms = 0;
+    // nonzero: send a rumble packet at least this often even with nothing to change
+    uint16_t keepalive_ms = 0;
 
     void set_rumble(uint8_t left, uint8_t right)
     {

@@ -187,14 +187,21 @@ bool DeviceFactory::get_bluetooth_pairing_state(int32_t id, BluetoothPairingStat
 
 int32_t DeviceFactory::find_bluetooth_pairing_id_by_mac(const uint8_t mac[6])
 {
+    // Negative IDs are fixed slots (-2 is the Wiimote emulator's host), which sort first. The same
+    // address can end up in one of those and as a controller pairing, and the controller one is
+    // what everything looking up a controller wants.
+    int32_t special = -1;
     for (const auto &pair : s_bluetooth_pairing_states)
     {
         if (memcmp(pair.second.mac, mac, 6) == 0)
         {
-            return pair.first;
+            if (pair.first >= 0)
+                return pair.first;
+            if (special == -1)
+                special = pair.first;
         }
     }
-    return -1;
+    return special;
 }
 
 bool DeviceFactory::find_bluetooth_pairing_state_by_mac(const uint8_t mac[6], BluetoothPairingStateData &out)

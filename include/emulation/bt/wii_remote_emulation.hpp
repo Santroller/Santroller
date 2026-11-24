@@ -17,6 +17,9 @@ public:
     void initialize() override;
     void deinitialize() override;
     bool is_bluetooth() const override { return true; }
+    // Nothing here depends on USB, and restarting pages the stored console, which holds the radio long
+    // enough for the controllers we host to time out
+    bool restarts_with_usb() const override { return false; }
     void process(bool full_poll, bool send_events) override;
 
 private:

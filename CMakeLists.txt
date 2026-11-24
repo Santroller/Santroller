@@ -206,6 +206,8 @@ endif()
 add_compile_definitions(PICO_STACK_SIZE=0x1000 PICO_CORE1_STACK_SIZE=0)
 # Fault as soon as a stack overflows, instead of silently corrupting whatever is below it
 add_compile_definitions(PICO_USE_STACK_GUARDS=1)
+# Heap locking is done by src/malloc_lock.c instead, which also keeps out IRQs (BTstack allocates from one)
+add_compile_definitions(PICO_USE_MALLOC_MUTEX=0)
 
 find_package(Git)
 if(DEFINED SANTROLLER_GIT_REPO_VERSION)
@@ -267,6 +269,7 @@ add_executable(
   src/main.cpp
   src/bootsel_pairing.cpp
   src/instance.cpp
+  src/malloc_lock.c
   src/emulation/usb/usb_descriptors.cpp
   src/emulation/usb/xinput_device.cpp
   src/emulation/usb/xone_device.cpp

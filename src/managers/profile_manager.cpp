@@ -721,7 +721,7 @@ void ProfileManager::initialize_device_bluetooth()
 {
     for (const auto &instance : m_instances)
     {
-        if (instance && instance->is_bluetooth())
+        if (instance && instance->is_bluetooth() && instance->restarts_with_usb())
         {
             instance->initialize();
         }
@@ -732,7 +732,7 @@ void ProfileManager::deinitialize_device_bluetooth()
 {
     for (const auto &instance : m_instances)
     {
-        if (instance && instance->is_bluetooth())
+        if (instance && instance->is_bluetooth() && instance->restarts_with_usb())
         {
             instance->deinitialize();
         }

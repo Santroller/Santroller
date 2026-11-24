@@ -35,6 +35,7 @@ void BtSwitchHost::on_connected()
     m_imu_init_step = 0;
     m_player_led_unacked = false;
     m_player_led_retries = 0;
+    m_output.keepalive_ms = SWITCH_BT_KEEPALIVE_MS;
 }
 
 void BtSwitchHost::send_init_packets()
@@ -44,7 +45,7 @@ void BtSwitchHost::send_init_packets()
     BtStackLock lock;
     uint8_t res = switch_send_subcommand(m_cid, SWITCH_SET_FULL_REPORT_MODE, sizeof(SWITCH_SET_FULL_REPORT_MODE),
                                          m_output.counter);
-    printf("Switch set report mode: cid=0x%04x status=0x%02x\r\n", m_cid, res);
+    printf("Switch set report mode: cid=0x%04x status=0x%02x t=%lums\r\n", m_cid, res, (unsigned long)millis());
     if (res == ERROR_CODE_SUCCESS)
     {
         m_mode_sent_at = millis();
@@ -88,9 +89,21 @@ void BtSwitchHost::handle_report(const uint8_t *data, uint16_t len)
 void BtSwitchHost::update(bool full_poll, bool send_events)
 {
     BluetoothHostInterface::update(full_poll, send_events);
-    if (m_is_switch2 || !m_cid || !m_full_reports)
+    if (m_is_switch2 || !m_cid)
         return;
     uint32_t now = millis();
+    if (!m_full_reports)
+    {
+        // The mode command can get dropped, and a resend tied to incoming reports waits for a button
+        // press: in simple mode a Joy-Con only reports when something changes
+        if (m_init_packets_sent && now - m_mode_sent_at > SWITCH_MODE_RETRY_MS)
+        {
+            printf("Switch: no full reports yet, resending report mode\r\n");
+            m_mode_sent_at = now; // paces the next try even if this send fails
+            send_init_packets();
+        }
+        return;
+    }
     // Once in full report mode, turn the IMU on and read its calibration, one subcommand at a time
     static const struct
     {

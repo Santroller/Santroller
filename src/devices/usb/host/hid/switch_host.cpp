@@ -495,7 +495,8 @@ uint8_t SwitchOutput::build(uint32_t now, uint8_t *out, SwitchOutputKind &kind) 
     kind = SwitchOutputKind::None;
     if (now - last_sent_ms < SWITCH_OUTPUT_MIN_INTERVAL_MS)
         return 0;
-    bool rumble_due = rumble_dirty || ((strong || weak) && now - last_sent_ms >= SWITCH_RUMBLE_REFRESH_MS);
+    bool rumble_due = rumble_dirty || ((strong || weak) && now - last_sent_ms >= SWITCH_RUMBLE_REFRESH_MS) ||
+                      (keepalive_ms && now - last_sent_ms >= keepalive_ms);
     if (!player_dirty && !rumble_due)
         return 0;
     out[0] = player_dirty ? SWITCH_PRO_CON_SUBCMD_REPORT_ID : SWITCH_RUMBLE_REPORT_ID;

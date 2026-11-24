@@ -198,8 +198,10 @@ static bool s_inquiry_active = false;
 #define CLASSIC_PAGE_TIMEOUT 0x2000
 // Retry while another connection is being set up
 #define SWITCH_PAGE_RETRY_MS 4000
-// 5s, instead of the default 20s
-#define CLASSIC_LINK_SUPERVISION_TIMEOUT 0x1F40
+// 6s, instead of the default 20s. Has to stay above CLASSIC_PAGE_TIMEOUT: a page that fails holds the
+// radio that long, and connected controllers timed out under it (0x08)
+#define CLASSIC_LINK_SUPERVISION_TIMEOUT 0x2580
+static_assert(CLASSIC_LINK_SUPERVISION_TIMEOUT > CLASSIC_PAGE_TIMEOUT, "a failed page would drop connected controllers");
 static bd_addr_t s_switch_wake_addr = {};
 static bool s_switch_wake_pending = false;
 
@@ -493,6 +495,18 @@ static bool is_host_peer(const uint8_t *addr)
     return stored;
 }
 
+// While emulating a Wiimote its HID device owns the HID PSMs, so a controller reconnecting by itself
+// (Joy-Con, Wii Remote) would open its channels into the emulator, which takes it for the console.
+// Hand those to the HID host instead.
+static btstack_packet_handler_t hid_incoming_handler(const bd_addr_t address, uint16_t psm, btstack_packet_handler_t handler)
+{
+    if ((psm == PSM_HID_CONTROL || psm == PSM_HID_INTERRUPT) && wiimote_emulator_active() && is_host_peer(address))
+    {
+        return hid_host_get_routed_incoming_handler();
+    }
+    return handler;
+}
+
 // A DS3 never authenticates (a PS3 doesn't ask it to), so requiring LEVEL_2 on the HID
 // PSMs makes us demand a PIN it can't give and the connection dies. Let known DS3s in
 // without security; everything else keeps the configured level.
@@ -516,15 +530,12 @@ static gap_security_level_t hid_incoming_security_level(const bd_addr_t address,
 // BTstack sends the accept with the current policy straight after this filter runs, so set it per link.
 static int classic_connection_filter(bd_addr_t addr, hci_link_type_t link_type)
 {
-    // A Switch controller reconnecting by itself also tends to hang up just after opening HID control,
-    // and a Switch console is master too, so take master for those as well.
     bool acl = link_type == HCI_LINK_TYPE_ACL;
     bool wii = acl && is_wii_device(addr);
-    bool switch_pad = acl && !wii && is_stored_switch_controller(addr);
-    hci_set_master_slave_policy((wii || switch_pad) ? HCI_ROLE_MASTER : HCI_ROLE_SLAVE);
-    if (wii || switch_pad)
+    hci_set_master_slave_policy(wii ? HCI_ROLE_MASTER : HCI_ROLE_SLAVE);
+    if (wii)
     {
-        printf("Accepting %s device %s as master\r\n", wii ? "Wii" : "Switch", bd_addr_to_str(addr));
+        printf("Accepting Wii device %s as master\r\n", bd_addr_to_str(addr));
     }
     return 1;
 }
@@ -543,6 +554,7 @@ static void hid_host_setup(void)
     hid_host_register_packet_handler(packet_handler);
     l2cap_set_classic_incoming_security_level_override(&hid_incoming_security_level);
     wiimote_emulator_set_host_peer_filter(&is_host_peer);
+    l2cap_set_classic_incoming_handler_override(&hid_incoming_handler);
 
     gap_set_default_link_policy_settings(LM_LINK_POLICY_ENABLE_SNIFF_MODE |
                                          LM_LINK_POLICY_ENABLE_ROLE_SWITCH);
@@ -978,6 +990,16 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             break;
         }
 
+        case HCI_EVENT_MODE_CHANGE: {
+            // 0 active, 2 sniff: in sniff a link only gets a slot every interval, which shows up as input lag
+            hci_con_handle_t handle = hci_event_mode_change_get_handle(packet);
+            hci_connection_t *conn = hci_connection_for_handle(handle);
+            printf("Classic BT: mode change for %s, status 0x%02x, mode %u, interval %u slots\r\n",
+                   conn ? bd_addr_to_str(conn->address) : "?", hci_event_mode_change_get_status(packet),
+                   hci_event_mode_change_get_mode(packet), hci_event_mode_change_get_interval(packet));
+            break;
+        }
+
         case HCI_EVENT_ROLE_CHANGE:
             hci_event_role_change_get_bd_addr(packet, event_addr);
             printf("Classic BT: role change for %s, status 0x%02x, now %s\r\n", bd_addr_to_str(event_addr),
@@ -1145,7 +1167,13 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     btc_schedule_reconnect(SWITCH_PAGE_RETRY_MS);
                     return;
                 }
-                printf("HID Host connected, cid=0x%04x\r\n", cid);
+                {
+                    bd_addr_t opened_addr;
+                    hid_subevent_connection_opened_get_bd_addr(packet, opened_addr);
+                    hci_connection_t *opened = hci_connection_for_bd_addr_and_type(opened_addr, BD_ADDR_TYPE_ACL);
+                    printf("HID Host connected, cid=0x%04x, we are %s\r\n", cid,
+                           opened && opened->role == HCI_ROLE_MASTER ? "master" : "slave");
+                }
 
                 bd_addr_t connected_addr = {};
                 hid_subevent_connection_opened_get_bd_addr(packet, connected_addr);
@@ -1307,6 +1335,44 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     {
                         report++;
                         report_len--;
+                    }
+                    // TEMP: everything a Switch controller sends before it's in full report mode
+                    {
+                        static uint16_t logged;
+                        if (report_len > 0 && report[0] != 0x30 && report[0] != 0x31 && report[0] != 0x33 && logged < 80)
+                        {
+                            logged++;
+                            printf("RX cid=0x%04x t=%lums id=0x%02x len=%u b1=%02x b2=%02x\r\n", cid,
+                                   (unsigned long)(time_us_32() / 1000), report[0], report_len,
+                                   report_len > 1 ? report[1] : 0, report_len > 2 ? report[2] : 0);
+                        }
+                    }
+                    // TEMP: Joy-Con arrival vs its own timer byte, to spot buffering (bursts) or drops
+                    if (report_len > 2 && report[0] == 0x30)
+                    {
+                        static uint32_t last_us, window_us, count, bursts, max_gap, skipped;
+                        static uint8_t last_timer;
+                        uint32_t now_us = time_us_32();
+                        uint32_t gap = now_us - last_us;
+                        if (count)
+                        {
+                            if (gap < 2000)
+                                bursts++;
+                            if (gap > max_gap)
+                                max_gap = gap;
+                            skipped += (uint8_t)(report[1] - last_timer) - 1;
+                        }
+                        else
+                            window_us = now_us;
+                        last_us = now_us;
+                        last_timer = report[1];
+                        count++;
+                        if (now_us - window_us > 5000000u)
+                        {
+                            printf("JoyCon: %lu reports/5s, %lu arrived <2ms after the last, max gap %luus, %lu timer steps skipped\r\n",
+                                   (unsigned long)count, (unsigned long)bursts, (unsigned long)max_gap, (unsigned long)skipped);
+                            count = bursts = max_gap = skipped = 0;
+                        }
                     }
                     // The host is only created later from btc_tick(), and controllers like the
                     // DS5 start streaming as soon as the channel opens, so it can still be null.

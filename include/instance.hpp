@@ -19,6 +19,8 @@ public:
     virtual void initialize() = 0;
     virtual void deinitialize() {}
     virtual bool is_bluetooth() const { return false; }
+    // Bluetooth instances are restarted along with the USB device stack, unless this says otherwise
+    virtual bool restarts_with_usb() const { return true; }
     // What a MIDI instrument played on its last process, for MIDI out jacks to send as well
     virtual const MidiState *midi_output_state() const { return nullptr; }
     virtual void process(bool full_poll, bool send_events) = 0;

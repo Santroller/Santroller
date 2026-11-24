@@ -9,8 +9,8 @@
 //   IR basic: per pair X1<7:0> Y1<7:0> [Y1<9:8> X1<9:8> Y2<9:8> X2<9:8>] X2<7:0> Y2<7:0>
 //   IR extended: X<7:0> Y<7:0> [Y<9:8> X<9:8> S<3:0>]
 //   IR full: extended, then X min, Y min, X max, Y max (7 bits each), 0, intensity
-// The rest of the Wii Remote emulation (wiimote.c, wiimote_btstack.c) is tied to BTstack and isn't
-// tested here.
+// EEPROM reads through wiimote.c are in wiimote_eeprom_test.cpp. wiimote_btstack.c is tied to BTstack
+// and isn't tested here.
 #include <gtest/gtest.h>
 #include <string.h>
 #include <memory>

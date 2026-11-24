@@ -254,8 +254,8 @@ void read_eeprom(struct wiimote_state * state, uint32_t offset, uint16_t size)
 
   offset = offset & 0xFFFF;
 
-  //addresses greater than 0x16FF cannot be read or written
-  if (offset + size > 0x16FF)
+  //addresses greater than 0x16FF cannot be read or written, so the last byte is 0x16FF
+  if (offset + size > TOTAL_SIZE_EEPROM)
   {
     rpt = report_queue_push(state);
     report_format_mem_resp(state, rpt, 0x10, 0x8, offset, NULL, false);
@@ -276,8 +276,8 @@ void write_eeprom(struct wiimote_state * state, uint32_t offset, uint8_t size, c
 
   offset = offset & 0xFFFF;
 
-  //addresses greater than 0x16FF cannot be read or written
-  if (offset + size > 0x16FF)
+  //addresses greater than 0x16FF cannot be read or written, so the last byte is 0x16FF
+  if (offset + size > TOTAL_SIZE_EEPROM)
   {
     rpt = report_queue_push(state);
     report_format_mem_resp(state, rpt, 0x10, 0x8, offset, NULL, false);

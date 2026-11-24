@@ -7,6 +7,8 @@
 #include "devices/vtechexpander.hpp"
 #include "devices/mpr121.hpp"
 #include "devices/display.hpp"
+#include "devices/gpio_led_group.hpp"
+#include "leds/display_element_data.hpp"
 #include "input/input.hpp"
 #include <memory>
 #include <vector>
@@ -63,9 +65,36 @@ public:
     uint8_t led_count();
     LedId led_id(uint8_t i);
 
+    // Driving one pin, shared with the LEDs of a GPIO LED group. val is a PWM level for analog LEDs,
+    // otherwise any non zero val lights it.
+    static void setup_pin(const proto_GpioLedDevice &led);
+    static void write_pin(const proto_GpioLedDevice &led, uint16_t val);
+    static void write_pin_raw(const proto_GpioLedDevice &led, uint8_t r, uint8_t g, uint8_t b);
+    // Every GPIO LED, grouped or not, shares the Pico's pins
+    static LedId pin_id(int32_t pin);
+
 protected:
-    bool write_cyw43(bool on);
     proto_GpioLedDevice m_device;
+};
+
+// Some of the LEDs of a GpioLedGroupDevice, so player LED styles and patterns can run across them
+class GpioGroupLedDevice : public LedMappingDevice
+{
+public:
+    GpioGroupLedDevice(proto_GpioGroupLedDevice device, std::shared_ptr<GpioLedGroupDevice> group);
+    void off();
+    void write_val(uint16_t val);
+    void write_val_raw(uint8_t index, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
+    void write_val_at(uint8_t index, uint16_t val) override;
+    void setup();
+    bool supports_brightness();
+    uint8_t led_count();
+    LedId led_id(uint8_t i);
+
+protected:
+    // The pins of the LEDs this drives, in the order listed (any past the end of the group are left out)
+    std::vector<proto_GpioLedDevice> m_pins;
+    std::shared_ptr<GpioLedGroupDevice> m_group;
 };
 
 class VTechGuitarIoExpanderLedDevice : public LedMappingDevice
@@ -152,14 +181,15 @@ protected:
 };
 
 // One element on a display: text and images show while the value is non zero, bars are filled by it. Each
-// one is its own LED, so they never cover each other up.
+// one is its own LED, so they never cover each other up. With frames, it animates while it's shown.
 class DisplayLedDevice : public LedMappingDevice, public DisplayElement
 {
 public:
     // stick_x and stick_y move a joystick's dot, they're null for the other elements
-    DisplayLedDevice(proto_DisplayLedDevice device, std::vector<uint8_t> image, std::unique_ptr<Input> stick_x,
+    DisplayLedDevice(proto_DisplayLedDevice device, DisplayElementData data, std::unique_ptr<Input> stick_x,
                      std::unique_ptr<Input> stick_y, std::shared_ptr<DisplayDevice> display)
-        : LedMappingDevice(), m_device(device), m_image(std::move(image)), m_stick_x(std::move(stick_x)),
+        : LedMappingDevice(), m_device(device), m_image(std::move(data.image)), m_frames(std::move(data.frames)),
+          m_stick_x(std::move(stick_x)),
           m_stick_y(std::move(stick_y)), m_display(std::move(display))
     {
         m_display->add_element(this);
@@ -179,6 +209,11 @@ protected:
     void set_state(bool visible, uint16_t value);
     proto_DisplayLedDevice m_device;
     std::vector<uint8_t> m_image;
+    // The animation's frames after the first, which is the element itself
+    std::vector<DisplayFrameData> m_frames;
+    // Which frame is showing (0 being the element itself), and when it started
+    size_t m_frame = 0;
+    uint32_t m_frame_start = 0;
     std::unique_ptr<Input> m_stick_x;
     std::unique_ptr<Input> m_stick_y;
     std::shared_ptr<DisplayDevice> m_display;

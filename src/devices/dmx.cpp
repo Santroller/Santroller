@@ -8,10 +8,12 @@ DMXDevice::DMXDevice(proto_DMXDevice device, uint16_t id) : LedDevice(id, device
 }
 void DMXDevice::begin()
 {
-    led_state = new uint32_t[m_device.channelCount];
-    prev_led_state = new uint32_t[m_device.channelCount];
-    memset(led_state, 0, sizeof(uint32_t) * m_device.channelCount);
-    memset(prev_led_state, 0, sizeof(uint32_t) * m_device.channelCount);
+    // One byte per channel after the start code in byte 0, which stays 0 for ordinary DMX data
+    size_t words = (channel_count() + 1 + 3) / 4;
+    led_state = new uint32_t[words];
+    prev_led_state = new uint32_t[words];
+    memset(led_state, 0, sizeof(uint32_t) * words);
+    memset(prev_led_state, 0, sizeof(uint32_t) * words);
     m_started = false;
     if (m_device.pin >= 0 && m_device.pin < (int)NUM_BANK0_GPIOS)
     {
@@ -40,7 +42,7 @@ void DMXDevice::update(bool full_poll, bool send_events)
     {
         return;
     }
-    m_dmx.write((uint8_t *)led_state, m_device.channelCount);
+    m_dmx.write((uint8_t *)led_state, channel_count() + 1);
     // m_dmx.putLeds((uint8_t *)led_state);
 }
 

@@ -665,14 +665,36 @@ static bool load_display_image(pb_istream_t *stream, const pb_field_t *field,
     image->resize(stream->bytes_left);
     return pb_read(stream, image->data(), image->size());
 }
+// One frame of a display LED's animation, with its own image
+static bool load_display_frame(pb_istream_t *stream, const pb_field_t *field,
+                               void **arg)
+{
+    auto *data = static_cast<DisplayElementData *>(*arg);
+    DisplayFrameData frame;
+    frame.frame = proto_DisplayFrame_init_zero;
+    frame.frame.image.funcs.decode = load_display_image;
+    frame.frame.image.arg = &frame.image;
+    if (!pb_decode_ex(stream, proto_DisplayFrame_fields, &frame.frame, PB_DECODE_NOINIT))
+    {
+        return false;
+    }
+    if (data->frames.size() < DisplayElementData::MAX_FRAMES)
+    {
+        data->frames.push_back(std::move(frame));
+    }
+    return true;
+}
 static bool load_led_device_dev(pb_istream_t *stream, const pb_field_t *field,
                                 void **arg)
 {
     if (field->tag == proto_LedDevice_display_tag)
     {
+        auto *data = static_cast<DisplayElementData *>(*arg);
         proto_DisplayLedDevice *msg = (proto_DisplayLedDevice *)field->pData;
         msg->image.funcs.decode = load_display_image;
-        msg->image.arg = *arg;
+        msg->image.arg = &data->image;
+        msg->frames.funcs.decode = load_display_frame;
+        msg->frames.arg = data;
     }
     return true;
 }
@@ -689,9 +711,9 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_led.mapping.led.inputMapping.input.cb_input.funcs.decode =
         load_input_dev;
     proto_led.mapping.led.inputMapping.input.cb_input.arg = *arg;
-    std::vector<uint8_t> image;
+    DisplayElementData display;
     proto_led.device.cb_device.funcs.decode = load_led_device_dev;
-    proto_led.device.cb_device.arg = &image;
+    proto_led.device.cb_device.arg = &display;
     if (!pb_decode_ex(stream, proto_Led_fields, &proto_led, PB_DECODE_NOINIT))
     {
         printf("couldn't decode LED: %s\r\n", PB_GET_ERROR(stream));
@@ -699,7 +721,7 @@ bool load_leds(pb_istream_t *stream, const pb_field_t *field, void **arg)
     }
 
     auto device = LedFactory::create_led_device(proto_led.device, profile,
-                                                std::move(image));
+                                                std::move(display));
     if (!device)
     {
         // Its device is missing, which only loses this LED

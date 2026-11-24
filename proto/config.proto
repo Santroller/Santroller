@@ -154,6 +154,21 @@ message STP16CPCLedDevice {
   required int32 deviceId = 1;
   repeated int32 activeLed = 2;
 }
+// LEDs from a group of GPIO LEDs, by their position in its pins
+message GpioGroupLedDevice {
+  required int32 deviceId = 1;
+  repeated uint32 activeLed = 2;
+}
+// One frame of a display element's animation. Anything left unset is the element's own.
+message DisplayFrame {
+  // Text elements only
+  optional string text = 1;
+  // Image elements only: the same size as the element's own image, packed the same way
+  optional bytes image = 2;
+  // Any element: where it's drawn in this frame
+  optional int32 x = 3;
+  optional int32 y = 4;
+}
 // One element drawn on a display, while its mapping has it on. Elements are drawn in the order they
 // are listed in, over the top of the ones before them.
 message DisplayLedDevice {
@@ -179,6 +194,10 @@ message DisplayLedDevice {
   optional Input stickY = 13;
   // Rectangles and circles only: drawn as an outline while the LED is off instead of not at all
   optional bool outlineWhenOff = 14;
+  // An animation: the element as set above is the first frame, then these follow, each shown for frameMs
+  // before looping back. It starts from the first frame whenever the element is shown.
+  repeated DisplayFrame frames = 15;
+  optional uint32 frameMs = 16;
 }
 message LedDevice {
   oneof device {
@@ -189,6 +208,7 @@ message LedDevice {
     DMXLedDevice dmx = 8;
     MPR121LedDevice mpr121 = 9;
     DisplayLedDevice display = 10;
+    GpioGroupLedDevice gpioGroup = 11;
   }
 }
 message LedMapping {

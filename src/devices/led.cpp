@@ -2,7 +2,7 @@
 #include "events.pb.h"
 #include "main.hpp"
 #include "config/config.hpp"
-void LedDevice::set_led(uint8_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
+void LedDevice::set_led(uint16_t i, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
     if (m_supportsBrightness && m_supportsColour)
     {

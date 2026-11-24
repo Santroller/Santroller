@@ -190,7 +190,8 @@ public:
     LedDevice(uint16_t id, uint16_t led_count, bool supportsColour, bool supports_brightness);
     virtual ~LedDevice() {}
     virtual void update(bool full_poll, bool send_events) = 0;
-    void set_led(uint8_t idx, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
+    // idx is wider than a byte for DMX, which has up to 512 channels
+    void set_led(uint16_t idx, uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
     bool supportsColour() { return m_supportsColour; }
     bool supports_brightness() { return m_supportsBrightness; }
 

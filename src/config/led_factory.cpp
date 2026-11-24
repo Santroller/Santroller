@@ -10,7 +10,7 @@
 std::unique_ptr<LedMappingDevice> LedFactory::create_led_device(
     const proto_LedDevice &proto_led_device,
     std::shared_ptr<Profile> profile,
-    std::vector<uint8_t> image)
+    DisplayElementData display_data)
 {
     switch (proto_led_device.which_device)
     {
@@ -25,6 +25,15 @@ std::unique_ptr<LedMappingDevice> LedFactory::create_led_device(
 
     case proto_LedDevice_gpio_tag:
         return std::make_unique<GpioLedDevice>(proto_led_device.device.gpio);
+
+    case proto_LedDevice_gpioGroup_tag:
+        if (profile->devices.find(proto_led_device.device.gpioGroup.deviceId) == profile->devices.end())
+        {
+            return nullptr;
+        }
+        return std::make_unique<GpioGroupLedDevice>(
+            proto_led_device.device.gpioGroup,
+            std::static_pointer_cast<GpioLedGroupDevice>(profile->devices[proto_led_device.device.gpioGroup.deviceId]));
 
     case proto_LedDevice_dmx_tag:
         if (profile->devices.find(proto_led_device.device.dmx.deviceId) == profile->devices.end())
@@ -73,7 +82,7 @@ std::unique_ptr<LedMappingDevice> LedFactory::create_led_device(
             bool stick = display.type == DisplayElementStick;
             return std::make_unique<DisplayLedDevice>(
                 display,
-                std::move(image),
+                std::move(display_data),
                 stick && display.has_stickX ? InputFactory::create_input(display.stickX, profile) : nullptr,
                 stick && display.has_stickY ? InputFactory::create_input(display.stickY, profile) : nullptr,
                 std::static_pointer_cast<DisplayDevice>(profile->devices[display.deviceId]));

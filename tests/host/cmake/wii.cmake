@@ -1,7 +1,8 @@
 # Wii extensions, both ways round: reading an extension plugged into us (lib/wii_extensions),
 # pretending to be one for a Wii Remote (lib/wii_extension_emulation and the report building in
 # src/emulation/wii_extension_input.cpp), the extension encryption (lib/wm_crypto) and the pure
-# report packing of the Bluetooth Wii Remote emulation (lib/wii_remote_emulation/wm_reports.c).
+# report packing and output report handling of the Bluetooth Wii Remote emulation
+# (lib/wii_remote_emulation/wm_reports.c and wiimote.c).
 # The I2C, alarm and GPIO calls go to the fakes in support/wii, which let a test play the other
 # end of the bus. Building the emulated reports needs the real mappings, so this reuses the
 # mappings area's fakes for the Pico clock, TinyUSB and the profile / MIDI device bits.
@@ -29,6 +30,7 @@ add_executable(wii_tests
   ${SANTROLLER_ROOT}/lib/wii_extensions/wii_extension_decoder.cpp
   ${SANTROLLER_ROOT}/lib/wii_extensions/wii_extension.cpp
   ${SANTROLLER_ROOT}/lib/wii_remote_emulation/wm_reports.c
+  ${SANTROLLER_ROOT}/lib/wii_remote_emulation/wiimote.c
   ${SANTROLLER_ROOT}/src/emulation/wii_extension_input.cpp
   ${WII_MAPPING_SOURCES}
   ${CMAKE_CURRENT_SOURCE_DIR}/support/mappings/fakes.cpp

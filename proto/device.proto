@@ -241,6 +241,15 @@ message STP16CPCDevice {
   required int32 le = 3;
   required int32 count = 4;
 }
+// Plain LEDs on the Pico's own pins, grouped so one LED mapping can drive any of them together, eg as player LEDs
+// or a chase. Each LED mapping picks which of the group's LEDs (by position in pins) it drives.
+message GpioLedGroupDevice {
+  repeated int32 pins = 1;
+  // Dimmable through PWM, instead of only on or off
+  required bool analog = 2;
+  // Lit while the pin is low
+  optional bool inverted = 3;
+}
 message MatrixDevice {
   // Pin masks for GPIO 0-31, with GPIO 32-63 in the *High fields
   required uint32 outPins = 1;
@@ -370,6 +379,7 @@ message Device {
     AdcBatteryDevice adcBattery = 42;
     SNESEmulationDevice snesEmulation = 43;
     DisplayDevice display = 44;
+    GpioLedGroupDevice gpioLedGroup = 45;
   }
 }
 message InfiniumFaderDevice {

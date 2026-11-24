@@ -4,6 +4,7 @@
 #include <vector>
 #include "input.pb.h"
 #include "config.pb.h"
+#include "leds/display_element_data.hpp"
 
 class LedMappingDevice;
 class LedMapping;
@@ -13,11 +14,12 @@ class Input;
 class LedFactory
 {
 public:
-    // Create LED device from protobuf. image is a display LED's image, which is decoded separately
+    // Create LED device from protobuf. display is a display LED's image and animation, which are decoded
+    // separately
     static std::unique_ptr<LedMappingDevice> create_led_device(
         const proto_LedDevice &proto_led_device,
         std::shared_ptr<Profile> profile,
-        std::vector<uint8_t> image = {});
+        DisplayElementData display = {});
 
     // Create LED mapping from protobuf
     static std::unique_ptr<LedMapping> create_led_mapping(

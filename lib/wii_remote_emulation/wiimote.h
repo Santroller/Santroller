@@ -24,7 +24,7 @@ struct report
 
 // Reports waiting to go out (acks, status, memory reads), in a fixed ring: they're queued from BTstack,
 // which runs in an IRQ, so they can't be malloc'd. A memory read of up to 16 bytes per response takes
-// a slot per response, except EEPROM reads (up to 0x16FF bytes), which stream from one slot.
+// a slot per response, except EEPROM reads (up to 0x1700 bytes), which stream from one slot.
 #define REPORT_QUEUE_SIZE 32
 
 struct queued_report

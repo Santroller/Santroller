@@ -5,6 +5,7 @@ proto.Config.manufacturerName max_size:32
 proto.Profile.opts type:FT_CALLBACK
 proto.RGBLedDevice.activeLed max_count:255 int_size:IS_8
 proto.STP16CPCLedDevice.activeLed max_count:255 int_size:IS_8
+proto.GpioGroupLedDevice.activeLed max_count:32 int_size:IS_8
 proto.ProfileAssignmentInfo.* submsg_callback:true
 proto.BluetoothPairingState.name max_size:32
 proto.BluetoothPairingState.macAddress max_size:6 fixed_length:1
@@ -12,4 +13,7 @@ proto.BluetoothPairingState.linkKey max_size:16 fixed_length:1
 proto.BluetoothTlvEntry.value max_size:70
 proto.DisplayLedDevice.text max_size:33
 proto.DisplayLedDevice.image type:FT_CALLBACK
+proto.DisplayLedDevice.frames type:FT_CALLBACK
+proto.DisplayFrame.text max_size:33
+proto.DisplayFrame.image type:FT_CALLBACK
 proto.LedDevice.* submsg_callback:true

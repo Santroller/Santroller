@@ -330,6 +330,13 @@ void PS3GamepadDevice::initialize()
         report->pickup = 0x7F;
         break;
     }
+    case LiveGuitar: {
+        // Tilt is in the accelerometer field, but GHL guitars only use 0-0xFF, so it rests at 0x80 rather than
+        // the accelerometer centre
+        PS3GHLGuitar_Data_t *report = (PS3GHLGuitar_Data_t *)m_initial_report;
+        report->tilt = 0x80;
+        break;
+    }
     case PowerGigDrum:
     case PowerGigGuitar: {
         // powergig has the bytes swapped, much like the ds3

@@ -250,6 +250,12 @@ void Instance::update_feedback(bool force)
 
 void Instance::update_capabilities()
 {
+    capabilities = capabilities_for(profiles, subtype, invert_y_axis_hid);
+}
+
+uint8_t Instance::capabilities_for(const std::vector<std::shared_ptr<Profile>> &profiles, SubType subtype,
+                                   bool invert_y_axis_hid)
+{
     uint8_t caps = 0;
     for (const auto &profile : profiles)
     {
@@ -339,5 +345,5 @@ void Instance::update_capabilities()
     {
         caps |= CapabilityXInputYAxis;
     }
-    capabilities = caps;
+    return caps;
 }

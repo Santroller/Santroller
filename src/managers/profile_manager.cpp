@@ -441,16 +441,24 @@ void ProfileManager::update_bt_config_instance(bool full_poll, bool send_events)
     m_bt_config_instance->process(full_poll, send_events);
 }
 
-std::shared_ptr<Instance> ProfileManager::reuse_bt_gamepad_instance(SubType subtype)
+std::shared_ptr<Instance> ProfileManager::reuse_bt_gamepad_instance(const std::shared_ptr<Profile> &profile)
 {
     // When it isn't reused it's destroyed on the way out, before the caller starts a new one
     auto previous = std::move(m_previous_bt_gamepad_instance);
-    if (previous && previous->subtype == subtype)
+    if (!previous || previous->subtype != profile->subtype)
     {
-        printf("bt reuse sub=%d\r\n", subtype);
-        return previous;
+        return nullptr;
     }
-    return nullptr;
+    // Hosts only read the capabilities (e.g. the "invert Y axis" HID option) when they connect, so a change needs
+    // a fresh instance too, which drops the host so it reconnects and reads them again
+    uint8_t capabilities = Instance::capabilities_for({profile}, profile->subtype, profile->invert_y_axis_hid);
+    if (capabilities != previous->capabilities)
+    {
+        printf("bt not reused, capabilities changed 0x%02x -> 0x%02x\r\n", previous->capabilities, capabilities);
+        return nullptr;
+    }
+    printf("bt reuse sub=%d\r\n", profile->subtype);
+    return previous;
 }
 
 std::shared_ptr<Instance> ProfileManager::reuse_wiimote_instance()

@@ -75,7 +75,7 @@ std::shared_ptr<Instance> InstanceFactory::create_instance(
         }
         profile_mgr.stop_bt_config_instance();
         profile_mgr.release_previous_wiimote_instance();
-        instance = profile_mgr.reuse_bt_gamepad_instance(profile->subtype);
+        instance = profile_mgr.reuse_bt_gamepad_instance(profile);
         if (!instance)
         {
             instance = std::make_shared<BTGamepadDevice>();

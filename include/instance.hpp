@@ -77,4 +77,7 @@ public:
         (void)right;
     }
     void update_capabilities();
+    // What update_capabilities() works out, for an instance with these profiles
+    static uint8_t capabilities_for(const std::vector<std::shared_ptr<Profile>> &profiles, SubType subtype,
+                                    bool invert_y_axis_hid);
 };

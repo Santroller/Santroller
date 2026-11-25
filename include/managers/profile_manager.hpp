@@ -107,7 +107,7 @@ public:
     // The bluetooth gamepad from before the reload, if the new config wants one with the same GATT database and
     // report map (ie the same subtype). Reusing it keeps a connected host (or the configurator) connected through
     // the reload. Otherwise it's dropped, so it disconnects before a new one takes the stack.
-    std::shared_ptr<Instance> reuse_bt_gamepad_instance(SubType subtype);
+    std::shared_ptr<Instance> reuse_bt_gamepad_instance(const std::shared_ptr<Profile> &profile);
     void set_bt_gamepad_instance(std::shared_ptr<Instance> instance) { m_bt_gamepad_instance = instance; }
     // The emulated wii remote from before the reload. Unlike the gamepad it's reused whatever the subtype, as
     // that only changes the extension plugged into it.

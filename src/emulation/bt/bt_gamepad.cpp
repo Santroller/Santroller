@@ -634,17 +634,22 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             peripheral_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
         }
         break;
-    case HCI_EVENT_DISCONNECTION_COMPLETE:
-        if (hci_event_disconnection_complete_get_connection_handle(packet) == peripheral_handle)
+    case HCI_EVENT_DISCONNECTION_COMPLETE: {
+        hci_con_handle_t handle = hci_event_disconnection_complete_get_connection_handle(packet);
+        // 0x05 auth failure, 0x08 supervision timeout, 0x13 remote closed, 0x16 we closed, 0x3d MIC failure (bad keys)
+        printf("BT: disconnected handle 0x%04x reason 0x%02x\r\n", handle, hci_event_disconnection_complete_get_reason(packet));
+        // Every connection's disconnects come through here, including classic ones (e.g. a host reconnecting to a
+        // bonded Wii Remote at the public address), which mustn't drop the host we're sending reports to
+        if (handle != peripheral_handle && handle != con_handle)
         {
-            peripheral_handle = HCI_CON_HANDLE_INVALID;
+            break;
         }
+        peripheral_handle = HCI_CON_HANDLE_INVALID;
         con_handle = HCI_CON_HANDLE_INVALID;
         s_capabilities_pending = false;
         bt_config_service_disconnected();
-        // 0x05 auth failure, 0x08 supervision timeout, 0x13 remote closed, 0x16 we closed, 0x3d MIC failure (bad keys)
-        printf("BT: disconnected handle 0x%04x reason 0x%02x\r\n", hci_event_disconnection_complete_get_connection_handle(packet), hci_event_disconnection_complete_get_reason(packet));
         break;
+    }
     case HCI_EVENT_ENCRYPTION_CHANGE:
         printf("BT: encryption change handle 0x%04x status 0x%02x enabled %u\r\n", hci_event_encryption_change_get_connection_handle(packet), hci_event_encryption_change_get_status(packet), hci_event_encryption_change_get_encryption_enabled(packet));
         break;

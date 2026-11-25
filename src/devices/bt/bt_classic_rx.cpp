@@ -77,6 +77,8 @@ struct BtClassicSlot
 {
     bool in_use = false;
     uint16_t cid = 0;
+    // The ACL link the HID connection runs over, so the slot is freed when it drops even if HID never reports closing
+    hci_con_handle_t con_handle = HCI_CON_HANDLE_INVALID;
     std::shared_ptr<BluetoothHostInterface> host;
     bool pending_destroy = false;
     // Host still has to be created by btc_tick(). Kept apart from `action` so later
@@ -110,6 +112,7 @@ static BtClassicSlot *bt_slot_alloc(uint16_t cid)
         {
             s.in_use = true;
             s.cid = cid;
+            s.con_handle = HCI_CON_HANDLE_INVALID;
             s.pending_destroy = false;
             s.action = PendingAction::None;
             s.needs_host = false;
@@ -174,6 +177,53 @@ static PendingConnection *pending_connection_alloc(uint16_t cid)
     return nullptr;
 }
 // static std::unordered_map<uint16_t, PendingConnection> pending_connections;
+
+// Class of device from recent incoming connection requests. Inquiry only picks up peripherals, but anything can
+// connect to us, e.g. a PC that still has us bonded as a Wii Remote opening HID as a host, which mustn't be taken
+// for a controller (and saved as one).
+struct IncomingCod
+{
+    bd_addr_t addr = {};
+    uint32_t cod = 0;
+    bool valid = false;
+};
+static IncomingCod s_incoming_cods[MAX_BT_CLASSIC_CONNECTIONS];
+static uint8_t s_incoming_cod_next = 0;
+
+static void remember_incoming_cod(const bd_addr_t addr, uint32_t cod)
+{
+    IncomingCod *entry = nullptr;
+    for (auto &e : s_incoming_cods)
+        if (e.valid && bd_addr_cmp(e.addr, addr) == 0)
+            entry = &e;
+    if (!entry)
+    {
+        entry = &s_incoming_cods[s_incoming_cod_next];
+        s_incoming_cod_next = (s_incoming_cod_next + 1) % MAX_BT_CLASSIC_CONNECTIONS;
+    }
+    memcpy(entry->addr, addr, sizeof(bd_addr_t));
+    entry->cod = cod;
+    entry->valid = true;
+}
+
+static bool incoming_cod_for(const bd_addr_t addr, uint32_t &cod)
+{
+    for (const auto &e : s_incoming_cods)
+    {
+        if (e.valid && bd_addr_cmp(e.addr, addr) == 0)
+        {
+            cod = e.cod;
+            return true;
+        }
+    }
+    return false;
+}
+
+// The same check inquiry results go through: major device class 0x0500 is Peripheral (or PERIPHERAL_COD)
+static bool is_peripheral_cod(uint32_t cod)
+{
+    return (cod & 0x1F00) == 0x0500 || (cod & PERIPHERAL_COD) == PERIPHERAL_COD;
+}
 
 // PNP SDP query in progress (before HID CID is allocated)
 struct PnpSdpState
@@ -947,6 +997,12 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             continue_remote_names();
             break;
 
+        case HCI_EVENT_CONNECTION_REQUEST: {
+            hci_event_connection_request_get_bd_addr(packet, event_addr);
+            remember_incoming_cod(event_addr, hci_event_connection_request_get_class_of_device(packet));
+            break;
+        }
+
         case HCI_EVENT_CONNECTION_COMPLETE: {
             status = hci_event_connection_complete_get_status(packet);
             hci_event_connection_complete_get_bd_addr(packet, event_addr);
@@ -1023,6 +1079,20 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                    hci_event_disconnection_complete_get_connection_handle(packet),
                    hci_event_disconnection_complete_get_status(packet),
                    hci_event_disconnection_complete_get_reason(packet));
+            {
+                // HID_SUBEVENT_CONNECTION_CLOSED doesn't always follow (e.g. a connection that failed after it
+                // opened), which would leave the slot taken for good
+                hci_con_handle_t handle = hci_event_disconnection_complete_get_connection_handle(packet);
+                for (auto &s : s_bt_slots)
+                {
+                    if (!s.in_use || s.con_handle != handle || s.action == PendingAction::Disconnected)
+                        continue;
+                    if (auto *pending = pending_connection_by_cid(s.cid))
+                        pending->cid = 0;
+                    s.cid = 0;
+                    s.action = PendingAction::Disconnected;
+                }
+            }
             if (s_wii_role_pending)
             {
                 hci_connection_t *conn = hci_connection_for_bd_addr_and_type(s_wii_role_pending_addr, BD_ADDR_TYPE_ACL);
@@ -1118,16 +1188,24 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                 bd_addr_t in_addr = {};
                 hid_subevent_incoming_connection_get_address(packet, in_addr);
                 printf("Classic BT: Incoming HID connection from %s, cid=0x%04x\r\n", bd_addr_to_str(in_addr), cid);
+                uint32_t in_cod;
+                if (incoming_cod_for(in_addr, in_cod) && !is_peripheral_cod(in_cod))
+                {
+                    printf("Classic BT: declining HID connection from %s, COD 0x%06lx isn't a peripheral\r\n",
+                           bd_addr_to_str(in_addr), (unsigned long)in_cod);
+                    hid_host_decline_connection(cid);
+                    break;
+                }
                 // Track the address so reconnect logic doesn't race this connection,
                 // and so VID/PID from a previous pairing can be matched later.
+                if (PendingConnection *pending = pending_connection_alloc(cid))
                 {
-                    PendingConnection &pending = *pending_connection_alloc(cid);
-                    memcpy(pending.addr, in_addr, 6);
+                    memcpy(pending->addr, in_addr, 6);
                     DeviceFactory::BluetoothPairingStateData paired_state = {};
                     if (DeviceFactory::find_bluetooth_pairing_state_by_mac(in_addr, paired_state) && !paired_state.ble)
                     {
-                        pending.vid = paired_state.vid;
-                        pending.pid = paired_state.pid;
+                        pending->vid = paired_state.vid;
+                        pending->pid = paired_state.pid;
                     }
                 }
                 // Like paging one, skip SDP for a Switch controller reconnecting by itself: it has hung up
@@ -1226,6 +1304,10 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     break;
                 }
                 memcpy(slot->addr, connected_addr, sizeof(slot->addr));
+                {
+                    hci_connection_t *acl = hci_connection_for_bd_addr_and_type(connected_addr, BD_ADDR_TYPE_ACL);
+                    slot->con_handle = acl ? acl->con_handle : HCI_CON_HANDLE_INVALID;
+                }
                 // a classic controller is up: pause the BLE background reconnect
                 ble_resync_reconnect();
                 // Parse HID descriptor if available in storage (SDP populated this during hid_host_connect)

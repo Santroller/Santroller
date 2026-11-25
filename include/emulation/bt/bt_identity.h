@@ -14,8 +14,9 @@
 // which hosts also only read when they pair (Windows bakes it into the device's hardware ID), so each subtype
 // is its own identity too.
 //
-// The plain gamepad keeps the controller's public address, so bonds from before this existed still work. The
-// others use a random static address derived from it, so they stay the same across reboots.
+// Each uses a random static address derived from the controller's public address, so they stay the same across
+// reboots. The public address itself is left to classic bluetooth (e.g. Wii Remote emulation), as a host that sees
+// both on one address treats them as the same dual-mode device.
 //
 // A host that pairs with two of them is bonded twice, with different keys. Each host bond remembers which
 // identity it was made with, and only the current identity's bonds are visible to btstack, so the right keys are

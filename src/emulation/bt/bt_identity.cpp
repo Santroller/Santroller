@@ -57,8 +57,8 @@ static bool bond_visible(int index, int addr_type, const bd_addr_t addr)
 
 // A random static address for the identity: the controller's public address, with the top bits of the first byte
 // replaced by the static marker (0b11) and the identity, so each identity of each controller gets its own.
-// The fixed identities use 1-3 in those bits (the plain gamepad is public), and gamepad subtypes use 0 with the
-// subtype mixed into the next byte.
+// The fixed identities use 0-3 in those bits, and gamepad subtypes use 0 with the subtype (never 0) mixed into the
+// next byte.
 static void random_address_for(uint8_t identity, bd_addr_t out)
 {
     gap_local_bd_addr(out);
@@ -76,7 +76,7 @@ static void random_address_for(uint8_t identity, bd_addr_t out)
 // Has to be redone whenever the controller starts, which forgets it (and could be a different USB adapter)
 static void apply_random_address()
 {
-    if (s_identity == BtIdentityGamepad || hci_get_state() != HCI_STATE_WORKING)
+    if (hci_get_state() != HCI_STATE_WORKING)
     {
         return;
     }
@@ -135,6 +135,8 @@ void bt_identity_init()
     s_sm_registration.callback = &packet_handler;
     sm_add_event_handler(&s_sm_registration);
     le_device_db_tlv_set_filter(bond_visible);
+    // every identity advertises from a random address; btstack holds advertising back until it is set
+    gap_advertisements_set_own_address_type(BD_ADDR_TYPE_LE_RANDOM);
 }
 
 static uint8_t identity_for(SubType subtype, bool config_only)
@@ -168,16 +170,7 @@ void bt_identity_set(SubType subtype, bool config_only)
     s_identity = identity;
     // first, as changing the address runs HCI, which then reloads the resolving list too
     reload_bonds();
-    if (identity == BtIdentityGamepad)
-    {
-        gap_advertisements_set_own_address_type(BD_ADDR_TYPE_LE_PUBLIC);
-    }
-    else
-    {
-        // btstack holds advertising back until the address is set
-        gap_advertisements_set_own_address_type(BD_ADDR_TYPE_LE_RANDOM);
-        apply_random_address();
-    }
+    apply_random_address();
 }
 
 void bt_identity_filter_bonds(bool filter)

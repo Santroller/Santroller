@@ -326,6 +326,8 @@ void PS3GamepadDevice::initialize()
     case RockBandGuitar: {
         PS3RockBandGuitar_Data_t *report = (PS3RockBandGuitar_Data_t *)m_initial_report;
         report->whammy = 0;
+        // Real guitars report 0x7F (a null value) when the pickup switch is at rest, rather than the stick centre
+        report->pickup = 0x7F;
         break;
     }
     case PowerGigDrum:

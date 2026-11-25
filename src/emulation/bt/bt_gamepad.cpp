@@ -115,21 +115,32 @@ int get_bt_address(uint8_t *addr)
     memcpy(addr, bd_addr_to_str(local_addr), SIZE_OF_BD_ADDRESS);
     return SIZE_OF_BD_ADDRESS;
 }
-void send_report(uint8_t size, uint8_t *report)
+// Returns the HCI status, so a report that couldn't go out (e.g. no ACL buffers free) can be retried
+static uint8_t send_report(uint8_t size, uint8_t *report)
 {
     BtStackLock lock;
-    if (con_handle != HCI_CON_HANDLE_INVALID)
+    if (con_handle == HCI_CON_HANDLE_INVALID)
     {
-        if (size > 0 && report[0] == ReportIdSantrollerCapabilities)
-        {
-            hids_device_send_input_report_for_id(con_handle, ReportIdSantrollerCapabilities, report + 1, size - 1);
-        }
-        else
-        {
-            hids_device_send_input_report(con_handle, report + 1, size - 1);
-        }
-        // hids_device_request_can_send_now_event(con_handle);
+        return ERROR_CODE_UNKNOWN_CONNECTION_IDENTIFIER;
     }
+    uint8_t status;
+    if (size > 0 && report[0] == ReportIdSantrollerCapabilities)
+    {
+        status = hids_device_send_input_report_for_id(con_handle, ReportIdSantrollerCapabilities, report + 1, size - 1);
+    }
+    else
+    {
+        status = hids_device_send_input_report(con_handle, report + 1, size - 1);
+    }
+    // Logged when it changes, as a failing report is retried every loop
+    static uint8_t s_last_status = ERROR_CODE_SUCCESS;
+    if (status != s_last_status)
+    {
+        printf("BT: input report send status 0x%02x (free ACL slots %d)\r\n", status,
+               hci_number_free_acl_slots_for_handle(con_handle));
+        s_last_status = status;
+    }
+    return status;
 }
 static void get_report_callback(hci_con_handle_t con_hdl, hid_report_type_t report_type, uint16_t report_id, uint16_t max_report_size, uint8_t *out_report)
 {
@@ -589,10 +600,10 @@ void BTGamepadDevice::process(bool full_poll, bool send_events)
             XInputGuitarHeroGuitar_Data_t *reportGh = (XInputGuitarHeroGuitar_Data_t *)report;
             reportGh->slider = -((int8_t)(encode_gh5_slider(reportGh->slider) ^ 0x80) * -257);
         }
-        if (memcmp(m_last_report, m_epin_buffer, sizeof(XInputGamepad_Data_t)) != 0)
+        // Only counted as sent once it goes out, so one that couldn't is retried next loop
+        if (memcmp(m_last_report, m_epin_buffer, sizeof(XInputGamepad_Data_t)) != 0 &&
+            send_report(sizeof(XInputGamepad_Data_t), m_epin_buffer) == ERROR_CODE_SUCCESS)
         {
-
-            send_report(sizeof(XInputGamepad_Data_t), m_epin_buffer);
             memcpy(m_last_report, m_epin_buffer, sizeof(XInputGamepad_Data_t));
         }
     }

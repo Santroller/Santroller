@@ -4,17 +4,18 @@
 #include "hardware/pio.h"
 #include "hardware/gpio.h"
 #include "hardware/dma.h"
+#include "hardware/irq.h"
 #include "hardware/sync.h"
 #include <string.h>
 #include <stdio.h>
 #include <pico/time.h>
 
-uint fixPio(PIO pio, pio_program_t program, int sck_pin)
+// Returns program with the clock pin encoded into it, its instructions in data
+static pio_program_t fixPio(pio_program_t program, uint16_t *data, int sck_pin)
 {
     // Santroller 1 let us put clock on any pin
     // because of this, we need to encode the pin into the pio instructions
     // which is easiest done by just replacing the instructions
-    uint16_t data[32];
     memcpy(data, program.instructions, program.length * sizeof(uint16_t));
     uint16_t prevClk0 = pio_encode_wait_gpio(false, PIN_SCK_PLACEHOLDER);
     uint16_t prevClk1 = pio_encode_wait_gpio(true, PIN_SCK_PLACEHOLDER);
@@ -32,10 +33,10 @@ uint fixPio(PIO pio, pio_program_t program, int sck_pin)
         }
     }
     program.instructions = data;
-    return pio_add_program(pio, &program);
+    return program;
 }
 
-pio_spi_t pio_spi[2];
+pio_spi_t pio_spi[NUM_PIOS];
 
 #define PSX_SPI_WATCHDOG_TIMEOUT_MS 1000
 
@@ -132,15 +133,14 @@ void pio_spi_watchdog_tick(pio_spi_t *spi)
 #endif
 }
 
-static void setup_cs_sm(PIO pio, uint sm, int cipo_pin, int cs_pin, uint *offset)
+static void setup_cs_sm(PIO pio, uint sm, int cipo_pin, int cs_pin, uint offset)
 {
-    *offset = pio_add_program(pio, &spi_cs_loop_program);
-    pio_sm_config c = spi_cs_loop_program_get_default_config(*offset);
+    pio_sm_config c = spi_cs_loop_program_get_default_config(offset);
     sm_config_set_in_pins(&c, cs_pin);
     sm_config_set_sideset_pins(&c, cipo_pin);
     pio_sm_set_consecutive_pindirs(pio, sm, cipo_pin, 1, false);
 
-    pio_sm_init(pio, sm, *offset, &c);
+    pio_sm_init(pio, sm, offset, &c);
 }
 
 static void setup_read_initial_sm(PIO pio, uint sm, int copi_pin, int ack_pin, uint offset)
@@ -159,10 +159,9 @@ static void setup_read_initial_sm(PIO pio, uint sm, int copi_pin, int ack_pin, u
     pio_sm_init(pio, sm, offset, &c);
 }
 
-static void setup_combined_sm(PIO pio, uint sm, int cipo_pin, int copi_pin, int sck_pin, int ack_pin, uint *offset)
+static void setup_combined_sm(PIO pio, uint sm, int cipo_pin, int copi_pin, int ack_pin, uint offset)
 {
-    *offset = fixPio(pio, spi_combined_loop_program, sck_pin);
-    pio_sm_config c = spi_combined_loop_program_get_default_config(*offset);
+    pio_sm_config c = spi_combined_loop_program_get_default_config(offset);
     sm_config_set_in_pins(&c, copi_pin);
     sm_config_set_out_pins(&c, cipo_pin, 1);
     sm_config_set_sideset_pins(&c, ack_pin);
@@ -187,13 +186,11 @@ static void setup_combined_sm(PIO pio, uint sm, int cipo_pin, int copi_pin, int 
         false, // Autopush enabled
         8      // Autopush threshold = 8
     );
-    pio_sm_init(pio, sm, *offset, &c);
+    pio_sm_init(pio, sm, offset, &c);
 }
 
-static void configure_read_dma(PIO pio, uint combined_sm, uint *channel)
+static void configure_read_dma(PIO pio, uint combined_sm, uint dma_channel)
 {
-    uint dma_channel = dma_claim_unused_channel(true);
-
     dma_channel_config channel_config = dma_channel_get_default_config(dma_channel);
     channel_config_set_transfer_data_size(&channel_config, DMA_SIZE_8);
     channel_config_set_dreq(&channel_config, pio_get_dreq(pio, combined_sm, false));
@@ -210,14 +207,10 @@ static void configure_read_dma(PIO pio, uint combined_sm, uint *channel)
 
     dma_channel_set_irq0_enabled(dma_channel, false);
     dma_channel_set_irq1_enabled(dma_channel, false);
-
-    *channel = dma_channel;
 }
 
-static void configure_write_dma(PIO pio, uint combined_sm, uint *channel)
+static void configure_write_dma(PIO pio, uint combined_sm, uint dma_channel)
 {
-    uint dma_channel = dma_claim_unused_channel(true);
-
     dma_channel_config channel_config = dma_channel_get_default_config(dma_channel);
     channel_config_set_transfer_data_size(&channel_config, DMA_SIZE_8);
     channel_config_set_dreq(&channel_config, pio_get_dreq(pio, combined_sm, true));
@@ -234,8 +227,6 @@ static void configure_write_dma(PIO pio, uint combined_sm, uint *channel)
 
     dma_channel_set_irq0_enabled(dma_channel, false);
     dma_channel_set_irq1_enabled(dma_channel, false);
-
-    *channel = dma_channel;
 }
 
 inline static int safe_fifo_rx_wait_for_finish(pio_hw_t *pio, uint sm, uint channel)
@@ -515,6 +506,13 @@ static void __time_critical_func(pio_irq_1)(void)
     pio_irq(&pio_spi[1]);
 }
 
+#if NUM_PIOS > 2
+static void __time_critical_func(pio_irq_2)(void)
+{
+    pio_irq(&pio_spi[2]);
+}
+#endif
+
 static void inline __attribute__((always_inline)) pio_data_irq(pio_spi_t *spi)
 {
     pio_spi_config_t *cfg = &spi->config;
@@ -553,17 +551,93 @@ static void __time_critical_func(pio_data_irq_1)(void)
     pio_data_irq(&pio_spi[1]);
 }
 
+#if NUM_PIOS > 2
+static void __time_critical_func(pio_data_irq_2)(void)
+{
+    pio_data_irq(&pio_spi[2]);
+}
+#endif
+
+// The handlers for each PIO's IRQ 0 (status) and IRQ 1 (data)
+static const irq_handler_t status_irq_handlers[NUM_PIOS] = {
+    pio_irq_0,
+    pio_irq_1,
+#if NUM_PIOS > 2
+    pio_irq_2,
+#endif
+};
+static const irq_handler_t data_irq_handlers[NUM_PIOS] = {
+    pio_data_irq_0,
+    pio_data_irq_1,
+#if NUM_PIOS > 2
+    pio_data_irq_2,
+#endif
+};
+
 pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
 {
     assert(config);
-    assert(config->pio_idx == 0 || config->pio_idx == 1);
+    if (config->pio_idx < 0 || config->pio_idx >= NUM_PIOS || pio_spi[config->pio_idx].allocated)
+    {
+        return NULL;
+    }
+    PIO pio = pio_get_instance((uint)config->pio_idx);
+    // The handlers own both of the PIO's IRQ lines outright
+    if (irq_has_handler(pio_get_irq_num(pio, 0)) || irq_has_handler(pio_get_irq_num(pio, 1)))
+    {
+        return NULL;
+    }
+    // Claim everything before touching anything, so a PIO without room is left as it was
+    uint16_t combined_data[32];
+    pio_program_t combined = fixPio(spi_combined_loop_program, combined_data, config->sck_pin);
+    int sms[3];
+    for (int i = 0; i < 3; i++)
+    {
+        sms[i] = pio_claim_unused_sm(pio, false);
+    }
+    int channel_read = dma_claim_unused_channel(false);
+    int channel_write = dma_claim_unused_channel(false);
+    int offset_combined = pio_can_add_program(pio, &combined) ? (int)pio_add_program(pio, &combined) : -1;
+    int offset_cs = offset_combined >= 0 && pio_can_add_program(pio, &spi_cs_loop_program)
+                        ? (int)pio_add_program(pio, &spi_cs_loop_program)
+                        : -1;
+    if (sms[0] < 0 || sms[1] < 0 || sms[2] < 0 || channel_read < 0 || channel_write < 0 || offset_cs < 0)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if (sms[i] >= 0)
+            {
+                pio_sm_unclaim(pio, (uint)sms[i]);
+            }
+        }
+        if (channel_read >= 0)
+        {
+            dma_channel_unclaim((uint)channel_read);
+        }
+        if (channel_write >= 0)
+        {
+            dma_channel_unclaim((uint)channel_write);
+        }
+        if (offset_combined >= 0)
+        {
+            pio_remove_program(pio, &combined, (uint)offset_combined);
+        }
+        return NULL;
+    }
+
     pio_spi_t *spi = &pio_spi[config->pio_idx];
-    assert(!spi->allocated);
     memset(spi, 0, sizeof(*spi));
     spi->allocated = true;
 
     spi->config = *config;
-    spi->pio = config->pio_idx == 0 ? pio0 : pio1;
+    spi->pio = pio;
+    spi->config.combined_sm = sms[0];
+    spi->config.initial_sm = sms[1];
+    spi->config.cs_sm = sms[2];
+    spi->channel_read = (uint)channel_read;
+    spi->channel_write = (uint)channel_write;
+    spi->offset_combined = (uint)offset_combined;
+    spi->offset_cs = (uint)offset_cs;
     spi->type = config->type;
     PSX_SPI_PROTOCOL_INIT(&spi->protocol, spi->type);
     spi->protocol.cmd_id = 0;
@@ -597,37 +671,23 @@ pio_spi_t *pio_spi_init(const pio_spi_config_t *config)
     gpio_set_pulls(config->ack_pin, false, false);
     gpio_set_pulls(config->copi_pin, false, false);
     gpio_set_pulls(config->cipo_pin, false, false);
-    spi->config.combined_sm = pio_claim_unused_sm(spi->pio, true);
-    spi->config.initial_sm = pio_claim_unused_sm(spi->pio, true);
-    spi->config.cs_sm = pio_claim_unused_sm(spi->pio, true);
+    setup_combined_sm(spi->pio, spi->config.combined_sm, spi->config.cipo_pin, spi->config.copi_pin, spi->config.ack_pin, spi->offset_combined);
+    configure_write_dma(spi->pio, spi->config.combined_sm, spi->channel_write);
 
-    setup_combined_sm(spi->pio, spi->config.combined_sm, spi->config.cipo_pin, spi->config.copi_pin, spi->config.sck_pin, spi->config.ack_pin, &spi->offset_combined);
-    configure_write_dma(spi->pio, spi->config.combined_sm, &spi->channel_write);
-
-    configure_read_dma(spi->pio, spi->config.combined_sm, &spi->channel_read);
+    configure_read_dma(spi->pio, spi->config.combined_sm, spi->channel_read);
 
     setup_read_initial_sm(spi->pio, spi->config.initial_sm, spi->config.copi_pin, spi->config.ack_pin, spi->offset_combined);
 
-    setup_cs_sm(spi->pio, spi->config.cs_sm, spi->config.cipo_pin, spi->config.cs_pin, &spi->offset_cs);
+    setup_cs_sm(spi->pio, spi->config.cs_sm, spi->config.cipo_pin, spi->config.cs_pin, spi->offset_cs);
 
     pio_set_irq1_source_enabled(spi->pio, pis_interrupt0, true);
 
     pio_set_irq0_source_enabled(spi->pio, pis_interrupt2, true);
 
-    if (config->pio_idx == 0)
-    {
-        irq_set_exclusive_handler(PIO0_IRQ_0, pio_irq_0);
-        irq_set_enabled(PIO0_IRQ_0, true);
-        irq_set_exclusive_handler(PIO0_IRQ_1, pio_data_irq_0);
-        irq_set_enabled(PIO0_IRQ_1, true);
-    }
-    else
-    {
-        irq_set_exclusive_handler(PIO1_IRQ_0, pio_irq_1);
-        irq_set_enabled(PIO1_IRQ_0, true);
-        irq_set_exclusive_handler(PIO1_IRQ_1, pio_data_irq_1);
-        irq_set_enabled(PIO1_IRQ_1, true);
-    }
+    irq_set_exclusive_handler(pio_get_irq_num(pio, 0), status_irq_handlers[config->pio_idx]);
+    irq_set_enabled(pio_get_irq_num(pio, 0), true);
+    irq_set_exclusive_handler(pio_get_irq_num(pio, 1), data_irq_handlers[config->pio_idx]);
+    irq_set_enabled(pio_get_irq_num(pio, 1), true);
 
     spi->startstop_mask = (1u << spi->config.combined_sm) | (1u << spi->config.initial_sm);
 
@@ -640,20 +700,12 @@ void pio_spi_free(pio_spi_t *spi)
 {
     assert(spi);
     assert(spi->allocated);
-    assert(spi->config.pio_idx == 0 || spi->config.pio_idx == 1);
+    assert(spi->config.pio_idx >= 0 && spi->config.pio_idx < NUM_PIOS);
     assert(spi == &pio_spi[spi->config.pio_idx]);
     pio_spi_stop(spi);
     // Give the IRQs back so another driver can use them
-    if (spi->config.pio_idx == 0)
-    {
-        irq_remove_handler(PIO0_IRQ_0, pio_irq_0);
-        irq_remove_handler(PIO0_IRQ_1, pio_data_irq_0);
-    }
-    else
-    {
-        irq_remove_handler(PIO1_IRQ_0, pio_irq_1);
-        irq_remove_handler(PIO1_IRQ_1, pio_data_irq_1);
-    }
+    irq_remove_handler(pio_get_irq_num(spi->pio, 0), status_irq_handlers[spi->config.pio_idx]);
+    irq_remove_handler(pio_get_irq_num(spi->pio, 1), data_irq_handlers[spi->config.pio_idx]);
     pio_sm_unclaim(spi->pio, spi->config.cs_sm);
     pio_sm_unclaim(spi->pio, spi->config.initial_sm);
     pio_sm_unclaim(spi->pio, spi->config.combined_sm);
@@ -668,7 +720,7 @@ void pio_spi_start(const pio_spi_t *spi)
 {
     assert(spi);
     assert(spi->allocated);
-    assert(spi->config.pio_idx == 0 || spi->config.pio_idx == 1);
+    assert(spi->config.pio_idx >= 0 && spi->config.pio_idx < NUM_PIOS);
     assert(spi == &pio_spi[spi->config.pio_idx]);
 
     pio_enable_sm_mask_in_sync(spi->pio, (1u << spi->config.cs_sm) | spi->startstop_mask);
@@ -678,7 +730,7 @@ void pio_spi_stop(pio_spi_t *spi)
 {
     assert(spi);
     assert(spi->allocated);
-    assert(spi->config.pio_idx == 0 || spi->config.pio_idx == 1);
+    assert(spi->config.pio_idx >= 0 && spi->config.pio_idx < NUM_PIOS);
     assert(spi == &pio_spi[spi->config.pio_idx]);
 
     // Silence the PIO interrupts first. Their handlers re-arm the state machines and DMA, which would

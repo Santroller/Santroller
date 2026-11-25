@@ -197,10 +197,12 @@ void PSXBus::init(uint32_t clock)
         gpio_set_pulls(m_misoPin, true, false);
     }
 
-    // Initialize PIO ACK Pacer (try pio0 first, fallback to pio1), on one that can reach the ack pin
+    // Initialize PIO ACK Pacer on a PIO that can reach the ack pin, from the last one down like the
+    // SDK's allocator, as the USB host looks for an entirely empty PIO from pio0 up.
     pio = nullptr;
-    for (PIO candidate : {pio0, pio1})
+    for (int pio_index = NUM_PIOS - 1; pio_index >= 0; --pio_index)
     {
+        PIO candidate = pio_get_instance(static_cast<uint>(pio_index));
         if (pio_can_add_program(candidate, &psx_ack_pacer_program) && pio_try_reach_pins(candidate, {(uint)m_ackPin}) &&
             (sm = pio_claim_unused_sm(candidate, false)) != (uint)-1)
         {

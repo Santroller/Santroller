@@ -345,44 +345,65 @@ void USBHostHardwareDevice::begin()
         gpio_put(18, 1);
     }
     printf("USBHostHardwareDevice init! %d %d %d\r\n", m_device.dmFirst, m_device.firstPin, m_device.firstPin + 1);
-    int8_t tx_ch = -1;
-    int8_t tx_sm = -1;
-    int8_t rx_sm = -1;
-    int8_t eop_sm = -1;
-    tx_ch = dma_claim_unused_channel(false);
-    tx_sm = pio_claim_unused_sm(pio0, false);
-    rx_sm = pio_claim_unused_sm(pio0, false);
-    eop_sm = pio_claim_unused_sm(pio0, false);
-    if (tx_ch < 0 || tx_sm < 0 || rx_sm < 0 || eop_sm < 0)
+    // PIO-USB's TX, NRZI decoder and edge detector programs fill a whole PIO's instruction memory, so it
+    // needs a block nothing else has loaded anything into. Look from pio0 up, as everything else
+    // allocates from the last PIO down, so the two only meet once every PIO is in use.
+    static const uint16_t whole_pio[PIO_INSTRUCTION_COUNT] = {};
+    static const pio_program_t whole_pio_program = {
+        .instructions = whole_pio,
+        .length = PIO_INSTRUCTION_COUNT,
+        .origin = 0,
+    };
+    int8_t tx_ch = dma_claim_unused_channel(false);
+    if (tx_ch < 0)
     {
-        printf("USBHostHardwareDevice init failed: dma=%d tx_sm=%d rx_sm=%d eop_sm=%d\r\n", tx_ch, tx_sm, rx_sm, eop_sm);
-        if (tx_ch >= 0)
-        {
-            dma_channel_unclaim(tx_ch);
-        }
-        if (tx_sm >= 0)
-        {
-            pio_sm_unclaim(pio0, tx_sm);
-        }
-        if (rx_sm >= 0)
-        {
-            pio_sm_unclaim(pio0, rx_sm);
-        }
-        if (eop_sm >= 0)
-        {
-            pio_sm_unclaim(pio0, eop_sm);
-        }
+        printf("USBHostHardwareDevice init failed: no free DMA channel\r\n");
         m_last_first_pin = -1;
         return;
     }
+    PIO pio = nullptr;
+    int8_t tx_sm = -1;
+    int8_t rx_sm = -1;
+    int8_t eop_sm = -1;
+    for (uint i = 0; i < NUM_PIOS && !pio; i++)
+    {
+        PIO candidate = pio_get_instance(i);
+        if (!pio_can_add_program(candidate, &whole_pio_program))
+        {
+            continue;
+        }
+        tx_sm = pio_claim_unused_sm(candidate, false);
+        rx_sm = pio_claim_unused_sm(candidate, false);
+        eop_sm = pio_claim_unused_sm(candidate, false);
+        if (tx_sm >= 0 && rx_sm >= 0 && eop_sm >= 0)
+        {
+            pio = candidate;
+            break;
+        }
+        for (int8_t sm : {tx_sm, rx_sm, eop_sm})
+        {
+            if (sm >= 0)
+            {
+                pio_sm_unclaim(candidate, sm);
+            }
+        }
+    }
+    if (!pio)
+    {
+        printf("USBHostHardwareDevice init failed: no PIO is entirely free\r\n");
+        dma_channel_unclaim(tx_ch);
+        m_last_first_pin = -1;
+        return;
+    }
+    printf("USBHostHardwareDevice using pio%u\r\n", pio_get_index(pio));
     m_initialized = true;
     s_host_owner = this;
     pio_usb_configuration_t host_config = {
         pin_dp : (uint8_t)(m_device.firstPin + m_device.dmFirst),
-        pio_tx_num : 0,
+        pio_tx_num : (uint8_t)pio_get_index(pio),
         sm_tx : (uint8_t)tx_sm,
         tx_ch : (uint8_t)tx_ch,
-        pio_rx_num : 0,
+        pio_rx_num : (uint8_t)pio_get_index(pio),
         sm_rx : (uint8_t)rx_sm,
         sm_eop : (uint8_t)eop_sm,
         alarm_pool : nullptr,
@@ -399,9 +420,9 @@ void USBHostHardwareDevice::begin()
     usb_host_id = m_id;
     tuh_configure(TUH_OPT_RHPORT, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &host_config);
     dma_channel_unclaim(tx_ch);
-    pio_sm_unclaim(pio0, tx_sm);
-    pio_sm_unclaim(pio0, rx_sm);
-    pio_sm_unclaim(pio0, eop_sm);
+    pio_sm_unclaim(pio, tx_sm);
+    pio_sm_unclaim(pio, rx_sm);
+    pio_sm_unclaim(pio, eop_sm);
     tusb_init(TUH_OPT_RHPORT, &rh_init);
     sof_alarm_start();
 }

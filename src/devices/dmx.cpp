@@ -17,10 +17,11 @@ void DMXDevice::begin()
     m_started = false;
     if (m_device.pin >= 0 && m_device.pin < (int)NUM_BANK0_GPIOS)
     {
-        // Any PIO that can reach the pin (on an RP2350B, a PIO reaches GP0 - GP31 or GP16 - GP47)
-        for (uint i = 0; i < NUM_PIOS && !m_started; i++)
+        // Any PIO that can reach the pin (on an RP2350B, a PIO reaches GP0 - GP31 or GP16 - GP47), from
+        // the last one down like the SDK's allocator, as the USB host looks for an empty one from pio0 up
+        for (int i = NUM_PIOS - 1; i >= 0 && !m_started; i--)
         {
-            PIO pio = pio_get_instance(i);
+            PIO pio = pio_get_instance(static_cast<uint>(i));
             m_started = pio_try_reach_pins(pio, {(uint)m_device.pin}) && m_dmx.begin(m_device.pin, pio) == DmxOutput::SUCCESS;
         }
     }

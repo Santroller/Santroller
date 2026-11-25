@@ -13,7 +13,7 @@
 // All items necessary except for callbacks and callback context
 typedef struct pio_spi_config_t
 {
-    int pio_idx;  // pio index
+    int pio_idx;  // pio index, any PIO
     int cs_pin;   // CS Pin (Can be any pin)
     int sck_pin;  // SCK Pin (Must be 1 pin after COPI)
     int copi_pin; // COPI Pin (Can be any pin)
@@ -115,7 +115,9 @@ extern "C"
     {
         return spi->protocol.config_responses[0x05][2];
     }
-    // Initialize a PIO SPI object. Asserts if already allocated.
+    // Initialize a PIO SPI object on config->pio_idx. Returns NULL, leaving that PIO as it was, when it's
+    // already in use by another PIO SPI, its IRQs have handlers, or it lacks state machines, program
+    // space or DMA channels.
     // The engine is stopped upon initialization, and must be started.
     pio_spi_t *pio_spi_init(const pio_spi_config_t *config);
     // Frees a PIO SPI object, stopping if its already running

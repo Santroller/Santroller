@@ -110,7 +110,7 @@ void PSXEmulation::start(SubType type, bool console_present)
 {
     m_listening = false;
     pio_spi_config_t config = {
-        .pio_idx = 1,
+        .pio_idx = -1,
         .cs_pin = attPin,
         .sck_pin = sck,
         .copi_pin = cmd,
@@ -118,13 +118,22 @@ void PSXEmulation::start(SubType type, bool console_present)
         .ack_pin = ackPin,
         .type = type};
 
-    // Its state machines all share PIO1, so it has to reach every pin (on an RP2350B, GP0 - GP31 or GP16 - GP47)
-    if (!pio_try_reach_pins(pio1, {(uint)attPin, (uint)sck, (uint)cmd, (uint)dat, (uint)ackPin}))
+    // Its state machines all share one PIO, so that PIO has to reach every pin (on an RP2350B, GP0 - GP31 or
+    // GP16 - GP47). From the last PIO down like the other drivers, as the USB host looks from pio0 up.
+    for (int idx = NUM_PIOS - 1; idx >= 0 && !spi; idx--)
     {
-        printf("PSXEmulation: PIO1 can't reach these pins\r\n");
+        if (!pio_try_reach_pins(pio_get_instance((uint)idx), {(uint)attPin, (uint)sck, (uint)cmd, (uint)dat, (uint)ackPin}))
+        {
+            continue;
+        }
+        config.pio_idx = idx;
+        spi = pio_spi_init(&config);
+    }
+    if (!spi)
+    {
+        printf("PSXEmulation: no PIO with room that can reach these pins\r\n");
         return;
     }
-    spi = pio_spi_init(&config);
     pio_spi_start(spi);
     if (console_present)
     {

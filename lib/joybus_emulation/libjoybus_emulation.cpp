@@ -77,15 +77,11 @@ bool JoybusEmulation::begin()
     {
         return false;
     }
-    // The PS2 emulation owns PIO1's interrupts outright, so prefer the other blocks
-    static const uint8_t pio_order[] = {0, 2, 1};
-    for (uint8_t idx : pio_order)
+    // From the last PIO down like the other drivers, as the USB host looks for an empty one from pio0
+    // up. A PIO whose IRQ 0 has an exclusive handler (the PS2 emulation's) can't share it.
+    for (int idx = NUM_PIOS - 1; idx >= 0; idx--)
     {
-        if (idx >= NUM_PIOS)
-        {
-            continue;
-        }
-        PIO pio = pio_get_instance(idx);
+        PIO pio = pio_get_instance((uint)idx);
         if (irq_get_exclusive_handler(pio_get_irq_num(pio, 0)) || !pio_can_add_program(pio, &joybus_program) ||
             !pio_try_reach_pins(pio, {m_pin}))
         {

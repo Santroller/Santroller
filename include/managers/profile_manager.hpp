@@ -231,6 +231,8 @@ private:
     UsbReloadIdentity m_usb_reload_identities[32] = {};
     UsbReloadIdentity m_previous_usb_reload_identities[32] = {};
     std::shared_ptr<UsbDevice> m_previous_usb_instances[32];
+    // What each USB instance reported in its descriptors before the reload, as a reused instance can change them
+    uint8_t m_previous_usb_capabilities[32] = {};
     std::shared_ptr<UsbDevice> m_previous_usb_instances_by_epin[16];
     std::shared_ptr<UsbDevice> m_previous_usb_instances_by_epout[16];
     std::map<ConsoleMode, std::shared_ptr<UsbDevice>> m_emulated_devices;

@@ -57,6 +57,12 @@ bool ProfileManager::changed_types()
         {
             return true;
         }
+        // A reused instance's capabilities are in its descriptors (e.g. the Santroller identity descriptor),
+        // which the host only reads when enumerating
+        if (m_usb_instances[i] && m_usb_instances[i]->capabilities != m_previous_usb_capabilities[i])
+        {
+            return true;
+        }
     }
     // The Xbox One device was reused and has all the profiles, so only what it announces as matters
     if (get_emulated_device(ModeXboxOne))
@@ -507,6 +513,10 @@ void ProfileManager::prepare_for_config_reload()
     m_xbox_one_identity_changed = false;
     m_xbox_one_auth_pending.reset();
     std::copy(std::begin(m_usb_instances), std::end(m_usb_instances), std::begin(m_previous_usb_instances));
+    for (size_t i = 0; i < std::size(m_usb_instances); ++i)
+    {
+        m_previous_usb_capabilities[i] = m_usb_instances[i] ? m_usb_instances[i]->capabilities : 0;
+    }
     std::copy(std::begin(m_usb_instances_by_epin), std::end(m_usb_instances_by_epin), std::begin(m_previous_usb_instances_by_epin));
     std::copy(std::begin(m_usb_instances_by_epout), std::end(m_usb_instances_by_epout), std::begin(m_previous_usb_instances_by_epout));
     std::copy(std::begin(m_usb_reload_identities), std::end(m_usb_reload_identities), std::begin(m_previous_usb_reload_identities));

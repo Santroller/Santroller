@@ -69,11 +69,63 @@ tusb_desc_device_t desc_device_init =
 
 uint8_t descriptor_buffer[0x7ff];
 
+// Windows keeps the driver it installed on each interface (MI_xx) for as long as the device's serial stays the
+// same, and some builds (11 23H2) don't pick a new one when the compatible ids change, so after a layout change an
+// interface could stay on the old one (eg the config interface on WinUSB, hiding it from the configurator). A new
+// serial would fix that, but WebHID keys its permission on the serial. Windows does pick drivers again when the
+// hardware ids change, which bcdDevice is part of (REV_xxxx), so it carries a hash of what Windows binds drivers
+// by: each interface's class, subclass and protocol, and the compatible ids from the MS OS descriptor.
+static uint16_t layout_bcd()
+{
+    // FNV-1a
+    uint32_t hash = 2166136261u;
+    auto add = [&hash](uint8_t byte) { hash = (hash ^ byte) * 16777619u; };
+    // descriptor_buffer is scratch space here, the device descriptor is written over it afterwards
+    ProfileManager::instance().for_each_usb_instance([&add](const auto &instance) {
+        const size_t len = instance->config_descriptor(descriptor_buffer, sizeof(descriptor_buffer));
+        for (size_t pos = 0; pos + 1 < len && descriptor_buffer[pos]; pos += descriptor_buffer[pos])
+        {
+            const auto *itf = (const tusb_desc_interface_t *)&descriptor_buffer[pos];
+            if (itf->bDescriptorType == TUSB_DESC_INTERFACE && pos + sizeof(*itf) <= len && itf->bAlternateSetting == 0)
+            {
+                add(itf->bInterfaceClass);
+                add(itf->bInterfaceSubClass);
+                add(itf->bInterfaceProtocol);
+            }
+        }
+        const size_t compat = instance->compatible_section_descriptor(descriptor_buffer, sizeof(descriptor_buffer));
+        for (size_t pos = 0; pos + sizeof(OS_COMPATIBLE_SECTION) <= compat; pos += sizeof(OS_COMPATIBLE_SECTION))
+        {
+            const auto *section = (const OS_COMPATIBLE_SECTION *)&descriptor_buffer[pos];
+            add(section->FirstInterfaceNumber);
+            for (const auto byte : section->CompatibleID)
+            {
+                add(byte);
+            }
+        }
+    });
+    // four BCD digits, as Windows turns the revision into REV_xxxx a nibble at a time
+    uint32_t value = hash % 10000;
+    uint16_t bcd = 0;
+    for (int shift = 0; shift < 16; shift += 4, value /= 10)
+    {
+        bcd |= (value % 10) << shift;
+    }
+    return bcd;
+}
+
 uint8_t const *tud_descriptor_device_cb(void)
 {
     UsbDetectionState::instance().mark_device_descriptor_read(millis());
+    const uint16_t bcd = layout_bcd();
     memcpy(descriptor_buffer, &desc_device_init, sizeof(desc_device_init));
-    ProfileManager::instance().for_each_usb_instance([](const auto &instance) { instance->device_descriptor((tusb_desc_device_t *)descriptor_buffer); });
+    auto *desc = (tusb_desc_device_t *)descriptor_buffer;
+    ProfileManager::instance().for_each_usb_instance([desc](const auto &instance) { instance->device_descriptor(desc); });
+    // Modes that emulate a real device keep their own ids and revision
+    if (desc->idVendor == USB_VID && desc->idProduct == USB_PID && desc->bcdDevice == desc_device_init.bcdDevice)
+    {
+        desc->bcdDevice = bcd;
+    }
     return descriptor_buffer;
 }
 
@@ -111,9 +163,8 @@ uint8_t const *tud_descriptor_configuration_cb(uint8_t index)
     return descriptor_buffer;
 }
 
-// Windows rebinds each interface's driver when its compatible id changes, so the serial can stay the same
-// across layouts (a different one per layout made WebHID treat each as a new device needing permission).
-// Old multi-pad layouts got a serial suffix when they used wired XInput pads, but those are receiver slots now.
+// The serial stays the same across layouts, as WebHID keys its permission on it (a different one per layout made
+// it treat each as a new device). Windows picks each interface's driver again from the layout hash in bcdDevice.
 static char serial[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
 
 static void update_serial()

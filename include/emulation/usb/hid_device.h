@@ -77,7 +77,16 @@ enum class ConfigTransport
 {
     Usb,
     Bluetooth,
+    // Vendor control requests to the device, for WebUSB (Chrome on Android lists no HID devices, and WebUSB
+    // can't claim a HID interface). Events wait for the tool to poll them, as there is no endpoint to send them on
+    UsbControl,
 };
+
+// The vendor request (to the device) that carries config reports over UsbControl. wValue is the same as a
+// HID GET_REPORT / SET_REPORT (report type << 8 | report id), and the buffers include the report id. Reading
+// the ReportIdConfig input report takes the queued events. wIndex is fixed, so no other vendor request matches
+#define SANTROLLER_CONFIG_VENDOR_REQUEST 0x53
+#define SANTROLLER_CONFIG_VENDOR_INDEX 0x5343
 
 class HIDConfigDevice : public HIDDevice
 {
@@ -114,6 +123,8 @@ public:
     // True if the config device is already processed as a USB instance
     bool is_registered();
     bool interrupt_xfer(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+    // A SANTROLLER_CONFIG_VENDOR_REQUEST from the host. Returns false to stall it
+    bool vendor_control_transfer(uint8_t stage, tusb_control_request_t const *request);
     static bool send_event(proto_Event event, bool now);
     // Non-blocking: true if an event can be queued without waiting on the host.
     static bool has_event_space();
@@ -124,6 +135,13 @@ public:
 private:
     void process_events();
     bool events_busy();
+    // Encodes as many of the queued events as fit in max_size bytes (as many as possible, at least one if
+    // it fits at all) into buffer. Returns how many it encoded, with the size in written
+    pb_size_t encode_events(uint8_t *buffer, uint16_t max_size, size_t *written);
+    // Drops the first count queued events, once they have been sent
+    void drop_events(pb_size_t count);
+    // The ReportIdConfig input report for a tool polling over UsbControl: the report id, then the events
+    uint16_t take_events(uint8_t *buffer, uint16_t reqlen);
     void switch_transport(ConfigTransport transport);
     // A tool on the other transport is still open, so one on transport has to wait for it to close
     bool in_use_elsewhere(ConfigTransport transport) const;
@@ -133,6 +151,9 @@ private:
     bool handle_set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer, uint16_t bufsize);
     void finish_firmware_update();
     ConfigTransport m_transport = ConfigTransport::Usb;
+    // Handling a UsbControl request: the tool can't poll for events until it finishes, so nothing waits on them
+    bool m_in_control_request = false;
+    bool events_can_drain() const { return !(m_transport == ConfigTransport::UsbControl && m_in_control_request); }
     proto_EventList list;
     proto_PinDetectType m_detect_type;
     uint32_t detect_done = 0;

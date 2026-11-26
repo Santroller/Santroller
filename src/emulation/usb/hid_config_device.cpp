@@ -326,6 +326,42 @@ void HIDConfigDevice::process(bool full_poll, bool send_events)
     process_events();
 }
 
+pb_size_t HIDConfigDevice::encode_events(uint8_t *buffer, uint16_t max_size, size_t *written)
+{
+    // A full batch (up to max_count events) can overflow the 63 byte report once a
+    // large event (e.g. UsbDeviceHotplugEvent's name) is in it - shrink the batch
+    // (in place, no extra stack copy of the struct) until it actually fits instead
+    // of silently dropping everything on overflow.
+    pb_size_t total_count = list.event_count;
+    pb_size_t sent_count = total_count;
+    *written = 0;
+    while (sent_count > 0)
+    {
+        list.event_count = sent_count;
+        pb_ostream_t outputStream = pb_ostream_from_buffer(buffer, max_size);
+        if (pb_encode_delimited(&outputStream, proto_EventList_fields, &list))
+        {
+            *written = outputStream.bytes_written;
+            break;
+        }
+        sent_count--;
+    }
+    list.event_count = total_count;
+    return sent_count;
+}
+
+void HIDConfigDevice::drop_events(pb_size_t count)
+{
+    pb_size_t total_count = list.event_count;
+    count = std::min(count, total_count);
+    // Keep whatever didn't get sent this round queued for the next flush.
+    for (pb_size_t i = count; i < total_count; i++)
+    {
+        list.event[i - count] = list.event[i];
+    }
+    list.event_count = total_count - count;
+}
+
 void HIDConfigDevice::process_events()
 {
     // Keeps BTstack callbacks from queueing (and sending) events between the busy check and
@@ -349,53 +385,30 @@ void HIDConfigDevice::process_events()
         max_size = std::min<uint16_t>(max_size, bt_config_max_event_size());
     }
 
-    // A full batch (up to max_count events) can overflow the 63 byte report once a
-    // large event (e.g. UsbDeviceHotplugEvent's name) is in it - shrink the batch
-    // (in place, no extra stack copy of the struct) until it actually fits instead
-    // of silently dropping everything on overflow.
-    pb_size_t total_count = list.event_count;
-    pb_size_t sent_count = total_count;
-    bool encoded = false;
-    while (sent_count > 0)
-    {
-        list.event_count = sent_count;
-        pb_ostream_t outputStream = pb_ostream_from_buffer(epin_buf + 1, max_size);
-        if (pb_encode_delimited(&outputStream, proto_EventList_fields, &list))
-        {
-            if (m_transport == ConfigTransport::Bluetooth)
-            {
-                // zero the unused tail, so the report always matches its declared size
-                memset(epin_buf + 1 + outputStream.bytes_written, 0, max_size - outputStream.bytes_written);
-                if (!bt_config_send_event(epin_buf + 1, max_size))
-                {
-                    // couldn't queue the notification, try again later
-                    list.event_count = total_count;
-                    return;
-                }
-            }
-            else if (!usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, 64, false))
-            {
-                // not sent, keep them for the next try
-                list.event_count = total_count;
-                return;
-            }
-            encoded = true;
-            break;
-        }
-        sent_count--;
-    }
-    if (!encoded)
+    size_t written;
+    pb_size_t sent_count = encode_events(epin_buf + 1, max_size, &written);
+    if (!sent_count)
     {
         // Not even a single event fits - drop it rather than spin on it forever.
-        sent_count = 1;
+        drop_events(1);
+        return;
     }
-
-    // Keep whatever didn't get sent this round queued for the next flush.
-    for (pb_size_t i = sent_count; i < total_count; i++)
+    if (m_transport == ConfigTransport::Bluetooth)
     {
-        list.event[i - sent_count] = list.event[i];
+        // zero the unused tail, so the report always matches its declared size
+        memset(epin_buf + 1 + written, 0, max_size - written);
+        if (!bt_config_send_event(epin_buf + 1, max_size))
+        {
+            // couldn't queue the notification, try again later
+            return;
+        }
     }
-    list.event_count = total_count - sent_count;
+    else if (!usbd_edpt_xfer(TUD_OPT_RHPORT, m_epin, epin_buf, 64, false))
+    {
+        // not sent, keep them for the next try
+        return;
+    }
+    drop_events(sent_count);
 }
 
 bool HIDConfigDevice::events_busy()
@@ -404,7 +417,81 @@ bool HIDConfigDevice::events_busy()
     {
         return !bt_config_can_send_event();
     }
+    if (m_transport == ConfigTransport::UsbControl)
+    {
+        // they wait for the tool to poll them (take_events)
+        return true;
+    }
     return !tud_ready() || usbd_edpt_busy(TUD_OPT_RHPORT, m_epin);
+}
+
+uint16_t HIDConfigDevice::take_events(uint8_t *buffer, uint16_t reqlen)
+{
+    if (reqlen < 1)
+    {
+        return 0;
+    }
+    buffer[0] = ReportId::ReportIdConfig;
+    if (in_use_elsewhere(ConfigTransport::UsbControl))
+    {
+        return 1;
+    }
+    switch_transport(ConfigTransport::UsbControl);
+    // The tool polling for events is proof it's alive, even if its keepalive timer is being
+    // throttled (e.g. a backgrounded browser tab), the same as it reading the event endpoint
+    if (tool_seen)
+    {
+        lastKeepAlive = millis();
+    }
+    BtStackLock lock;
+    if (list.event_count > TU_ARRAY_SIZE(list.event))
+    {
+        list.event_count = TU_ARRAY_SIZE(list.event);
+    }
+    if (list.event_count == 0)
+    {
+        return 1;
+    }
+    size_t written;
+    pb_size_t sent_count = encode_events(buffer + 1, std::min<uint16_t>(reqlen - 1, 63), &written);
+    // Not even a single event fits - drop it rather than spin on it forever.
+    drop_events(sent_count ? sent_count : 1);
+    return written + 1;
+}
+
+bool HIDConfigDevice::vendor_control_transfer(uint8_t stage, tusb_control_request_t const *request)
+{
+    uint8_t const report_type = tu_u16_high(request->wValue);
+    uint8_t const report_id = tu_u16_low(request->wValue);
+    if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
+    {
+        if (stage != CONTROL_STAGE_SETUP)
+        {
+            return true;
+        }
+        uint16_t reqlen = tu_min16(request->wLength, sizeof(ctrl_buf));
+        m_in_control_request = true;
+        uint16_t len = report_type == HID_REPORT_TYPE_INPUT && report_id == ReportId::ReportIdConfig
+                           ? take_events(ctrl_buf, reqlen)
+                           : get_report_from(ConfigTransport::UsbControl, report_id, static_cast<hid_report_type_t>(report_type), ctrl_buf, reqlen);
+        m_in_control_request = false;
+        return tud_control_xfer(TUD_OPT_RHPORT, request, ctrl_buf, len);
+    }
+    if (stage == CONTROL_STAGE_SETUP)
+    {
+        // every report starts with its id
+        TU_VERIFY(request->wLength >= 1 && request->wLength <= sizeof(ctrl_buf));
+        return tud_control_xfer(TUD_OPT_RHPORT, request, ctrl_buf, request->wLength);
+    }
+    if (stage == CONTROL_STAGE_DATA)
+    {
+        // Handled before the status stage, so a refused report stalls and the tool finds out
+        m_in_control_request = true;
+        bool accepted = set_report_from(ConfigTransport::UsbControl, report_id, static_cast<hid_report_type_t>(report_type), ctrl_buf, request->wLength);
+        m_in_control_request = false;
+        return accepted;
+    }
+    return true;
 }
 
 size_t HIDConfigDevice::compatible_section_descriptor(uint8_t *dest, size_t remaining)
@@ -1355,7 +1442,7 @@ void HIDConfigDevice::flush_events(uint32_t timeout_us)
     }
     const uint32_t started_us = micros();
     while ((dev->list.event_count || (dev->m_transport == ConfigTransport::Usb && tud_ready() && usbd_edpt_busy(TUD_OPT_RHPORT, dev->m_epin))) &&
-           !tool_closed() && micros() - started_us < timeout_us)
+           dev->events_can_drain() && !tool_closed() && micros() - started_us < timeout_us)
     {
         tud_task();
         dev->process_events();
@@ -1378,7 +1465,7 @@ bool HIDConfigDevice::send_event(proto_Event event, bool now)
     // instead of spinning forever, and the event is still queued below if there is room.
     // Not from an interrupt though (BTstack callbacks run in one on the Pico W), as that
     // would run tud_task() there; the main loop sends what gets queued.
-    while (dev->list.event_count && now && !tool_closed() && !__get_current_exception())
+    while (dev->list.event_count && now && dev->events_can_drain() && !tool_closed() && !__get_current_exception())
     {
         dev->process_events();
         tud_task();

@@ -364,6 +364,15 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
         }
         return true;
     }
+    if (request->bmRequestType_bit.type == TUSB_REQ_TYPE_VENDOR &&
+        request->bmRequestType_bit.recipient == TUSB_REQ_RCPT_DEVICE &&
+        request->bRequest == SANTROLLER_CONFIG_VENDOR_REQUEST &&
+        request->wIndex == SANTROLLER_CONFIG_VENDOR_INDEX)
+    {
+        // Config reports for WebUSB, only while the config interface is there for WebHID too
+        auto config = HIDConfigDevice::instance;
+        return config && config->is_registered() && config->vendor_control_transfer(stage, request);
+    }
     if (request->bmRequestType_bit.direction == TUSB_DIR_IN)
     {
 

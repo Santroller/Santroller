@@ -40,6 +40,18 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
                                            true, false, false, false, false,
                                            vid, pid);
     }
+    // DS5 / DualSense gamepads. Checked before the DS4 branch, whose known_subtype + SONY_VID fallback
+    // would otherwise also catch a paired DualSense reconnecting and parse it as a DS4
+    else if ((vid == SONY_VID && (pid == SONY_DS5_PID || pid == SONY_DS5_EDGE_PID)) ||
+             (info && info->foundPS5Usage) || known_controller_type == BtControllerType_BtControllerTypePS5)
+    {
+        SubType sub = (known_subtype != SubType_Unknown) ? known_subtype : SubType_Gamepad;
+        if (info)
+            USB_FreeReportInfo(info);
+        host = std::make_shared<BtDs5Host>(device_id, sub,
+                                           false, true, true, true, true,
+                                           vid, pid);
+    }
     // DS4 / DualShock 4 gamepads (first-party or clones/generic DS4)
     else if ((vid == SONY_VID && (pid == SONY_DS4_PID_1 || pid == SONY_DS4_PID_2 || pid == SONY_DS4_PID_3)) ||
              (info && info->foundPS4Usage) ||
@@ -50,17 +62,6 @@ std::shared_ptr<BluetoothHostInterface> bt_classic_create_host(uint16_t vid, uin
         if (info)
             USB_FreeReportInfo(info);
         host = std::make_shared<BtDs4Host>(device_id, sub,
-                                           false, true, true, true, true,
-                                           vid, pid);
-    }
-    // DS5 / DualSense gamepads
-    else if ((vid == SONY_VID && (pid == SONY_DS5_PID || pid == SONY_DS5_EDGE_PID)) ||
-             (info && info->foundPS5Usage) || known_controller_type == BtControllerType_BtControllerTypePS5)
-    {
-        SubType sub = (known_subtype != SubType_Unknown) ? known_subtype : SubType_Gamepad;
-        if (info)
-            USB_FreeReportInfo(info);
-        host = std::make_shared<BtDs5Host>(device_id, sub,
                                            false, true, true, true, true,
                                            vid, pid);
     }

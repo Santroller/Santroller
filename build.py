@@ -16,7 +16,7 @@ import struct
 import sys
 
 UF2_FAMILY_ID_PICO = 0xE48BFF56
-UF2_FAMILY_ID_PICO_HEADER = 0xE48BFF57
+UF2_FAMILY_ID_PICO_HEADER = 0xE48BFF57 # "absolute": RP2350 ignores partitions for these
 UF2_FAMILY_ID_PICO2 = 0xE48BFF59
 block_format = "< 8I 476B I"
 magic0 = 0x0A324655 # "UF2\n"
@@ -154,12 +154,19 @@ blocks.sort(key=lambda b: b.address)
 for a, b in itertools.pairwise(blocks):
     # Ensure no blocks overlap
     assert a.address + a.size <= b.address
-# header and footer blocks seem unneeded and stop things working so...
-# if header_blocks:
-#     header_block = header_blocks[0]
-#     blocks.insert(0, header_blocks[0])
-#     blocks.append(header_blocks[0])
-#     print(blocks)
+# The header_blocks are picotool's RP2350-E10 workaround (A2 bootroms can't drag and drop onto flash with a
+# partition table). On an A2 that block erases the last sector of flash, which is where the config lives, so
+# it stays out.
+#
+# On RP2350, a partition table left in flash by whatever the board ran before (eg a vendor demo) makes the
+# bootrom write an rp2350-arm-s UF2 into a partition, with 0x10000000 mapped to the partition's start, or
+# skip it entirely. The bootloader then isn't at the start of flash and nothing enumerates until the flash is
+# nuked. The absolute family is written where it says regardless of partitions (datasheet 5.5.3), and this
+# image starts at 0x10000000, so it replaces the old partition table too. The configurator copies the family
+# of the first block when it adds a config, so its UF2s follow.
+if ref.family_id == UF2_FAMILY_ID_PICO2:
+    for b in blocks:
+        b.family_id = UF2_FAMILY_ID_PICO_HEADER
 
 write_uf2(blocks, os.path.join(out_dir,"santroller_fota.uf2"))
 

@@ -1006,7 +1006,10 @@ void PSXController::process_data(bool ack, bool timeout)
             if (isDualShock2Reply(ps2Data))
             {
                 if ((~ps2Data[3]) & (1 << 7))
+                {
+                    packet_delay = 10000;
                     type = PS2ControllerTypeGuitar;
+                }
                 else
                 {
                     packet_delay = 1000;

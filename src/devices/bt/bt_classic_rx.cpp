@@ -225,6 +225,16 @@ static bool is_peripheral_cod(uint32_t cod)
     return (cod & 0x1F00) == 0x0500 || (cod & PERIPHERAL_COD) == PERIPHERAL_COD;
 }
 
+// A DS3 / Navigation controller connects with exactly 0x000508: peripheral/gamepad and no service class
+// bits. DS4s and Joy-Cons set limited discoverable (0x002508) and Wiimotes are 0x002504.
+#define DS3_COD 0x000508
+static bool is_unpaired_ds3_by_cod(const bd_addr_t addr)
+{
+    uint32_t cod;
+    DeviceFactory::BluetoothPairingStateData state = {};
+    return incoming_cod_for(addr, cod) && cod == DS3_COD && !DeviceFactory::find_bluetooth_pairing_state_by_mac(addr, state);
+}
+
 // PNP SDP query in progress (before HID CID is allocated)
 struct PnpSdpState
 {
@@ -559,7 +569,8 @@ static btstack_packet_handler_t hid_incoming_handler(const bd_addr_t address, ui
 
 // A DS3 never authenticates (a PS3 doesn't ask it to), so requiring LEVEL_2 on the HID
 // PSMs makes us demand a PIN it can't give and the connection dies. Let known DS3s in
-// without security; everything else keeps the configured level.
+// without security; everything else keeps the configured level. A DS3 paired to us from a PC
+// (sixaxispairer etc.) has no stored pairing, so recognise those by their class of device.
 static gap_security_level_t hid_incoming_security_level(const bd_addr_t address, uint16_t psm, gap_security_level_t required_level)
 {
     if (psm != PSM_HID_CONTROL && psm != PSM_HID_INTERRUPT)
@@ -569,6 +580,11 @@ static gap_security_level_t hid_incoming_security_level(const bd_addr_t address,
     DeviceFactory::BluetoothPairingStateData state = {};
     if (DeviceFactory::find_bluetooth_pairing_state_by_mac(address, state) && is_ds3_pairing(state))
     {
+        return LEVEL_0;
+    }
+    if (is_unpaired_ds3_by_cod(address))
+    {
+        printf("Classic BT: %s has DS3 COD and no pairing, allowing HID without security\r\n", bd_addr_to_str(address));
         return LEVEL_0;
     }
     return required_level;
@@ -1206,6 +1222,12 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
                     {
                         pending->vid = paired_state.vid;
                         pending->pid = paired_state.pid;
+                    }
+                    else if (is_unpaired_ds3_by_cod(in_addr))
+                    {
+                        // never went through inquiry, so there's no name to detect it by either
+                        pending->vid = SONY_VID;
+                        pending->pid = SONY_DS3_PID;
                     }
                 }
                 // Like paging one, skip SDP for a Switch controller reconnecting by itself: it has hung up

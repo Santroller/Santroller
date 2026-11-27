@@ -348,6 +348,12 @@ bool Ps3Host::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t xferred_by
             }
             data->whammy = m_rb_whammy_value;
         }
+        if (m_subtype == GuitarHeroDrums && result == XFER_RESULT_SUCCESS)
+        {
+            auto *data = reinterpret_cast<PS3GuitarHeroDrums_Data_t *>(m_ep_in_buf);
+            m_hi_hat_filter.filter_report(data->kickVelocity, data->midiByte0, data->midiByte1,
+                                          data->midiByte2, millis());
+        }
         if ((m_subtype == ProKeys || m_subtype == ProGuitarMustang || m_subtype == ProGuitarSquier) &&
             (millis() - m_last_pro_instrument_poke) >= 8000)
         {

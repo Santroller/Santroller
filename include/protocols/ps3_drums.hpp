@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "protocols/gh_drums.hpp"
 #include "protocols/ps3.hpp"
 #include "protocols/rock_band_drums.hpp"
 
@@ -83,7 +84,9 @@ inline uint16_t ps3_gh_drum_axis(const uint8_t *buf, GuitarHeroDrumsAxisType axi
     case GuitarHeroDrums_GreenPad:
         return (uint16_t)(data->greenVelocity << 9);
     case GuitarHeroDrums_KickPedal:
-        return (uint16_t)(data->kickVelocity << 9);
+        return (uint16_t)(gh_drum_kick_velocity(data->kickVelocity, data->midiByte0, data->midiByte1,
+                                                data->midiByte2)
+                          << 9);
     default:
         return 0;
     }

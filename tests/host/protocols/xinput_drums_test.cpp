@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstring>
 #include "devices/usb/host/xinput_tick_helpers.h"
+#include "protocols/gh_drums.hpp"
 
 namespace
 {
@@ -244,4 +245,61 @@ TEST(XInputDrums, GuitarHeroVelocitiesAre7BitMidi)
     EXPECT_EQ(xinput_tick_analog_impl(buf, GuitarHeroDrums, kick), 1 << 9);
     EXPECT_TRUE(xinput_tick_digital_impl(buf, GuitarHeroDrums, green));
     EXPECT_FALSE(xinput_tick_digital_impl(buf, GuitarHeroDrums, yellow));
+}
+
+TEST(XInputDrums, GuitarHeroHiHatNoteWithoutAKickIsAKick)
+{
+    // PlasticBand: the kit passes the hi-hat pedal's MIDI on at the end of the report (byte 14 on),
+    // eg 99 64 1C, normally alongside a kick velocity
+    uint8_t buf[20] = {0x00, 0x14};
+    buf[14] = 0x99;
+    buf[15] = 100;
+    buf[16] = 0x1C;
+    auto kick = gh_axis(GuitarHeroDrums_KickPedal);
+    EXPECT_EQ(xinput_tick_analog_impl(buf, GuitarHeroDrums, kick), 0x1C << 9);
+    EXPECT_TRUE(xinput_tick_digital_impl(buf, GuitarHeroDrums, kick));
+    buf[13] = 64;
+    EXPECT_EQ(xinput_tick_analog_impl(buf, GuitarHeroDrums, kick), 64 << 9);
+    buf[13] = 0;
+    buf[15] = 38;
+    EXPECT_EQ(xinput_tick_analog_impl(buf, GuitarHeroDrums, kick), 0);
+}
+
+TEST(XInputDrums, GuitarHeroHiHatRunsAreOneKick)
+{
+    // a hi-hat port press repeats its note every ~50ms, sometimes after a kick (Wii kit capture)
+    GhHiHatFilter filter;
+    auto report = [&](uint32_t now_ms, uint8_t kick_velocity, bool hi_hat) {
+        uint8_t buf[20] = {0x00, 0x14};
+        buf[13] = kick_velocity;
+        if (hi_hat)
+        {
+            buf[14] = 0x99;
+            buf[15] = 100;
+            buf[16] = 0x7F;
+        }
+        auto *data = reinterpret_cast<XInputGuitarHeroDrums_Data_t *>(buf);
+        filter.filter_report(data->kickVelocity, data->midiPacket[0], data->midiPacket[1],
+                             data->midiPacket[2], now_ms);
+        auto kick = gh_axis(GuitarHeroDrums_KickPedal);
+        return xinput_tick_analog_impl(buf, GuitarHeroDrums, kick);
+    };
+    // a run on its own: only its first note is a kick
+    EXPECT_EQ(report(10000, 0, true), 0x7F << 9);
+    EXPECT_EQ(report(10004, 0, false), 0);
+    EXPECT_EQ(report(10050, 0, true), 0);
+    EXPECT_EQ(report(10105, 0, true), 0);
+    EXPECT_EQ(report(10155, 0, true), 0);
+    // a kick, then its run 135ms later: just the kick
+    EXPECT_EQ(report(20000, 25, false), 25 << 9);
+    EXPECT_EQ(report(20004, 0, false), 0);
+    EXPECT_EQ(report(20135, 0, true), 0);
+    EXPECT_EQ(report(20191, 0, true), 0);
+    // up to 195ms has been seen
+    EXPECT_EQ(report(25000, 26, false), 26 << 9);
+    EXPECT_EQ(report(25195, 0, true), 0);
+    // a press well after both counts again
+    EXPECT_EQ(report(30000, 0, true), 0x7F << 9);
+    // a real kick always goes through, whatever the hi-hat is doing
+    EXPECT_EQ(report(30050, 90, true), 90 << 9);
 }

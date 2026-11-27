@@ -174,6 +174,13 @@ bool XInputGamepadHost::xfer_cb(uint8_t ep_addr, xfer_result_t result, uint32_t 
     }
     if (ep_addr & 0x80 && result != XFER_RESULT_FAILED)
     {
+        if (m_subtype == GuitarHeroDrums && result == XFER_RESULT_SUCCESS && m_ep_in_buf[0] == 0x00 &&
+            xferred_bytes >= sizeof(XInputGuitarHeroDrums_Data_t))
+        {
+            auto *data = reinterpret_cast<XInputGuitarHeroDrums_Data_t *>(m_ep_in_buf);
+            m_hi_hat_filter.filter_report(data->kickVelocity, data->midiPacket[0], data->midiPacket[1],
+                                          data->midiPacket[2], millis());
+        }
         usbh_edpt_xfer(m_dev_addr, m_ep_in, m_ep_in_buf, m_ep_in_size);
     }
     return true;

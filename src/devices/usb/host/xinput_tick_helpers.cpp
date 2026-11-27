@@ -1,3 +1,4 @@
+#include "protocols/gh_drums.hpp"
 #include "devices/usb/host/xinput_tick_helpers.h"
 #include "protocols/pro_keys.hpp"
 #include "devices/usb/host/gh_slider_helpers.h"
@@ -48,7 +49,9 @@ uint16_t xinput_gh_drum_axis(const uint8_t *ep_in_buf, GuitarHeroDrumsAxisType a
     case GuitarHeroDrums_GreenPad:
         return data->greenVelocity << 9;
     case GuitarHeroDrums_KickPedal:
-        return data->kickVelocity << 9;
+        return gh_drum_kick_velocity(data->kickVelocity, data->midiPacket[0], data->midiPacket[1],
+                                     data->midiPacket[2])
+               << 9;
     default:
         return 0;
     }

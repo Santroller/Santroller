@@ -634,6 +634,13 @@ void XInputWirelessGamepadHost::process_in(const uint8_t *buf, uint32_t len)
             len - report_offset <= sizeof(m_report_buf))
         {
             memcpy(m_report_buf, buf + report_offset, len - report_offset);
+            if (m_subtype == GuitarHeroDrums &&
+                len - report_offset >= sizeof(XInputGuitarHeroDrums_Data_t))
+            {
+                auto *data = reinterpret_cast<XInputGuitarHeroDrums_Data_t *>(m_report_buf);
+                m_hi_hat_filter.filter_report(data->kickVelocity, data->midiPacket[0],
+                                              data->midiPacket[1], data->midiPacket[2], millis());
+            }
             if (m_request_caps_on_input)
             {
                 if (send_out("caps", capabilitiesRequest, sizeof(capabilitiesRequest)))

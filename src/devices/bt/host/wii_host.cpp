@@ -327,7 +327,7 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
         }
         if (len >= 14)
         {
-            m_decoder.update_data(data + 6, 8, this);
+            m_decoder.update_data(data + 6, 8, millis(), this);
         }
         break;
     }
@@ -345,7 +345,7 @@ void BtWiiHost::handle_report(const uint8_t *data, uint16_t len)
         }
         if (len >= 11)
         {
-            m_decoder.update_data(data + 3, 8, this);
+            m_decoder.update_data(data + 3, 8, millis(), this);
         }
         break;
     }

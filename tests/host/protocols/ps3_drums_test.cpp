@@ -198,3 +198,25 @@ TEST(PS3Drums, GuitarHeroVelocities)
                       GuitarHeroDrums_OrangePad, GuitarHeroDrums_GreenPad, GuitarHeroDrums_KickPedal})
         EXPECT_EQ(ps3_gh_drum_axis(Report(0, 0).buf, axis), 0) << axis;
 }
+
+TEST(PS3Drums, GuitarHeroHiHatNoteWithoutAKickIsAKick)
+{
+    // PlasticBand: the kit passes the hi-hat pedal's MIDI on in the right stick X, accel X and accel Y
+    // bytes, eg 99 64 1C, normally alongside a kick velocity
+    auto hi_hat = [](uint8_t status, uint8_t note, uint8_t velocity) {
+        Report r = Report(0, 0);
+        r.buf[5] = status;
+        r.buf[19] = note;
+        r.buf[23] = velocity;
+        return r;
+    };
+    EXPECT_EQ(ps3_gh_drum_axis(hi_hat(0x99, 100, 0x1C).buf, GuitarHeroDrums_KickPedal), 0x1C << 9);
+    // the kick velocity wins when there is one
+    Report both = hi_hat(0x99, 100, 0x1C).kick(64);
+    EXPECT_EQ(ps3_gh_drum_axis(both.buf, GuitarHeroDrums_KickPedal), 64 << 9);
+    // other notes, other channels and note offs aren't the pedal
+    EXPECT_EQ(ps3_gh_drum_axis(hi_hat(0x99, 38, 0x1C).buf, GuitarHeroDrums_KickPedal), 0);
+    EXPECT_EQ(ps3_gh_drum_axis(hi_hat(0x98, 100, 0x1C).buf, GuitarHeroDrums_KickPedal), 0);
+    EXPECT_EQ(ps3_gh_drum_axis(hi_hat(0x89, 100, 0x1C).buf, GuitarHeroDrums_KickPedal), 0);
+    EXPECT_EQ(ps3_gh_drum_axis(hi_hat(0x99, 100, 0x1C).buf, GuitarHeroDrums_RedPad), 0);
+}

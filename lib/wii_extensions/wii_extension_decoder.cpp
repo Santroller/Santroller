@@ -16,6 +16,7 @@ void WiiExtensionDecoder::reset()
     hasTapBar = false;
     s_box = 0;
     memset(mDrumHits, 0, sizeof(mDrumHits));
+    mHiHatFilter.reset();
 }
 
 void WiiExtensionDecoder::decode_id(const uint8_t *id_bytes)
@@ -52,7 +53,20 @@ static uint8_t wii_drum_pad(uint8_t note)
     }
 }
 
-void WiiExtensionDecoder::update_data(const uint8_t *data, uint8_t len, MidiDevice *midi_device)
+#define WII_DRUM_KICK_NOTE 36
+#define WII_DRUM_HI_HAT_NOTE 100
+
+bool WiiExtensionDecoder::filter_hi_hat(uint8_t note, uint32_t now_ms)
+{
+    if (note == WII_DRUM_KICK_NOTE)
+    {
+        mHiHatFilter.kick(now_ms);
+        return true;
+    }
+    return note != WII_DRUM_HI_HAT_NOTE || mHiHatFilter.hi_hat(now_ms);
+}
+
+void WiiExtensionDecoder::update_data(const uint8_t *data, uint8_t len, uint32_t now_ms, MidiDevice *midi_device)
 {
     uint8_t copy_len = len < sizeof(mBuffer) ? len : sizeof(mBuffer);
     memcpy(mBuffer, data, copy_len);
@@ -93,8 +107,14 @@ void WiiExtensionDecoder::update_data(const uint8_t *data, uint8_t len, MidiDevi
         velocity = 0x7F - velocity;
         note = 0x7F - note;
         // The pads are on channel 10, and only that channel is hooked up. A note on with no velocity doesn't hit anything.
-        if (channel == WII_DRUM_MIDI_CHANNEL && velocity)
+        if (channel == WII_DRUM_MIDI_CHANNEL && velocity && filter_hi_hat(note, now_ms))
         {
+            // A hi-hat port press that got through is a kick (as on PS3 and 360 kits, which report
+            // it as one), so it's sent as one and only the kick needs mapping
+            if (note == WII_DRUM_HI_HAT_NOTE)
+            {
+                note = WII_DRUM_KICK_NOTE;
+            }
             uint8_t pad = wii_drum_pad(note);
             if (pad)
             {

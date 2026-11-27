@@ -1,5 +1,6 @@
 #pragma once
 #include "devices/usb/host/host.hpp"
+#include "protocols/gh_drums.hpp"
 #include "protocols/xinput.hpp"
 #include "devices/usb/host/gh_slider_helpers.h"
 #include "protocols/xbox360_chatpad.hpp"
@@ -53,6 +54,8 @@ private:
     WtSliderFilter m_wt_filter;
     // RB2+ drum kit, from the capabilities
     bool m_rb2 = false;
+    // Runs of hi-hat notes from a GH kit, see GhHiHatFilter
+    GhHiHatFilter m_hi_hat_filter;
     // from the serial read in set_config
     std::optional<uint64_t> m_hardware_id;
 };
@@ -262,6 +265,8 @@ private:
     // RB2+ drum kit, from the capabilities. Only RB2+ kits are wireless, so assume one until
     // the capabilities arrive
     bool m_rb2 = true;
+    // Runs of hi-hat notes from a GH kit, see GhHiHatFilter
+    GhHiHatFilter m_hi_hat_filter;
     // Force feedback, from bit 7 of the link report's subtype. Wireless caps reports carry
     // voice in their flags byte instead, so this is the only place it shows up
     bool m_force_feedback = false;

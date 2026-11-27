@@ -3,6 +3,7 @@
 #include "enums.pb.h"
 #include "input_enums.pb.h"
 #include "input.pb.h"
+#include "protocols/gh_drums.hpp"
 
 class MidiDevice;
 
@@ -23,6 +24,8 @@ public:
     // Velocity of each pad hit in the latest drum report, indexed by GuitarHeroDrumsAxisType - 1.
     // A report only ever carries one hit.
     uint16_t mDrumHits[GuitarHeroDrums_KickPedal] = {};
+    // Runs of notes from a pedal in the hi-hat port, see GhHiHatFilter
+    GhHiHatFilter mHiHatFilter;
 
     void reset();
 
@@ -30,8 +33,8 @@ public:
     void decode_id(const uint8_t *id_bytes);
 
     // Updates buffer with extension bytes; handles s_box decryption,
-    // tap bar detection, and GH drum MIDI parsing
-    void update_data(const uint8_t *data, uint8_t len, MidiDevice *midi_device = nullptr);
+    // tap bar detection, and GH drum MIDI parsing. now_ms is when it was read, which the drums need
+    void update_data(const uint8_t *data, uint8_t len, uint32_t now_ms, MidiDevice *midi_device = nullptr);
 
     // Wii direct input reading
     uint16_t read_axis(proto_WiiAxisType type) const;
@@ -44,4 +47,8 @@ public:
 
     // SubType mapping helper
     SubType get_subtype() const;
+
+private:
+    // Whether a drum note is a real hit, rather than the hi-hat port repeating itself
+    bool filter_hi_hat(uint8_t note, uint32_t now_ms);
 };

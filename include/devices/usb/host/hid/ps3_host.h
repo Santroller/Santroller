@@ -1,6 +1,7 @@
 #pragma once
 #include "devices/usb/host/hid/hid_host.h"
 #include "protocols/ps3.hpp"
+#include "protocols/gh_drums.hpp"
 #include "protocols/ps3_drums.hpp"
 #include "protocols/switch_arcade.hpp"
 #include "utils.h"
@@ -78,6 +79,8 @@ private:
     uint32_t m_last_pro_instrument_poke = 0;
     uint32_t m_rb_whammy_changed = 0;
     uint8_t m_rb_whammy_raw = 0;
+    // Runs of hi-hat notes from a GH kit, see GhHiHatFilter
+    GhHiHatFilter m_hi_hat_filter;
     uint8_t m_rb_whammy_value = 0;
     uint8_t m_rumble_left = 0;
     uint8_t m_rumble_right = 0;

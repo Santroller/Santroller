@@ -30,9 +30,16 @@ WiiExtensionDecoder decoder_for(std::initializer_list<uint8_t> id)
     return decoder;
 }
 
+// When a report was read. feed reads each one a second after the last, so nothing time based links them
+uint32_t read_time_ms = 0;
+void feed_at(WiiExtensionDecoder &decoder, std::vector<uint8_t> report, uint32_t now_ms, MidiDevice *midi = nullptr)
+{
+    read_time_ms = now_ms;
+    decoder.update_data(report.data(), (uint8_t)report.size(), now_ms, midi);
+}
 void feed(WiiExtensionDecoder &decoder, std::vector<uint8_t> report, MidiDevice *midi = nullptr)
 {
-    decoder.update_data(report.data(), (uint8_t)report.size(), midi);
+    feed_at(decoder, std::move(report), read_time_ms + 1000, midi);
 }
 
 // A button and where wiibrew puts it: byte, bit
@@ -710,15 +717,15 @@ TEST(WiiDrums, OnlyChannel10IsHookedUp)
     {
         reset_wii_fakes();
         auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});
-        feed(decoder, drums(100, channel, 64), fake_midi_device());
+        feed(decoder, drums(38, channel, 64), fake_midi_device());
         EXPECT_TRUE(fake_midi::packets.empty()) << int(channel);
     }
     reset_wii_fakes();
     auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});
-    feed(decoder, drums(100, 9, 64), fake_midi_device());
+    feed(decoder, drums(38, 9, 64), fake_midi_device());
     ASSERT_EQ(fake_midi::packets.size(), 1u);
     EXPECT_EQ(fake_midi::packets[0][1], 0x99);
-    EXPECT_EQ(fake_midi::packets[0][2], 100);
+    EXPECT_EQ(fake_midi::packets[0][2], 38);
 }
 
 TEST(WiiDrums, NoteWithoutVelocitySendsNoMidi)
@@ -784,6 +791,84 @@ TEST(WiiDrums, PadHitsMapStraightToDrumOutputs)
             EXPECT_EQ(decoder.tick_digital(out), axis == hit) << int(note) << " " << axis;
         }
     }
+}
+
+namespace
+{
+// note 100 on the given times, as a pedal in the hi-hat port sends it
+void hi_hat_run(WiiExtensionDecoder &decoder, std::initializer_list<uint32_t> times)
+{
+    for (uint32_t t : times)
+    {
+        feed_at(decoder, drums(100, 9, 127), t, fake_midi_device());
+    }
+}
+size_t notes(uint8_t note)
+{
+    size_t count = 0;
+    for (const auto &packet : fake_midi::packets)
+    {
+        count += packet[2] == note;
+    }
+    return count;
+}
+} // namespace
+
+TEST(WiiDrums, HiHatPortRunIsOneKick)
+{
+    // captured: four note 100s, 50 - 55ms apart, for one press with no kick
+    reset_wii_fakes();
+    auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});
+    hi_hat_run(decoder, {10000, 10050, 10105, 10155});
+    EXPECT_EQ(notes(36), 1u);
+    EXPECT_EQ(notes(100), 0u);
+    EXPECT_EQ(fake_midi::packets[0][3], 127);
+    // the next press
+    hi_hat_run(decoder, {10500, 10550});
+    EXPECT_EQ(notes(36), 2u);
+}
+
+TEST(WiiDrums, HiHatPortRunAfterItsKickIsDropped)
+{
+    // captured: a kick at velocity 25, then note 100 135ms, 191ms and 241ms later, for one press
+    reset_wii_fakes();
+    auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});
+    feed_at(decoder, drums(36, 9, 25), 10000, fake_midi_device());
+    hi_hat_run(decoder, {10135, 10191, 10241});
+    EXPECT_EQ(notes(36), 1u);
+    EXPECT_EQ(notes(100), 0u);
+    // the same again, 130ms between them this time
+    feed_at(decoder, drums(36, 9, 25), 20000, fake_midi_device());
+    hi_hat_run(decoder, {20130, 20186, 20241});
+    EXPECT_EQ(notes(36), 2u);
+    // and 195ms, the longest captured
+    feed_at(decoder, drums(36, 9, 26), 30000, fake_midi_device());
+    hi_hat_run(decoder, {30195, 30245});
+    EXPECT_EQ(notes(36), 3u);
+    EXPECT_EQ(notes(100), 0u);
+}
+
+TEST(WiiDrums, HiHatPressWellAfterAKickCounts)
+{
+    reset_wii_fakes();
+    auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});
+    feed_at(decoder, drums(36, 9, 80), 10000, fake_midi_device());
+    hi_hat_run(decoder, {10400, 10450});
+    EXPECT_EQ(notes(36), 2u);
+    EXPECT_EQ(notes(100), 0u);
+}
+
+TEST(WiiDrums, PadsAndKicksAreNeverMerged)
+{
+    reset_wii_fakes();
+    auto decoder = decoder_for({0x01, 0x00, 0xA4, 0x20, 0x01, 0x03});
+    for (uint32_t t : {10000u, 10010u, 10020u})
+    {
+        feed_at(decoder, drums(38, 9, 100), t, fake_midi_device());
+        feed_at(decoder, drums(36, 9, 100), t + 5, fake_midi_device());
+    }
+    EXPECT_EQ(notes(38), 3u);
+    EXPECT_EQ(notes(36), 3u);
 }
 
 TEST(WiiDrums, HitsOnlyLastForTheirReport)

@@ -268,7 +268,7 @@ void WiiExtension::process_data(uint8_t addr, bool running, bool timeout, bool a
             if (valid)
             {
                 packetIssueCount = 0;
-                update_data(bufferRx, wiiBytes, m_device);
+                update_data(bufferRx, wiiBytes, to_ms_since_boot(get_absolute_time()), m_device);
                 // Update the led if it changes
                 if (mType == WiiExtType::WiiDjHeroTurntable && ledUpdated)
                 {

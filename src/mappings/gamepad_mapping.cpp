@@ -26,8 +26,170 @@ static int16_t invert_signed_axis(int16_t value)
     return static_cast<int16_t>(~static_cast<uint16_t>(value));
 }
 
+// Which sticks (bit 0 left, bit 1 right) an output's report for this subtype keeps something
+// else in. From the report layouts: the 360 / OG Xbox / HID instrument reports fill both stick
+// areas (drum velocities, whammy and tilt, frets, turntable velocities...), GIP instruments aren't
+// gamepad shaped at all, PS3 instruments mostly use the right stick bytes (whammy, the GH slider,
+// the GH kit's MIDI byte), GHL keeps its strum bar and whammy in the sticks everywhere, and PS2
+// guitars keep the slider, whammy and their dpad there.
+static uint8_t conflicting_sticks(GamepadAxisMapping::StickOutput output, SubType subtype)
+{
+    using StickOutput = GamepadAxisMapping::StickOutput;
+    constexpr uint8_t LEFT = 1;
+    constexpr uint8_t RIGHT = 2;
+    switch (output)
+    {
+    case StickOutput::XInput:
+    case StickOutput::XboxOne:
+        switch (subtype)
+        {
+        case GuitarHeroGuitar:
+        case RockBandGuitar:
+        case GuitarFreaks:
+        case RockRevolutionGuitar:
+        case PowerGigGuitar:
+        case LiveGuitar:
+        case GuitarHeroDrums:
+        case RockBandDrums:
+        case PowerGigDrum:
+        case DjHeroTurntable:
+        case ProKeys:
+        case ProGuitarMustang:
+        case ProGuitarSquier:
+            return LEFT | RIGHT;
+        default:
+            return 0;
+        }
+    case StickOutput::PS3:
+        switch (subtype)
+        {
+        case LiveGuitar:
+            return LEFT | RIGHT;
+        case GuitarHeroGuitar:
+        case RockBandGuitar:
+        case PowerGigGuitar:
+        case GuitarHeroDrums:
+        case DjHeroTurntable:
+        case ProKeys:
+        case ProGuitarMustang:
+        case ProGuitarSquier:
+            return RIGHT;
+        default:
+            return 0;
+        }
+    case StickOutput::PS4:
+    case StickOutput::PS5:
+        return subtype == LiveGuitar ? LEFT | RIGHT : 0;
+    case StickOutput::PS2:
+        return (subtype == GuitarHeroGuitar || subtype == RockBandGuitar) ? LEFT | RIGHT : 0;
+    }
+    return 0;
+}
+
+// dpad bits, in the order dpad_bindings uses
+static constexpr uint8_t STICK_DPAD_UP = 1;
+static constexpr uint8_t STICK_DPAD_DOWN = 2;
+static constexpr uint8_t STICK_DPAD_LEFT = 4;
+static constexpr uint8_t STICK_DPAD_RIGHT = 8;
+
+template <typename Report>
+static void press_stick_dpad(Report *report, uint8_t dpad)
+{
+    report->dpadUp |= (dpad & STICK_DPAD_UP) != 0;
+    report->dpadDown |= (dpad & STICK_DPAD_DOWN) != 0;
+    report->dpadLeft |= (dpad & STICK_DPAD_LEFT) != 0;
+    report->dpadRight |= (dpad & STICK_DPAD_RIGHT) != 0;
+}
+
+bool GamepadAxisMapping::stick_to_dpad(StickOutput output, uint8_t *buf) const
+{
+    uint8_t side;
+    bool vertical;
+    switch (m_mapping.mapping.mapping.gamepadAxis)
+    {
+    case Gamepad_LeftStickX:
+        side = 1;
+        vertical = false;
+        break;
+    case Gamepad_LeftStickY:
+        side = 1;
+        vertical = true;
+        break;
+    case Gamepad_RightStickX:
+        side = 2;
+        vertical = false;
+        break;
+    case Gamepad_RightStickY:
+        side = 2;
+        vertical = true;
+        break;
+    default:
+        return false;
+    }
+    if (!m_profile || !(conflicting_sticks(output, m_profile->subtype) & side))
+    {
+        return false;
+    }
+    if (m_centered)
+    {
+        return true;
+    }
+    // Half way out, so stick noise around the centre doesn't press anything
+    constexpr int32_t threshold = 16384;
+    const int32_t value = static_cast<int32_t>(m_calibrated_value) - 32768;
+    uint8_t dpad = 0;
+    if (value >= threshold)
+    {
+        dpad = vertical ? STICK_DPAD_UP : STICK_DPAD_RIGHT;
+    }
+    else if (value <= -threshold)
+    {
+        dpad = vertical ? STICK_DPAD_DOWN : STICK_DPAD_LEFT;
+    }
+    if (!dpad)
+    {
+        return true;
+    }
+    switch (output)
+    {
+    case StickOutput::XInput:
+        // the OG Xbox and HID reports keep the dpad in the same bits as the 360's
+        press_stick_dpad((XInputGamepad_Data_t *)buf, dpad);
+        break;
+    case StickOutput::XboxOne:
+        press_stick_dpad((XboxOneGamepad_Data_t *)buf, dpad);
+        break;
+    case StickOutput::PS3:
+        press_stick_dpad((PS3ThirdPartyGamepad_Data_t *)buf, dpad);
+        break;
+    case StickOutput::PS4:
+        press_stick_dpad((PS4Gamepad_Data_t *)buf, dpad);
+        break;
+    case StickOutput::PS5:
+        press_stick_dpad((PS5Gamepad_Data_t *)buf, dpad);
+        break;
+    case StickOutput::PS2:
+    {
+        // the same bits GuitarHeroGuitarGamepadButtonMapping presses
+        PS2GuitarHeroGuitar_Data_t *report = (PS2GuitarHeroGuitar_Data_t *)buf;
+        report->psDpadUp |= (dpad & STICK_DPAD_UP) != 0;
+        report->dpadUp |= (dpad & STICK_DPAD_UP) != 0;
+        report->psDpadDown |= (dpad & STICK_DPAD_DOWN) != 0;
+        report->dpadDown |= (dpad & STICK_DPAD_DOWN) != 0;
+        report->psDpadLeft |= (dpad & STICK_DPAD_LEFT) != 0;
+        report->psDpadRight |= (dpad & STICK_DPAD_RIGHT) != 0;
+        break;
+    }
+    }
+    return true;
+}
+
 void GamepadAxisMapping::update_hid(uint8_t *buf)
 {
+    if (stick_to_dpad(StickOutput::XInput, buf))
+    {
+        return;
+    }
     if (m_centered)
     {
         return;
@@ -217,6 +379,10 @@ void GamepadAxisMapping::update_switch(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps2(uint8_t *buf)
 {
+    if (stick_to_dpad(StickOutput::PS2, buf))
+    {
+        return;
+    }
     PS2Gamepad_Data_t *report = (PS2Gamepad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.gamepadAxis)
     {
@@ -335,6 +501,10 @@ void GamepadAxisMapping::update_n64(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps3(uint8_t *buf)
 {
+    if (stick_to_dpad(StickOutput::PS3, buf))
+    {
+        return;
+    }
     PS3Dpad_Data_t *report = (PS3Dpad_Data_t *)buf;
     switch (m_mapping.mapping.mapping.gamepadAxis)
     {
@@ -378,6 +548,10 @@ void GamepadAxisMapping::update_ps3(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps4(uint8_t *buf)
 {
+    if (stick_to_dpad(StickOutput::PS4, buf))
+    {
+        return;
+    }
     if (m_centered)
     {
         return;
@@ -410,6 +584,10 @@ void GamepadAxisMapping::update_ps4(uint8_t *buf)
 
 void GamepadAxisMapping::update_ps5(uint8_t *buf)
 {
+    if (stick_to_dpad(StickOutput::PS5, buf))
+    {
+        return;
+    }
     if (m_centered)
     {
         return;
@@ -442,6 +620,10 @@ void GamepadAxisMapping::update_ps5(uint8_t *buf)
 
 void GamepadAxisMapping::update_xinput(uint8_t *buf)
 {
+    if (stick_to_dpad(StickOutput::XInput, buf))
+    {
+        return;
+    }
     if (m_centered)
     {
         return;
@@ -473,6 +655,10 @@ void GamepadAxisMapping::update_xinput(uint8_t *buf)
 }
 void GamepadAxisMapping::update_ogxbox(uint8_t *buf)
 {
+    if (stick_to_dpad(StickOutput::XInput, buf))
+    {
+        return;
+    }
     if (m_centered)
     {
         return;
@@ -504,6 +690,10 @@ void GamepadAxisMapping::update_ogxbox(uint8_t *buf)
 }
 void GamepadAxisMapping::update_xboxone(uint8_t *buf)
 {
+    if (stick_to_dpad(StickOutput::XboxOne, buf))
+    {
+        return;
+    }
     if (m_centered)
     {
         return;

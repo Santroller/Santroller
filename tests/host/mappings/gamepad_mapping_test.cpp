@@ -142,17 +142,19 @@ TEST_F(GamepadAxis, Santroller2HostReadsHidSticksBack)
     }
 }
 
-TEST_F(GamepadAxis, HidInstrumentsKeepXInputYAxes)
+TEST_F(GamepadAxis, HidInstrumentSticksPressTheDpad)
 {
-    // instrument reports are XInput reports, so a stick mapped on one isn't flipped
+    // instrument reports are XInput reports with their own data where the sticks go
     for (SubType subtype : {GuitarHeroGuitar, RockBandDrums, LiveGuitar, ProKeys, PowerGigGuitar})
     {
         profile = make_profile(subtype);
-        Report<PCGamepadDpad_Data_t> report;
+        Report<XInputGamepad_Data_t> report;
         axis(Gamepad_LeftStickY, UINT16_MAX)->update_hid(report.buf());
         axis(Gamepad_RightStickY, 0)->update_hid(report.buf());
-        EXPECT_EQ(report->leftStickY, INT16_MAX) << subtype;
-        EXPECT_EQ(report->rightStickY, INT16_MIN) << subtype;
+        EXPECT_EQ(report->leftStickY, 0) << subtype;
+        EXPECT_EQ(report->rightStickY, 0) << subtype;
+        EXPECT_TRUE(report->dpadUp) << subtype;
+        EXPECT_TRUE(report->dpadDown) << subtype;
     }
     for (SubType subtype : {Gamepad, Dancepad, Taiko, StageKit})
     {
@@ -160,26 +162,6 @@ TEST_F(GamepadAxis, HidInstrumentsKeepXInputYAxes)
         Report<PCGamepadDpad_Data_t> report;
         axis(Gamepad_LeftStickY, UINT16_MAX)->update_hid(report.buf());
         EXPECT_EQ(report->leftStickY, INT16_MIN) << subtype;
-    }
-}
-
-TEST_F(GamepadAxis, Santroller2HostReadsInstrumentSticksBack)
-{
-    // instruments report CapabilityXInputYAxis, so the host leaves their Y axes alone
-    profile = make_profile(GuitarHeroGuitar);
-    for (GamepadAxisType type : {Gamepad_LeftStickX, Gamepad_LeftStickY, Gamepad_RightStickX, Gamepad_RightStickY})
-    {
-        for (uint16_t value : {0, 0x1234, 0x8001, 0xBEEF, UINT16_MAX})
-        {
-            Report<PCGamepadDpad_Data_t> report;
-            axis(type, value)->update_hid(report.buf());
-            proto_Output output = {};
-            output.which_mapping = proto_Output_gamepadAxis_tag;
-            output.mapping.gamepadAxis = type;
-            uint16_t read = santroller_v2_fix_analog(output, xinput_tick_analog_impl(report.buf(), GuitarHeroGuitar, output, true),
-                                                     CapabilityXInputYAxis);
-            EXPECT_EQ(read, value) << "axis " << type << " value " << value;
-        }
     }
 }
 
@@ -473,30 +455,87 @@ TEST_F(GamepadAxis, WiiFormat1RightStickYAndTriggers)
 
 // Drum and turntable reports keep instrument data where the sticks go
 
-TEST_F(GamepadAxis, DrumsDropSticksButKeepTriggers)
+TEST_F(GamepadAxis, DrumsPressTheDpadButKeepTriggers)
 {
+    // a Wii kit's stick noise would otherwise land on the green and red velocities
+    profile = make_profile(GuitarHeroDrums);
     Report<XInputGamepad_Data_t> report;
     axis<DrumsGamepadAxisMapping>(Gamepad_LeftStickX, UINT16_MAX)->update_xinput(report.buf());
+    axis<DrumsGamepadAxisMapping>(Gamepad_LeftStickY, 0)->update_xinput(report.buf());
     axis<DrumsGamepadAxisMapping>(Gamepad_LeftTrigger, UINT16_MAX)->update_xinput(report.buf());
     EXPECT_EQ(report->leftStickX, 0);
+    EXPECT_EQ(report->leftStickY, 0);
+    EXPECT_TRUE(report->dpadRight);
+    EXPECT_TRUE(report->dpadDown);
+    EXPECT_FALSE(report->dpadLeft);
+    EXPECT_FALSE(report->dpadUp);
     EXPECT_EQ(report->leftTrigger, 0xFF);
 }
 
-TEST_F(GamepadAxis, DrumsStillSendSticksToPlayStation)
+TEST_F(GamepadAxis, StickNoiseDoesNotPressTheDpad)
 {
-    Report<PS3Dpad_Data_t> report;
-    axis<DrumsGamepadAxisMapping>(Gamepad_LeftStickX, UINT16_MAX)->update_ps3(report.buf());
-    EXPECT_EQ(report->leftStickX, 0xFF);
+    profile = make_profile(GuitarHeroDrums);
+    Report<XInputGamepad_Data_t> report;
+    axis<DrumsGamepadAxisMapping>(Gamepad_LeftStickX, 0x8000 + 0x3000)->update_xinput(report.buf());
+    axis<DrumsGamepadAxisMapping>(Gamepad_LeftStickY, 0x8000 - 0x3000)->update_xinput(report.buf());
+    EXPECT_EQ(report->leftStickX, 0);
+    EXPECT_EQ(report->leftStickY, 0);
+    EXPECT_FALSE(report->dpadUp || report->dpadDown || report->dpadLeft || report->dpadRight);
 }
 
-TEST_F(GamepadAxis, TurntableDropsAllAxesOnXbox)
+TEST_F(GamepadAxis, DrumsStillSendTheLeftStickToPlayStation)
 {
+    // the PS3 GH kit only keeps its MIDI byte in the right stick
+    profile = make_profile(GuitarHeroDrums);
+    Report<PS3ThirdPartyGamepad_Data_t> report;
+    axis<DrumsGamepadAxisMapping>(Gamepad_LeftStickX, UINT16_MAX)->update_ps3(report.buf());
+    axis<DrumsGamepadAxisMapping>(Gamepad_RightStickX, 0)->update_ps3(report.buf());
+    EXPECT_EQ(((PS3Dpad_Data_t *)report.buf())->leftStickX, 0xFF);
+    EXPECT_EQ(((PS3Dpad_Data_t *)report.buf())->rightStickX, 0);
+    EXPECT_TRUE(report->dpadLeft);
+}
+
+TEST_F(GamepadAxis, PS3GuitarRightStickPressesTheDpadInsteadOfWhammy)
+{
+    profile = make_profile(GuitarHeroGuitar);
+    Report<PS3ThirdPartyGamepad_Data_t> report;
+    axis(Gamepad_RightStickX, UINT16_MAX)->update_ps3(report.buf());
+    EXPECT_EQ(((PS3GuitarHeroGuitar_Data_t *)report.buf())->whammy, 0);
+    EXPECT_TRUE(report->dpadRight);
+}
+
+TEST_F(GamepadAxis, PS4LiveGuitarSticksPressTheDpad)
+{
+    profile = make_profile(LiveGuitar);
+    Report<PS4Gamepad_Data_t> report;
+    axis(Gamepad_LeftStickY, UINT16_MAX)->update_ps4(report.buf());
+    EXPECT_EQ(report->leftStickY, 0);
+    EXPECT_TRUE(report->dpadUp);
+}
+
+TEST_F(GamepadAxis, PS2GuitarSticksPressTheGuitarDpad)
+{
+    profile = make_profile(GuitarHeroGuitar);
+    Report<PS2GuitarHeroGuitar_Data_t> report;
+    axis(Gamepad_LeftStickX, 0)->update_ps2(report.buf());
+    axis(Gamepad_LeftStickY, UINT16_MAX)->update_ps2(report.buf());
+    EXPECT_EQ(report->slider, 0);
+    EXPECT_EQ(report->whammy, 0);
+    EXPECT_TRUE(report->psDpadLeft);
+    EXPECT_TRUE(report->psDpadUp);
+    EXPECT_TRUE(report->dpadUp);
+}
+
+TEST_F(GamepadAxis, TurntableDropsTriggersAndPressesTheDpadOnXbox)
+{
+    profile = make_profile(DjHeroTurntable);
     Report<XInputGamepad_Data_t> report;
     axis<DJHTurntableGamepadAxisMapping>(Gamepad_LeftStickX, UINT16_MAX)->update_xinput(report.buf());
     axis<DJHTurntableGamepadAxisMapping>(Gamepad_LeftTrigger, UINT16_MAX)->update_xinput(report.buf());
     axis<DJHTurntableGamepadAxisMapping>(Gamepad_LeftTrigger, UINT16_MAX)->update_hid(report.buf());
     EXPECT_EQ(report->leftStickX, 0);
     EXPECT_EQ(report->leftTrigger, 0);
+    EXPECT_TRUE(report->dpadRight);
 }
 
 // Buttons

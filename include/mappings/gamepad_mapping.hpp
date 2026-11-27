@@ -24,6 +24,23 @@ public:
 protected:
     // For outputs written as a gamepad axis that calibrate differently, e.g. a wheel's pedals rest at their minimum
     GamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile, bool trigger);
+
+public:
+    enum class StickOutput : uint8_t
+    {
+        XInput, // also HID and the OG Xbox, which share the 360 instrument layouts
+        XboxOne,
+        PS2,
+        PS3,
+        PS4,
+        PS5,
+    };
+
+protected:
+    // Instrument reports keep their own data (velocities, whammy, frets...) where a gamepad's sticks
+    // go, so a stick on that side is pressed on the dpad instead. Returns false if this axis isn't a
+    // stick on such a side, and should be written as usual.
+    bool stick_to_dpad(StickOutput output, uint8_t *buf) const;
 };
 
 class PS3GamepadAxisMapping : public GamepadAxisMapping
@@ -35,19 +52,12 @@ public:
 };
 
 // Drum reports keep the pad velocities where the sticks go (on HID, 360 and OG Xbox), so
-// gamepad sticks can't be written there (e.g. a passed through controller's stick noise
-// would overwrite every hit's velocity). Triggers are unused on drums, so they still pass.
+// gamepad sticks go to the dpad there (see stick_to_dpad). Triggers are unused on drums, so they still pass.
 class DrumsGamepadAxisMapping : public GamepadAxisMapping
 {
 public:
     ~DrumsGamepadAxisMapping() {}
     DrumsGamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile) {}
-    void update_hid(uint8_t *report);
-    void update_xinput(uint8_t *report);
-    void update_ogxbox(uint8_t *report);
-
-private:
-    bool is_stick() const;
 };
 
 class RockBandDrumsGamepadAxisMapping : public DrumsGamepadAxisMapping
@@ -59,16 +69,16 @@ public:
 };
 
 // Turntable reports keep the table buttons where the triggers go and the table velocities,
-// effects knob and crossfader where the sticks go, so gamepad axes can't be written there
-// (e.g. Wii DJ stick noise would show up as right table movement)
+// effects knob and crossfader where the sticks go, so the triggers are dropped and the sticks
+// go to the dpad (e.g. Wii DJ stick noise would otherwise show up as right table movement)
 class DJHTurntableGamepadAxisMapping : public GamepadAxisMapping
 {
 public:
     ~DJHTurntableGamepadAxisMapping() {}
     DJHTurntableGamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile) {}
-    void update_hid(uint8_t *report) { (void)report; }
-    void update_xinput(uint8_t *report) { (void)report; }
-    void update_ogxbox(uint8_t *report) { (void)report; }
+    void update_hid(uint8_t *report) { stick_to_dpad(StickOutput::XInput, report); }
+    void update_xinput(uint8_t *report) { stick_to_dpad(StickOutput::XInput, report); }
+    void update_ogxbox(uint8_t *report) { stick_to_dpad(StickOutput::XInput, report); }
 };
 
 class RockBandGuitarGamepadAxisMapping : public GamepadAxisMapping
@@ -77,12 +87,6 @@ public:
     ~RockBandGuitarGamepadAxisMapping();
     RockBandGuitarGamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile);
     void update_xboxone(uint8_t *report);
-    void update_xinput(uint8_t *report);
-    void update_ogxbox(uint8_t *report);
-    void update_hid(uint8_t *report);
-
-private:
-    bool is_stick() const;
 };
 
 class GamepadButtonMapping : public ButtonMapping

@@ -619,19 +619,6 @@ void RockBandGuitarAxisMapping::update_xboxone(uint8_t *buf)
         break;
     }
 }
-bool RockBandGuitarGamepadAxisMapping::is_stick() const
-{
-    switch (m_mapping.mapping.mapping.gamepadAxis)
-    {
-    case Gamepad_LeftStickX:
-    case Gamepad_LeftStickY:
-    case Gamepad_RightStickX:
-    case Gamepad_RightStickY:
-        return true;
-    default:
-        return false;
-    }
-}
 RockBandGuitarGamepadAxisMapping::~RockBandGuitarGamepadAxisMapping() {}
 
 RockBandGuitarGamepadAxisMapping::RockBandGuitarGamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : GamepadAxisMapping(mapping, std::move(input), id, profile)
@@ -640,6 +627,13 @@ RockBandGuitarGamepadAxisMapping::RockBandGuitarGamepadAxisMapping(const proto_M
 void RockBandGuitarGamepadAxisMapping::update_xboxone(uint8_t *buf)
 {
     if (m_centered)
+    {
+        return;
+    }
+    // The left stick has the guitar's joystick to go to, the right stick doesn't
+    if (m_mapping.mapping.mapping.gamepadAxis != Gamepad_LeftStickX &&
+        m_mapping.mapping.mapping.gamepadAxis != Gamepad_LeftStickY &&
+        stick_to_dpad(StickOutput::XboxOne, buf))
     {
         return;
     }
@@ -666,28 +660,6 @@ void RockBandGuitarGamepadAxisMapping::update_xboxone(uint8_t *buf)
         break;
     default:
         break;
-    }
-}
-
-void RockBandGuitarGamepadAxisMapping::update_hid(uint8_t *buf)
-{
-    if (!is_stick())
-    {
-        GamepadAxisMapping::update_hid(buf);
-    }
-}
-void RockBandGuitarGamepadAxisMapping::update_xinput(uint8_t *buf)
-{
-    if (!is_stick())
-    {
-        GamepadAxisMapping::update_xinput(buf);
-    }
-}
-void RockBandGuitarGamepadAxisMapping::update_ogxbox(uint8_t *buf)
-{
-    if (!is_stick())
-    {
-        GamepadAxisMapping::update_ogxbox(buf);
     }
 }
 
@@ -1365,41 +1337,6 @@ void RockBandDrumsAxisMapping::update_xboxone(uint8_t *buf)
         break;
     }
 }
-bool DrumsGamepadAxisMapping::is_stick() const
-{
-    switch (m_mapping.mapping.mapping.gamepadAxis)
-    {
-    case Gamepad_LeftStickX:
-    case Gamepad_LeftStickY:
-    case Gamepad_RightStickX:
-    case Gamepad_RightStickY:
-        return true;
-    default:
-        return false;
-    }
-}
-void DrumsGamepadAxisMapping::update_hid(uint8_t *buf)
-{
-    if (!is_stick())
-    {
-        GamepadAxisMapping::update_hid(buf);
-    }
-}
-void DrumsGamepadAxisMapping::update_xinput(uint8_t *buf)
-{
-    if (!is_stick())
-    {
-        GamepadAxisMapping::update_xinput(buf);
-    }
-}
-void DrumsGamepadAxisMapping::update_ogxbox(uint8_t *buf)
-{
-    if (!is_stick())
-    {
-        GamepadAxisMapping::update_ogxbox(buf);
-    }
-}
-
 RockBandDrumsGamepadAxisMapping::~RockBandDrumsGamepadAxisMapping() {}
 
 RockBandDrumsGamepadAxisMapping::RockBandDrumsGamepadAxisMapping(const proto_Mapping &mapping, std::unique_ptr<Input> input, uint16_t id, std::shared_ptr<Profile> profile) : DrumsGamepadAxisMapping(mapping, std::move(input), id, profile)
@@ -1407,11 +1344,10 @@ RockBandDrumsGamepadAxisMapping::RockBandDrumsGamepadAxisMapping(const proto_Map
 }
 void RockBandDrumsGamepadAxisMapping::update_xboxone(uint8_t *buf)
 {
-    if (m_centered)
+    if (m_centered || stick_to_dpad(StickOutput::XboxOne, buf))
     {
         return;
     }
-    (void)buf;
     switch (m_mapping.mapping.mapping.gamepadAxis)
     {
     case Gamepad_LeftStickX:

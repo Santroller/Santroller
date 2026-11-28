@@ -29,6 +29,8 @@
 #include "devices/ws2812.hpp"
 #include "devices/stp16cpc.hpp"
 #include "devices/gpio_led_group.hpp"
+#include "devices/drum_kit.hpp"
+#include "devices/single_input.hpp"
 #include "devices/apa102.hpp"
 #include "devices/multiplexer.hpp"
 #include "devices/bluetooth.hpp"
@@ -396,6 +398,16 @@ std::shared_ptr<Device> DeviceFactory::create_device(
 
     case proto_Device_gpioLedGroup_tag:
         device = std::make_shared<GpioLedGroupDevice>(proto_device.device.gpioLedGroup, device_id);
+        break;
+
+    case proto_Device_drumKit_tag:
+        // load_device gives it its pads
+        device = std::make_shared<DrumKitDevice>(device_id);
+        break;
+
+    case proto_Device_singleInput_tag:
+        // load_device gives it its input
+        device = std::make_shared<SingleInputDevice>(device_id);
         break;
 
     case proto_Device_apa102_tag:

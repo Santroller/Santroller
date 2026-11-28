@@ -26,6 +26,8 @@
 #include "input/infinium_fader.hpp"
 #include "input/secondary_pico.hpp"
 #include "devices/encoder.hpp"
+#include "devices/drum_kit.hpp"
+#include "devices/single_input.hpp"
 #include "devices/infinium_fader.hpp"
 #include "devices/secondary_pico.hpp"
 
@@ -62,6 +64,18 @@ template <typename InputType, typename ConfigType>
 static std::unique_ptr<Input> create_simple_input(const ConfigType &config)
 {
     return std::make_unique<InputType>(config);
+}
+
+// An input a device holds. Missing reads as never pressed, and so does one that is itself on a device holding
+// an input, which could otherwise go round in circles.
+static std::unique_ptr<Input> create_held_input(const proto_Input *held, std::shared_ptr<Profile> profile)
+{
+    std::unique_ptr<Input> input;
+    if (held && held->which_input != proto_Input_drumKit_tag && held->which_input != proto_Input_singleInput_tag)
+    {
+        input = InputFactory::create_input(*held, profile);
+    }
+    return input ? std::move(input) : std::make_unique<FixedInput>(proto_FixedInput{0});
 }
 
 std::unique_ptr<Input> InputFactory::create_input(
@@ -189,6 +203,19 @@ std::unique_ptr<Input> InputFactory::create_input(
 
     case proto_Input_encoder_tag:
         return create_device_input<EncoderInput, EncoderDevice>(proto_input, profile, proto_input.input.encoder.deviceid, proto_input.input.encoder);
+
+    // Devices holding an input (a drum kit's pads, a single input) read whatever it is
+    case proto_Input_drumKit_tag:
+    {
+        auto kit = get_device<DrumKitDevice>(profile, proto_input.input.drumKit.deviceid);
+        return create_held_input(kit ? kit->pad(proto_input.input.drumKit.pad) : nullptr, profile);
+    }
+
+    case proto_Input_singleInput_tag:
+    {
+        auto device = get_device<SingleInputDevice>(profile, proto_input.input.singleInput.deviceid);
+        return create_held_input(device ? device->input() : nullptr, profile);
+    }
 
     // Special inputs (held, cycle, toggle, shortcut, shifted) are handled by callbacks
     case proto_Input_held_tag:

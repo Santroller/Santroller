@@ -271,11 +271,22 @@ message Input {
     SNESAxisInput snesAxis = 44;
     JoybusButtonInput joybusButton = 45;
     JoybusAxisInput joybusAxis = 46;
+    DrumKitInput drumKit = 47;
+    SingleInputDeviceInput singleInput = 48;
   }
   // Overrides the source's digital state when this input is used as a digital input.
   optional AnalogToDigitalTriggerType digitalTrigger = 60;
   optional int32 digitalTriggerValue = 61;
   optional int32 digitalMaxTriggerValue = 62;
+}
+// A pad of a DrumKitDevice, by its id
+message DrumKitInput {
+  required int32 deviceid = 1;
+  required uint32 pad = 2;
+}
+// What a SingleInputDevice reads
+message SingleInputDeviceInput {
+  required int32 deviceid = 1;
 }
 message InfiniumFaderInput {
   required int32 deviceid = 1;

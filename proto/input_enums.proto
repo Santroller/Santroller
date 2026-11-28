@@ -322,6 +322,22 @@ enum AxisSection {
 // only registers a press once it has been held for the debounce time and releases straight
 // away, so presses shorter than that (and bounces) are ignored. Impulse outputs the press
 // for the debounce time and then releases, requiring a release and repress to send again.
+// What a drum kit's pad is, which drum layouts use to pick the lane it plays. Guitar Hero kits have a red pad,
+// yellow cymbal, blue pad, orange cymbal and green pad.
+enum DrumPadType {
+  DrumPadOther = 0;
+  DrumPadRed = 1;
+  DrumPadYellow = 2;
+  DrumPadBlue = 3;
+  DrumPadGreen = 4;
+  DrumPadYellowCymbal = 5;
+  DrumPadBlueCymbal = 6;
+  DrumPadGreenCymbal = 7;
+  DrumPadOrangeCymbal = 8;
+  DrumPadKick = 9;
+  DrumPadKick2 = 10;
+  DrumPadHiHatPedal = 11;
+}
 enum DebounceMode {
   DebounceRelease = 0;
   DebouncePress = 1;

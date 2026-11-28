@@ -15,12 +15,18 @@
 #define ADXL345_REG_DEVID 0x00
 #define LIS3DH_ADDRESS 0x18
 #define LIS3DH_ADDRESS_2 0x19
+// The LIS3DSH sits at 0x1D (shared with the ADXL345) or 0x1E, not at the LIS3DH's addresses
+#define LIS3DSH_ADDRESS ADXL345_ADDRESS_2
+#define LIS3DSH_ADDRESS_2 0x1E
 #define LIS3DH_REG_CTRL1 0x20
 #define LIS3DH_REG_CTRL2 0x21
 #define LIS3DH_REG_CTRL3 0x22
 #define LIS3DH_REG_CTRL4 0x23
 #define LIS3DH_REG_WHOAMI 0x0F
 #define LIS3DH_REG_STATUS 0x27
+// The LIS3DSH has no auto increment bit in its register address, it uses CTRL_REG6's ADD_INC
+// (on by default) instead
+#define LIS3DSH_REG_STATUS 0x27
 #define LIS3DH_REG_STATUS_AI 0x27 | 0x80 // Status followed by the outputs, with auto increment
 #define LIS3DH_STATUS_ZYXDA 0x08
 #define LIS3DH_REG_STATUS_AUX 0x07
@@ -150,6 +156,24 @@ private:
     uint8_t idResponseAdxl2 = 0;
     uint8_t idResponseMpu1 = 0;
     uint8_t idResponseMpu2 = 0;
+    uint8_t idResponseLis3dsh1 = 0;
+    uint8_t idResponseLis3dsh2 = 0;
+    // 0x1D can be an ADXL345 or a LIS3DSH, which keep their IDs in different registers. When the
+    // ADXL345 probe there finds something else, the LIS3DSH's WHOAMI is read next, and this is set
+    // until it comes back
+    bool lis3dshFollowUp = false;
+    bool start_lis(uint8_t addr, uint8_t id);
+    // What each probed address last did, PROBE_NAK or the ID it answered with. Only stored by
+    // process_data (an interrupt), tick() prints it when it changes
+    // The ADXL345/MPU-6050 order of the probes, then the LIS3DSH WHOAMI follow up at 0x1D and 0x1E
+    static constexpr uint8_t PROBE_ADDRESSES = 8;
+    static constexpr uint16_t PROBE_NONE = 0xFFFF;
+    static constexpr uint16_t PROBE_NAK = 0xFF00;
+    static const char *const probeNames[PROBE_ADDRESSES];
+    volatile uint16_t probeResult[PROBE_ADDRESSES];
+    uint16_t probeResultPrinted[PROBE_ADDRESSES];
+    accel_status_e statusPrinted = ACCEL_INIT;
+    void print_debug();
     uint8_t pollReg = 0;
     uint32_t lastPoll = 0;
     // Probes sent to each possible address that haven't answered yet

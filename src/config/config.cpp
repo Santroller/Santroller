@@ -19,6 +19,8 @@
 #include "config/trigger_factory.hpp"
 #include "devices/accelerometer.hpp"
 #include "devices/ads1115.hpp"
+#include "devices/drum_kit.hpp"
+#include "devices/single_input.hpp"
 #include "devices/apa102.hpp"
 #include "devices/base.hpp"
 #include "devices/bhdrum.hpp"
@@ -192,6 +194,33 @@ static bool load_peripheral_sub_device(pb_istream_t *stream,
     devices->ids.push_back(sub_device.deviceid);
     return pb_read(stream, nullptr, len);
 }
+// A drum kit's pads, collected while its config is decoded and then given to it. Never re-entered, as pads
+// don't have devices of their own
+static std::vector<DrumKitPad> drum_kit_pads;
+static bool load_drum_pad(pb_istream_t *stream, const pb_field_t *field,
+                          void **arg)
+{
+    proto_DrumPad pad = proto_DrumPad_init_zero;
+    if (!pb_decode(stream, proto_DrumPad_fields, &pad))
+    {
+        return false;
+    }
+    if (drum_kit_pads.size() < DrumKitDevice::MAX_PADS)
+    {
+        drum_kit_pads.push_back({pad.id, pad.input});
+    }
+    return true;
+}
+// A single input device's input, decoded the same way
+static bool has_single_input;
+static proto_Input single_input;
+static bool load_single_input(pb_istream_t *stream, const pb_field_t *field,
+                              void **arg)
+{
+    single_input = proto_Input_init_zero;
+    has_single_input = pb_decode(stream, proto_Input_fields, &single_input);
+    return has_single_input;
+}
 bool load_device_dev(pb_istream_t *stream, const pb_field_t *field,
                      void **arg)
 {
@@ -200,6 +229,16 @@ bool load_device_dev(pb_istream_t *stream, const pb_field_t *field,
         proto_PeripheralDevice *msg = (proto_PeripheralDevice *)field->pData;
         msg->devices.funcs.decode = load_peripheral_sub_device;
         msg->devices.arg = &peripheral_sub_devices;
+    }
+    if (field->tag == proto_Device_singleInput_tag)
+    {
+        proto_SingleInputDevice *msg = (proto_SingleInputDevice *)field->pData;
+        msg->input.funcs.decode = load_single_input;
+    }
+    if (field->tag == proto_Device_drumKit_tag)
+    {
+        proto_DrumKitDevice *msg = (proto_DrumKitDevice *)field->pData;
+        msg->pads.funcs.decode = load_drum_pad;
     }
     if (field->tag == proto_Device_cycle_tag)
     {
@@ -217,6 +256,8 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     proto_device = proto_Device_init_default;
     peripheral_sub_devices.encoded.clear();
     peripheral_sub_devices.ids.clear();
+    drum_kit_pads.clear();
+    has_single_input = false;
     proto_device.cb_device.funcs.decode = load_device_dev;
     proto_device.cb_device.arg = arg ? *arg : nullptr;
     pb_decode_ex(stream, proto_Device_fields, &proto_device, PB_DECODE_NOINIT);
@@ -285,7 +326,19 @@ bool load_device(pb_istream_t *stream, const pb_field_t *field, void **arg)
     }
 
     device_mgr.set_root_device(device_id, device);
-    if (proto_device.which_device == proto_Device_psxEmulation_tag)
+    if (proto_device.which_device == proto_Device_drumKit_tag)
+    {
+        std::static_pointer_cast<DrumKitDevice>(device)->set_pads(std::move(drum_kit_pads));
+        drum_kit_pads = {};
+    }
+    else if (proto_device.which_device == proto_Device_singleInput_tag)
+    {
+        if (has_single_input)
+        {
+            std::static_pointer_cast<SingleInputDevice>(device)->set_input(single_input);
+        }
+    }
+    else if (proto_device.which_device == proto_Device_psxEmulation_tag)
     {
         device_mgr.set_psx_emulation_device(
             std::static_pointer_cast<PSXEmulationDevice>(device));

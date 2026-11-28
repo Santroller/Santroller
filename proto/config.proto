@@ -422,7 +422,9 @@ message Config {
   repeated Device devices = 2;
   repeated Profile profiles = 3;
   repeated GuiConfig guiConfig = 4;
-  optional bool syncCalibrations = 5;
+  // Every input used to be able to sync its calibration, devices do that now (Device.syncCalibration)
+  reserved 5;
+  reserved "syncCalibrations";
   optional PeripheralBootConfig peripheralBoot = 6;
   optional InactivityConfig inactivity = 7;
   // What the whole device is called over USB (its product string), rather than one profile.

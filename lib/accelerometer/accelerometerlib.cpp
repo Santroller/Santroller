@@ -11,6 +11,8 @@ static const uint8_t lis3dh_init = LIS3DH_REG_WHOAMI;
 static const uint8_t adxl345_init = ADXL345_REG_DEVID;
 static const uint8_t mpu6050_init = MPU6050_REG_WHO_AM_I;
 
+const char *const Accelerometer::probeNames[PROBE_ADDRESSES] = {"18", "19", "53", "1d", "68", "69", "1d/whoami", "1e"};
+
 static int64_t __not_in_flash_func(restart_handler)(__unused alarm_id_t id, void *user_data)
 {
     Accelerometer *inst = (Accelerometer *)user_data;
@@ -176,9 +178,17 @@ void Accelerometer::begin()
     interface.dmaInit(MPU6050_ADDRESS_2, this);
     interface.dmaInit(LIS3DH_ADDRESS, this);
     interface.dmaInit(LIS3DH_ADDRESS_2, this);
+    interface.dmaInit(LIS3DSH_ADDRESS_2, this);
     probesPending = 0;
+    lis3dshFollowUp = false;
     failCount = 0;
     type = AccelerometerType::None;
+    for (int i = 0; i < PROBE_ADDRESSES; i++)
+    {
+        probeResult[i] = PROBE_NONE;
+        probeResultPrinted[i] = PROBE_NONE;
+    }
+    statusPrinted = ACCEL_INIT;
     clear();
     status = ACCEL_INIT;
     process_data(0, false, false, false, false);
@@ -195,6 +205,7 @@ void Accelerometer::end()
     interface.dmaDeinit(MPU6050_ADDRESS_2);
     interface.dmaDeinit(LIS3DH_ADDRESS);
     interface.dmaDeinit(LIS3DH_ADDRESS_2);
+    interface.dmaDeinit(LIS3DSH_ADDRESS_2);
     cancel_alarm(restart_alarm_id);
     restart_alarm_id = 0;
     status = ACCEL_INIT;
@@ -221,9 +232,34 @@ void __not_in_flash_func(Accelerometer::process_data)(uint8_t addr, bool running
         cancel_alarm(restart_alarm_id);
         restart_alarm_id = 0;
     }
+    bool lis3dshAnswer = false;
     if ((timeout || abort_detected || stop_detected) && status == ACCEL_INIT && addr && probesPending)
     {
         probesPending--;
+        // Same order as probeNames
+        int index = -1;
+        uint8_t id = 0;
+        if (addr == LIS3DSH_ADDRESS && lis3dshFollowUp)
+        {
+            lis3dshFollowUp = false;
+            lis3dshAnswer = true;
+            index = 6;
+            id = idResponseLis3dsh1;
+        }
+        else switch (addr)
+        {
+        case LIS3DH_ADDRESS: index = 0; id = idResponseLis1; break;
+        case LIS3DH_ADDRESS_2: index = 1; id = idResponseLis2; break;
+        case ADXL345_ADDRESS: index = 2; id = idResponseAdxl1; break;
+        case ADXL345_ADDRESS_2: index = 3; id = idResponseAdxl2; break;
+        case MPU6050_ADDRESS: index = 4; id = idResponseMpu1; break;
+        case MPU6050_ADDRESS_2: index = 5; id = idResponseMpu2; break;
+        case LIS3DSH_ADDRESS_2: index = 7; id = idResponseLis3dsh2; break;
+        }
+        if (index >= 0)
+        {
+            probeResult[index] = (timeout || abort_detected) ? PROBE_NAK : id;
+        }
     }
     if (timeout || abort_detected)
     {
@@ -302,36 +338,10 @@ void __not_in_flash_func(Accelerometer::process_data)(uint8_t addr, bool running
             {
             case LIS3DH_ADDRESS:
             case LIS3DH_ADDRESS_2:
+            case LIS3DSH_ADDRESS_2:
             {
-                uint8_t idResponse = addr == LIS3DH_ADDRESS ? idResponseLis1 : idResponseLis2;
-                if (idResponse == LIS3DH_ID)
-                {
-                    address = addr;
-                    type = AccelerometerType::LIS3DH;
-                    status = LIS3DH_CTRL1_INIT;
-                    bufferTx[0] = LIS3DH_REG_CTRL1;
-                    bufferTx[1] = 0b01110111;
-                    interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
-                }
-                else if (idResponse == SC7A20_ID)
-                {
-                    address = addr;
-                    type = AccelerometerType::SC7A20;
-                    status = SC7A20_CTRL1_INIT;
-                    bufferTx[0] = LIS3DH_REG_CTRL1;
-                    bufferTx[1] = 0b01110111;
-                    interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
-                }
-                else if (idResponse == LIS3DSH_ID)
-                {
-                    address = addr;
-                    type = AccelerometerType::LIS3DSH;
-                    status = LIS3DSH_CTRL1_INIT;
-                    bufferTx[0] = LIS3DH_REG_CTRL1;
-                    bufferTx[1] = 0b01111111;
-                    interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
-                }
-                else
+                uint8_t idResponse = addr == LIS3DH_ADDRESS ? idResponseLis1 : addr == LIS3DH_ADDRESS_2 ? idResponseLis2 : idResponseLis3dsh2;
+                if (!start_lis(addr, idResponse))
                 {
                     // Something else is at this address
                     probe_round_done();
@@ -347,9 +357,24 @@ void __not_in_flash_func(Accelerometer::process_data)(uint8_t addr, bool running
                     probe_round_done();
                     return;
                 }
+                if (addr == ADXL345_ADDRESS_2 && lis3dshAnswer)
+                {
+                    if (!start_lis(addr, idResponseLis3dsh1))
+                    {
+                        // Neither an ADXL345 nor a LIS3DSH
+                        probe_round_done();
+                    }
+                    return;
+                }
                 if (addr == ADXL345_ADDRESS_2 && idResponseAdxl2 != ADXL345_ID)
                 {
-                    // Something else is at this address
+                    // Not an ADXL345, see if it is a LIS3DSH
+                    if (interface.dmaWriteRead(LIS3DSH_ADDRESS, &lis3dh_init, 1, &idResponseLis3dsh1, 1))
+                    {
+                        lis3dshFollowUp = true;
+                        probesPending++;
+                        return;
+                    }
                     probe_round_done();
                     return;
                 }
@@ -464,7 +489,7 @@ void __not_in_flash_func(Accelerometer::process_data)(uint8_t addr, bool running
             break;
         case LIS3DSH_CTRL1_INIT:
             status = LIS_FAMILY_POLL;
-            pollReg = LIS3DH_REG_STATUS_AI;
+            pollReg = LIS3DSH_REG_STATUS;
             schedule_us(ACCEL_POLL_US);
             break;
         case SC7A20_CTRL4_INIT:
@@ -499,12 +524,14 @@ void __not_in_flash_func(Accelerometer::process_data)(uint8_t addr, bool running
         {
             break;
         }
+        lis3dshFollowUp = false;
         probesPending += interface.dmaWriteRead(LIS3DH_ADDRESS, &lis3dh_init, 1, &idResponseLis1, 1);
         probesPending += interface.dmaWriteRead(LIS3DH_ADDRESS_2, &lis3dh_init, 1, &idResponseLis2, 1);
         probesPending += interface.dmaWriteRead(ADXL345_ADDRESS, &adxl345_init, 1, &idResponseAdxl1, 1);
         probesPending += interface.dmaWriteRead(ADXL345_ADDRESS_2, &adxl345_init, 1, &idResponseAdxl2, 1);
         probesPending += interface.dmaWriteRead(MPU6050_ADDRESS, &mpu6050_init, 1, &idResponseMpu1, 1);
         probesPending += interface.dmaWriteRead(MPU6050_ADDRESS_2, &mpu6050_init, 1, &idResponseMpu2, 1);
+        probesPending += interface.dmaWriteRead(LIS3DSH_ADDRESS_2, &lis3dh_init, 1, &idResponseLis3dsh2, 1);
         if (!probesPending)
         {
             probe_later();
@@ -518,6 +545,37 @@ void __not_in_flash_func(Accelerometer::process_data)(uint8_t addr, bool running
         schedule_us(ACCEL_POLL_US);
         break;
     }
+}
+
+// Starts setting up a LIS family accelerometer that answered WHOAMI with id, false if it isn't one
+bool __not_in_flash_func(Accelerometer::start_lis)(uint8_t addr, uint8_t id)
+{
+    switch (id)
+    {
+    case LIS3DH_ID:
+        type = AccelerometerType::LIS3DH;
+        status = LIS3DH_CTRL1_INIT;
+        // 400Hz, all axes
+        bufferTx[1] = 0b01110111;
+        break;
+    case SC7A20_ID:
+        type = AccelerometerType::SC7A20;
+        status = SC7A20_CTRL1_INIT;
+        bufferTx[1] = 0b01110111;
+        break;
+    case LIS3DSH_ID:
+        type = AccelerometerType::LIS3DSH;
+        status = LIS3DSH_CTRL1_INIT;
+        // CTRL_REG4 on the LIS3DSH: 400Hz, block data update, all axes
+        bufferTx[1] = 0b01111111;
+        break;
+    default:
+        return false;
+    }
+    address = addr;
+    bufferTx[0] = LIS3DH_REG_CTRL1;
+    interface.dmaWriteRead(addr, bufferTx, 2, nullptr, 0);
+    return true;
 }
 
 void Accelerometer::probe_later()
@@ -535,9 +593,47 @@ void Accelerometer::probe_round_done()
     }
 }
 
+void Accelerometer::print_debug()
+{
+    bool changed = status != statusPrinted;
+    statusPrinted = status;
+    for (int i = 0; i < PROBE_ADDRESSES; i++)
+    {
+        uint16_t result = probeResult[i];
+        if (result != probeResultPrinted[i])
+        {
+            probeResultPrinted[i] = result;
+            changed = true;
+        }
+    }
+    if (!changed)
+    {
+        return;
+    }
+    printf("accel status %d type %d addr %02x:", statusPrinted, type, address);
+    for (int i = 0; i < PROBE_ADDRESSES; i++)
+    {
+        uint16_t result = probeResultPrinted[i];
+        if (result == PROBE_NONE)
+        {
+            printf(" %s=?", probeNames[i]);
+        }
+        else if (result == PROBE_NAK)
+        {
+            printf(" %s=nak", probeNames[i]);
+        }
+        else
+        {
+            printf(" %s=id%02x", probeNames[i], result);
+        }
+    }
+    printf("\r\n");
+}
+
 void Accelerometer::tick()
 {
     interface.tick();
+    print_debug();
     if (filterReset)
     {
         filterReset = false;

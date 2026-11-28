@@ -3,6 +3,7 @@ syntax = "proto2";
 package proto;
 import "enums.proto";
 import "input.proto";
+import "input_enums.proto";
 
 message UARTDevice {
   required int32 block = 1;
@@ -250,6 +251,23 @@ message GpioLedGroupDevice {
   // Lit while the pin is low
   optional bool inverted = 3;
 }
+// The pads of a drum kit, set up once so every drum layout can use them. Mappings read a pad through a
+// DrumKitInput, which reads whatever input the pad is on.
+message DrumKitDevice {
+  repeated DrumPad pads = 1;
+}
+message DrumPad {
+  // What DrumKitInput picks the pad by, which stays the same as pads are added, removed and reordered
+  required uint32 id = 1;
+  // Which lane drum layouts play it as, which also names it
+  required DrumPadType type = 2;
+  required Input input = 3;
+}
+// One input on its own, as a device, so it can do what devices do for their inputs: sync its calibration across
+// every profile, and be named (by its pin's label). Mappings read it through a SingleInputDeviceInput.
+message SingleInputDevice {
+  required Input input = 1;
+}
 message MatrixDevice {
   // Pin masks for GPIO 0-31, with GPIO 32-63 in the *High fields
   required uint32 outPins = 1;
@@ -336,6 +354,9 @@ message DeviceGate {
 message Device {
   required int32 deviceid = 1;
   optional DeviceGate gate = 50;
+  // Config tool only: keep every mapping that reads the same input of this device calibrated the same way, so
+  // calibrating it in one profile calibrates it in all of them
+  optional bool syncCalibration = 51;
   oneof device {
     AccelerometerDevice accelerometer = 2;
     Max1704xDevice max1704x = 4;
@@ -380,6 +401,8 @@ message Device {
     SNESEmulationDevice snesEmulation = 43;
     DisplayDevice display = 44;
     GpioLedGroupDevice gpioLedGroup = 45;
+    DrumKitDevice drumKit = 46;
+    SingleInputDevice singleInput = 47;
   }
 }
 message InfiniumFaderDevice {

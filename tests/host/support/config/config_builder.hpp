@@ -32,7 +32,6 @@ struct ConfigSpec
     std::vector<ProfileSpec> profiles;
     std::optional<proto_InactivityConfig> inactivity;
     std::optional<proto_PeripheralBootConfig> peripheral_boot;
-    std::optional<bool> sync_calibrations;
     std::optional<bool> xbox_one_legacy_adapter;
     std::optional<std::string> device_name;
     std::optional<std::string> manufacturer_name;
@@ -190,11 +189,6 @@ inline std::vector<uint8_t> encode_config(const ConfigSpec &spec)
     {
         config.has_peripheralBoot = true;
         config.peripheralBoot = *spec.peripheral_boot;
-    }
-    if (spec.sync_calibrations)
-    {
-        config.has_syncCalibrations = true;
-        config.syncCalibrations = *spec.sync_calibrations;
     }
     if (spec.xbox_one_legacy_adapter)
     {

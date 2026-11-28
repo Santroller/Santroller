@@ -58,8 +58,12 @@ class CRC32 {
 const magic = 0xd2f1e365;
 
 // buildConfigBuffer and writeConfig in SettingsContext.ts
-function encodeUpload(config, aux) {
-  const bufferMain = proto.Config.encode(config).finish();
+// retired is raw fields the tool's proto no longer has, as older tools still sent them
+function encodeUpload(config, aux, retired = new Uint8Array()) {
+  const encoded = proto.Config.encode(config).finish();
+  const bufferMain = new Uint8Array(encoded.length + retired.length);
+  bufferMain.set(encoded, 0);
+  bufferMain.set(retired, encoded.length);
   const bufferAux = proto.AuxConfigBlock.encode(aux).finish();
   const buffer = new Uint8Array(bufferMain.length + bufferAux.length);
   buffer.set(bufferMain, 0);
@@ -79,8 +83,8 @@ function encodeUpload(config, aux) {
   return { info, data: buffer };
 }
 
-function write(name, config, aux) {
-  const { info, data } = encodeUpload(config, aux);
+function write(name, config, aux, retired) {
+  const { info, data } = encodeUpload(config, aux, retired);
   writeFileSync(join(here, `${name}.info.bin`), info);
   writeFileSync(join(here, `${name}.data.bin`), data);
   console.log(`${name}: ${data.length} bytes`);
@@ -202,7 +206,6 @@ const representative = proto.Config.create({
     { deviceid: 1, label: { label: 'USB port', pin: 20, showToCustomer: true } },
     { deviceid: 0, seller: { logo: Uint8Array.from({ length: 300 }, (_, i) => i & 0xff), name: 'Seller' } },
   ],
-  syncCalibrations: true,
   inactivity: { sleepTimeoutSec: 600, wakePin: 15, wakeActiveHigh: false, ledTimeoutSec: 30 },
 });
 
@@ -225,7 +228,10 @@ const representativeAux = proto.AuxConfigBlock.create({
   tlvEntries: [{ tag: 0x42544c00, value: Uint8Array.from([7, 8, 9]) }],
 });
 
-write('representative', representative, representativeAux);
+// syncCalibrations (field 5) = true: devices sync calibration now, so the field is reserved, but configs
+// saved before that still have it, and the firmware has to step over it
+const retiredSyncCalibrations = Uint8Array.of((5 << 3) | 0, 1);
+write('representative', representative, representativeAux, retiredSyncCalibrations);
 
 // A fresh device in the tool: nothing configured (initialConfig in SettingsContext.ts)
 write(
